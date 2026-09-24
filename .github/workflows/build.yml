@@ -8,10 +8,6 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: opencore-main-build
-  cancel-in-progress: true
-
 jobs:
   windows:
     runs-on: windows-latest

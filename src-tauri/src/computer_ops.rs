@@ -17,7 +17,8 @@ async fn output(mut process: tokio::process::Command) -> Result<String, String> 
     let stdout = String::from_utf8_lossy(&result.stdout);
     let stderr = String::from_utf8_lossy(&result.stderr);
     if !result.status.success() { return Err(format!("Command exited {}: {}", result.status, stderr.chars().take(4000).collect::<String>())); }
-    Ok(stdout.chars().take(16000).collect())
+    if result.stdout.len() > 4 * 1024 * 1024 { return Err("Command output exceeded 4 MiB".into()); }
+    Ok(stdout.into_owned())
 }
 
 #[cfg(windows)]
@@ -97,7 +98,7 @@ pub(crate) async fn command(action: &str, args: &Value) -> Result<Value, String>
                 if !std::path::Path::new(cwd).is_dir() { return Err("Working directory does not exist".into()); }
                 process.current_dir(cwd);
             }
-            Ok(json!({"exitCode":0,"output":output(process).await?}))
+            Ok(json!({"exitCode":0,"output":output(process).await?.chars().take(16000).collect::<String>()}))
         }
         _ => Err("Unsupported computer action".into()),
     }
@@ -125,6 +126,14 @@ mod tests {
     async fn can_find_installed_apps_without_launching_them() {
         let result = command("find_apps", &json!({"query":"powershell"})).await.unwrap();
         assert!(result["apps"].as_array().is_some());
+    }
+    #[tokio::test]
+    async fn structured_app_output_is_not_cut_off_before_json_parsing() {
+        let mut process = tokio::process::Command::new("powershell.exe");
+        process.args(["-NoProfile", "-NonInteractive", "-Command", "'{\"Name\":\"' + ('A' * 20000) + '\"}'"]);
+        let raw = output(process).await.unwrap();
+        let parsed: Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(parsed["Name"].as_str().unwrap().len(), 20000);
     }
     #[tokio::test]
     async fn silent_powershell_success_is_explicit() {
