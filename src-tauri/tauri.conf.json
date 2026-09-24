@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "OpenCore",
+  "mainBinaryName": "OpenCore",
+  "version": "0.1.0",
+  "identifier": "ai.opencore.control-center",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "OpenCore",
+        "width": 1600,
+        "height": 1000,
+        "minWidth": 1180,
+        "minHeight": 720,
+        "center": true,
+        "decorations": false,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:*; img-src 'self' data: https: http:; frame-src 'self' data: blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "publisher": "OpenCore",
+    "targets": ["nsis"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "resources": {
+      "resources/configure_unsloth.py": "resources/configure_unsloth.py",
+      "../reflex/server.py": "reflex/server.py",
+      "../reflex/reflex_model.py": "reflex/reflex_model.py",
+      "../reflex/desktop_task.py": "reflex/desktop_task.py",
+      "../reflex/snake.py": "reflex/snake.py",
+      "../reflex/perception.py": "reflex/perception.py",
+      "../reflex/live_snake.py": "reflex/live_snake.py",
+      "../reflex/grounder.py": "reflex/grounder.py",
+      "../reflex/vendor": "reflex/vendor",
+      "../reflex/laya_core/__init__.py": "reflex/laya_core/__init__.py",
+      "../reflex/laya_core/rl_common.py": "reflex/laya_core/rl_common.py",
+      "../reflex/laya_core/rl_agent_api.py": "reflex/laya_core/rl_agent_api.py",
+      "../reflex/laya_core/NOTICE.md": "reflex/laya_core/NOTICE.md",
+      "../chrome-extension/manifest.json": "chrome-extension/manifest.json",
+      "../chrome-extension/background.js": "chrome-extension/background.js",
+      "../chrome-extension/popup.html": "chrome-extension/popup.html",
+      "../chrome-extension/popup.js": "chrome-extension/popup.js",
+      "resources/echo/echo_server.py": "echo/echo_server.py",
+      "resources/echo/echo_import.py": "echo/echo_import.py",
+      "resources/echo/echo_summarize.py": "echo/echo_summarize.py",
+      "resources/echo/echo_salience.py": "echo/echo_salience.py",
+      "resources/echo/evoagent/echo_memory.py": "echo/evoagent/echo_memory.py",
+      "resources/echo/evoagent/echo_context.py": "echo/evoagent/echo_context.py",
+      "resources/echo/evoagent/echo_output.py": "echo/evoagent/echo_output.py"
+    },
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

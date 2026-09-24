@@ -1,0 +1,48 @@
+name: Build OpenCore
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: opencore-main-build
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Test frontend
+        run: npm test
+      - name: Test Rust
+        working-directory: src-tauri
+        run: cargo test --lib
+      - name: Version this push
+        shell: pwsh
+        run: |
+          node -e "const fs=require('fs');const p='src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.version='0.1.'+process.env.GITHUB_RUN_NUMBER;fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n')"
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__
+          releaseName: OpenCore v__VERSION__
+          releaseBody: Windows installer built from this main branch push.
+          releaseDraft: false
+          prerelease: false
+          args: --bundles nsis

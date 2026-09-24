@@ -1,0 +1,264 @@
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+import type { AppSnapshot, ArchiveEvent, ArchiveOverview, ArchivePageRef, ArchiveSearchHit, ApprovalMode, ChatSendResult, ConnectorInput, ConnectorStatus, OperationRecord, ProjectSummary, ReasoningEffort, RuntimeProfile, TimelineEntry } from "./types";
+import { previewSnapshot, previewTimeline } from "./mock";
+
+const desktop = () => "__TAURI_INTERNALS__" in window;
+
+export type ArtifactPreview = { id: string; name: string; mime: string; size: number; dataUrl: string; text: string | null };
+export type BrowserStatus = { port: number; token: string; connected: boolean; extensionPath?: string };
+export type BrowserTab = { tabId: number; title: string; url: string; active: boolean };
+export type BrowserShot = { tabId: number; dataUrl: string; viewport: { width: number; height: number } };
+export type DesktopWindow = { windowId: number; title: string; bounds: { left: number; top: number; width: number; height: number } };
+export type DesktopShot = { windowId: number; bounds: DesktopWindow["bounds"]; dataUrl: string };
+
+export async function desktopCommand<T>(action: string, args: Record<string, unknown> = {}): Promise<T> {
+  if (!desktop()) throw new Error("Windows control requires the desktop application.");
+  return invoke<T>("desktop_command", { action, args });
+}
+
+export async function setComputerFocusMode(keepUserWindowInFront: boolean): Promise<void> {
+  if (desktop()) await invoke("set_computer_focus_mode", { keepUserWindowInFront });
+}
+
+export async function browserBridgeStatus(): Promise<BrowserStatus> {
+  return desktop() ? invoke<BrowserStatus>("browser_bridge_status") : { port: 8814, token: "", connected: false };
+}
+
+export async function browserCommand<T>(action: string, args: Record<string, unknown> = {}): Promise<T> {
+  if (!desktop()) throw new Error("Browser control requires the desktop application.");
+  return invoke<T>("browser_command", { action, args });
+}
+
+export async function nativeBrowserCommand<T>(action: string, args: Record<string, unknown> = {}): Promise<T> {
+  if (!desktop()) throw new Error("The in-app browser requires the desktop application.");
+  return invoke<T>("native_browser_command", { action, args });
+}
+
+export async function previewArtifact(id: string): Promise<ArtifactPreview> {
+  if (!desktop()) throw new Error("Artifact preview requires the desktop application.");
+  return invoke<ArtifactPreview>("preview_artifact", { id });
+}
+
+export async function previewAttachmentImage(path: string): Promise<string> {
+  if (!desktop()) throw new Error("Image preview requires the desktop application.");
+  return invoke<string>("preview_attachment_image", { path });
+}
+
+export async function downloadArtifact(id: string): Promise<string> {
+  if (!desktop()) throw new Error("Artifact download requires the desktop application.");
+  return invoke<string>("download_artifact", { id });
+}
+
+export async function snapshot(): Promise<AppSnapshot> {
+  if (desktop()) return invoke<AppSnapshot>("get_snapshot");
+  const preview = structuredClone(previewSnapshot);
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("previewActive") || params.has("previewReasoning")) preview.activeConversationIds = ["preview"];
+  return preview;
+}
+
+export async function conversation(id: string): Promise<TimelineEntry[]> {
+  if (desktop()) return invoke<TimelineEntry[]>("get_conversation", { id });
+  if (id !== "preview") return [];
+  return new URLSearchParams(window.location.search).has("previewReasoning")
+    ? previewTimeline.filter((entry) => entry.id <= 4.5) : previewTimeline;
+}
+
+export async function startProfile(profile: RuntimeProfile, attachUrl?: string): Promise<void> {
+  if (!desktop()) throw new Error("Runtime controls require the desktop application.");
+  await invoke("start_profile", { request: { profile, attachUrl: attachUrl || null } });
+}
+
+export async function stopRuntime(): Promise<void> {
+  if (!desktop()) throw new Error("Runtime controls require the desktop application.");
+  await invoke("stop_runtime");
+}
+
+export async function restartRuntime(): Promise<void> {
+  if (!desktop()) throw new Error("Runtime controls require the desktop application.");
+  await invoke("restart_runtime");
+}
+
+export async function exportConversation(id: string, format: "json" | "markdown"): Promise<string> {
+  if (!desktop()) throw new Error("Export requires the desktop application.");
+  const result = await invoke<{ path: string }>("export_conversation", { id, format });
+  return result.path;
+}
+
+export async function renameConversation(id: string, title: string): Promise<void> {
+  if (!desktop()) return;
+  await invoke("rename_conversation", { id, title });
+}
+
+export async function removeConversation(id: string): Promise<void> {
+  if (!desktop()) return;
+  await invoke("delete_conversation", { id });
+}
+
+export async function setConversationPinned(id: string, pinned: boolean): Promise<void> {
+  if (!desktop()) return;
+  await invoke("set_conversation_pinned", { id, pinned });
+}
+
+export async function moveConversationToProject(id: string, projectId: string | null): Promise<void> {
+  if (!desktop()) return;
+  await invoke("move_conversation_to_project", { id, projectId });
+}
+
+export async function chooseProjectFolder(): Promise<string | null> {
+  if (!desktop()) throw new Error("Choose a folder in the Windows desktop app.");
+  const selected = await open({ directory: true, multiple: false, title: "Choose an OpenCore project folder" });
+  return typeof selected === "string" ? selected : null;
+}
+
+export async function createProject(name: string, folderPath: string): Promise<ProjectSummary> {
+  if (!desktop()) throw new Error("Project creation requires the Windows desktop app.");
+  return invoke<ProjectSummary>("create_project", { name, folderPath });
+}
+
+export async function changeProjectFolder(id: string, folderPath: string): Promise<ProjectSummary> {
+  if (!desktop()) throw new Error("Project changes require the Windows desktop app.");
+  return invoke<ProjectSummary>("change_project_folder", { id, folderPath });
+}
+
+export async function renameProject(id: string, name: string): Promise<ProjectSummary> {
+  if (!desktop()) throw new Error("Project changes require the desktop application.");
+  return invoke<ProjectSummary>("rename_project", { id, name });
+}
+
+export async function deleteProject(id: string): Promise<number> {
+  if (!desktop()) throw new Error("Project changes require the desktop application.");
+  return invoke<number>("delete_project", { id });
+}
+
+export async function saveConnector(input: ConnectorInput): Promise<ConnectorStatus> {
+  if (!desktop()) return { id: input.id || "preview-custom", name: input.name, kind: input.kind, endpoint: input.endpoint, status: "configured", observable: false, details: "Preview connector", custom: true };
+  return invoke<ConnectorStatus>("save_connector", { input });
+}
+
+export async function deleteConnector(id: string): Promise<void> {
+  if (!desktop()) return;
+  await invoke("delete_connector", { id });
+}
+
+export async function testConnector(endpoint: string): Promise<string> {
+  if (!desktop()) return "Desktop backend required for a live connection test.";
+  return invoke<string>("test_connector", { endpoint });
+}
+
+export async function configureUnsloth(): Promise<string> {
+  if (!desktop()) return "Desktop backend required to configure Unsloth.";
+  return invoke<string>("configure_unsloth");
+}
+
+export async function syncLocalHistory(id: string): Promise<string> {
+  if (!desktop()) return "Desktop backend required.";
+  return invoke<string>("sync_local_history", { id });
+}
+
+export async function listOperations(): Promise<OperationRecord[]> {
+  return desktop() ? invoke<OperationRecord[]>("list_operations") : [];
+}
+
+export async function startHistorySync(id: "claude-code" | "codex"): Promise<OperationRecord> {
+  if (!desktop()) throw new Error("History sync requires the desktop application.");
+  return invoke<OperationRecord>("start_history_sync", { id });
+}
+
+export async function searchArchive(query: string, limit = 50, conversationIds?: string[]): Promise<ArchiveSearchHit[]> {
+  if (!desktop()) return [];
+  return invoke<ArchiveSearchHit[]>("search_archive", { query, limit, conversationIds });
+}
+
+export async function archiveOverview(): Promise<ArchiveOverview> {
+  if (!desktop()) return { archives: 0, pages: 0, sourceBytes: 0, storedBytes: 0, conversations: [], summaries: [] };
+  return invoke<ArchiveOverview>("archive_overview");
+}
+
+export async function readArchivePage(archiveFile: string, pageId: string): Promise<string> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<string>("read_archive_page", { archiveFile, pageId });
+}
+
+export async function listArchivePages(conversationId: string, offset = 0, limit = 40): Promise<ArchivePageRef[]> {
+  if (!desktop()) return [];
+  return invoke<ArchivePageRef[]>("list_archive_pages", { conversationId, offset, limit });
+}
+
+export async function listArchiveEvents(conversationId: string, offset = 0, limit = 100): Promise<ArchiveEvent[]> {
+  if (!desktop()) return [];
+  return invoke<ArchiveEvent[]>("list_archive_events", { conversationId, offset, limit });
+}
+
+export async function readArchiveEvent(eventId: string): Promise<ArchiveEvent> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<ArchiveEvent>("read_archive_event", { eventId });
+}
+
+export async function readArchiveAsset(assetId: string): Promise<string> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<string>("read_archive_asset", { assetId });
+}
+
+export async function indexEchoHistory(): Promise<string> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<string>("index_echo_history");
+}
+
+export async function echoMemoryAction(action: "trim" | "compact", conversationId: string): Promise<string> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<string>("echo_memory_action", { action, conversationId });
+}
+
+export async function clearLogs(): Promise<void> {
+  if (!desktop()) return;
+  await invoke("clear_logs");
+}
+
+export async function verifyModel(): Promise<string> {
+  if (!desktop()) return "Desktop backend required.";
+  return invoke<string>("verify_model");
+}
+
+export async function openLocalPath(path: string): Promise<void> {
+  if (!desktop()) throw new Error("Opening local folders requires the Windows application.");
+  await invoke("open_local_path", { path });
+}
+
+export async function exportArchiveIndex(): Promise<string> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<string>("export_archive_index");
+}
+
+export async function exportDiagnostics(): Promise<string> {
+  if (!desktop()) throw new Error("Desktop backend required.");
+  return invoke<string>("export_diagnostics");
+}
+
+export async function healthCheck(): Promise<string> {
+  if (!desktop()) return "Desktop backend required.";
+  return invoke<string>("health_check");
+}
+
+export async function configureAgentConnector(id: "claude-code" | "codex"): Promise<string> {
+  if (!desktop()) return "Desktop backend required.";
+  return invoke<string>("configure_agent_connector", { id });
+}
+
+export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = []): Promise<ChatSendResult> {
+  if (!desktop()) throw new Error("Interactive chat requires the desktop application.");
+  return invoke<ChatSendResult>("send_chat_message", {
+    request: { conversationId, text, files, reasoningEffort, approvalMode, skills },
+  });
+}
+
+export async function resolveToolApproval(requestId: string, approved: boolean): Promise<void> {
+  if (!desktop()) return;
+  await invoke("resolve_tool_approval", { requestId, approved });
+}
+
+export async function cancelChatMessage(conversationId: string): Promise<boolean> {
+  if (!desktop()) return false;
+  return invoke<boolean>("cancel_chat_message", { conversationId });
+}

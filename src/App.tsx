@@ -1,0 +1,1061 @@
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import {
+  Activity,
+  Archive,
+  Box,
+  BrainCircuit,
+  ChevronDown,
+  CircleAlert,
+  CircleStop,
+  Copy,
+  Database,
+  Download,
+  ExternalLink,
+  FileDown,
+  FolderOpen,
+  Gauge,
+  HardDrive,
+  Home,
+  LayoutDashboard,
+  MemoryStick,
+  MessageSquare,
+  MoreHorizontal,
+  Move,
+  Network,
+  Play,
+  Pin,
+  PinOff,
+  RefreshCw,
+  RotateCw,
+  Search,
+  Settings,
+  SlidersHorizontal,
+  ShieldCheck,
+  SquareTerminal,
+  Trash2,
+  Unplug,
+  Wrench,
+  X,
+  Zap,
+} from "lucide-react";
+import * as api from "./api";
+import opencoreLogo from "./assets/opencore-logo.png";
+import { AssistantConversation } from "./AssistantConversation";
+import { WindowTitleBar } from "./WindowTitleBar";
+import { ProjectActionsMenu } from "./ProjectActionsMenu";
+import { FloatingWindow } from "./FloatingWindow";
+import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
+
+type View = "overview" | "conversations" | "memory" | "runtime" | "models" | "connectors" | "settings" | "troubleshooting";
+type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
+type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
+type Appearance = { chatFontSize: number; compactMessages: boolean; keepUserWindowInFront: boolean };
+const appearanceKey = "opencore.appearance.v1";
+const defaultAppearance: Appearance = { chatFontSize: 15, compactMessages: false, keepUserWindowInFront: false };
+
+async function revealLocalPath(path: string, onNotice: (message: string) => void) {
+  try { await api.openLocalPath(path); }
+  catch (error) { onNotice(`Could not open folder: ${String(error)}`); }
+}
+
+function savedAppearance(): Appearance {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(appearanceKey) || "null") as Partial<Appearance> | null;
+    return {
+      chatFontSize: Math.max(13, Math.min(18, Number(stored?.chatFontSize) || defaultAppearance.chatFontSize)),
+      compactMessages: stored?.compactMessages === true,
+      keepUserWindowInFront: stored?.keepUserWindowInFront === true,
+    };
+  } catch { return defaultAppearance; }
+}
+
+const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }> = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "conversations", label: "Conversations", icon: MessageSquare },
+  { id: "memory", label: "Memory", icon: Database },
+  { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
+  { id: "models", label: "Models", icon: Box },
+  { id: "connectors", label: "Connectors", icon: Network },
+  { id: "settings", label: "Settings", icon: Settings },
+  { id: "troubleshooting", label: "Troubleshooting", icon: CircleAlert, group: true },
+];
+
+const shortTime = (value?: string | null) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? value : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
+const shortDate = (value?: string | null) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? value : date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+};
+
+function recentDecoderSpeed(logs: LogEntry[]): number | null {
+  const cutoff = Date.now() - 8000;
+  for (let index = logs.length - 1; index >= 0; index--) {
+    const entry = logs[index];
+    if (entry.source !== "runtime" || new Date(entry.timestamp).getTime() < cutoff) continue;
+    const match = entry.message.match(/tg_3s\s*=\s*(\d+(?:\.\d+)?)/);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+export function recentPromptProgress(logs: LogEntry[]): { label: string; speed: number | null } | null {
+  const matches = logs.filter((entry) => entry.source === "runtime")
+    .map((entry) => ({ entry, match: entry.message.match(/prompt processing,\s*n_tokens\s*=\s*(\d+),\s*progress\s*=\s*([\d.]+)/) }))
+    .filter((item): item is { entry: LogEntry; match: RegExpMatchArray } => Boolean(item.match));
+  const latest = matches.at(-1);
+  if (!latest || Date.now() - new Date(latest.entry.timestamp).getTime() > 20000) return null;
+  const previous = matches.at(-2);
+  const seconds = previous ? (new Date(latest.entry.timestamp).getTime() - new Date(previous.entry.timestamp).getTime()) / 1000 : 0;
+  const speed = previous && seconds > 0 ? (Number(latest.match[1]) - Number(previous.match[1])) / seconds : null;
+  return { label: `Reading prompt · ${Number(latest.match[1]).toLocaleString()} tokens · ${Math.round(Number(latest.match[2]) * 100)}%`, speed: speed && speed > 0 ? speed : null };
+}
+
+function modelLoaderDetail(snapshot: AppSnapshot): { text: string; loaded: number | null; total: number | null } {
+  const since = snapshot.runtime.startedAt ? new Date(snapshot.runtime.startedAt).getTime() : 0;
+  const logs = snapshot.logs.filter((entry) => ["runtime", "echo"].includes(entry.source) && new Date(entry.timestamp).getTime() >= since);
+  const latest = logs.at(-1);
+  const text = latest?.message.trim() || snapshot.runtime.loadingPhase || "Waiting for loader output";
+  const fraction = text.match(/(?:tensor|tensors).*?(\d+)\s*\/\s*(\d+)/i) || text.match(/(\d+)\s*\/\s*(\d+).*?(?:tensor|tensors)/i);
+  return { text, loaded: fraction ? Number(fraction[1]) : null, total: fraction ? Number(fraction[2]) : null };
+}
+
+const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "Native 1M" : profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped";
+
+function StatusDot({ state }: { state: string }) {
+  const kind = ["running", "ready", "detected", "configured", "observed", "stop", "active"].includes(state) ? "good" : state === "error" ? "bad" : state === "starting" ? "warn" : "muted";
+  return <span className={`status-dot ${kind}`} aria-label={state} />;
+}
+
+function Navigation({ active, onChange, running, compact = false }: { active: View; onChange: (view: View) => void; running: boolean; compact?: boolean }) {
+  return <aside className={`nav-rail ${compact ? "conversation-app-rail" : ""}`}>
+    <button className="brand-mini" onClick={() => onChange("overview")} title="OpenCore overview"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><span>OpenCore</span></button>
+    <nav>
+      {nav.map((item) => <div key={item.id} className={item.group ? "nav-group-start" : ""}>
+        <button title={item.label} aria-label={item.label} className={`nav-item ${active === item.id ? "active" : ""}`} onClick={() => onChange(item.id)}>
+          <item.icon size={17} /><span>{item.label}</span>
+        </button>
+      </div>)}
+    </nav>
+    <div className="nav-footer">
+      <div><StatusDot state={running ? "running" : "stopped"} />{running ? "Runtime active" : "Runtime stopped"}</div>
+      <small>OpenCore v0.1.0</small>
+    </div>
+  </aside>;
+}
+
+function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedProfile, onStart, onStop, onRestart, onExport }: {
+  snapshot: AppSnapshot; busy: boolean; runtimeAction: "starting" | "stopping" | null; selectedProfile: RuntimeProfile; setSelectedProfile: (profile: RuntimeProfile) => void;
+  onStart: () => void; onStop: () => void; onRestart: () => void; onExport: () => void;
+}) {
+  const running = snapshot.runtime.status === "running";
+  const active = running || snapshot.runtime.status === "starting" || runtimeAction !== null;
+  return <header className="topbar">
+    <div className="brand"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><div><strong>OpenCore</strong><small>Observe · Understand · Trust</small></div></div>
+    <div className="runtime-actions">
+      <button className={active ? "runtime-stop-button" : "primary"} disabled={runtimeAction === "stopping"} onClick={active ? onStop : onStart}>{active ? <CircleStop size={15} /> : <Play size={15} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button>
+      <button disabled={busy || runtimeAction !== null || !running} onClick={onRestart}><RotateCw size={15} /> Restart</button>
+      <label className="mode-select"><span>Mode</span><select value={selectedProfile} onChange={(event) => setSelectedProfile(event.target.value as RuntimeProfile)} disabled={active || busy}>
+        <option value="echo">ECHO 3T</option><option value="native1m">Native 1M</option>
+      </select><ChevronDown size={13} /></label>
+    </div>
+    <div className="topbar-right">
+      <button onClick={onExport} title="Export conversation" aria-label="Export conversation"><FileDown size={15} /> Export</button>
+      <div className="connection-state"><StatusDot state={running ? "running" : snapshot.runtime.status} /><div><strong>{running ? "Connected" : snapshot.runtime.status}</strong><small>{profileLabel(snapshot.runtime.profile)}</small></div></div>
+    </div>
+  </header>;
+}
+
+const ConversationRows = memo(function ConversationRows({ items, selected, onSelect, onTogglePin }: { items: ConversationSummary[]; selected?: string; onSelect: (id: string) => void; onTogglePin: (item: ConversationSummary) => void }) {
+  return <>{items.map((item) => <div key={item.id} className={`conversation-row-shell ${selected === item.id ? "selected" : ""}`}><button className={`conversation-row ${selected === item.id ? "selected" : ""}`} onClick={() => onSelect(item.id)}>
+    <span className={`client-dot client-${item.client.toLowerCase().replaceAll(" ", "-")}`} />
+    <span className="conversation-copy"><strong>{item.title || "Untitled conversation"}</strong><small>{item.client}{item.project && item.project !== item.client ? ` · ${item.project}` : ""}</small></span>
+    <time>{shortTime(item.updatedAt)}</time>
+  </button><button className={`conversation-row-pin ${item.pinned ? "is-pinned" : ""}`} onClick={() => onTogglePin(item)} title={item.pinned ? "Unpin chat" : "Pin chat"} aria-label={`${item.pinned ? "Unpin" : "Pin"} ${item.title}`}>
+    {item.pinned ? <PinOff size={14} /> : <Pin size={14} />}
+  </button></div>)}</>;
+});
+
+function CollapsibleConversationGroup({ id, label, count, collapsed, onToggle, children }: { id: string; label: string; count: number; collapsed: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
+  return <section className={`conversation-group ${collapsed ? "collapsed" : ""}`}>
+    <button className="conversation-group-heading" onClick={() => onToggle(id)} aria-label={`${label} group, ${count}`} aria-expanded={!collapsed}><ChevronDown size={13} /><strong>{label}</strong><span>{count}</span></button>
+    {!collapsed ? <div className="conversation-group-body">{children}</div> : null}
+  </section>;
+}
+
+function ProjectConversationGroup({ project, items, selected, collapsed, onToggle, onSelect, onTogglePin, onEdit, onRemove, onOpenFolder, onChangeFolder }: {
+  project: ProjectSummary | undefined; items: ConversationSummary[]; selected?: string; collapsed: boolean; onToggle: () => void;
+  onSelect: (id: string) => void; onTogglePin: (item: ConversationSummary) => void;
+  onEdit: (project: ProjectSummary) => void; onRemove: (project: ProjectSummary) => void;
+  onOpenFolder: (project: ProjectSummary) => Promise<string>; onChangeFolder: (project: ProjectSummary) => Promise<string>;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const sourceLocked = items.some((item) => /claude|codex/i.test(item.client));
+  return <section className={`conversation-group project-group ${collapsed ? "collapsed" : ""}`}>
+    <div className="project-group-toolbar">
+      <button className="conversation-group-heading" onClick={onToggle} aria-label={`${project?.name || items[0]?.project} group, ${items.length}`} aria-expanded={!collapsed}><ChevronDown size={14} /><strong>{project?.name || items[0]?.project}</strong>{project?.needsFolder ? <em>Needs folder</em> : project && !project.folderAvailable ? <em>Folder unavailable</em> : null}<span>{items.length}</span></button>
+      {project ? <div className="project-group-actions"><button ref={trigger} className="project-more" aria-label={`Options for ${project.name}`} aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((current) => !current)}><MoreHorizontal size={17} /></button>
+        {menuOpen && trigger.current ? <ProjectActionsMenu project={project} locked={sourceLocked} anchor={trigger.current} onClose={() => setMenuOpen(false)} onOpenFolder={() => onOpenFolder(project)} onChangeFolder={() => onChangeFolder(project)} onRename={() => onEdit(project)} onRemove={() => onRemove(project)} /> : null}
+      </div> : null}
+    </div>
+    {!collapsed ? <div className="conversation-group-body"><ConversationRows items={items} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></div> : null}
+  </section>;
+}
+
+function ConversationsList({ conversations, projects: projectDefinitions, selected, onSelect, onNew, onExit, onCreateProject, onTogglePin, onEditProject, onRemoveProject, onOpenProjectFolder, onChangeProjectFolder, onToggleFloating, floating }: {
+  conversations: ConversationSummary[]; projects: ProjectSummary[]; selected?: string; onSelect: (id: string) => void; onNew: () => void; onExit: () => void; onCreateProject: (name: string, folderPath: string) => Promise<boolean>;
+  onTogglePin: (item: ConversationSummary) => void; onEditProject: (project: ProjectSummary) => void; onRemoveProject: (project: ProjectSummary) => void;
+  onOpenProjectFolder: (project: ProjectSummary) => Promise<string>; onChangeProjectFolder: (project: ProjectSummary) => Promise<string>;
+  onToggleFloating: () => void; floating: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
+  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "projects">("all");
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(["all-projects"]));
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [projectFolder, setProjectFolder] = useState("");
+  const [projectError, setProjectError] = useState("");
+  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["projects", "Projects"]] as const;
+  const needle = deferredQuery.trim().toLowerCase();
+  const searched = useMemo(() => conversations.filter((item) => !needle || `${item.title} ${item.client} ${item.project || ""}`.toLowerCase().includes(needle)), [conversations, needle]);
+  const sourceItems = useMemo(() => {
+    const isOpenCore = (item: ConversationSummary) => {
+      const client = item.client.toLowerCase();
+      return client.includes("opencore") || client.includes("unsloth") || item.id.startsWith("opencore:") || item.id.startsWith("local:");
+    };
+    return {
+      pinned: searched.filter((item) => item.pinned),
+      recent: searched.slice(0, 20),
+      opencore: searched.filter(isOpenCore),
+      claude: searched.filter((item) => item.client.toLowerCase().includes("claude")),
+      codex: searched.filter((item) => item.client.toLowerCase().includes("codex")),
+    };
+  }, [searched]);
+  const projects = useMemo(() => {
+    const defined = projectDefinitions.map((definition) => ({ key: definition.id, name: definition.name, definition, items: searched.filter((item) => item.projectId === definition.id) }));
+    const orphanNames = new Set(searched.filter((item) => item.project?.trim() && !projectDefinitions.some((project) => project.id === item.projectId)).map((item) => item.project));
+    const orphans = Array.from(orphanNames).map((name) => ({ key: `orphan-${name}`, name, definition: undefined as ProjectSummary | undefined, items: searched.filter((item) => item.project === name && !projectDefinitions.some((project) => project.id === item.projectId)) }));
+    return [...defined, ...orphans].sort((a, b) => a.name.localeCompare(b.name));
+  }, [projectDefinitions, searched]);
+  const toggle = useCallback((id: string) => setCollapsed((current) => {
+    const next = new Set(current);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  }), []);
+  const projectGroups = projects.map((group) => <ProjectConversationGroup key={group.key} project={group.definition} items={group.items} selected={selected} collapsed={collapsed.has(`project-${group.key}`)} onToggle={() => toggle(`project-${group.key}`)} onSelect={onSelect} onTogglePin={onTogglePin} onEdit={onEditProject} onRemove={onRemoveProject} onOpenFolder={onOpenProjectFolder} onChangeFolder={onChangeProjectFolder} />);
+
+  const chooseFolder = async () => {
+    setProjectError("");
+    try { const path = await api.chooseProjectFolder(); if (path) setProjectFolder(path); }
+    catch (error) { setProjectError(String(error)); }
+  };
+
+  return <section className="conversation-list conversation-list-focus">
+    <div className="conversation-list-head">
+      <button className="conversation-home" onClick={onExit} title="Overview"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span></button>
+      <div className="conversation-list-title"><h2>Conversations</h2><span>{conversations.length}</span></div><button className="conversation-float-toggle" title={floating ? "Dock conversations" : "Move conversations"} aria-label={floating ? "Dock conversations" : "Move conversations"} onClick={onToggleFloating}><Move size={14} /></button><div className="conversation-list-actions"><button className="new-chat-button secondary" onClick={() => setCreatingProject(true)}>+ Project</button><button className="new-chat-button" onClick={onNew}>+ New</button></div>
+    </div>
+    {creatingProject ? <form className="project-create" onSubmit={async (event) => { event.preventDefault(); const name = projectName.trim(); if (!name || !projectFolder) return; if (!(await onCreateProject(name, projectFolder))) { setProjectError("Could not create project. Check the app notification for details."); return; } setProjectName(""); setProjectFolder(""); setProjectError(""); setCreatingProject(false); setSection("projects"); }}><input autoFocus aria-label="Project name" value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Project name" maxLength={120} /><button type="button" onClick={() => void chooseFolder()}>Choose folder</button>{projectFolder ? <small className="project-selected-folder" title={projectFolder}>{projectFolder}</small> : null}{projectError ? <small className="project-error" role="alert">{projectError}</small> : null}<button type="submit" disabled={!projectName.trim() || !projectFolder}>Create project</button><button type="button" onClick={() => { setCreatingProject(false); setProjectError(""); }}>Cancel</button></form> : null}
+    <div className="search conversation-search"><Search size={14} /><input aria-label="Search conversations" placeholder="Search…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+    <div className="conversation-sections">{sections.map(([id, label]) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}>{label}</button>)}</div>
+    <div className="conversation-scroll">
+      {searched.length === 0 ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
+      {section === "all" ? <>
+        {sourceItems.pinned.length ? <CollapsibleConversationGroup id="all-pinned" label="Pinned" count={sourceItems.pinned.length} collapsed={collapsed.has("all-pinned")} onToggle={toggle}><ConversationRows items={sourceItems.pinned} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup> : null}
+        <CollapsibleConversationGroup id="all-recent" label="Recent" count={sourceItems.recent.length} collapsed={collapsed.has("all-recent")} onToggle={toggle}><ConversationRows items={sourceItems.recent} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
+        <CollapsibleConversationGroup id="all-opencore" label="OpenCore" count={sourceItems.opencore.length} collapsed={collapsed.has("all-opencore")} onToggle={toggle}><ConversationRows items={sourceItems.opencore} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
+        <CollapsibleConversationGroup id="all-claude" label="Claude Code" count={sourceItems.claude.length} collapsed={collapsed.has("all-claude")} onToggle={toggle}><ConversationRows items={sourceItems.claude} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
+        <CollapsibleConversationGroup id="all-codex" label="Codex" count={sourceItems.codex.length} collapsed={collapsed.has("all-codex")} onToggle={toggle}><ConversationRows items={sourceItems.codex} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
+        <CollapsibleConversationGroup id="all-projects" label="Projects" count={projects.length} collapsed={collapsed.has("all-projects")} onToggle={toggle}>{projectGroups}</CollapsibleConversationGroup>
+      </> : section === "projects" ? projectGroups : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
+    </div>
+  </section>;
+}
+
+function Meter({ label, value, max, suffix = "" }: { label: string; value: number; max: number; suffix?: string }) {
+  const percent = max ? Math.min(100, Math.round(value / max * 100)) : 0;
+  return <div className="meter"><div><span>{label}</span><strong>{value.toLocaleString()}{suffix} / {max.toLocaleString()}{suffix}</strong><em>{percent}%</em></div><div className="meter-track"><span style={{ width: `${percent}%` }} /></div></div>;
+}
+
+const Telemetry = memo(function Telemetry({ snapshot }: { snapshot: AppSnapshot }) {
+  const { runtime, telemetry } = snapshot;
+  return <aside className="telemetry panel-edge">
+    <div className="section-title"><h2>Telemetry</h2><span className="live"><StatusDot state={runtime.status} />Live</span></div>
+    <div className="fact-table">
+      <div><span>Mode</span><strong>{profileLabel(runtime.profile)}</strong></div>
+      <div><span>Context</span><strong>{runtime.contextSize.toLocaleString()} {runtime.profile === "echo" ? "live scratchpad" : "tokens"}</strong></div>
+      <div><span>Model</span><strong>{runtime.status}</strong></div>
+    </div>
+    <div className="metric-pair"><div><span>VRAM</span><strong>{(telemetry.vramUsedMib / 1024).toFixed(1)} / {(telemetry.vramTotalMib / 1024).toFixed(0)} GB</strong><small>Live hardware sample</small></div><div><span>Tokens/s</span><strong>{telemetry.tokensPerSecond.toFixed(1)}</strong><small>Last model response</small></div></div>
+    <Meter label="Context usage" value={telemetry.promptTokens} max={runtime.contextSize} />
+    <div className="telemetry-box"><h3>Active experts <span>{telemetry.activeExperts.length ? `${telemetry.activeExperts.length} / 10,000` : "No route data"}</span></h3>{(telemetry.activeExperts.length ? telemetry.activeExperts : ["Awaiting model telemetry"]).map((expert) => <div className="expert" key={expert}><StatusDot state={telemetry.activeExperts.length ? "active" : "stopped"} /><span>{expert}</span><em>{telemetry.activeExperts.length ? "Active" : "—"}</em></div>)}</div>
+    <div className="telemetry-box"><h3>Client route status</h3>{snapshot.connectors.map((connector) => { const connected = connector.observable || connector.status === "configured" || connector.status === "observed"; return <div className="route" key={connector.id}><StatusDot state={connected ? "active" : connector.status} /><span>{connector.name}</span><b className={connected ? "ok" : "warn"}>{connector.observable ? "Observable" : connector.status === "configured" ? "Connected" : connector.status === "detected" ? "Ready" : "Offline"}</b></div>; })}</div>
+    <div className="telemetry-box"><h3>Event timeline</h3>{snapshot.logs.slice(-5).reverse().map((log) => <div className="event" key={log.id}><time>{shortTime(log.timestamp)}</time><b>{log.source}</b><span>{log.message}</span></div>)}</div>
+  </aside>;
+});
+
+function RuntimeTable({ snapshot, onRestart }: { snapshot: AppSnapshot; onRestart: () => void }) {
+  const runtime = snapshot.runtime;
+  const rows = [
+    { name: "Control Gateway", detail: "Captures routing and events", status: "running", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
+    { name: "llama-server", detail: profileLabel(runtime.profile), status: runtime.modelPid ? runtime.status : "stopped", port: runtime.backendPort, pid: runtime.modelPid || "—", observable: true, restartable: Boolean(runtime.modelPid) },
+    { name: "ECHO proxy", detail: "Memory control and retrieval", status: runtime.echoPid ? runtime.status : "stopped", port: runtime.echoPort, pid: runtime.echoPid || "—", observable: runtime.profile.includes("echo"), restartable: Boolean(runtime.echoPid) },
+    ...snapshot.connectors.map((item) => ({ name: item.name, detail: item.details, status: item.status, port: item.kind === "history" ? "local" : item.endpoint.split(":").pop() || "—", pid: "—", observable: item.observable, restartable: false })),
+  ];
+  return <div className="runtime-table">
+    <div className="runtime-row header"><span>Component</span><span>Status</span><span>Port</span><span>PID</span><span>Observability</span><span>Actions</span></div>
+    {rows.map((row) => <div className="runtime-row" key={row.name}><span><strong>{row.name}</strong><small>{row.detail}</small></span><span><StatusDot state={row.status} />{row.status}</span><span>{row.port}</span><span>{row.pid}</span><span className={row.observable ? "good-text" : "warn-text"}>{row.observable ? "Observable" : "Bypassing / offline"}</span><span>{row.restartable ? <button className="icon-button" onClick={onRestart} title="Restart OpenCore runtime"><RefreshCw size={14} /></button> : <em>—</em>}</span></div>)}
+  </div>;
+}
+
+function RuntimeLogs({ logs }: { logs: LogEntry[] }) {
+  const [filter, setFilter] = useState("all");
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [clearing, setClearing] = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const options = ["all", "runtime", "echo", "gateway", "client", "error"];
+  const visible = logs.filter((log) => filter === "all" || log.source === filter || (filter === "error" && log.level === "error"));
+
+  useEffect(() => {
+    if (autoScroll && canvasRef.current) canvasRef.current.scrollTop = canvasRef.current.scrollHeight;
+  }, [autoScroll, visible.length]);
+
+  const clear = async () => {
+    setClearing(true);
+    try { await api.clearLogs(); } finally { setClearing(false); }
+  };
+
+  return <section className="logs-panel">
+    <div className="logs-toolbar">
+      <h3>Runtime Logs</h3>
+      <div>{options.map((option) => <button key={option} className={filter === option ? "active" : ""} onClick={() => setFilter(option)}>{option[0].toUpperCase() + option.slice(1)}</button>)}</div>
+      <button onClick={clear} disabled={clearing}>{clearing ? "Clearing…" : "Clear"}</button>
+      <label><input type="checkbox" checked={autoScroll} onChange={(event) => setAutoScroll(event.target.checked)} /> Auto-scroll</label>
+    </div>
+    <div ref={canvasRef} className="log-canvas">{visible.length === 0 && <span className="log-empty">No matching logs yet.</span>}{visible.map((log) => <div className={`log-line level-${log.level}`} key={log.id}><time>{new Date(log.timestamp).toLocaleString()}</time><b>{log.level.toUpperCase()}</b><em>{log.source}</em><span>{log.message}</span></div>)}</div>
+  </section>;
+}
+
+function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAction, actions }: { snapshot: AppSnapshot; selectedProfile: RuntimeProfile; setSelectedProfile: (p: RuntimeProfile) => void; runtimeAction: "starting" | "stopping" | null; actions: { start: () => void; stop: () => void; restart: () => void; navigate: (view: View) => void; notice: (message: string) => void } }) {
+  const runtime = snapshot.runtime;
+  const active = runtime.status === "running" || runtime.status === "starting" || runtimeAction !== null;
+  const modelDir = runtime.modelPath.replace(/[\\/][^\\/]+$/, "");
+  const exportDiagnostics = async () => {
+    try { actions.notice(`Diagnostics exported to ${await api.exportDiagnostics()}`); }
+    catch (error) { actions.notice(String(error)); }
+  };
+  return <div className="workspace runtime-workspace">
+    <section className="runtime-main">
+      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · mutually exclusive</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={runtime.status === "running"}><b>ECHO 3T</b><small>256K live window</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={runtime.status === "running"}><b>Native 1M</b><small>1M server window</small></button></div></div>
+      <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
+      <RuntimeLogs logs={snapshot.logs} />
+    </section>
+    <aside className="runtime-inspector">
+      <InspectorSection title="Model & Download"><div className="model-line"><div><span>{profileLabel(selectedProfile)}</span><strong>OpenCore-Code-Single-File.gguf</strong><small>{runtime.modelPath}</small></div><StatusDot state={runtime.status} /></div><KeyValue label="Runtime status" value={runtime.status} /><button className="wide" onClick={() => void revealLocalPath(modelDir, actions.notice)}><FolderOpen size={14} /> Open model folder</button></InspectorSection>
+      <InspectorSection title="Resource Usage"><ResourceRow label="GPU VRAM" value={`${(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)} / ${(snapshot.telemetry.vramTotalMib / 1024).toFixed(0)} GB`} /><ResourceRow label="System RAM" value={`${(snapshot.telemetry.systemMemoryUsedMib / 1024).toFixed(1)} / ${(snapshot.telemetry.systemMemoryTotalMib / 1024).toFixed(0)} GB`} /><ResourceRow label="Disk free" value={`${snapshot.telemetry.diskFreeGib.toFixed(1)} GiB`} /></InspectorSection>
+      <InspectorSection title="Endpoints"><Endpoint label="Gateway · use this" value={`http://127.0.0.1:${runtime.gatewayPort}/v1`} /><Endpoint label="Direct · bypasses capture" value={`http://127.0.0.1:${runtime.backendPort}/v1`} /><Endpoint label="ECHO internal" value={`http://127.0.0.1:${runtime.echoPort}/v1`} /></InspectorSection>
+      <InspectorSection title="Process Supervision"><KeyValue label="Status" value={runtime.status} /><KeyValue label="Recovery" value="Manual restart available" /><KeyValue label="No console windows" value="Enabled" /><KeyValue label="Last error" value={runtime.error || "None"} /></InspectorSection>
+      <InspectorSection title="Tools"><button className="wide" onClick={exportDiagnostics}><FileDown size={14} /> Export diagnostics</button><button className="wide" onClick={() => void revealLocalPath(runtime.archivePath, actions.notice)}><Archive size={14} /> Open archive</button><button className="wide" onClick={() => actions.navigate("connectors")}><Network size={14} /> Manage connectors</button></InspectorSection>
+    </aside>
+  </div>;
+}
+
+function InspectorSection({ title, children }: { title: string; children: React.ReactNode }) { return <section className="inspector-section"><h3>{title}</h3>{children}</section>; }
+function ResourceRow({ label, value }: { label: string; value: string }) { return <div className="resource-row"><div><span>{label}</span><strong>{value}</strong></div><small>Live sample</small></div>; }
+function KeyValue({ label, value }: { label: string; value: string }) { return <div className="key-value"><span>{label}</span><strong>{value}</strong></div>; }
+function Endpoint({ label, value }: { label: string; value: string }) { const copy = () => navigator.clipboard.writeText(value); return <div className="endpoint"><span>{label}</span><code>{value}</code><button onClick={copy} title="Copy endpoint"><Copy size={13} /></button></div>; }
+
+function OpenCoreDialog({ dialog, title, onChange, onCancel, onConfirm }: {
+  dialog: Exclude<ConversationDialog, null>; title: string; onChange: (value: string) => void; onCancel: () => void; onConfirm: () => void;
+}) {
+  const rename = dialog.kind === "rename";
+  return <><div className="modal-backdrop" role="presentation" onMouseDown={onCancel} />
+    <FloatingWindow id="conversation-dialog" title={rename ? "Rename conversation" : "Delete conversation"} icon={<MessageSquare size={17} />} onClose={onCancel} place="center" modal className="opencore-modal dialog-floating" initialWidth={460} initialHeight={260} minWidth={350} minHeight={205}>
+      <div className="modal-brand"><span>OpenCore</span></div>
+      <h2 id="conversation-dialog-title">{rename ? "Rename conversation" : "Delete conversation?"}</h2>
+      {rename
+        ? <input autoFocus aria-label="Conversation name" value={dialog.value} onChange={(event) => onChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") onConfirm(); if (event.key === "Escape") onCancel(); }} />
+        : <p><strong>{title}</strong> will be removed from local conversation history.</p>}
+      <div className="modal-actions"><button onClick={onCancel}>Cancel</button><button className={rename ? "primary" : "danger"} onClick={onConfirm}>{rename ? "Save name" : "Delete"}</button></div>
+    </FloatingWindow>
+  </>;
+}
+
+function ProjectEditDialog({ dialog, onChange, onCancel, onConfirm }: {
+  dialog: Exclude<ProjectDialog, null>; onChange: (value: string) => void; onCancel: () => void; onConfirm: () => void;
+}) {
+  const rename = dialog.kind === "rename";
+  return <><div className="modal-backdrop" role="presentation" onMouseDown={onCancel} />
+    <FloatingWindow id="project-dialog" title={rename ? "Rename project" : "Delete project"} ariaLabel={rename ? "Rename project" : `Delete ${dialog.project.name}?`} icon={<FolderOpen size={17} />} onClose={onCancel} place="center" modal className="opencore-modal dialog-floating" initialWidth={480} initialHeight={270} minWidth={350} minHeight={205}>
+      <h2 id="project-dialog-title">{rename ? "Rename project" : `Delete ${dialog.project.name}?`}</h2>
+      {rename
+        ? <input autoFocus aria-label="Project name" value={dialog.value} maxLength={120} onChange={(event) => onChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") onConfirm(); if (event.key === "Escape") onCancel(); }} />
+        : <p>{dialog.project.conversationCount} conversation{dialog.project.conversationCount === 1 ? "" : "s"} will move to <strong>No project</strong>. Their messages, exports, and pins will be kept. The physical folder will not be changed or deleted.</p>}
+      <div className="modal-actions"><button onClick={onCancel}>Cancel</button><button className={rename ? "primary" : "danger"} onClick={onConfirm}>{rename ? "Save name" : "Delete project, keep chats"}</button></div>
+    </FloatingWindow>
+  </>;
+}
+
+function ArchiveEventCard({ event, onNotice }: { event: ArchiveEvent; onNotice: (message: string) => void }) {
+  const [image, setImage] = useState<string | null>(null);
+  const [exact, setExact] = useState<ArchiveEvent | null>(null);
+  const shown = exact || event;
+  const displayContent = shown.content.replace(/data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+/g, "[Archived image data · use View archived image]");
+  let receipt: Record<string, unknown> | null = null;
+  if (shown.kind === "echo") {
+    try { const parsed = JSON.parse(shown.content); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) receipt = parsed; } catch { /* Older receipts remain readable as text. */ }
+  }
+  const receiptArtifact = receipt?.artifact && typeof receipt.artifact === "object" ? receipt.artifact as Record<string, unknown> : null;
+  const assets = Array.isArray(shown.metadata.assets) ? shown.metadata.assets as { name?: string; asset?: string }[] : [];
+  let contentParts: { type?: string; asset?: string }[] = [];
+  try { const parsed = JSON.parse(shown.content); if (Array.isArray(parsed)) contentParts = parsed; } catch { /* Plain text remains exact. */ }
+  const asset = assets.find((item) => item.asset?.startsWith("echo-asset:"))?.asset || contentParts.find((item) => item.asset?.startsWith("echo-asset:"))?.asset;
+  const files = Array.isArray(shown.metadata.files) ? shown.metadata.files as { name?: string; bytes?: number; included?: boolean; note?: string }[] : [];
+  const openImage = async () => {
+    if (!asset) return;
+    try { setImage(await api.readArchiveAsset(asset.slice("echo-asset:".length))); }
+    catch (error) { onNotice(`Could not open archived image: ${String(error)}`); }
+  };
+  return <article className={`archive-event archive-event-${event.kind}`}>
+    <header><span className="archive-event-kind">{event.kind.replace(/_/g, " ")}</span><strong>{event.title || event.role}</strong><small>{event.source} · {new Date(event.timestamp * 1000).toLocaleString()}</small></header>
+    {receipt ? <details className="archive-event-receipt"><summary>{receiptArtifact?.status === "complete" ? "Response saved" : "ECHO receipt"}{typeof receiptArtifact?.words === "number" ? ` · ${receiptArtifact.words} words` : ""} · Open details</summary><pre>{displayContent}</pre></details> : displayContent.trim() ? <pre>{displayContent}</pre> : null}
+    {event.truncated && !exact ? <button className="archive-event-expand" onClick={() => void api.readArchiveEvent(event.eventId).then(setExact).catch((error) => onNotice(`Could not open exact event: ${String(error)}`))}>Open full event · {event.contentBytes.toLocaleString()} bytes</button> : null}
+    {files.length ? <div className="archive-event-files">{files.map((file, index) => <span key={`${file.name}:${index}`}>{file.name || "Attachment"} · {typeof file.bytes === "number" ? `${Math.ceil(file.bytes / 1024)} KB` : "size unknown"}{file.note ? ` · ${file.note}` : ""}</span>)}</div> : null}
+    {asset ? <div className="archive-event-image"><button onClick={() => void openImage()}>{image ? "Reload image" : "View archived image"}</button>{image ? <img src={image} alt={assets[0]?.name || "Archived image"} /> : null}</div> : null}
+  </article>;
+}
+
+function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefresh, onNavigate, appearance, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; onAppearanceChange: (value: Appearance) => void }) {
+  const [connectorForm, setConnectorForm] = useState({ name: "", endpoint: "", matchPattern: "", kind: "openai" });
+  const [connectorNotice, setConnectorNotice] = useState("");
+  const [memoryQuery, setMemoryQuery] = useState("");
+  const [memoryHits, setMemoryHits] = useState<import("./types").ArchiveSearchHit[]>([]);
+  const [archiveOverview, setArchiveOverview] = useState<import("./types").ArchiveOverview | null>(null);
+  const [memoryScope, setMemoryScope] = useState("all");
+  const [memorySearched, setMemorySearched] = useState(false);
+  const [memoryPreview, setMemoryPreview] = useState<{ title: string; content: string } | null>(null);
+  const [memoryBusy, setMemoryBusy] = useState(false);
+  const [openArchiveId, setOpenArchiveId] = useState<string | null>(null);
+  const [archivePages, setArchivePages] = useState<ArchivePageRef[]>([]);
+  const [archiveEvents, setArchiveEvents] = useState<ArchiveEvent[]>([]);
+  const [generalEvents, setGeneralEvents] = useState<ArchiveEvent[] | null>(null);
+  const [archiveEventsMore, setArchiveEventsMore] = useState(false);
+  const [memoryCategory, setMemoryCategory] = useState("all");
+  const [archivePageText, setArchivePageText] = useState<Record<string, string>>({});
+  const [archivePageBusy, setArchivePageBusy] = useState<string | null>(null);
+  const [archiveHasMore, setArchiveHasMore] = useState(false);
+  const archiveRequest = useRef(0);
+  const archiveReader = useRef<HTMLElement | null>(null);
+  const [operations, setOperations] = useState<OperationRecord[]>([]);
+  const operationsRef = useRef<OperationRecord[]>([]);
+  const [syncStarting, setSyncStarting] = useState<Record<string, boolean>>({});
+  const [profileBusy, setProfileBusy] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (view !== "connectors" && view !== "settings") return;
+    let active = true;
+    const tick = async () => {
+      try {
+        const next = await api.listOperations();
+        if (!active) return;
+        const previous = new Map(operationsRef.current.map((item) => [item.id, item.status]));
+        operationsRef.current = next;
+        setOperations(next);
+        if (next.some((item) => item.kind === "history_sync" && previous.has(item.id) && previous.get(item.id) !== item.status && (item.status === "completed" || item.status === "failed"))) await onRefresh();
+      } catch (error) { if (active) setConnectorNotice(String(error)); }
+    };
+    void tick();
+    const timer = window.setInterval(tick, 1200);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [view, onRefresh]);
+
+  useEffect(() => {
+    if (view !== "memory") return;
+    let active = true;
+    api.archiveOverview().then((overview) => { if (active) setArchiveOverview(overview); })
+      .catch((error) => { if (active) onNotice(String(error)); });
+    return () => { active = false; };
+  }, [view, snapshot.runtime.archivePath, onNotice]);
+
+  const operationFor = (id: string) => operations.find((item) => item.kind === "history_sync" && item.target === id);
+  const syncLabel = (id: string) => {
+    if (syncStarting[id]) return "Starting sync…";
+    const operation = operationFor(id);
+    if (!operation) return "Sync history";
+    if (operation.status === "queued") return "Queued…";
+    if (operation.status === "running") return operation.total ? `Scanning files… ${operation.current}/${operation.total}` : "Scanning folders…";
+    if (operation.status === "failed") return "Retry sync";
+    return operation.summary || "Sync complete";
+  };
+
+  const configure = async (id: string, endpoint: string) => {
+    try {
+      const message = id === "unsloth" ? await api.configureUnsloth() : await api.testConnector(endpoint);
+      setConnectorNotice(message);
+    } catch (error) { setConnectorNotice(String(error)); }
+  };
+  const connectAgent = async (id: "claude-code" | "codex") => {
+    setProfileBusy((current) => ({ ...current, [id]: true }));
+    try {
+      setConnectorNotice(await api.configureAgentConnector(id));
+      await onRefresh();
+    } catch (error) { setConnectorNotice(String(error)); }
+    finally { setProfileBusy((current) => ({ ...current, [id]: false })); }
+  };
+  const syncHistory = async (id: "claude-code" | "codex") => {
+    setSyncStarting((current) => ({ ...current, [id]: true }));
+    try {
+      const operation = await api.startHistorySync(id);
+      operationsRef.current = [operation, ...operationsRef.current];
+      setOperations(operationsRef.current);
+    } catch (error) { setConnectorNotice(String(error)); onNotice(String(error)); }
+    finally { setSyncStarting((current) => ({ ...current, [id]: false })); }
+  };
+
+  const addConnector = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      await api.saveConnector({ ...connectorForm, id: null });
+      await onRefresh();
+      setConnectorNotice(`Saved ${connectorForm.name}. Send X-OpenCore-Client: ${connectorForm.matchPattern} from that client.`);
+      setConnectorForm({ name: "", endpoint: "", matchPattern: "", kind: "openai" });
+    } catch (error) { setConnectorNotice(String(error)); }
+  };
+
+  const searchMemory = async () => {
+    if (!memoryQuery.trim()) return;
+    setMemoryBusy(true);
+    const conversationIds = memoryScope.startsWith("chat:") ? [memoryScope.slice(5)]
+      : memoryScope.startsWith("project:") ? snapshot.conversations.filter((item) => item.projectId === memoryScope.slice(8)).map((item) => item.id)
+      : undefined;
+    if (memoryScope.startsWith("project:") && conversationIds?.length === 0) { setMemoryHits([]); setMemorySearched(true); setMemoryBusy(false); return; }
+    try { setMemoryHits(await api.searchArchive(memoryQuery, 75, conversationIds)); setMemorySearched(true); }
+    catch (error) { onNotice(String(error)); }
+    finally { setMemoryBusy(false); }
+  };
+
+  const showMemoryPage = async (hit: import("./types").ArchiveSearchHit) => {
+    setMemoryBusy(true);
+    try {
+      const content = await api.readArchivePage(hit.archiveFile, hit.pageId);
+      const title = snapshot.conversations.find((item) => item.id === hit.conversationId)?.title || hit.conversationId;
+      setMemoryPreview({ title, content });
+    } catch (error) { onNotice(String(error)); }
+    finally { setMemoryBusy(false); }
+  };
+
+  const archivePageKey = (page: ArchivePageRef) => `${page.archiveFile}:${page.pageId}`;
+  const readArchiveText = async (page: ArchivePageRef) => {
+    const key = archivePageKey(page);
+    setArchivePageBusy(key);
+    try {
+      const content = await api.readArchivePage(page.archiveFile, page.pageId);
+      setArchivePageText((current) => ({ ...current, [key]: content }));
+    } catch (error) { onNotice(String(error)); }
+    finally { setArchivePageBusy(null); }
+  };
+  const fillArchivePages = async (pages: ArchivePageRef[], request: number) => {
+    for (let offset = 0; offset < pages.length; offset += 4) {
+      const batch = pages.slice(offset, offset + 4);
+      const results = await Promise.allSettled(batch.map((page) => api.readArchivePage(page.archiveFile, page.pageId)));
+      if (request !== archiveRequest.current) return;
+      const texts: Record<string, string> = {};
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") texts[archivePageKey(batch[index])] = result.value;
+      });
+      setArchivePageText((current) => ({ ...current, ...texts }));
+      const failed = results.find((result) => result.status === "rejected");
+      if (failed?.status === "rejected") onNotice(`Could not open an archive page: ${String(failed.reason)}`);
+    }
+  };
+  const openArchive = async (conversationId: string) => {
+    const request = ++archiveRequest.current;
+    setMemoryScope(`chat:${conversationId}`);
+    setMemoryHits([]);
+    setMemorySearched(false);
+    setOpenArchiveId(conversationId);
+    setGeneralEvents(null);
+    setArchivePages([]);
+    setArchiveEvents([]);
+    setArchiveEventsMore(false);
+    setArchivePageText({});
+    setMemoryBusy(true);
+    try {
+      const [pages, events] = await Promise.all([api.listArchivePages(conversationId, 0, 40), api.listArchiveEvents(conversationId, 0, 100)]);
+      if (request !== archiveRequest.current) return;
+      setArchivePages(pages);
+      setArchiveHasMore(pages.length === 40);
+      setArchiveEvents(events);
+      setArchiveEventsMore(events.length === 100);
+      window.setTimeout(() => { if (request === archiveRequest.current) archiveReader.current?.scrollIntoView?.({ behavior: "smooth", block: "start" }); }, 0);
+      await fillArchivePages(pages, request);
+    } catch (error) { onNotice(String(error)); }
+    finally { if (request === archiveRequest.current) setMemoryBusy(false); }
+  };
+  const openGeneralArchive = async () => {
+    const request = ++archiveRequest.current;
+    setOpenArchiveId(null);
+    setMemoryScope("all");
+    setMemoryCategory("all");
+    setGeneralEvents(null);
+    setMemoryBusy(true);
+    try {
+      const events = await api.listArchiveEvents("*", 0, 50);
+      if (request === archiveRequest.current) setGeneralEvents(events);
+    } catch (error) { onNotice(`Could not open general ECHO activity: ${String(error)}`); }
+    finally { if (request === archiveRequest.current) setMemoryBusy(false); }
+  };
+  const loadMoreArchivePages = async () => {
+    if (!openArchiveId || memoryBusy) return;
+    const request = archiveRequest.current;
+    setMemoryBusy(true);
+    try {
+      const pages = await api.listArchivePages(openArchiveId, archivePages.length, 40);
+      if (request !== archiveRequest.current) return;
+      setArchivePages((current) => [...current, ...pages]);
+      setArchiveHasMore(pages.length === 40);
+      await fillArchivePages(pages, request);
+    } catch (error) { onNotice(String(error)); }
+    finally { if (request === archiveRequest.current) setMemoryBusy(false); }
+  };
+
+  const loadMoreArchiveEvents = async () => {
+    if (!openArchiveId || memoryBusy) return;
+    setMemoryBusy(true);
+    try {
+      const events = await api.listArchiveEvents(openArchiveId, archiveEvents.length, 100);
+      setArchiveEvents((current) => [...current, ...events]);
+      setArchiveEventsMore(events.length === 100);
+    } catch (error) { onNotice(String(error)); }
+    finally { setMemoryBusy(false); }
+  };
+
+  const memoryAction = async (action: "trim" | "compact") => {
+    const target = openArchiveId || selectedConversation;
+    if (!target) return onNotice("Open an archive first.");
+    setMemoryBusy(true);
+    try { onNotice(await api.echoMemoryAction(action, target)); setArchiveOverview(await api.archiveOverview()); }
+    catch (error) { onNotice(String(error)); }
+    finally { setMemoryBusy(false); }
+  };
+  const indexEchoHistory = async () => {
+    setMemoryBusy(true);
+    try { onNotice(await api.indexEchoHistory()); setArchiveOverview(await api.archiveOverview()); }
+    catch (error) { onNotice(String(error)); }
+    finally { setMemoryBusy(false); }
+  };
+  const archiveRows = (archiveOverview?.conversations || []).map((item) => {
+    const chat = snapshot.conversations.find((conversation) => conversation.id === item.conversationId);
+    const client = chat?.client || (/^codex/i.test(item.conversationId) ? "Codex" : /^claude/i.test(item.conversationId) ? "Claude Code" : "OpenCore");
+    return { ...item, chat, client };
+  }).sort((a, b) => Number(Boolean(b.chat?.pinned)) - Number(Boolean(a.chat?.pinned)) || b.lastTimestamp - a.lastTimestamp);
+  const categoryRows = archiveRows.filter((item, index) => memoryCategory === "all"
+    || (memoryCategory === "pinned" && item.chat?.pinned)
+    || (memoryCategory === "projects" && item.chat?.projectId)
+    || (memoryCategory === "recent" && index < 20)
+    || item.client.toLowerCase() === memoryCategory);
+  const visibleSummaries = (archiveOverview?.summaries || []).filter((item) => memoryScope === "all" || (memoryScope.startsWith("chat:") ? item.conversationId === memoryScope.slice(5) : snapshot.conversations.some((conversation) => conversation.id === item.conversationId && conversation.projectId === memoryScope.slice(8))));
+  if (view === "overview") return <div className="support-page overview-page">
+    <div className="page-heading"><div><h1>OpenCore</h1><p>Your local model, persistent ECHO memory, conversations, and client routes in one private workspace.</p></div><button className="primary" onClick={() => onNavigate("conversations")}><MessageSquare size={15} /> Open conversations</button></div>
+    <div className="overview-grid">
+      <button onClick={() => onNavigate("runtime")}><SquareTerminal /><span><strong>Runtime</strong><small>{profileLabel(snapshot.runtime.profile)} · {snapshot.runtime.status}</small></span></button>
+      <button onClick={() => onNavigate("memory")}><Database /><span><strong>ECHO Memory</strong><small>{snapshot.runtime.contextSize.toLocaleString()} live tokens · persistent archive</small></span></button>
+      <button onClick={() => onNavigate("models")}><Box /><span><strong>Model</strong><small>{snapshot.runtime.modelPath.split(/[\\/]/).pop()}</small></span></button>
+      <button onClick={() => onNavigate("connectors")}><Network /><span><strong>Connectors</strong><small>{snapshot.connectors.filter((item) => item.observable || item.status === "configured").length} active or observable</small></span></button>
+      <button onClick={() => onNavigate("conversations")}><MessageSquare /><span><strong>Conversations</strong><small>{snapshot.conversations.length} indexed across OpenCore, Claude Code, and Codex</small></span></button>
+      <button onClick={() => onNavigate("settings")}><SlidersHorizontal /><span><strong>Settings</strong><small>Privacy, storage, exports, and local endpoint</small></span></button>
+    </div>
+  </div>;
+  if (view === "connectors") return <div className="support-page">
+    <div className="page-heading"><div><h1>Connectors</h1><p>Connect coding clients directly to the loaded OpenCore model. Transcript sync is optional and separate.</p></div></div>
+    <div className="connector-list">{snapshot.connectors.map((connector) => {
+      const history = connector.kind === "history";
+      const syncOperation = history ? operationFor(connector.id) : undefined;
+      const syncActive = syncOperation?.status === "running" || syncOperation?.status === "queued";
+      return <article key={connector.id}>
+        <div className="connector-icon"><Network /></div>
+        <div className="connector-copy"><h2>{connector.name}</h2><p>{connector.details}</p><code>{history ? "OpenCore local model connector" : connector.endpoint}</code></div>
+        <div className="connector-state"><StatusDot state={connector.status} /><strong>{connector.status}</strong><span>{history ? (connector.status === "configured" ? "Opt-in profile added" : "Profile not added") : connector.observable ? "Observable" : "Not observable"}</span></div>
+        {history ? <div className="connector-actions">
+          <button className="primary" disabled={profileBusy[connector.id]} onClick={() => connectAgent(connector.id as "claude-code" | "codex")}>{profileBusy[connector.id] ? "Writing profile…" : connector.status === "configured" ? "Refresh profile" : "Add profile"}</button>
+          <button className="sync-history-button" disabled={syncActive || syncStarting[connector.id]} onClick={() => syncHistory(connector.id as "claude-code" | "codex")}>{syncLabel(connector.id)}</button>
+          {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? syncOperation.error : syncOperation.status === "running" ? `${syncOperation.phase}${syncOperation.total ? ` · ${syncOperation.current}/${syncOperation.total} files` : ""}` : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.startedAt)}</time>{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
+        </div> : <div className="connector-actions single">
+          <button onClick={() => configure(connector.id, connector.endpoint)}>{connector.id === "unsloth" ? "Install" : "Test"}</button>
+        </div>}
+      </article>;
+    })}</div>
+    <form className="custom-connector" onSubmit={addConnector}>
+      <div><h2>Add custom provider or client</h2><p>Any OpenAI-compatible endpoint can be tested and saved. Routed requests become observable through the gateway.</p></div>
+      <label>Name<input required value={connectorForm.name} onChange={(e) => setConnectorForm({ ...connectorForm, name: e.target.value })} placeholder="My local provider" /></label>
+      <label>Endpoint<input required value={connectorForm.endpoint} onChange={(e) => setConnectorForm({ ...connectorForm, endpoint: e.target.value })} placeholder="http://127.0.0.1:9000/v1" /></label>
+      <label>Client match<input required value={connectorForm.matchPattern} onChange={(e) => setConnectorForm({ ...connectorForm, matchPattern: e.target.value })} placeholder="my-client" /></label>
+      <label>Protocol<select value={connectorForm.kind} onChange={(e) => setConnectorForm({ ...connectorForm, kind: e.target.value })}><option value="openai">OpenAI-compatible</option><option value="ollama">Ollama</option><option value="custom">Custom local</option></select></label>
+      <button className="primary" type="submit">Add connector</button>
+    </form>
+    {connectorNotice && <div className="connector-notice">{connectorNotice}</div>}
+    <div className="route-instruction"><ShieldCheck /><div><strong>Universal observable endpoint</strong><code>http://127.0.0.1:{snapshot.runtime.gatewayPort}/v1</code><p>Use this base URL in OpenAI-compatible clients. Claude Code/Codex use local transcript sync because their native protocols differ.</p></div></div>
+  </div>;
+  if (view === "memory") return <div className="support-page memory-page">
+    <div className="page-heading"><div><h1>ECHO Memory</h1><p>Exact history, tool activity, files, and generated summaries across your conversations and projects.</p></div><button onClick={() => void revealLocalPath(snapshot.runtime.archivePath, onNotice)}><FolderOpen size={15} /> Open folder</button></div>
+    <button className="memory-general-button" onClick={() => void openGeneralArchive()}><Database size={17} /><span><strong>General ECHO archive</strong><small>Browse all recorded conversations and projects</small></span><span>{archiveRows.length.toLocaleString()} archives</span></button>
+    <div className="memory-summary" aria-label="Archive totals">
+      <div><strong>{archiveOverview?.conversations.length.toLocaleString() ?? "—"}</strong><span>conversations</span></div>
+      <div><strong>{archiveOverview?.pages.toLocaleString() ?? "—"}</strong><span>exact pages</span></div>
+      <div><strong>{archiveOverview ? (archiveOverview.sourceBytes / 1024 / 1024).toFixed(1) : "—"} MB</strong><span>source history</span></div>
+      <div><strong>{archiveOverview?.toolCalls?.toLocaleString() ?? "—"}</strong><span>tool calls</span></div>
+      <div><strong>{archiveOverview?.toolResults?.toLocaleString() ?? "—"}</strong><span>tool results</span></div>
+      <div><strong>{archiveOverview?.imageAssets?.toLocaleString() ?? "—"}</strong><span>archived images</span></div>
+    </div>
+    <div className="memory-layout">
+      <section>
+        <h2>Search archive</h2>
+        <label className="memory-scope-label">Scope<select aria-label="Memory scope" value={memoryScope} onChange={(event) => { const next = event.target.value; setMemoryScope(next); setMemoryHits([]); setMemorySearched(false); if (next.startsWith("chat:")) void openArchive(next.slice(5)); else { archiveRequest.current += 1; setOpenArchiveId(null); setMemoryBusy(false); } }}>
+          <option value="all">All ECHO memory</option>
+          {snapshot.projects.map((project) => <option key={project.id} value={`project:${project.id}`}>Project · {project.name}</option>)}
+          {snapshot.conversations.map((conversation) => <option key={conversation.id} value={`chat:${conversation.id}`}>Chat · {conversation.title}</option>)}
+          {archiveOverview?.conversations.filter((item) => !snapshot.conversations.some((conversation) => conversation.id === item.conversationId)).map((item) => <option key={item.conversationId} value={`chat:${item.conversationId}`}>Archived chat · {item.conversationId}</option>)}
+        </select></label>
+        <div className="search memory-search"><Search size={15} /><input aria-label="Search archived text" value={memoryQuery} onChange={(e) => setMemoryQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && searchMemory()} placeholder="Search words or code…" /><button onClick={searchMemory} disabled={memoryBusy}>{memoryBusy ? "Searching…" : "Search"}</button></div>
+        <div className="memory-results">{memoryHits.length === 0 ? <p>{memorySearched ? "No matching pages in this scope." : "Search or choose a conversation below."}</p> : memoryHits.map((hit) => <button key={`${hit.archiveFile}:${hit.pageId}`} className="memory-hit" onClick={() => void showMemoryPage(hit)}><strong>{snapshot.conversations.find((item) => item.id === hit.conversationId)?.title || hit.conversationId}</strong><small>Exact page</small><span>{hit.preview}</span></button>)}</div>
+        <h2 className="memory-list-title">Archived conversations</h2>
+        <div className="memory-category-tabs" role="group" aria-label="Archive categories">{[{ id:"all", label:"All" }, { id:"pinned", label:"Pinned" }, { id:"recent", label:"Recent" }, { id:"opencore", label:"OpenCore" }, { id:"codex", label:"Codex" }, { id:"claude code", label:"Claude Code" }, { id:"projects", label:"Projects" }].map((category) => <button key={category.id} className={memoryCategory === category.id ? "active" : ""} onClick={() => setMemoryCategory(category.id)}>{category.label}</button>)}</div>
+        <div className="memory-conversation-list">{categoryRows.length ? categoryRows.map((item) => <button key={item.conversationId} className={openArchiveId === item.conversationId ? "active" : ""} onClick={() => void openArchive(item.conversationId)}><span>{item.chat?.pinned ? "◆ " : ""}{item.chat?.title || item.conversationId}<small>{item.client}{item.chat?.project ? ` · ${item.chat.project}` : ""}</small></span><small>{item.pages.toLocaleString()} pages</small></button>) : <p>No archives in this category.</p>}</div>
+      </section>
+      <section>
+        <h2>Working set</h2>
+        <Meter label="Live context" value={snapshot.telemetry.promptTokens} max={snapshot.runtime.contextSize} />
+        <p>{selectedConversation ? `Selected conversation: ${selectedConversation}` : "Select a conversation before trimming or compacting."}</p>
+        <div className="memory-actions">
+          <button onClick={indexEchoHistory} disabled={memoryBusy}>{memoryBusy ? "Indexing…" : "Index activity and files"}</button>
+          <button onClick={() => memoryAction("compact")} disabled={memoryBusy || !(openArchiveId || selectedConversation)}>Summarize open archive</button>
+          <button onClick={() => memoryAction("trim")} disabled={memoryBusy || !(openArchiveId || selectedConversation)}>Trim to 32K</button>
+          <button onClick={async () => { try { onNotice(`Index exported to ${await api.exportArchiveIndex()}`); } catch (error) { onNotice(String(error)); } }}>Export index</button>
+        </div>
+        <div className="memory-integrity"><ShieldCheck size={16} /><span>Pages keep the original text and code. Opening a page verifies its source hash.</span></div>
+        <h2 className="memory-list-title">Generated summaries</h2>
+        <div className="memory-summary-list">{visibleSummaries.length ? visibleSummaries.map((item, index) => <button key={`${item.conversationId}:${item.generatedAt}:${index}`} onClick={() => setMemoryPreview({ title: `Generated summary · ${snapshot.conversations.find((conversation) => conversation.id === item.conversationId)?.title || item.conversationId}`, content: item.content })}><strong>{snapshot.conversations.find((conversation) => conversation.id === item.conversationId)?.title || item.conversationId}</strong><small>{item.sourcePages} source pages · {item.modelCalls} model calls{item.incomplete || item.truncated ? " · partial" : ""}</small></button>) : <p>No generated summaries in this scope yet.</p>}</div>
+      </section>
+    </div>
+    {generalEvents ? <section className="archive-reader" aria-label="General ECHO archive"><div className="archive-reader-heading"><div><h2>General ECHO activity</h2><span>Latest 50 exact events across all archives · select a conversation above to open its full history</span></div><button onClick={() => setGeneralEvents(null)}>Close archive</button></div><div className="archive-event-list">{generalEvents.map((event) => <ArchiveEventCard key={event.eventId} event={event} onNotice={onNotice} />)}</div></section> : null}
+    {openArchiveId ? <section ref={archiveReader} className="archive-reader" aria-label="Open archive">
+      <div className="archive-reader-heading"><div><h2>{snapshot.conversations.find((item) => item.id === openArchiveId)?.title || openArchiveId}</h2><span>{archivePages.length.toLocaleString()} of {(archiveOverview?.conversations.find((item) => item.conversationId === openArchiveId)?.pages || archivePages.length).toLocaleString()} pages · exact source</span></div><button onClick={() => { archiveRequest.current += 1; setOpenArchiveId(null); setMemoryBusy(false); }}>Close archive</button></div>
+      <h3 className="archive-section-title">Activity, tools, files, and images</h3>
+      {archiveEvents.length ? <div className="archive-event-list">{archiveEvents.map((event) => <ArchiveEventCard key={event.eventId} event={event} onNotice={onNotice} />)}</div> : <p className="archive-legacy-note">This archive has exact transcript pages but no indexed activity yet. Use “Index imported chats” to rebuild its tool and file records from available conversation history.</p>}
+      {archiveEventsMore ? <button className="archive-load-more" onClick={() => void loadMoreArchiveEvents()} disabled={memoryBusy}>Load more activity</button> : null}
+      <h3 className="archive-section-title">Exact transcript pages</h3>
+      {archivePages.length === 0 ? <p>{memoryBusy ? "Opening archive…" : "No pages in this archive."}</p> : archivePages.map((page, index) => <article className="archive-reader-page" key={`${page.archiveFile}:${page.pageId}`}>
+        <div><strong>Page {index + 1}</strong><small>Bytes {page.offsetStart.toLocaleString()}–{page.offsetEnd.toLocaleString()}</small><button onClick={() => void readArchiveText(page)} disabled={archivePageBusy === archivePageKey(page)}>{archivePageText[archivePageKey(page)] !== undefined ? "Reload" : archivePageBusy === archivePageKey(page) ? "Opening…" : "Open page"}</button></div>
+        {archivePageText[archivePageKey(page)] !== undefined ? <pre>{archivePageText[archivePageKey(page)]}</pre> : <p className="archive-page-loading">{memoryBusy ? "Opening exact text…" : "Open page to retry."}</p>}
+      </article>)}
+      {archiveHasMore ? <button className="archive-load-more" onClick={() => void loadMoreArchivePages()} disabled={memoryBusy}>{memoryBusy ? "Loading…" : "Load more pages"}</button> : null}
+    </section> : null}
+    {memoryPreview ? <FloatingWindow id="memory-page" title={memoryPreview.title} icon={<Archive size={17} />} className="memory-page-preview" onClose={() => setMemoryPreview(null)} place="center" initialWidth={760} initialHeight={620} minWidth={390} minHeight={260} ariaLabel="Exact ECHO archive page"><pre>{memoryPreview.content}</pre></FloatingWindow> : null}
+  </div>;
+  const modelDir = snapshot.runtime.modelPath.replace(/[\\/][^\\/]+$/, "");
+  if (view === "models") return <div className="support-page">
+    <div className="page-heading"><div><h1>Models</h1><p>Verify the actual local model package and open its installation folder.</p></div></div>
+    <div className="settings-grid">
+      <section className="model-activity" aria-label="Model activity">
+        <div className="model-activity-heading"><div><h2>Model activity</h2><span>{snapshot.runtime.loadingPhase || snapshot.runtime.status}</span></div><strong>{snapshot.runtime.status === "starting" ? `${((snapshot.runtime.loadingElapsedMs || 0) / 1000).toFixed(1)}s` : snapshot.runtime.loadingElapsedMs != null ? `Loaded in ${(snapshot.runtime.loadingElapsedMs / 1000).toFixed(1)}s` : "—"}</strong></div>
+        <progress aria-label="Model loading" value={snapshot.runtime.status === "starting" ? modelLoaderDetail(snapshot).loaded ?? undefined : snapshot.runtime.status === "running" ? 1 : 0} max={snapshot.runtime.status === "starting" ? modelLoaderDetail(snapshot).total ?? undefined : 1} />
+        <p className="model-loader-detail">{snapshot.runtime.status === "starting" ? modelLoaderDetail(snapshot).text : snapshot.runtime.status === "running" ? `Loaded in ${((snapshot.runtime.loadingElapsedMs || 0) / 1000).toFixed(1)} seconds` : snapshot.runtime.loadingPhase}</p>
+        {snapshot.runtime.status === "starting" && modelLoaderDetail(snapshot).loaded !== null ? <p>{modelLoaderDetail(snapshot).loaded} of {modelLoaderDetail(snapshot).total} tensors reported by the runtime</p> : null}
+        <div className="model-usage-grid">
+          <div><small>Model calls</small><strong>{(snapshot.telemetry.responseCount || 0).toLocaleString()}</strong></div>
+          <div><small>Prompt tokens</small><strong>{(snapshot.telemetry.totalPromptTokens ?? snapshot.telemetry.promptTokens).toLocaleString()}</strong></div>
+          <div><small>Output tokens</small><strong>{(snapshot.telemetry.totalCompletionTokens ?? snapshot.telemetry.completionTokens).toLocaleString()}</strong></div>
+          <div><small>Token speed</small><strong>{(recentDecoderSpeed(snapshot.logs) ?? snapshot.telemetry.tokensPerSecond).toFixed(1)} /s</strong><small>{recentDecoderSpeed(snapshot.logs) === null ? "Last reported" : "Live decoder sample"}</small></div>
+        </div>
+      </section>
+      <InspectorSection title="OpenCore model">
+        <KeyValue label="Path" value={snapshot.runtime.modelPath} />
+        <KeyValue label="Status" value={snapshot.runtime.status} />
+        <KeyValue label="Context" value={snapshot.runtime.contextSize.toLocaleString()} />
+        <button className="wide" onClick={async () => { try { onNotice(await api.verifyModel()); } catch (error) { onNotice(String(error)); } }}><ShieldCheck size={14} /> Verify SHA-256</button>
+        <button className="wide" onClick={() => void revealLocalPath(modelDir, onNotice)}><FolderOpen size={14} /> Open model folder</button>
+      </InspectorSection>
+      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="262,144 live + disk archive" /><KeyValue label="Native 1M" value="1,000,000 server window" /><KeyValue label="Active profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
+    </div>
+  </div>;
+
+  if (view === "settings") return <div className="support-page settings-page">
+    <div className="page-heading"><div><h1>Settings</h1><p>Real local controls for storage, privacy, history, and diagnostics.</p></div></div>
+    <div className="settings-grid">
+      <InspectorSection title="Conversation appearance">
+        <label className="appearance-label" htmlFor="chat-font-size">Message text size <strong>{appearance.chatFontSize}px</strong></label>
+        <input id="chat-font-size" className="appearance-range" type="range" min="13" max="18" step="1" value={appearance.chatFontSize} onChange={(event) => onAppearanceChange({ ...appearance, chatFontSize: Number(event.target.value) })} />
+        <div className="appearance-label">Message spacing</div>
+        <div className="appearance-choices"><button className={!appearance.compactMessages ? "active" : ""} aria-pressed={!appearance.compactMessages} onClick={() => onAppearanceChange({ ...appearance, compactMessages: false })}>Comfortable</button><button className={appearance.compactMessages ? "active" : ""} aria-pressed={appearance.compactMessages} onClick={() => onAppearanceChange({ ...appearance, compactMessages: true })}>Compact</button></div>
+        <p className="appearance-note">Changes apply to Conversations immediately and remain on this computer.</p>
+      </InspectorSection>
+      <InspectorSection title="Computer use">
+        <div className="appearance-label">Window focus</div>
+        <div className="appearance-choices"><button className={!appearance.keepUserWindowInFront ? "active" : ""} aria-pressed={!appearance.keepUserWindowInFront} onClick={() => onAppearanceChange({ ...appearance, keepUserWindowInFront: false })}>Bring OpenCore's work forward</button><button className={appearance.keepUserWindowInFront ? "active" : ""} aria-pressed={appearance.keepUserWindowInFront} onClick={() => onAppearanceChange({ ...appearance, keepUserWindowInFront: true })}>Keep my window in front</button></div>
+        <p className="appearance-note">When your window stays in front, OpenCore can use supported app controls without taking focus. Mouse and keyboard actions wait until foreground control is selected. Windows may still foreground newly opened apps.</p>
+        <p className="appearance-note">Press Escape twice to stop an active OpenCore run.</p>
+      </InspectorSection>
+      <InspectorSection title="Privacy & responsibility"><KeyValue label="Network" value="Localhost only" /><KeyValue label="Credentials" value="Redacted before persistence" /><KeyValue label="AI output" value="Review code and tool actions before use" /><KeyValue label="Ownership" value="You control local data and exported conversations" /></InspectorSection>
+      <InspectorSection title="Storage"><KeyValue label="Conversation database" value="Local SQLite" /><KeyValue label="ECHO archive" value={snapshot.runtime.archivePath} /><button className="wide" onClick={() => void revealLocalPath(snapshot.runtime.archivePath, onNotice)}><FolderOpen size={14} /> Open archive</button><button className="wide" onClick={async () => { try { onNotice(`Index exported to ${await api.exportArchiveIndex()}`); } catch (error) { onNotice(String(error)); } }}><Download size={14} /> Export memory index</button></InspectorSection>
+      <InspectorSection title="Conversation sources"><KeyValue label="OpenCore" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("opencore") || item.client.toLowerCase().includes("unsloth")).length} conversations`} /><KeyValue label="Claude Code" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("claude")).length} conversations`} /><KeyValue label="Codex" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("codex")).length} conversations`} /><button className="wide" disabled={Boolean(syncStarting["claude-code"] || syncStarting.codex || ["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || "")))} onClick={() => { void syncHistory("claude-code"); void syncHistory("codex"); }}><RefreshCw size={14} /> {(["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || ""))) ? "Scanning local histories…" : "Sync local histories"}</button><div className="settings-sync-results">{(["claude-code", "codex"] as const).map((id) => { const result = operationFor(id); return result ? <div key={id}><strong>{id === "codex" ? "Codex" : "Claude Code"}</strong><span>{result.status === "failed" ? result.error : result.summary || `${result.phase}${result.total ? ` · ${result.current}/${result.total}` : ""}`}</span></div> : null; })}</div></InspectorSection>
+      <InspectorSection title="API & diagnostics"><KeyValue label="Gateway" value={`http://127.0.0.1:${snapshot.runtime.gatewayPort}/v1`} /><KeyValue label="Capture" value="Routed API conversations are saved automatically" /><button className="wide" onClick={() => navigator.clipboard.writeText(`http://127.0.0.1:${snapshot.runtime.gatewayPort}/v1`)}><Copy size={14} /> Copy API endpoint</button><button className="wide" onClick={async () => { try { onNotice(`Diagnostics exported to ${await api.exportDiagnostics()}`); } catch (error) { onNotice(String(error)); } }}><FileDown size={14} /> Export diagnostics</button></InspectorSection>
+    </div>
+  </div>;
+
+  return <div className="support-page">
+    <div className="page-heading"><div><h1>Troubleshooting</h1><p>Run real health checks and export a diagnostic snapshot.</p></div></div>
+    <div className="settings-grid">
+      <InspectorSection title="Health">
+        <KeyValue label="Gateway" value={`127.0.0.1:${snapshot.runtime.gatewayPort}`} />
+        <KeyValue label="Backend" value={`127.0.0.1:${snapshot.runtime.backendPort}`} />
+        <KeyValue label="ECHO" value={`127.0.0.1:${snapshot.runtime.echoPort}`} />
+        <button className="wide" onClick={async () => { try { onNotice(await api.healthCheck()); } catch (error) { onNotice(String(error)); } }}><Activity size={14} /> Run full check</button>
+      </InspectorSection>
+      <InspectorSection title="Diagnostics">
+        <KeyValue label="Credentials" value="Redacted before persistence" />
+        <KeyValue label="Conversation storage" value="Local SQLite" />
+        <KeyValue label="Logs" value="Persistent, rotating" />
+        <button className="wide" onClick={async () => { try { onNotice(`Diagnostics exported to ${await api.exportDiagnostics()}`); } catch (error) { onNotice(String(error)); } }}><FileDown size={14} /> Export diagnostics</button>
+      </InspectorSection>
+    </div>
+  </div>;
+}
+
+
+export default function App() {
+  const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
+  const [view, setView] = useState<View>("conversations");
+  const [selectedProfile, setSelectedProfile] = useState<RuntimeProfile>("echo");
+  const [selectedConversation, setSelectedConversation] = useState<string>();
+  const [conversationEpoch, setConversationEpoch] = useState(0);
+  const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string>();
+  const [runtimeAction, setRuntimeAction] = useState<"starting" | "stopping" | null>(null);
+  const [conversationDialog, setConversationDialog] = useState<ConversationDialog>(null);
+  const [projectDialog, setProjectDialog] = useState<ProjectDialog>(null);
+  const [appearance, setAppearance] = useState<Appearance>(savedAppearance);
+  const [sidebarDetached, setSidebarDetached] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const saved = Number(window.localStorage.getItem("opencore.sidebar.width"));
+      return Number.isFinite(saved) && saved >= 230 && saved <= 600 ? saved : 306;
+    } catch { return 306; }
+  });
+  const sidebarResize = useRef<{ x: number; width: number } | null>(null);
+  const selectedConversationRef = useRef<string | undefined>(undefined);
+  const initializedSelectionRef = useRef(false);
+  const snapshotFingerprintRef = useRef("");
+
+  useEffect(() => { selectedConversationRef.current = selectedConversation; }, [selectedConversation]);
+  useEffect(() => { try { window.localStorage.setItem(appearanceKey, JSON.stringify(appearance)); } catch { /* The preference still works for this session. */ } }, [appearance]);
+  useEffect(() => { void api.setComputerFocusMode(appearance.keepUserWindowInFront).catch((error: unknown) => setNotice(String(error))); }, [appearance.keepUserWindowInFront]);
+  useEffect(() => { try { window.localStorage.setItem("opencore.sidebar.width", String(sidebarWidth)); } catch { /* Session-only layout. */ } }, [sidebarWidth]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(undefined), 5000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const refresh = useCallback(async () => {
+    try {
+      const next = await api.snapshot();
+      const fingerprint = JSON.stringify(next);
+      if (fingerprint !== snapshotFingerprintRef.current) {
+        snapshotFingerprintRef.current = fingerprint;
+        setSnapshot(next);
+      }
+      if (!initializedSelectionRef.current) {
+        initializedSelectionRef.current = true;
+        if (!selectedConversationRef.current && next.conversations[0]) {
+          selectedConversationRef.current = next.conversations[0].id;
+          setSelectedConversation(next.conversations[0].id);
+        }
+      }
+    } catch (error) { setNotice(String(error)); }
+  }, []);
+
+  useEffect(() => {
+    let stopped = false;
+    const tick = async () => { if (!stopped && !document.hidden) await refresh(); };
+    tick();
+    const timer = window.setInterval(tick, view === "conversations" || view === "models" || view === "runtime" || snapshot?.runtime.status === "starting" ? 2000 : 15000);
+    const onVisibility = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { stopped = true; window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibility); };
+  }, [refresh, view, snapshot?.runtime.status]);
+  useEffect(() => { if (selectedConversation) api.conversation(selectedConversation).then(setTimeline).catch((error) => setNotice(String(error))); }, [selectedConversation]);
+  const selectedActive = Boolean(selectedConversation && snapshot?.activeConversationIds?.includes(selectedConversation));
+  useEffect(() => {
+    if (!selectedConversation || !selectedActive) return;
+    let live = true;
+    const update = () => { void api.conversation(selectedConversation).then((entries) => { if (live) setTimeline(entries); }).catch(() => {}); };
+    update();
+    const timer = window.setInterval(update, 1200);
+    return () => { live = false; window.clearInterval(timer); };
+  }, [selectedConversation, selectedActive]);
+
+  const selected = useMemo(() => snapshot?.conversations.find((item) => item.id === selectedConversation), [snapshot, selectedConversation]);
+  const act = async (operation: () => Promise<unknown>): Promise<boolean> => { setBusy(true); setNotice(undefined); try { await operation(); await refresh(); return true; } catch (error) { setNotice(String(error)); return false; } finally { setBusy(false); } };
+  const start = async () => {
+    setRuntimeAction("starting"); setNotice(undefined);
+    try { await api.startProfile(selectedProfile); await refresh(); }
+    catch (error) { if (!String(error).includes("Runtime loading stopped")) setNotice(String(error)); }
+    finally { setRuntimeAction((current) => current === "starting" ? null : current); }
+  };
+  const stop = async () => {
+    setRuntimeAction("stopping");
+    try { await api.stopRuntime(); await refresh(); }
+    catch (error) { setNotice(String(error)); }
+    finally { setRuntimeAction(null); }
+  };
+  const restart = () => act(api.restartRuntime);
+  const exportCurrent = () => selectedConversation ? act(async () => setNotice(`Exported to ${await api.exportConversation(selectedConversation, "markdown")}`)) : setNotice("Select a conversation to export.");
+  const renameCurrent = () => {
+    if (!selectedConversation || !selected) return setNotice("Select a conversation to rename.");
+    setConversationDialog({ kind: "rename", value: selected.title });
+  };
+  const deleteCurrent = () => {
+    if (!selectedConversation || !selected) return setNotice("Select a conversation to delete.");
+    setConversationDialog({ kind: "delete" });
+  };
+  const togglePinned = () => selectedConversation && selected ? act(() => api.setConversationPinned(selectedConversation, !selected.pinned)) : Promise.resolve();
+  const toggleRowPinned = (item: ConversationSummary) => { void act(() => api.setConversationPinned(item.id, !item.pinned)); };
+  const moveCurrentToProject = (projectId: string | null) => selectedConversation ? act(() => api.moveConversationToProject(selectedConversation, projectId)) : Promise.resolve();
+  const createProject = (name: string, folderPath: string) => act(() => api.createProject(name, folderPath));
+  const createProjectForCurrent = (name: string, folderPath: string) => act(async () => {
+    const created = await api.createProject(name, folderPath);
+    if (selectedConversation) await api.moveConversationToProject(selectedConversation, created.id);
+  });
+  const openProjectFolder = async (project: ProjectSummary): Promise<string> => {
+    if (!project.folderPath) throw new Error("Link a folder to this project first.");
+    await api.openLocalPath(project.folderPath);
+    return "Opened in Windows Explorer";
+  };
+  const changeProjectFolder = async (project: ProjectSummary): Promise<string> => {
+    const folderPath = await api.chooseProjectFolder();
+    if (!folderPath) return "Folder selection cancelled";
+    await api.changeProjectFolder(project.id, folderPath);
+    await refresh();
+    return `Linked to ${folderPath}`;
+  };
+  const confirmProjectDialog = () => {
+    if (!projectDialog) return;
+    const { project } = projectDialog;
+    if (projectDialog.kind === "rename") {
+      const name = projectDialog.value.trim();
+      if (!name) return;
+      setProjectDialog(null);
+      void act(() => api.renameProject(project.id, name));
+    } else {
+      setProjectDialog(null);
+      void act(async () => { const count = await api.deleteProject(project.id); setNotice(`Deleted ${project.name}. ${count} conversation${count === 1 ? "" : "s"} kept without a project.`); });
+    }
+  };
+  const confirmConversationDialog = () => {
+    if (!conversationDialog || !selectedConversation || !selected) return;
+    if (conversationDialog.kind === "rename") {
+      const next = conversationDialog.value.trim();
+      setConversationDialog(null);
+      if (next && next !== selected.title) void act(() => api.renameConversation(selectedConversation, next));
+      return;
+    }
+    const id = selectedConversation;
+    setConversationDialog(null);
+    void act(async () => {
+      await api.removeConversation(id);
+      setSelectedConversation(undefined);
+      selectedConversationRef.current = undefined;
+      setTimeline([]);
+      setConversationEpoch((value) => value + 1);
+      snapshotFingerprintRef.current = "";
+    });
+  };
+
+  const selectConversation = (id: string) => {
+    selectedConversationRef.current = id;
+    setSelectedConversation(id);
+    setConversationEpoch((value) => value + 1);
+  };
+
+  const acceptConversationId = (id: string) => {
+    selectedConversationRef.current = id;
+    setSelectedConversation(id);
+  };
+
+  const newChat = () => {
+    selectedConversationRef.current = undefined;
+    setSelectedConversation(undefined);
+    setTimeline([]);
+    setConversationEpoch((value) => value + 1);
+    setNotice(undefined);
+  };
+
+  const refreshConversation = async () => {
+    await refresh();
+    const id = selectedConversationRef.current;
+    if (id) {
+      try { setTimeline(await api.conversation(id)); }
+      catch (error) { setNotice(String(error)); }
+    }
+  };
+
+  if (!snapshot) return <div className="app-window-frame"><WindowTitleBar /><div className="splash"><span className="brand-mark splash-logo"><img src="/opencore-logo.png" alt="OpenCore" /></span><strong>OpenCore</strong><p>Loading runtime state…</p></div></div>;
+  const running = snapshot.runtime.status === "running";
+  const appearanceStyle = { "--chat-font-size": `${appearance.chatFontSize}px` } as CSSProperties;
+
+  if (view === "conversations") {
+    const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} onToggleFloating={() => setSidebarDetached((value) => !value)} floating={sidebarDetached} />;
+    return <div className="app-window-frame"><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""} ${sidebarDetached ? "sidebar-detached" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: sidebarDetached ? "58px minmax(0,1fr)" : `58px ${sidebarWidth}px 7px minmax(0,1fr)` }}>
+      <Navigation active={view} onChange={setView} running={running} compact />
+      {!sidebarDetached ? <>{conversationList}<div className="conversation-resizer" role="separator" aria-label="Resize conversations" aria-orientation="vertical" onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} /></> : null}
+      <AssistantConversation
+        key={`chat-${conversationEpoch}`}
+        conversationId={selectedConversation}
+        title={selected?.title || "New conversation"}
+        client={selected?.client || "OpenCore"}
+        entries={timeline}
+        runtimeRunning={running}
+        runtimeSnapshot={snapshot.runtime}
+        telemetry={snapshot.telemetry}
+        liveTokenSpeed={recentDecoderSpeed(snapshot.logs)}
+        promptProgress={recentPromptProgress(snapshot.logs)}
+        backendActive={snapshot.activeConversationIds?.includes(selectedConversation || "") || false}
+        onConversationId={acceptConversationId}
+        onRefresh={refreshConversation}
+        onNotice={setNotice}
+        onExport={exportCurrent}
+        onRename={renameCurrent}
+        onDelete={deleteCurrent}
+        pinned={selected?.pinned || false}
+        project={selected?.project || ""}
+        projectId={selected?.projectId || null}
+        projects={snapshot.projects}
+        onPin={togglePinned}
+        onMoveProject={moveCurrentToProject}
+        onCreateProject={createProjectForCurrent}
+      />
+      {sidebarDetached ? <FloatingWindow id="conversations" title="Conversations" icon={<MessageSquare size={17} />} onClose={() => setSidebarDetached(false)} place="left" className="conversation-floating" initialWidth={sidebarWidth} initialHeight={window.innerHeight - 16} minWidth={290} minHeight={300}>{conversationList}</FloatingWindow> : null}
+      {notice && <div className="toast conversation-toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
+      {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
+      {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
+    </div></div>;
+  }
+
+  return <div className="app-window-frame"><WindowTitleBar /><div className="app-shell">
+    <Header snapshot={snapshot} busy={busy} runtimeAction={runtimeAction} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} onStart={start} onStop={stop} onRestart={restart} onExport={exportCurrent} />
+    <Navigation active={view} onChange={setView} running={running} />
+    {view === "runtime"
+      ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
+      : <SupportingView view={view} snapshot={snapshot} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
+    <footer className="statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span></footer>
+    {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
+  </div></div>;
+}

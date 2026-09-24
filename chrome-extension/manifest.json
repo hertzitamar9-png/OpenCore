@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "OpenCore Browser Control",
+  "version": "0.1.0",
+  "description": "Pair Chrome tabs with OpenCore.",
+  "minimum_chrome_version": "116",
+  "permissions": ["debugger", "tabs", "storage", "alarms"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "OpenCore Browser", "default_popup": "popup.html" }
+}

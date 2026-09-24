@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snake - score 0</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #578a34; display: grid; place-items: center; font: 600 18px system-ui, sans-serif; color: #fff; }
+  #hud { position: fixed; top: 10px; left: 0; right: 0; text-align: center; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<div id="hud">Apples: <span id="score">0</span> · press an arrow key</div>
+<canvas id="board" width="510" height="450"></canvas>
+<script>
+// Test fixture for OpenCore Reflex: Google-Snake palette, 17x15 cells, ~7 moves per second.
+const W = 17, H = 15, C = 30, TICK = 140;
+const LIGHT = "#aad751", DARK = "#a2d149", SNAKE = "#4e7cf6", APPLE = "#e7471d";
+const ctx = document.getElementById("board").getContext("2d");
+let body, dir, queued, apple, score, alive, started, timer;
+
+function reset() {
+  body = [[4, 7], [3, 7], [2, 7]]; dir = "right"; queued = []; score = 0; alive = true; started = false;
+  placeApple(); draw(); setScore(0);
+  document.getElementById("hud").lastChild.textContent = " · press an arrow key";
+}
+function setScore(value) { score = value; document.getElementById("score").textContent = value; document.title = "Snake - score " + value + (alive ? "" : " - game over"); }
+function placeApple() {
+  const free = [];
+  for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) if (!body.some(([bx, by]) => bx === x && by === y)) free.push([x, y]);
+  apple = free[Math.floor(Math.random() * free.length)];
+}
+function draw() {
+  for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) { ctx.fillStyle = (x + y) % 2 ? DARK : LIGHT; ctx.fillRect(x * C, y * C, C, C); }
+  ctx.fillStyle = APPLE; ctx.beginPath(); ctx.arc(apple[0] * C + C / 2, apple[1] * C + C / 2, C * 0.4, 0, Math.PI * 2); ctx.fill();
+  body.forEach(([x, y], i) => { ctx.fillStyle = SNAKE; ctx.fillRect(x * C + 1, y * C + 1, C - 2, C - 2); });
+  const [hx, hy] = body[0]; // eyes mark the head, as in Google Snake
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath(); ctx.arc(hx * C + C * 0.32, hy * C + C * 0.35, 4, 0, Math.PI * 2); ctx.arc(hx * C + C * 0.68, hy * C + C * 0.35, 4, 0, Math.PI * 2); ctx.fill();
+}
+const MOVES = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+const DELTA = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const OPP = { up: "down", down: "up", left: "right", right: "left" };
+document.addEventListener("keydown", (event) => {
+  if (!alive && (event.key === "Enter" || event.key === " ")) { reset(); return; }
+  const move = MOVES[event.key];
+  if (!move || !alive) return;
+  event.preventDefault();
+  queued.push(move);
+  if (!started) { started = true; document.getElementById("hud").lastChild.textContent = ""; timer = setInterval(tick, TICK); }
+});
+function tick() {
+  while (queued.length) { const next = queued.shift(); if (next !== OPP[dir]) { dir = next; break; } }
+  const [dx, dy] = DELTA[dir], [hx, hy] = body[0], head = [hx + dx, hy + dy];
+  const grows = head[0] === apple[0] && head[1] === apple[1];
+  const rest = grows ? body : body.slice(0, -1);
+  if (head[0] < 0 || head[0] >= W || head[1] < 0 || head[1] >= H || rest.some(([x, y]) => x === head[0] && y === head[1])) {
+    alive = false; clearInterval(timer); setScore(score);
+    document.getElementById("hud").lastChild.textContent = " · game over, Enter to restart"; return;
+  }
+  body = [head, ...rest];
+  if (grows) { setScore(score + 1); placeApple(); }
+  draw();
+}
+reset();
+</script>
+</body>
+</html>
