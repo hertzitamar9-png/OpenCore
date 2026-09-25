@@ -78,6 +78,12 @@ export async function startProfile(profile: RuntimeProfile, attachUrl?: string):
   await invoke("start_profile", { request: { profile, attachUrl: attachUrl || null } });
 }
 
+export async function selectProfile(profile: RuntimeProfile): Promise<void> {
+  if (!desktop()) return;
+  if (profile === "stopped") throw new Error("Choose a model profile before starting the runtime.");
+  await invoke("select_profile", { profile });
+}
+
 export async function stopRuntime(): Promise<void> {
   if (!desktop()) throw new Error("Runtime controls require the desktop application.");
   await invoke("stop_runtime");

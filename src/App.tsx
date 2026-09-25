@@ -142,7 +142,22 @@ function modelLoaderDetail(snapshot: AppSnapshot): { text: string; loaded: numbe
   return { text, loaded: fraction ? Number(fraction[1]) : null, total: fraction ? Number(fraction[2]) : null };
 }
 
-const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "Native 1M" : profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped";
+const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "Native 1M" : profile === "unsloth-echo" ? "Unsloth + ECHO" : profile === "doucode" ? "doUcode" : "Stopped";
+const profileDescription = (profile: RuntimeProfile) => profile === "echo"
+  ? "262,144 native context · ECHO archive"
+  : profile === "doucode"
+    ? "K2 + Nanbeige · shared 262,144 context"
+    : profile === "native1m"
+      ? "1,000,000 token server window"
+      : "Unsloth backend · ECHO archive";
+
+const readProfilePreference = (): RuntimeProfile => {
+  try {
+    const stored = window.localStorage.getItem("opencore.model-profile");
+    if (stored === "echo" || stored === "native1m" || stored === "unsloth-echo" || stored === "doucode") return stored;
+  } catch { /* Use the first-run profile when storage is unavailable. */ }
+  return "doucode";
+};
 
 function StatusDot({ state }: { state: string }) {
   const kind = ["running", "ready", "detected", "configured", "observed", "stop", "active"].includes(state) ? "good" : state === "error" ? "bad" : state === "starting" ? "warn" : "muted";
@@ -201,7 +216,7 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
       <div className="model-picker" ref={profilePickerRef}>
         <span className="model-picker-label">Model</span>
         <button ref={profileTriggerRef} className={`model-picker-trigger ${profileMenuOpen ? "open" : ""}`} type="button" aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={profileMenuOpen} aria-controls="model-profile-options" disabled={profileLocked} onClick={() => setProfileMenuOpen((open) => !open)}>
-          <span className="model-picker-copy"><strong>{profileLabel(selectedProfile)}</strong><small>{selectedProfile === "echo" ? "262,144 native context · ECHO archive" : "1,000,000 token server window"}</small></span>
+          <span className="model-picker-copy"><strong>{profileLabel(selectedProfile)}</strong><small>{profileDescription(selectedProfile)}</small></span>
           <ChevronDown size={15} aria-hidden="true" />
         </button>
         {profileMenuOpen && !profileLocked ? <div className="model-picker-options" id="model-profile-options" role="group" aria-label="Choose model profile">
@@ -211,12 +226,15 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
           <button className={`model-picker-option ${selectedProfile === "native1m" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "native1m"} onClick={() => chooseProfile("native1m")}>
             <span><strong>Native 1M</strong><small>1,000,000 token server window</small></span>{selectedProfile === "native1m" ? <Check size={16} aria-hidden="true" /> : null}
           </button>
+          <button className={`model-picker-option ${selectedProfile === "doucode" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "doucode"} onClick={() => chooseProfile("doucode")}>
+            <span><strong>doUcode</strong><small>K2 + Nanbeige · shared 262,144 context</small></span>{selectedProfile === "doucode" ? <Check size={16} aria-hidden="true" /> : null}
+          </button>
         </div> : null}
       </div>
     </div>
     <div className="topbar-right">
       <button onClick={onExport} title="Export conversation" aria-label="Export conversation"><FileDown size={15} /> Export</button>
-      <div className="connection-state"><StatusDot state={running ? "running" : snapshot.runtime.status} /><div><strong>{running ? "Connected" : snapshot.runtime.status}</strong><small>{profileLabel(snapshot.runtime.profile)}</small></div></div>
+      <div className="connection-state"><StatusDot state={running ? "running" : snapshot.runtime.status} /><div><strong>{running ? "Connected" : snapshot.runtime.status}</strong><small>{profileLabel(running ? snapshot.runtime.profile : selectedProfile)}</small></div></div>
     </div>
   </header>;
 }
@@ -356,7 +374,7 @@ function RuntimeTable({ snapshot, onRestart }: { snapshot: AppSnapshot; onRestar
   const rows = [
     { name: "Control Gateway", detail: "Captures routing and events", status: "running", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
     { name: "llama-server", detail: profileLabel(runtime.profile), status: runtime.modelPid ? runtime.status : "stopped", port: runtime.backendPort, pid: runtime.modelPid || "—", observable: true, restartable: Boolean(runtime.modelPid) },
-    { name: "ECHO proxy", detail: "Memory control and retrieval", status: runtime.echoPid ? runtime.status : "stopped", port: runtime.echoPort, pid: runtime.echoPid || "—", observable: runtime.profile.includes("echo"), restartable: Boolean(runtime.echoPid) },
+    { name: "ECHO proxy", detail: "Memory control and retrieval", status: runtime.echoPid ? runtime.status : "stopped", port: runtime.echoPort, pid: runtime.echoPid || "—", observable: runtime.profile.includes("echo") || runtime.profile === "doucode", restartable: Boolean(runtime.echoPid) },
     ...snapshot.connectors.map((item) => ({ name: item.name, detail: item.details, status: item.status, port: item.kind === "history" ? "local" : item.endpoint.split(":").pop() || "—", pid: "—", observable: item.observable, restartable: false })),
   ];
   return <div className="runtime-table">
@@ -396,19 +414,21 @@ function RuntimeLogs({ logs }: { logs: LogEntry[] }) {
 function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAction, actions }: { snapshot: AppSnapshot; selectedProfile: RuntimeProfile; setSelectedProfile: (p: RuntimeProfile) => void; runtimeAction: "starting" | "stopping" | null; actions: { start: () => void; stop: () => void; restart: () => void; navigate: (view: View) => void; notice: (message: string) => void } }) {
   const runtime = snapshot.runtime;
   const active = runtime.status === "running" || runtime.status === "starting" || runtimeAction !== null;
-  const modelDir = runtime.modelPath.replace(/[\\/][^\\/]+$/, "");
+  const modelDir = selectedProfile === "doucode"
+    ? runtime.modelPath
+    : runtime.modelPath.slice(0, Math.max(runtime.modelPath.lastIndexOf("\\"), runtime.modelPath.lastIndexOf("/")));
   const exportDiagnostics = async () => {
     try { actions.notice(`Diagnostics exported to ${await api.exportDiagnostics()}`); }
     catch (error) { actions.notice(String(error)); }
   };
   return <div className="workspace runtime-workspace">
     <section className="runtime-main">
-      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · mutually exclusive</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={runtime.status === "running"}><b>ECHO 3T</b><small>262K native context + ECHO archive</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={runtime.status === "running"}><b>Native 1M</b><small>1M server window</small></button></div></div>
+      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · one runtime at a time</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={active}><b>ECHO 3T</b><small>262K native context + ECHO archive</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={active}><b>Native 1M</b><small>1M server window</small></button><button className={selectedProfile === "doucode" ? "active" : ""} onClick={() => setSelectedProfile("doucode")} disabled={active}><b>doUcode</b><small>K2 + Nanbeige · shared 262K context</small></button></div></div>
       <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
       <RuntimeLogs logs={snapshot.logs} />
     </section>
     <aside className="runtime-inspector">
-      <InspectorSection title="Model & Download"><div className="model-line"><div><span>{profileLabel(selectedProfile)}</span><strong>OpenCore-Code-Single-File.gguf</strong><small>{runtime.modelPath}</small></div><StatusDot state={runtime.status} /></div><KeyValue label="Runtime status" value={runtime.status} /><button className="wide" onClick={() => void revealLocalPath(modelDir, actions.notice)}><FolderOpen size={14} /> Open model folder</button></InspectorSection>
+      <InspectorSection title="Model & Download"><div className="model-line"><div><span>{profileLabel(selectedProfile)}</span><strong>{selectedProfile === "doucode" ? "K2 + Nanbeige + TwinCore bridge" : "OpenCore-Code-Single-File.gguf"}</strong><small>{runtime.modelPath}</small></div><StatusDot state={runtime.profile === selectedProfile ? runtime.status : "stopped"} /></div><KeyValue label="Runtime status" value={runtime.profile === selectedProfile ? runtime.status : "Selected · model unloaded"} />{selectedProfile === "doucode" ? <><KeyValue label="Backbones" value="K2 + Nanbeige start together" /><KeyValue label="Laya" value="Bundled, not used in bilateral agreement" /><p className="appearance-note">Selecting doUcode does not load either model. Press Start to launch both backbones and the ECHO archive.</p></> : null}<button className="wide" onClick={() => void revealLocalPath(modelDir, actions.notice)}><FolderOpen size={14} /> Open model folder</button></InspectorSection>
       <InspectorSection title="Resource Usage"><ResourceRow label="GPU VRAM" value={`${(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)} / ${(snapshot.telemetry.vramTotalMib / 1024).toFixed(0)} GB`} /><ResourceRow label="System RAM" value={`${(snapshot.telemetry.systemMemoryUsedMib / 1024).toFixed(1)} / ${(snapshot.telemetry.systemMemoryTotalMib / 1024).toFixed(0)} GB`} /><ResourceRow label="Disk free" value={`${snapshot.telemetry.diskFreeGib.toFixed(1)} GiB`} /></InspectorSection>
       <InspectorSection title="Endpoints"><Endpoint label="Gateway · use this" value={`http://127.0.0.1:${runtime.gatewayPort}/v1`} /><Endpoint label="Direct · bypasses capture" value={`http://127.0.0.1:${runtime.backendPort}/v1`} /><Endpoint label="ECHO internal" value={`http://127.0.0.1:${runtime.echoPort}/v1`} /></InspectorSection>
       <InspectorSection title="Process Supervision"><KeyValue label="Status" value={runtime.status} /><KeyValue label="Recovery" value="Manual restart available" /><KeyValue label="No console windows" value="Enabled" /><KeyValue label="Last error" value={runtime.error || "None"} /></InspectorSection>
@@ -482,7 +502,7 @@ function ArchiveEventCard({ event, onNotice }: { event: ArchiveEvent; onNotice: 
   </article>;
 }
 
-function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefresh, onNavigate, appearance, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; onAppearanceChange: (value: Appearance) => void }) {
+function SupportingView({ view, snapshot, selectedProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; onAppearanceChange: (value: Appearance) => void }) {
   const [connectorForm, setConnectorForm] = useState({ name: "", endpoint: "", matchPattern: "", kind: "openai" });
   const [connectorNotice, setConnectorNotice] = useState("");
   const [memoryQuery, setMemoryQuery] = useState("");
@@ -734,7 +754,7 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
   if (view === "overview") return <div className="support-page overview-page">
     <div className="page-heading"><div><h1>OpenCore</h1><p>Your local model, persistent ECHO memory, conversations, and client routes in one private workspace.</p></div><button className="primary" onClick={() => onNavigate("conversations")}><MessageSquare size={15} /> Open conversations</button></div>
     <div className="overview-grid">
-      <button onClick={() => onNavigate("runtime")}><SquareTerminal /><span><strong>Runtime</strong><small>{profileLabel(snapshot.runtime.profile)} · {snapshot.runtime.status}</small></span></button>
+      <button onClick={() => onNavigate("runtime")}><SquareTerminal /><span><strong>Runtime</strong><small>{profileLabel(["running", "starting"].includes(snapshot.runtime.status) ? snapshot.runtime.profile : selectedProfile)} · {snapshot.runtime.status}</small></span></button>
       <button onClick={() => onNavigate("memory")}><Database /><span><strong>ECHO Memory</strong><small>{snapshot.runtime.contextSize.toLocaleString()} live tokens · persistent archive</small></span></button>
       <button onClick={() => onNavigate("models")}><Box /><span><strong>Model</strong><small>{snapshot.runtime.modelPath.split(/[\\/]/).pop()}</small></span></button>
       <button onClick={() => onNavigate("connectors")}><Network /><span><strong>Connectors</strong><small>{snapshot.connectors.filter((item) => item.observable || item.status === "configured").length} active or observable</small></span></button>
@@ -871,7 +891,7 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
         <p className="appearance-note">The two generator backbones negotiate an answer/action directly; neither gets to choose the other's output. Laya's bundled classifier is not loaded or used for selection.</p>
         <button className="wide" onClick={() => void revealLocalPath("C:\\Users\\hertz\\Documents\\Best ai model in the world\\release\\doUcode", onNotice)}><FolderOpen size={14} /> Open doUcode package</button>
       </InspectorSection>
-      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="262,144 native context + disk archive" /><KeyValue label="doUcode package" value="262,144-token context · package runtime not selectable here yet" /><KeyValue label="Native 1M" value="1,000,000 server window" /><KeyValue label="Active profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
+      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="262,144 native context + disk archive" /><KeyValue label="doUcode" value="K2 + Nanbeige · shared 262,144-token context" /><KeyValue label="Native 1M" value="1,000,000 server window" /><KeyValue label="Selected profile" value={profileLabel(selectedProfile)} /><KeyValue label="Loaded profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
       <InspectorSection title="Live context"><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /><button className="wide" onClick={() => onNavigate("context")}><BrainCircuit size={14} /> Open live context</button></InspectorSection>
     </div>
   </div>;
@@ -952,7 +972,7 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
 export default function App() {
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>("conversations");
-  const [selectedProfile, setSelectedProfile] = useState<RuntimeProfile>("echo");
+  const [selectedProfile, setSelectedProfileState] = useState<RuntimeProfile>(readProfilePreference);
   const [selectedConversation, setSelectedConversation] = useState<string>();
   const [conversationEpoch, setConversationEpoch] = useState(0);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
@@ -976,6 +996,20 @@ export default function App() {
   const snapshotFingerprintRef = useRef("");
 
   useEffect(() => { selectedConversationRef.current = selectedConversation; }, [selectedConversation]);
+  const setSelectedProfile = useCallback((profile: RuntimeProfile) => {
+    if (profile === "stopped") return;
+    setSelectedProfileState(profile);
+    try { window.localStorage.setItem("opencore.model-profile", profile); } catch { /* The choice remains active for this session. */ }
+  }, []);
+  useEffect(() => {
+    if (!snapshot || ["running", "starting"].includes(snapshot.runtime.status)) return;
+    void api.selectProfile(selectedProfile).catch((error) => setNotice(String(error)));
+  }, [selectedProfile, snapshot?.runtime.status]);
+  useEffect(() => {
+    const runtime = snapshot?.runtime;
+    if (!runtime || !["running", "starting"].includes(runtime.status) || runtime.profile === "stopped" || runtime.profile === selectedProfile) return;
+    setSelectedProfile(runtime.profile);
+  }, [snapshot?.runtime.profile, snapshot?.runtime.status, selectedProfile, setSelectedProfile]);
   useEffect(() => { try { window.localStorage.setItem(appearanceKey, JSON.stringify(appearance)); } catch { /* The preference still works for this session. */ } }, [appearance]);
   useEffect(() => { void api.setComputerFocusMode(appearance.keepUserWindowInFront).catch((error: unknown) => setNotice(String(error))); }, [appearance.keepUserWindowInFront]);
   useEffect(() => { try { window.localStorage.setItem("opencore.sidebar.width", String(sidebarWidth)); } catch { /* Session-only layout. */ } }, [sidebarWidth]);
@@ -1224,7 +1258,7 @@ export default function App() {
     <Navigation active={view} onChange={setView} running={running} />
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
-      : <SupportingView view={view} snapshot={snapshot} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
+      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <footer className="statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span><span className="archive-target" title="ECHO reuses the model session between turns; at a backend context limit it rebuilds from the retained transcript while exact older source history stays archived for retrieval.">{snapshot.runtime.status === "running" ? "Live context" : "Model window"} <strong>{snapshot.runtime.status === "running" ? "rolling · " : ""}{snapshot.runtime.contextSize.toLocaleString()}</strong></span></footer>
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
   </div></div>;

@@ -38,6 +38,7 @@ describe("OpenCore", () => {
   });
   beforeEach(() => {
     eventHandlers.clear();
+    window.localStorage.removeItem?.("opencore.model-profile");
     window.localStorage.removeItem?.("opencore.approval-global.v1");
     window.sessionStorage.removeItem?.("opencore.approval-chat.preview");
   });
@@ -467,14 +468,18 @@ describe("OpenCore", () => {
     expect(screen.getAllByRole("button", { name: "Sync history" }).length).toBeGreaterThanOrEqual(2);
   });
 
-  it("opens the styled model picker and keeps Unsloth out of runtime profiles", async () => {
+  it("opens the styled model picker with doUcode selectable and keeps Unsloth out of runtime profiles", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
-    const picker = screen.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ });
+    const picker = screen.getByRole("button", { name: /Choose model profile, currently doUcode/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /doUcode K2 \+ Nanbeige · shared 262,144 context/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ }));
+    expect(screen.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
     fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
     expect(screen.getByRole("button", { name: /Choose model profile, currently Native 1M/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /Choose model profile, currently Native 1M/ }));

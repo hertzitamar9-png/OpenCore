@@ -1,4 +1,4 @@
-export type RuntimeProfile = "stopped" | "echo" | "native1m" | "unsloth-echo";
+export type RuntimeProfile = "stopped" | "echo" | "native1m" | "unsloth-echo" | "doucode";
 
 export interface RuntimeSnapshot {
   profile: RuntimeProfile;

@@ -389,6 +389,11 @@ async fn start_profile(
 }
 
 #[tauri::command]
+fn select_profile(core: tauri::State<'_, Arc<AppCore>>, profile: String) -> Result<(), String> {
+    core.runtime.select_profile(&profile)
+}
+
+#[tauri::command]
 async fn stop_runtime(core: tauri::State<'_, Arc<AppCore>>) -> Result<(), String> {
     if let Ok(active) = core.active_chats.lock() {
         for token in active.values() { token.cancel(); }
@@ -1683,6 +1688,7 @@ pub fn run() {
             get_snapshot,
             list_conversations,
             get_conversation,
+            select_profile,
             start_profile,
             stop_runtime,
             restart_runtime,
