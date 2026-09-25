@@ -54,7 +54,7 @@ impl BrowserBridge {
 }
 
 pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> {
-    if !matches!(action, "list" | "open" | "navigate" | "inspect" | "screenshot" | "click" | "type" | "scroll" | "key" | "back" | "forward") {
+    if !matches!(action, "list" | "open" | "navigate" | "activate" | "close" | "inspect" | "screenshot" | "click" | "type" | "scroll" | "key" | "back" | "forward" | "reload" | "evaluate") {
         return Err("Unsupported browser action".into());
     }
     if matches!(action, "open" | "navigate") {
@@ -71,6 +71,9 @@ pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> 
     }
     if action == "type" && args.get("text").and_then(Value::as_str).is_none_or(|text| text.len() > 4000) {
         return Err("Browser text must be at most 4000 characters".into());
+    }
+    if action == "evaluate" && args.get("expression").and_then(Value::as_str).is_none_or(|code| code.is_empty() || code.len() > 16000) {
+        return Err("DevTools expression must be 1 to 16000 characters".into());
     }
     if action == "key" && !matches!(args.get("key").and_then(Value::as_str), Some("Enter" | "Tab" | "Escape" | "Backspace" | "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight")) {
         return Err("Unsupported browser key".into());
@@ -137,6 +140,7 @@ mod tests {
     #[test]
     fn invalid_browser_actions_never_reach_the_extension() {
         assert!(validate_action("execute_script", &json!({"script":"alert(1)"})).is_err());
+        assert!(validate_action("evaluate", &json!({"expression":"document.title"})).is_ok());
         assert!(validate_action("open", &json!({"url":"file:///C:/secret"})).is_err());
         assert!(validate_action("click", &json!({"x":-1,"y":4})).is_err());
         assert!(validate_action("type", &json!({"x":2,"y":3,"text":"hello"})).is_ok());

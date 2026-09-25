@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "OpenCore desktop permissions",
   "windows": ["main"],
-  "permissions": ["core:default", "core:window:allow-start-dragging", "core:window:allow-minimize", "core:window:allow-toggle-maximize", "core:window:allow-close", "opener:default", "dialog:default"]
+  "permissions": ["core:default", "core:webview:allow-set-webview-focus", "core:window:allow-start-dragging", "core:window:allow-minimize", "core:window:allow-toggle-maximize", "core:window:allow-close", "opener:default", "dialog:default"]
 }

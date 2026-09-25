@@ -7,9 +7,14 @@ const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 
 pub(crate) fn tool_spec() -> Value {
     json!({"type":"function","function":{
-        "name":"dev","description":"General coding workspace for any text-based language. Inspect with status, search and read; use exact-hash edit/apply_patch on existing files; run compilers, tests or browser automation; inspect Git status/diff/log; commit named files and push without force. Use checkout for prior artifacts. Preserve the existing project and publish only a verified version. The run action can invoke installed language-specific tools and the shell; it does not claim they are installed.",
+        "name":"dev","description":"General coding workspace for any text-based language. Inspect with status, search and read; use exact-hash edit/apply_patch on existing files; run compilers, tests or browser automation; inspect Git status/diff/log; commit named files and push without force. Use checkout for prior artifacts. Preserve the existing project and publish only a verified version. The run action executes command in this workspace using Windows PowerShell 5.1. Supply verifyPaths for each file being tested so successful checks can authorize publication. Use separate calls instead of &&. It can invoke any installed compiler, interpreter or test runner; it does not claim they are installed.",
         "parameters":{"type":"object","properties":{
-            "action":{"type":"string","enum":["status","list","search","read","checkout","write","edit","patch","apply_patch","run","git_status","git_diff","git_log","git_commit","git_push","publish"]},
+            "action":{"type":"string","enum":["status","list","search","read","recall","checkpoint","checkout","write","edit","patch","apply_patch","run","git_status","git_diff","git_log","git_commit","git_push","publish"]},
+            "title":{"type":"string","description":"Name of the completed component for checkpoint"},
+            "summary":{"type":"string","description":"Component purpose, interfaces, dependencies, decisions and known failures; notes are not proof"},
+            "nextSteps":{"type":"string","description":"Unfinished work to retain after checkpoint"},
+            "versionSha256":{"type":"string","description":"Read an exact source version from a project checkpoint; omit to read current code"},
+            "offset":{"type":"integer","minimum":0},"limit":{"type":"integer","minimum":1,"maximum":32},
             "path":{"type":"string","description":"Workspace-relative file path; never an absolute path"},
             "query":{"type":"string","description":"Literal text to find in source files"},
             "artifactId":{"type":"string","description":"ID from status for an exact prior file version"},
@@ -17,7 +22,7 @@ pub(crate) fn tool_spec() -> Value {
             "expectedSha256":{"type":"string","description":"Hash returned by read or write, required for patch"},
             "edits":{"type":"array","items":{"type":"object","properties":{"oldText":{"type":"string"},"newText":{"type":"string"}},"required":["oldText","newText"]}},
             "command":{"type":"string","description":"Shell command for the project's language-specific checks"},
-            "paths":{"type":"array","items":{"type":"string"},"description":"Exact workspace-relative files to commit"},
+            "paths":{"type":"array","items":{"type":"string"},"description":"Exact workspace-relative files to commit, or all component dependencies to checkpoint"},
             "message":{"type":"string","description":"Git commit message"},
             "remote":{"type":"string","description":"Configured Git remote name, defaults to origin"},
             "verifyPaths":{"type":"array","items":{"type":"string"},"description":"Optional files checked by this command. Their exact hashes are recorded on success; required before publish"},
@@ -36,7 +41,7 @@ fn text_arg<'a>(args: &'a Value, key: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("{key} is required"))
 }
 
-fn workspace_file(root: &Path, name: &str, create_parents: bool) -> Result<PathBuf, String> {
+pub(crate) fn workspace_file(root: &Path, name: &str, create_parents: bool) -> Result<PathBuf, String> {
     let relative = Path::new(name);
     if name.is_empty() || relative.components().any(|part| !matches!(part, Component::Normal(_))) {
         return Err("Use a workspace-relative path without . or ..".into());
@@ -77,7 +82,7 @@ fn workspace_file(root: &Path, name: &str, create_parents: bool) -> Result<PathB
     }
 }
 
-fn read_text(path: &Path) -> Result<String, String> {
+pub(crate) fn read_text(path: &Path) -> Result<String, String> {
     if path.metadata().map_err(|e| e.to_string())?.len() > MAX_FILE_BYTES {
         return Err("File exceeds the 16 MiB coding workspace limit".into());
     }
@@ -147,13 +152,19 @@ pub(crate) async fn execute(root: &Path, artifacts_root: &Path, receipts_root: &
     std::fs::create_dir_all(root).map_err(|e| e.to_string())?;
     let action = text_arg(args, "action")?;
     match action {
-        "status" | "list" => Ok(json!({"workspace":root,"files":list_files(root)?,"priorArtifacts":history})),
+        "status" | "list" => Ok(json!({"workspace":root,"files":list_files(root)?,"priorArtifacts":history,
+            "projectMemory":crate::project_memory::recall(root,receipts_root,args)?})),
+        "recall" => crate::project_memory::recall(root,receipts_root,args),
+        "checkpoint" => crate::project_memory::checkpoint(root,receipts_root,args,&read_receipts(receipts_root)),
         "search" => {
             let query = text_arg(args, "query")?;
             crate::tooling::execute_read_only(root, "search_project", &json!({"query":query}))
         }
         "read" => {
-            let (name, content) = if let Some(id) = args.get("artifactId").and_then(Value::as_str) {
+            let (name, content) = if let Some(hash) = args.get("versionSha256").and_then(Value::as_str) {
+                let name = text_arg(args, "path")?;
+                (name.to_string(), crate::project_memory::version(root,receipts_root,name,hash)?)
+            } else if let Some(id) = args.get("artifactId").and_then(Value::as_str) {
                 if !history.iter().any(|item| item["id"] == id) { return Err("Artifact is not in this conversation".into()); }
                 let item = crate::artifacts::preview(artifacts_root, id)?;
                 (item.info.name, item.text.ok_or("Artifact is not a UTF-8 code file")?)
@@ -324,6 +335,30 @@ mod tests {
         let receipts = base.join("receipts");
         std::fs::create_dir_all(&workspace).unwrap();
         (workspace, artifacts, receipts)
+    }
+
+    #[tokio::test]
+    async fn completed_component_survives_new_chat_and_detects_changed_dependencies() {
+        let (workspace, artifacts, receipts) = fixture();
+        std::fs::write(workspace.join("movement.js"), "function run() { return 2; }\n").unwrap();
+        let checkpoint = execute(&workspace, &artifacts, &receipts, &[], &json!({
+            "action":"checkpoint", "title":"Running system", "summary":"run doubles movement speed; walking must preserve it",
+            "paths":["movement.js"], "nextSteps":"Add walking without changing run"
+        })).await.unwrap();
+        let original = checkpoint["files"][0]["sha256"].as_str().unwrap().to_string();
+        let new_chat = receipts.parent().unwrap().join("other-chat");
+        let recalled = execute(&workspace, &artifacts, &new_chat, &[], &json!({"action":"recall", "query":"Running"})).await.unwrap();
+        assert_eq!(recalled["checkpoints"][0]["title"], "Running system");
+        assert_eq!(recalled["checkpoints"][0]["stale"], false);
+        assert_eq!(recalled["checkpoints"][0]["evidence"], "unverified");
+        std::fs::write(workspace.join("movement.js"), "function run() { return 3; }\n").unwrap();
+        let changed = execute(&workspace, &artifacts, &new_chat, &[], &json!({"action":"recall", "query":"Running"})).await.unwrap();
+        assert_eq!(changed["checkpoints"][0]["stale"], true);
+        let exact = execute(&workspace, &artifacts, &new_chat, &[], &json!({
+            "action":"read", "path":"movement.js", "versionSha256":original
+        })).await.unwrap();
+        assert_eq!(exact["content"], "function run() { return 2; }\n");
+        std::fs::remove_dir_all(workspace.parent().unwrap()).unwrap();
     }
 
     #[tokio::test]

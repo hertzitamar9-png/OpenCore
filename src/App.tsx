@@ -1,10 +1,13 @@
+import { EchoContextStatus } from "./EchoContextStatus";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { listen } from "@tauri-apps/api/event";
 import {
   Activity,
   Archive,
   Box,
   BrainCircuit,
+  Check,
   ChevronDown,
   CircleAlert,
   CircleStop,
@@ -47,12 +50,17 @@ import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
-type View = "overview" | "conversations" | "memory" | "runtime" | "models" | "connectors" | "settings" | "troubleshooting";
+type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "connectors" | "settings" | "troubleshooting";
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
-type Appearance = { chatFontSize: number; compactMessages: boolean; keepUserWindowInFront: boolean };
-const appearanceKey = "opencore.appearance.v1";
-const defaultAppearance: Appearance = { chatFontSize: 15, compactMessages: false, keepUserWindowInFront: false };
+type Appearance = {
+  chatFontSize: number; terminalFontSize: number; compactMessages: boolean; keepUserWindowInFront: boolean;
+  defaultComputerUse: boolean; defaultBrowserUse: boolean; defaultChromeControl: boolean;
+  subagentsEnabled: boolean; maxSubagents: number;
+  projectSkillsEnabled: boolean; compactAtTokens: number;
+};
+const appearanceKey = "opencore.appearance.v2";
+const defaultAppearance: Appearance = { chatFontSize: 15, terminalFontSize: 13, compactMessages: false, keepUserWindowInFront: false, defaultComputerUse: false, defaultBrowserUse: false, defaultChromeControl: false, subagentsEnabled: true, maxSubagents: 3, projectSkillsEnabled: true, compactAtTokens: 200000 };
 
 async function revealLocalPath(path: string, onNotice: (message: string) => void) {
   try { await api.openLocalPath(path); }
@@ -64,8 +72,16 @@ function savedAppearance(): Appearance {
     const stored = JSON.parse(window.localStorage.getItem(appearanceKey) || "null") as Partial<Appearance> | null;
     return {
       chatFontSize: Math.max(13, Math.min(18, Number(stored?.chatFontSize) || defaultAppearance.chatFontSize)),
+      terminalFontSize: Math.max(10, Math.min(20, Number(stored?.terminalFontSize) || defaultAppearance.terminalFontSize)),
       compactMessages: stored?.compactMessages === true,
       keepUserWindowInFront: stored?.keepUserWindowInFront === true,
+      defaultComputerUse: stored?.defaultComputerUse === true,
+      defaultBrowserUse: stored?.defaultBrowserUse === true,
+      defaultChromeControl: stored?.defaultChromeControl === true,
+      subagentsEnabled: stored?.subagentsEnabled !== false,
+      maxSubagents: Math.max(1, Math.min(1000, Number(stored?.maxSubagents) || defaultAppearance.maxSubagents)),
+      projectSkillsEnabled: stored?.projectSkillsEnabled !== false,
+      compactAtTokens: Math.max(1024, Math.min(1000000, Number(stored?.compactAtTokens) || defaultAppearance.compactAtTokens)),
     };
   } catch { return defaultAppearance; }
 }
@@ -73,6 +89,7 @@ function savedAppearance(): Appearance {
 const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }> = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "conversations", label: "Conversations", icon: MessageSquare },
+  { id: "context", label: "Live Context", icon: BrainCircuit },
   { id: "memory", label: "Memory", icon: Database },
   { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
   { id: "models", label: "Models", icon: Box },
@@ -155,14 +172,47 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
 }) {
   const running = snapshot.runtime.status === "running";
   const active = running || snapshot.runtime.status === "starting" || runtimeAction !== null;
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profilePickerRef = useRef<HTMLDivElement>(null);
+  const profileTriggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!profilePickerRef.current?.contains(event.target as Node)) setProfileMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setProfileMenuOpen(false); profileTriggerRef.current?.focus(); }
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("pointerdown", closeOutside); document.removeEventListener("keydown", closeOnEscape); };
+  }, [profileMenuOpen]);
+  const chooseProfile = (profile: RuntimeProfile) => {
+    setSelectedProfile(profile);
+    setProfileMenuOpen(false);
+    profileTriggerRef.current?.focus();
+  };
+  const profileLocked = active || busy;
   return <header className="topbar">
     <div className="brand"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><div><strong>OpenCore</strong><small>Observe · Understand · Trust</small></div></div>
     <div className="runtime-actions">
       <button className={active ? "runtime-stop-button" : "primary"} disabled={runtimeAction === "stopping"} onClick={active ? onStop : onStart}>{active ? <CircleStop size={15} /> : <Play size={15} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button>
       <button disabled={busy || runtimeAction !== null || !running} onClick={onRestart}><RotateCw size={15} /> Restart</button>
-      <label className="mode-select"><span>Mode</span><select value={selectedProfile} onChange={(event) => setSelectedProfile(event.target.value as RuntimeProfile)} disabled={active || busy}>
-        <option value="echo">ECHO 3T</option><option value="native1m">Native 1M</option>
-      </select><ChevronDown size={13} /></label>
+      <div className="model-picker" ref={profilePickerRef}>
+        <span className="model-picker-label">Model</span>
+        <button ref={profileTriggerRef} className={`model-picker-trigger ${profileMenuOpen ? "open" : ""}`} type="button" aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={profileMenuOpen} aria-controls="model-profile-options" disabled={profileLocked} onClick={() => setProfileMenuOpen((open) => !open)}>
+          <span className="model-picker-copy"><strong>{profileLabel(selectedProfile)}</strong><small>{selectedProfile === "echo" ? "262,144 native context · ECHO archive" : "1,000,000 token server window"}</small></span>
+          <ChevronDown size={15} aria-hidden="true" />
+        </button>
+        {profileMenuOpen && !profileLocked ? <div className="model-picker-options" id="model-profile-options" role="group" aria-label="Choose model profile">
+          <button className={`model-picker-option ${selectedProfile === "echo" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "echo"} onClick={() => chooseProfile("echo")}>
+            <span><strong>ECHO 3T</strong><small>262,144 native context · ECHO archive</small></span>{selectedProfile === "echo" ? <Check size={16} aria-hidden="true" /> : null}
+          </button>
+          <button className={`model-picker-option ${selectedProfile === "native1m" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "native1m"} onClick={() => chooseProfile("native1m")}>
+            <span><strong>Native 1M</strong><small>1,000,000 token server window</small></span>{selectedProfile === "native1m" ? <Check size={16} aria-hidden="true" /> : null}
+          </button>
+        </div> : null}
+      </div>
     </div>
     <div className="topbar-right">
       <button onClick={onExport} title="Export conversation" aria-label="Export conversation"><FileDown size={15} /> Export</button>
@@ -353,7 +403,7 @@ function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAct
   };
   return <div className="workspace runtime-workspace">
     <section className="runtime-main">
-      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · mutually exclusive</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={runtime.status === "running"}><b>ECHO 3T</b><small>256K live window</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={runtime.status === "running"}><b>Native 1M</b><small>1M server window</small></button></div></div>
+      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · mutually exclusive</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={runtime.status === "running"}><b>ECHO 3T</b><small>262K native context + ECHO archive</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={runtime.status === "running"}><b>Native 1M</b><small>1M server window</small></button></div></div>
       <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
       <RuntimeLogs logs={snapshot.logs} />
     </section>
@@ -437,6 +487,7 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
   const [connectorNotice, setConnectorNotice] = useState("");
   const [memoryQuery, setMemoryQuery] = useState("");
   const [memoryHits, setMemoryHits] = useState<import("./types").ArchiveSearchHit[]>([]);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveOverview, setArchiveOverview] = useState<import("./types").ArchiveOverview | null>(null);
   const [memoryScope, setMemoryScope] = useState("all");
   const [memorySearched, setMemorySearched] = useState(false);
@@ -457,6 +508,16 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
   const operationsRef = useRef<OperationRecord[]>([]);
   const [syncStarting, setSyncStarting] = useState<Record<string, boolean>>({});
   const [profileBusy, setProfileBusy] = useState<Record<string, boolean>>({});
+  const [browserStatus, setBrowserStatus] = useState<api.BrowserStatus | null>(null);
+
+  useEffect(() => {
+    if (view !== "settings") return;
+    let active = true;
+    const refreshBrowser = () => void api.browserBridgeStatus().then((status) => { if (active) setBrowserStatus(status); }).catch(() => {});
+    refreshBrowser();
+    const timer = window.setInterval(refreshBrowser, 2500);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [view]);
 
   useEffect(() => {
     if (view !== "connectors" && view !== "settings") return;
@@ -479,9 +540,17 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
   useEffect(() => {
     if (view !== "memory") return;
     let active = true;
-    api.archiveOverview().then((overview) => { if (active) setArchiveOverview(overview); })
-      .catch((error) => { if (active) onNotice(String(error)); });
-    return () => { active = false; };
+    let pending = false;
+    const update = async () => {
+      if (pending) return;
+      pending = true;
+      try { const overview = await api.archiveOverview(); if (active) { setArchiveOverview(overview); setArchiveError(null); } }
+      catch (error) { if (active) setArchiveError(String(error)); }
+      finally { pending = false; }
+    };
+    void update();
+    const timer = window.setInterval(update, 5000);
+    return () => { active = false; window.clearInterval(timer); };
   }, [view, snapshot.runtime.archivePath, onNotice]);
 
   const operationFor = (id: string) => operations.find((item) => item.kind === "history_sync" && item.target === id);
@@ -704,8 +773,9 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
     <div className="route-instruction"><ShieldCheck /><div><strong>Universal observable endpoint</strong><code>http://127.0.0.1:{snapshot.runtime.gatewayPort}/v1</code><p>Use this base URL in OpenAI-compatible clients. Claude Code/Codex use local transcript sync because their native protocols differ.</p></div></div>
   </div>;
   if (view === "memory") return <div className="support-page memory-page">
+    {archiveError ? <p role="alert">Could not read ECHO archives: {archiveError}. Retrying automatically.</p> : !archiveOverview ? <p role="status">Loading saved ECHO archives…</p> : null}
     <div className="page-heading"><div><h1>ECHO Memory</h1><p>Exact history, tool activity, files, and generated summaries across your conversations and projects.</p></div><button onClick={() => void revealLocalPath(snapshot.runtime.archivePath, onNotice)}><FolderOpen size={15} /> Open folder</button></div>
-    <button className="memory-general-button" onClick={() => void openGeneralArchive()}><Database size={17} /><span><strong>General ECHO archive</strong><small>Browse all recorded conversations and projects</small></span><span>{archiveRows.length.toLocaleString()} archives</span></button>
+    <button className="memory-general-button" onClick={() => void openGeneralArchive()}><Database size={17} /><span><strong>General ECHO archive</strong><small>Browse all recorded conversations and projects</small></span><span>{archiveOverview ? `${archiveRows.length.toLocaleString()} archives` : "Loading archives…"}</span></button>
     <div className="memory-summary" aria-label="Archive totals">
       <div><strong>{archiveOverview?.conversations.length.toLocaleString() ?? "—"}</strong><span>conversations</span></div>
       <div><strong>{archiveOverview?.pages.toLocaleString() ?? "—"}</strong><span>exact pages</span></div>
@@ -727,16 +797,16 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
         <div className="memory-results">{memoryHits.length === 0 ? <p>{memorySearched ? "No matching pages in this scope." : "Search or choose a conversation below."}</p> : memoryHits.map((hit) => <button key={`${hit.archiveFile}:${hit.pageId}`} className="memory-hit" onClick={() => void showMemoryPage(hit)}><strong>{snapshot.conversations.find((item) => item.id === hit.conversationId)?.title || hit.conversationId}</strong><small>Exact page</small><span>{hit.preview}</span></button>)}</div>
         <h2 className="memory-list-title">Archived conversations</h2>
         <div className="memory-category-tabs" role="group" aria-label="Archive categories">{[{ id:"all", label:"All" }, { id:"pinned", label:"Pinned" }, { id:"recent", label:"Recent" }, { id:"opencore", label:"OpenCore" }, { id:"codex", label:"Codex" }, { id:"claude code", label:"Claude Code" }, { id:"projects", label:"Projects" }].map((category) => <button key={category.id} className={memoryCategory === category.id ? "active" : ""} onClick={() => setMemoryCategory(category.id)}>{category.label}</button>)}</div>
-        <div className="memory-conversation-list">{categoryRows.length ? categoryRows.map((item) => <button key={item.conversationId} className={openArchiveId === item.conversationId ? "active" : ""} onClick={() => void openArchive(item.conversationId)}><span>{item.chat?.pinned ? "◆ " : ""}{item.chat?.title || item.conversationId}<small>{item.client}{item.chat?.project ? ` · ${item.chat.project}` : ""}</small></span><small>{item.pages.toLocaleString()} pages</small></button>) : <p>No archives in this category.</p>}</div>
+        <div className="memory-conversation-list">{categoryRows.length ? categoryRows.map((item) => <button key={item.conversationId} className={openArchiveId === item.conversationId ? "active" : ""} onClick={() => void openArchive(item.conversationId)}><span>{item.chat?.pinned ? "◆ " : ""}{item.chat?.title || item.conversationId}<small>{item.client}{item.chat?.project ? ` · ${item.chat.project}` : ""}</small></span><small>{item.pages.toLocaleString()} pages</small></button>) : <p>{archiveOverview ? "No archives in this category." : "Reading saved archives…"}</p>}</div>
       </section>
       <section>
         <h2>Working set</h2>
-        <Meter label="Live context" value={snapshot.telemetry.promptTokens} max={snapshot.runtime.contextSize} />
+        <EchoContextStatus conversationId={openArchiveId || selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} />
         <p>{selectedConversation ? `Selected conversation: ${selectedConversation}` : "Select a conversation before trimming or compacting."}</p>
         <div className="memory-actions">
           <button onClick={indexEchoHistory} disabled={memoryBusy}>{memoryBusy ? "Indexing…" : "Index activity and files"}</button>
           <button onClick={() => memoryAction("compact")} disabled={memoryBusy || !(openArchiveId || selectedConversation)}>Summarize open archive</button>
-          <button onClick={() => memoryAction("trim")} disabled={memoryBusy || !(openArchiveId || selectedConversation)}>Trim to 32K</button>
+          <button onClick={() => memoryAction("trim")} disabled={memoryBusy || !(openArchiveId || selectedConversation)}>Trim live context</button>
           <button onClick={async () => { try { onNotice(`Index exported to ${await api.exportArchiveIndex()}`); } catch (error) { onNotice(String(error)); } }}>Export index</button>
         </div>
         <div className="memory-integrity"><ShieldCheck size={16} /><span>Pages keep the original text and code. Opening a page verifies its source hash.</span></div>
@@ -760,6 +830,14 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
     {memoryPreview ? <FloatingWindow id="memory-page" title={memoryPreview.title} icon={<Archive size={17} />} className="memory-page-preview" onClose={() => setMemoryPreview(null)} place="center" initialWidth={760} initialHeight={620} minWidth={390} minHeight={260} ariaLabel="Exact ECHO archive page"><pre>{memoryPreview.content}</pre></FloatingWindow> : null}
   </div>;
   const modelDir = snapshot.runtime.modelPath.replace(/[\\/][^\\/]+$/, "");
+  if (view === "context") return <div className="support-page">
+    <div className="page-heading"><div><h1>Live Context</h1><p>The actual prompt window and ECHO offload state for the selected conversation.</p></div></div>
+    <div className="settings-grid">
+      <InspectorSection title="Active live window"><KeyValue label="Profile" value={profileLabel(snapshot.runtime.profile)} /><KeyValue label="Physical context cap" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens`} /><KeyValue label="Selected conversation" value={snapshot.conversations.find((item) => item.id === selectedConversation)?.title || "No conversation selected"} /><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /></InspectorSection>
+      <InspectorSection title="ECHO archive"><KeyValue label="ECHO 3T native context" value="262,144 tokens per inference" /><KeyValue label="Long-term history" value="Disk-backed ECHO archive; storage-bounded, not token-capped" /><KeyValue label="Archive target" value="3T tokens; not a live model window" /></InspectorSection>
+    </div>
+  </div>;
+
   if (view === "models") return <div className="support-page">
     <div className="page-heading"><div><h1>Models</h1><p>Verify the actual local model package and open its installation folder.</p></div></div>
     <div className="settings-grid">
@@ -776,13 +854,25 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
         </div>
       </section>
       <InspectorSection title="OpenCore model">
+        <KeyValue label="Model class" value="Qwen3.5-derived · about 5B parameters" />
+        <KeyValue label="Vision" value="BF16 projector auto-loads from vision/mmproj-BF16.gguf" />
         <KeyValue label="Path" value={snapshot.runtime.modelPath} />
         <KeyValue label="Status" value={snapshot.runtime.status} />
         <KeyValue label="Context" value={snapshot.runtime.contextSize.toLocaleString()} />
         <button className="wide" onClick={async () => { try { onNotice(await api.verifyModel()); } catch (error) { onNotice(String(error)); } }}><ShieldCheck size={14} /> Verify SHA-256</button>
         <button className="wide" onClick={() => void revealLocalPath(modelDir, onNotice)}><FolderOpen size={14} /> Open model folder</button>
       </InspectorSection>
-      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="262,144 live + disk archive" /><KeyValue label="Native 1M" value="1,000,000 server window" /><KeyValue label="Active profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
+      <InspectorSection title="doUcode">
+        <KeyValue label="Package" value="K2 + Nanbeige shared-state coding model" />
+        <KeyValue label="Language model" value="Laya multilingual · 322M encoder" />
+        <KeyValue label="Laya runtime" value="Bundled but not loaded; doUcode uses bilateral agreement" />
+        <KeyValue label="Live context" value="262,144 tokens in the package configuration" />
+        <KeyValue label="Current status" value="Alignment trained; end to end coding quality unverified" />
+        <p className="appearance-note">The two generator backbones negotiate an answer/action directly; neither gets to choose the other's output. Laya's bundled classifier is not loaded or used for selection.</p>
+        <button className="wide" onClick={() => void revealLocalPath("C:\\Users\\hertz\\Documents\\Best ai model in the world\\release\\doUcode", onNotice)}><FolderOpen size={14} /> Open doUcode package</button>
+      </InspectorSection>
+      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="262,144 native context + disk archive" /><KeyValue label="doUcode package" value="262,144-token context · package runtime not selectable here yet" /><KeyValue label="Native 1M" value="1,000,000 server window" /><KeyValue label="Active profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
+      <InspectorSection title="Live context"><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /><button className="wide" onClick={() => onNavigate("context")}><BrainCircuit size={14} /> Open live context</button></InspectorSection>
     </div>
   </div>;
 
@@ -792,6 +882,8 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
       <InspectorSection title="Conversation appearance">
         <label className="appearance-label" htmlFor="chat-font-size">Message text size <strong>{appearance.chatFontSize}px</strong></label>
         <input id="chat-font-size" className="appearance-range" type="range" min="13" max="18" step="1" value={appearance.chatFontSize} onChange={(event) => onAppearanceChange({ ...appearance, chatFontSize: Number(event.target.value) })} />
+        <label className="appearance-label" htmlFor="terminal-font-size">Terminal/log text <strong>{appearance.terminalFontSize}px</strong></label>
+        <input id="terminal-font-size" className="appearance-range" type="range" min="10" max="20" step="1" value={appearance.terminalFontSize} onChange={(event) => onAppearanceChange({ ...appearance, terminalFontSize: Number(event.target.value) })} />
         <div className="appearance-label">Message spacing</div>
         <div className="appearance-choices"><button className={!appearance.compactMessages ? "active" : ""} aria-pressed={!appearance.compactMessages} onClick={() => onAppearanceChange({ ...appearance, compactMessages: false })}>Comfortable</button><button className={appearance.compactMessages ? "active" : ""} aria-pressed={appearance.compactMessages} onClick={() => onAppearanceChange({ ...appearance, compactMessages: true })}>Compact</button></div>
         <p className="appearance-note">Changes apply to Conversations immediately and remain on this computer.</p>
@@ -801,6 +893,34 @@ function SupportingView({ view, snapshot, selectedConversation, onNotice, onRefr
         <div className="appearance-choices"><button className={!appearance.keepUserWindowInFront ? "active" : ""} aria-pressed={!appearance.keepUserWindowInFront} onClick={() => onAppearanceChange({ ...appearance, keepUserWindowInFront: false })}>Bring OpenCore's work forward</button><button className={appearance.keepUserWindowInFront ? "active" : ""} aria-pressed={appearance.keepUserWindowInFront} onClick={() => onAppearanceChange({ ...appearance, keepUserWindowInFront: true })}>Keep my window in front</button></div>
         <p className="appearance-note">When your window stays in front, OpenCore can use supported app controls without taking focus. Mouse and keyboard actions wait until foreground control is selected. Windows may still foreground newly opened apps.</p>
         <p className="appearance-note">Press Escape twice to stop an active OpenCore run.</p>
+      </InspectorSection>
+      <InspectorSection title="Tools">
+        <div className="appearance-choices"><button className={appearance.projectSkillsEnabled ? "active" : ""} aria-pressed={appearance.projectSkillsEnabled} onClick={() => onAppearanceChange({ ...appearance, projectSkillsEnabled: !appearance.projectSkillsEnabled })}>{appearance.projectSkillsEnabled ? "Project skills enabled" : "Project skills disabled"}</button></div>
+        <p className="appearance-note">When enabled, the Claude Agent SDK loads this workspace's Claude settings and skills. These settings control which tools can be used in new prompts.</p>
+        <div className="appearance-label">Default skills for every new prompt</div>
+        <div className="appearance-choices"><button className={appearance.defaultComputerUse ? "active" : ""} aria-pressed={appearance.defaultComputerUse} onClick={() => onAppearanceChange({ ...appearance, defaultComputerUse: !appearance.defaultComputerUse })}>Computer use</button><button className={appearance.defaultBrowserUse ? "active" : ""} aria-pressed={appearance.defaultBrowserUse} onClick={() => onAppearanceChange({ ...appearance, defaultBrowserUse: !appearance.defaultBrowserUse })}>Browser</button><button className={appearance.defaultChromeControl ? "active" : ""} aria-pressed={appearance.defaultChromeControl} onClick={() => onAppearanceChange({ ...appearance, defaultChromeControl: !appearance.defaultChromeControl })}>Chrome</button></div>
+        <p className="appearance-note">All are off by default. Without /computer-use, the 0.8B screen model is not exposed to the agent and cannot wake.</p>
+        <div className="appearance-choices"><button className={appearance.subagentsEnabled ? "active" : ""} aria-pressed={appearance.subagentsEnabled} onClick={() => onAppearanceChange({ ...appearance, subagentsEnabled: !appearance.subagentsEnabled })}>{appearance.subagentsEnabled ? "Subagents enabled" : "Subagents disabled"}</button></div>
+        <label className="appearance-label" htmlFor="max-subagents">Maximum subagent spawns per prompt <strong>{appearance.maxSubagents}</strong></label>
+        <input id="max-subagents" className="appearance-number" type="number" min="1" max="1000" step="1" value={appearance.maxSubagents} disabled={!appearance.subagentsEnabled} onChange={(event) => onAppearanceChange({ ...appearance, maxSubagents: Math.max(1, Math.min(1000, Number(event.target.value) || 1)) })} />
+        <p className="appearance-note">Hard ceiling: 1,000. Keep it low on a single-GPU machine; this is a capability limit, not a recommended spawn count.</p>
+        <p className="appearance-note">Computer use, OpenCore Browser, and Chrome control are configured above. Type / in the composer to add a skill to one prompt.</p>
+      </InspectorSection>
+      <InspectorSection title="Model & context">
+        <KeyValue label="ECHO 3T model" value="Qwen3.5-derived 5B class + BF16 vision projector" />
+        <KeyValue label="ECHO 3T native context" value="262,144 tokens per inference" />
+        <KeyValue label="doUcode package context" value="262,144 tokens" />
+        <KeyValue label="Native 1M profile" value="1,000,000 tokens" />
+        <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
+        <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
+        <p className="appearance-note">This is an exact token count. The active model's native context sets the per-inference ceiling. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
+      </InspectorSection>
+      <InspectorSection title="Chrome extension">
+        <KeyValue label="Bridge" value={browserStatus?.connected ? "Connected" : "Not connected"} /><KeyValue label="Local port" value={String(browserStatus?.port || 8814)} />
+        <p className="appearance-note">In Chrome Extensions, enable Developer mode, choose Load unpacked, and select the bundled chrome-extension folder. Open the OpenCore extension popup and pair it with the local token below.</p>
+        <code className="settings-token">{browserStatus?.token || "Loading pairing token..."}</code>
+        <button className="wide" disabled={!browserStatus?.token} onClick={() => browserStatus?.token && navigator.clipboard.writeText(browserStatus.token)}><Copy size={14} /> Copy pairing token</button>
+        <p className="appearance-note">/chrome-control can list/open/activate/close tabs, inspect, screenshot, interact, reload, and only for explicit development/debugging, evaluate JavaScript through Chrome DevTools Runtime.</p>
       </InspectorSection>
       <InspectorSection title="Privacy & responsibility"><KeyValue label="Network" value="Localhost only" /><KeyValue label="Credentials" value="Redacted before persistence" /><KeyValue label="AI output" value="Review code and tool actions before use" /><KeyValue label="Ownership" value="You control local data and exported conversations" /></InspectorSection>
       <InspectorSection title="Storage"><KeyValue label="Conversation database" value="Local SQLite" /><KeyValue label="ECHO archive" value={snapshot.runtime.archivePath} /><button className="wide" onClick={() => void revealLocalPath(snapshot.runtime.archivePath, onNotice)}><FolderOpen size={14} /> Open archive</button><button className="wide" onClick={async () => { try { onNotice(`Index exported to ${await api.exportArchiveIndex()}`); } catch (error) { onNotice(String(error)); } }}><Download size={14} /> Export memory index</button></InspectorSection>
@@ -836,6 +956,7 @@ export default function App() {
   const [selectedConversation, setSelectedConversation] = useState<string>();
   const [conversationEpoch, setConversationEpoch] = useState(0);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [liveGeneration, setLiveGeneration] = useState<{ conversationId: string; runId: string; content?: string; reasoning?: string; segments?: { kind: "thinking" | "text"; content: string }[]; phase?: string }>();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [runtimeAction, setRuntimeAction] = useState<"starting" | "stopping" | null>(null);
@@ -892,6 +1013,44 @@ export default function App() {
     return () => { stopped = true; window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibility); };
   }, [refresh, view, snapshot?.runtime.status]);
   useEffect(() => { if (selectedConversation) api.conversation(selectedConversation).then(setTimeline).catch((error) => setNotice(String(error))); }, [selectedConversation]);
+  useEffect(() => {
+    let disposed = false;
+    let stop: (() => void) | undefined;
+    void listen<NonNullable<typeof liveGeneration> & { done?: boolean; checkpoint?: boolean }>("opencore-generation", ({ payload }) => {
+      if (payload.done) {
+        void api.conversation(payload.conversationId).then((entries) => {
+          if (disposed) return;
+          if (selectedConversationRef.current === payload.conversationId) setTimeline(entries);
+          setLiveGeneration((current) => current?.runId === payload.runId ? undefined : current);
+        }).catch(() => { setLiveGeneration((current) => current?.runId === payload.runId ? undefined : current); });
+      } else if (payload.checkpoint) {
+        void api.conversation(payload.conversationId).then((entries) => {
+          if (disposed) return;
+          if (selectedConversationRef.current === payload.conversationId) setTimeline(entries);
+          setLiveGeneration((current) => current?.runId === payload.runId
+            ? { ...payload, checkpoint: undefined, segments: [], content: "", reasoning: "" } : current);
+        }).catch(() => {});
+      } else { setLiveGeneration(payload); }
+    }).then((unlisten) => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
+    return () => { disposed = true; stop?.(); };
+  }, []);
+  const visibleTimeline = useMemo(() => {
+    if (!liveGeneration || liveGeneration.conversationId !== selectedConversation) return timeline;
+    const entries = [...timeline];
+    const preview = (id: number, kind: string, content: string): TimelineEntry => ({
+      id, kind, content, conversationId: selectedConversation, timestamp: new Date().toISOString(),
+      role: "assistant", source: "OpenCore", title: "Live generation", metadata: { live: true, phase: liveGeneration.phase },
+    });
+    const segments = liveGeneration.segments?.length ? liveGeneration.segments : [
+      ...(liveGeneration.reasoning ? [{ kind: "thinking" as const, content: liveGeneration.reasoning }] : []),
+      ...(liveGeneration.content ? [{ kind: "text" as const, content: liveGeneration.content }] : []),
+    ];
+    for (const [index, segment] of segments.entries()) {
+      if (!segment.content.trim() || segment.content.trimStart().startsWith("<echo>")) continue;
+      entries.push(preview(-2 - index, segment.kind === "thinking" ? "thinking" : "message", segment.content));
+    }
+    return entries;
+  }, [timeline, liveGeneration, selectedConversation]);
   const selectedActive = Boolean(selectedConversation && snapshot?.activeConversationIds?.includes(selectedConversation));
   useEffect(() => {
     if (!selectedConversation || !selectedActive) return;
@@ -1009,11 +1168,16 @@ export default function App() {
 
   if (!snapshot) return <div className="app-window-frame"><WindowTitleBar /><div className="splash"><span className="brand-mark splash-logo"><img src="/opencore-logo.png" alt="OpenCore" /></span><strong>OpenCore</strong><p>Loading runtime state…</p></div></div>;
   const running = snapshot.runtime.status === "running";
-  const appearanceStyle = { "--chat-font-size": `${appearance.chatFontSize}px` } as CSSProperties;
+  const appearanceStyle = { "--chat-font-size": `${appearance.chatFontSize}px`, "--terminal-font-size": `${appearance.terminalFontSize}px` } as CSSProperties;
+  const defaultSkills = [
+    appearance.defaultComputerUse ? "computer-use" : null,
+    appearance.defaultBrowserUse ? "browser-use" : null,
+    appearance.defaultChromeControl ? "chrome-control" : null,
+  ].filter(Boolean) as ("computer-use" | "browser-use" | "chrome-control")[];
 
   if (view === "conversations") {
     const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} onToggleFloating={() => setSidebarDetached((value) => !value)} floating={sidebarDetached} />;
-    return <div className="app-window-frame"><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""} ${sidebarDetached ? "sidebar-detached" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: sidebarDetached ? "58px minmax(0,1fr)" : `58px ${sidebarWidth}px 7px minmax(0,1fr)` }}>
+    return <div className="app-window-frame"><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""} ${sidebarDetached ? "sidebar-detached" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: sidebarDetached ? "58px minmax(0,1fr)" : `58px ${sidebarWidth}px 7px minmax(0,1fr)`, gridTemplateRows: "minmax(0,1fr) 28px" }}>
       <Navigation active={view} onChange={setView} running={running} compact />
       {!sidebarDetached ? <>{conversationList}<div className="conversation-resizer" role="separator" aria-label="Resize conversations" aria-orientation="vertical" onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} /></> : null}
       <AssistantConversation
@@ -1021,7 +1185,7 @@ export default function App() {
         conversationId={selectedConversation}
         title={selected?.title || "New conversation"}
         client={selected?.client || "OpenCore"}
-        entries={timeline}
+        entries={visibleTimeline}
         runtimeRunning={running}
         runtimeSnapshot={snapshot.runtime}
         telemetry={snapshot.telemetry}
@@ -1041,7 +1205,13 @@ export default function App() {
         onPin={togglePinned}
         onMoveProject={moveCurrentToProject}
         onCreateProject={createProjectForCurrent}
+        defaultSkills={defaultSkills}
+        subagentsEnabled={appearance.subagentsEnabled}
+        maxSubagents={appearance.maxSubagents}
+        projectSkillsEnabled={appearance.projectSkillsEnabled}
+        compactAtTokens={appearance.compactAtTokens}
       />
+      <footer className="statusbar conversation-statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span><span className="archive-target" title="ECHO reuses the model session between turns; at a backend context limit it rebuilds from the retained transcript while exact older source history stays archived for retrieval.">{snapshot.runtime.status === "running" ? "Live context" : "Model window"} <strong>{snapshot.runtime.status === "running" ? "rolling · " : ""}{snapshot.runtime.contextSize.toLocaleString()}</strong></span></footer>
       {sidebarDetached ? <FloatingWindow id="conversations" title="Conversations" icon={<MessageSquare size={17} />} onClose={() => setSidebarDetached(false)} place="left" className="conversation-floating" initialWidth={sidebarWidth} initialHeight={window.innerHeight - 16} minWidth={290} minHeight={300}>{conversationList}</FloatingWindow> : null}
       {notice && <div className="toast conversation-toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
       {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
@@ -1049,13 +1219,13 @@ export default function App() {
     </div></div>;
   }
 
-  return <div className="app-window-frame"><WindowTitleBar /><div className="app-shell">
+  return <div className="app-window-frame" style={appearanceStyle}><WindowTitleBar /><div className="app-shell">
     <Header snapshot={snapshot} busy={busy} runtimeAction={runtimeAction} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} onStart={start} onStop={stop} onRestart={restart} onExport={exportCurrent} />
     <Navigation active={view} onChange={setView} running={running} />
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : <SupportingView view={view} snapshot={snapshot} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
-    <footer className="statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span></footer>
+    <footer className="statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span><span className="archive-target" title="ECHO reuses the model session between turns; at a backend context limit it rebuilds from the retained transcript while exact older source history stays archived for retrieval.">{snapshot.runtime.status === "running" ? "Live context" : "Model window"} <strong>{snapshot.runtime.status === "running" ? "rolling · " : ""}{snapshot.runtime.contextSize.toLocaleString()}</strong></span></footer>
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
   </div></div>;
 }

@@ -34,11 +34,12 @@ import json
 import math
 import re
 import sqlite3
+import sys
 import threading
 import time
 import zlib
 from datetime import datetime
-from collections import Counter
+from collections import Counter, OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -117,6 +118,91 @@ class RetrievalResult:
             out.append(block)
             used += cost
         return "\n\n".join(out)
+
+
+class BoundedPageCache:
+    """Process-wide, byte-accounted RAM cache for exact decoded ECHO pages.
+
+    SQLite remains the authoritative archive. This cache is only a warm tier:
+    entries can always be discarded and read again from disk. The accounting
+    includes Python object/string sizes plus a conservative per-entry allowance
+    for the ordered-dictionary node and references.
+    """
+
+    def __init__(self, budget_bytes: int):
+        self.budget_bytes = max(0, int(budget_bytes))
+        self._lock = threading.RLock()
+        self._pages: OrderedDict[str, tuple[MemoryPage, int]] = OrderedDict()
+        self._resident_bytes = 0
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+        self._oversized = 0
+
+    @staticmethod
+    def page_cost(key: str, page: MemoryPage) -> int:
+        values = vars(page).values()
+        # Include the dataclass and its attribute dictionary, each referenced
+        # field, tuple members, and a conservative allowance for the
+        # OrderedDict node/references. This is an accounting budget rather
+        # than a process-RSS guarantee; shared Python objects may be counted
+        # more than once while allocator arenas are outside our control.
+        size = 256 + sys.getsizeof(key) + sys.getsizeof(page) + sys.getsizeof(vars(page))
+        for value in values:
+            if value is None:
+                continue
+            size += sys.getsizeof(value)
+            if isinstance(value, tuple):
+                size += sum(sys.getsizeof(item) for item in value)
+        return size
+
+    def get(self, key: str) -> MemoryPage | None:
+        with self._lock:
+            entry = self._pages.get(key)
+            if entry is None:
+                self._misses += 1
+                return None
+            self._hits += 1
+            self._pages.move_to_end(key)
+            return entry[0]
+
+    def put(self, key: str, page: MemoryPage) -> bool:
+        if self.budget_bytes == 0:
+            return False
+        size = self.page_cost(key, page)
+        with self._lock:
+            if size > self.budget_bytes:
+                self._oversized += 1
+                return False
+            previous = self._pages.pop(key, None)
+            if previous is not None:
+                self._resident_bytes -= previous[1]
+            while self._pages and self._resident_bytes + size > self.budget_bytes:
+                _, (_, removed_size) = self._pages.popitem(last=False)
+                self._resident_bytes -= removed_size
+                self._evictions += 1
+            self._pages[key] = (page, size)
+            self._resident_bytes += size
+            return True
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            accesses = self._hits + self._misses
+            return {
+                "budget_bytes": self.budget_bytes,
+                "resident_bytes": self._resident_bytes,
+                "pages": len(self._pages),
+                "hits": self._hits,
+                "misses": self._misses,
+                "evictions": self._evictions,
+                "oversized": self._oversized,
+                "hit_rate": self._hits / accesses if accesses else 0.0,
+            }
+
+    def clear(self) -> None:
+        with self._lock:
+            self._pages.clear()
+            self._resident_bytes = 0
 
 
 def split_into_pages(text: str) -> list[str]:
@@ -218,7 +304,8 @@ class EchoArchive:
     """
 
     def __init__(self, path: str | Path, idle_seconds: float = 60.0,
-                 cache_kib: int = 2048):
+                 cache_kib: int = 2048,
+                 page_cache: BoundedPageCache | None = None):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         # check_same_thread=False plus an explicit reentrant lock: the proxy
@@ -230,6 +317,7 @@ class EchoArchive:
         self._lock = threading.RLock()
         self._idle_seconds = idle_seconds
         self._cache_kib = cache_kib
+        self.page_cache = page_cache
         self._last_used = time.time()
         self._db: sqlite3.Connection | None = None
         self._open()
@@ -481,7 +569,7 @@ class EchoArchive:
         if not delete_instead:
             target = Path(cold_path) if cold_path else \
                 self.path.with_name(self.path.stem + "-cold" + self.path.suffix)
-            cold_archive = EchoArchive(target)
+            cold_archive = EchoArchive(target, page_cache=self.page_cache)
             try:
                 for page_id in cold:
                     page = self.load(page_id)
@@ -803,6 +891,11 @@ class EchoArchive:
 
     def load(self, page_id: str) -> MemoryPage | None:
         """Load exact source bytes and verify them against the stored hash."""
+        cache_key = str(self.path.resolve()) + "\0" + page_id
+        if self.page_cache is not None:
+            cached = self.page_cache.get(cache_key)
+            if cached is not None:
+                return cached
         with self._lock:
             row = self.db.execute("SELECT * FROM pages WHERE page_id=?",
                                   (page_id,)).fetchone()
@@ -811,13 +904,16 @@ class EchoArchive:
         raw = zlib.decompress(row["compressed_bytes"])
         if hashlib.sha256(raw).hexdigest() != row["content_hash"]:
             raise IOError("ECHO archive corruption at page %s" % page_id)
-        return MemoryPage(
+        page = MemoryPage(
             page_id=row["page_id"], conversation_id=row["conversation_id"],
             source_offset=(row["offset_start"], row["offset_end"]),
             timestamp=row["timestamp"], codec_version=row["codec_version"],
             parent_page=row["parent_page"], next_page=row["next_page"],
             content_hash=row["content_hash"], text=raw.decode("utf-8"),
         )
+        if self.page_cache is not None:
+            self.page_cache.put(cache_key, page)
+        return page
 
     def stats(self) -> dict:
         with self._lock:

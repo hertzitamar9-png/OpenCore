@@ -61,6 +61,17 @@ async function handle(command) {
     return { tabId: tab.id, url: tab.url || args.url };
   }
   const tabId = await activeTabId(args);
+  if (action === "activate") {
+    const tab = await chrome.tabs.get(tabId);
+    await chrome.tabs.update(tabId, { active: true });
+    if (tab.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
+    return { tabId, active: true };
+  }
+  if (action === "close") {
+    await chrome.tabs.remove(tabId);
+    attachedTabs.delete(tabId);
+    return { tabId, closed: true };
+  }
   if (action === "navigate") {
     if (!isHttpUrl(args.url)) throw new Error("Only HTTP and HTTPS URLs are supported");
     const tab = await chrome.tabs.update(tabId, { url: args.url, active: true });
@@ -99,6 +110,16 @@ async function handle(command) {
     await cdp(tabId, "Input.dispatchKeyEvent", { type: "rawKeyDown", key: args.key, windowsVirtualKeyCode: code });
     await cdp(tabId, "Input.dispatchKeyEvent", { type: "keyUp", key: args.key, windowsVirtualKeyCode: code });
     return { tabId, key: args.key };
+  }
+  if (action === "reload") {
+    await cdp(tabId, "Page.reload", { ignoreCache: false });
+    return { tabId, reloaded: true };
+  }
+  if (action === "evaluate") {
+    if (typeof args.expression !== "string" || !args.expression.length || args.expression.length > 16000) throw new Error("Invalid DevTools expression");
+    const output = await cdp(tabId, "Runtime.evaluate", { expression: args.expression, returnByValue: true, awaitPromise: true, userGesture: true });
+    if (output.exceptionDetails) throw new Error(output.exceptionDetails.exception?.description || output.exceptionDetails.text || "DevTools evaluation failed");
+    return { tabId, type: output.result.type, value: output.result.value ?? null, description: output.result.description || "" };
   }
   if (action === "back" || action === "forward") {
     const history = await cdp(tabId, "Page.getNavigationHistory");

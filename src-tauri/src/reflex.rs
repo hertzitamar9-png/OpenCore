@@ -134,9 +134,9 @@ pub fn relative_center(elements: &[Value], element_id: i64) -> Option<(i64, i64)
 pub fn tool_spec() -> Value {
     json!({"type":"function","function":{
         "name":"reflex_use",
-        "description":"OpenCore Reflex is a persistent, sub-1B computer-use controller. pick chooses a Windows accessibility control (about 25 ms). ground locates a visible target from a screenshot and returns window-relative x,y without clicking. ground_click locates that target and clicks it in one call; it returns whether input was sent, not proof that the task succeeded. Use a short, specific goal and check the screen afterward. Both visual actions require the selected window to be visible and foregroundable. play_snake plays a visible Snake game until game over or the time limit. Use the existing Chrome windowId when the user asked for Chrome.",
+        "description":"OpenCore Reflex is OpenCore's computer-use part; each action works on one window from desktop_use list. Reflex Vision, a 0.85B vision model, looks at the window image even when other windows cover it: see answers goal as a question about what is visible now (screen state, icons, images, game boards, whether an action worked); ground returns window-relative x,y for the target described in goal without clicking; ground_click locates it and clicks it. Describe one target by its text, look and position, for example 'the blue Send button at the bottom right'. A click returns whether input was sent, not whether the task succeeded, so use see afterward to check. The first vision call can take a few seconds while the model loads. pick chooses a Windows accessibility control from the window's control tree (about 25 ms, text only). play_snake plays a visible Snake game until game over or the time limit. Use the existing Chrome windowId when the user asked for Chrome.",
         "parameters":{"type":"object","properties":{
-            "action":{"type":"string","enum":["pick","ground","ground_click","play_snake"]},
+            "action":{"type":"string","enum":["see","ground","ground_click","pick","play_snake"]},
             "windowId":{"type":"integer"},
             "goal":{"type":"string"},
             "seconds":{"type":"number"}

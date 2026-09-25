@@ -55,7 +55,7 @@ CONTEXT_FILL = 0.90
 # of 1,500, so far more detail survives each round.
 COMPRESSION = 4.0
 CHARS_PER_TOKEN = 3.10           # measured for this tokenizer; only an estimate
-FALLBACK_CTX = 32768
+FALLBACK_CTX = 262144
 
 # Merge rounds needed are log(batches) / log(COMPRESSION): eight for a billion
 # tokens at 4x, thirteen for a trillion. This was 4, which was enough at the

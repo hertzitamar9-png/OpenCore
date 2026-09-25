@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import re
+import uuid
 
 
 COMMAND = re.compile(r"^\s*<echo>(.*?)</echo>\s*$", re.S)
@@ -35,14 +36,13 @@ When ready, output your ordinary answer without <echo> tags.
 
 
 class LiveTranscript:
-    """The conversation exactly as the backend has already read it.
+    """The durable transcript and its status in the active backend session.
 
     OpenCore is a hybrid recurrent model: the server can reuse cached work only
     when a request extends the previous one, and prefill runs at a few hundred
-    tokens per second. Rebuilding the prompt on every call therefore re-read
-    the whole window each time. Every call now sends this list unchanged with
-    new messages appended at the end; nothing already sent is edited,
-    reordered or re-rendered until a deliberate compaction.
+    tokens per second. The first call sends the current transcript; later calls
+    send only entries not yet processed by the active backend session. The
+    exact source history remains in ECHO's archive when the working set rolls.
     """
 
     TURN, NOTE = "turn", "note"
@@ -61,6 +61,35 @@ class LiveTranscript:
         self.question = saved.get("question")
         self.open = bool(saved.get("open"))
         self.compactions = int(saved.get("compactions", 0))
+        self.prompt_tokens = int(saved.get('prompt_tokens', 0))
+        self.offloaded_messages = int(saved.get('offloaded_messages', 0))
+        self.turn_id = saved.get("turn_id")
+
+    def repair_invalid_calls(self, count_tokens):
+        rejected = set()
+        repaired = 0
+        for entry in self.entries:
+            message = entry['message']
+            calls = message.get('tool_calls') or []
+            invalid = False
+            for call in calls:
+                try:
+                    invalid |= not isinstance(json.loads(call.get('function', {}).get('arguments', '')), dict)
+                except (ValueError, TypeError):
+                    invalid = True
+            if invalid:
+                self.archive.append(json.dumps(message, ensure_ascii=False), self.conversation)
+                rejected.update(call.get('id') for call in calls)
+                entry['message'] = {'role':'assistant', 'content':'A malformed tool request was rejected. Its exact text is archived; no successful result is implied.'}
+                repaired += 1
+            elif message.get('role') == 'tool' and message.get('tool_call_id') in rejected:
+                self.archive.append(json.dumps(message, ensure_ascii=False), self.conversation)
+                entry['message'] = {'role':'user', 'content':'Recorded result for the rejected request: ' + str(message.get('content', ''))}
+            if entry['message'] is not message:
+                entry['tokens'] = self.cost(entry['message'], count_tokens)
+        if repaired:
+            self.save()
+        return repaired
 
     @property
     def messages(self):
@@ -73,14 +102,34 @@ class LiveTranscript:
     @staticmethod
     def cost(message, count_tokens):
         text = message.get("content")
-        text = text if isinstance(text, str) else json.dumps(text or "", ensure_ascii=False)
+        image_tokens = 0
+        if isinstance(text, list):
+            image_tokens = sum(2048 for part in text if isinstance(part, dict) and part.get('type') == 'image_url')
+            text = '\n'.join(part.get('text', '') for part in text if isinstance(part, dict) and part.get('type') == 'text')
+        else:
+            text = text if isinstance(text, str) else json.dumps(text or "", ensure_ascii=False)
         if message.get("tool_calls"):
             text += json.dumps(message["tool_calls"], ensure_ascii=False)
-        return count_tokens(text) + 8
+        return count_tokens(text) + image_tokens + 8
 
     def append(self, message, count_tokens, kind=None):
-        self.entries.append({"message": message, "tokens": self.cost(message, count_tokens),
-                             "kind": kind or message.get("role")})
+        entry = {"message": message, "tokens": self.cost(message, count_tokens),
+                 "kind": kind or message.get("role"),
+                 "archive_event_id": "live:" + uuid.uuid4().hex,
+                 "backend_sent": False}
+        self.entries.append(entry)
+        return entry
+
+    def mark_backend_sent(self):
+        """Mark transcript entries now represented in the model's live state."""
+        for entry in self.entries:
+            entry["backend_sent"] = True
+
+    def append_generated(self, message, count_tokens, kind=None):
+        """Record model output that is already present in the backend state."""
+        entry = self.append(message, count_tokens, kind)
+        entry["backend_sent"] = True
+        return entry
 
     def tool_result_ids(self):
         return {entry["message"].get("tool_call_id") for entry in self.entries
@@ -95,7 +144,7 @@ class LiveTranscript:
                     pending.append(call.get("id"))
         return pending
 
-    def start_turn(self, question, count_tokens):
+    def start_turn(self, question, count_tokens, content=None):
         # A turn abandoned mid-action (cancelled, or a new message sent) must
         # not leave a call without a result: templates and the model both
         # expect every call to be answered.
@@ -104,10 +153,62 @@ class LiveTranscript:
                          "content": "Not run: the user sent a new message before this action ran."},
                         count_tokens)
         self.question, self.open = question, True
-        self.append({"role": "user", "content": question}, count_tokens, self.TURN)
+        self.turn_id = uuid.uuid4().hex
+        self.append({"role": "user", "content": question if content is None else content}, count_tokens, self.TURN)
+
+    def abandon_open_turn(self, count_tokens):
+        """Close a cancelled turn with explicit receipts for unfinished calls."""
+        for call_id in self.pending_tool_calls():
+            self.append({"role": "tool", "tool_call_id": call_id,
+                         "content": "Not run: the user sent a new message before this action ran."},
+                        count_tokens)
+        self.open = False
+
+    def archive_completed(self):
+        """Persist completed source events while retaining them in the working set.
+
+        Stable IDs make a retry after interruption idempotent. Keeping entries
+        live preserves ordinary conversation continuity; context compaction may
+        later remove older entries without losing their exact archived record.
+        """
+        if self.open or not self.entries:
+            return 0
+        archived = 0
+        for entry in self.entries:
+            if entry.get("kind") == self.NOTE:
+                continue
+            if entry.get("archive_recorded"):
+                continue
+            if not entry.get("archive_event_id"):
+                entry["archive_event_id"] = "live:" + uuid.uuid4().hex
+        # Save stable IDs before the first archive write. A retry is then safe.
+        self.save()
+        for entry in self.entries:
+            if entry.get("kind") == self.NOTE or entry.get("archive_recorded"):
+                continue
+            message = dict(entry["message"])
+            message.setdefault("source", "OpenCore ECHO working turn")
+            message.setdefault("kind", "message")
+            message["source_event_id"] = entry["archive_event_id"]
+            self.archive.record_source_event(message, self.conversation)
+            entry["archive_recorded"] = True
+            archived += 1
+        self.offloaded_messages += archived
+        self.save()
+        return archived
+
+    def offload_completed(self):
+        """Persist a finished working set, then clear it from the live prompt."""
+        if self.open or not self.entries:
+            return 0
+        archived = self.archive_completed()
+        self.entries = []
+        self.question = None
+        self.turn_id = None
+        return archived
 
     def compact(self, keep_tokens, count_tokens):
-        """Move the oldest whole turns out of the live window in one step.
+        """Archive completed exchanges and remove them from the working window.
 
         Compaction is the only operation that rewrites what the backend has
         read, so it runs rarely and removes a large block at once (hysteresis)
@@ -115,42 +216,60 @@ class LiveTranscript:
         searchable in the archive; a short index of them stays live.
         """
         starts = [i for i, entry in enumerate(self.entries) if entry.get("kind") == self.TURN]
-        if len(starts) < 2:
+        if not starts:
             return 0
         current = starts[-1]
+        # A complete assistant/tool exchange is indivisible. The current user
+        # request and every unfinished call remain live, even in a single long task.
+        pending = set()
+        boundaries = []
+        for index, entry in enumerate(self.entries):
+            message = entry["message"]
+            pending.update(call["id"] for call in message.get("tool_calls") or [])
+            if message.get("role") == "tool":
+                pending.discard(message.get("tool_call_id"))
+            if not pending and index + 1 < len(self.entries):
+                boundaries.append(index + 1)
         cut = None
-        for start in starts[1:]:
-            if start > current:
+        for candidate in boundaries:
+            remaining = self.entries[candidate:]
+            if candidate > current:
+                remaining = [self.entries[current]] + remaining
+            if sum(entry["tokens"] for entry in remaining) <= max(0, keep_tokens - 512):
+                cut = candidate
                 break
-            if sum(entry["tokens"] for entry in self.entries[start:]) <= keep_tokens:
-                cut = start
-                break
+        if cut is None and boundaries:
+            cut = boundaries[-1]
         if cut is None:
-            cut = current
-        moved = self.entries[:cut]
+            return 0
+        moved = [entry for i, entry in enumerate(self.entries[:cut]) if i != current]
         if not moved:
             return 0
-        earlier = []
+        # Archive before eviction, including exact tool arguments/results that
+        # may never have appeared in a final answer. A failed write aborts eviction.
+        hashes = []
         for entry in moved:
-            if entry.get("kind") == self.NOTE:
-                earlier.extend(entry.get("index", []))
-            elif entry.get("kind") == self.TURN:
-                text = str(entry["message"].get("content") or "").strip().replace("\n", " ")
-                earlier.append(text[:160] + ("..." if len(text) > 160 else ""))
-        earlier = earlier[-120:]
-        note = ("ECHO: the earlier part of this conversation (%d messages) moved to the archive "
-                "to keep the live window fast. It is exact and still searchable with an ECHO "
-                "search command. Earlier requests, oldest first:\n%s"
-                % (len(moved), "\n".join("- " + line for line in earlier)))
-        entry = {"message": {"role": "user", "content": note}, "kind": self.NOTE, "index": earlier}
+            if entry.get("archive_recorded"):
+                continue
+            pages = self.archive.append(json.dumps(entry["message"], ensure_ascii=False), self.conversation)
+            hashes.extend(page.content_hash for page in pages)
+            entry["archive_recorded"] = True
+        archived_refs = ", ".join(hashes[-4:]) or "existing exact ECHO archive records"
+        note = ("ECHO checkpoint: %d completed messages saved exactly in the archive. "
+                "Search or load their source records before reusing earlier details. "
+                "Recent references: %s" % (len(moved), archived_refs))
+        entry = {"message": {"role": "user", "content": note}, "kind": self.NOTE}
         entry["tokens"] = self.cost(entry["message"], count_tokens)
-        self.entries = [entry] + self.entries[cut:]
+        kept = ([self.entries[current]] if cut > current else []) + self.entries[cut:]
+        self.entries = [entry] + kept
         self.compactions += 1
+        self.offloaded_messages += len(moved)
         return len(moved)
 
     def save(self):
         state = {"entries": self.entries, "question": self.question, "open": self.open,
-                 "compactions": self.compactions}
+                 "compactions": self.compactions, "prompt_tokens": self.prompt_tokens,
+                 "offloaded_messages": self.offloaded_messages, "turn_id": self.turn_id}
         with self.archive._lock:
             self.archive.db.execute("INSERT OR REPLACE INTO echo_live_transcript VALUES (?,?)",
                                     (self.conversation, json.dumps(state, ensure_ascii=False)))

@@ -25,12 +25,23 @@ describe("conversation response grouping", () => {
     ]);
   });
 
-  it("leaves imported client messages and ECHO import progress separate", () => {
+  it("keeps ECHO import progress visible and client replies in separate turns", () => {
     const turns = groupConversationTurns([
       event(1, "message", "assistant", "Codex answer", "Codex"),
       event(2, "echo_import", "system", "Indexing"),
       event(3, "message", "assistant", "OpenCore answer"),
     ]);
     expect(turns.map((turn) => turn.entries.map((entry) => entry.id))).toEqual([[1], [2], [3]]);
+  });
+
+  it("hides internal harness startup records so they cannot look like a reply", () => {
+    const turns = groupConversationTurns([
+      event(1, "message", "user", "What is this?"),
+      event(2, "harness", "system", "Claude Agent SDK"),
+      event(3, "message", "assistant", "It is the OpenCore logo."),
+    ]);
+    expect(turns.map((turn) => turn.entries.map((entry) => entry.content))).toEqual([
+      ["What is this?"], ["It is the OpenCore logo."],
+    ]);
   });
 });

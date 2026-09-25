@@ -35,27 +35,52 @@ def path_for(root: Path, conversation_id: str) -> Path:
 def import_stream(root: Path, lines) -> dict:
     current_id = None
     archive = None
-    imported = skipped = 0
+    imported = skipped = failed = 0
+    errors = []
     try:
-        for line in lines:
-            payload = json.loads(line)
-            conversation_id = payload["conversation_id"]
-            if not isinstance(conversation_id, str) or not conversation_id:
-                raise ValueError("conversation_id is required")
+        for line_number, line in enumerate(lines, start=1):
+            try:
+                payload = json.loads(line)
+                if not isinstance(payload, dict):
+                    raise ValueError("batch must be an object")
+                conversation_id = payload.get("conversation_id")
+                if not isinstance(conversation_id, str) or not conversation_id:
+                    raise ValueError("conversation_id is required")
+            except Exception as error:
+                failed += 1
+                if len(errors) < 20:
+                    errors.append(f"batch {line_number}: {type(error).__name__}: {str(error)[:160]}")
+                continue
             if conversation_id != current_id:
                 if archive is not None:
                     archive.close()
                 archive = EchoArchive(path_for(root, conversation_id))
                 current_id = conversation_id
-            for message in payload.get("messages", []):
-                if archive.record_source_event(message, conversation_id):
-                    imported += 1
-                else:
-                    skipped += 1
+            messages = payload.get("messages", [])
+            if not isinstance(messages, list):
+                failed += 1
+                if len(errors) < 20:
+                    errors.append(f"batch {line_number}: messages must be a list")
+                continue
+            for message_index, message in enumerate(messages, start=1):
+                try:
+                    if not isinstance(message, dict):
+                        raise ValueError("event must be an object")
+                    if archive.record_source_event(message, conversation_id):
+                        imported += 1
+                    else:
+                        skipped += 1
+                except Exception as error:
+                    # One malformed legacy record must not close stdin and fail
+                    # every later conversation with a broken-pipe error.
+                    archive.db.rollback()
+                    failed += 1
+                    if len(errors) < 20:
+                        errors.append(f"batch {line_number}, event {message_index}: {type(error).__name__}: {str(error)[:160]}")
     finally:
         if archive is not None:
             archive.close()
-    return {"imported": imported, "skipped": skipped}
+    return {"imported": imported, "skipped": skipped, "failed": failed, "errors": errors}
 
 
 if __name__ == "__main__":

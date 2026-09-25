@@ -40,6 +40,22 @@ fn flatten_text(content: &Value) -> String {
     }).unwrap_or_default()
 }
 
+fn image_part(part: &Value) -> Option<Value> {
+    if part["type"] != "image" { return None; }
+    let source = &part["source"];
+    let url = if source["type"] == "base64" {
+        format!("data:{};base64,{}", source["media_type"].as_str()?, source["data"].as_str()?)
+    } else { source["url"].as_str()?.to_string() };
+    Some(json!({"type":"image_url","image_url":{"url":url}}))
+}
+
+fn tool_content(content: &Value) -> Value {
+    let Some(parts) = content.as_array() else { return json!(flatten_text(content)); };
+    if !parts.iter().any(|p| p["type"] == "image") { return json!(flatten_text(content)); }
+    json!(parts.iter().filter_map(|p| image_part(p).or_else(||
+        (p["type"] == "text").then(|| p.clone()))).collect::<Vec<_>>())
+}
+
 fn usage_from_openai(value: &Value) -> (u64, u64) {
     (
         value.pointer("/usage/prompt_tokens").and_then(Value::as_u64).unwrap_or(0),
@@ -110,6 +126,13 @@ fn anthropic_messages(payload: &Value) -> Vec<Value> {
     for message in payload.get("messages").and_then(Value::as_array).into_iter().flatten() {
         let role = message.get("role").and_then(Value::as_str).unwrap_or("user");
         let content = message.get("content").unwrap_or(&Value::Null);
+        // Recent SDK versions send environment and budget updates as in-history
+        // system messages. Qwen's template permits system only at position zero.
+        // Preserve their chronological position (and the reusable prompt prefix).
+        if matches!(role, "system" | "developer") {
+            out.push(json!({"role":"user","content":format!("<harness_context>\n{}\n</harness_context>", flatten_text(content))}));
+            continue;
+        }
         if let Some(text) = content.as_str() {
             out.push(json!({"role":role,"content":text}));
             continue;
@@ -144,6 +167,7 @@ fn anthropic_messages(payload: &Value) -> Vec<Value> {
             out.push(Value::Object(msg));
         } else {
             let mut text = Vec::new();
+            let mut images = Vec::new();
             for part in parts {
                 match part.get("type").and_then(Value::as_str).unwrap_or("") {
                     "text" => if let Some(value) = part.get("text").and_then(Value::as_str) {
@@ -151,13 +175,18 @@ fn anthropic_messages(payload: &Value) -> Vec<Value> {
                     },
                     "tool_result" => {
                         let id = part.get("tool_use_id").and_then(Value::as_str).unwrap_or("tool");
-                        let result = flatten_text(part.get("content").unwrap_or(&Value::Null));
+                        let result = tool_content(part.get("content").unwrap_or(&Value::Null));
                         out.push(json!({"role":"tool","tool_call_id":id,"content":result}));
                     }
+                    "image" => if let Some(image) = image_part(part) { images.push(image); },
                     _ => {}
                 }
             }
-            if !text.is_empty() {
+            if !images.is_empty() {
+                let mut content = vec![json!({"type":"text","text":text.join("\n")})];
+                content.extend(images);
+                out.push(json!({"role":"user","content":content}));
+            } else if !text.is_empty() {
                 out.push(json!({"role":"user","content":text.join("\n")}));
             }
         }
@@ -273,18 +302,31 @@ pub async fn anthropic(
         return json_response(StatusCode::OK, &json!({"input_tokens":(chars / 4).max(1)}));
     }
     let requested_model = payload.get("model").and_then(Value::as_str).unwrap_or("opencore");
+    let embedded = headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("claude-agent-sdk");
+    let model_output_limit = state.runtime.snapshot().context_size.saturating_sub(1_024).max(1_024);
+    let requested_output = payload.get("max_tokens").and_then(Value::as_u64).unwrap_or(model_output_limit);
     let mut chat = json!({
         "model":"opencore",
         "messages":anthropic_messages(payload),
         "stream":false,
-        "max_tokens":payload.get("max_tokens").and_then(Value::as_u64).unwrap_or(4096)
+        "max_tokens":requested_output.min(model_output_limit)
     });
     apply_client_reasoning(payload, &mut chat, true);
+    if embedded {
+        let effort = chat["reasoning_effort"].as_str().unwrap_or("medium");
+        let budget = match effort { "off" => 0, "low" => 512, "medium" => 1500, "high" => 3000, _ => 6000 };
+        chat["reasoning_budget_tokens"] = json!(budget);
+        chat["chat_template_kwargs"] = json!({"enable_thinking":budget > 0});
+        chat["max_tokens"] = json!(requested_output.min(model_output_limit));
+    }
     let tools = anthropic_tools(payload);
     if !tools.is_empty() { chat["tools"] = Value::Array(tools); }
     let client = "Claude Code";
     let conversation = conversation_id(headers, &chat);
-    capture_request(state, &conversation, client, &redact_json(&chat));
+    if !embedded { capture_request(state, &conversation, client, &redact_json(&chat)); }
+    if payload["stream"] == true {
+        return anthropic_live(state.clone(), chat, requested_model.to_string(), conversation, embedded).await;
+    }
     let openai = match call_chat(state, &chat).await {
         Ok(value) => value,
         Err(response) => return response,
@@ -296,6 +338,78 @@ pub async fn anthropic(
     } else {
         json_response(StatusCode::OK, &output)
     }
+}
+
+// Emit genuine partial content as it arrives. Tool arguments are only committed
+// after the complete, validated backend message; truncated calls never execute.
+async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, conversation: String, embedded: bool) -> Response<Body> {
+    let upstream = if embedded { state.runtime.direct_backend_url() } else { state.runtime.upstream_url() };
+    chat["stream"] = json!(true);
+    chat["stream_options"] = json!({"include_usage":true});
+    let response = match state.client.post(format!("{upstream}/v1/chat/completions")).json(&chat).send().await {
+        Ok(r) if r.status().is_success() => r,
+        Ok(r) => { let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY); return json_response(status,&json!({"error":{"type":"api_error","message":r.text().await.unwrap_or_default()}})); },
+        Err(e) => return json_response(StatusCode::BAD_GATEWAY,&json!({"error":{"type":"api_error","message":e.to_string()}})),
+    };
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+    let send = move |value: Value| { let _ = tx.send(format!("event: {}\ndata: {}\n\n", value["type"].as_str().unwrap_or("error"), value)); };
+    let task = tokio::spawn(async move {
+        send(json!({"type":"message_start","message":{"id":format!("msg_{}",Uuid::new_v4().simple()),"type":"message","role":"assistant","model":model,"content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"output_tokens":0}}}));
+        let mut sent_text = String::new();
+        let mut text_open = false;
+        let mut reasoning_sent = String::new();
+        let mut thinking_open = false;
+        let result = crate::chat_stream::read(response, |preview| {
+            if let Some(current) = preview["reasoning"].as_str() {
+                if !text_open && current.len() > reasoning_sent.len() && current.starts_with(&reasoning_sent) {
+                    if !thinking_open { send(json!({"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}})); thinking_open = true; }
+                    send(json!({"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":&current[reasoning_sent.len()..]}}));
+                    reasoning_sent = current.to_string();
+                }
+            }
+            if let Some(current) = preview["content"].as_str() {
+                if current.len() > sent_text.len() && current.starts_with(&sent_text) {
+                    if !text_open {
+                        if thinking_open { send(json!({"type":"content_block_stop","index":0})); }
+                        send(json!({"type":"content_block_start","index":usize::from(thinking_open),"content_block":{"type":"text","text":""}})); text_open = true;
+                    }
+                    send(json!({"type":"content_block_delta","index":usize::from(thinking_open),"delta":{"type":"text_delta","text":&current[sent_text.len()..]}}));
+                    sent_text = current.to_string();
+                }
+            }
+        }).await;
+        match result {
+            Ok(value) => {
+                state.runtime.record_response_metrics(&value);
+                if !embedded { capture_completion(&state.store, &conversation, "Claude Code", &redact_json(&value)); }
+                let output = anthropic_output(&value, &model);
+                if text_open { send(json!({"type":"content_block_stop","index":usize::from(thinking_open)})); }
+                else if thinking_open { send(json!({"type":"content_block_stop","index":0})); }
+                let mut index = usize::from(text_open) + usize::from(thinking_open);
+                for block in output["content"].as_array().into_iter().flatten() {
+                    if block["type"] == "text" && text_open { continue; }
+                    if block["type"] == "tool_use" {
+                        send(json!({"type":"content_block_start","index":index,"content_block":{"type":"tool_use","id":block["id"],"name":block["name"],"input":{}}}));
+                        send(json!({"type":"content_block_delta","index":index,"delta":{"type":"input_json_delta","partial_json":block["input"].to_string()}}));
+                    } else { send(json!({"type":"content_block_start","index":index,"content_block":block})); }
+                    send(json!({"type":"content_block_stop","index":index})); index += 1;
+                }
+                let stop = if value.pointer("/choices/0/finish_reason").and_then(Value::as_str) == Some("length") { json!("max_tokens") } else { output["stop_reason"].clone() };
+                send(json!({"type":"message_delta","delta":{"stop_reason":stop,"stop_sequence":null},"usage":output["usage"]}));
+                send(json!({"type":"message_stop"}));
+                if embedded {
+                    let prior = state.store.get_setting(&format!("claude_context:{conversation}")).ok().flatten().and_then(|s| serde_json::from_str::<Value>(&s).ok()).unwrap_or(json!({}));
+                    let window_tokens = state.runtime.snapshot().context_size;
+                    let _ = state.store.set_setting(&format!("claude_context:{conversation}"), &json!({"available":true,"liveTokens":output["usage"]["input_tokens"],"promptTokens":output["usage"]["input_tokens"],"windowTokens":window_tokens,"compactions":prior["compactions"].as_u64().unwrap_or(0),"harness":{"name":"claude-agent-sdk","status":"working","tasks":[],"unverified":[]}}).to_string());
+                }
+            },
+            Err(error) => send(json!({"type":"error","error":{"type":"api_error","message":error}})),
+        }
+    });
+    struct Abort(tokio::task::JoinHandle<()>);
+    impl Drop for Abort { fn drop(&mut self) { self.0.abort(); } }
+    let body = async_stream::stream! { let _guard = Abort(task); while let Some(chunk) = rx.recv().await { yield Ok::<_,std::convert::Infallible>(chunk); } };
+    Response::builder().status(StatusCode::OK).header("content-type","text/event-stream").header("cache-control","no-cache").body(Body::from_stream(body)).unwrap()
 }
 fn responses_messages(payload: &Value) -> Vec<Value> {
     let mut out = Vec::new();
@@ -510,11 +624,13 @@ pub async fn responses(
     payload: &Value,
 ) -> Response<Body> {
     let model = payload.get("model").and_then(Value::as_str).unwrap_or("opencore");
+    let model_output_limit = state.runtime.snapshot().context_size.saturating_sub(1_024).max(1_024);
+    let requested_output = payload.get("max_output_tokens").and_then(Value::as_u64).unwrap_or(model_output_limit);
     let mut chat = json!({
         "model":"opencore",
         "messages":responses_messages(payload),
         "stream":false,
-        "max_tokens":payload.get("max_output_tokens").and_then(Value::as_u64).unwrap_or(4096)
+        "max_tokens":requested_output.min(model_output_limit)
     });
     apply_client_reasoning(payload, &mut chat, false);
     let (tools, tool_kinds) = responses_tools(payload);
@@ -607,6 +723,32 @@ mod tests {
         let payload = json!({"tools":[{"name":"read","description":"Read","input_schema":{"type":"object","properties":{"path":{"type":"string"}}}}]});
         let tools = anthropic_tools(&payload);
         assert_eq!(tools[0].pointer("/function/name").and_then(Value::as_str), Some("read"));
+    }
+
+    #[test]
+    fn anthropic_preserves_user_and_tool_images() {
+        let picture = json!({"type":"image","source":{"type":"base64","media_type":"image/png","data":"AA=="}});
+        let messages = anthropic_messages(&json!({"messages":[
+            {"role":"user","content":[{"type":"text","text":"Describe this"},picture.clone()]},
+            {"role":"assistant","content":[{"type":"tool_use","id":"one","name":"capture","input":{}}]},
+            {"role":"user","content":[{"type":"tool_result","tool_use_id":"one","content":[{"type":"text","text":"screen"},picture]}]}
+        ]}));
+        assert_eq!(messages[0]["content"][1]["image_url"]["url"],"data:image/png;base64,AA==");
+        assert_eq!(messages[2]["role"],"tool");
+        assert_eq!(messages[2]["tool_call_id"],"one");
+        assert_eq!(messages[2]["content"][1]["image_url"]["url"],"data:image/png;base64,AA==");
+    }
+
+    #[test]
+    fn sdk_environment_updates_keep_position_without_mid_history_system_roles() {
+        let messages = anthropic_messages(&json!({"system":"instructions","messages":[
+            {"role":"user","content":"task"},{"role":"system","content":"environment"},
+            {"role":"assistant","content":"answer"},{"role":"system","content":[{"type":"text","text":"budget update"}]}
+        ]}));
+        assert_eq!(messages[0]["role"],"system");
+        assert!(messages.iter().skip(1).all(|m| m["role"] != "system"));
+        assert!(messages[2]["content"].as_str().unwrap().contains("environment"));
+        assert!(messages[4]["content"].as_str().unwrap().contains("budget update"));
     }
 
     #[test]

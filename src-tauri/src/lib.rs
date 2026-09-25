@@ -1,4 +1,7 @@
+mod claude_harness;
 mod artifacts;
+mod chat_stream;
+mod speech;
 mod dev_tool;
 mod archive_view;
 mod browser_bridge;
@@ -13,11 +16,15 @@ mod history;
 mod models;
 mod native_browser;
 mod project_paths;
+mod project_memory;
 mod redaction;
 mod reflex;
 mod runtime;
 mod store;
 mod tooling;
+mod vision;
+#[cfg(windows)]
+mod desktop_activity;
 mod windows_control;
 
 use crate::gateway::GatewayState;
@@ -32,18 +39,28 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio_util::sync::CancellationToken;
 use tauri::{Emitter, Manager};
 
 pub struct AppCore {
+    speech: speech::SpeechManager,
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
     active_chats: Mutex<HashMap<String, CancellationToken>>,
     pending_approvals: Mutex<HashMap<String, (String, tokio::sync::oneshot::Sender<bool>)>>,
     browser: Arc<browser_bridge::BrowserBridge>,
     reflex: Arc<reflex::ReflexManager>,
+    vision: Arc<vision::VisionManager>,
+}
+
+struct LiveGenerationGuard { app: tauri::AppHandle, conversation: String, run: String }
+impl Drop for LiveGenerationGuard {
+    fn drop(&mut self) {
+        let _ = self.app.emit("opencore-generation", json!({"conversationId":self.conversation,
+            "runId":self.run,"done":true}));
+    }
 }
 
 #[tauri::command]
@@ -73,9 +90,7 @@ async fn desktop_command(app: tauri::AppHandle, action: String, args: serde_json
     desktop_action(&app, action, args).await
 }
 
-static DESKTOP_ACTIVITY_GENERATION: AtomicU64 = AtomicU64::new(0);
-#[cfg(windows)]
-static DESKTOP_CURSOR_ACTIVITY: Mutex<Option<((i32, i32), (i32, i32))>> = Mutex::new(None);
+
 static KEEP_USER_WINDOW_IN_FRONT: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
@@ -83,13 +98,54 @@ fn set_computer_focus_mode(keep_user_window_in_front: bool) {
     KEEP_USER_WINDOW_IN_FRONT.store(keep_user_window_in_front, Ordering::SeqCst);
 }
 
-/// Fast Reflex decisions from accessibility rows or a fresh screenshot.
+/// The selected window as Reflex Vision sees it. The compositor capture works while
+/// other windows cover it, so looking never moves focus.
+#[cfg(windows)]
+async fn vision_frame(window_id: i64) -> Result<vision::Frame, String> {
+    tokio::task::spawn_blocking(move || {
+        let frame = desktop_capture::frame_for_window(window_id as isize)?;
+        let origin = desktop_capture::frame_origin(window_id as isize);
+        Ok(vision::Frame { data_url: frame.data_url, width: frame.width, height: frame.height, origin })
+    }).await.map_err(|error| error.to_string())?
+}
+
+#[cfg(not(windows))]
+async fn vision_frame(_window_id: i64) -> Result<vision::Frame, String> {
+    Err("Reflex Vision needs Windows window capture".into())
+}
+
+/// Fast Reflex decisions from accessibility rows, or Reflex Vision looking at the window.
 async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str, args: serde_json::Value) -> Result<serde_json::Value, String> {
     let window_id = args.get("windowId").and_then(|v| v.as_i64()).ok_or("windowId is required; use desktop_use action=list first")?;
-    core.reflex.ensure_running().await?;
+    let goal = args.get("goal").and_then(|v| v.as_str()).map(str::trim).filter(|goal| !goal.is_empty());
     match action {
+        "ground" | "ground_click" | "see" => {
+            let goal = goal.ok_or(if action == "see" { "goal is required: the question to answer about the window" }
+                                  else { "goal is required: describe one visible target" })?;
+            #[cfg(windows)]
+            let _activity = desktop_activity::begin(app, window_id, &args);
+            let frame = vision_frame(window_id).await?;
+            let mut result = if action == "see" { core.vision.ask(&frame, goal).await? }
+                             else { core.vision.locate(&frame, goal).await? };
+            result["windowId"] = json!(window_id);
+            result["imageSize"] = json!({"width":frame.width,"height":frame.height});
+            result["origin"] = json!({"x":frame.origin.0,"y":frame.origin.1});
+            if action == "see" {
+                result["dataUrl"] = json!(frame.data_url);
+                result["nextAction"] = json!("For a named control, use reflex_use ground with the exact target; its result is window-relative. Do not invent coordinates from this text description.");
+            }
+            if action != "see" { result["coordinate_space"] = json!("window_relative"); }
+            if action == "ground_click" && result.get("found").and_then(Value::as_bool) == Some(true) {
+                let clicked = desktop_action(app, "click".into(),
+                    json!({"windowId":window_id,"x":result["x"],"y":result["y"]})).await?;
+                result["click"] = clicked;
+                result["clicked"] = json!(true);
+            }
+            Ok(result)
+        }
         "pick" => {
-            let goal = args.get("goal").and_then(|v| v.as_str()).filter(|goal| !goal.trim().is_empty()).ok_or("goal is required")?;
+            core.reflex.ensure_running().await?;
+            let goal = goal.ok_or("goal is required")?;
             let inspected = desktop_action(app, "inspect".into(), json!({"windowId":window_id})).await?;
             let elements = inspected.get("elements").and_then(|v| v.as_array()).cloned().unwrap_or_default();
             let mut picked = core.reflex.post("/desktop/pick", json!({"goal":goal,
@@ -104,37 +160,17 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             picked["windowId"] = json!(window_id);
             Ok(picked)
         }
-        "ground" | "ground_click" => {
-            if KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst) {
-                return Err("Visual grounding needs the selected window in front. Turn off Keep my window in front first.".into());
-            }
-            let goal = args.get("goal").and_then(|v| v.as_str())
-                .filter(|goal| !goal.trim().is_empty()).ok_or("goal is required")?;
-            child_guard::allow_foreground_handoff();
-            let mut grounded = core.reflex.post("/desktop/ground",
-                json!({"hwnd":window_id,"goal":goal}), std::time::Duration::from_secs(90)).await?;
-            if action == "ground_click" && grounded.get("found").and_then(|v| v.as_bool()) == Some(true) {
-                let clicked = desktop_action(app, "click".into(),
-                    json!({"windowId":window_id,"x":grounded["x"],"y":grounded["y"]})).await?;
-                grounded["click"] = clicked;
-                grounded["clicked"] = json!(true);
-            }
-            Ok(grounded)
-        }
         "play_snake" => {
+            core.reflex.ensure_running().await?;
             let seconds = args.get("seconds").and_then(|v| v.as_f64()).unwrap_or(90.0).clamp(5.0, 600.0);
             #[cfg(windows)]
-            let overlay = app.get_webview_window("desktop-activity");
-            #[cfg(windows)]
-            if let Some(window) = &overlay { let _ = window.show(); }
+            let _activity = desktop_activity::begin(app, window_id, &args);
             child_guard::allow_foreground_handoff();
             let result = core.reflex.post("/snake/play", json!({"hwnd":window_id,"seconds":seconds}),
                 std::time::Duration::from_secs(seconds as u64 + 60)).await;
-            #[cfg(windows)]
-            if let Some(window) = &overlay { let _ = window.hide(); }
             result
         }
-        _ => Err("reflex_use action must be pick, ground, ground_click, or play_snake".into()),
+        _ => Err("reflex_use action must be pick, ground, ground_click, see, or play_snake".into()),
     }
 }
 
@@ -144,57 +180,12 @@ async fn desktop_action(app: &tauri::AppHandle, action: String, mut args: serde_
     }
     if action == "interact" { args["allowForegroundFallback"] = json!(!KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst)); }
     #[cfg(windows)]
-    if matches!(action.as_str(), "move" | "click" | "drag") {
-        if let Some(position) = windows_control::cursor_position() {
-            if let Ok(mut activity) = DESKTOP_CURSOR_ACTIVITY.lock() {
-                if activity.is_none() { *activity = Some((position, position)); }
-            }
-        }
-    }
-    #[cfg(windows)]
-    let generation = if matches!(action.as_str(), "move" | "click" | "drag" | "type" | "key" | "scroll") {
-        let generation = DESKTOP_ACTIVITY_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
-        if let Some(overlay) = app.get_webview_window("desktop-activity") {
-            let _ = overlay.show();
-            let follower = overlay.clone();
-            tauri::async_runtime::spawn(async move {
-                for _ in 0..75 {
-                    if DESKTOP_ACTIVITY_GENERATION.load(Ordering::SeqCst) != generation { break; }
-                    if let Some((x, y)) = windows_control::cursor_position() {
-                        let _ = follower.set_position(tauri::PhysicalPosition::new(x + 20, y + 20));
-                    }
-                    tokio::time::sleep(std::time::Duration::from_millis(40)).await;
-                }
-            });
-        }
-        Some(generation)
-    } else { None };
+    let _activity = desktop_activity::begin(app, args["windowId"].as_i64().unwrap_or(0), &args);
     #[cfg(not(windows))]
     let _ = app;
     let result = windows_control::command(action, args).await;
-    #[cfg(windows)]
-    if generation.is_some() {
-        if let Some(position) = windows_control::cursor_position() {
-            if let Ok(mut activity) = DESKTOP_CURSOR_ACTIVITY.lock() {
-                if let Some((_, last)) = activity.as_mut() { *last = position; }
-            }
-        }
-    }
-    #[cfg(windows)]
-    if let Some(generation) = generation {
-        let app = app.clone();
-        tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(std::time::Duration::from_millis(1400)).await;
-            if DESKTOP_ACTIVITY_GENERATION.load(Ordering::SeqCst) == generation {
-                if let Some(overlay) = app.get_webview_window("desktop-activity") { let _ = overlay.hide(); }
-                if let Ok(mut activity) = DESKTOP_CURSOR_ACTIVITY.lock() {
-                    if let Some((original, last)) = activity.take() {
-                        windows_control::restore_cursor_if_unchanged(last, original);
-                    }
-                }
-            }
-        });
-    }
+    // Keep brief pointer actions visible long enough to identify their target.
+    tokio::time::sleep(std::time::Duration::from_millis(180)).await;
     result
 }
 
@@ -409,11 +400,13 @@ async fn stop_runtime(core: tauri::State<'_, Arc<AppCore>>) -> Result<(), String
         .map_err(|e| e.to_string())?
 }
 
-struct ActiveChatGuard { core: Arc<AppCore>, id: String }
+struct ActiveChatGuard { core: Arc<AppCore>, id: String, app: tauri::AppHandle }
 
 impl Drop for ActiveChatGuard {
     fn drop(&mut self) {
         if let Ok(mut active) = self.core.active_chats.lock() { active.remove(&self.id); }
+        #[cfg(windows)]
+        desktop_activity::clear(&self.app);
     }
 }
 
@@ -631,9 +624,9 @@ fn start_history_sync(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Resul
 }
 
 fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
-                                  operation_id: Option<&str>) -> Result<(u64, u64), String> {
+                                  operation_id: Option<&str>) -> Result<(u64, u64, u64), String> {
     let ids = store.archive_conversation_ids()?;
-    if ids.is_empty() { return Ok((0, 0)); }
+    if ids.is_empty() { return Ok((0, 0, 0)); }
     let python = runtime.python_path().ok_or("Python runtime not found for ECHO import")?;
     let script = runtime.echo_import_script_path();
     if !script.is_file() { return Err(format!("ECHO import helper is missing: {}", script.display())); }
@@ -673,7 +666,12 @@ fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
         return Err(format!("ECHO import failed: {}", String::from_utf8_lossy(&output.stderr).chars().take(600).collect::<String>()));
     }
     let result: serde_json::Value = serde_json::from_slice(&output.stdout).map_err(|error| error.to_string())?;
-    Ok((result["imported"].as_u64().unwrap_or(0), result["skipped"].as_u64().unwrap_or(0)))
+    if let Some(errors) = result["errors"].as_array() {
+        for error in errors.iter().filter_map(serde_json::Value::as_str) {
+            store.log("warn", "echo-import", error);
+        }
+    }
+    Ok((result["imported"].as_u64().unwrap_or(0), result["skipped"].as_u64().unwrap_or(0), result["failed"].as_u64().unwrap_or(0)))
 }
 
 fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: String, operation_id: String) {
@@ -691,7 +689,7 @@ fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: St
         Ok(report) => {
             let echo_result = index_imported_history_offline(&store, &runtime, Some(&operation_id));
             let echo_note = match &echo_result {
-                Ok((imported, skipped)) => format!(" · ECHO indexed {imported}, already present {skipped}"),
+                Ok((imported, skipped, failed)) => format!(" · ECHO indexed {imported}, already present {skipped}, invalid records {failed}"),
                 Err(error) => format!(" · ECHO indexing failed: {error}"),
             };
             let summary = format!("Imported {} · Updated {} · Skipped {} · Source folders found {} · Unresolved {}{}",
@@ -718,8 +716,8 @@ async fn index_echo_history(core: tauri::State<'_, Arc<AppCore>>) -> Result<Stri
     let store = core.store.clone();
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let (imported, skipped) = index_imported_history_offline(&store, &runtime, None)?;
-        Ok(format!("ECHO indexed {imported} source events · {skipped} already present"))
+        let (imported, skipped, failed) = index_imported_history_offline(&store, &runtime, None)?;
+        Ok(format!("ECHO indexed {imported} source events · {skipped} already present · {failed} invalid records"))
     }).await.map_err(|error| error.to_string())?
 }
 
@@ -850,7 +848,27 @@ async fn search_archive(
 #[tauri::command]
 async fn archive_overview(core: tauri::State<'_, Arc<AppCore>>) -> Result<archive_view::ArchiveOverview, String> {
     let root = PathBuf::from(core.runtime.snapshot().archive_path);
-    tauri::async_runtime::spawn_blocking(move || archive_view::overview(&root)).await.map_err(|e| e.to_string())?
+    let started = std::time::Instant::now();
+    core.store.log("info", "archive", &format!("Reading overview from {}", root.display()));
+    let result = tauri::async_runtime::spawn_blocking(move || archive_view::overview(&root)).await.map_err(|e| e.to_string())?;
+    match &result {
+        Ok(overview) => core.store.log("info", "archive", &format!("Overview ready: {} conversations, {} pages in {} ms", overview.conversations.len(), overview.pages, started.elapsed().as_millis())),
+        Err(error) => core.store.log("error", "archive", &format!("Overview failed: {error}")),
+    }
+    result
+}
+
+#[tauri::command]
+async fn echo_working_set(core: tauri::State<'_, Arc<AppCore>>, conversation_id: String) -> Result<Value, String> {
+    if let Some(value) = core.store.get_setting(&format!("claude_context:{conversation_id}"))? {
+        let mut context: Value = serde_json::from_str(&value).map_err(|e| e.to_string())?;
+        context["windowTokens"] = json!(core.runtime.snapshot().context_size.max(1));
+        return Ok(context);
+    }
+    let client = reqwest::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(4)).build().map_err(|e| e.to_string())?;
+    let response = client.get(format!("http://127.0.0.1:{}/echo/context", core.runtime.snapshot().echo_port))
+        .query(&[("conversation", conversation_id)]).send().await.map_err(|e| e.to_string())?;
+    response.error_for_status().map_err(|e| e.to_string())?.json().await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -903,7 +921,7 @@ async fn echo_memory_action(
     if !snapshot.profile.contains("echo") || snapshot.status != "running" {
         return Err("Start an ECHO profile first".into());
     }
-    let command = if action == "trim" { "/trim 32768" } else { "/summarize" };
+    let command = if action == "trim" { format!("/trim {}", snapshot.context_size.max(1)) } else { "/summarize".into() };
     let body = json!({
         "model": "opencore-echo",
         "conversation_id": conversation_id,
@@ -1017,7 +1035,7 @@ async fn generate_chat_title(runtime: Arc<RuntimeManager>, seed: String) -> Stri
         "messages": [
             {
                 "role":"system",
-                "content":"Create a short, specific conversation title in 3 to 7 words. Return only the title, with no quotes, prefix, markdown, or punctuation at the end."
+                "content":"Create a short, specific conversation title in 3 to 7 words describing the requested task. This is a request, not a result: never claim it succeeded, passed, or completed. Return only the title, with no quotes, prefix, markdown, or punctuation at the end."
             },
             {
                 "role":"user",
@@ -1048,21 +1066,27 @@ async fn generate_chat_title(runtime: Arc<RuntimeManager>, seed: String) -> Stri
     }
 }
 
-fn read_chat_attachments(paths: &[String], image_store: &Path) -> (String, Vec<serde_json::Value>) {
+fn read_chat_attachments(paths: &[String], image_store: &Path) -> Result<(String, Vec<serde_json::Value>, Vec<serde_json::Value>), String> {
     const MAX_ATTACHMENT_BYTES: u64 = 1_000_000_000_000;
     const PREVIEW_BYTES: u64 = 1_048_576;
     let mut prompt = String::new();
     let mut metadata = Vec::new();
+    let mut images = Vec::new();
     for raw in paths.iter().take(12) {
         let path = PathBuf::from(raw);
         let name = path.file_name().and_then(|v| v.to_str()).unwrap_or("attachment");
         let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
         let mut entry = json!({"path":raw,"name":name,"bytes":size});
         if artifacts::is_image_name(name) {
-            match artifacts::store_attached_image(image_store, &path) {
-                Ok(image) => entry["artifactId"] = json!(image.id),
-                Err(error) => entry["previewError"] = json!(error),
-            }
+            let image = artifacts::store_attached_image(image_store, &path)
+                .map_err(|error| format!("Cannot attach image {name}: {error}"))?;
+            let preview = artifacts::preview(image_store, &image.id)?;
+            entry["artifactId"] = json!(image.id);
+            entry["included"] = json!(true);
+            images.push(json!({"type":"image_url","image_url":{"url":preview.data_url}}));
+            prompt.push_str(&format!("\n[Attached image: {name}. Original file: {}. Its pixels are included in this message.]", path.display()));
+            metadata.push(entry);
+            continue;
         }
         if size > MAX_ATTACHMENT_BYTES {
             entry["error"] = serde_json::Value::String("File exceeds the 1 TB attachment limit".into());
@@ -1097,16 +1121,17 @@ fn read_chat_attachments(paths: &[String], image_store: &Path) -> (String, Vec<s
         }
         metadata.push(entry);
     }
-    (prompt, metadata)
+    Ok((prompt, metadata, images))
 }
 
 fn composer_skill_instructions(skills: &[String]) -> Result<String, String> {
-    if skills.len() > 2 { return Err("Choose at most two skills".into()); }
+    if skills.len() > 3 { return Err("Choose at most three skills".into()); }
     let mut instructions = Vec::new();
     for skill in skills {
         match skill.as_str() {
-            "computer-use" => instructions.push("Computer use skill: carry out the user's computer task with desktop_use for running Windows windows, system_use for installed apps and PowerShell, and browser_use for OpenCore Browser. For a running Windows app: desktop_use action=list, copy its windowId, then action=inspect for accessible controls or action=read_screen for text and coordinates detected on a canvas. Use the exact x,y center of the matching read_screen line; do not estimate coordinates from nearby items. For visible controls use desktop_use action=interact with windowId,x,y; it falls back to a foreground click if accessibility has no control. Coordinates are relative to the selected window. system_use action=find_apps searches installed apps, not running windows. Quote paths containing spaces, verify results, and report failures accurately."),
-            "chrome-control" => instructions.push("Chrome control skill: use chrome_use for the user's paired Chrome tabs. List and inspect tabs before acting, then verify the page result. If Chrome is not paired, explain that connection is needed and do not claim the action happened."),
+            "computer-use" => instructions.push("Computer use skill: carry out the user's Windows/terminal task with desktop_use, system_use and reflex_use. Reflex Vision is an on-demand 0.8B model and may only be used because this prompt explicitly enabled /computer-use. Inspect before acting, verify results, and avoid unnecessary vision calls."),
+            "browser-use" => instructions.push("OpenCore Browser skill: use browser_use for the isolated in-app browser. Inspect before interacting and verify navigation or page changes."),
+            "chrome-control" => instructions.push("Chrome control skill: use chrome_use for the user's paired Chrome tabs. List and inspect tabs before acting, then verify the page result. For an explicit development/debugging request, evaluate may run JavaScript in the selected tab's DevTools Runtime. If Chrome is not paired, explain that connection is needed and do not claim the action happened."),
             _ => return Err(format!("Unknown skill: {skill}")),
         }
     }
@@ -1130,8 +1155,22 @@ fn browser_surface_error(user_text: &str, tool_name: &str) -> Option<&'static st
     } else { None }
 }
 
-fn tool_progress(name: &str, args: &Value) -> &'static str {
+fn tool_progress(name: &str, args: &Value) -> String {
     let action = args.get("action").and_then(Value::as_str).unwrap_or("");
+    let target = args.get("path").or_else(|| args.get("query")).and_then(Value::as_str).unwrap_or("the workspace");
+    if name == "dev" {
+        match action {
+            "read" => return format!("Reading {target} to check the current implementation and version."),
+            "edit" | "patch" | "apply_patch" => return format!("Applying the requested changes to {target}; other code stays in place."),
+            "write" => return format!("Creating {target} in the project workspace."),
+            "checkpoint" => return format!("Saving the completed component '{}' with its source versions and check results.", args["title"].as_str().unwrap_or("component")),
+            "recall" => return format!("Retrieving project memory for {target} and checking whether its files changed."),
+            _ => {}
+        }
+    }
+    if (name == "dev" && action == "run") || (name == "system_use" && action == "run_command") {
+        return format!("Running: {}. I'll inspect its exit status and output before continuing.", args["command"].as_str().unwrap_or("the requested command").chars().take(300).collect::<String>());
+    }
     match (name, action) {
         ("dev", "status" | "list" | "search" | "read" | "git_status" | "git_diff" | "git_log") => "I'll inspect the existing files and their exact versions.",
         ("dev", "checkout") => "I'll restore the selected prior file into the coding workspace.",
@@ -1151,9 +1190,10 @@ fn tool_progress(name: &str, args: &Value) -> &'static str {
         ("chrome_use", _) => "I'll use the paired Chrome tab and check the page.",
         ("reflex_use", "pick") => "I'll find the right control with Reflex.",
         ("reflex_use", "ground" | "ground_click") => "I'll locate the target on the selected window's screen.",
+        ("reflex_use", "see") => "I'll look at the selected window.",
         ("reflex_use", "play_snake") => "I'll play the game live with Reflex.",
         _ => "I'll run the next tool and check its result.",
-    }
+    }.to_string()
 }
 
 #[cfg(test)]
@@ -1268,7 +1308,8 @@ mod composer_skill_tests {
     #[test]
     fn skill_guidance_is_optional_and_bounded() {
         assert!(composer_skill_instructions(&[]).unwrap().is_empty());
-        assert!(composer_skill_instructions(&["computer-use".into()]).unwrap().contains("desktop_use"));
+        assert!(composer_skill_instructions(&["computer-use".into()]).unwrap().contains("on-demand 0.8B"));
+        assert!(composer_skill_instructions(&["browser-use".into()]).unwrap().contains("browser_use"));
         assert!(composer_skill_instructions(&["chrome-control".into()]).unwrap().contains("paired Chrome"));
         assert!(composer_skill_instructions(&["invented".into()]).is_err());
     }
@@ -1309,14 +1350,17 @@ async fn send_chat_message(
     }
     let skill_instructions = composer_skill_instructions(&request.skills)?;
     // Clipboard and temporary image files can disappear while the model starts.
-    let (attachment_prompt, attachment_meta) = read_chat_attachments(&request.files, &artifact_root(&app)?);
+    let (attachment_prompt, attachment_meta, attachment_images) = read_chat_attachments(&request.files, &artifact_root(&app)?)?;
+    if !attachment_images.is_empty() && !core.runtime.install_root().join("vision/mmproj-BF16.gguf").is_file() {
+        return Err("The main model vision projector is missing. Install the matching Qwen3.5-4B projector before sending images.".into());
+    }
     let token = CancellationToken::new();
     {
         let mut active = core.active_chats.lock().map_err(|error| error.to_string())?;
         if active.contains_key(&id) { return Err("This conversation is already running. Stop it before retrying.".into()); }
         active.insert(id.clone(), token.clone());
     }
-    let _active_guard = ActiveChatGuard { core: core.clone(), id: id.clone() };
+    let _active_guard = ActiveChatGuard { core: core.clone(), id: id.clone(), app: app.clone() };
     let runtime = core.runtime.clone();
     let startup_token = token.clone();
     let runtime_result = tauri::async_runtime::spawn_blocking(move || {
@@ -1370,27 +1414,10 @@ async fn send_chat_message(
     }
 
     let full_user = format!("{text}{attachment_prompt}");
-    let mut messages = if runtime_snapshot.profile == "native1m" {
-        let mut history = prior.into_iter()
-            .filter(|entry| matches!(entry.role.as_str(), "user" | "assistant"))
-            .map(|entry| json!({"role":entry.role,"content":entry.content}))
-            .collect::<Vec<_>>();
-        history.push(json!({"role":"user","content":full_user}));
-        history
-    } else {
-        vec![json!({"role":"user","content":full_user})]
-    };
-    messages.insert(0, json!({"role":"system","content":"For coding tasks, use dev as the persistent workspace for any programming language. Start with dev status. For a follow-up, read the exact existing file or checkout the appropriate prior artifact; edit that file with focused patches. Do not replace a project with a smaller new program to hide an error. Run the appropriate compiler, test command, or browser automation for the code you wrote, read the actual result, and publish only the checked version. Report only observed checks and failures. For computer tasks, use browser_use for OpenCore Browser, chrome_use for paired Chrome tabs, desktop_use for a Windows window, and system_use for installed apps or PowerShell. Use the surface the user named. Never install or update software unless requested. Before each tool call, put one short plain sentence in assistant content explaining the next action; keep private reasoning separate. If a tool fails, correct its arguments or report the failure. Finish with a plain answer stating only verified results."}));
-    if !skill_instructions.is_empty() {
-        messages.insert(0, json!({"role":"system","content":skill_instructions}));
-    }
-
-    let effort = request.reasoning_effort;
-    let budget = effort.budget_tokens();
-    let upstream_effort = if runtime_snapshot.profile == "native1m" && effort.as_str() == "opencore" {
-        "high"
-    } else {
-        effort.as_str()
+    let user_content = if attachment_images.is_empty() { json!(full_user) } else {
+        let mut parts = vec![json!({"type":"text","text":full_user})];
+        parts.extend(attachment_images);
+        json!(parts)
     };
     let project_id = core.store.list_conversations(None)?.into_iter()
         .find(|conversation| conversation.id == id)
@@ -1405,27 +1432,9 @@ async fn send_chat_message(
     let workspace_key = dev_tool::sha256(id.as_bytes());
     let workspace_root = project_root.clone().unwrap_or_else(|| data_root.join("code-workspaces").join(&workspace_key[..24]));
     let receipts_root = data_root.join("code-receipts").join(&workspace_key[..24]);
-    let mut artifact_history = core.store.code_artifacts(&id)?;
-    let dev_status = dev_tool::execute(&workspace_root, &artifact_root(&app)?, &receipts_root,
-        &artifact_history, &json!({"action":"status"})).await?;
-    messages.insert(1, json!({"role":"system","content":format!(
-        "Current durable code workspace and exact prior file versions: {}. Before modifying existing work, read or checkout the selected file version with dev. These file IDs and hashes are authoritative; an ECHO summary is not a substitute for source code.",
-        dev_status)}));
-    let base_message_count = messages.len();
-    let mut body = json!({
-        "model":"opencore",
-        "conversation_id":id,
-        "messages":messages,
-        "max_tokens":16384,
-        "stream":false,
-        "reasoning_effort":upstream_effort,
-        "reasoning_budget_tokens":budget,
-        "reasoning_format":if budget > 0 { "deepseek" } else { "none" },
-        "chat_template_kwargs":{"enable_thinking":budget > 0}
-    });
     let mut available_tools = vec![dev_tool::tool_spec(), artifacts::tool_spec(),
         json!({"type":"function","function":{
-            "name":"desktop_use","description":"Control a running Windows window. Start with action=list (no windowId) for window IDs. For a Google Chrome window, navigate_url with windowId and an HTTP(S) url uses its address bar; then inspect or read_screen to verify the loaded page. To search for a game, use a Google search URL instead of guessing an unverified game URL. Inspect accessible controls once; if the target text is absent, immediately use read_screen with windowId for Windows OCR text and x,y coordinates on a canvas. Repeating inspect on panes will not reveal canvas text. For a named target, copy the exact x,y center of its matching read_screen line; do not estimate from the layout or nearby targets. This text-only model cannot receive screenshots; read_screen describes visible text but not non-text shapes. interact activates a control at x,y and falls back to a foreground click. drag draws one line from x,y to toX,toY within the selected window; inspect the canvas after a stroke. Coordinates are relative to the selected window. Desktop input shares the user's Windows pointer and focus.",
+            "name":"desktop_use","description":"Control a running Windows window. Start with action=list (no windowId) for window IDs. For a Google Chrome window, navigate_url with windowId and an HTTP(S) url uses its address bar; then inspect or read_screen to verify the loaded page. To search for a game, use a Google search URL instead of guessing an unverified game URL. Inspect accessible controls once; if the target text is absent, immediately use read_screen with windowId for Windows OCR text and x,y coordinates on a canvas. Repeating inspect on panes will not reveal canvas text. For a named target, copy the exact x,y center of its matching read_screen line; do not estimate from the layout or nearby targets. Screenshots include actual image content for visual analysis; read_screen adds OCR text coordinates. For icons, images, canvas content or on-screen state, use reflex_use see (ask what is visible) and reflex_use ground (locate a described target). interact activates a control at x,y and falls back to a foreground click. drag draws one line from x,y to toX,toY within the selected window; inspect the canvas after a stroke. Coordinates are physical pixels relative to the selected window. Use inspect element x,y directly; do not copy absolute screenBounds. After an out-of-bounds error, inspect again and choose a fresh in-window target before retrying. Desktop input shares the user's Windows pointer and focus.",
             "parameters":{"type":"object","properties":{
                 "action":{"type":"string","enum":["list","inspect","read_screen","invoke","set_value","interact","set_at","commit_enter","commit_text","move","click","drag","type","scroll","key","navigate_url"]},
                 "windowId":{"type":"integer"},"elementId":{"type":"integer"},"x":{"type":"number"},"y":{"type":"number"},"toX":{"type":"number"},"toY":{"type":"number"},"text":{"type":"string"},
@@ -1433,7 +1442,7 @@ async fn send_chat_message(
             },"required":["action"],"additionalProperties":false}
         }}),
         json!({"type":"function","function":{
-            "name":"system_use","description":"Use PowerShell or Windows installed apps. find_apps searches installed Start menu apps; it does not list currently running windows. run_command already runs Windows PowerShell 5.1: put native PowerShell text in the separate command field, without a nested powershell -Command prefix. PowerShell 5.1 does not support &&; use separate calls or a semicolon. Quote paths containing spaces and use -LiteralPath for file paths. To write a text file use Set-Content -LiteralPath 'path' -Value 'text'; to check it use Get-Content -LiteralPath 'path'. A successful command returns exitCode 0 even when output is empty. If a command fails, retry system_use with corrected fields; do not switch to a user's terminal window.",
+            "name":"system_use","description":"Use PowerShell or Windows installed apps. find_apps searches installed Start menu apps; it does not list currently running windows. run_command defaults to this conversation workspace; use cwd to choose another directory. For testing workspace code use dev run with verifyPaths. run_command already runs Windows PowerShell 5.1: put native PowerShell text in the separate command field, without a nested powershell -Command prefix. PowerShell 5.1 does not support &&; use separate calls or a semicolon. Quote paths containing spaces and use -LiteralPath for file paths. To write a text file use Set-Content -LiteralPath 'path' -Value 'text'; to check it use Get-Content -LiteralPath 'path'. A successful command returns exitCode 0 even when output is empty. If a command fails, retry system_use with corrected fields; do not switch to a user's terminal window.",
             "parameters":{"type":"object","properties":{
                 "action":{"type":"string","enum":["find_apps","launch_app","run_command"]},"query":{"type":"string"},
                 "appId":{"type":"string"},"command":{"type":"string"},"cwd":{"type":"string"},"keepUserWindowInFront":{"type":"boolean"}
@@ -1449,245 +1458,40 @@ async fn send_chat_message(
         json!({"type":"function","function":{
             "name":"chrome_use","description":"Control tabs in the user's Chrome profile through the paired OpenCore extension. Requires a connected extension. Use list to get tab IDs, then inspect and interact with each tab.",
             "parameters":{"type":"object","properties":{
-                "action":{"type":"string","enum":["list","open","navigate","inspect","click","type","key","scroll","back","forward","reload"]},
-                "tabId":{"type":"integer"},"url":{"type":"string"},"x":{"type":"number"},"y":{"type":"number"},"text":{"type":"string"},"key":{"type":"string"},"deltaY":{"type":"number"}
+                "action":{"type":"string","enum":["list","open","navigate","activate","close","inspect","screenshot","click","type","key","scroll","back","forward","reload","evaluate"]},
+                "tabId":{"type":"integer"},"url":{"type":"string"},"x":{"type":"number"},"y":{"type":"number"},"text":{"type":"string"},"key":{"type":"string"},"deltaY":{"type":"number"},"expression":{"type":"string"}
             },"required":["action"],"additionalProperties":false}
         }})];
     available_tools.push(reflex::tool_spec());
+    let computer_enabled = request.skills.iter().any(|skill| skill == "computer-use");
+    let browser_enabled = request.skills.iter().any(|skill| skill == "browser-use");
+    let chrome_enabled = request.skills.iter().any(|skill| skill == "chrome-control");
+    available_tools.retain(|spec| {
+        let name = spec.pointer("/function/name").and_then(Value::as_str).unwrap_or("");
+        match name {
+            "desktop_use" | "system_use" | "reflex_use" => computer_enabled,
+            "browser_use" => browser_enabled,
+            "chrome_use" => chrome_enabled,
+            _ => true,
+        }
+    });
     if project_root.is_some() { available_tools.extend(tooling::read_only_tool_specs()); }
-    body["tools"] = json!(available_tools);
-    body["tool_choice"] = json!("auto");
-    let url = format!("{}/v1/chat/completions", core.runtime.upstream_url());
-    let client = reqwest::Client::builder()
-        .no_proxy()
-        .timeout(std::time::Duration::from_secs(86_400))
-        .build()
-        .map_err(|e| e.to_string())?;
-    let import_total = if matches!(runtime_snapshot.profile.as_str(), "echo" | "unsloth-echo") {
-        core.store.imported_message_count(&id)?
-    } else { 0 };
-    let import_progress_id = if import_total > 0 {
-        Some(core.store.add_timeline(&id, "echo_import", "system", "OpenCore", "Preparing ECHO",
-            &format!("Indexing 0/{import_total} source events"),
-            &json!({"status":"indexing","current":0,"total":import_total}))?)
-    } else { None };
-    let import_completed = AtomicBool::new(false);
-    let request_future = async {
-        if let Some(progress_id) = import_progress_id {
-            hydrate_imported_history(&core, &client, &id, progress_id, import_total).await?;
-            import_completed.store(true, Ordering::Relaxed);
-        }
-        let mut conflict_retries = 0;
-        for _round in 0..64 {
-            if token.is_cancelled() { return Err("__INTERRUPTED__".into()); }
-            body["messages"] = json!(messages);
-            let mut upstream_request = client.post(&url).json(&body);
-            if matches!(runtime_snapshot.profile.as_str(), "echo" | "unsloth-echo") {
-                upstream_request = upstream_request.header("X-OpenCore-Timeline-Owner", "app");
-            }
-            let response = upstream_request.send().await
-                .map_err(|e| format!("Could not reach the OpenCore model: {e}"))?;
-            let status = response.status();
-            let raw = response.text().await.map_err(|e| e.to_string())?;
-            if !status.is_success() {
-                let parsed = serde_json::from_str::<serde_json::Value>(&raw).ok();
-                let detail = parsed.as_ref()
-                    .and_then(|value| value.pointer("/error/message").or_else(|| value.get("error")))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(raw.as_str());
-                if status.as_u16() == 409 && detail.to_ascii_lowercase().contains("conversation already active") && conflict_retries < 20 {
-                    conflict_retries += 1;
-                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                    continue;
-                }
-                let suffix = if status.as_u16() == 503 {
-                    " The model may have stopped; check Runtime & Logs, then retry."
-                } else { "" };
-                return Err(format!("OpenCore request failed ({}): {}.{}", status, detail.trim().trim_end_matches('.'), suffix));
-            }
-            let value = serde_json::from_str::<serde_json::Value>(&raw)
-                .map_err(|e| format!("OpenCore returned an invalid response: {e}"))?;
-            conflict_retries = 0;
-            core.runtime.record_response_metrics(&value);
-            let message = value.pointer("/choices/0/message").cloned().unwrap_or_default();
-            let Some(calls) = value.pointer("/choices/0/message/tool_calls").and_then(|item| item.as_array()) else {
-                return Ok(value);
-            };
-            if calls.is_empty() { return Ok(value); }
-            if let Some(reasoning) = message.get("reasoning_content").and_then(|item| item.as_str()) {
-                if !reasoning.trim().is_empty() {
-                    let _ = core.store.add_timeline(&id, "thinking", "assistant", "OpenCore", "Reasoning", reasoning, &json!({"visibility":"after_response"}));
-                }
-            }
-            if calls.len() > 4 {
-                return Err("The model requested more than four tools in one step".into());
-            }
-            let announced_progress = message.get("content").and_then(|item| item.as_str())
-                .map(str::trim).filter(|content| !content.is_empty())
-                .map(|content| content.chars().take(500).collect::<String>());
-            let mut context_message = message;
-            if let Some(object) = context_message.as_object_mut() { object.remove("reasoning_content"); }
-            messages.push(context_message);
-            for (call_index, call) in calls.iter().enumerate() {
-                if token.is_cancelled() { return Err("__INTERRUPTED__".into()); }
-                let call_id = call.get("id").and_then(|item| item.as_str()).unwrap_or("missing-id").to_string();
-                let name = call.pointer("/function/name").and_then(|item| item.as_str()).unwrap_or("unknown").to_string();
-                let raw_args = call.pointer("/function/arguments").and_then(|item| item.as_str()).unwrap_or("{}");
-                let args = normalize_computer_args(&name, serde_json::from_str::<serde_json::Value>(raw_args)
-                    .unwrap_or_else(|_| json!({"error":"Invalid tool arguments"})));
-                let progress = if call_index == 0 { announced_progress.as_deref() }
-                    else { None }.unwrap_or_else(|| tool_progress(&name, &args));
-                let _ = core.store.add_timeline(&id, "progress", "assistant", "OpenCore", "Next action", progress,
-                    &json!({"source": if call_index == 0 && announced_progress.is_some() { "model" } else { "tool_intent" }}));
-                let _ = core.store.add_timeline(&id, "tool_call", "assistant", "OpenCore", &name, &call.to_string(), call);
-                let approval_args = args.to_string();
-                let publishes_file = name == "create_artifact"
-                    || (name == "dev" && args.get("action").and_then(Value::as_str) == Some("publish"));
-                let permission = if let Some(error) = browser_surface_error(&text, &name) {
-                    Err(error.to_string())
-                } else { match request.approval_mode {
-                    ApprovalMode::AskEveryTime => {
-                        if ask_tool_approval(&app, &core, &id, &name, &approval_args, &token).await? {
-                            Ok(())
-                        } else { Err("Tool approval denied or timed out".to_string()) }
-                    }
-                    ApprovalMode::ApproveForMe => if name == "dev" {
-                        if matches!(args.get("action").and_then(Value::as_str), Some("status" | "list" | "search" | "read" | "git_status" | "git_diff" | "git_log")) { Ok(()) }
-                        else if ask_tool_approval(&app, &core, &id, &name, &approval_args, &token).await? { Ok(()) }
-                        else { Err("Dev action denied or timed out".into()) }
-                    } else if name == "create_artifact" { Ok(()) } else if is_computer_tool(&name) {
-                        if matches!(args.get("action").and_then(|v| v.as_str()), Some("list" | "inspect" | "screenshot" | "read_screen" | "find_apps" | "pick")) { Ok(()) }
-                        else if ask_tool_approval(&app, &core, &id, &name, &approval_args, &token).await? { Ok(()) }
-                        else { Err("Computer action denied or timed out".into()) }
-                    } else if let Some(root) = &project_root {
-                        tooling::auto_review_read_only(root, &name, &args)
-                    } else { Err("No available project folder".into()) },
-                    ApprovalMode::AllowChat | ApprovalMode::AllowAll => Ok(()),
-                }};
-                let result = if let Err(error) = permission { Err(error) } else if name == "dev" {
-                    dev_tool::execute(&workspace_root, &artifact_root(&app)?, &receipts_root,
-                        &artifact_history, &args).await
-                } else if name == "create_artifact" {
-                    let artifact_dir = artifact_root(&app)?;
-                    tokio::task::spawn_blocking(move || {
-                        let filename = args.get("filename").and_then(|v| v.as_str()).ok_or("filename is required")?;
-                        let ext = Path::new(filename).extension().and_then(|value| value.to_str())
-                            .unwrap_or("").to_ascii_lowercase();
-                        if !matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "gif" | "webp" | "pdf") {
-                            return Err("Use dev for code and other text files".into());
-                        }
-                        let content = args.get("content").and_then(|v| v.as_str()).ok_or("content is required")?;
-                        let encoding = args.get("encoding").and_then(|v| v.as_str()).unwrap_or("utf8");
-                        let info = artifacts::create(&artifact_dir, filename, content, encoding)?;
-                        Ok(json!({"id": info.id, "name": info.name, "mime": info.mime,
-                            "size": info.size, "preview_link": format!("artifact://{}", info.id),
-                            "download_link": format!("artifact-download://{}", info.id)}))
-                    }).await.map_err(|error| error.to_string())?
-                } else if is_computer_tool(&name) {
-                    let target = match name.as_str() {
-                        "desktop_use" => Some("desktop"),
-                        "system_use" => Some("system"),
-                        "browser_use" => Some("browser"),
-                        "chrome_use" => Some("chrome"),
-                        "reflex_use" => Some("reflex"),
-                        _ => args.get("target").and_then(|v| v.as_str()),
-                    };
-                    match (target, args.get("action").and_then(|v| v.as_str()).map(clean_computer_action)) {
-                        (Some("chrome"), Some(action)) => core.browser.command(action, args.clone()).await,
-                        (Some("browser"), Some("list")) => native_browser::agent_command(&app, "status", &args).await,
-                        (Some("browser"), Some(action)) => native_browser::agent_command(&app, action, &args).await,
-                        (Some("desktop"), Some(action)) => desktop_action(&app, action.to_string(), args.clone()).await,
-                        (Some("reflex"), Some(action)) => reflex_action(&app, &core, action, args.clone()).await,
-                        (Some("system"), Some(action)) => {
-                            let mut system_args = args.clone();
-                            system_args["keepUserWindowInFront"] = json!(KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst));
-                            computer_ops::command(action, &system_args).await
-                        },
-                        _ => Err("Choose a valid computer target and action".into()),
-                    }
-                } else if let Some(root) = &project_root {
-                    let root = root.clone();
-                    let tool_name = name.clone();
-                    tokio::task::spawn_blocking(move || tooling::execute_read_only(&root, &tool_name, &args))
-                        .await.map_err(|error| error.to_string())?
-                } else {
-                    Err("The requested project tool needs a linked project folder".into())
-                };
-                let output = match result { Ok(value) => value, Err(error) => json!({"error":error}) };
-                let image = output.get("dataUrl").and_then(|value| value.as_str()).filter(|value| value.starts_with("data:image/") && value.len() < 16 * 1024 * 1024);
-                let record = if image.is_some() {
-                    let mut summary = output.clone();
-                    summary.as_object_mut().map(|object| { object.remove("dataUrl"); object.insert("imageAvailable".into(), json!(true)); });
-                    summary
-                } else { output.clone() };
-                let _ = core.store.add_timeline(&id, "tool_result", "tool", "OpenCore", &name, &record.to_string(), &record);
-                if publishes_file && output.get("id").is_some() {
-                    let _ = core.store.add_timeline(&id, "file", "assistant", "OpenCore",
-                        output.get("name").and_then(|v| v.as_str()).unwrap_or("Generated file"),
-                        output.get("preview_link").and_then(|v| v.as_str()).unwrap_or(""), &output);
-                    artifact_history.insert(0, json!({"id":output["id"],"name":output["name"],"size":output["size"]}));
-                }
-                let content = if let Some(data_url) = image {
-                    json!([{"type":"text","text":record.to_string()}, {"type":"image_url","image_url":{"url":data_url}}])
-                } else { json!(output.to_string()) };
-                messages.push(json!({"role":"tool","tool_call_id":call_id,"content":content}));
-            }
-            compact_tool_history(&mut messages, base_message_count);
-        }
-        Err("OpenCore reached the 64-step computer tool limit; the conversation remains saved".into())
-    };
-    let result = tokio::select! {
-        _ = token.cancelled() => {
-            // A live Reflex game runs in its own process; stopping the chat must stop it too.
-            let reflex = core.reflex.clone();
-            tauri::async_runtime::spawn(async move {
-                let _ = reflex.post("/stop", json!({}), std::time::Duration::from_secs(5)).await;
-            });
-            Err("__INTERRUPTED__".to_string())
-        },
-        value = request_future => value,
-    };
-    let value = match result {
-        Ok(value) => value,
-        Err(error) if error == "__INTERRUPTED__" => {
-            if let Some(progress_id) = import_progress_id.filter(|_| !import_completed.load(Ordering::Relaxed)) {
-                let _ = core.store.update_timeline(progress_id, "ECHO import interrupted",
-                    &json!({"status":"interrupted","total":import_total}));
-            }
-            core.store.finish_conversation(&id, "interrupted");
-            return Err(error);
-        }
-        Err(error) => {
-            if let Some(progress_id) = import_progress_id.filter(|_| !import_completed.load(Ordering::Relaxed)) {
-                let _ = core.store.update_timeline(progress_id, "ECHO import or response failed",
-                    &json!({"status":"failed","total":import_total,"error":error}));
-            }
-            let _ = core.store.add_timeline(&id, "error", "system", "OpenCore", "Generation error", &error, &json!({}));
-            core.store.finish_conversation(&id, "error");
-            if matches!(runtime_snapshot.profile.as_str(), "echo" | "unsloth-echo") {
-                if let Err(sync_error) = sync_chat_activity(&core, &id).await {
-                    core.store.log("warn", "echo", &format!("Pending chat activity will retry on the next message: {sync_error}"));
-                }
-            }
-            return Err(error);
-        }
-    };
-    gateway::capture_completion(&core.store, &id, "OpenCore", &redact_json(&value));
-    if matches!(runtime_snapshot.profile.as_str(), "echo" | "unsloth-echo") {
-        if let Err(error) = sync_chat_activity(&core, &id).await {
-            core.store.log("warn", "echo", &format!("Structured activity will need reindexing: {error}"));
-            let _ = core.store.add_timeline(&id, "error", "system", "OpenCore", "Memory sync",
-                "ECHO saved the response, but its activity index needs reindexing from Memory.", &json!({"error":error}));
+    for spec in &mut available_tools {
+        spec["function"]["parameters"]["properties"]["explanation"] = json!({"type":"string", "description":"Explain to the user what you learned and why this exact action is needed, in clear complete sentences. Name the relevant file, behavior or error. Do not use generic filler."});
+        if let Some(required) = spec["function"]["parameters"]["required"].as_array_mut() {
+            required.push(json!("explanation"));
         }
     }
-
-    let title = core.store.list_conversations(None)?
-        .into_iter()
-        .find(|conversation| conversation.id == id)
-        .map(|conversation| conversation.title)
-        .unwrap_or_else(|| "OpenCore chat".into());
-
-    Ok(ChatSendResult { conversation_id: id, title })
+    // Keep every composer effort on this single Claude Agent SDK / Claude Code
+    // preset path. reasoning_effort configures the local model request; it must
+    // never select or bypass the agent harness.
+    let result = claude_harness::run(core.clone(), app, &request, token, workspace_root, receipts_root,
+        user_content, available_tools, skill_instructions).await;
+    if computer_enabled {
+        core.vision.stop();
+        core.reflex.stop();
+    }
+    result
 }
 
 #[tauri::command]
@@ -1705,7 +1509,10 @@ fn resolve_tool_approval(
 async fn cancel_chat_message(
     core: tauri::State<'_, Arc<AppCore>>,
     conversation_id: String,
+    app: tauri::AppHandle,
 ) -> Result<bool, String> {
+    #[cfg(windows)]
+    desktop_activity::clear(&app);
     let sole_active_chat = {
         let active = core.active_chats.lock().map_err(|e| e.to_string())?;
         let Some(token) = active.get(&conversation_id) else { return Ok(false); };
@@ -1782,6 +1589,9 @@ pub fn run() {
                     .inner_size(290.0, 54.0)
                     .build()?;
                 overlay.set_ignore_cursor_events(true)?;
+                if let Ok(hwnd) = overlay.hwnd() {
+                    unsafe { let _ = windows::Win32::UI::WindowsAndMessaging::SetWindowDisplayAffinity(windows::Win32::Foundation::HWND(hwnd.0 as _), windows::Win32::UI::WindowsAndMessaging::WDA_EXCLUDEFROMCAPTURE); }
+                }
             }
             let database = data_path(app)?;
             let store = Arc::new(EventStore::open(&database)?);
@@ -1790,12 +1600,14 @@ pub fn run() {
             }
             let runtime = Arc::new(RuntimeManager::new_with_resources(store.clone(), app.path().resource_dir().ok()));
             let core = Arc::new(AppCore {
+                speech: speech::SpeechManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir()?),
                 store: store.clone(),
                 runtime: runtime.clone(),
                 active_chats: Mutex::new(HashMap::new()),
                 pending_approvals: Mutex::new(HashMap::new()),
                 browser: Arc::new(browser_bridge::BrowserBridge::new()),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
+                vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf())),
             });
             let browser_state = core.browser.clone();
             let browser_log = store.clone();
@@ -1867,6 +1679,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
             get_conversation,
@@ -1893,6 +1706,7 @@ pub fn run() {
             ,configure_agent_connector
             ,search_archive
             ,archive_overview
+            ,echo_working_set
             ,read_archive_page
             ,list_archive_pages
             ,list_archive_events
@@ -1920,4 +1734,23 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running OpenCore");
+}
+
+#[cfg(test)]
+mod image_attachment_tests {
+    use super::*;
+    #[test]
+    fn attached_pixels_survive_original_file_removal() {
+        let root = std::env::temp_dir().join(format!("opencore-image-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let source = root.join("picture.png");
+        std::fs::write(&source, include_bytes!("../../public/opencore-logo.png")).unwrap();
+        let (prompt, meta, parts) = read_chat_attachments(&[source.to_string_lossy().to_string()], &root.join("stored")).unwrap();
+        std::fs::remove_file(&source).unwrap();
+        assert!(prompt.contains("pixels are included"));
+        assert_eq!(meta[0]["included"], true);
+        let stored = artifacts::preview(&root.join("stored"), meta[0]["artifactId"].as_str().unwrap()).unwrap();
+        assert_eq!(parts[0]["image_url"]["url"], stored.data_url);
+        std::fs::remove_dir_all(root).unwrap();
+    }
 }

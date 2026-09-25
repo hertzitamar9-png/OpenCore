@@ -17,9 +17,12 @@ use std::os::windows::process::CommandExt;
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
-/// ECHO's live window: the model's native trained length. Only 8 of its 32 layers keep a
-/// token-indexed KV cache (q4_0), so 256K costs about 2.7 GB more VRAM than 32K on the RTX 4070.
-const ECHO_LIVE_WINDOW: u64 = 262_144;
+/// The GGUF declares a native Qwen3.5 context of 262,144 tokens. Pass `-c 0`
+/// to llama.cpp so it reads that value from model metadata instead of imposing
+/// the old 32K override. This is the per-inference model context; ECHO's exact
+/// conversation archive is separate and has no token-count cap (storage bound).
+/// KV stays in system RAM so context does not reserve the model's VRAM budget.
+const ECHO_MODEL_CONTEXT: u64 = 262_144;
 /// Context checkpoints let the hybrid recurrent model resume from the end of the previous
 /// prompt instead of re-reading everything when an assistant turn is re-rendered.
 const CONTEXT_CHECKPOINT_ARGS: [&str; 4] = ["--ctx-checkpoints", "64", "--checkpoint-min-step", "256"];
@@ -490,8 +493,12 @@ impl RuntimeManager {
             .args(CONTEXT_CHECKPOINT_ARGS)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        let projector = self.install_root.join("vision/mmproj-BF16.gguf");
+        if projector.is_file() {
+            command.args(["--mmproj", projector.to_string_lossy().as_ref(), "--image-max-tokens", "2048"]);
+        }
         if profile == "echo" {
-            command.args(["-c", &ECHO_LIVE_WINDOW.to_string(), "-t", "1"]);
+            command.args(["-c", "0", "-t", "1", "--no-kv-offload"]);
         } else {
             command.args(["-c", "1000000", "-t", "4"]);
             command.args([
@@ -521,7 +528,8 @@ impl RuntimeManager {
         if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = if profile == "echo" { "Starting ECHO" } else { "Finishing startup" }.into(); inner.loading_step = 2; }
 
         if profile == "echo" {
-            if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{}", self.backend_port), Some(ECHO_LIVE_WINDOW)) {
+            // ECHO asks /props for the model's real metadata-derived n_ctx.
+            if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{}", self.backend_port), None) {
                 return self.fail_start(profile, error);
             }
             if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) {
@@ -556,6 +564,7 @@ impl RuntimeManager {
             .arg(script)
             .args(["--upstream", upstream, "--port", &self.echo_port.to_string()])
             .args(["--offload-every", "100"])
+            .args(["--warm-cache-budget-mb", "128"])
             .args(["--archive", self.install_root.join("echo").join("archives").to_string_lossy().as_ref()])
             .arg("--no-console")
             .stdout(Stdio::piped())
@@ -611,6 +620,15 @@ impl RuntimeManager {
                 inner.error = Some(format!("ECHO exited with {status}"));
             }
         }
+        let (attention_kv_location, attention_kv_type) = if inner.status != "running" {
+            ("not loaded".to_string(), "none".to_string())
+        } else {
+            match inner.profile.as_str() {
+                "echo" | "native1m" => ("system RAM".to_string(), "Q4_0".to_string()),
+                "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
+                _ => ("not loaded".to_string(), "none".to_string()),
+            }
+        };
         RuntimeSnapshot {
             profile: inner.profile.clone(),
             status: inner.status.clone(),
@@ -622,7 +640,9 @@ impl RuntimeManager {
             echo_pid: inner.echo.as_ref().map(Child::id),
             model_path: self.install_root.join("OpenCore-Code-Single-File.gguf").display().to_string(),
             archive_path: self.install_root.join("echo").join("archives").display().to_string(),
-            context_size: if inner.profile == "native1m" { 1_000_000 } else { ECHO_LIVE_WINDOW },
+            context_size: if inner.profile == "native1m" { 1_000_000 } else { ECHO_MODEL_CONTEXT },
+            attention_kv_location,
+            attention_kv_type,
             error: inner.error.clone(),
             loading_phase: inner.loading_phase.clone(),
             loading_step: inner.loading_step,

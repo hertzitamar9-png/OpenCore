@@ -4,7 +4,6 @@ usage: server.py MODEL_DIR [--port 8815]
 
 POST /decide        {"state": ..., "questions": {...}}        typed choices with probabilities
 POST /desktop/pick  {"goal", "title", "elements", "recent"}   which control does the goal mean
-POST /desktop/ground {"hwnd": int, "goal": str}                screenshot to coordinates
 POST /snake/play    {"hwnd": int, "seconds": float}           play a visible Snake game live
 GET  /health
 """
@@ -16,19 +15,16 @@ import re
 import sys
 import threading
 import time
-from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 import desktop_task as task
-from grounder import Grounder
 
 app = FastAPI(title="OpenCore Reflex")
 MODEL = None
 MODEL_DIR: str | None = None
-GROUNDER: Grounder | None = None
 PLAYING = threading.Lock()
 LOADING = threading.Lock()
 LAST_ACTIVE = time.monotonic()
@@ -60,8 +56,7 @@ def idle_watchdog() -> None:
     """Exit the child server after inactivity; the app restarts it on next use."""
     while True:
         time.sleep(10)
-        if (time.monotonic() - LAST_ACTIVE > IDLE_SECONDS and not PLAYING.locked()
-                and not (GROUNDER and GROUNDER.lock.locked()) and not LOADING.locked()):
+        if time.monotonic() - LAST_ACTIVE > IDLE_SECONDS and not PLAYING.locked() and not LOADING.locked():
             os._exit(0)
 
 
@@ -82,50 +77,11 @@ class PlayRequest(BaseModel):
     seconds: float = 90.0
 
 
-class GroundRequest(BaseModel):
-    hwnd: int
-    goal: str
-
-
-class GroundImageRequest(BaseModel):
-    data_url: str
-    goal: str
-    crop: tuple[int, int, int, int] | None = None
-
-
 @app.get("/health")
 def health():
     return {"ready": True, "text_model_ready": MODEL is not None,
             "model": MODEL.model_dir if MODEL else MODEL_DIR,
-            "device": str(MODEL.agent.device) if MODEL else None,
-            "grounder_ready": GROUNDER.ready if GROUNDER else False,
-            "grounder_load_ms": GROUNDER.load_ms if GROUNDER else None}
-
-
-@app.post("/desktop/ground")
-def ground(request: GroundRequest):
-    if GROUNDER is None:
-        raise HTTPException(503, "Visual grounder is not configured")
-    try:
-        touch()
-        return GROUNDER.ground(request.hwnd, request.goal)
-    except ValueError as error:
-        raise HTTPException(422, str(error)) from error
-    except RuntimeError as error:
-        raise HTTPException(503, str(error)) from error
-
-
-@app.post("/desktop/ground_image")
-def ground_image(request: GroundImageRequest):
-    if GROUNDER is None:
-        raise HTTPException(503, "Visual grounder is not configured")
-    try:
-        touch()
-        return GROUNDER.predict_image(request.data_url, request.goal, request.crop)
-    except ValueError as error:
-        raise HTTPException(422, str(error)) from error
-    except RuntimeError as error:
-        raise HTTPException(503, str(error)) from error
+            "device": str(MODEL.agent.device) if MODEL else None}
 
 
 @app.post("/decide")
@@ -182,14 +138,12 @@ def snake_play(request: PlayRequest):
 
 
 def main():
-    global MODEL_DIR, GROUNDER
+    global MODEL_DIR
     parser = argparse.ArgumentParser()
     parser.add_argument("model")
-    parser.add_argument("--grounder", default=None)
     parser.add_argument("--port", type=int, default=8815)
     args = parser.parse_args()
     MODEL_DIR = args.model
-    GROUNDER = Grounder(args.grounder or Path(args.model).resolve().parent / "grounder")
     threading.Thread(target=idle_watchdog, name="reflex-idle-release", daemon=True).start()
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")
 

@@ -7,6 +7,11 @@ use std::process::Child;
 #[cfg(windows)]
 pub fn adopt(child: &Child) {
     use std::os::windows::io::AsRawHandle;
+    adopt_handle(child.as_raw_handle());
+}
+
+#[cfg(windows)]
+pub fn adopt_handle(handle: std::os::windows::io::RawHandle) {
     use std::sync::OnceLock;
     use windows::Win32::Foundation::HANDLE;
     use windows::Win32::System::JobObjects::{
@@ -27,7 +32,7 @@ pub fn adopt(child: &Child) {
     if let Some(job) = job {
         unsafe {
             let _ = AssignProcessToJobObject(HANDLE(*job as *mut core::ffi::c_void),
-                HANDLE(child.as_raw_handle() as *mut core::ffi::c_void));
+                HANDLE(handle));
         }
     }
 }

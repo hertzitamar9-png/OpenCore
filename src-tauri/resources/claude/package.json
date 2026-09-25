@@ -1,0 +1,1 @@
+{"name":"opencore-agent-runtime","private":true,"type":"module","dependencies":{"@anthropic-ai/claude-agent-sdk":"0.3.282","zod":"^4.0.0"}}

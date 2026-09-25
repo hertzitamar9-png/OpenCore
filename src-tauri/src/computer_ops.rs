@@ -6,6 +6,13 @@ use std::path::PathBuf;
 #[cfg(windows)]
 const NO_WINDOW: u32 = 0x0800_0000;
 
+pub(crate) fn with_workspace(mut args: Value, workspace: &std::path::Path) -> Value {
+    if args["action"] == "run_command" && args["cwd"].as_str().is_none_or(|cwd| cwd.trim().is_empty()) {
+        args["cwd"] = json!(workspace.to_string_lossy());
+    }
+    args
+}
+
 async fn output(mut process: tokio::process::Command) -> Result<String, String> {
     process.stdout(Stdio::piped()).stderr(Stdio::piped());
     process.kill_on_drop(true);
@@ -107,6 +114,19 @@ pub(crate) async fn command(action: &str, args: &Value) -> Result<Value, String>
 #[cfg(all(test, windows))]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn workspace_commands_read_the_conversation_file_and_preserve_explicit_cwd() {
+        let root = std::env::temp_dir().join(format!("opencore-cwd-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("marker.txt"), "conversation workspace").unwrap();
+        let args = with_workspace(json!({"action":"run_command", "command":"Get-Content -LiteralPath marker.txt"}), &root);
+        let result = command("run_command", &args).await.unwrap();
+        assert_eq!(result["output"].as_str().unwrap().trim(), "conversation workspace");
+        let explicit = with_workspace(json!({"action":"run_command", "cwd":"C:/explicit"}), &root);
+        assert_eq!(explicit["cwd"], "C:/explicit");
+        std::fs::remove_file(root.join("marker.txt")).unwrap();
+        std::fs::remove_dir(root).unwrap();
+    }
     #[test]
     fn chrome_executable_outside_start_apps_is_discoverable() {
         let root = std::env::temp_dir().join(format!("opencore-chrome-test-{}", uuid::Uuid::new_v4()));

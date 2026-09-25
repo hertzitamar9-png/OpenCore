@@ -9,12 +9,14 @@ import {
 } from "@assistant-ui/react";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   AppWindow, BrainCircuit, ChevronDown, Copy, FileDown, Globe2, Paperclip, Pencil, Pin, PinOff, Send, ShieldCheck, Square, Trash2, X,
-  CheckCircle2, CircleAlert, Code2, CornerUpLeft, FilePenLine, FileSearch, FileText, FolderOpen, Gamepad2, Terminal, Wrench, Zap
+  CheckCircle2, CircleAlert, Code2, CornerUpLeft, Crosshair, Eye, FilePenLine, FileSearch, FileText, FolderOpen, Gamepad2, MousePointerClick, Terminal, Wrench, Zap
 } from "lucide-react";
 import * as api from "./api";
 import { messageUrlTransform, parseArtifactLink } from "./artifact-links";
@@ -22,11 +24,12 @@ import { sanitizeMessageMarkdown } from "./message-markdown";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
-import { buildResponseSegments, type ToolStep } from "./response-segments";
+import { buildResponseSegments, visibleEchoReceiptGroups, type ToolStep } from "./response-segments";
 import { ProjectPicker } from "./ProjectPicker";
 import { NativeBrowserPanel } from "./NativeBrowserPanel";
 import { DesktopPanel } from "./DesktopPanel";
 import { FloatingWindow } from "./FloatingWindow";
+import { SpeechButton } from "./SpeechButton";
 import type { ApprovalMode, ChatQueueItem, ProjectSummary, ReasoningEffort, RuntimeSnapshot, TelemetrySnapshot, TimelineEntry } from "./types";
 
 const REASONING_MODES: { value: ReasoningEffort; label: string }[] = [
@@ -40,8 +43,8 @@ const REASONING_MODES: { value: ReasoningEffort; label: string }[] = [
 ];
 
 const APPROVAL_MODES: { value: ApprovalMode; label: string; short: string; detail: string }[] = [
-  { value: "ask-every-time", label: "Ask every time", short: "Ask", detail: "Ask before each project tool action." },
-  { value: "approve-for-me", label: "Approve for me", short: "Auto", detail: "Review safe project reads and searches automatically." },
+  { value: "ask-every-time", label: "Ask every time", short: "Ask", detail: "Ask before every tool action, including computer controls." },
+  { value: "approve-for-me", label: "Approve for me", short: "Auto", detail: "Allow reads automatically; ask before edits, commands, and computer actions." },
   { value: "allow-chat", label: "Allow everything in this chat", short: "Chat", detail: "Allow available tools for this chat." },
   { value: "allow-all", label: "Allow everything", short: "All", detail: "Allow available tools across chats on this computer." },
 ];
@@ -86,6 +89,11 @@ type Props = {
   onPin: () => void;
   onMoveProject: (projectId: string | null) => void;
   onCreateProject: (name: string, folderPath: string) => Promise<boolean>;
+  defaultSkills: ComposerSkillId[];
+  subagentsEnabled: boolean;
+  maxSubagents: number;
+  projectSkillsEnabled: boolean;
+  compactAtTokens: number;
 };
 
 function displayText(value: string) {
@@ -107,7 +115,7 @@ function convertTurn(turn: ConversationTurn, active: boolean): ThreadMessageLike
     content: [{ type: "text", text: visible || " " }],
     metadata: { custom: { source: entry.source, timestamp: entry.timestamp, kind: response ? "response" : entry.kind,
       title: entry.title, raw: visible, details: entry.metadata, events: response ? turn.entries : undefined,
-      active: response && active && !turn.entries.some((item) => item.kind === "message" && item.role === "assistant") } },
+      active: response && active } },
   };
 }
 
@@ -194,6 +202,7 @@ function toolPayload(raw: string): Record<string, unknown> {
 }
 
 function toolSummary(title = "", raw = "", result = false) {
+  title = title.replace(/^mcp__opencore__/, "");
   const payload = toolPayload(raw);
   const action = String(payload.action || "");
   const probe = `${title} ${raw.slice(0, 500)}`.toLowerCase();
@@ -205,7 +214,12 @@ function toolSummary(title = "", raw = "", result = false) {
   }
   if (title === "desktop_use") return { label: action === "list" ? "Checking open windows" : action === "read_screen" ? "Reading the screen" : action === "navigate_url" ? "Opening a page in Chrome" : action === "click" || action === "interact" ? "Clicking in a window" : "Controlling a window", icon: AppWindow };
   if (title === "system_use") return { label: action === "find_apps" ? "Finding an app" : action === "launch_app" ? "Opening an app" : "Running a command", icon: Terminal };
-  if (title === "reflex_use") return action === "play_snake" ? { label: "Played Snake", icon: Gamepad2 } : { label: "Found a control", icon: Zap };
+  if (title === "reflex_use") return ({
+    see: { label: "Looked at the screen", icon: Eye },
+    ground: { label: "Located a target", icon: Crosshair },
+    ground_click: { label: "Clicked a target", icon: MousePointerClick },
+    play_snake: { label: "Played Snake", icon: Gamepad2 },
+  } as Record<string, { label: string; icon: typeof Zap }>)[action] ?? { label: "Found a control", icon: Zap };
   if (probe.includes("apply_patch") || probe.includes("patch")) return { label: "Patched files", icon: FilePenLine };
   if (probe.includes("write") || probe.includes("edit")) return { label: "Edited files", icon: FilePenLine };
   if (probe.includes("grep") || probe.includes("rg ") || probe.includes("search") || probe.includes("find")) return { label: "Searched the project", icon: FileSearch };
@@ -214,52 +228,52 @@ function toolSummary(title = "", raw = "", result = false) {
   return { label: `Used ${title || "a tool"}`, icon: Wrench };
 }
 
-function recordedToolNarration(title: string, raw: string): string {
-  const action = String(toolPayload(raw).action || "");
-  if (title === "desktop_use") {
-    if (action === "list") return "I'll check which Windows apps are open.";
-    if (["inspect", "read_screen", "screenshot"].includes(action)) return "I'll inspect the selected window before acting.";
-    return "I'll use the selected window and check what changed.";
-  }
-  if (title === "browser_use") return action === "inspect" || action === "read_screen"
-    ? "I'll inspect OpenCore Browser before acting." : "I'll use OpenCore Browser and check the page.";
-  if (title === "chrome_use") return "I'll use the paired Chrome tab and check the page.";
-  if (title === "system_use") {
-    if (action === "find_apps") return "I'll look for the installed app.";
-    if (action === "launch_app") return "I'll open the selected app.";
-    return "I'll run the command and check its output.";
-  }
-  if (title === "reflex_use") return action === "play_snake" ? "I'll play the game live with Reflex." : "I'll find the right control with Reflex.";
-  if (title === "read_project_file") return "I'll read the selected project file.";
-  if (title === "search_project") return "I'll search the project and check the matches.";
-  return "I'll run the next tool and check its result.";
-}
-
 function toolTarget(raw: string) {
   try {
     const payload = toolPayload(raw);
-    const candidate = payload.path ?? payload.cmd ?? payload.query ?? payload.pattern ?? payload.url ?? payload.text ?? payload.prompt;
+    const candidate = payload.path ?? payload.file_path ?? payload.command ?? payload.cmd ?? payload.query ?? payload.pattern ?? payload.url ?? payload.text ?? payload.prompt;
     if (typeof candidate === "string") return candidate.replace(/\s+/g, " ").slice(0, 150);
   } catch { /* Non-JSON tool text is still available in details. */ }
   return "";
 }
 
 function ToolActivity({ kind, title, raw, resultRaw }: { kind: string; title?: string; raw: string; resultRaw?: string }) {
-  const failed = resultRaw ? !!toolPayload(resultRaw).error : false;
+  const outcome = resultRaw ? toolPayload(resultRaw) : {};
+  const failed = !!outcome.error || (typeof outcome.exitCode === "number" && outcome.exitCode !== 0);
   const presentation = failed ? { label: "Action failed", icon: CircleAlert } : toolSummary(title, raw, kind === "tool_result");
   const Icon = presentation.icon;
   const target = toolTarget(raw);
   const pretty = (value: string) => { try { return JSON.stringify(JSON.parse(value), null, 2); } catch { return value; } };
   const details = resultRaw ? `Action\n${pretty(raw)}\n\nResult\n${pretty(resultRaw)}` : pretty(raw);
   return <details className={`tool-activity ${kind === "tool_result" ? "tool-result" : ""} ${resultRaw ? "completed" : ""} ${failed ? "failed" : ""}`}>
-    <summary><Icon size={15} /><strong>{presentation.label}</strong>{target ? <span>{target}</span> : null}{resultRaw ? <CheckCircle2 size={13} className="tool-status-icon" /> : null}<em>Details</em></summary>
+    <summary><Icon size={15} /><strong>{presentation.label}</strong><span title={target}>{target}</span>{resultRaw ? failed ? <CircleAlert size={13} className="tool-status-icon" /> : <CheckCircle2 size={13} className="tool-status-icon" /> : <span />}<em>Details</em></summary>
     <pre>{details}</pre>
   </details>;
 }
 
-function EchoReceipt({ entry }: { entry: TimelineEntry }) {
-  const artifact = entry.metadata.artifact && typeof entry.metadata.artifact === "object" ? entry.metadata.artifact as Record<string, unknown> : null;
-  return <details className="echo-storage-card"><summary><BrainCircuit size={15} /><strong>{artifact?.status === "complete" ? "Saved to ECHO" : "ECHO memory"}</strong><span>{typeof artifact?.words === "number" ? `${artifact.words} words archived` : "Memory receipt available"}</span></summary><pre>{displayText(entry.content).trim() || "No receipt text saved"}{Object.keys(entry.metadata).length ? `\n\nReceipt metadata\n${JSON.stringify(entry.metadata, null, 2)}` : ""}</pre></details>;
+export function EchoReceipt({ entries }: { entries: TimelineEntry[] }) {
+  const artifacts = entries.map((entry) => entry.metadata.artifact && typeof entry.metadata.artifact === "object" ? entry.metadata.artifact as Record<string, unknown> : null);
+  const allSaved = artifacts.length > 0 && artifacts.every((artifact) => artifact?.status === "complete");
+  const words = artifacts.reduce((sum, artifact) => sum + (typeof artifact?.words === "number" ? artifact.words : 0), 0);
+  const summary = entries.length > 1 ? `${entries.length} updates combined` : words ? `${words} words archived` : "Memory receipt available";
+  const receiptText = entries.map((entry, index) => {
+    const title = entry.title.trim() || `ECHO update ${index + 1}`;
+    const content = displayText(entry.content).trim() || "No receipt text saved";
+    const metadata = Object.keys(entry.metadata).length ? `Receipt metadata\n${JSON.stringify(entry.metadata, null, 2)}` : "";
+    return [entries.length > 1 ? `${index + 1}. ${title}` : "", content, metadata].filter(Boolean).join("\n\n");
+  }).join("\n\n────────────────────────\n\n");
+  return <details className="echo-storage-card"><summary><BrainCircuit size={15} /><strong>{allSaved ? "Saved to ECHO" : "ECHO memory"}</strong><span>{summary}</span></summary><pre>{receiptText}</pre></details>;
+}
+
+function ResponseMarkdown({ content }: { content: string }) {
+  const actions = useContext(ArtifactActionsContext);
+  return <div className="aui-md"><ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={messageUrlTransform} components={{
+    a: ({ href, children }) => {
+      const artifact = parseArtifactLink(href);
+      return artifact ? <a href={href} onClick={(event) => { event.preventDefault(); artifact.action === "download" ? actions?.download(artifact.id) : actions?.preview(artifact.id); }}>{children}</a> : <a href={href}>{children}</a>;
+    },
+    img: ({ src, alt }) => <MessageImage src={src} alt={alt} />,
+  }}>{displayText(content)}</ReactMarkdown></div>;
 }
 
 function ReasoningDisclosure({ entries, active }: { entries: TimelineEntry[]; active: boolean }) {
@@ -288,25 +302,25 @@ function ToolGroup({ steps, active }: { steps: ToolStep[]; active: boolean }) {
 }
 
 function ResponseActivity({ events, active }: { events: TimelineEntry[]; active: boolean }) {
-  const hasAnswer = events.some((entry) => entry.kind === "message" && entry.role === "assistant");
   const latest = events.filter((entry) => entry.kind !== "echo").at(-1);
-  const working = active && !hasAnswer;
+  const working = active;
   return <div className="assistant-response">
     {buildResponseSegments(events).map((segment) => segment.type === "reasoning"
-      ? <ReasoningDisclosure key={segment.key} entries={segment.entries} active={working && latest?.kind === "thinking" && segment.entries.includes(latest)} />
+      ? <ReasoningDisclosure key={segment.key} entries={segment.entries} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
       : segment.type === "narration"
-        ? <p key={segment.key} className="assistant-progress">{displayText(segment.entry.content)}</p>
+        ? segment.entry.metadata.source === "tool_intent" ? null : <p key={segment.key} className="assistant-progress">{displayText(segment.entry.content)}</p>
       : segment.type === "inferred"
-        ? <p key={segment.key} className="assistant-progress inferred" title="Action summary from the recorded tool call">{recordedToolNarration(segment.call.title, segment.call.content)}</p>
+        ? null
       : segment.type === "tools"
         ? <ToolGroup key={segment.key} steps={segment.steps} active={working && segment.steps.some(({ call, result }) => call === latest && !result)} />
       : segment.entry.kind === "file" && typeof segment.entry.metadata.id === "string"
         ? <GeneratedArtifact key={segment.key} id={segment.entry.metadata.id} name={segment.entry.title || "Generated file"} mime={typeof segment.entry.metadata.mime === "string" ? segment.entry.metadata.mime : undefined} size={typeof segment.entry.metadata.size === "number" ? segment.entry.metadata.size : undefined} />
+      : segment.entry.kind === "message"
+        ? <div key={segment.key} className="assistant-response-answer"><ResponseMarkdown content={segment.entry.content} /></div>
       : segment.entry.kind === "error"
         ? <details key={segment.key} className="assistant-disclosure kind-error" open><summary><Code2 size={14} /><strong>Error</strong><span>{segment.entry.title}</span></summary><div>{displayText(segment.entry.content)}</div></details>
       : null)}
-    {hasAnswer ? <div className="assistant-response-answer"><MessagePrimitive.Parts components={{ Text: MarkdownText }} /></div> : null}
-    {events.filter((entry) => entry.kind === "echo").map((entry) => <EchoReceipt key={entry.id} entry={entry} />)}
+    {visibleEchoReceiptGroups(events, active).map((entries) => <EchoReceipt key={entries.map((entry) => entry.id).join("-")} entries={entries} />)}
   </div>;
 }
 
@@ -366,9 +380,26 @@ export const AssistantConversation = memo(function AssistantConversation({
   conversationId, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, liveTokenSpeed, promptProgress, backendActive,
   onConversationId, onRefresh, onNotice, onExport, onRename, onDelete,
   pinned, project, projectId, projects, onPin, onMoveProject, onCreateProject,
+  defaultSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens,
 }: Props) {
   const [draft, setDraft] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState<ComposerSkillId[]>([]);
+  const draftInput = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const input = draftInput.current;
+    if (!input) return;
+    const wheel = (event: WheelEvent) => {
+      if (event.ctrlKey || !event.deltaY || input.scrollHeight <= input.clientHeight) return;
+      event.preventDefault();
+      const line = Math.round(parseFloat(getComputedStyle(input).lineHeight) || 24);
+      input.scrollTop = Math.max(0, Math.round(input.scrollTop / line) + Math.sign(event.deltaY)) * line;
+    };
+    input.addEventListener('wheel', wheel, { passive: false });
+    return () => input.removeEventListener('wheel', wheel);
+  }, []);
+
+  const [selectedSkills, setSelectedSkills] = useState<ComposerSkillId[]>(() => [...defaultSkills]);
+  const defaultSkillsKey = defaultSkills.join("\u0000");
+  useEffect(() => { setSelectedSkills([...defaultSkills]); }, [defaultSkillsKey]);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [files, setFiles] = useState<string[]>([]);
   const [queue, setQueue] = useState<ChatQueueItem[]>([]);
@@ -441,7 +472,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   useEffect(() => {
     if (!controlOpen) return;
     const outside = (event: PointerEvent) => {
-      if (controlsRef.current && !controlsRef.current.contains(event.target as Node) && !(event.target as HTMLElement).closest("#effort-panel,#approval-panel")) setControlOpen(null);
+      if (controlsRef.current && !controlsRef.current.contains(event.target as Node) && !(event.target as HTMLElement).closest("#effort-panel,#approval-panel,#tools-panel")) setControlOpen(null);
     };
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setControlOpen(null); };
     document.addEventListener("pointerdown", outside);
@@ -522,11 +553,12 @@ export const AssistantConversation = memo(function AssistantConversation({
   }, [sending, conversationId]);
 
   const visibleEntries = useMemo(() => {
-    const persisted = liveEntries.length ? liveEntries : entries;
+    const streaming = entries.filter((entry) => entry.metadata.live === true);
+    const persisted = liveEntries.length ? liveEntries : entries.filter((entry) => entry.metadata.live !== true);
     return [...persisted, ...optimistic.filter((pending) => !persisted.some((entry) =>
       entry.role === pending.role && entry.content === pending.content &&
       Math.abs(new Date(entry.timestamp).valueOf() - new Date(pending.timestamp).valueOf()) < 30000
-    ))];
+    )), ...streaming];
   }, [entries, liveEntries, optimistic]);
   const messages = useMemo(() => {
     const turns = groupConversationTurns(visibleEntries);
@@ -578,7 +610,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     let interrupted = false;
 
     try {
-      await api.sendChatMessage(id, item.text, item.files, item.reasoningEffort, item.approvalMode, item.skills);
+      await api.sendChatMessage(id, item.text, item.files, item.reasoningEffort, item.approvalMode, item.skills, item.subagentsEnabled, item.maxSubagents, item.projectSkillsEnabled, item.compactAtTokens);
       await onRefresh();
       setLiveEntries([]);
     } catch (error) {
@@ -628,10 +660,10 @@ export const AssistantConversation = memo(function AssistantConversation({
     if (backendActive && !sendingRef.current) return;
     const text = draft.trim();
     if (!text && files.length === 0) return;
-    const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort, approvalMode, skills: [...selectedSkills] };
+    const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort, approvalMode, skills: [...selectedSkills], subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens };
     setDraft("");
     setFiles([]);
-    setSelectedSkills([]);
+    setSelectedSkills([...defaultSkills]);
     setSkillPickerOpen(false);
     if (sendingRef.current) {
       setQueueBoth([...queueRef.current, item]);
@@ -641,10 +673,23 @@ export const AssistantConversation = memo(function AssistantConversation({
   };
 
   const chooseFiles = async () => {
-    const selected = await open({ multiple: true, directory: false });
-    if (!selected) return;
-    const paths = Array.isArray(selected) ? selected : [selected];
-    setFiles((current) => Array.from(new Set([...current, ...paths])));
+    try {
+      const selected = await open({ multiple: true, directory: false });
+      if (selected) {
+        const paths = Array.isArray(selected) ? selected : [selected];
+        setFiles((current) => Array.from(new Set([...current, ...paths])));
+      }
+    } catch (error) { onNotice(`Could not attach files: ${String(error)}`); }
+    finally { await focusDraft(); }
+  };
+
+  const focusDraft = async () => {
+    // WebView2's native keyboard target can remain outside the renderer after
+    // a native dialog or another child webview. DOM focus alone is insufficient.
+    if ('__TAURI_INTERNALS__' in window) {
+      try { await getCurrentWebview().setFocus(); } catch (error) { onNotice(`Could not focus the editor: ${String(error)}`); }
+    }
+    draftInput.current?.focus({ preventScroll: true });
   };
 
   const removeQueued = (id: string) => {
@@ -735,8 +780,11 @@ export const AssistantConversation = memo(function AssistantConversation({
 
       <div className="chat-composer" ref={controlsRef}>
         <button className="attach-button" onClick={chooseFiles} title="Attach files"><Paperclip size={18} /></button>
+        <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />
         <textarea
+          ref={draftInput}
           aria-label="Message OpenCore"
+          onPointerDown={() => { void focusDraft(); }}
           value={draft}
           onChange={(event) => { setDraft(event.target.value); setSkillPickerOpen(event.target.value.startsWith("/")); }}
           onKeyDown={(event) => {
@@ -748,7 +796,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             }
           }}
           placeholder="Message OpenCore…"
-          rows={1}
+          rows={2}
         />
         <div className="composer-controls">
           <button type="button" className={`composer-control-button approval-trigger ${controlOpen === "approval" ? "active" : ""}`} aria-label={`Approval: ${approvalLabel}`} aria-expanded={controlOpen === "approval"} aria-controls="approval-panel" onClick={() => setControlOpen((open) => open === "approval" ? null : "approval")}>
@@ -760,13 +808,14 @@ export const AssistantConversation = memo(function AssistantConversation({
           {controlOpen === "effort" ? <FloatingWindow id="effort-compact" domId="effort-panel" title="Effort" icon={<BrainCircuit size={16} />} className={`composer-popover effort-popover effort-${effortIndex}`} onClose={() => setControlOpen(null)} place="composer" initialWidth={440} initialHeight={160} minWidth={280} minHeight={145} maximizable={false} ariaLabel="Effort settings">
             <div className="effort-bar">
               <div className="effort-rail">
-                <div className="effort-segments">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index <= effortIndex ? "lit" : ""} />)}</div>
+                <div className="effort-segments">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index === effortIndex ? "lit" : ""} />)}</div>
                 <input className="effort-range" type="range" min="0" max="6" step="1" value={effortIndex} aria-label="Reasoning effort" aria-valuetext={effortLabel} onChange={(event) => chooseEffort(Number(event.target.value))} />
               </div>
             </div>
-            <div className="effort-labels" aria-hidden="true">{REASONING_MODES.map((mode) => <span key={mode.value}>{mode.label}</span>)}</div>
+            <div className="effort-labels" aria-hidden="true">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index === effortIndex ? "selected" : ""}>{mode.label}</span>)}</div>
           </FloatingWindow> : null}
           {controlOpen === "approval" ? <FloatingWindow id="approval" domId="approval-panel" title="Approval" icon={<ShieldCheck size={16} />} className="composer-popover approval-popover" onClose={() => setControlOpen(null)} place="composer" initialWidth={510} initialHeight={160} minWidth={280} minHeight={140} maximizable={false} ariaLabel="Approval settings">
+            <p className="control-explanation">{APPROVAL_MODES.find(mode => mode.value === approvalMode)?.detail}</p>
             <div className="approval-bar" role="group" aria-label="Approval mode"><div className="approval-rail"><div className="approval-segments" aria-hidden="true">{APPROVAL_MODES.map((mode, index) => <span key={mode.value} className={index <= shownApprovalIndex ? "lit" : ""} />)}</div><input className="approval-range" type="range" min="0" max="3" step="1" value={shownApprovalIndex} aria-label="Approval level" aria-valuetext={APPROVAL_MODES[shownApprovalIndex].label} onChange={(event) => { const index = Number(event.target.value); approvalPreviewRef.current = index; setApprovalPreviewIndex(index); }} onPointerUp={commitApprovalRange} onKeyUp={commitApprovalRange} onBlur={commitApprovalRange} onPointerCancel={() => { approvalPreviewRef.current = null; setApprovalPreviewIndex(null); }} /></div><div className="approval-labels">{APPROVAL_MODES.map((mode) => <button type="button" key={mode.value} aria-pressed={mode.value === approvalMode} onClick={() => chooseApprovalMode(mode.value)}>{mode.label}</button>)}</div></div>
           </FloatingWindow> : null}
         </div>

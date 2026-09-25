@@ -12,6 +12,8 @@ export interface RuntimeSnapshot {
   modelPath: string;
   archivePath: string;
   contextSize: number;
+  attentionKvLocation?: string;
+  attentionKvType?: string;
   error?: string | null;
   loadingPhase?: string;
   loadingStep?: number;
@@ -183,7 +185,11 @@ export interface ChatQueueItem {
   files: string[];
   reasoningEffort: ReasoningEffort;
   approvalMode: ApprovalMode;
-  skills: ("computer-use" | "chrome-control")[];
+  skills: ("computer-use" | "browser-use" | "chrome-control")[];
+  subagentsEnabled: boolean;
+  maxSubagents: number;
+  projectSkillsEnabled: boolean;
+  compactAtTokens: number;
 }
 
 export type ReasoningEffort = "off" | "low" | "medium" | "high" | "extra-high" | "max" | "opencore";

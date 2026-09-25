@@ -87,3 +87,24 @@ test("long user messages remain inside their bubble", async ({ page }) => {
   expect(result.scrollWidth).toBeLessThanOrEqual(result.clientWidth + 1);
   expect(result.right).toBeLessThanOrEqual(result.panelRight + 1);
 });
+
+test("composer shows two complete lines and the wheel advances one line", async ({ page }) => {
+  await page.setViewportSize({ width: 1500, height: 900 });
+  await page.goto("/");
+  const input = page.getByRole("textbox", { name: "Message OpenCore" });
+  await input.fill("row one\nrow two\nrow three\nrow four");
+  const geometry = await input.evaluate((element: HTMLTextAreaElement) => {
+    const style = getComputedStyle(element);
+    return { contentHeight: element.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom), line: parseFloat(style.lineHeight), scrollHeight: element.scrollHeight, height: element.clientHeight, rows: element.rows };
+  });
+  expect(geometry.rows).toBe(2);
+  expect(Math.abs(geometry.contentHeight - geometry.line * 2)).toBeLessThanOrEqual(2);
+  expect(geometry.scrollHeight).toBeGreaterThan(geometry.height);
+  await input.evaluate((element: HTMLTextAreaElement) => {
+    element.scrollTop = 0;
+    element.dispatchEvent(new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }));
+  });
+  const firstScroll = await input.evaluate((element: HTMLTextAreaElement) => element.scrollTop);
+  expect(Math.abs(firstScroll - geometry.line)).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: "C:/Users/hertz/AppData/Local/Temp/opencore-composer-two-lines.png" });
+});

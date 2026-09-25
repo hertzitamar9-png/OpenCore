@@ -51,23 +51,57 @@ test("compact viewport preserves the primary conversation workflow", async ({ pa
   await page.screenshot({ path: `${screenshotRoot}/conversations-1100x800.png`, fullPage: false });
 });
 
-test("composer text sits centered beside its controls", async ({ page }) => {
+test("three ECHO memory records appear together in one receipt", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto("/");
+  const cards = page.locator(".aui-assistant-message .echo-storage-card");
+  await expect(cards).toHaveCount(1);
+  const card = cards.first();
+  await expect(card.locator("summary")).toContainText("3 updates combined");
+  await card.locator("summary").click();
+  const content = card.locator("pre");
+  for (const text of ["first checkpoint", "first part of the response", "second checkpoint", "next part of the response", "final checkpoint", "both earlier checkpoints"]) {
+    await expect(content).toContainText(text);
+  }
+  await page.screenshot({ path: `${screenshotRoot}/echo-receipt-grouped.png`, fullPage: false });
+});
+
+test("composer placeholder stays left aligned and sits between the two text lines", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/");
+  await expect(page).toHaveTitle("OpenCore");
+  await expect(page.getByRole("heading", { name: "Conversations" })).toBeVisible();
   const composer = page.locator(".chat-composer");
   const input = page.getByRole("textbox", { name: "Message OpenCore" });
+  const placeholderStyle = await input.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { textAlign: style.textAlign, paddingTop: parseFloat(style.paddingTop), height: element.clientHeight, lineHeight: parseFloat(style.lineHeight) };
+  });
+  expect(placeholderStyle.textAlign).toBe("left");
+  expect(placeholderStyle.paddingTop).toBe(12);
+  expect(placeholderStyle.height).toBe(placeholderStyle.lineHeight * 2);
+  await composer.screenshot({ path: `${screenshotRoot}/composer-placeholder-left-centered.png` });
+
   await input.fill("Open the exits");
   const composerBox = await composer.boundingBox();
   const inputBox = await input.boundingBox();
   const buttonBox = await page.getByRole("button", { name: "Send message" }).boundingBox();
   expect(composerBox && inputBox && buttonBox).toBeTruthy();
   expect(Math.abs((inputBox!.y + inputBox!.height / 2) - (buttonBox!.y + buttonBox!.height / 2))).toBeLessThan(2);
-  const textInsets = await input.evaluate((element) => {
+  const typedStyle = await input.evaluate((element) => {
     const style = getComputedStyle(element);
-    return [parseFloat(style.paddingTop), parseFloat(style.paddingBottom)];
+    return { textAlign: style.textAlign, paddingTop: parseFloat(style.paddingTop), paddingBottom: parseFloat(style.paddingBottom) };
   });
-  expect(Math.abs(textInsets[0] - textInsets[1])).toBeLessThan(1);
-  await composer.screenshot({ path: `${screenshotRoot}/composer-centered.png` });
+  expect(["left", "start"]).toContain(typedStyle.textAlign);
+  expect(typedStyle.paddingTop).toBe(0);
+  expect(typedStyle.paddingBottom).toBe(0);
+  await input.fill("row one\nrow two");
+  await expect(input).toHaveValue("row one\nrow two");
+  await composer.screenshot({ path: `${screenshotRoot}/composer-typed-left.png` });
+  expect(errors).toEqual([]);
 });
 
 test("only active reasoning stays open and prior reasoning reads Reasoned", async ({ page }) => {

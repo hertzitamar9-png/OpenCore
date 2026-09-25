@@ -9,6 +9,12 @@ export type ResponseSegment =
   | { type: "tools"; key: string; steps: ToolStep[] }
   | { type: "entry"; key: string; entry: TimelineEntry };
 
+export function visibleEchoReceiptGroups(events: TimelineEntry[], active: boolean): TimelineEntry[][] {
+  if (active) return [];
+  const receipts = events.filter((entry) => entry.kind === "echo");
+  return receipts.length ? [receipts] : [];
+}
+
 /**
  * Fold one response's activity into readable steps.
  *
@@ -23,9 +29,16 @@ export function buildResponseSegments(events: TimelineEntry[]): ResponseSegment[
   let reasoning: Extract<ResponseSegment, { type: "reasoning" }> | null = null;
   let tools: Extract<ResponseSegment, { type: "tools" }> | null = null;
   let narrated = false;
+  const paired = new Set<number>();
   const visible = events.filter((entry) => entry.kind !== "echo");
+  const callId = (entry: TimelineEntry) => {
+    if (typeof entry.metadata.toolCallId === "string") return entry.metadata.toolCallId;
+    if (entry.kind === "tool_call" && typeof entry.metadata.id === "string") return entry.metadata.id;
+    try { const value = JSON.parse(entry.content); return value.toolCallId ?? value.tool_call_id ?? (entry.kind === "tool_call" ? value.id : undefined); } catch { return undefined; }
+  };
   for (let index = 0; index < visible.length; index++) {
     const entry = visible[index];
+    if (paired.has(entry.id)) continue;
     if (entry.kind === "progress") {
       segments.push({ type: "narration", key: `narration-${entry.id}`, entry });
       reasoning = null;
@@ -43,10 +56,12 @@ export function buildResponseSegments(events: TimelineEntry[]): ResponseSegment[
         tools = { type: "tools", key: `tools-${entry.id}`, steps: [] };
         segments.push(tools);
       }
-      const next = visible[index + 1];
-      const result = entry.kind === "tool_call" && next?.kind === "tool_result" ? next : undefined;
+      const next = visible.slice(index + 1).find((candidate) => candidate.kind !== "progress");
+      const id = callId(entry);
+      const matched = id ? visible.slice(index + 1).find(candidate => candidate.kind === "tool_result" && callId(candidate) === id) : undefined;
+      const result = entry.kind === "tool_call" ? matched ?? (next?.kind === "tool_result" && !callId(next) ? next : undefined) : undefined;
       tools.steps.push({ call: entry, result });
-      if (result) index++;
+      if (result) paired.add(result.id);
     } else {
       segments.push({ type: "entry", key: `entry-${entry.id}`, entry });
       reasoning = null;

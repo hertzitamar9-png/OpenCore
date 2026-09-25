@@ -12,7 +12,9 @@ export const previewTimeline: TimelineEntry[] = [
   { id: 4.5, conversationId: "preview", timestamp: ago(2.8), kind: "thinking", role: "assistant", source: "OpenCore", title: "Thinking", content: "The script ran successfully; I can now summarize its output.", metadata: {} },
   { id: 5, conversationId: "preview", timestamp: ago(2), kind: "message", role: "assistant", source: "OpenCore", title: "Assistant", content: "The analysis script is complete. It calculates summary statistics, groups revenue by month, and generates a bar chart.\n\n```python\nmonthly = sales.groupby(\"month\")[\"revenue\"].sum()\nmonthly.plot.bar()\n```", metadata: {} },
   { id: 6, conversationId: "preview", timestamp: ago(1.8), kind: "file", role: "assistant", source: "OpenCore", title: "Generated file · sales_analysis.py", content: "C:\\Users\\hertz\\OpenCore\\echo\\archives\\long-answers\\sales_analysis.py", metadata: { size: 2458 } },
-  { id: 7, conversationId: "preview", timestamp: ago(1), kind: "echo", role: "system", source: "ECHO", title: "ECHO memory · remember", content: "Stored working note project/sales_analysis and linked the generated artifact.", metadata: { operation: "remember" } },
+  { id: 7, conversationId: "preview", timestamp: ago(1), kind: "echo", role: "system", source: "ECHO", title: "Context compacted · first checkpoint", content: "Compacted the first part of the response. Exact recorded activity remains available in ECHO.", metadata: { compactBoundary: 1 } },
+  { id: 8, conversationId: "preview", timestamp: ago(0.9), kind: "echo", role: "system", source: "ECHO", title: "Context compacted · second checkpoint", content: "Compacted the next part of the response while keeping the active task in context.", metadata: { compactBoundary: 2 } },
+  { id: 9, conversationId: "preview", timestamp: ago(0.8), kind: "echo", role: "system", source: "ECHO", title: "Response memory · final checkpoint", content: "Saved the final response context together with both earlier checkpoints.", metadata: { compactBoundary: 3 } },
 ];
 
 export const previewSnapshot: AppSnapshot = {
@@ -50,7 +52,7 @@ export const previewSnapshot: AppSnapshot = {
   ],
   logs: [
     { id: 1, timestamp: ago(6), level: "info", source: "gateway", message: "Control Gateway ready on 127.0.0.1:8812" },
-    { id: 2, timestamp: ago(5.5), level: "info", source: "runtime", message: "llama-server ready · ECHO 3T · 256K live window" },
+    { id: 2, timestamp: ago(5.5), level: "info", source: "runtime", message: "llama-server ready · ECHO 3T · 262K native context" },
     { id: 3, timestamp: ago(5), level: "info", source: "echo", message: "ECHO archive opened and integrity verified" },
     { id: 4, timestamp: ago(4.5), level: "warn", source: "client", message: "Ollama detected but not routed through gateway" },
   ],

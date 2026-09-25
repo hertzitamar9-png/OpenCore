@@ -1,4 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
+export const speechStart = () => invoke<string>("speech_start");
+export interface EchoWorkingSet { available: boolean; liveTokens?: number; promptTokens?: number; windowTokens: number; modelSessionTokens?: number; modelActiveTokens?: number; modelContextTokens?: number; modelSessionActive?: boolean; contextMode?: string; autoCompactThreshold?: number | null; autoCompactEnabled?: boolean; compactions?: number; offloadedMessages?: number; active?: boolean; warmCache?: { budgetBytes: number; residentBytes: number; pages: number; hits: number; misses: number; evictions: number; oversized: number; hitRate: number }; harness?: { name: string; status: string; tasks: { id: number; desc: string; status: string }[]; reviews: number; toolCount: number; unverified: string[]; ledgerPath: string } }
+export async function echoWorkingSet(conversationId: string): Promise<EchoWorkingSet> {
+  if (!desktop()) return { available: false, windowTokens: 262144 };
+  return invoke<EchoWorkingSet>("echo_working_set", { conversationId });
+}
+export const speechTranscribe = (sessionId: string, audio: string) => invoke<{ text: string; language: string }>("speech_transcribe", { sessionId, audio });
+export const speechCancel = (sessionId: string) => invoke<void>("speech_cancel", { sessionId });
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AppSnapshot, ArchiveEvent, ArchiveOverview, ArchivePageRef, ArchiveSearchHit, ApprovalMode, ChatSendResult, ConnectorInput, ConnectorStatus, OperationRecord, ProjectSummary, ReasoningEffort, RuntimeProfile, TimelineEntry } from "./types";
 import { previewSnapshot, previewTimeline } from "./mock";
@@ -246,10 +254,10 @@ export async function configureAgentConnector(id: "claude-code" | "codex"): Prom
   return invoke<string>("configure_agent_connector", { id });
 }
 
-export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = []): Promise<ChatSendResult> {
+export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = [], subagentsEnabled = false, maxSubagents = 3, projectSkillsEnabled = true, compactAtTokens = 200000): Promise<ChatSendResult> {
   if (!desktop()) throw new Error("Interactive chat requires the desktop application.");
   return invoke<ChatSendResult>("send_chat_message", {
-    request: { conversationId, text, files, reasoningEffort, approvalMode, skills },
+    request: { conversationId, text, files, reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens },
   });
 }
 

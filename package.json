@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port 1420",
     "build": "tsc && vite build",
-    "test": "vitest run",
+    "test": "vitest run && node --test tests/context-budget.test.mjs",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build --bundles nsis"
@@ -19,6 +19,7 @@
     "@tauri-apps/plugin-opener": "^2.5.0",
     "lucide-react": "^0.468.0",
     "playwright": "^1.63.0",
+    "react-markdown": "^10.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "remark-gfm": "^4.0.1"

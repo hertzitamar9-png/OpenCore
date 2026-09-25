@@ -35,3 +35,6 @@
 /src-tauri/resources/*.exe
 /src-tauri/resources/*.png
 /src-tauri/resources/*.sha256
+
+/src-tauri/resources/claude/node.exe
+/src-tauri/resources/claude/node

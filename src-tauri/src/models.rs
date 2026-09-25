@@ -14,6 +14,8 @@ pub struct RuntimeSnapshot {
     pub model_path: String,
     pub archive_path: String,
     pub context_size: u64,
+    pub attention_kv_location: String,
+    pub attention_kv_type: String,
     pub error: Option<String>,
     pub loading_phase: String,
     pub loading_step: u8,
@@ -174,7 +176,18 @@ pub struct ChatSendRequest {
     pub approval_mode: ApprovalMode,
     #[serde(default)]
     pub skills: Vec<String>,
+    #[serde(default)]
+    pub subagents_enabled: bool,
+    #[serde(default = "default_max_subagents")]
+    pub max_subagents: u16,
+    #[serde(default)]
+    pub project_skills_enabled: bool,
+    #[serde(default = "default_compact_at_tokens")]
+    pub compact_at_tokens: u32,
 }
+
+fn default_max_subagents() -> u16 { 3 }
+fn default_compact_at_tokens() -> u32 { 200_000 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]

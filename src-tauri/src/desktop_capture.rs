@@ -65,7 +65,37 @@ struct Session {
 
 static SESSION: OnceLock<Mutex<Option<Session>>> = OnceLock::new();
 
+/// Where the captured image's top-left pixel sits in the window rectangle that click
+/// coordinates use. Windows 10 and 11 give normal windows an invisible resize border
+/// (7-8 px) that GetWindowRect and UI Automation include but the compositor capture
+/// does not, so image coordinates must be shifted by this origin before clicking.
+pub(crate) fn frame_origin(window_id: isize) -> (i64, i64) {
+    use windows::Win32::Foundation::{HWND, RECT};
+    use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
+    use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
+    let hwnd = HWND(window_id as *mut std::ffi::c_void);
+    let (mut outer, mut visible) = (RECT::default(), RECT::default());
+    let found = unsafe {
+        GetWindowRect(hwnd, &mut outer).is_ok()
+            && DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, (&mut visible as *mut RECT).cast(),
+                                     std::mem::size_of::<RECT>() as u32).is_ok()
+    };
+    if found { (i64::from(visible.left - outer.left), i64::from(visible.top - outer.top)) } else { (0, 0) }
+}
+
+pub(crate) fn stop_capture() {
+    let old = SESSION.get().and_then(|session| session.lock().ok().and_then(|mut session| session.take()));
+    if let Some(old) = old { let _ = old.control.stop(); }
+}
+
 pub(crate) fn frame_for_window(window_id: isize) -> Result<CapturedFrame, String> {
+    let result = capture_frame(window_id);
+    // A screenshot is one operation, not a permanent capture session.
+    stop_capture();
+    result
+}
+
+fn capture_frame(window_id: isize) -> Result<CapturedFrame, String> {
     let latest = {
         let mut session = SESSION.get_or_init(|| Mutex::new(None)).lock().map_err(|error| error.to_string())?;
         if session.as_ref().is_some_and(|current| current.window_id != window_id || current.control.is_finished()) {
@@ -77,7 +107,7 @@ pub(crate) fn frame_for_window(window_id: isize) -> Result<CapturedFrame, String
             let settings = Settings::new(
                 window,
                 CursorCaptureSettings::WithoutCursor,
-                DrawBorderSettings::Default,
+                DrawBorderSettings::WithoutBorder,
                 SecondaryWindowSettings::Include,
                 MinimumUpdateIntervalSettings::Custom(Duration::from_millis(100)),
                 DirtyRegionSettings::Default,

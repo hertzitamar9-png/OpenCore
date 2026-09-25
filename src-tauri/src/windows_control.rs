@@ -87,7 +87,7 @@ mod platform {
         let width = rect.get_width();
         let height = rect.get_height();
         if width <= 0 || height <= 0 || x >= f64::from(width) || y >= f64::from(height) {
-            return Err("Pointer is outside the selected window".into());
+            return Err(format!("Pointer ({x}, {y}) is outside this {width}x{height} window. Use inspect again and copy its window-relative x,y center; screen coordinates are not accepted."));
         }
         Ok(Point::new(rect.get_left() + x.round() as i32, rect.get_top() + y.round() as i32))
     }
@@ -95,15 +95,22 @@ mod platform {
     fn inspect_tree(automation: &UIAutomation, window: &UIElement) -> Value {
         let Ok(walker) = automation.get_control_view_walker() else { return json!([]) };
         let mut rows = Vec::new();
+        let origin = rect_json(window);
         let mut queue = std::collections::VecDeque::from([(window.clone(), 0)]);
         while let Some((element, depth)) = queue.pop_front() {
             let password = element.is_password().unwrap_or(false);
+            let bounds = rect_json(&element);
+            let x = bounds["left"].as_i64().unwrap_or(0) - origin["left"].as_i64().unwrap_or(0) + bounds["width"].as_i64().unwrap_or(0) / 2;
+            let y = bounds["top"].as_i64().unwrap_or(0) - origin["top"].as_i64().unwrap_or(0) + bounds["height"].as_i64().unwrap_or(0) / 2;
+            let inside = x >= 0 && y >= 0 && x < origin["width"].as_i64().unwrap_or(0) && y < origin["height"].as_i64().unwrap_or(0);
             rows.push(json!({
+                "x":if inside { Some(x) } else { None }, "y":if inside { Some(y) } else { None },
+                "coordinateSpace":"window", "insideWindow":inside,
                 "elementId":rows.len(),
                 "depth":depth,
                 "name":if password { "[password]".to_string() } else { element.get_name().unwrap_or_default().chars().take(160).collect() },
                 "controlType":element.get_control_type().map(|kind| format!("{kind:?}")).unwrap_or_default(),
-                "bounds":rect_json(&element)
+                "bounds":bounds, "boundsCoordinateSpace":"screen"
             }));
             if rows.len() >= 160 { break; }
             if depth < 5 {
@@ -282,6 +289,9 @@ mod platform {
         use windows::Win32::System::WinRT::{RoInitialize, RoUninitialize, RO_INIT_MULTITHREADED};
 
         let shot = run("screenshot", args)?;
+        // OCR measures the captured image; clicks use the window rectangle around it.
+        let origin_x = shot["origin"]["x"].as_f64().unwrap_or(0.0) as f32;
+        let origin_y = shot["origin"]["y"].as_f64().unwrap_or(0.0) as f32;
         let data_url = shot["dataUrl"].as_str().ok_or("Window capture has no image")?;
         let encoded = data_url.split_once(',').ok_or("Window capture is invalid")?.1;
         let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).map_err(|e| e.to_string())?;
@@ -310,7 +320,9 @@ mod platform {
                     let mut bottom = 0.0_f32;
                     for index in 0..found.Size().map_err(|e| e.to_string())?.min(40) {
                         let word = found.GetAt(index).map_err(|e| e.to_string())?;
-                        let bounds = word.BoundingRect().map_err(|e| e.to_string())?;
+                        let mut bounds = word.BoundingRect().map_err(|e| e.to_string())?;
+                        bounds.X += origin_x;
+                        bounds.Y += origin_y;
                         let text = word.Text().map_err(|e| e.to_string())?.to_string();
                         left = left.min(bounds.X);
                         top = top.min(bounds.Y);
@@ -358,7 +370,7 @@ mod platform {
         let window = if id == 0 { automation.get_root_element().map_err(|e| e.to_string())? } else { window_by_id(&automation, id)? };
         match action {
             "read_screen" => read_screen(args),
-            "inspect" => Ok(json!({"windowId":id,"title":window.get_name().unwrap_or_default(),"elements":inspect_tree(&automation, &window)})),
+            "inspect" => Ok(json!({"windowId":id,"title":window.get_name().unwrap_or_default(),"bounds":rect_json(&window),"coordinateSpace":"window","elements":inspect_tree(&automation, &window)})),
             "invoke" | "set_value" => {
                 use uiautomation::patterns::{UIInvokePattern, UIValuePattern};
                 let element_id = args["elementId"].as_u64().unwrap_or(160) as usize;
@@ -375,7 +387,9 @@ mod platform {
             "screenshot" => {
                 if id != 0 {
                     let frame = crate::desktop_capture::frame_for_window(id)?;
-                    return Ok(json!({"windowId":id,"bounds":{"left":0,"top":0,"width":frame.width,"height":frame.height},"dataUrl":frame.data_url}));
+                    let (x, y) = crate::desktop_capture::frame_origin(id);
+                    return Ok(json!({"windowId":id,"bounds":{"left":0,"top":0,"width":frame.width,"height":frame.height},
+                        "origin":{"x":x,"y":y},"dataUrl":frame.data_url}));
                 }
                 let image = window.screenshot().map_err(|e| e.to_string())?;
                 let path = std::env::temp_dir().join(format!("opencore-window-{}.png", uuid::Uuid::new_v4()));

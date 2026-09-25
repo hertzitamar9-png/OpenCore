@@ -5,8 +5,29 @@ import * as api from "./api";
 import * as dialog from "@tauri-apps/plugin-dialog";
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
+const eventHandlers = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>());
+vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, callback: (event: { payload: unknown }) => void) => {
+  eventHandlers.set(name, callback);
+  return () => { eventHandlers.delete(name); };
+}) }));
 
 describe("OpenCore", () => {
+  it("returns keyboard focus to the draft after an attachment dialog is cancelled or fails", async () => {
+    render(<App />);
+    const input = await screen.findByLabelText('Message OpenCore');
+    fireEvent.change(input, { target: { value: 'Keep my draft' } });
+    vi.mocked(dialog.open).mockResolvedValueOnce(null);
+    screen.getByTitle('Attach files').focus();
+    fireEvent.click(screen.getByTitle('Attach files'));
+    await waitFor(() => expect(input).toHaveFocus());
+    expect(input).toHaveValue('Keep my draft');
+    vi.mocked(dialog.open).mockRejectedValueOnce(new Error('Picker failed'));
+    screen.getByTitle('Attach files').focus();
+    fireEvent.click(screen.getByTitle('Attach files'));
+    await waitFor(() => expect(input).toHaveFocus());
+    fireEvent.change(input, { target: { value: 'Edited' } });
+    expect(input).toHaveValue('Edited');
+  });
   it("reads the runtime's spaced prompt-progress format", () => {
     const now = Date.now();
     const logs = [
@@ -16,8 +37,32 @@ describe("OpenCore", () => {
     expect(recentPromptProgress(logs)).toEqual({ label: "Reading prompt · 1,024 tokens · 100%", speed: 512 });
   });
   beforeEach(() => {
+    eventHandlers.clear();
     window.localStorage.removeItem?.("opencore.approval-global.v1");
     window.sessionStorage.removeItem?.("opencore.approval-chat.preview");
+  });
+  it("streams answer and reasoning segments live in their actual order", async () => {
+    const send = vi.spyOn(api, "sendChatMessage").mockImplementation(() => new Promise(() => {}));
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Add walking" } });
+      fireEvent.click(screen.getByTitle("Send"));
+      await waitFor(() => expect(eventHandlers.has("opencore-generation")).toBe(true));
+      act(() => eventHandlers.get("opencore-generation")!({ payload: {
+        conversationId: "preview", runId: "live-1", phase: "answering", segments: [
+          { kind: "thinking", content: "first live thought" },
+          { kind: "text", content: "answer arriving now" },
+          { kind: "thinking", content: "latest live thought" },
+        ],
+      } }));
+      const first = await screen.findByText("first live thought");
+      const answer = await screen.findByText("answer arriving now");
+      const latest = await screen.findByText("latest live thought");
+      expect(first.compareDocumentPosition(answer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(answer.compareDocumentPosition(latest) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Stop generation" })).toBeVisible();
+    } finally { send.mockRestore(); }
   });
   it("passes a chosen reasoning mode through the chat request", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
@@ -33,7 +78,7 @@ describe("OpenCore", () => {
       expect(selector).toHaveAttribute("aria-valuetext", "Extra high");
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Explain this change" } });
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Explain this change", [], "extra-high", "ask-every-time", []));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Explain this change", [], "extra-high", "ask-every-time", [], true, 3, true, 200000));
     } finally { send.mockRestore(); }
   });
 
@@ -199,7 +244,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("button", { name: "Approve for me" }));
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Find the helper" } });
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Find the helper", [], expect.any(String), "approve-for-me", []));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Find the helper", [], expect.any(String), "approve-for-me", [], true, 3, true, 200000));
     } finally { send.mockRestore(); }
   });
 
@@ -213,7 +258,26 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("option", { name: /computer-use/ }));
       expect(screen.getByLabelText("Message OpenCore")).toHaveValue("open Calculator");
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "open Calculator", [], expect.any(String), "ask-every-time", ["computer-use"]));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "open Calculator", [], expect.any(String), "ask-every-time", ["computer-use"], true, 3, true, 200000));
+    } finally { send.mockRestore(); }
+  });
+
+  it("sends tool choices configured in Settings and the exact context threshold", async () => {
+    const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+      fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
+      fireEvent.click(screen.getByRole("button", { name: "Chrome" }));
+      expect(screen.getByRole("button", { name: "Chrome" })).toHaveAttribute("aria-pressed", "true");
+      fireEvent.change(screen.getByLabelText(/Auto compact after/), { target: { value: "200000" } });
+      expect(screen.queryByLabelText("Maximum answer length")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
+      expect(screen.queryByRole("button", { name: /Prompt tools/ })).not.toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Check my local dev page" } });
+      fireEvent.click(screen.getByTitle("Send"));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Check my local dev page", [], expect.any(String), "ask-every-time", ["chrome-control"], true, 3, false, 200000));
     } finally { send.mockRestore(); }
   });
 
@@ -315,7 +379,7 @@ describe("OpenCore", () => {
     } finally { send.mockRestore(); history.mockRestore(); }
   });
 
-  it("narrates older tool traces and closes reasoning when the next action starts", async () => {
+  it("keeps older tool evidence without inventing assistant narration", async () => {
     const original = api.snapshot;
     const snapshot = vi.spyOn(api, "snapshot").mockImplementation(async () => ({ ...await original(), activeConversationIds: ["preview"] }));
     const row = (id: number, kind: string, role: string, title: string, content: string) => ({
@@ -332,12 +396,12 @@ describe("OpenCore", () => {
     ]);
     try {
       render(<App />);
-      // One unnarrated tool loop reads as one reasoning block, one sentence and one tool group.
-      expect(await screen.findByText("I'll check which Windows apps are open.")).toBeInTheDocument();
+      await screen.findByText("Used 2 tools");
+      expect(screen.queryByText("I'll check which Windows apps are open.")).not.toBeInTheDocument();
       expect(Array.from(document.querySelector(".assistant-response")!.children).map((node) =>
         node.classList.contains("kind-thinking") ? "reasoning" : node.classList.contains("tool-group") ? "tools"
           : node.classList.contains("assistant-progress") ? "narration" : "other"
-      )).toEqual(["reasoning", "narration", "tools"]);
+      )).toEqual(["reasoning", "tools"]);
       const reasoning = document.querySelectorAll<HTMLDetailsElement>(".kind-thinking");
       expect(reasoning).toHaveLength(1);
       expect(reasoning[0]).not.toHaveAttribute("open");
@@ -403,16 +467,34 @@ describe("OpenCore", () => {
     expect(screen.getAllByRole("button", { name: "Sync history" }).length).toBeGreaterThanOrEqual(2);
   });
 
-  it("keeps Unsloth out of model mode selection", async () => {
+  it("opens the styled model picker and keeps Unsloth out of runtime profiles", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
-    const mode = screen.getByRole("combobox");
-    expect(mode).toHaveTextContent("ECHO 3T");
-    expect(mode).toHaveTextContent("Native 1M");
-    expect(mode).not.toHaveTextContent("Unsloth + ECHO");
+    const picker = screen.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ });
+    fireEvent.click(picker);
+    expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
+    expect(screen.getByRole("button", { name: /Choose model profile, currently Native 1M/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Choose model profile, currently Native 1M/ }));
+    expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Unsloth", { selector: "h2" })).toBeInTheDocument();
+  });
+
+  it("shows the rolling model context in the bottom status bar and removes the composer context panel", async () => {
+    render(<App />);
+    await screen.findByText("Conversations", { selector: "h2" });
+    const target = screen.getByTitle(/ECHO reuses the model session between turns/);
+    const statusbar = target.closest("footer");
+    expect(statusbar).toHaveClass("statusbar");
+    expect(statusbar?.textContent).toContain("Model window");
+    expect(target.textContent).toContain("262,144");
+    expect(statusbar?.textContent).toContain("VRAM");
+    expect(statusbar?.textContent).toContain("tokens/s");
+    expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();
+    expect(target).toHaveAttribute("title", expect.stringContaining("exact older source history stays archived"));
   });
 
   it("uses an OpenCore rename modal instead of a browser hostname prompt", async () => {
@@ -484,10 +566,12 @@ describe("OpenCore", () => {
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     fireEvent.change(screen.getByLabelText(/Message text size/), { target: { value: "17" } });
     fireEvent.click(screen.getByRole("button", { name: "Compact" }));
+    fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
+    fireEvent.change(screen.getByLabelText(/Auto compact after/), { target: { value: "200000" } });
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
     await waitFor(() => expect(document.querySelector(".conversation-focus-shell")).toHaveClass("compact-messages"));
     expect((document.querySelector(".conversation-focus-shell") as HTMLElement).style.getPropertyValue("--chat-font-size")).toBe("17px");
-    expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v1") || "{}")).toMatchObject({ chatFontSize: 17, compactMessages: true });
+    expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v2") || "{}")).toMatchObject({ chatFontSize: 17, compactMessages: true, projectSkillsEnabled: false, compactAtTokens: 200000 });
     if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
   });
 

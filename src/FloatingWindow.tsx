@@ -36,13 +36,14 @@ function initialRect(id: string, width: number, height: number, place: Props["pl
   if (place === "composer") {
     const anchor = document.querySelector(id.startsWith("effort") ? ".effort-trigger" : ".approval-trigger")?.getBoundingClientRect();
     const chat = document.querySelector(".chat-composer-wrap")?.getBoundingClientRect();
+    const composer = document.querySelector(".chat-composer")?.getBoundingClientRect();
     if (chat) width = Math.min(width, Math.max(280, chat.width - 16));
     minWidth = Math.min(minWidth, width);
     if (anchor) {
       const right = chat?.right ?? vw;
       const left = chat?.left ?? 0;
       x = Math.max(left + 8, Math.min(anchor.left, right - width - 12));
-      y = anchor.top - height - 14;
+      y = (composer?.top ?? anchor.top) - height - 14;
     }
     return clampFloatingRect({ x, y, width, height }, vw, vh, minWidth, minHeight);
   }

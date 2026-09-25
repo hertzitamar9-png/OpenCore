@@ -7,7 +7,7 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "node scripts/prepare-claude-harness.mjs && npm run build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -30,9 +30,18 @@
   "bundle": {
     "active": true,
     "publisher": "OpenCore",
-    "targets": ["nsis"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
     "resources": {
+      "resources/speech/whisper_worker.py": "speech/whisper_worker.py",
       "resources/configure_unsloth.py": "resources/configure_unsloth.py",
       "../reflex/server.py": "reflex/server.py",
       "../reflex/reflex_model.py": "reflex/reflex_model.py",
@@ -40,8 +49,6 @@
       "../reflex/snake.py": "reflex/snake.py",
       "../reflex/perception.py": "reflex/perception.py",
       "../reflex/live_snake.py": "reflex/live_snake.py",
-      "../reflex/grounder.py": "reflex/grounder.py",
-      "../reflex/vendor": "reflex/vendor",
       "../reflex/laya_core/__init__.py": "reflex/laya_core/__init__.py",
       "../reflex/laya_core/rl_common.py": "reflex/laya_core/rl_common.py",
       "../reflex/laya_core/rl_agent_api.py": "reflex/laya_core/rl_agent_api.py",
@@ -56,7 +63,8 @@
       "resources/echo/echo_salience.py": "echo/echo_salience.py",
       "resources/echo/evoagent/echo_memory.py": "echo/evoagent/echo_memory.py",
       "resources/echo/evoagent/echo_context.py": "echo/evoagent/echo_context.py",
-      "resources/echo/evoagent/echo_output.py": "echo/evoagent/echo_output.py"
+      "resources/echo/evoagent/echo_output.py": "echo/evoagent/echo_output.py",
+      "resources/claude/": "claude/"
     },
     "windows": {
       "nsis": {
