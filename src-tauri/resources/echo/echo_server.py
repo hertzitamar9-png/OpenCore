@@ -343,6 +343,58 @@ class ArchiveSet:
             self._open.clear()
 
 
+class BoundedTokenCountCache:
+    """Keep recent exact tokenizer counts without retaining source text.
+
+    Token counts are stable for one ECHO process/model, while message bodies
+    are immutable. A bounded LRU avoids repeated HTTP tokenization of the same
+    history and stores only fixed-size digests and integer counts.
+    """
+
+    def __init__(self, max_entries: int = 8192, max_text_chars: int = 65536):
+        self.max_entries = max(1, int(max_entries))
+        self.max_text_chars = max(1, int(max_text_chars))
+        self._values: OrderedDict[bytes, int] = OrderedDict()
+        self._lock = threading.Lock()
+        self._hits = 0
+        self._misses = 0
+        self._skipped = 0
+
+    def key_for(self, text: str) -> bytes | None:
+        if len(text) > self.max_text_chars:
+            with self._lock:
+                self._skipped += 1
+            return None
+        return hashlib.sha256(text.encode("utf-8", "surrogatepass")).digest()
+
+    def get(self, key: bytes | None) -> int | None:
+        if key is None:
+            return None
+        with self._lock:
+            if key not in self._values:
+                self._misses += 1
+                return None
+            self._hits += 1
+            self._values.move_to_end(key)
+            return self._values[key]
+
+    def put(self, key: bytes | None, count: int) -> None:
+        if key is None:
+            return
+        with self._lock:
+            self._values[key] = int(count)
+            self._values.move_to_end(key)
+            while len(self._values) > self.max_entries:
+                self._values.popitem(last=False)
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {"entries": len(self._values), "max_entries": self.max_entries,
+                    "max_text_chars": self.max_text_chars,
+                    "hits": self._hits, "misses": self._misses,
+                    "skipped_large_texts": self._skipped}
+
+
 class EchoState:
     """Shared archive plus settings. One instance per process."""
 
@@ -365,6 +417,7 @@ class EchoState:
         self.reasoning = reasoning
         self.allow_model_search = allow_model_search
         self.lock = threading.Lock()
+        self.token_count_cache = BoundedTokenCountCache()
         # Cold SQLite handles each own a bounded 2 MiB SQLite page cache.
         # Keep only as many open cold connections as the hot archive set so
         # opening many conversations cannot grow host RAM without a bound.
@@ -484,13 +537,23 @@ class EchoState:
         """
         if not text:
             return 0
+        key = self.token_count_cache.key_for(text)
+        cached = self.token_count_cache.get(key)
+        if cached is not None:
+            return cached
         try:
             request = urllib.request.Request(
                 self.upstream + "/tokenize",
                 data=json.dumps({"content": text}).encode(),
                 headers=self.upstream_headers(), method="POST")
             with urllib.request.urlopen(request, timeout=30) as response:
-                return len(json.loads(response.read()).get("tokens", []))
+                result = json.loads(response.read())
+            tokens = result.get("tokens")
+            if not isinstance(tokens, list):
+                raise ValueError("Tokenizer response did not include a token list")
+            count = len(tokens)
+            self.token_count_cache.put(key, count)
+            return count
         except Exception:
             # A UTF-8 byte bound is conservative for this byte-level tokenizer.
             return len(text.encode("utf-8"))
@@ -877,6 +940,7 @@ class Handler(BaseHTTPRequestHandler):
             stats["open_cold_archives"] = len(self.state._cold)
             stats["context_mode"] = "model_controlled" if self.state.autonomous_context else "legacy"
             stats["history_mode"] = "persistent_echo"
+            stats["token_count_cache"] = self.state.token_count_cache.snapshot()
             stats["archive_directory"] = str(self.state.archives.directory.resolve())
             stats["outputs_directory"] = str((self.state.archives.directory / "long-answers").resolve())
             stats["archive_capacity"] = "limited by disk and SQLite; no guaranteed token count"

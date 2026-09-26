@@ -15,7 +15,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src-tauri/resources/echo"))
-from echo_server import ArchiveSet, EchoState, Handler, _conversation_id, tool_call_error
+from echo_server import (
+    ArchiveSet,
+    BoundedTokenCountCache,
+    EchoState,
+    Handler,
+    _conversation_id,
+    tool_call_error,
+)
 from evoagent.echo_context import LiveTranscript
 from evoagent.echo_memory import BoundedPageCache, EchoArchive, MemoryPage
 import echo_import
@@ -23,6 +30,47 @@ from echo_import import import_stream
 
 
 class EchoLiveTests(unittest.TestCase):
+    def test_tokenizer_result_cache_evicts_old_entries_at_its_capacity(self):
+        cache = BoundedTokenCountCache(max_entries=2)
+        first = cache.key_for('first old turn')
+        cache.put(first, 3)
+        cache.put(cache.key_for('second old turn'), 3)
+        cache.put(cache.key_for('new turn'), 2)
+        self.assertIsNone(cache.get(first))
+        self.assertEqual(cache.get(cache.key_for('new turn')), 2)
+        self.assertEqual(cache.snapshot()['entries'], 2)
+
+    def test_repeated_history_token_counts_reuse_the_model_tokenizer_result(self):
+        calls = []
+
+        class Tokenizer(BaseHTTPRequestHandler):
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                calls.append(payload['content'])
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                tokens = payload['content'].split()
+                self.wfile.write(json.dumps({'tokens': tokens}).encode())
+
+            def log_message(self, *_args):
+                pass
+
+        with tempfile.TemporaryDirectory() as folder:
+            upstream = ThreadingHTTPServer(('127.0.0.1', 0), Tokenizer)
+            threading.Thread(target=upstream.serve_forever, daemon=True).start()
+            state = EchoState(ArchiveSet(Path(folder), idle_seconds=0),
+                              'http://127.0.0.1:%d' % upstream.server_port,
+                              10000, 4, False)
+            try:
+                self.assertEqual(state.count_tokens('preserve the running system'), 4)
+                self.assertEqual(state.count_tokens('preserve the running system'), 4)
+                self.assertEqual(calls, ['preserve the running system'])
+            finally:
+                state.archives.close()
+                upstream.shutdown()
+                upstream.server_close()
+
     def test_concurrent_requests_for_one_conversation_queue_instead_of_conflicting(self):
         with tempfile.TemporaryDirectory() as folder:
             state = EchoState(ArchiveSet(Path(folder), idle_seconds=0), 'http://127.0.0.1:1', 10000, 4, False)
