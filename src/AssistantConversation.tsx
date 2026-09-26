@@ -155,6 +155,19 @@ function attachedFiles(value: unknown): AttachedFile[] {
   });
 }
 
+function filesFromTransfer(transfer: DataTransfer | null): File[] {
+  if (!transfer) return [];
+  if (transfer.files.length) return Array.from(transfer.files);
+  return Array.from(transfer.items)
+    .filter((item) => item.kind === "file")
+    .map((item) => item.getAsFile())
+    .filter((file): file is File => file !== null);
+}
+
+function transferHasFiles(transfer: DataTransfer | null): boolean {
+  return !!transfer && (Array.from(transfer.types).includes("Files") || filesFromTransfer(transfer).length > 0);
+}
+
 function AttachedFilePreview({ file, onRemove }: { file: AttachedFile; onRemove?: () => void }) {
   const actions = useContext(ArtifactActionsContext);
   const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
@@ -436,6 +449,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   useEffect(() => { setSelectedSkills([...defaultSkills]); }, [defaultSkillsKey]);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [files, setFiles] = useState<string[]>([]);
+  const [draggingFiles, setDraggingFiles] = useState(false);
   const [composerMenu, setComposerMenu] = useState<"actions" | "model" | null>(null);
   const [queue, setQueue] = useState<ChatQueueItem[]>([]);
   const [sending, setSending] = useState(false);
@@ -460,6 +474,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   const pendingToolRef = useRef<ToolApprovalRequest | null>(null);
   const composerMenuRef = useRef<HTMLDivElement>(null);
   const composerMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const nativeFileDragRef = useRef(false);
   useEffect(() => {
     let dispose: (() => void) | undefined;
     if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
@@ -718,12 +733,17 @@ export const AssistantConversation = memo(function AssistantConversation({
     }
   };
 
+  const addFilePaths = (paths: string[]) => {
+    if (!paths.length) return;
+    setFiles((current) => Array.from(new Set([...current, ...paths])));
+  };
+
   const chooseFiles = async () => {
     try {
       const selected = await open({ multiple: true, directory: false });
       if (selected) {
         const paths = Array.isArray(selected) ? selected : [selected];
-        setFiles((current) => Array.from(new Set([...current, ...paths])));
+        addFilePaths(paths);
       }
     } catch (error) { onNotice(`Could not attach files: ${String(error)}`); }
     finally { await focusDraft(); }
@@ -737,6 +757,54 @@ export const AssistantConversation = memo(function AssistantConversation({
     }
     draftInput.current?.focus({ preventScroll: true });
   };
+
+  const attachTransferredFiles = async (transfer: DataTransfer | null, returnFocus = false) => {
+    const incoming = filesFromTransfer(transfer);
+    if (!incoming.length) return;
+    const paths: string[] = [];
+    const failures: string[] = [];
+    for (const file of incoming) {
+      try { paths.push(await api.stageComposerAttachment(file)); }
+      catch (error) { failures.push(`${file.name || "file"}: ${String(error)}`); }
+    }
+    addFilePaths(paths);
+    if (failures.length) onNotice(`Could not attach ${failures.join("; ")}`);
+    if (returnFocus && paths.length) await focusDraft();
+  };
+
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) return;
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    const insideComposer = (x: number, y: number) => {
+      const rect = controlsRef.current?.getBoundingClientRect();
+      if (!rect) return false;
+      const scale = window.devicePixelRatio || 1;
+      const left = x / scale;
+      const top = y / scale;
+      return left >= rect.left && left <= rect.right && top >= rect.top && top <= rect.bottom;
+    };
+    void getCurrentWebview().onDragDropEvent(({ payload }) => {
+      if (payload.type === "leave") {
+        nativeFileDragRef.current = false;
+        setDraggingFiles(false);
+        return;
+      }
+      if (payload.type === "enter") nativeFileDragRef.current = payload.paths.length > 0;
+      if (payload.type === "enter" || payload.type === "over") {
+        setDraggingFiles(nativeFileDragRef.current && insideComposer(payload.position.x, payload.position.y));
+        return;
+      }
+      const accepted = nativeFileDragRef.current && insideComposer(payload.position.x, payload.position.y);
+      nativeFileDragRef.current = false;
+      setDraggingFiles(false);
+      if (accepted && payload.paths.length) {
+        addFilePaths(payload.paths);
+        void focusDraft();
+      }
+    }).then((stop) => { if (disposed) stop(); else unlisten = stop; }).catch(() => {});
+    return () => { disposed = true; unlisten?.(); };
+  }, []);
 
   const removeQueued = (id: string) => {
     setQueueBoth(queueRef.current.filter((item) => item.id !== id));
@@ -824,7 +892,32 @@ export const AssistantConversation = memo(function AssistantConversation({
       </div>}
       {selectedSkills.length > 0 ? <div className="composer-skill-chips" aria-label="Selected skills">{selectedSkills.map((id) => <span key={id}>{COMPOSER_SKILLS.find((skill) => skill.id === id)?.label}<button type="button" aria-label={`Remove ${id} skill`} onClick={() => setSelectedSkills((current) => current.filter((item) => item !== id))}><X size={12} /></button></span>)}</div> : null}
 
-      <div className="chat-composer" ref={controlsRef}>
+      <div
+        className={`chat-composer ${draggingFiles ? "file-drop-active" : ""}`}
+        ref={controlsRef}
+        onDragEnter={(event) => {
+          if ("__TAURI_INTERNALS__" in window || !transferHasFiles(event.dataTransfer)) return;
+          event.preventDefault();
+          setDraggingFiles(true);
+        }}
+        onDragOver={(event) => {
+          if ("__TAURI_INTERNALS__" in window || !transferHasFiles(event.dataTransfer)) return;
+          event.preventDefault();
+          setDraggingFiles(true);
+        }}
+        onDragLeave={(event) => {
+          if ("__TAURI_INTERNALS__" in window) return;
+          const next = event.relatedTarget;
+          if (next instanceof Node && event.currentTarget.contains(next)) return;
+          setDraggingFiles(false);
+        }}
+        onDrop={(event) => {
+          if ("__TAURI_INTERNALS__" in window || !transferHasFiles(event.dataTransfer)) return;
+          event.preventDefault();
+          setDraggingFiles(false);
+          void attachTransferredFiles(event.dataTransfer, true);
+        }}
+      >
         <div className="composer-action-anchor" ref={composerMenuRef}>
           <button ref={composerMenuTriggerRef} type="button" className="attach-button composer-plus-button" aria-label="Add files or choose model" aria-expanded={composerMenu !== null} aria-controls="composer-action-menu" onClick={() => setComposerMenu((open) => open === null ? "actions" : null)} title="Add files or choose model"><Plus size={19} /></button>
           {composerMenu === "actions" ? <div className="composer-action-popover" id="composer-action-menu" role="menu" aria-label="Composer actions">
@@ -851,9 +944,16 @@ export const AssistantConversation = memo(function AssistantConversation({
               submit();
             }
           }}
+          onPaste={(event) => {
+            const pastedFiles = filesFromTransfer(event.clipboardData);
+            if (!pastedFiles.length) return;
+            if (!event.clipboardData.getData("text/plain")) event.preventDefault();
+            void attachTransferredFiles(event.clipboardData);
+          }}
           placeholder="Message OpenCore…"
           rows={2}
         />
+        {draggingFiles ? <div className="composer-drop-overlay" role="status" aria-live="polite">Drop files to attach</div> : null}
         <div className="composer-controls">
           <button type="button" className={`composer-control-button approval-trigger ${controlOpen === "approval" ? "active" : ""}`} aria-label={`Approval: ${approvalLabel}`} aria-expanded={controlOpen === "approval"} aria-controls="approval-panel" onClick={() => setControlOpen((open) => open === "approval" ? null : "approval")}>
             <ShieldCheck size={16} /><span className="control-copy"><small>Approval</small><strong>{approvalShort}</strong></span><ChevronDown size={13} />
@@ -879,7 +979,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           {generationActive ? <Square size={17} fill="currentColor" /> : <Send size={18} />}
         </button>
       </div>
-      <div className="composer-hint"><span>{generationActive ? "OpenCore is working · press Stop to cancel" : "Enter to send · Shift+Enter for a new line"}</span><span>OpenCore can make mistakes. Check important results.</span><span className="composer-token-speed">{generationActive && promptProgress?.speed ? `${promptProgress.speed.toFixed(1)} input tokens/s` : (liveTokenSpeed ?? telemetry.tokensPerSecond) > 0 ? `${(liveTokenSpeed ?? telemetry.tokensPerSecond).toFixed(1)} output tokens/s` : "Waiting for token metrics"} · {(telemetry.totalCompletionTokens ?? telemetry.completionTokens).toLocaleString()} output tokens</span></div>
+      <div className="composer-hint"><span>{generationActive ? "OpenCore is working · press Stop to cancel" : "Enter to send · Shift+Enter for a new line · paste or drop files"}</span><span>OpenCore can make mistakes. Check important results.</span><span className="composer-token-speed">{generationActive && promptProgress?.speed ? `${promptProgress.speed.toFixed(1)} input tokens/s` : (liveTokenSpeed ?? telemetry.tokensPerSecond) > 0 ? `${(liveTokenSpeed ?? telemetry.tokensPerSecond).toFixed(1)} output tokens/s` : "Waiting for token metrics"} · {(telemetry.totalCompletionTokens ?? telemetry.completionTokens).toLocaleString()} output tokens</span></div>
     </div>
     {confirmApproval ? <><div className="modal-backdrop" /><FloatingWindow id="approval-confirm" title="Approval" ariaLabel={`${APPROVAL_MODES.find((mode) => mode.value === confirmApproval)?.label}?`} icon={<ShieldCheck size={17} />} onClose={() => setConfirmApproval(null)} place="center" modal className="opencore-modal dialog-floating approval-confirm" initialWidth={490} initialHeight={290} minWidth={350} minHeight={220}>
       <h2 id="approval-confirm-title">{APPROVAL_MODES.find((mode) => mode.value === confirmApproval)?.label}?</h2>

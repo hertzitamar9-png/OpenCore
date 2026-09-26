@@ -80,6 +80,26 @@ export async function previewAttachmentImage(path: string): Promise<string> {
   return invoke<string>("preview_attachment_image", { path });
 }
 
+export async function stageComposerAttachment(file: File): Promise<string> {
+  if (!desktop()) throw new Error("Pasting file attachments requires the OpenCore desktop app.");
+  const maximumBytes = 32 * 1024 * 1024;
+  if (file.size > maximumBytes) throw new Error("Pasted files are limited to 32 MiB; drag larger files into the composer instead.");
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  const extensions: Record<string, string> = {
+    "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp", "image/bmp": "bmp", "application/pdf": "pdf",
+  };
+  const extension = extensions[file.type] || "";
+  const name = file.name.trim()
+    ? /\.[^./\\]+$/.test(file.name) || !extension ? file.name : `${file.name}.${extension}`
+    : `pasted-${Date.now()}.${extension || "bin"}`;
+  return invoke<string>("stage_composer_attachment", { name, dataBase64: window.btoa(binary) });
+}
+
 export async function downloadArtifact(id: string): Promise<string> {
   if (!desktop()) throw new Error("Artifact download requires the desktop application.");
   return invoke<string>("download_artifact", { id });

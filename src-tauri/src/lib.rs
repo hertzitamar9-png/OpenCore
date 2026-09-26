@@ -2,6 +2,7 @@ mod claude_harness;
 mod artifacts;
 mod app_update;
 mod chat_stream;
+mod composer_attachments;
 mod speech;
 mod dev_tool;
 mod archive_view;
@@ -1615,6 +1616,13 @@ fn preview_attachment_image(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn stage_composer_attachment(app: tauri::AppHandle, name: String, data_base64: String) -> Result<String, String> {
+    let root = app.path().app_data_dir().map_err(|error| error.to_string())?.join("composer-attachments");
+    let path = composer_attachments::stage_attachment_bytes(&root, &name, &data_base64)?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
 fn download_artifact(app: tauri::AppHandle, id: String) -> Result<String, String> {
     let downloads = app.path().download_dir().map_err(|e| e.to_string())?;
     let target = artifacts::download(&artifact_root(&app)?, &downloads, &id)?;
@@ -1789,6 +1797,7 @@ pub fn run() {
             ,configure_unsloth
             ,preview_artifact
             ,preview_attachment_image
+            ,stage_composer_attachment
             ,download_artifact
             ,browser_bridge_status
             ,browser_command

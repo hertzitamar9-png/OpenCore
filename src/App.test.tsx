@@ -4,6 +4,11 @@ import App, { recentPromptProgress } from "./App";
 import * as api from "./api";
 import * as dialog from "@tauri-apps/plugin-dialog";
 
+const stageClipboardAttachment = vi.hoisted(() => vi.fn());
+vi.mock("./api", async (importOriginal) => ({
+  ...await importOriginal<typeof import("./api")>(),
+  stageComposerAttachment: stageClipboardAttachment,
+}));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
 const eventHandlers = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>());
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, callback: (event: { payload: unknown }) => void) => {
@@ -38,9 +43,60 @@ describe("OpenCore", () => {
   });
   beforeEach(() => {
     eventHandlers.clear();
+    stageClipboardAttachment.mockReset();
     window.localStorage.removeItem?.("opencore.model-profile");
     window.localStorage.removeItem?.("opencore.approval-global.v1");
     window.sessionStorage.removeItem?.("opencore.approval-chat.preview");
+  });
+  it("pastes clipboard images as attachments and sends them with the prompt", async () => {
+    stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\clipboard-image.png");
+    const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
+    try {
+      render(<App />);
+      const input = await screen.findByLabelText("Message OpenCore");
+      const file = new File(["image bytes"], "clipboard-image.png", { type: "image/png" });
+      const transfer = { files: [], items: [{ kind: "file", getAsFile: () => file }], types: ["Files"], getData: () => "" };
+      const paste = new Event("paste", { bubbles: true, cancelable: true });
+      Object.defineProperty(paste, "clipboardData", { value: transfer });
+      fireEvent(input, paste);
+
+      expect(paste.defaultPrevented).toBe(true);
+      await screen.findByText("clipboard-image.png");
+      fireEvent.change(input, { target: { value: "Describe this image" } });
+      fireEvent.click(screen.getByTitle("Send"));
+      await waitFor(() => expect(send).toHaveBeenCalled());
+      expect(send.mock.calls[0][2]).toEqual(["C:\\temp\\clipboard-image.png"]);
+    } finally { send.mockRestore(); }
+  });
+  it("keeps ordinary text paste in the composer", async () => {
+    render(<App />);
+    const input = await screen.findByLabelText("Message OpenCore");
+    const transfer = { files: [], items: [{ kind: "string", getAsFile: () => null }], types: ["text/plain"], getData: () => "keep this text" };
+    const paste = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: transfer });
+    fireEvent(input, paste);
+
+    expect(paste.defaultPrevented).toBe(false);
+    expect(stageClipboardAttachment).not.toHaveBeenCalled();
+  });
+  it("shows a drop target and attaches files dropped on the composer", async () => {
+    stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\dropped-notes.txt");
+    render(<App />);
+    await screen.findByLabelText("Message OpenCore");
+    const target = document.querySelector(".chat-composer")!;
+    const file = new File(["notes"], "dropped-notes.txt", { type: "text/plain" });
+    const dataTransfer = { files: [file], items: [{ kind: "file", getAsFile: () => file }], types: ["Files"] };
+    const dragEnter = new Event("dragenter", { bubbles: true, cancelable: true });
+    Object.defineProperty(dragEnter, "dataTransfer", { value: dataTransfer });
+    fireEvent(target, dragEnter);
+    expect(screen.getByText("Drop files to attach")).toBeVisible();
+
+    const drop = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(drop, "dataTransfer", { value: dataTransfer });
+    fireEvent(target, drop);
+    expect(drop.defaultPrevented).toBe(true);
+    await screen.findByText("dropped-notes.txt");
+    expect(stageClipboardAttachment).toHaveBeenCalledOnce();
   });
   it("streams answer and reasoning segments live in their actual order", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockImplementation(() => new Promise(() => {}));
