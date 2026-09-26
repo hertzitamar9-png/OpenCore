@@ -29,6 +29,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "publisher": "OpenCore",
     "targets": [
       "nsis"
@@ -71,6 +72,17 @@
       "nsis": {
         "installerIcon": "icons/icon.ico",
         "installMode": "currentUser"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBRjdEMzgyOEI0QzExRDUKUldUVkVVeUxndFAzdXQwWHVzZVo3MWNZNUNSRnlHTGt2MS9OZEUrNFZDYTdZQVFVbXNZaDhNR0gK",
+      "endpoints": [
+        "https://github.com/hertzitamar9-png/OpenCore/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }

@@ -1,5 +1,6 @@
 mod claude_harness;
 mod artifacts;
+mod app_update;
 mod chat_stream;
 mod speech;
 mod dev_tool;
@@ -1578,6 +1579,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             #[cfg(windows)]
             {
@@ -1684,6 +1686,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            app_update::auto_update,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
