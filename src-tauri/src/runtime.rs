@@ -943,7 +943,7 @@ impl RuntimeManager {
                     } else if connector.id == "claude-code" {
                         "OpenCore Local settings are installed separately. Your normal Claude account remains the default; launch Claude with --settings ~/.claude/opencore-settings.json to use the local model.".into()
                     } else {
-                        "Connected to OpenCore. Load ECHO 3T or Native 1M and this client will use it.".into()
+                        "Connected to OpenCore. Load ECHO 3T or the 1M extended profile and this client will use it.".into()
                     };
                 } else if root.is_dir() {
                     connector.status = "detected".into();

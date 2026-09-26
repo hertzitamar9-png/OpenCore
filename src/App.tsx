@@ -402,7 +402,7 @@ function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAct
   };
   return <div className="workspace runtime-workspace">
     <section className="runtime-main">
-      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · one runtime at a time</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={active}><b>ECHO 3T</b><small>Addressable-history target · exact archive</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={active}><b>Native 1M</b><small>1M server window</small></button><button className={selectedProfile === "doucode" ? "active" : ""} onClick={() => setSelectedProfile("doucode")} disabled={active}><b>doUcode</b><small>K2 + Nanbeige · persistent ECHO archive</small></button></div></div>
+      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · one runtime at a time</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={active}><b>ECHO 3T</b><small>Addressable-history target · exact archive</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={active}><b>1M extended</b><small>YaRN window · trained at 262K</small></button><button className={selectedProfile === "doucode" ? "active" : ""} onClick={() => setSelectedProfile("doucode")} disabled={active}><b>doUcode</b><small>K2 + Nanbeige · persistent ECHO archive</small></button></div></div>
       <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
       <RuntimeLogs logs={snapshot.logs} />
     </section>
@@ -832,8 +832,8 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
   if (view === "context") return <div className="support-page">
     <div className="page-heading"><div><h1>Live Context</h1><p>The actual prompt window and ECHO offload state for the selected conversation.</p></div></div>
     <div className="settings-grid">
-      <InspectorSection title="Active live window"><KeyValue label="Profile" value={profileLabel(snapshot.runtime.profile)} /><KeyValue label="Physical context cap" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens`} /><KeyValue label="Selected conversation" value={snapshot.conversations.find((item) => item.id === selectedConversation)?.title || "No conversation selected"} /><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /></InspectorSection>
-      <InspectorSection title="ECHO archive"><KeyValue label="Native model window" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens per inference`} /><KeyValue label="Long-term history" value="Exact disk-backed ECHO archive; limited by available storage" /><KeyValue label="Addressable-history target" value="3T tokens; retrieved into the finite model window when relevant" /></InspectorSection>
+      <InspectorSection title="Active live window"><KeyValue label="Profile" value={profileLabel(snapshot.runtime.profile)} /><KeyValue label="Configured inference window" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens`} />{snapshot.runtime.profile === "native1m" ? <KeyValue label="Original trained context" value="262,144 tokens · 1M uses YaRN length extension" /> : null}<KeyValue label="Selected conversation" value={snapshot.conversations.find((item) => item.id === selectedConversation)?.title || "No conversation selected"} /><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /></InspectorSection>
+      <InspectorSection title="ECHO archive"><KeyValue label="Configured model window" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens per inference`} /><KeyValue label="Long-term history" value="Exact disk-backed ECHO archive; limited by available storage" /><KeyValue label="Addressable-history target" value="3T tokens; retrieved into the finite model window when relevant" /></InspectorSection>
     </div>
   </div>;
 
@@ -870,7 +870,7 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
         <p className="appearance-note">The two generator backbones negotiate an answer/action directly; neither gets to choose the other's output. Laya's bundled classifier is not loaded or used for selection.</p>
         <button className="wide" onClick={() => void revealLocalPath("C:\\Users\\hertz\\Documents\\Best ai model in the world\\release\\doUcode", onNotice)}><FolderOpen size={14} /> Open doUcode package</button>
       </InspectorSection>
-      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="3T addressable-history target · exact disk archive" /><KeyValue label="doUcode" value="K2 + Nanbeige · persistent ECHO archive" /><KeyValue label="Native 1M" value="1,000,000 server window" /><KeyValue label="Selected profile" value={profileLabel(selectedProfile)} /><KeyValue label="Loaded profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
+      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="3T addressable-history target · exact disk archive" /><KeyValue label="doUcode" value="K2 + Nanbeige · persistent ECHO archive" /><KeyValue label="1M extended" value="1,000,000-token YaRN window · trained context 262,144" /><KeyValue label="Selected profile" value={profileLabel(selectedProfile)} /><KeyValue label="Loaded profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
       <InspectorSection title="Live context"><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /><button className="wide" onClick={() => onNavigate("context")}><BrainCircuit size={14} /> Open live context</button></InspectorSection>
     </div>
   </div>;
@@ -909,10 +909,10 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
         <KeyValue label="ECHO 3T model" value="Qwen3.5-derived 5B class + BF16 vision projector" />
         <KeyValue label="ECHO model native window" value="262,144 tokens per inference" />
         <KeyValue label="doUcode package context" value="262,144 tokens" />
-        <KeyValue label="Native 1M profile" value="1,000,000 tokens" />
+        <KeyValue label="1M extended profile" value="1,000,000-token YaRN window; original trained context 262,144" />
         <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
         <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
-        <p className="appearance-note">This is an exact token count. The active model's native context sets the per-inference ceiling. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
+        <p className="appearance-note">This is an exact token count. The configured inference window sets the per-request ceiling. YaRN length extension does not mean the model was trained at that length. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
       </InspectorSection>
       <InspectorSection title="Chrome extension">
         <KeyValue label="Bridge" value={browserStatus?.connected ? "Connected" : "Not connected"} /><KeyValue label="Local port" value={String(browserStatus?.port || 8814)} />
@@ -991,9 +991,9 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
   const rawUsed = workingSet?.modelActiveTokens;
   const measured = Boolean(workingSet?.available && rawUsed != null);
   const used = measured ? Math.min(maximum, Math.max(0, rawUsed as number)) : 0;
-  return <div className="statusbar-context" title={measured ? `${used.toLocaleString()} of ${maximum.toLocaleString()} native model context tokens in use` : `Native model context capacity: ${maximum.toLocaleString()} tokens. Waiting for usage telemetry.`}>
+  return <div className="statusbar-context" title={measured ? `${used.toLocaleString()} of ${maximum.toLocaleString()} configured model context tokens in use` : `Configured model context capacity: ${maximum.toLocaleString()} tokens. Waiting for usage telemetry.`}>
     <span className="statusbar-context-label">Context</span>
-    <progress aria-label="Native context usage" value={used} max={maximum} />
+    <progress aria-label="Model context usage" value={used} max={maximum} />
     <span className="statusbar-context-reading">{measured ? compactTokenCount(used) : "—"} / {compactTokenCount(maximum)}</span>
   </div>;
 }

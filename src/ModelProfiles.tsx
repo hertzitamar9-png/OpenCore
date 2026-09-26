@@ -3,11 +3,11 @@ import type { RuntimeProfile } from "./types";
 
 export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">; label: string; description: string }[] = [
   { id: "echo", label: "ECHO 3T", description: "Addressable history target · exact archive" },
-  { id: "native1m", label: "Native 1M", description: "1,000,000 token server window" },
+  { id: "native1m", label: "1M extended", description: "1,000,000-token YaRN window · trained context 262,144" },
   { id: "doucode", label: "doUcode", description: "K2 + Nanbeige · persistent ECHO archive" },
 ];
 
-export const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "Native 1M" : profile === "unsloth-echo" ? "Unsloth + ECHO" : profile === "doucode" ? "doUcode" : "Stopped";
+export const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "1M extended" : profile === "unsloth-echo" ? "Unsloth + ECHO" : profile === "doucode" ? "doUcode" : "Stopped";
 
 export const profileDescription = (profile: RuntimeProfile) =>
   selectableModelProfiles.find((item) => item.id === profile)?.description ?? "Unsloth backend · ECHO archive";

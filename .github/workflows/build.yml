@@ -27,12 +27,7 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm ci
       - name: Benchmark exact ECHO archive scaling
-        run: python scripts/echo_archive_scale.py --output echo-archive-scale.json
-      - name: Preserve ECHO archive benchmark
-        uses: actions/upload-artifact@v4
-        with:
-          name: echo-archive-scale
-          path: echo-archive-scale.json
+        run: python scripts/echo_archive_scale.py
       - name: Test frontend
         run: npm test
       - name: Test Rust

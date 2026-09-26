@@ -483,9 +483,9 @@ describe("OpenCore", () => {
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
-    expect(topbar.getByRole("button", { name: /Choose model profile, currently Native 1M/ })).toBeVisible();
-    fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently Native 1M/ }));
+    fireEvent.click(screen.getByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
+    expect(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended/ })).toBeVisible();
+    fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended/ }));
     expect(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Unsloth", { selector: "h2" })).toBeInTheDocument();
@@ -500,17 +500,17 @@ describe("OpenCore", () => {
     expect(screen.getByRole("menuitem", { name: "Upload files or images" })).toBeVisible();
     fireEvent.click(screen.getByRole("menuitem", { name: /Model doUcode/ }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
+    fireEvent.click(screen.getByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
 
     const footer = document.querySelector(".conversation-statusbar");
-    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently Native 1M" }));
-    fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently Native 1M" }));
+    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently 1M extended" }));
+    fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
   });
 
-  it("shows native context usage and ECHO's 3T history target in the footer", async () => {
+  it("shows configured model context usage and ECHO's 3T history target in the footer", async () => {
     const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
       available: true,
       liveTokens: 131072,
@@ -532,7 +532,7 @@ describe("OpenCore", () => {
     try {
       const { unmount } = render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      const meter = await screen.findByRole("progressbar", { name: "Native context usage" });
+      const meter = await screen.findByRole("progressbar", { name: "Model context usage" });
       expect(meter).toHaveAttribute("max", "262144");
       expect(meter).toHaveAttribute("value", "131072");
 
@@ -557,7 +557,7 @@ describe("OpenCore", () => {
   it("shows the selected model and bounded context meter in the bottom status bar", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
-    const target = await screen.findByRole("progressbar", { name: "Native context usage" });
+    const target = await screen.findByRole("progressbar", { name: "Model context usage" });
     const statusbar = target.closest("footer");
     expect(statusbar).toHaveClass("statusbar");
     expect(target).toHaveAttribute("max", "262144");
