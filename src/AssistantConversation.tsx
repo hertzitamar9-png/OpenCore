@@ -24,7 +24,7 @@ import { sanitizeMessageMarkdown } from "./message-markdown";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
-import { buildResponseSegments, visibleEchoReceiptGroups, type ToolStep } from "./response-segments";
+import { buildResponseSegments, visibleEchoReceiptGroups, type ResponseSegment, type ToolStep } from "./response-segments";
 import { ProjectPicker } from "./ProjectPicker";
 import { NativeBrowserPanel } from "./NativeBrowserPanel";
 import { DesktopPanel } from "./DesktopPanel";
@@ -279,25 +279,55 @@ function ResponseMarkdown({ content }: { content: string }) {
   }}>{displayText(content)}</ReactMarkdown></div>;
 }
 
-function ReasoningDisclosure({ entries, active }: { entries: TimelineEntry[]; active: boolean }) {
+function actionSummary(step: ToolStep): string {
+  const payload = toolPayload(step.call.content);
+  const action = String(payload.action || "");
+  const target = toolTarget(step.call.content).split(/[\\/]/).pop() || "the current task";
+  const tool = (step.call.title || "").replace(/^mcp__opencore__/, "");
+  if (tool === "dev" && action === "read") return `I’ll read ${target} to inspect the current version before changing it.`;
+  if (tool === "dev" && ["edit", "patch", "apply_patch"].includes(action)) return `I’ll update ${target} and check the result.`;
+  if (tool === "dev" && action === "write") return `I’ll create ${target} in the workspace and verify it.`;
+  const label = toolSummary(step.call.title, step.call.content).label.toLowerCase();
+  return target === "the current task" ? `I’ll ${label} and check what happened.` : `I’ll ${label} for ${target} and check what happened.`;
+}
+
+function reasoningStepSummary(events: TimelineEntry[], segments: ResponseSegment[], index: number): string {
+  const next = segments[index + 1];
+  if (next?.type === "narration") return displayText(next.entry.content).trim();
+  const step = next?.type === "tools" ? next.steps[0] : next?.type === "inferred" ? { call: next.call } : undefined;
+  if (!step) return "I’ll use the completed steps to prepare the response.";
+
+  const reasoning = segments[index];
+  const reasoningId = reasoning?.type === "reasoning" ? reasoning.entries[0]?.id : undefined;
+  const reasoningPosition = events.findIndex((entry) => entry.id === reasoningId);
+  const previousFailure = reasoningPosition < 0 ? undefined : events.slice(0, reasoningPosition).reverse()
+    .find((entry) => entry.kind === "tool_result" && Boolean(toolPayload(entry.content).error));
+  const error = previousFailure ? String(toolPayload(previousFailure.content).error || "") : "";
+  const target = toolTarget(step.call.content).split(/[\\/]/).pop() || "the file";
+  const action = String(toolPayload(step.call.content).action || "");
+  if (/already exists/i.test(error) && action === "read") {
+    return `The earlier write found that ${target} already exists, so I’ll read it before editing.`;
+  }
+  if (error) return `The previous action failed; I’ll ${actionSummary(step).replace(/^I’ll /, "")} to recover.`;
+  return `Next: ${actionSummary(step)}`;
+}
+
+function ReasoningDisclosure({ summary, active }: { summary: string; active: boolean }) {
   const [expanded, setExpanded] = useState(active);
   useEffect(() => { setExpanded(active); }, [active]);
   return <details className="assistant-disclosure kind-thinking" open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
-    <summary><BrainCircuit size={14} /><strong>{active ? "Reasoning" : "Reasoned"}</strong><span>{active ? "Working…" : "Show thinking"}</span></summary>
-    <div className="reasoning-text">{entries.map((entry) => displayText(entry.content).trim()).filter(Boolean).join("\n\n")}</div>
+    <summary><BrainCircuit size={14} /><strong>{active ? "Reasoning summary" : "Reasoned"}</strong><span title={summary}>{summary}</span></summary>
+    <div className="reasoning-text">{summary}</div>
   </details>;
 }
 
 function ToolGroup({ steps, active }: { steps: ToolStep[]; active: boolean }) {
   const [expanded, setExpanded] = useState(false);
-  if (steps.length === 1) {
-    const [{ call, result }] = steps;
-    return <div className="tool-step"><ToolActivity kind={call.kind} title={call.title} raw={call.content} resultRaw={result?.content} /></div>;
-  }
   const labels = Array.from(new Set(steps.map(({ call }) => toolSummary(call.title, call.content, call.kind === "tool_result").label)));
   const failed = steps.some(({ result }) => result && !!toolPayload(result.content).error);
+  const countLabel = `${steps.length} ${steps.length === 1 ? "tool" : "tools"}`;
   return <details className={`tool-group ${active ? "active" : ""} ${failed ? "failed" : ""}`} open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
-    <summary><Wrench size={15} /><strong>{active ? "Using tools" : `Used ${steps.length} tools`}</strong><span>{labels.join(" · ")}</span><em>{expanded ? "Hide" : "Show"}</em></summary>
+    <summary><Wrench size={15} /><strong>{active ? `Using ${countLabel}` : `Used ${countLabel}`}</strong><span>{labels.join(" · ")}</span><em>{expanded ? "Hide" : "Show"}</em></summary>
     <ol className="tool-chain">{steps.map(({ call, result }) => <li key={call.id} className={result ? "done" : active ? "running" : ""}>
       <ToolActivity kind={call.kind} title={call.title} raw={call.content} resultRaw={result?.content} />
     </li>)}</ol>
@@ -307,9 +337,10 @@ function ToolGroup({ steps, active }: { steps: ToolStep[]; active: boolean }) {
 function ResponseActivity({ events, active }: { events: TimelineEntry[]; active: boolean }) {
   const latest = events.filter((entry) => entry.kind !== "echo").at(-1);
   const working = active;
+  const segments = buildResponseSegments(events);
   return <div className="assistant-response">
-    {buildResponseSegments(events).map((segment) => segment.type === "reasoning"
-      ? <ReasoningDisclosure key={segment.key} entries={segment.entries} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
+    {segments.map((segment, index) => segment.type === "reasoning"
+      ? <ReasoningDisclosure key={segment.key} summary={reasoningStepSummary(events, segments, index)} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
       : segment.type === "narration"
         ? segment.entry.metadata.source === "tool_intent" ? null : <p key={segment.key} className="assistant-progress">{displayText(segment.entry.content)}</p>
       : segment.type === "inferred"

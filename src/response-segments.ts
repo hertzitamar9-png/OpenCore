@@ -45,12 +45,16 @@ export function buildResponseSegments(events: TimelineEntry[]): ResponseSegment[
       tools = null;
       narrated = true;
     } else if (entry.kind === "thinking") {
+      // A new reasoning block after any tool call belongs below that tool step.
+      tools = null;
       if (!reasoning) {
         reasoning = { type: "reasoning", key: `reasoning-${entry.id}`, entries: [] };
         segments.push(reasoning);
       }
       reasoning.entries.push(entry);
     } else if (entry.kind === "tool_call" || entry.kind === "tool_result") {
+      // Do not append later thinking to a reasoning segment rendered above this tool.
+      reasoning = null;
       if (!tools) {
         if (!narrated && entry.kind === "tool_call") segments.push({ type: "inferred", key: `inferred-${entry.id}`, call: entry });
         tools = { type: "tools", key: `tools-${entry.id}`, steps: [] };
