@@ -17,12 +17,22 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
       - name: Install JavaScript dependencies
         run: npm ci
+      - name: Benchmark exact ECHO archive scaling
+        run: python scripts/echo_archive_scale.py --output echo-archive-scale.json
+      - name: Preserve ECHO archive benchmark
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-archive-scale
+          path: echo-archive-scale.json
       - name: Test frontend
         run: npm test
       - name: Test Rust

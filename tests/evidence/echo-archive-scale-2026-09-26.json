@@ -1,0 +1,46 @@
+{
+  "benchmark": "echo-exact-archive-scaling",
+  "generated_at_utc": "2026-09-26T03:25:21.246400+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3",
+  "token_counting": "whitespace-delimited synthetic tokens",
+  "scope": "Measures SQLite exact-page storage, indexed lookup, and archive integrity. Does not measure model attention, KV memory, prompt reconstruction, or answer quality.",
+  "runs": [
+    {
+      "synthetic_whitespace_tokens": 100000,
+      "indexed_pages": 117,
+      "archive_bytes": 1108096,
+      "append_seconds": 0.0212,
+      "oldest_fact_search_seconds": 0.0248,
+      "full_integrity_check_seconds": 0.0135,
+      "oldest_fact_exact": true,
+      "oldest_fact_searchable": true,
+      "corrupt_pages": 0,
+      "scope": "temporary exact ECHO SQLite archive; no model inference"
+    },
+    {
+      "synthetic_whitespace_tokens": 1000000,
+      "indexed_pages": 1167,
+      "archive_bytes": 17882312,
+      "append_seconds": 0.231,
+      "oldest_fact_search_seconds": 0.0247,
+      "full_integrity_check_seconds": 0.1309,
+      "oldest_fact_exact": true,
+      "oldest_fact_searchable": true,
+      "corrupt_pages": 0,
+      "scope": "temporary exact ECHO SQLite archive; no model inference"
+    },
+    {
+      "synthetic_whitespace_tokens": 10000000,
+      "indexed_pages": 11667,
+      "archive_bytes": 175965888,
+      "append_seconds": 2.483,
+      "oldest_fact_search_seconds": 0.025,
+      "full_integrity_check_seconds": 1.2746,
+      "oldest_fact_exact": true,
+      "oldest_fact_searchable": true,
+      "corrupt_pages": 0,
+      "scope": "temporary exact ECHO SQLite archive; no model inference"
+    }
+  ]
+}
