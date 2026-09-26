@@ -50,15 +50,24 @@ pub struct AppCore {
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
     active_chats: Mutex<HashMap<String, CancellationToken>>,
+    live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
     pending_approvals: Mutex<HashMap<String, (String, tokio::sync::oneshot::Sender<bool>)>>,
     browser: Arc<browser_bridge::BrowserBridge>,
     reflex: Arc<reflex::ReflexManager>,
     vision: Arc<vision::VisionManager>,
 }
 
-struct LiveGenerationGuard { app: tauri::AppHandle, conversation: String, run: String }
+struct LiveGenerationGuard {
+    app: tauri::AppHandle,
+    conversation: String,
+    run: String,
+    runs: Arc<Mutex<HashMap<String, String>>>,
+}
 impl Drop for LiveGenerationGuard {
     fn drop(&mut self) {
+        if let Ok(mut runs) = self.runs.lock() {
+            if runs.get(&self.conversation) == Some(&self.run) { runs.remove(&self.conversation); }
+        }
         let _ = self.app.emit("opencore-generation", json!({"conversationId":self.conversation,
             "runId":self.run,"done":true}));
     }
@@ -1611,6 +1620,7 @@ pub fn run() {
                 store: store.clone(),
                 runtime: runtime.clone(),
                 active_chats: Mutex::new(HashMap::new()),
+                live_generation_runs: Arc::new(Mutex::new(HashMap::new())),
                 pending_approvals: Mutex::new(HashMap::new()),
                 browser: Arc::new(browser_bridge::BrowserBridge::new()),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
@@ -1666,8 +1676,11 @@ pub fn run() {
                 }
             });
             let gateway_store = store.clone();
+            let gateway_app = app.handle().clone();
+            let gateway_live_runs = app.state::<Arc<AppCore>>().live_generation_runs.clone();
             tauri::async_runtime::spawn(async move {
-                if let Err(error) = gateway::serve(GatewayState::new(runtime, gateway_store.clone()), 8812).await {
+                if let Err(error) = gateway::serve(GatewayState::new(runtime, gateway_store.clone(),
+                    gateway_app, gateway_live_runs), 8812).await {
                     gateway_store.log("error", "gateway", &error);
                 }
             });

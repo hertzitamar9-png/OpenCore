@@ -4,6 +4,7 @@ use axum::body::Body;
 use axum::http::{HeaderMap, HeaderValue, Response, StatusCode};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
+use tauri::Emitter;
 use uuid::Uuid;
 
 fn json_response(status: StatusCode, value: &Value) -> Response<Body> {
@@ -22,6 +23,17 @@ fn sse_response(body: String) -> Response<Body> {
         .header("connection", "close")
         .body(Body::from(body))
         .unwrap()
+}
+
+fn provisional_generation_event(conversation: &str, run_id: &str, preview: &Value) -> Option<Value> {
+    if preview.get("provisional").and_then(Value::as_bool) != Some(true) { return None; }
+    Some(json!({
+        "conversationId":conversation,
+        "runId":run_id,
+        "content":preview["content"],
+        "reasoning":preview["reasoning"],
+        "phase":preview["phase"],
+    }))
 }
 
 fn flatten_text(content: &Value) -> String {
@@ -383,6 +395,10 @@ async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, con
         Ok(r) => { let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY); return json_response(status,&json!({"error":{"type":"api_error","message":r.text().await.unwrap_or_default()}})); },
         Err(e) => return json_response(StatusCode::BAD_GATEWAY,&json!({"error":{"type":"api_error","message":e.to_string()}})),
     };
+    let live_run = state.live_generation_runs.lock().ok()
+        .and_then(|runs| runs.get(&conversation).cloned());
+    let preview_app = state.app.clone();
+    let preview_conversation = conversation.clone();
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
     let send = move |value: Value| { let _ = tx.send(format!("event: {}\ndata: {}\n\n", value["type"].as_str().unwrap_or("error"), value)); };
     let task = tokio::spawn(async move {
@@ -392,6 +408,14 @@ async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, con
         let mut reasoning_sent = String::new();
         let mut thinking_open = false;
         let result = crate::chat_stream::read(response, |preview| {
+            if preview["provisional"] == true {
+                if let Some(run_id) = live_run.as_ref() {
+                    if let Some(event) = provisional_generation_event(&preview_conversation, run_id, &preview) {
+                        let _ = preview_app.emit("opencore-generation", event);
+                        return;
+                    }
+                }
+            }
             if let Some(current) = preview["reasoning"].as_str() {
                 if !text_open && current.len() > reasoning_sent.len() && current.starts_with(&reasoning_sent) {
                     if !thinking_open { send(json!({"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}})); thinking_open = true; }
@@ -768,6 +792,16 @@ mod tests {
             true,
         ).build().unwrap();
         assert_eq!(request.headers().get("x-opencore-timeline-owner").unwrap(), "app");
+    }
+
+    #[test]
+    fn provisional_tokens_are_previewed_in_app_but_final_deltas_are_not() {
+        let preview = json!({"provisional":true,"content":"draft answer","reasoning":"","phase":"drafting"});
+        let event = provisional_generation_event("conversation-1", "run-1", &preview).unwrap();
+        assert_eq!(event["conversationId"], "conversation-1");
+        assert_eq!(event["runId"], "run-1");
+        assert_eq!(event["content"], "draft answer");
+        assert!(provisional_generation_event("conversation-1", "run-1", &json!({"content":"verified answer"})).is_none());
     }
 
     #[test]

@@ -10,21 +10,32 @@ use axum::Router;
 use futures_util::StreamExt;
 use serde_json::{json, Value};
 use std::convert::Infallible;
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use tauri::AppHandle;
 use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct GatewayState {
     pub runtime: Arc<RuntimeManager>,
     pub store: Arc<EventStore>,
+    pub(crate) app: AppHandle,
+    pub(crate) live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
     pub(crate) client: reqwest::Client,
 }
 
 impl GatewayState {
-    pub fn new(runtime: Arc<RuntimeManager>, store: Arc<EventStore>) -> Self {
+    pub fn new(
+        runtime: Arc<RuntimeManager>,
+        store: Arc<EventStore>,
+        app: AppHandle,
+        live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
+    ) -> Self {
         Self {
             runtime,
             store,
+            app,
+            live_generation_runs,
             client: reqwest::Client::builder()
                 .no_proxy()
                 .timeout(std::time::Duration::from_secs(86_400))

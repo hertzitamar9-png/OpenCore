@@ -38,7 +38,10 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
     token: CancellationToken, workspace: PathBuf, receipts: PathBuf, content: Value,
     mut specs: Vec<Value>, guidance: String) -> Result<ChatSendResult, String> {
     let id = request.conversation_id.trim();
-    let live = LiveGenerationGuard { app: app.clone(), conversation: id.into(), run: uuid::Uuid::new_v4().to_string() };
+    let live_run = uuid::Uuid::new_v4().to_string();
+    if let Ok(mut active_runs) = core.live_generation_runs.lock() { active_runs.insert(id.into(), live_run.clone()); }
+    let live = LiveGenerationGuard { app: app.clone(), conversation: id.into(), run: live_run,
+        runs: core.live_generation_runs.clone() };
     let data = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let context_window_tokens = core.runtime.snapshot().context_size.max(1);
     let compact_at_tokens = request.compact_at_tokens.max(1_024);

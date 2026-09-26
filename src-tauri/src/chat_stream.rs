@@ -29,7 +29,7 @@ impl Decoder {
             if let Some(preview) = event.get("echo_preview") {
                 if self.preview["generation"] != preview["generation"] {
                     self.preview = json!({"generation":preview["generation"], "phase":preview["phase"],
-                        "content":"", "reasoning":""});
+                        "provisional":true, "content":"", "reasoning":""});
                 }
                 append(&mut self.preview, "content", &preview["delta"]["content"]);
                 append(&mut self.preview, "reasoning", &preview["delta"]["reasoning_content"]);
@@ -122,7 +122,10 @@ mod tests {
         let mut decoder = Decoder::default();
         let previews = decoder.push(b"data: {\"echo_preview\":{\"generation\":\"1\",\"phase\":\"working\",\"delta\":{\"content\":\"draft\"}}}\n\n").unwrap();
         assert_eq!(previews[0]["content"], "draft");
-        decoder.push(b"data: {\"choices\":[{\"delta\":{\"content\":\"checked answer\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n").unwrap();
+        assert_eq!(previews[0]["provisional"], true);
+        let answer_previews = decoder.push(b"data: {\"choices\":[{\"delta\":{\"content\":\"checked answer\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n").unwrap();
+        assert_eq!(answer_previews.last().unwrap()["content"], "checked answer");
+        assert!(answer_previews.last().unwrap().get("provisional").is_none());
         assert_eq!(decoder.finish().unwrap()["choices"][0]["message"]["content"], "checked answer");
     }
 

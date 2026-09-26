@@ -9,7 +9,7 @@ import time
 import uuid
 import urllib.error
 import urllib.request
-from typing import Any
+from typing import Any, Callable
 
 try:
     import torch
@@ -42,6 +42,60 @@ class BackboneReply:
     raw: dict[str, Any]
 
 
+def read_chat_stream(response, on_delta: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any]:
+    """Read OpenAI-compatible SSE deltas into the complete, validated reply."""
+    message: dict[str, Any] = {"role": "assistant", "content": ""}
+    calls: dict[int, dict[str, Any]] = {}
+    result: dict[str, Any] = {"choices": [{"index": 0, "message": message, "finish_reason": None}]}
+    finished = False
+    for raw_line in response:
+        line = raw_line.decode("utf-8", errors="strict") if isinstance(raw_line, bytes) else str(raw_line)
+        line = line.strip()
+        if not line.startswith("data:"):
+            continue
+        data = line[5:].strip()
+        if data == "[DONE]":
+            finished = True
+            break
+        if not data:
+            continue
+        event = json.loads(data)
+        if event.get("error"):
+            raise RuntimeError(f"Model stream failed: {event['error']}")
+        for key in ("id", "model", "usage", "timings"):
+            if event.get(key) is not None:
+                result[key] = event[key]
+        for choice in event.get("choices") or []:
+            if choice.get("index", 0) != 0:
+                continue
+            delta = choice.get("delta") or {}
+            if on_delta and any(isinstance(delta.get(key), str) and delta[key] for key in ("content", "reasoning_content")):
+                on_delta(delta)
+            for key in ("content", "reasoning_content"):
+                if isinstance(delta.get(key), str):
+                    message[key] = message.get(key, "") + delta[key]
+            for position, call in enumerate(delta.get("tool_calls") or []):
+                index = int(call.get("index", position))
+                target = calls.setdefault(index, {
+                    "id": "", "type": "function", "function": {"name": "", "arguments": ""},
+                })
+                if call.get("id"):
+                    target["id"] = call["id"]
+                if call.get("type"):
+                    target["type"] = call["type"]
+                function = call.get("function") or {}
+                for key in ("name", "arguments"):
+                    if isinstance(function.get(key), str):
+                        target["function"][key] += function[key]
+            if choice.get("finish_reason") is not None:
+                result["choices"][0]["finish_reason"] = choice["finish_reason"]
+    if not finished or result["choices"][0]["finish_reason"] is None:
+        raise RuntimeError("Model stream ended before completion; partial output is unverified")
+    if calls:
+        message["tool_calls"] = [calls[index] for index in sorted(calls)]
+    return result
+
+
 class LlamaBackbone:
     def __init__(self, spec: BackboneSpec, model_path: Path):
         self.spec = spec
@@ -68,6 +122,7 @@ class LlamaBackbone:
         repeat_penalty: float = 1.08,
         json_mode: bool = False,
         feedback_embedding: list[float] | None = None,
+        on_delta: Callable[[dict[str, Any]], None] | None = None,
     ) -> BackboneReply:
         body: dict[str, Any] = {
             "model": self.spec.name,
@@ -77,6 +132,8 @@ class LlamaBackbone:
             "top_p": 0.95,
             "repeat_penalty": repeat_penalty,
         }
+        if on_delta is not None:
+            body["stream"] = True
         if json_mode:
             body["response_format"] = {"type": "json_object"}
         if feedback_embedding:
@@ -93,7 +150,7 @@ class LlamaBackbone:
             )
             try:
                 with urllib.request.urlopen(request, timeout=900) as response:
-                    return json.load(response)
+                    return read_chat_stream(response, on_delta) if data.get("stream") else json.load(response)
             except urllib.error.HTTPError as error:
                 detail = error.read().decode("utf-8", errors="replace")
                 if tools and error.code >= 500:
@@ -112,7 +169,7 @@ class LlamaBackbone:
                         headers={"Content-Type": "application/json"},
                     )
                     with urllib.request.urlopen(retry, timeout=900) as response:
-                        return json.load(response)
+                        return read_chat_stream(response, on_delta) if fallback.get("stream") else json.load(response)
                 raise RuntimeError(f"{self.spec.name} chat HTTP {error.code}: {detail[:1200]}") from error
 
         raw = request_chat(body)
@@ -304,6 +361,7 @@ class TwinCoreEngine:
         board: TwinBlackboard,
         tools: list[dict[str, Any]] | None,
         max_tokens: int,
+        on_preview: Callable[[dict[str, Any]], None] | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         # Both heads contribute to the shared plan, then each writes a complete
         # candidate. A result is returned only after the peer accepts that exact
@@ -325,7 +383,8 @@ class TwinCoreEngine:
         feedback_k2 = latent["feedback_k2"] if latent else None
         feedback_nb = latent["feedback_nanbeige"] if latent else None
         k2_reply, nb_reply = self._pair(
-            lambda: self.k2.chat(k2_messages, tools=tools, max_tokens=max_tokens, temperature=0.25, feedback_embedding=feedback_k2),
+            lambda: self.k2.chat(k2_messages, tools=tools, max_tokens=max_tokens, temperature=0.25,
+                feedback_embedding=feedback_k2, on_delta=on_preview),
             lambda: self.nanbeige.chat(nb_messages, tools=tools, max_tokens=max_tokens, temperature=0.25, feedback_embedding=feedback_nb),
         )
         drafts = {
@@ -419,14 +478,18 @@ class TwinCoreEngine:
             "last_offer_from": offerer,
         }
 
-    def chat_completion(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def chat_completion(
+        self,
+        payload: dict[str, Any],
+        on_preview: Callable[[dict[str, Any]], None] | None = None,
+    ) -> dict[str, Any]:
         messages = list(payload.get("messages") or [])
         tools = payload.get("tools")
         max_tokens = int(payload.get("max_tokens") or payload.get("max_completion_tokens") or 2048)
         max_tokens = max(64, min(max_tokens, 12288))
         started = time.perf_counter()
         board = self.deliberate(messages)
-        message, agreement_result = self.commit(messages, board, tools, max_tokens)
+        message, agreement_result = self.commit(messages, board, tools, max_tokens, on_preview)
         elapsed = time.perf_counter() - started
         return {
             "id": f"twincore-{int(time.time() * 1000)}",

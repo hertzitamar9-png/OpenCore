@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import urllib.error
 import urllib.request
+import uuid
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -112,6 +113,51 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write("[twincore] " + (fmt % args) + "\n")
 
+    def _write_sse(self, value: dict):
+        raw = json.dumps(value, ensure_ascii=False).encode("utf-8")
+        self.wfile.write(b"data: " + raw + b"\n\n")
+        self.wfile.flush()
+
+    def _stream_completion(self, engine, payload: dict):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        self.close_connection = True
+        generation = uuid.uuid4().hex
+        try:
+            result = engine.chat_completion(
+                payload,
+                on_preview=lambda delta: self._write_sse({"echo_preview": {
+                    "generation": generation,
+                    "phase": "drafting",
+                    "delta": delta,
+                }}),
+            )
+            choice = result["choices"][0]
+            chunk = {
+                "id": result.get("id", f"twincore-{generation}"),
+                "object": "chat.completion.chunk",
+                "created": result.get("created"),
+                "model": result.get("model"),
+                "choices": [{
+                    "index": 0,
+                    "delta": choice.get("message") or {},
+                    "finish_reason": choice.get("finish_reason") or "stop",
+                }],
+            }
+            if result.get("usage") is not None:
+                chunk["usage"] = result["usage"]
+            self._write_sse(chunk)
+            self.wfile.write(b"data: [DONE]\n\n")
+            self.wfile.flush()
+        except Exception as error:
+            try:
+                self._write_sse({"error": {"message": f"{type(error).__name__}: {error}"}})
+            except OSError:
+                pass
+
     def do_GET(self):
         engine = self.server.engine
         config = self.server.config
@@ -165,6 +211,9 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
                 return
             if self.path not in ("/v1/chat/completions", "/chat/completions"):
                 self._json(404, {"error": {"message": "not found"}})
+                return
+            if payload.get("stream") is True:
+                self._stream_completion(engine, payload)
                 return
             result = engine.chat_completion(payload)
             self._json(200, result)
