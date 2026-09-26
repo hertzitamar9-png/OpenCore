@@ -46,8 +46,8 @@ const timer=setTimeout(()=>child.kill(),30000);
 await new Promise(r=>child.on('exit',r));clearTimeout(timer);server.close();
 assert.ok(result&&!result.is_error,errors||JSON.stringify(result));
 assert.ok(permissionCount>0);assert.ok(denied);assert.ok(!existsSync(marker));assert.ok(streamDeltas>=2);
-assert.ok(contextReports.some(usage=>usage.isAutoCompactEnabled===false),
-  `ECHO-managed session must disable SDK auto-compaction; got ${JSON.stringify(contextReports)}`);
+assert.ok(contextReports.some(usage=>usage.isAutoCompactEnabled===true),
+  `ECHO-managed sessions must retain exact source history while enabling bounded SDK working-set compaction; got ${JSON.stringify(contextReports)}`);
 let cancelChild,requestClosed=false,cancelStarted=0;
 const slow=http.createServer(async(req,res)=>{
   for await(const ignored of req){}

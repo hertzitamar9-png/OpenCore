@@ -181,6 +181,14 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
                     context["compactions"] = json!(context["compactions"].as_u64().unwrap_or(0) + 1);
                     core.store.set_setting(&key,&context.to_string())?;
                     core.store.add_timeline(id,"echo","system","OpenCore","Context compacted","Claude Agent SDK compacted the active session. Exact recorded activity remains in ECHO.", &message.clone())?;
+                    // Make completed tool exchanges searchable before the SDK
+                    // continues with its compacted working set. The final sync
+                    // remains as a retry path if this import is temporarily down.
+                    if core.runtime.profile().contains("echo") {
+                        if let Err(error) = sync_chat_activity(&core, id).await {
+                            core.store.log("warn", "echo", &format!("Could not flush history at compact boundary: {error}"));
+                        }
+                    }
                 },
                 "stream_event" => {
                     let e = &message["event"];
