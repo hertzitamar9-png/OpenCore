@@ -132,7 +132,7 @@ impl RuntimeManager {
 
     pub fn upstream_url(&self) -> String {
         let inner = self.inner.lock().expect("runtime lock");
-        if matches!(inner.profile.as_str(), "echo" | "unsloth-echo" | "doucode") {
+        if matches!(inner.profile.as_str(), "echo" | "native1m" | "unsloth-echo" | "doucode") {
             return format!("http://127.0.0.1:{}", self.echo_port);
         }
         if let Some(url) = &inner.attached_backend {
@@ -712,11 +712,14 @@ impl RuntimeManager {
             return self.fail_start(profile, error);
         }
 
-        if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = if profile == "echo" { "Starting ECHO" } else { "Finishing startup" }.into(); inner.loading_step = 2; }
+        let echo_enabled = matches!(profile, "echo" | "native1m");
+        if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = if echo_enabled { "Starting ECHO" } else { "Finishing startup" }.into(); inner.loading_step = 2; }
 
-        if profile == "echo" {
-            // ECHO asks /props for the model's real metadata-derived n_ctx.
-            if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{}", self.backend_port), None) {
+        if echo_enabled {
+            // ECHO asks /props for the model's real metadata-derived n_ctx, except
+            // the YaRN profile whose configured 1M window must match the proxy.
+            let context_size = (profile == "native1m").then_some(1_000_000);
+            if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{}", self.backend_port), context_size) {
                 return self.fail_start(profile, error);
             }
             if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) {
@@ -1023,6 +1026,17 @@ mod tests {
             inner.profile = "unsloth-echo".into();
             inner.attached_backend = Some("http://127.0.0.1:54389".into());
         }
+        assert_eq!(manager.upstream_url(), "http://127.0.0.1:8813");
+        drop(manager);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn native1m_public_route_goes_through_echo_proxy() {
+        let path = std::env::temp_dir().join(format!("opencore-runtime-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = Arc::new(EventStore::open(&path).unwrap());
+        let manager = RuntimeManager::new(store);
+        manager.inner.lock().unwrap().profile = "native1m".into();
         assert_eq!(manager.upstream_url(), "http://127.0.0.1:8813");
         drop(manager);
         let _ = std::fs::remove_file(path);

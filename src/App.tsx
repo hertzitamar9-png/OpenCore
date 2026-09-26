@@ -974,7 +974,7 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
     return () => { active = false; window.clearInterval(timer); };
   }, [conversationId, profile, runtime.profile, runtime.status]);
 
-  if (profile === "echo" || profile === "unsloth-echo") {
+  if (profile === "echo" || profile === "native1m" || profile === "unsloth-echo" || profile === "doucode") {
     const archived = workingSet?.offloadedMessages;
     return <div className="statusbar-context statusbar-echo-context" aria-label="ECHO addressable history" title="3 trillion tokens is the addressable-history target for the exact disk-backed ECHO archive, not simultaneous model attention. The finite per-inference model window and its live usage are shown in Live Context.">
       <span className="statusbar-context-label">ECHO</span>
@@ -984,7 +984,7 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
     </div>;
   }
 
-  const fallbackLimit = profile === "native1m" ? 1_000_000 : profile === "doucode" ? 262_144 : runtime.contextSize || 262_144;
+  const fallbackLimit = runtime.contextSize || 262_144;
   const loaded = ["running", "starting"].includes(runtime.status) && runtime.profile === profile;
   const reportedLimit = workingSet?.available ? workingSet.modelContextTokens || workingSet.windowTokens : undefined;
   const maximum = Math.max(1, reportedLimit || (loaded ? runtime.contextSize : 0) || fallbackLimit);

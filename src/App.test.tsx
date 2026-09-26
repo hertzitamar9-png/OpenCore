@@ -510,7 +510,7 @@ describe("OpenCore", () => {
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
   });
 
-  it("shows configured model context usage and ECHO's 3T history target in the footer", async () => {
+  it("shows ECHO's 3T history target for the extended profile in the footer", async () => {
     const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
       available: true,
       liveTokens: 131072,
@@ -532,9 +532,9 @@ describe("OpenCore", () => {
     try {
       const { unmount } = render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      const meter = await screen.findByRole("progressbar", { name: "Model context usage" });
-      expect(meter).toHaveAttribute("max", "262144");
-      expect(meter).toHaveAttribute("value", "131072");
+      const extendedStatusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
+      expect(await within(extendedStatusbar).findByText("3T history target")).toBeVisible();
+      expect(within(extendedStatusbar).queryByRole("progressbar", { name: "Model context usage" })).not.toBeInTheDocument();
 
       unmount();
       values.set("opencore.model-profile", "echo");
@@ -554,15 +554,14 @@ describe("OpenCore", () => {
     }
   });
 
-  it("shows the selected model and bounded context meter in the bottom status bar", async () => {
+  it("shows ECHO's addressable history target in the bottom status bar for doUcode", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
-    const target = await screen.findByRole("progressbar", { name: "Model context usage" });
+    const target = await screen.findByLabelText("ECHO addressable history");
     const statusbar = target.closest("footer");
     expect(statusbar).toHaveClass("statusbar");
-    expect(target).toHaveAttribute("max", "262144");
+    expect(target).toHaveTextContent("3T history target");
     expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently doUcode" }));
-    expect(statusbar?.textContent).toContain("262K");
     expect(statusbar?.textContent).toContain("VRAM");
     expect(statusbar?.textContent).toContain("tokens/s");
     expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();

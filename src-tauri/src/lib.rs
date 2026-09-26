@@ -1382,7 +1382,7 @@ async fn send_chat_message(
     let prior = core.store.conversation_messages(&id)?;
     let is_new = prior.is_empty();
     core.store.ensure_conversation(&id, "OpenCore", &runtime_snapshot.profile, "New conversation")?;
-    if !is_new && matches!(runtime_snapshot.profile.as_str(), "echo" | "unsloth-echo") {
+    if !is_new && matches!(runtime_snapshot.profile.as_str(), "echo" | "native1m" | "unsloth-echo" | "doucode") {
         sync_chat_activity(&core, &id).await
             .map_err(|error| format!("ECHO could not restore pending chat activity: {error}"))?;
     }
