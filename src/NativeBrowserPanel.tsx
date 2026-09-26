@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, ExternalLink, FileDown, Globe2, Grip, Maximize2, Minimize2, RefreshCw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, FileDown, Globe2, Grip, RefreshCw, X } from "lucide-react";
 import * as api from "./api";
 import { BrowserPanel } from "./BrowserPanel";
 
@@ -9,8 +9,6 @@ type Props = {
   onNotice: (message: string) => void;
   preview: Preview;
   onDownload: (id: string) => void;
-  full: boolean;
-  onFullChange: (full: boolean) => void;
   width: number;
   onWidthChange: (width: number) => void;
   side: "left" | "right";
@@ -20,7 +18,7 @@ type Props = {
   obscured?: boolean;
 };
 
-export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, full, onFullChange, width, onWidthChange, side, onSideChange, snapPx, onSnapChange, obscured = false }: Props) {
+export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, width, onWidthChange, side, onSideChange, snapPx, onSnapChange, obscured = false }: Props) {
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; width: number } | null>(null);
@@ -94,12 +92,11 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, ful
     if (target) onWidthChange(Math.round(target));
   };
 
-  return <section ref={root} className={`workspace-browser ${full ? "browser-expanded" : "browser-split"} browser-${side}`} aria-label="OpenCore Browser">
-    {!full ? <div className="workspace-browser-resizer" role="separator" aria-label="Resize OpenCore Browser" onPointerDown={(event) => { drag.current = { x: event.clientX, width }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (drag.current) onWidthChange(Math.max(420, Math.min(window.innerWidth - 420, drag.current.width + (side === "right" ? drag.current.x - event.clientX : event.clientX - drag.current.x)))); }} onPointerUp={(event) => { resizeEnd(); event.currentTarget.releasePointerCapture(event.pointerId); }} /> : null}
-    <header className="workspace-browser-head" onPointerDown={(event) => { if (!(event.target as HTMLElement).closest("button,input")) { headDrag.current = event.clientX; event.currentTarget.setPointerCapture(event.pointerId); } }} onPointerUp={(event) => { if (headDrag.current != null && Math.abs(event.clientX - headDrag.current) > 60) { onFullChange(false); onSideChange(event.clientX < window.innerWidth / 2 ? "left" : "right"); } headDrag.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }}>
+  return <section ref={root} className={`workspace-browser browser-split browser-${side}`} aria-label="OpenCore Browser">
+    <div className="workspace-browser-resizer" role="separator" aria-label="Resize OpenCore Browser" onPointerDown={(event) => { drag.current = { x: event.clientX, width }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (drag.current) onWidthChange(Math.max(420, Math.min(window.innerWidth - 420, drag.current.width + (side === "right" ? drag.current.x - event.clientX : event.clientX - drag.current.x)))); }} onPointerUp={(event) => { resizeEnd(); event.currentTarget.releasePointerCapture(event.pointerId); }} />
+    <header className="workspace-browser-head" onPointerDown={(event) => { if (!(event.target as HTMLElement).closest("button,input")) { headDrag.current = event.clientX; event.currentTarget.setPointerCapture(event.pointerId); } }} onPointerUp={(event) => { if (headDrag.current != null && Math.abs(event.clientX - headDrag.current) > 60) { onSideChange(event.clientX < window.innerWidth / 2 ? "left" : "right"); } headDrag.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }}>
       <span className="workspace-browser-logo"><Globe2 size={16} /></span><strong>OpenCore Browser</strong><Grip size={15} className="workspace-browser-grip" />
       <button aria-label="Snap settings" title="Snap settings" onClick={() => setSnapOpen((open) => !open)}><span className="snap-symbol">◈</span></button>
-      <button aria-label={full ? "Split browser" : "Expand browser"} title={full ? "Split browser" : "Expand browser"} onClick={() => onFullChange(!full)}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
       <button aria-label="Close browser" title="Close browser" onClick={close}><X size={17} /></button>
     </header>
     {snapOpen ? <div className="workspace-snap-control"><span>Snap</span><input type="range" aria-label="Snap strength" min="0" max="80" value={snapPx} onChange={(event) => onSnapChange(Number(event.target.value))} /><strong>{snapPx}</strong></div> : null}

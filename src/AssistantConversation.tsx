@@ -15,7 +15,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
-  AppWindow, BrainCircuit, ChevronDown, Copy, FileDown, Globe2, Paperclip, Pencil, Pin, PinOff, Send, ShieldCheck, Square, Trash2, X,
+  AppWindow, ArrowLeft, BrainCircuit, ChevronDown, ChevronRight, Copy, FileDown, Globe2, Paperclip, Pencil, Pin, PinOff, Plus, Send, ShieldCheck, Square, Trash2, X,
   CheckCircle2, CircleAlert, Code2, CornerUpLeft, Crosshair, Eye, FilePenLine, FileSearch, FileText, FolderOpen, Gamepad2, MousePointerClick, Terminal, Wrench, Zap
 } from "lucide-react";
 import * as api from "./api";
@@ -30,7 +30,8 @@ import { NativeBrowserPanel } from "./NativeBrowserPanel";
 import { DesktopPanel } from "./DesktopPanel";
 import { FloatingWindow } from "./FloatingWindow";
 import { SpeechButton } from "./SpeechButton";
-import type { ApprovalMode, ChatQueueItem, ProjectSummary, ReasoningEffort, RuntimeSnapshot, TelemetrySnapshot, TimelineEntry } from "./types";
+import { ModelProfileOptions, profileLabel } from "./ModelProfiles";
+import type { ApprovalMode, ChatQueueItem, ProjectSummary, ReasoningEffort, RuntimeProfile, RuntimeSnapshot, TelemetrySnapshot, TimelineEntry } from "./types";
 
 const REASONING_MODES: { value: ReasoningEffort; label: string }[] = [
   { value: "off", label: "Off" },
@@ -73,6 +74,8 @@ type Props = {
   runtimeRunning: boolean;
   runtimeSnapshot: RuntimeSnapshot;
   telemetry: TelemetrySnapshot;
+  selectedProfile: RuntimeProfile;
+  onSelectProfile: (profile: RuntimeProfile) => void;
   liveTokenSpeed: number | null;
   promptProgress: { label: string; speed: number | null } | null;
   backendActive: boolean;
@@ -377,7 +380,7 @@ function MessageActions() {
   </ActionBarPrimitive.Root>;
 }
 export const AssistantConversation = memo(function AssistantConversation({
-  conversationId, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, liveTokenSpeed, promptProgress, backendActive,
+  conversationId, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, selectedProfile, onSelectProfile, liveTokenSpeed, promptProgress, backendActive,
   onConversationId, onRefresh, onNotice, onExport, onRename, onDelete,
   pinned, project, projectId, projects, onPin, onMoveProject, onCreateProject,
   defaultSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens,
@@ -402,6 +405,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   useEffect(() => { setSelectedSkills([...defaultSkills]); }, [defaultSkillsKey]);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [files, setFiles] = useState<string[]>([]);
+  const [composerMenu, setComposerMenu] = useState<"actions" | "model" | null>(null);
   const [queue, setQueue] = useState<ChatQueueItem[]>([]);
   const [sending, setSending] = useState(false);
   const [active, setActive] = useState<ChatQueueItem | null>(null);
@@ -417,13 +421,14 @@ export const AssistantConversation = memo(function AssistantConversation({
   const [artifactPreview, setArtifactPreview] = useState<api.ArtifactPreview | { remoteImage: string } | null>(null);
   const [artifactLoading, setArtifactLoading] = useState(false);
   const [nativeBrowserOpen, setNativeBrowserOpen] = useState(false);
-  const [browserFull, setBrowserFull] = useState(() => { try { return window.localStorage.getItem("opencore.browser.full") !== "false"; } catch { return true; } });
   const [browserWidth, setBrowserWidth] = useState(() => { try { return Number(window.localStorage.getItem("opencore.browser.width")) || 580; } catch { return 580; } });
   const [browserSide, setBrowserSide] = useState<"left" | "right">(() => { try { return window.localStorage.getItem("opencore.browser.side") === "left" ? "left" : "right"; } catch { return "right"; } });
   const [browserSnap, setBrowserSnap] = useState(() => { try { return Number(window.localStorage.getItem("opencore.browser.snap")) || 24; } catch { return 24; } });
   const [desktopOpen, setDesktopOpen] = useState(false);
   const generationActive = sending || backendActive;
   const pendingToolRef = useRef<ToolApprovalRequest | null>(null);
+  const composerMenuRef = useRef<HTMLDivElement>(null);
+  const composerMenuTriggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     let dispose: (() => void) | undefined;
     if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
@@ -431,7 +436,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     }
     return () => dispose?.();
   }, []);
-  useEffect(() => { try { window.localStorage.setItem("opencore.browser.width", String(browserWidth)); window.localStorage.setItem("opencore.browser.side", browserSide); window.localStorage.setItem("opencore.browser.snap", String(browserSnap)); window.localStorage.setItem("opencore.browser.full", String(browserFull)); } catch { /* Layout works for this session. */ } }, [browserWidth, browserSide, browserSnap, browserFull]);
+  useEffect(() => { try { window.localStorage.setItem("opencore.browser.width", String(browserWidth)); window.localStorage.setItem("opencore.browser.side", browserSide); window.localStorage.setItem("opencore.browser.snap", String(browserSnap)); } catch { /* Layout works for this session. */ } }, [browserWidth, browserSide, browserSnap]);
   const controlsRef = useRef<HTMLDivElement>(null);
   const effortIndex = REASONING_MODES.findIndex((mode) => mode.value === reasoningEffort);
   const effortLabel = REASONING_MODES[effortIndex].label;
@@ -439,6 +444,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   const approvalShort = APPROVAL_MODES.find((mode) => mode.value === approvalMode)?.short;
   const approvalIndex = APPROVAL_MODES.findIndex((mode) => mode.value === approvalMode);
   const shownApprovalIndex = approvalPreviewIndex ?? approvalIndex;
+  const profileLocked = runtimeRunning || runtimeSnapshot.status === "starting" || generationActive;
 
   const artifactActions: ArtifactActions = {
     preview: (id) => {
@@ -479,6 +485,15 @@ export const AssistantConversation = memo(function AssistantConversation({
     document.addEventListener("keydown", escape);
     return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
   }, [controlOpen]);
+
+  useEffect(() => {
+    if (!composerMenu) return;
+    const outside = (event: PointerEvent) => { if (!composerMenuRef.current?.contains(event.target as Node)) setComposerMenu(null); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setComposerMenu(null); composerMenuTriggerRef.current?.focus(); } };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [composerMenu]);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
@@ -721,7 +736,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     setDraft((current) => resolveSlashSkill(current, id));
     setSkillPickerOpen(false);
   };
-  return <main className={`assistant-thread-panel chat-mode ${nativeBrowserOpen ? "browser-open" : ""} ${nativeBrowserOpen && browserFull ? "browser-full" : ""} ${browserSide === "left" ? "browser-left" : ""}`} style={nativeBrowserOpen ? { "--browser-width": `${browserWidth}px` } as React.CSSProperties : undefined}>
+  return <main className={`assistant-thread-panel chat-mode ${nativeBrowserOpen ? "browser-open" : ""} ${browserSide === "left" ? "browser-left" : ""}`} style={nativeBrowserOpen ? { "--browser-width": `${browserWidth}px` } as React.CSSProperties : undefined}>
     <div className="timeline-heading compact">
       <div className="chat-title">
         <h2>{title || "New conversation"}</h2>
@@ -738,7 +753,7 @@ export const AssistantConversation = memo(function AssistantConversation({
       </div>
     </div>
 
-    {nativeBrowserOpen ? <NativeBrowserPanel onClose={() => setNativeBrowserOpen(false)} onNotice={onNotice} preview={artifactPreview} onDownload={artifactActions.download} full={browserFull} onFullChange={setBrowserFull} width={browserWidth} onWidthChange={setBrowserWidth} side={browserSide} onSideChange={setBrowserSide} snapPx={browserSnap} onSnapChange={setBrowserSnap} obscured={controlOpen !== null} /> : null}
+    {nativeBrowserOpen ? <NativeBrowserPanel onClose={() => setNativeBrowserOpen(false)} onNotice={onNotice} preview={artifactPreview} onDownload={artifactActions.download} width={browserWidth} onWidthChange={setBrowserWidth} side={browserSide} onSideChange={setBrowserSide} snapPx={browserSnap} onSnapChange={setBrowserSnap} obscured={controlOpen !== null} /> : null}
     {desktopOpen ? <DesktopPanel onClose={() => setDesktopOpen(false)} onNotice={onNotice} /> : null}
 
     <ArtifactActionsContext.Provider value={artifactActions}><AssistantRuntimeProvider runtime={runtime}>
@@ -779,7 +794,17 @@ export const AssistantConversation = memo(function AssistantConversation({
       {selectedSkills.length > 0 ? <div className="composer-skill-chips" aria-label="Selected skills">{selectedSkills.map((id) => <span key={id}>{COMPOSER_SKILLS.find((skill) => skill.id === id)?.label}<button type="button" aria-label={`Remove ${id} skill`} onClick={() => setSelectedSkills((current) => current.filter((item) => item !== id))}><X size={12} /></button></span>)}</div> : null}
 
       <div className="chat-composer" ref={controlsRef}>
-        <button className="attach-button" onClick={chooseFiles} title="Attach files"><Paperclip size={18} /></button>
+        <div className="composer-action-anchor" ref={composerMenuRef}>
+          <button ref={composerMenuTriggerRef} type="button" className="attach-button composer-plus-button" aria-label="Add files or choose model" aria-expanded={composerMenu !== null} aria-controls="composer-action-menu" onClick={() => setComposerMenu((open) => open === null ? "actions" : null)} title="Add files or choose model"><Plus size={19} /></button>
+          {composerMenu === "actions" ? <div className="composer-action-popover" id="composer-action-menu" role="menu" aria-label="Composer actions">
+            <button type="button" role="menuitem" onClick={() => { setComposerMenu(null); void chooseFiles(); }}><Paperclip size={16} /><span>Upload files or images</span></button>
+            <button type="button" role="menuitem" aria-haspopup="menu" onClick={() => setComposerMenu("model")}><BrainCircuit size={16} /><span className="composer-action-model-copy">Model<small>{profileLabel(selectedProfile)}</small></span><ChevronRight size={15} /></button>
+          </div> : null}
+          {composerMenu === "model" ? <div className="composer-action-popover composer-model-popover" id="composer-action-menu" role="menu" aria-label="Model selection">
+            <div className="composer-model-heading"><button type="button" aria-label="Back to composer actions" onClick={() => setComposerMenu("actions")}><ArrowLeft size={14} /></button><span><strong>Model</strong><small>Current · {profileLabel(selectedProfile)}</small></span></div>
+            <ModelProfileOptions selectedProfile={selectedProfile} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} disabled={profileLocked} id="composer-model-profile-options" className="composer-model-options" />
+          </div> : null}
+        </div>
         <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />
         <textarea
           ref={draftInput}
@@ -805,7 +830,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           <button type="button" className={`composer-control-button effort-trigger effort-${effortIndex} ${controlOpen === "effort" ? "active" : ""}`} aria-label={`Effort: ${effortLabel}`} aria-expanded={controlOpen === "effort"} aria-controls="effort-panel" onClick={() => setControlOpen((open) => open === "effort" ? null : "effort")}>
             <BrainCircuit size={16} /><span className="control-copy"><small>Effort</small><strong>{effortLabel}</strong></span><ChevronDown size={13} />
           </button>
-          {controlOpen === "effort" ? <FloatingWindow id="effort-compact" domId="effort-panel" title="Effort" icon={<BrainCircuit size={16} />} className={`composer-popover effort-popover effort-${effortIndex}`} onClose={() => setControlOpen(null)} place="composer" initialWidth={440} initialHeight={160} minWidth={280} minHeight={145} maximizable={false} ariaLabel="Effort settings">
+          {controlOpen === "effort" ? <FloatingWindow id="effort-compact" domId="effort-panel" title="Effort" icon={<BrainCircuit size={16} />} className={`composer-popover effort-popover effort-${effortIndex}`} onClose={() => setControlOpen(null)} place="composer" initialWidth={440} initialHeight={160} minWidth={280} minHeight={145} ariaLabel="Effort settings">
             <div className="effort-bar">
               <div className="effort-rail">
                 <div className="effort-segments">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index === effortIndex ? "lit" : ""} />)}</div>
@@ -814,7 +839,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             </div>
             <div className="effort-labels" aria-hidden="true">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index === effortIndex ? "selected" : ""}>{mode.label}</span>)}</div>
           </FloatingWindow> : null}
-          {controlOpen === "approval" ? <FloatingWindow id="approval" domId="approval-panel" title="Approval" icon={<ShieldCheck size={16} />} className="composer-popover approval-popover" onClose={() => setControlOpen(null)} place="composer" initialWidth={510} initialHeight={160} minWidth={280} minHeight={140} maximizable={false} ariaLabel="Approval settings">
+          {controlOpen === "approval" ? <FloatingWindow id="approval" domId="approval-panel" title="Approval" icon={<ShieldCheck size={16} />} className="composer-popover approval-popover" onClose={() => setControlOpen(null)} place="composer" initialWidth={510} initialHeight={160} minWidth={280} minHeight={140} ariaLabel="Approval settings">
             <p className="control-explanation">{APPROVAL_MODES.find(mode => mode.value === approvalMode)?.detail}</p>
             <div className="approval-bar" role="group" aria-label="Approval mode"><div className="approval-rail"><div className="approval-segments" aria-hidden="true">{APPROVAL_MODES.map((mode, index) => <span key={mode.value} className={index <= shownApprovalIndex ? "lit" : ""} />)}</div><input className="approval-range" type="range" min="0" max="3" step="1" value={shownApprovalIndex} aria-label="Approval level" aria-valuetext={APPROVAL_MODES[shownApprovalIndex].label} onChange={(event) => { const index = Number(event.target.value); approvalPreviewRef.current = index; setApprovalPreviewIndex(index); }} onPointerUp={commitApprovalRange} onKeyUp={commitApprovalRange} onBlur={commitApprovalRange} onPointerCancel={() => { approvalPreviewRef.current = null; setApprovalPreviewIndex(null); }} /></div><div className="approval-labels">{APPROVAL_MODES.map((mode) => <button type="button" key={mode.value} aria-pressed={mode.value === approvalMode} onClick={() => chooseApprovalMode(mode.value)}>{mode.label}</button>)}</div></div>
           </FloatingWindow> : null}

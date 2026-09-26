@@ -10,10 +10,12 @@ it("keeps a page opened by the model when the browser panel mounts", async () =>
     open: true, url: "http://127.0.0.1:8989/task/45",
   });
   render(<NativeBrowserPanel onClose={() => {}} onNotice={() => {}} preview={null}
-    onDownload={() => {}} full={false} onFullChange={() => {}} width={800}
+    onDownload={() => {}} width={800}
     onWidthChange={() => {}} side="right" onSideChange={() => {}} snapPx={0}
     onSnapChange={() => {}} />);
   await waitFor(() => expect(screen.getByLabelText("Browser address")).toHaveValue("http://127.0.0.1:8989/task/45"));
+  expect(screen.queryByRole("button", { name: "Expand browser" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Split browser" })).not.toBeInTheDocument();
   expect(command).toHaveBeenCalledWith("status");
   expect(command.mock.calls.some(([action]) => action === "open" || action === "navigate")).toBe(false);
 });

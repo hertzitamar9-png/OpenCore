@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App, { recentPromptProgress } from "./App";
 import * as api from "./api";
@@ -17,13 +17,13 @@ describe("OpenCore", () => {
     const input = await screen.findByLabelText('Message OpenCore');
     fireEvent.change(input, { target: { value: 'Keep my draft' } });
     vi.mocked(dialog.open).mockResolvedValueOnce(null);
-    screen.getByTitle('Attach files').focus();
-    fireEvent.click(screen.getByTitle('Attach files'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add files or choose model' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Upload files or images' }));
     await waitFor(() => expect(input).toHaveFocus());
     expect(input).toHaveValue('Keep my draft');
     vi.mocked(dialog.open).mockRejectedValueOnce(new Error('Picker failed'));
-    screen.getByTitle('Attach files').focus();
-    fireEvent.click(screen.getByTitle('Attach files'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add files or choose model' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Upload files or images' }));
     await waitFor(() => expect(input).toHaveFocus());
     fireEvent.change(input, { target: { value: 'Edited' } });
     expect(input).toHaveValue('Edited');
@@ -70,7 +70,8 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      expect(screen.getByRole("main")).not.toHaveClass("browser-full");
+      expect(screen.queryByRole("button", { name: "Maximize OpenCore" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Move conversations|Dock conversations/ })).not.toBeInTheDocument();
       expect(screen.queryByRole("slider", { name: "Reasoning effort" })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: /Effort/ }));
       const selector = screen.getByRole("slider", { name: "Reasoning effort" });
@@ -347,7 +348,8 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      fireEvent.click(screen.getByTitle("Attach files"));
+      fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
       expect(await screen.findByRole("img", { name: "draft.png" })).toHaveAttribute("src", dataUrl);
       expect(preview).toHaveBeenCalledWith(path);
       fireEvent.click(screen.getByRole("button", { name: "Remove draft.png" }));
@@ -472,34 +474,94 @@ describe("OpenCore", () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
-    const picker = screen.getByRole("button", { name: /Choose model profile, currently doUcode/ });
+    const topbar = within(document.querySelector(".topbar") as HTMLElement);
+    const picker = topbar.getByRole("button", { name: /Choose model profile, currently doUcode/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /doUcode K2 \+ Nanbeige · shared 262,144 context/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ }));
-    expect(screen.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
+    expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
+    fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
     fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
-    expect(screen.getByRole("button", { name: /Choose model profile, currently Native 1M/ })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /Choose model profile, currently Native 1M/ }));
+    expect(topbar.getByRole("button", { name: /Choose model profile, currently Native 1M/ })).toBeVisible();
+    fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently Native 1M/ }));
     expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Unsloth", { selector: "h2" })).toBeInTheDocument();
   });
 
-  it("shows the rolling model context in the bottom status bar and removes the composer context panel", async () => {
+  it("opens upload and model choices from the composer and switches models from the footer", async () => {
+    render(<App />);
+    await screen.findByText("Build a data analysis script", { selector: "h2" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
+    expect(screen.getByRole("menu", { name: "Composer actions" })).toBeVisible();
+    expect(screen.getByRole("menuitem", { name: "Upload files or images" })).toBeVisible();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Model doUcode/ }));
+    expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
+
+    const footer = document.querySelector(".conversation-statusbar");
+    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently Native 1M" }));
+    fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently Native 1M" }));
+    expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ }));
+    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
+  });
+
+  it("shows the measured ECHO rolling window and archived message count in the footer", async () => {
+    const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
+      available: true,
+      liveTokens: 131072,
+      promptTokens: 131072,
+      modelActiveTokens: 131072,
+      modelContextTokens: 262144,
+      windowTokens: 262144,
+      active: true,
+      offloadedMessages: 7,
+      contextMode: "native",
+    });
+    const originalStorage = Object.getOwnPropertyDescriptor(window, "localStorage");
+    const values = new Map<string, string>([["opencore.model-profile", "native1m"]]);
+    Object.defineProperty(window, "localStorage", { configurable: true, value: {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    } });
+    try {
+      const { unmount } = render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      const meter = await screen.findByRole("progressbar", { name: "Native context usage" });
+      expect(meter).toHaveAttribute("max", "262144");
+      expect(meter).toHaveAttribute("value", "131072");
+
+      unmount();
+      values.set("opencore.model-profile", "echo");
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      const echoMeter = await screen.findByRole("progressbar", { name: "ECHO model context usage" });
+      expect(echoMeter).toHaveAttribute("max", "262144");
+      expect(echoMeter).toHaveAttribute("value", "131072");
+      expect(screen.getByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
+    } finally {
+      workingSet.mockRestore();
+      if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
+    }
+  });
+
+  it("shows the selected model and bounded context meter in the bottom status bar", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
-    const target = screen.getByTitle(/ECHO reuses the model session between turns/);
+    const target = await screen.findByRole("progressbar", { name: "Native context usage" });
     const statusbar = target.closest("footer");
     expect(statusbar).toHaveClass("statusbar");
-    expect(statusbar?.textContent).toContain("Model window");
-    expect(target.textContent).toContain("262,144");
+    expect(target).toHaveAttribute("max", "262144");
+    expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently doUcode" }));
+    expect(statusbar?.textContent).toContain("262K");
     expect(statusbar?.textContent).toContain("VRAM");
     expect(statusbar?.textContent).toContain("tokens/s");
     expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();
-    expect(target).toHaveAttribute("title", expect.stringContaining("exact older source history stays archived"));
   });
 
   it("uses an OpenCore rename modal instead of a browser hostname prompt", async () => {

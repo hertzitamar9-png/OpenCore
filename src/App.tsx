@@ -7,7 +7,6 @@ import {
   Archive,
   Box,
   BrainCircuit,
-  Check,
   ChevronDown,
   CircleAlert,
   CircleStop,
@@ -24,7 +23,6 @@ import {
   MemoryStick,
   MessageSquare,
   MoreHorizontal,
-  Move,
   Network,
   Play,
   Pin,
@@ -48,6 +46,7 @@ import { AssistantConversation } from "./AssistantConversation";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
+import { ModelProfileOptions, profileDescription, profileLabel } from "./ModelProfiles";
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
 type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "connectors" | "settings" | "troubleshooting";
@@ -142,15 +141,6 @@ function modelLoaderDetail(snapshot: AppSnapshot): { text: string; loaded: numbe
   return { text, loaded: fraction ? Number(fraction[1]) : null, total: fraction ? Number(fraction[2]) : null };
 }
 
-const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "Native 1M" : profile === "unsloth-echo" ? "Unsloth + ECHO" : profile === "doucode" ? "doUcode" : "Stopped";
-const profileDescription = (profile: RuntimeProfile) => profile === "echo"
-  ? "262,144 native context · ECHO archive"
-  : profile === "doucode"
-    ? "K2 + Nanbeige · shared 262,144 context"
-    : profile === "native1m"
-      ? "1,000,000 token server window"
-      : "Unsloth backend · ECHO archive";
-
 const readProfilePreference = (): RuntimeProfile => {
   try {
     const stored = window.localStorage.getItem("opencore.model-profile");
@@ -219,17 +209,7 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
           <span className="model-picker-copy"><strong>{profileLabel(selectedProfile)}</strong><small>{profileDescription(selectedProfile)}</small></span>
           <ChevronDown size={15} aria-hidden="true" />
         </button>
-        {profileMenuOpen && !profileLocked ? <div className="model-picker-options" id="model-profile-options" role="group" aria-label="Choose model profile">
-          <button className={`model-picker-option ${selectedProfile === "echo" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "echo"} onClick={() => chooseProfile("echo")}>
-            <span><strong>ECHO 3T</strong><small>262,144 native context · ECHO archive</small></span>{selectedProfile === "echo" ? <Check size={16} aria-hidden="true" /> : null}
-          </button>
-          <button className={`model-picker-option ${selectedProfile === "native1m" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "native1m"} onClick={() => chooseProfile("native1m")}>
-            <span><strong>Native 1M</strong><small>1,000,000 token server window</small></span>{selectedProfile === "native1m" ? <Check size={16} aria-hidden="true" /> : null}
-          </button>
-          <button className={`model-picker-option ${selectedProfile === "doucode" ? "selected" : ""}`} type="button" aria-pressed={selectedProfile === "doucode"} onClick={() => chooseProfile("doucode")}>
-            <span><strong>doUcode</strong><small>K2 + Nanbeige · shared 262,144 context</small></span>{selectedProfile === "doucode" ? <Check size={16} aria-hidden="true" /> : null}
-          </button>
-        </div> : null}
+        {profileMenuOpen && !profileLocked ? <ModelProfileOptions selectedProfile={selectedProfile} onSelect={chooseProfile} id="model-profile-options" /> : null}
       </div>
     </div>
     <div className="topbar-right">
@@ -276,11 +256,10 @@ function ProjectConversationGroup({ project, items, selected, collapsed, onToggl
   </section>;
 }
 
-function ConversationsList({ conversations, projects: projectDefinitions, selected, onSelect, onNew, onExit, onCreateProject, onTogglePin, onEditProject, onRemoveProject, onOpenProjectFolder, onChangeProjectFolder, onToggleFloating, floating }: {
+function ConversationsList({ conversations, projects: projectDefinitions, selected, onSelect, onNew, onExit, onCreateProject, onTogglePin, onEditProject, onRemoveProject, onOpenProjectFolder, onChangeProjectFolder }: {
   conversations: ConversationSummary[]; projects: ProjectSummary[]; selected?: string; onSelect: (id: string) => void; onNew: () => void; onExit: () => void; onCreateProject: (name: string, folderPath: string) => Promise<boolean>;
   onTogglePin: (item: ConversationSummary) => void; onEditProject: (project: ProjectSummary) => void; onRemoveProject: (project: ProjectSummary) => void;
   onOpenProjectFolder: (project: ProjectSummary) => Promise<string>; onChangeProjectFolder: (project: ProjectSummary) => Promise<string>;
-  onToggleFloating: () => void; floating: boolean;
 }) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
@@ -328,7 +307,7 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
   return <section className="conversation-list conversation-list-focus">
     <div className="conversation-list-head">
       <button className="conversation-home" onClick={onExit} title="Overview"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span></button>
-      <div className="conversation-list-title"><h2>Conversations</h2><span>{conversations.length}</span></div><button className="conversation-float-toggle" title={floating ? "Dock conversations" : "Move conversations"} aria-label={floating ? "Dock conversations" : "Move conversations"} onClick={onToggleFloating}><Move size={14} /></button><div className="conversation-list-actions"><button className="new-chat-button secondary" onClick={() => setCreatingProject(true)}>+ Project</button><button className="new-chat-button" onClick={onNew}>+ New</button></div>
+      <div className="conversation-list-title"><h2>Conversations</h2><span>{conversations.length}</span></div><div className="conversation-list-actions"><button className="new-chat-button secondary" onClick={() => setCreatingProject(true)}>+ Project</button><button className="new-chat-button" onClick={onNew}>+ New</button></div>
     </div>
     {creatingProject ? <form className="project-create" onSubmit={async (event) => { event.preventDefault(); const name = projectName.trim(); if (!name || !projectFolder) return; if (!(await onCreateProject(name, projectFolder))) { setProjectError("Could not create project. Check the app notification for details."); return; } setProjectName(""); setProjectFolder(""); setProjectError(""); setCreatingProject(false); setSection("projects"); }}><input autoFocus aria-label="Project name" value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Project name" maxLength={120} /><button type="button" onClick={() => void chooseFolder()}>Choose folder</button>{projectFolder ? <small className="project-selected-folder" title={projectFolder}>{projectFolder}</small> : null}{projectError ? <small className="project-error" role="alert">{projectError}</small> : null}<button type="submit" disabled={!projectName.trim() || !projectFolder}>Create project</button><button type="button" onClick={() => { setCreatingProject(false); setProjectError(""); }}>Cancel</button></form> : null}
     <div className="search conversation-search"><Search size={14} /><input aria-label="Search conversations" placeholder="Search…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
@@ -969,6 +948,106 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
 }
 
 
+function compactTokenCount(value: number) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`;
+  return value.toLocaleString();
+}
+
+function ContextUsageIndicator({ conversationId, profile, runtime }: { conversationId?: string; profile: RuntimeProfile; runtime: AppSnapshot["runtime"] }) {
+  const [workingSet, setWorkingSet] = useState<api.EchoWorkingSet | null>(null);
+  useEffect(() => {
+    setWorkingSet(null);
+    if (!conversationId) return;
+    let active = true;
+    let pending = false;
+    const refresh = async () => {
+      if (pending) return;
+      pending = true;
+      try { const next = await api.echoWorkingSet(conversationId); if (active) setWorkingSet(next); }
+      catch { if (active) setWorkingSet(null); }
+      finally { pending = false; }
+    };
+    void refresh();
+    if (!["running", "starting"].includes(runtime.status)) return () => { active = false; };
+    const timer = window.setInterval(refresh, 2500);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [conversationId, profile, runtime.profile, runtime.status]);
+
+  if (profile === "echo" || profile === "unsloth-echo") {
+    const archived = workingSet?.offloadedMessages;
+    const fallbackLimit = runtime.profile === profile && ["running", "starting"].includes(runtime.status) ? runtime.contextSize : 262_144;
+    const maximum = Math.max(1, (workingSet?.available ? workingSet.modelContextTokens || workingSet.windowTokens : undefined) || fallbackLimit);
+    const rawUsed = workingSet?.modelActiveTokens;
+    const measured = Boolean(workingSet?.available && rawUsed != null);
+    const used = measured ? Math.min(maximum, Math.max(0, rawUsed as number)) : 0;
+    return <div className="statusbar-context statusbar-echo-context" title={measured
+      ? `ECHO model context: ${used.toLocaleString()} of ${maximum.toLocaleString()} tokens · exact older messages remain in the ECHO archive`
+      : `ECHO native context capacity: ${maximum.toLocaleString()} tokens. Waiting for usage telemetry; exact older messages remain in the ECHO archive.`}>
+      <span className="statusbar-context-label">ECHO</span>
+      <progress aria-label="ECHO model context usage" value={used} max={maximum} />
+      <span className="statusbar-context-reading">{measured ? `${compactTokenCount(used)} / ${compactTokenCount(maximum)}` : `— / ${compactTokenCount(maximum)}`}
+        {archived ? <small aria-label="ECHO archived messages">{archived} archived</small> : null}
+      </span>
+    </div>;
+  }
+
+  const fallbackLimit = profile === "native1m" ? 1_000_000 : profile === "doucode" ? 262_144 : runtime.contextSize || 262_144;
+  const loaded = ["running", "starting"].includes(runtime.status) && runtime.profile === profile;
+  const reportedLimit = workingSet?.available ? workingSet.modelContextTokens || workingSet.windowTokens : undefined;
+  const maximum = Math.max(1, reportedLimit || (loaded ? runtime.contextSize : 0) || fallbackLimit);
+  const rawUsed = workingSet?.modelActiveTokens;
+  const measured = Boolean(workingSet?.available && rawUsed != null);
+  const used = measured ? Math.min(maximum, Math.max(0, rawUsed as number)) : 0;
+  return <div className="statusbar-context" title={measured ? `${used.toLocaleString()} of ${maximum.toLocaleString()} native model context tokens in use` : `Native model context capacity: ${maximum.toLocaleString()} tokens. Waiting for usage telemetry.`}>
+    <span className="statusbar-context-label">Context</span>
+    <progress aria-label="Native context usage" value={used} max={maximum} />
+    <span className="statusbar-context-reading">{measured ? compactTokenCount(used) : "—"} / {compactTokenCount(maximum)}</span>
+  </div>;
+}
+
+function StatusbarModelSelector({ selectedProfile, onSelect, disabled }: { selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void; disabled: boolean }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpen(false); triggerRef.current?.focus(); } };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [open]);
+  const choose = (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => { onSelect(profile); setOpen(false); triggerRef.current?.focus(); };
+  return <div className="statusbar-model-picker" ref={rootRef}>
+    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" disabled={disabled} onClick={() => setOpen((value) => !value)}>
+      <BrainCircuit size={13} aria-hidden="true" /><strong>{profileLabel(selectedProfile)}</strong><ChevronDown size={12} aria-hidden="true" />
+    </button>
+    {open && !disabled ? <ModelProfileOptions selectedProfile={selectedProfile} onSelect={choose} id="statusbar-model-profile-options" /> : null}
+  </div>;
+}
+
+function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, conversationId, className = "" }: {
+  snapshot: AppSnapshot;
+  selectedProfile: RuntimeProfile;
+  setSelectedProfile: (profile: RuntimeProfile) => void;
+  conversationId?: string;
+  className?: string;
+}) {
+  const active = ["running", "starting"].includes(snapshot.runtime.status);
+  const currentProfile = active && snapshot.runtime.profile !== "stopped" ? snapshot.runtime.profile : selectedProfile;
+  return <footer className={`statusbar ${className}`}>
+    <span className="statusbar-state"><StatusDot state={snapshot.runtime.status} />{active ? "Runtime active" : "Runtime stopped"}</span>
+    <span>{snapshot.conversations.length} conversations</span>
+    <span>Gateway :{snapshot.runtime.gatewayPort}</span>
+    <span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span>
+    <span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span>
+    <span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span>
+    <StatusbarModelSelector selectedProfile={currentProfile} onSelect={setSelectedProfile} disabled={active || Boolean(snapshot.activeConversationIds?.length)} />
+    <ContextUsageIndicator conversationId={conversationId} profile={currentProfile} runtime={snapshot.runtime} />
+  </footer>;
+}
+
 export default function App() {
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>("conversations");
@@ -983,7 +1062,6 @@ export default function App() {
   const [conversationDialog, setConversationDialog] = useState<ConversationDialog>(null);
   const [projectDialog, setProjectDialog] = useState<ProjectDialog>(null);
   const [appearance, setAppearance] = useState<Appearance>(savedAppearance);
-  const [sidebarDetached, setSidebarDetached] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try {
       const saved = Number(window.localStorage.getItem("opencore.sidebar.width"));
@@ -1210,10 +1288,10 @@ export default function App() {
   ].filter(Boolean) as ("computer-use" | "browser-use" | "chrome-control")[];
 
   if (view === "conversations") {
-    const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} onToggleFloating={() => setSidebarDetached((value) => !value)} floating={sidebarDetached} />;
-    return <div className="app-window-frame"><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""} ${sidebarDetached ? "sidebar-detached" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: sidebarDetached ? "58px minmax(0,1fr)" : `58px ${sidebarWidth}px 7px minmax(0,1fr)`, gridTemplateRows: "minmax(0,1fr) 28px" }}>
+    const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} />;
+    return <div className="app-window-frame"><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: `58px ${sidebarWidth}px 7px minmax(0,1fr)`, gridTemplateRows: "minmax(0,1fr) 36px" }}>
       <Navigation active={view} onChange={setView} running={running} compact />
-      {!sidebarDetached ? <>{conversationList}<div className="conversation-resizer" role="separator" aria-label="Resize conversations" aria-orientation="vertical" onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} /></> : null}
+      {conversationList}<div className="conversation-resizer" role="separator" aria-label="Resize conversations" aria-orientation="vertical" onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
       <AssistantConversation
         key={`chat-${conversationEpoch}`}
         conversationId={selectedConversation}
@@ -1223,6 +1301,8 @@ export default function App() {
         runtimeRunning={running}
         runtimeSnapshot={snapshot.runtime}
         telemetry={snapshot.telemetry}
+        selectedProfile={selectedProfile}
+        onSelectProfile={setSelectedProfile}
         liveTokenSpeed={recentDecoderSpeed(snapshot.logs)}
         promptProgress={recentPromptProgress(snapshot.logs)}
         backendActive={snapshot.activeConversationIds?.includes(selectedConversation || "") || false}
@@ -1245,8 +1325,7 @@ export default function App() {
         projectSkillsEnabled={appearance.projectSkillsEnabled}
         compactAtTokens={appearance.compactAtTokens}
       />
-      <footer className="statusbar conversation-statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span><span className="archive-target" title="ECHO reuses the model session between turns; at a backend context limit it rebuilds from the retained transcript while exact older source history stays archived for retrieval.">{snapshot.runtime.status === "running" ? "Live context" : "Model window"} <strong>{snapshot.runtime.status === "running" ? "rolling · " : ""}{snapshot.runtime.contextSize.toLocaleString()}</strong></span></footer>
-      {sidebarDetached ? <FloatingWindow id="conversations" title="Conversations" icon={<MessageSquare size={17} />} onClose={() => setSidebarDetached(false)} place="left" className="conversation-floating" initialWidth={sidebarWidth} initialHeight={window.innerHeight - 16} minWidth={290} minHeight={300}>{conversationList}</FloatingWindow> : null}
+      <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} className="conversation-statusbar" />
       {notice && <div className="toast conversation-toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
       {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
       {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
@@ -1259,7 +1338,7 @@ export default function App() {
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
-    <footer className="statusbar"><span><StatusDot state={snapshot.runtime.status} />{profileLabel(snapshot.runtime.profile)}</span><span>{snapshot.conversations.length} conversations</span><span>Gateway :{snapshot.runtime.gatewayPort}</span><span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span><span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span><span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span><span className="archive-target" title="ECHO reuses the model session between turns; at a backend context limit it rebuilds from the retained transcript while exact older source history stays archived for retrieval.">{snapshot.runtime.status === "running" ? "Live context" : "Model window"} <strong>{snapshot.runtime.status === "running" ? "rolling · " : ""}{snapshot.runtime.contextSize.toLocaleString()}</strong></span></footer>
+    <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
   </div></div>;
 }

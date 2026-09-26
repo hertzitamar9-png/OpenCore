@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Minimize2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { clampFloatingRect, moveFloatingRect, resizeFloatingRect } from "./floating-geometry";
 import type { FloatingRect, ResizeEdge } from "./floating-geometry";
 
@@ -24,8 +24,6 @@ type Props = {
   domId?: string;
   place?: "right" | "left" | "center" | "composer";
   modal?: boolean;
-  startMaximized?: boolean;
-  maximizable?: boolean;
 };
 
 function initialRect(id: string, width: number, height: number, place: Props["place"], minWidth: number, minHeight: number): FloatingRect {
@@ -56,39 +54,20 @@ function initialRect(id: string, width: number, height: number, place: Props["pl
   return clampFloatingRect({ x, y, width, height }, vw, vh, minWidth, minHeight);
 }
 
-function initialMaximized(id: string, fallback: boolean): boolean {
-  try {
-    const saved = window.localStorage.getItem(`opencore.surface.maximized.${id}`);
-    return saved === null ? fallback : saved === "true";
-  } catch { return fallback; }
-}
-
-function maximizedRect(minWidth: number, minHeight: number): FloatingRect {
-  const top = document.querySelector(".window-titlebar")?.getBoundingClientRect().bottom ?? 0;
-  return clampFloatingRect({ x: 8, y: top + 8, width: window.innerWidth - 16, height: window.innerHeight - top - 16 }, window.innerWidth, window.innerHeight, minWidth, minHeight);
-}
-
-export function FloatingWindow({ id, title, icon, status, children, onClose, initialWidth = 760, initialHeight = 600, minWidth = 340, minHeight = 220, className = "", ariaLabel, domId, place = "right", modal = false, startMaximized = false, maximizable = true }: Props) {
-  const [maximized, setMaximized] = useState(() => initialMaximized(id, startMaximized));
-  const [box, setBox] = useState(() => maximized
-    ? maximizedRect(minWidth, minHeight)
-    : initialRect(id, initialWidth, initialHeight, place, minWidth, minHeight));
+export function FloatingWindow({ id, title, icon, status, children, onClose, initialWidth = 760, initialHeight = 600, minWidth = 340, minHeight = 220, className = "", ariaLabel, domId, place = "right", modal = false }: Props) {
+  const [box, setBox] = useState(() => initialRect(id, initialWidth, initialHeight, place, minWidth, minHeight));
   const layer = useRef(modal ? ++topModalLayer : ++topLayer);
   const panel = useRef<HTMLElement>(null);
-  const restore = useRef<FloatingRect | null>(maximized ? initialRect(id, initialWidth, initialHeight, place, minWidth, minHeight) : null);
   const pointer = useRef<{ startX: number; startY: number; box: FloatingRect; edge?: ResizeEdge } | null>(null);
 
   useEffect(() => {
-    try { if (!maximized) window.localStorage.setItem(`opencore.surface.${id}`, JSON.stringify(box)); } catch { /* Session-only layout. */ }
-  }, [box, id, maximized]);
+    try { window.localStorage.setItem(`opencore.surface.${id}`, JSON.stringify(box)); } catch { /* Session-only layout. */ }
+  }, [box, id]);
   useEffect(() => {
-    try { window.localStorage.setItem(`opencore.surface.maximized.${id}`, String(maximized)); } catch { /* Session-only layout. */ }
-  }, [id, maximized]);
-  useEffect(() => {
-    const clamp = () => setBox((current) => maximized ? maximizedRect(minWidth, minHeight) : clampFloatingRect(current, window.innerWidth, window.innerHeight, minWidth, minHeight));
+    const clamp = () => setBox((current) => clampFloatingRect(current, window.innerWidth, window.innerHeight, minWidth, minHeight));
     window.addEventListener("resize", clamp);
     return () => window.removeEventListener("resize", clamp);
-  }, [minWidth, minHeight, maximized]);
+  }, [minWidth, minHeight]);
 
   const raise = () => {
     layer.current = modal ? ++topModalLayer : ++topLayer;
@@ -96,7 +75,6 @@ export function FloatingWindow({ id, title, icon, status, children, onClose, ini
   };
   const begin = (event: PointerEvent<HTMLElement>, edge?: ResizeEdge) => {
     if (event.button !== 0 || (event.target as HTMLElement).closest("button,input,select,textarea")) return;
-    if (maximized) return;
     pointer.current = { startX: event.clientX, startY: event.clientY, box, edge };
     event.currentTarget.setPointerCapture(event.pointerId);
     raise();
@@ -116,14 +94,9 @@ export function FloatingWindow({ id, title, icon, status, children, onClose, ini
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
   const lost = () => { pointer.current = null; };
-  const toggleMaximize = () => {
-    if (maximized && restore.current) { setBox(restore.current); setMaximized(false); }
-    else { restore.current = box; setBox(maximizedRect(minWidth, minHeight)); setMaximized(true); }
-    raise();
-  };
   const style = { left: box.x, top: box.y, width: box.width, height: box.height, zIndex: layer.current } satisfies CSSProperties;
   return createPortal(<aside ref={panel} id={domId} className={`floating-window ${className}`} role={modal ? "dialog" : "region"} aria-modal={modal ? "true" : undefined} aria-label={ariaLabel || title} style={style} onPointerDownCapture={raise}>
-    <header className="floating-window-title" onPointerDown={(event) => begin(event)} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={lost} onDoubleClick={maximizable ? toggleMaximize : undefined} tabIndex={0} aria-label={`Move ${title} panel`} onKeyDown={(event) => {
+    <header className="floating-window-title" onPointerDown={(event) => begin(event)} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={lost} tabIndex={0} aria-label={`Move ${title} panel`} onKeyDown={(event) => {
       if (!event.altKey || !event.key.startsWith("Arrow")) return;
       event.preventDefault();
       const dx = event.key === "ArrowRight" ? 16 : event.key === "ArrowLeft" ? -16 : 0;
@@ -131,11 +104,10 @@ export function FloatingWindow({ id, title, icon, status, children, onClose, ini
       setBox((current) => event.shiftKey ? resizeFloatingRect(current, "se", dx, dy, window.innerWidth, window.innerHeight, minWidth, minHeight) : moveFloatingRect(current, dx, dy, window.innerWidth, window.innerHeight));
     }}>
       <span className="floating-window-icon">{icon}</span><strong>{title}</strong><span className="floating-window-status">{status}</span>
-      {maximizable ? <button type="button" aria-label={maximized ? `Restore ${title}` : `Maximize ${title}`} title={maximized ? "Restore" : "Maximize"} onClick={toggleMaximize}>{maximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button> : null}
       <button type="button" aria-label={`Close ${title}`} title="Close" onClick={onClose}><X size={16} /></button>
     </header>
     <div className="floating-window-body">{children}</div>
-    {!maximized && (["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeEdge[]).map((edge) =>
+    {(["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeEdge[]).map((edge) =>
       <div key={edge} className={`floating-resize floating-resize-${edge}`} role="separator" aria-label={`Resize ${title} ${edge}`} onPointerDown={(event) => begin(event, edge)} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={lost} />)}
   </aside>, document.body);
 }
