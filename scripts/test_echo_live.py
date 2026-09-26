@@ -109,7 +109,14 @@ class EchoLiveTests(unittest.TestCase):
                     statuses = list(pool.map(lambda _: send(), range(2)))
                 self.assertEqual(statuses, [200, 200])
                 self.assertEqual(metrics['maximum'], 1)
-                self.assertNotIn('same-conversation', state._context_active)
+                deadline = time.monotonic() + 1
+                while time.monotonic() < deadline:
+                    with state.lock:
+                        active = 'same-conversation' in state._context_active
+                    if not active:
+                        break
+                    time.sleep(0.005)
+                self.assertFalse(active, 'the conversation stayed active after both requests completed')
             finally:
                 server.shutdown()
                 server.server_close()
