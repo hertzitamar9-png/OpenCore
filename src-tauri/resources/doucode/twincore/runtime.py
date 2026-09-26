@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import re
 import subprocess
 import time
 import uuid
@@ -17,6 +18,7 @@ except ImportError:
     torch = None
 
 from .latent_bridge import BridgeConfig, build_bridge
+from .laya_judge import LayaPairwiseJudge
 from .consensus import (
     TwinBlackboard,
     TwinCycle,
@@ -33,6 +35,15 @@ from .consensus import (
     work_packet_instruction,
 )
 from .spec import BackboneSpec, TwinCoreConfig
+
+
+_DIRECT_COMPLEXITY_MARKERS = re.compile(
+    r"\b(?:build|create|implement|fix|change|edit|modify|refactor|debug|game|app|website|"
+    r"project|repository|repo|codebase|workspace|file|files|browser|computer|terminal|tool|"
+    r"run|test|tests|multiple|several|entire|complete|full|before|after|then|step|steps|"
+    r"compare|benchmark|integrate|feature|bug|error|exactly|every)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -214,11 +225,41 @@ class TwinCoreEngine:
             bridge.load_state_dict(state, strict=True)
             bridge.eval()
             self.bridge = bridge
+        self.judge = None
+        judge_config = config.laya_judge
+        if judge_config is not None and judge_config.enabled:
+            self.judge = LayaPairwiseJudge(
+                model_path=release_root / judge_config.checkpoint,
+                expected_sha256=judge_config.expected_sha256,
+                device=judge_config.device,
+                min_cuda_free_mib=judge_config.min_cuda_free_mib,
+                max_len=judge_config.max_len,
+                min_confidence=judge_config.min_confidence,
+                min_margin=judge_config.min_margin,
+            )
 
     def _pair(self, left, right):
         a = self.pool.submit(left)
         b = self.pool.submit(right)
         return a.result(), b.result()
+
+    @staticmethod
+    def _can_answer_directly(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None) -> bool:
+        """Avoid the planning pipeline only for short, single-turn text requests."""
+        if tools:
+            return False
+        user_messages = [message for message in messages if message.get("role") == "user"]
+        if len(user_messages) != 1 or any(
+            message.get("role") not in {"system", "developer", "user"} for message in messages
+        ):
+            return False
+        content = user_messages[0].get("content")
+        if not isinstance(content, str):
+            return False
+        text = content.strip()
+        if not text or len(text) > 600 or "\n" in text or "```" in text:
+            return False
+        return _DIRECT_COMPLEXITY_MARKERS.search(text) is None
 
     @staticmethod
     def _task_text(messages: list[dict[str, Any]]) -> str:
@@ -362,31 +403,41 @@ class TwinCoreEngine:
         tools: list[dict[str, Any]] | None,
         max_tokens: int,
         on_preview: Callable[[dict[str, Any]], None] | None = None,
+        *,
+        direct_mode: bool = False,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         # Both heads contribute to the shared plan, then each writes a complete
         # candidate. A result is returned only after the peer accepts that exact
         # answer/action or both independently produce the same valid candidate.
-        k2_work_messages = work_packet_instruction("K2", "Nanbeige", messages, board)
-        nb_work_messages = work_packet_instruction("Nanbeige", "K2", messages, board)
-        k2_work, nb_work = self._pair(
-            lambda: self.k2.chat(k2_work_messages, max_tokens=1024, temperature=0.25),
-            lambda: self.nanbeige.chat(nb_work_messages, max_tokens=1024, temperature=0.25),
-        )
-        work_packets = {"K2": k2_work.content, "Nanbeige": nb_work.content}
-        k2_messages = commit_instruction("K2", "Nanbeige", messages, board, work_packets)
-        nb_messages = commit_instruction("Nanbeige", "K2", messages, board, work_packets)
-        state = board.latest
-        latent = self._latent_exchange(
-            " ".join([state.k2.hypothesis, state.k2.proposal, *state.k2.implementation]) if state else self._task_text(messages),
-            " ".join([state.nanbeige.hypothesis, state.nanbeige.proposal, *state.nanbeige.implementation]) if state else self._task_text(messages),
-        )
-        feedback_k2 = latent["feedback_k2"] if latent else None
-        feedback_nb = latent["feedback_nanbeige"] if latent else None
-        k2_reply, nb_reply = self._pair(
-            lambda: self.k2.chat(k2_messages, tools=tools, max_tokens=max_tokens, temperature=0.25,
-                feedback_embedding=feedback_k2, on_delta=on_preview),
-            lambda: self.nanbeige.chat(nb_messages, tools=tools, max_tokens=max_tokens, temperature=0.25, feedback_embedding=feedback_nb),
-        )
+        if direct_mode:
+            work_packets = {}
+            latent = None
+            k2_reply, nb_reply = self._pair(
+                lambda: self.k2.chat(messages, max_tokens=max_tokens, temperature=0.1, on_delta=on_preview),
+                lambda: self.nanbeige.chat(messages, max_tokens=max_tokens, temperature=0.1),
+            )
+        else:
+            k2_work_messages = work_packet_instruction("K2", "Nanbeige", messages, board)
+            nb_work_messages = work_packet_instruction("Nanbeige", "K2", messages, board)
+            k2_work, nb_work = self._pair(
+                lambda: self.k2.chat(k2_work_messages, max_tokens=1024, temperature=0.25),
+                lambda: self.nanbeige.chat(nb_work_messages, max_tokens=1024, temperature=0.25),
+            )
+            work_packets = {"K2": k2_work.content, "Nanbeige": nb_work.content}
+            k2_messages = commit_instruction("K2", "Nanbeige", messages, board, work_packets)
+            nb_messages = commit_instruction("Nanbeige", "K2", messages, board, work_packets)
+            state = board.latest
+            latent = self._latent_exchange(
+                " ".join([state.k2.hypothesis, state.k2.proposal, *state.k2.implementation]) if state else self._task_text(messages),
+                " ".join([state.nanbeige.hypothesis, state.nanbeige.proposal, *state.nanbeige.implementation]) if state else self._task_text(messages),
+            )
+            feedback_k2 = latent["feedback_k2"] if latent else None
+            feedback_nb = latent["feedback_nanbeige"] if latent else None
+            k2_reply, nb_reply = self._pair(
+                lambda: self.k2.chat(k2_messages, tools=tools, max_tokens=max_tokens, temperature=0.25,
+                    feedback_embedding=feedback_k2, on_delta=on_preview),
+                lambda: self.nanbeige.chat(nb_messages, tools=tools, max_tokens=max_tokens, temperature=0.25, feedback_embedding=feedback_nb),
+            )
         drafts = {
             "K2": self._candidate_from_message(k2_reply.message),
             "Nanbeige": self._candidate_from_message(nb_reply.message),
@@ -406,8 +457,31 @@ class TwinCoreEngine:
                 "agreement_mode": "independent_identical_candidates",
             }
 
-        offerer, reviewer = "K2", "Nanbeige"
-        offer = k2_candidate
+        judge_result = None
+        judge_error = None
+        preferred_offer_key = None
+        if self.judge is not None:
+            try:
+                judgment = self.judge.choose(self._task_text(messages), k2_candidate, nb_candidate)
+                judge_result = judgment.to_dict()
+                winner_key = {"k2": "K2", "nanbeige": "Nanbeige"}.get(judgment.winner.casefold())
+                selected = drafts.get(winner_key) if winner_key else None
+                if judgment.qualified and self._candidate_is_valid(selected, tools, exact_count):
+                    # Laya's preference orders the peer review. It cannot commit
+                    # a final response or tool action without bilateral review.
+                    preferred_offer_key = winner_key
+            except Exception as error:
+                judge_error = f"{type(error).__name__}: {error}"
+
+        if direct_mode:
+            latent = self._latent_exchange(
+                str(k2_candidate.get("content") or ""),
+                str(nb_candidate.get("content") or ""),
+            )
+
+        offerer = preferred_offer_key or "K2"
+        reviewer = "Nanbeige" if offerer == "K2" else "K2"
+        offer = drafts[offerer]
         protocol_note = ""
         max_rounds = max(1, int(self.config.max_negotiation_rounds))
         for round_index in range(max_rounds):
@@ -445,8 +519,11 @@ class TwinCoreEngine:
                         "status": "agreed",
                         "rounds": round_index + 1,
                         "both_heads_accepted": True,
-                        "laya_used": False,
+                        "laya_used": judge_result is not None,
+                        "laya_preference_applied": preferred_offer_key is not None,
                         "agreement_mode": "peer_acceptance",
+                        "judge": judge_result,
+                        "judge_error": judge_error,
                     }
                 protocol_note = (
                     "The attempted acceptance did not exactly echo the current offer, or the offer failed the user's "
@@ -474,8 +551,11 @@ class TwinCoreEngine:
             "status": "no_agreement",
             "rounds": max_rounds,
             "both_heads_accepted": False,
-            "laya_used": False,
+            "laya_used": judge_result is not None,
+            "laya_preference_applied": preferred_offer_key is not None,
             "last_offer_from": offerer,
+            "judge": judge_result,
+            "judge_error": judge_error,
         }
 
     def chat_completion(
@@ -488,8 +568,9 @@ class TwinCoreEngine:
         max_tokens = int(payload.get("max_tokens") or payload.get("max_completion_tokens") or 2048)
         max_tokens = max(64, min(max_tokens, 12288))
         started = time.perf_counter()
-        board = self.deliberate(messages)
-        message, agreement_result = self.commit(messages, board, tools, max_tokens, on_preview)
+        direct_mode = self._can_answer_directly(messages, tools)
+        board = TwinBlackboard(task=self._task_text(messages)) if direct_mode else self.deliberate(messages)
+        message, agreement_result = self.commit(messages, board, tools, max_tokens, on_preview, direct_mode=direct_mode)
         elapsed = time.perf_counter() - started
         return {
             "id": f"twincore-{int(time.time() * 1000)}",
@@ -502,16 +583,21 @@ class TwinCoreEngine:
                 "cycles": len(board.cycles),
                 "agreement": board.latest.agreement if board.latest else 0.0,
                 "confidence": board.latest.confidence if board.latest else 0.0,
-                "laya_preference": None,
-                "judge": None,
+                "laya_preference": agreement_result.get("judge"),
+                "judge": agreement_result.get("judge"),
                 "agreement_result": agreement_result,
-                "judge_status": {"enabled": False, "reason": "TwinCore now uses bilateral negotiation; Laya does not rank or select candidates."},
+                "judge_status": getattr(
+                    self.judge,
+                    "status",
+                    {"enabled": False, "reason": "The active profile does not configure a Laya judge."},
+                ),
                 "collaboration": {
                     "work_packets_parallel": True,
                     **coordination_state(board),
                 },
                 "seconds": elapsed,
                 "live_window_tokens": self.config.live_window_tokens,
+                "execution_mode": "direct" if direct_mode else "collaborative",
             },
         }
 

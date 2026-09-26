@@ -1895,6 +1895,18 @@ class Handler(BaseHTTPRequestHandler):
                 event = json.loads(data)
                 if event.get('error'):
                     raise ValueError(str(event['error']))
+                upstream_preview = event.get('echo_preview')
+                if isinstance(upstream_preview, dict):
+                    delta = upstream_preview.get('delta')
+                    if isinstance(delta, dict) and delta:
+                        self._live_event({'echo_preview': {
+                            'generation': upstream_preview.get('generation') or generation,
+                            'phase': upstream_preview.get('phase') or phase,
+                            'delta': delta,
+                        }})
+                    # TwinCore previews are provisional drafts. Forward them to
+                    # the UI, but keep them out of the committed assistant turn.
+                    continue
                 for key in ('id', 'model', 'usage', 'timings'):
                     if event.get(key) is not None:
                         result[key] = event[key]

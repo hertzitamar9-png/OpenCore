@@ -733,6 +733,28 @@ class EchoLiveTests(unittest.TestCase):
         self.assertEqual(result['choices'][0]['message']['tool_calls'][0]['function']['arguments'], '{"action":"checkpoint"}')
         self.assertEqual(handler.wfile.getvalue().count(b'echo_preview'), 2)
 
+    def test_forwards_twincore_previews_without_appending_them_to_final_answer(self):
+        handler = object.__new__(Handler)
+        handler.wfile = io.BytesIO()
+        handler.send_response = lambda *args: None
+        handler.send_header = lambda *args: None
+        handler.end_headers = lambda: None
+        events = [
+            {'echo_preview': {'generation': 'twin-1', 'phase': 'drafting', 'delta': {'content': 'draft words'}}},
+            {'choices': [{'delta': {'role': 'assistant', 'content': 'final answer'}, 'finish_reason': 'stop'}]},
+        ]
+        wire = ''.join('data: ' + json.dumps(event) + '\n\n' for event in events) + 'data: [DONE]\n\n'
+        handler._upstream = lambda *args, **kwargs: io.BytesIO(wire.encode())
+
+        result = handler._generate_live({'stream': True}, 'working')
+
+        self.assertEqual(result['choices'][0]['message']['content'], 'final answer')
+        streamed = handler.wfile.getvalue().decode()
+        self.assertIn('"generation": "twin-1"', streamed)
+        self.assertIn('"phase": "drafting"', streamed)
+        self.assertIn('draft words', streamed)
+        self.assertNotIn('draft wordsfinal answer', streamed)
+
     def test_checkpoint_result_releases_completed_work_before_next_model_call(self):
         with tempfile.TemporaryDirectory() as folder:
             archives = ArchiveSet(Path(folder), 0)

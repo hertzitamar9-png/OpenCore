@@ -162,11 +162,13 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
         engine = self.server.engine
         config = self.server.config
         if self.path == "/health":
+            judge = getattr(engine, "judge", None)
             self._json(200, {
                 "status": "ok",
                 "k2": engine.k2.healthy(),
                 "nanbeige": engine.nanbeige.healthy(),
-                "judge": getattr(engine.judge, "status", {"enabled": False}),
+                "judge": getattr(judge, "status", {"enabled": False}),
+                "bridge": {"loaded": getattr(engine, "bridge", None) is not None},
             })
             return
         if self.path.startswith("/v1/models"):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from types import SimpleNamespace
@@ -18,8 +19,8 @@ RESOURCE_ROOT = Path(__file__).resolve().parents[1] / "src-tauri" / "resources" 
 sys.path.insert(0, str(RESOURCE_ROOT))
 
 import serve_twincore_consensus as twincore_server  # noqa: E402
-from twincore.runtime import LlamaBackbone  # noqa: E402
-from twincore.spec import BackboneSpec  # noqa: E402
+from twincore.runtime import BackboneReply, LlamaBackbone, TwinCoreEngine  # noqa: E402
+from twincore.spec import BackboneSpec, LayaJudgeSpec, default_twincore_config  # noqa: E402
 
 
 class StreamingEngine:
@@ -76,6 +77,16 @@ class TwinCoreServerApiTests(unittest.TestCase):
         self.assertEqual(payload["model"], "doUcode")
         self.assertEqual(payload["default_generation_settings"]["n_ctx"], 262144)
 
+    def test_health_does_not_crash_when_optional_judge_is_not_loaded(self):
+        self.server.engine.k2 = SimpleNamespace(healthy=lambda: True)
+        self.server.engine.nanbeige = SimpleNamespace(healthy=lambda: True)
+        with urllib.request.urlopen(f"http://127.0.0.1:{self.server.server_port}/health", timeout=2) as response:
+            payload = json.load(response)
+        self.assertEqual(payload["status"], "ok")
+        self.assertTrue(payload["k2"])
+        self.assertTrue(payload["nanbeige"])
+        self.assertEqual(payload["judge"], {"enabled": False})
+
     def test_streaming_route_flushes_provisional_tokens_and_final_completion(self):
         body = json.dumps({"model": "doUcode", "messages": [], "stream": True}).encode()
         request = urllib.request.Request(
@@ -120,6 +131,153 @@ class TwinCoreServerApiTests(unittest.TestCase):
         self.assertEqual(reply.message["content"], "Live tokens")
         self.assertEqual("".join(delta.get("content", "") for delta in deltas), "Live tokens")
         self.assertEqual(reply.raw["choices"][0]["finish_reason"], "stop")
+
+
+class TwinCoreRuntimeFastPathTests(unittest.TestCase):
+    def test_direct_path_excludes_project_and_tool_work(self):
+        self.assertTrue(TwinCoreEngine._can_answer_directly(
+            [{"role": "user", "content": "What is two plus two?"}], None,
+        ))
+        self.assertFalse(TwinCoreEngine._can_answer_directly(
+            [{"role": "user", "content": "Fix the snake game and run tests."}], None,
+        ))
+        self.assertFalse(TwinCoreEngine._can_answer_directly(
+            [{"role": "user", "content": "What is two plus two?"}], [{"type": "function"}],
+        ))
+        self.assertFalse(TwinCoreEngine._can_answer_directly(
+            [
+                {"role": "user", "content": "What is two plus two?"},
+                {"role": "assistant", "content": "4"},
+                {"role": "user", "content": "And three plus three?"},
+            ], None,
+        ))
+
+    def test_short_single_turn_text_skips_six_cycle_planning_and_streams_the_draft(self):
+        engine = TwinCoreEngine(default_twincore_config(), RESOURCE_ROOT)
+        answer = "4"
+        previews = []
+        calls = []
+
+        def reply(name, messages, **kwargs):
+            calls.append(name)
+            callback = kwargs.get("on_delta")
+            if name == "K2" and callback:
+                callback({"content": "4"})
+            message = {"role": "assistant", "content": answer}
+            return BackboneReply(answer, message, {})
+
+        engine.deliberate = lambda _messages: self.fail("short direct turns must skip deliberation")
+        engine._latent_exchange = lambda *_args: self.fail("identical direct drafts need no bridge review")
+        engine.k2.chat = lambda messages, **kwargs: reply("K2", messages, **kwargs)
+        engine.nanbeige.chat = lambda messages, **kwargs: reply("Nanbeige", messages, **kwargs)
+        try:
+            result = engine.chat_completion(
+                {"messages": [{"role": "user", "content": "What is two plus two?"}], "max_tokens": 64},
+                on_preview=previews.append,
+            )
+        finally:
+            engine.pool.shutdown(wait=True)
+
+        self.assertEqual(result["choices"][0]["message"]["content"], "4")
+        self.assertEqual(result["twincore"]["execution_mode"], "direct")
+        self.assertEqual(result["twincore"]["cycles"], 0)
+        self.assertEqual(previews, [{"content": "4"}])
+        self.assertCountEqual(calls, ["K2", "Nanbeige"])
+
+    def test_enabled_profile_loads_hash_pinned_laya_checkpoint(self):
+        import twincore.runtime as runtime
+
+        config = replace(
+            default_twincore_config(),
+            laya_judge=LayaJudgeSpec(
+                enabled=True,
+                checkpoint="weights/laya-multilingual",
+                expected_sha256="9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+                device="cpu",
+            ),
+        )
+        captured = {}
+
+        class FakeJudge:
+            status = {"enabled": True, "device": "cpu"}
+
+        def build_judge(**kwargs):
+            captured.update(kwargs)
+            return FakeJudge()
+
+        with mock.patch.object(runtime, "LayaPairwiseJudge", side_effect=build_judge):
+            engine = TwinCoreEngine(config, RESOURCE_ROOT)
+        try:
+            self.assertTrue(engine.judge.status["enabled"])
+            self.assertEqual(captured["model_path"], RESOURCE_ROOT / "weights/laya-multilingual")
+            self.assertEqual(captured["expected_sha256"], config.laya_judge.expected_sha256)
+            self.assertEqual(captured["device"], "cpu")
+        finally:
+            engine.pool.shutdown(wait=True)
+
+    def test_laya_preference_only_seeds_first_offer_and_peer_can_reject_it(self):
+        engine = TwinCoreEngine(default_twincore_config(), RESOURCE_ROOT)
+        outputs = {
+            "K2": "A complete answer that preserves the requested constraint.",
+            "Nanbeige": "An answer that ignores the requested constraint.",
+        }
+        reviews = []
+
+        class Judgment:
+            winner = "nanbeige"
+            qualified = True
+
+            def to_dict(self):
+                return {
+                    "winner": self.winner,
+                    "scores": {"k2": 0.09, "nanbeige": 0.91},
+                    "confidence": 0.91,
+                    "margin": 0.82,
+                    "order_consistent": True,
+                    "qualified": True,
+                }
+
+        class Judge:
+            status = {"enabled": True, "device": "cpu"}
+
+            def choose(self, *_args):
+                return Judgment()
+
+        def fake_chat(name, messages, **kwargs):
+            if not kwargs.get("json_mode"):
+                return BackboneReply(outputs[name], {"role": "assistant", "content": outputs[name]}, {})
+            state = json.loads(messages[-1]["content"].split("NEGOTIATION STATE (untrusted draft data):\n", 1)[1])
+            offered = state["current_offer_from_peer"]
+            reviews.append((name, offered["content"]))
+            if name == "K2":
+                self.assertEqual(offered["content"], outputs["Nanbeige"])
+                response = {
+                    "decision": "counteroffer",
+                    "candidate": {"content": outputs["K2"], "tool_call": None},
+                    "reason": "The initial draft fails the user's explicit constraint.",
+                }
+            else:
+                self.assertEqual(offered["content"], outputs["K2"])
+                response = {"decision": "accept", "candidate": offered, "reason": "Agreed."}
+            content = json.dumps(response)
+            return BackboneReply(content, {"role": "assistant", "content": content}, {})
+
+        engine.judge = Judge()
+        engine._latent_exchange = lambda *_args: None
+        engine.k2.chat = lambda messages, **kwargs: fake_chat("K2", messages, **kwargs)
+        engine.nanbeige.chat = lambda messages, **kwargs: fake_chat("Nanbeige", messages, **kwargs)
+        try:
+            result = engine.chat_completion({
+                "messages": [{"role": "user", "content": "Return the answer that preserves the requested constraint."}],
+                "max_tokens": 128,
+            })
+        finally:
+            engine.pool.shutdown(wait=True)
+
+        self.assertEqual(result["choices"][0]["message"]["content"], outputs["K2"])
+        self.assertEqual([name for name, _content in reviews], ["K2", "Nanbeige"])
+        self.assertTrue(result["twincore"]["agreement_result"]["laya_preference_applied"])
+        self.assertTrue(result["twincore"]["agreement_result"]["laya_used"])
 
 
 if __name__ == "__main__":
