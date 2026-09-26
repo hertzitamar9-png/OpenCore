@@ -61,6 +61,16 @@ it('shows attention KV placement separately from the ECHO RAM page cache', async
   } finally { read.mockRestore(); }
 });
 
+it('does not display an invalid negative auto-compact threshold from a prior run', async () => {
+  const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({available:true,liveTokens:14859,windowTokens:32768,autoCompactThreshold:-232,autoCompactEnabled:true});
+  try {
+    render(<EchoContextStatus conversationId="game" running={false} />);
+    expect(await screen.findByText('Last prompt snapshot')).toBeVisible();
+    expect(screen.queryByText(/Auto compact/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/-232/)).not.toBeInTheDocument();
+  } finally { read.mockRestore(); }
+});
+
 it('reports unavailable telemetry instead of inventing zero usage', async () => {
   const read = vi.spyOn(api, 'echoWorkingSet').mockRejectedValue(new Error('offline'));
   try {

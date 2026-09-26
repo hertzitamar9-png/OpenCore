@@ -4,7 +4,7 @@ import { query, tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk'
 import { z } from 'zod';
 import { createInterface } from 'node:readline';
 import { mkdirSync } from 'node:fs';
-import { deriveContextBudget } from './context-budget.mjs';
+import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
 const input = createInterface({ input: process.stdin });
 const pending = new Map();
@@ -56,8 +56,7 @@ async function run(config) {
     ENABLE_TOOL_SEARCH: 'false',
     // Keep headroom for the local model's variable token estimates, SDK prompt,
     // and tool replies. A near-limit trigger can make the SDK compact repeatedly.
-    CLAUDE_CODE_MAX_CONTEXT_TOKENS: String(contextBudget.contextWindowTokens),
-    CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(contextBudget.autoCompactThresholdTokens),
+    ...contextBudgetEnvironment(contextBudget),
     CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS: String(maxSubagents || 1),
     CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS: String(contextBudget.toolOutputTokens),
     MAX_MCP_OUTPUT_TOKENS: String(contextBudget.toolOutputTokens),

@@ -49,7 +49,7 @@ export function EchoContextStatus({ conversationId, running, attentionKvLocation
       {state?.modelSessionTokens != null ? <span className="echo-context-chip">Model state is reused between turns; at its limit ECHO rebuilds from the retained transcript</span> : null}
       {persistentEcho ? <span className="echo-context-chip">Exact conversation history stays in the ECHO archive for source retrieval</span> : null}
       {state?.modelSessionActive != null ? <span className="echo-context-chip">Model slot · {state.modelSessionActive ? "processing" : "ready"}</span> : null}
-      {state?.autoCompactThreshold ? <span className="echo-context-chip">Auto compact · {state.autoCompactThreshold.toLocaleString()}</span> : null}
+      {typeof state?.autoCompactThreshold === "number" && state.autoCompactThreshold > 0 ? <span className="echo-context-chip">Auto compact · {state.autoCompactThreshold.toLocaleString()}</span> : null}
       {state ? <span className="echo-context-chip">{state.compactions ?? 0} compactions</span> : null}
       {state?.offloadedMessages ? <span className="echo-context-chip">ECHO holds {state.offloadedMessages} archived messages</span> : null}
       {persistentEcho && !state?.active && state?.promptTokens ? <span className="echo-context-chip">Last request · {state.promptTokens.toLocaleString()} tokens</span> : null}
