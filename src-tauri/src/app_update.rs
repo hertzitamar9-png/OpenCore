@@ -1,4 +1,5 @@
 use crate::AppCore;
+use reqwest::Url;
 use serde::Serialize;
 use std::path::PathBuf;
 use std::process::Command;
@@ -51,7 +52,7 @@ fn parse_cli_token(stdout: &[u8]) -> Option<String> {
     (!token.is_empty()).then_some(token)
 }
 
-fn github_cli_token() -> Result<Option<String>, String> {
+fn github_cli_candidates() -> Vec<PathBuf> {
     let mut candidates = vec![PathBuf::from("gh.exe"), PathBuf::from("gh")];
     if let Some(program_files) = std::env::var_os("ProgramFiles") {
         candidates.push(
@@ -68,8 +69,64 @@ fn github_cli_token() -> Result<Option<String>, String> {
                 .join("gh.exe"),
         );
     }
+    candidates
+}
 
-    for executable in candidates {
+fn parse_manifest_asset_url(release_json: &[u8]) -> Option<Url> {
+    let release: serde_json::Value = serde_json::from_slice(release_json).ok()?;
+    let assets = release.get("assets")?.as_array()?;
+    let mut manifests = assets
+        .iter()
+        .filter(|asset| asset.get("name").and_then(|name| name.as_str()) == Some("latest.json"));
+    let asset = manifests.next()?;
+    if manifests.next().is_some() {
+        return None;
+    }
+
+    let url = Url::parse(asset.get("url")?.as_str()?).ok()?;
+    if url.scheme() != "https"
+        || url.host_str() != Some("api.github.com")
+        || url.port_or_known_default() != Some(443)
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+    {
+        return None;
+    }
+    let asset_id = url
+        .path()
+        .strip_prefix("/repos/hertzitamar9-png/OpenCore/releases/assets/")?;
+    if asset_id.is_empty() || !asset_id.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    Some(url)
+}
+
+/// Resolve the latest private-release manifest through GitHub's authenticated
+/// API. GitHub's browser-style `/releases/latest/download/...` route returns
+/// 404 for this private repo even when the app supplies a token; the API asset
+/// URL is stable for the lifetime of a release and is regenerated each release.
+fn github_cli_latest_manifest_url() -> Option<Url> {
+    for executable in github_cli_candidates() {
+        let mut command = Command::new(executable);
+        command.args(["api", "repos/hertzitamar9-png/OpenCore/releases/latest"]);
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        }
+        let output = match command.output() {
+            Ok(output) if output.status.success() => output,
+            _ => continue,
+        };
+        return parse_manifest_asset_url(&output.stdout);
+    }
+    None
+}
+
+fn github_cli_token() -> Result<Option<String>, String> {
+    for executable in github_cli_candidates() {
         let mut command = Command::new(&executable);
         command.args(["auth", "token", "--hostname", "github.com"]);
         #[cfg(windows)]
@@ -132,10 +189,19 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
         emit_notice(&app, "auth-required", None, None, None);
         return Ok(());
     };
+    let manifest_url =
+        match tauri::async_runtime::spawn_blocking(github_cli_latest_manifest_url).await {
+            Ok(Some(url)) => url,
+            _ => {
+                emit_notice(&app, "failed", None, None, None);
+                return Ok(());
+            }
+        };
 
     let builder = match app
         .updater_builder()
-        .header("Authorization", format!("Bearer {token}"))
+        .endpoints(vec![manifest_url])
+        .and_then(|builder| builder.header("Authorization", format!("Bearer {token}")))
         .and_then(|builder| builder.header("Accept", "application/octet-stream"))
     {
         Ok(builder) => builder,
@@ -221,5 +287,33 @@ mod tests {
             Some("gho_example-secret-token")
         );
         assert_eq!(super::parse_cli_token(b" \r\n"), None);
+    }
+
+    #[test]
+    fn latest_release_manifest_asset_url_is_selected_from_authenticated_api_json() {
+        let release = br#"{
+            "assets": [
+                {"name": "latest.json.backup", "url": "https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/assets/1"},
+                {"name": "latest.json", "url": "https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/assets/589608428"}
+            ]
+        }"#;
+
+        let url = super::parse_manifest_asset_url(release).unwrap();
+        assert_eq!(
+            url.as_str(),
+            "https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/assets/589608428"
+        );
+    }
+
+    #[test]
+    fn latest_release_manifest_asset_url_rejects_untrusted_or_ambiguous_assets() {
+        let untrusted = br#"{"assets":[{"name":"latest.json","url":"https://attacker.example/releases/assets/2"}]}"#;
+        let duplicate = br#"{"assets":[
+            {"name":"latest.json","url":"https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/assets/2"},
+            {"name":"latest.json","url":"https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/assets/3"}
+        ]}"#;
+
+        assert!(super::parse_manifest_asset_url(untrusted).is_none());
+        assert!(super::parse_manifest_asset_url(duplicate).is_none());
     }
 }
