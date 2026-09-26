@@ -83,72 +83,9 @@ def main() -> int:
             child.wait(timeout=10)
         raise
 
-    class Handler(BaseHTTPRequestHandler):
-        server_version = "TwinCoreConsensus/0.1"
-
-        def _json(self, status: int, value: dict):
-            raw = json.dumps(value, ensure_ascii=False).encode("utf-8")
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(raw)))
-            self.end_headers()
-            self.wfile.write(raw)
-
-        def log_message(self, fmt, *args):
-            sys.stderr.write("[twincore] " + (fmt % args) + "\n")
-
-        def do_GET(self):
-            if self.path == "/health":
-                self._json(200, {
-                    "status": "ok",
-                    "k2": engine.k2.healthy(),
-                    "nanbeige": engine.nanbeige.healthy(),
-                    "judge": getattr(engine.judge, "status", {"enabled": False}),
-                })
-                return
-            if self.path.startswith("/v1/models"):
-                self._json(200, {"object": "list", "data": [{"id": config.model_id, "object": "model"}]})
-                return
-            self._json(404, {"error": {"message": "not found"}})
-
-        def do_POST(self):
-            try:
-                length = int(self.headers.get("Content-Length") or 0)
-                raw_body = self.rfile.read(length) or b"{}"
-                payload = json.loads(raw_body)
-                if self.path == "/tokenize":
-                    replies = []
-                    for backbone in (engine.k2, engine.nanbeige):
-                        req = urllib.request.Request(
-                            backbone.base_url + "/tokenize",
-                            data=raw_body,
-                            headers={"Content-Type": "application/json"},
-                        )
-                        with urllib.request.urlopen(req, timeout=60) as response:
-                            replies.append(json.load(response))
-                    chosen = max(replies, key=lambda item: len(item.get("tokens") or []))
-                    self._json(200, chosen)
-                    return
-                if self.path == "/detokenize":
-                    req = urllib.request.Request(
-                        engine.k2.base_url + "/detokenize",
-                        data=raw_body,
-                        headers={"Content-Type": "application/json"},
-                    )
-                    with urllib.request.urlopen(req, timeout=60) as response:
-                        self._json(200, json.load(response))
-                    return
-                if self.path not in ("/v1/chat/completions", "/chat/completions"):
-                    self._json(404, {"error": {"message": "not found"}})
-                    return
-                result = engine.chat_completion(payload)
-                self._json(200, result)
-            except Exception as error:
-                message = f"{type(error).__name__}: {error}"
-                print("[twincore] ERROR " + message, file=sys.stderr, flush=True)
-                self._json(500, {"error": {"message": message}})
-
-    server = ThreadingHTTPServer((config.host, config.port), Handler)
+    server = ThreadingHTTPServer((config.host, config.port), TwinCoreHandler)
+    server.engine = engine
+    server.config = config
     print(f"TwinCore listening on http://{config.host}:{config.port}", flush=True)
     print(f"K2: {engine.k2.base_url} | Nanbeige: {engine.nanbeige.base_url}", flush=True)
     try:
@@ -157,6 +94,84 @@ def main() -> int:
         for child in children:
             child.terminate()
     return 0
+
+
+class TwinCoreHandler(BaseHTTPRequestHandler):
+    """OpenAI-compatible HTTP surface for TwinCore and its context telemetry."""
+
+    server_version = "TwinCoreConsensus/0.1"
+
+    def _json(self, status: int, value: dict):
+        raw = json.dumps(value, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def log_message(self, fmt, *args):
+        sys.stderr.write("[twincore] " + (fmt % args) + "\n")
+
+    def do_GET(self):
+        engine = self.server.engine
+        config = self.server.config
+        if self.path == "/health":
+            self._json(200, {
+                "status": "ok",
+                "k2": engine.k2.healthy(),
+                "nanbeige": engine.nanbeige.healthy(),
+                "judge": getattr(engine.judge, "status", {"enabled": False}),
+            })
+            return
+        if self.path.startswith("/v1/models"):
+            self._json(200, {"object": "list", "data": [{"id": config.model_id, "object": "model"}]})
+            return
+        if self.path == "/props":
+            self._json(200, {
+                "model": config.model_id,
+                "n_ctx": config.live_window_tokens,
+                "default_generation_settings": {"n_ctx": config.live_window_tokens},
+            })
+            return
+        self._json(404, {"error": {"message": "not found"}})
+
+    def do_POST(self):
+        engine = self.server.engine
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+            raw_body = self.rfile.read(length) or b"{}"
+            payload = json.loads(raw_body)
+            if self.path == "/tokenize":
+                replies = []
+                for backbone in (engine.k2, engine.nanbeige):
+                    req = urllib.request.Request(
+                        backbone.base_url + "/tokenize",
+                        data=raw_body,
+                        headers={"Content-Type": "application/json"},
+                    )
+                    with urllib.request.urlopen(req, timeout=60) as response:
+                        replies.append(json.load(response))
+                chosen = max(replies, key=lambda item: len(item.get("tokens") or []))
+                self._json(200, chosen)
+                return
+            if self.path == "/detokenize":
+                req = urllib.request.Request(
+                    engine.k2.base_url + "/detokenize",
+                    data=raw_body,
+                    headers={"Content-Type": "application/json"},
+                )
+                with urllib.request.urlopen(req, timeout=60) as response:
+                    self._json(200, json.load(response))
+                return
+            if self.path not in ("/v1/chat/completions", "/chat/completions"):
+                self._json(404, {"error": {"message": "not found"}})
+                return
+            result = engine.chat_completion(payload)
+            self._json(200, result)
+        except Exception as error:
+            message = f"{type(error).__name__}: {error}"
+            print("[twincore] ERROR " + message, file=sys.stderr, flush=True)
+            self._json(500, {"error": {"message": message}})
 
 
 if __name__ == "__main__":
