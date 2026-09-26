@@ -750,6 +750,7 @@ impl RuntimeManager {
             .current_dir(&self.install_root)
             .arg(script)
             .args(["--upstream", upstream, "--port", &self.echo_port.to_string()])
+            .args(["--max-continuations", "0"])
             .args(["--offload-every", "100"])
             .args(["--warm-cache-budget-mb", "128"])
             .args(["--archive", self.install_root.join("echo").join("archives").to_string_lossy().as_ref()])

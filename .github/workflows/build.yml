@@ -28,6 +28,8 @@ jobs:
         run: npm ci
       - name: Benchmark exact ECHO archive scaling
         run: python scripts/echo_archive_scale.py
+      - name: Test ECHO conversation and archive runtime
+        run: python scripts/test_echo_live.py
       - name: Test frontend
         run: npm test
       - name: Test Rust

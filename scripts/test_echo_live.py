@@ -22,6 +22,11 @@ from echo_import import import_stream
 
 
 class EchoLiveTests(unittest.TestCase):
+    def test_echo_state_has_no_fixed_reply_continuation_cap_by_default(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = EchoState(ArchiveSet(Path(folder), idle_seconds=0), 'http://127.0.0.1:1', 0, 12, False)
+            self.assertEqual(0, state.max_continuations)
+
     def test_context_endpoint_reports_cache_budget_without_a_conversation_archive(self):
         with tempfile.TemporaryDirectory() as folder:
             archives = ArchiveSet(Path(folder), idle_seconds=0, warm_cache_budget_mib=2)

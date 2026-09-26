@@ -347,7 +347,7 @@ class EchoState:
     """Shared archive plus settings. One instance per process."""
 
     def __init__(self, archive: EchoArchive, upstream: str, budget_chars: int,
-                 min_query_chars: int, verbose: bool, max_continuations: int = 8,
+                 min_query_chars: int, verbose: bool, max_continuations: int = 0,
                  recent_turns: int = 6, window_tokens: int = 100_000_000,
                  salience: float = 0.0, offload_every: int = 1000,
                  reasoning: str = DEFAULT_REASONING,
