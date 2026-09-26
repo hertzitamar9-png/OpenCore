@@ -2,9 +2,9 @@ import { Check } from "lucide-react";
 import type { RuntimeProfile } from "./types";
 
 export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">; label: string; description: string }[] = [
-  { id: "echo", label: "ECHO 3T", description: "262,144 native context · ECHO archive" },
+  { id: "echo", label: "ECHO 3T", description: "Addressable history target · exact archive" },
   { id: "native1m", label: "Native 1M", description: "1,000,000 token server window" },
-  { id: "doucode", label: "doUcode", description: "K2 + Nanbeige · shared 262,144 context" },
+  { id: "doucode", label: "doUcode", description: "K2 + Nanbeige · persistent ECHO archive" },
 ];
 
 export const profileLabel = (profile: string) => profile === "echo" ? "ECHO 3T" : profile === "native1m" ? "Native 1M" : profile === "unsloth-echo" ? "Unsloth + ECHO" : profile === "doucode" ? "doUcode" : "Stopped";

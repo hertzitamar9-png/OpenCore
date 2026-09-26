@@ -478,15 +478,15 @@ describe("OpenCore", () => {
     const picker = topbar.getByRole("button", { name: /Choose model profile, currently doUcode/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
-    expect(screen.getByRole("button", { name: /doUcode K2 \+ Nanbeige · shared 262,144 context/ })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ }));
+    expect(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /doUcode K2 \+ Nanbeige · persistent ECHO archive/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
     fireEvent.click(screen.getByRole("button", { name: /Native 1M 1,000,000 token server window/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently Native 1M/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently Native 1M/ }));
-    expect(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Unsloth", { selector: "h2" })).toBeInTheDocument();
   });
@@ -506,11 +506,11 @@ describe("OpenCore", () => {
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently Native 1M" }));
     fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently Native 1M" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T 262,144 native context/ }));
+    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
   });
 
-  it("shows the measured ECHO rolling window and archived message count in the footer", async () => {
+  it("shows native context usage and ECHO's 3T history target in the footer", async () => {
     const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
       available: true,
       liveTokens: 131072,
@@ -540,10 +540,14 @@ describe("OpenCore", () => {
       values.set("opencore.model-profile", "echo");
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      const echoMeter = await screen.findByRole("progressbar", { name: "ECHO model context usage" });
-      expect(echoMeter).toHaveAttribute("max", "262144");
-      expect(echoMeter).toHaveAttribute("value", "131072");
-      expect(screen.getByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
+      const statusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
+      expect(await within(statusbar).findByText("3T history target")).toBeVisible();
+      expect(within(statusbar).getByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
+      expect(within(statusbar).queryByRole("progressbar", { name: "ECHO model context usage" })).not.toBeInTheDocument();
+      expect(within(statusbar).getByLabelText("ECHO addressable history")).toHaveAttribute(
+        "title",
+        expect.stringContaining("not simultaneous model attention"),
+      );
     } finally {
       workingSet.mockRestore();
       if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
