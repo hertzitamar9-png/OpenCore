@@ -6,12 +6,11 @@ import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
 import App from "./App";
 import DesktopActivity from "./DesktopActivity";
+import { updateNoticeMessage, updateNoticeTimeout, type UpdateNotice } from "./update-notices";
 import { installExternalLinkGuard } from "./external-links";
 import "./styles.css";
 
 installExternalLinkGuard(openUrl);
-
-type UpdateNotice = { state: string; version?: string; downloaded?: number; total?: number };
 
 function AutoUpdaterBootstrap() {
   const [notice, setNotice] = useState<UpdateNotice | null>(null);
@@ -28,8 +27,9 @@ function AutoUpdaterBootstrap() {
       if (disposed) return;
       setNotice(event.payload);
       if (clearNotice !== undefined) window.clearTimeout(clearNotice);
-      if (event.payload.state === "failed" || event.payload.state === "waiting") {
-        clearNotice = window.setTimeout(() => setNotice(null), 12_000);
+      const timeout = updateNoticeTimeout(event.payload.state);
+      if (timeout !== null) {
+        clearNotice = window.setTimeout(() => setNotice(null), timeout);
       }
     }).then((stop) => {
       if (disposed) {
@@ -51,19 +51,9 @@ function AutoUpdaterBootstrap() {
     };
   }, []);
 
-  if (!notice || !["auth-required", "downloading", "waiting", "restarting", "failed"].includes(notice.state)) return null;
-  const progress = notice.total && notice.downloaded != null
-    ? ` ${Math.min(100, Math.floor(notice.downloaded * 100 / notice.total))}%`
-    : "";
-  const message = notice.state === "auth-required"
-    ? "Sign in to GitHub CLI to enable private app updates."
-    : notice.state === "downloading"
-      ? `Updating OpenCore${notice.version ? ` to ${notice.version}` : ""}…${progress}`
-      : notice.state === "waiting"
-        ? "Update found. OpenCore will install it when the model and chats are idle."
-        : notice.state === "restarting"
-        ? "Update installed. Restarting OpenCore…"
-        : "OpenCore could not check for updates. It will retry automatically.";
+  if (!notice) return null;
+  const message = updateNoticeMessage(notice);
+  if (!message) return null;
   return <div className="auto-update-notice" role="status">{message}</div>;
 }
 

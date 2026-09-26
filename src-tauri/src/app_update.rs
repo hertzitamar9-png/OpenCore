@@ -225,6 +225,13 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
         }
     };
     let Some(update) = update else {
+        emit_notice(
+            &app,
+            "up-to-date",
+            Some(app.package_info().version.to_string()),
+            None,
+            None,
+        );
         return Ok(());
     };
     let version = update.version.clone();
