@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { echoWorkingSet, type EchoWorkingSet } from "./api";
 
-export function EchoContextStatus({ conversationId, running, attentionKvLocation, attentionKvType }: { conversationId?: string; running: boolean; attentionKvLocation?: string; attentionKvType?: string }) {
+export function EchoContextStatus({ conversationId, running, configuredContextTokens, attentionKvLocation, attentionKvType }: { conversationId?: string; running: boolean; configuredContextTokens?: number; attentionKvLocation?: string; attentionKvType?: string }) {
   const [state, setState] = useState<EchoWorkingSet | null>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
@@ -20,7 +20,7 @@ export function EchoContextStatus({ conversationId, running, attentionKvLocation
     const timer = setInterval(refresh, 2500);
     return () => { active = false; clearInterval(timer); };
   }, [conversationId, running]);
-  const windowTokens = state?.modelContextTokens || state?.windowTokens || 262144;
+  const windowTokens = state?.modelContextTokens ?? state?.windowTokens ?? configuredContextTokens ?? 32768;
   const persistentEcho = state?.contextMode === "persistent_echo";
   const transcriptTokens = persistentEcho && !state?.active
     ? state?.liveTokens

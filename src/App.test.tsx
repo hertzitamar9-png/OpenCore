@@ -510,7 +510,7 @@ describe("OpenCore", () => {
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
   });
 
-  it("shows ECHO's 3T history target for the extended profile in the footer", async () => {
+  it("shows ECHO's 3T archive goal for the extended profile in the footer", async () => {
     const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
       available: true,
       liveTokens: 131072,
@@ -533,18 +533,18 @@ describe("OpenCore", () => {
       const { unmount } = render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const extendedStatusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
-      expect(await within(extendedStatusbar).findByText("3T history target")).toBeVisible();
-      expect(within(extendedStatusbar).queryByRole("progressbar", { name: "Model context usage" })).not.toBeInTheDocument();
+      expect(await within(extendedStatusbar).findByText(/3T archive goal/)).toBeVisible();
+      expect(within(extendedStatusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072");
 
       unmount();
       values.set("opencore.model-profile", "echo");
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const statusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
-      expect(await within(statusbar).findByText("3T history target")).toBeVisible();
+      expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
       expect(within(statusbar).getByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
-      expect(within(statusbar).queryByRole("progressbar", { name: "ECHO model context usage" })).not.toBeInTheDocument();
-      expect(within(statusbar).getByLabelText("ECHO addressable history")).toHaveAttribute(
+      expect(within(statusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072");
+      expect(within(statusbar).getByLabelText("ECHO context and archive")).toHaveAttribute(
         "title",
         expect.stringContaining("not simultaneous model attention"),
       );
@@ -557,14 +557,50 @@ describe("OpenCore", () => {
   it("shows ECHO's addressable history target in the bottom status bar for doUcode", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
-    const target = await screen.findByLabelText("ECHO addressable history");
+    const target = await screen.findByLabelText("ECHO context and archive");
     const statusbar = target.closest("footer");
     expect(statusbar).toHaveClass("statusbar");
-    expect(target).toHaveTextContent("3T history target");
+    expect(target).toHaveTextContent("3T archive goal");
     expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently doUcode" }));
     expect(statusbar?.textContent).toContain("VRAM");
     expect(statusbar?.textContent).toContain("tokens/s");
     expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();
+  });
+
+  it("retains the last measured ECHO window usage when idle", async () => {
+    const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
+      available: true,
+      liveTokens: 131072,
+      promptTokens: 8192,
+      modelContextTokens: 32768,
+      windowTokens: 32768,
+      active: false,
+      offloadedMessages: 7,
+      contextMode: "persistent_echo",
+    });
+    const originalStorage = Object.getOwnPropertyDescriptor(window, "localStorage");
+    const values = new Map<string, string>([["opencore.model-profile", "echo"]]);
+    Object.defineProperty(window, "localStorage", { configurable: true, value: {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    } });
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      const statusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
+      expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
+      expect(within(statusbar).getByText(/8.2K \/ 32.8K last/)).toBeVisible();
+      expect(within(statusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "8192");
+      expect(within(statusbar).getByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
+      expect(within(statusbar).getByLabelText("ECHO context and archive")).toHaveAttribute(
+        "title",
+        expect.stringContaining("not simultaneous model attention"),
+      );
+    } finally {
+      workingSet.mockRestore();
+      if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
+    }
   });
 
   it("uses an OpenCore rename modal instead of a browser hostname prompt", async () => {

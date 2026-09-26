@@ -800,7 +800,7 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
       </section>
       <section>
         <h2>Working set</h2>
-        <EchoContextStatus conversationId={openArchiveId || selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} />
+        <EchoContextStatus conversationId={openArchiveId || selectedConversation} running={snapshot.runtime.status === "running"} configuredContextTokens={snapshot.runtime.contextSize} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} />
         <p>{selectedConversation ? `Selected conversation: ${selectedConversation}` : "Select a conversation before trimming or compacting."}</p>
         <div className="memory-actions">
           <button onClick={indexEchoHistory} disabled={memoryBusy}>{memoryBusy ? "Indexing…" : "Index activity and files"}</button>
@@ -832,7 +832,7 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
   if (view === "context") return <div className="support-page">
     <div className="page-heading"><div><h1>Live Context</h1><p>The actual prompt window and ECHO offload state for the selected conversation.</p></div></div>
     <div className="settings-grid">
-      <InspectorSection title="Active live window"><KeyValue label="Profile" value={profileLabel(snapshot.runtime.profile)} /><KeyValue label="Configured inference window" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens`} />{snapshot.runtime.profile === "native1m" ? <KeyValue label="Original trained context" value="262,144 tokens · 1M uses YaRN length extension" /> : null}<KeyValue label="Selected conversation" value={snapshot.conversations.find((item) => item.id === selectedConversation)?.title || "No conversation selected"} /><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /></InspectorSection>
+      <InspectorSection title="Active live window"><KeyValue label="Profile" value={profileLabel(snapshot.runtime.profile)} /><KeyValue label="Configured inference window" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens`} />{snapshot.runtime.profile === "native1m" ? <KeyValue label="Original trained context" value="262,144 tokens · 1M uses YaRN length extension" /> : null}<KeyValue label="Selected conversation" value={snapshot.conversations.find((item) => item.id === selectedConversation)?.title || "No conversation selected"} /><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} configuredContextTokens={snapshot.runtime.contextSize} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /></InspectorSection>
       <InspectorSection title="ECHO archive"><KeyValue label="Configured model window" value={`${snapshot.runtime.contextSize.toLocaleString()} tokens per inference`} /><KeyValue label="Long-term history" value="Exact disk-backed ECHO archive; limited by available storage" /><KeyValue label="Addressable-history target" value="3T tokens; retrieved into the finite model window when relevant" /></InspectorSection>
     </div>
   </div>;
@@ -871,7 +871,7 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
         <button className="wide" onClick={() => void revealLocalPath("C:\\Users\\hertz\\Documents\\Best ai model in the world\\release\\doUcode", onNotice)}><FolderOpen size={14} /> Open doUcode package</button>
       </InspectorSection>
       <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="3T addressable-history target · exact disk archive" /><KeyValue label="doUcode" value="K2 + Nanbeige · persistent ECHO archive" /><KeyValue label="1M extended" value="1,000,000-token YaRN window · trained context 262,144" /><KeyValue label="Selected profile" value={profileLabel(selectedProfile)} /><KeyValue label="Loaded profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
-      <InspectorSection title="Live context"><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /><button className="wide" onClick={() => onNavigate("context")}><BrainCircuit size={14} /> Open live context</button></InspectorSection>
+      <InspectorSection title="Live context"><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} configuredContextTokens={snapshot.runtime.contextSize} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /><button className="wide" onClick={() => onNavigate("context")}><BrainCircuit size={14} /> Open live context</button></InspectorSection>
     </div>
   </div>;
 
@@ -950,7 +950,7 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
 
 function compactTokenCount(value: number) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
-  if (value >= 1_000) return `${Math.round(value / 1_000)}K`;
+  if (value >= 1_000) return `${(value / 1_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}K`;
   return value.toLocaleString();
 }
 
@@ -976,11 +976,23 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
 
   if (profile === "echo" || profile === "native1m" || profile === "unsloth-echo" || profile === "doucode") {
     const archived = workingSet?.offloadedMessages;
-    return <div className="statusbar-context statusbar-echo-context" aria-label="ECHO addressable history" title="3 trillion tokens is the addressable-history target for the exact disk-backed ECHO archive, not simultaneous model attention. The finite per-inference model window and its live usage are shown in Live Context.">
+    const reportedLimit = workingSet?.available ? workingSet.modelContextTokens ?? workingSet.windowTokens : undefined;
+    const fallbackLimit = runtime.contextSize || (profile === "native1m" ? 1_000_000 : 32768);
+    const maximum = Math.max(1, reportedLimit ?? fallbackLimit);
+    const liveValue = workingSet?.modelActiveTokens ?? (workingSet?.available ? workingSet.promptTokens ?? workingSet.liveTokens : undefined);
+    const measured = typeof liveValue === "number";
+    const used = measured ? Math.min(maximum, Math.max(0, liveValue as number)) : 0;
+    const usageState = workingSet?.active ? "live" : "last";
+    const liveLabel = measured ? `${compactTokenCount(used)} / ${compactTokenCount(maximum)} ${usageState}` : `Live — / ${compactTokenCount(maximum)}`;
+    const title = measured
+      ? `ECHO ${workingSet?.active ? "live" : "last reported"} model window: ${used.toLocaleString()} / ${maximum.toLocaleString()} tokens. The 3T figure is an unvalidated archive scaling goal, not measured archive capacity; it is not simultaneous model attention.`
+      : `ECHO live model window capacity: ${maximum.toLocaleString()} tokens. The 3T figure is an unvalidated archive scaling goal, not measured archive capacity; it is not simultaneous model attention.`;
+    return <div className="statusbar-context statusbar-echo-context" aria-label="ECHO context and archive" title={title}>
       <span className="statusbar-context-label">ECHO</span>
-      <span className="statusbar-context-reading">3T history target
+      <span className="statusbar-context-reading">3T archive goal · {liveLabel}
         {archived ? <small aria-label="ECHO archived messages">{archived} archived</small> : null}
       </span>
+      <progress aria-label="ECHO model context usage" value={used} max={maximum} />
     </div>;
   }
 

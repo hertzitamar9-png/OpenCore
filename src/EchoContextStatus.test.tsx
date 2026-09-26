@@ -88,8 +88,10 @@ it('reports SDK summary compaction disabled and hides its stale threshold', asyn
 it('reports unavailable telemetry instead of inventing zero usage', async () => {
   const read = vi.spyOn(api, 'echoWorkingSet').mockRejectedValue(new Error('offline'));
   try {
-    render(<EchoContextStatus conversationId="game" running />);
+    render(<EchoContextStatus conversationId="game" running configuredContextTokens={32768} />);
     expect(await screen.findByText('Context telemetry reconnecting…')).toBeVisible();
+    expect(screen.getByText('32,768-token rolling window · awaiting prompt')).toBeVisible();
+    expect(screen.queryByText(/262,144-token rolling window/)).not.toBeInTheDocument();
     expect(screen.queryByText(/0 live history tokens/)).not.toBeInTheDocument();
   } finally { read.mockRestore(); }
 });
