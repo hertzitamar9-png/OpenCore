@@ -1,0 +1,419 @@
+{
+  "artifacts": [
+    {
+      "id": "lfm-q8",
+      "path": "models/lfm/LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+      "repo": "DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF",
+      "revision": "36fe18b06b8198bf93e5b5055c77b72e186e83db",
+      "filename": "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+      "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e",
+      "bytes": 3120573088
+    },
+    {
+      "id": "k2-q6",
+      "path": "doUcode/backbones/k2/K2-Horizon-4B-Q6_K.gguf",
+      "repo": "IFM/K2-Horizon-3.7B-GGUF",
+      "revision": "a81d5fec318b47b9c7144a839f538f6b9006291c",
+      "filename": "K2-Horizon-4B-Q6_K.gguf",
+      "sha256": "2180f3ca4eb4906a109b364a98740778fd8dcd9969e270b0d34036d18ee33232",
+      "bytes": 4161403264
+    },
+    {
+      "id": "nanbeige-q6",
+      "path": "doUcode/backbones/nanbeige/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
+      "repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
+      "revision": "17562eefe9752007209148d5f7a6e275fc8d8077",
+      "filename": "Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
+      "sha256": "93f884a2d8d6cafc5406df84be64f197a407889904b18db7c6e82fd35f2b0170",
+      "bytes": 3595603104
+    },
+    {
+      "id": "opencore-apex",
+      "path": "OpenCore-Code-Single-File.gguf",
+      "repo": "Pita-Ai/OpenCore-code-10kexperts-3tcontext-apex-echo-max",
+      "revision": "69cf90d90cf450df2a0a373d69d4146bbacaa84b",
+      "filename": "OpenCore-Code-Single-File.gguf",
+      "sha256": "261ef6c572bf9916f9ea5097bc156da0ee0ef6d631d52cf59dbcf293f416b7ae",
+      "bytes": 5476762688
+    },
+    {
+      "id": "opencore-runtime-ggml-base.dll",
+      "path": "runtime/ggml-base.dll",
+      "bytes": 650752,
+      "sha256": "200bba9b6d3d2d8eb575a24366ba7e361bc8a4880db06e94056c6a6ceaf67ba4",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/ggml-base.dll"
+    },
+    {
+      "id": "opencore-runtime-ggml-cpu.dll",
+      "path": "runtime/ggml-cpu.dll",
+      "bytes": 897536,
+      "sha256": "a3847b16ac57b669ab86b4c881b2ff25e1bae6eddc1cde54558598249980d11b",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/ggml-cpu.dll"
+    },
+    {
+      "id": "opencore-runtime-ggml-cuda.dll",
+      "path": "runtime/ggml-cuda.dll",
+      "bytes": 53116928,
+      "sha256": "b33a44b70572f61cd3ca1ec21194d2d636ac8bc23a9482c1ccff29eac980082c",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/ggml-cuda.dll"
+    },
+    {
+      "id": "opencore-runtime-ggml.dll",
+      "path": "runtime/ggml.dll",
+      "bytes": 67072,
+      "sha256": "b215f47cca0951ef4a38ef60c22fdb465d60f151d88c4966a4b4e74358a64d8a",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/ggml.dll"
+    },
+    {
+      "id": "opencore-runtime-llama-common.dll",
+      "path": "runtime/llama-common.dll",
+      "bytes": 9300992,
+      "sha256": "6933121148c73598183050ff1262ce43a91ee96b76a19d89474fee26fb7eaf88",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/llama-common.dll"
+    },
+    {
+      "id": "opencore-runtime-llama-server-impl.dll",
+      "path": "runtime/llama-server-impl.dll",
+      "bytes": 6972416,
+      "sha256": "08a1a4bd94f7a2496c8061bb8f5e9ec34ddd68d4bb40a422a28e2ebe92c26abb",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/llama-server-impl.dll"
+    },
+    {
+      "id": "opencore-runtime-llama-server.exe",
+      "path": "runtime/llama-server.exe",
+      "bytes": 10752,
+      "sha256": "3c830680aa79d1163415d3386b45341c8f84195a87d1b66f48f64ef08f5a73a1",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/llama-server.exe"
+    },
+    {
+      "id": "opencore-runtime-llama.dll",
+      "path": "runtime/llama.dll",
+      "bytes": 2531328,
+      "sha256": "de071e4491522a9be07e2d3326a9fef46a6c39a50d63208fd8f56a6b05048833",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/llama.dll"
+    },
+    {
+      "id": "opencore-runtime-mtmd.dll",
+      "path": "runtime/mtmd.dll",
+      "bytes": 1014272,
+      "sha256": "81f747f4b86091fdbf253136b652acea5c298f08671a8a3c3a2d131e3783e467",
+      "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+      "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+      "filename": "runtime/mtmd.dll"
+    },
+    {
+      "id": "opencore-vision",
+      "path": "vision/mmproj-BF16.gguf",
+      "repo": "unsloth/Qwen3.5-4B-GGUF",
+      "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
+      "filename": "mmproj-BF16.gguf",
+      "bytes": 675569344,
+      "sha256": "302b92d565080b9cc0281186979ae75a7429ec23d14f6f7607a035539b21f3a6"
+    },
+    {
+      "id": "reflex-vision-reflex-vision-0.8b-q8_0.gguf",
+      "path": "reflex/vision/reflex-vision-0.8b-q8_0.gguf",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "4a0de4e720d5efe1d5579afb46d31c029d9a997d",
+      "filename": "weights/vision/reflex-vision-0.8b-q8_0.gguf",
+      "bytes": 811844256,
+      "sha256": "ee95a9adb5046273fb8487a300d12f54b0ca0b0d54ffa123503d4bd9fde6e4d9"
+    },
+    {
+      "id": "reflex-vision-reflex-vision-0.8b-mmproj-f16.gguf",
+      "path": "reflex/vision/reflex-vision-0.8b-mmproj-f16.gguf",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "05ce5ef2d9f035ec85084ce490d1814c1b8dbd5c",
+      "filename": "weights/vision/reflex-vision-0.8b-mmproj-f16.gguf",
+      "bytes": 204987776,
+      "sha256": "daa7bade4e4e4f80d44787ffd1584303e4ad5701cd2a9de739e6b9b63488ebd7"
+    },
+    {
+      "id": "reflex-policy-model.safetensors",
+      "path": "reflex/model/model.safetensors",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "714327f351164f9674d32b167a40c9521c6a7855",
+      "filename": "weights/model/model.safetensors",
+      "bytes": 643835524,
+      "sha256": "aec3bbb96ad6c1c224aa3134b1e60cba65c6bb0633bdb3a93e5fa3ba0af003c8"
+    },
+    {
+      "id": "reflex-meta-config.json",
+      "path": "reflex/model/encoder/config.json",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "add86d075280f9a3b87b2ec59ce767d752707d95",
+      "filename": "weights/model/encoder/config.json",
+      "bytes": 1939,
+      "sha256": "fad4076bcae03044a509e35a2d36c1cdff482fd4c2d6e7c5d187bbc7d8b91590"
+    },
+    {
+      "id": "reflex-meta-rl_agent_config.json",
+      "path": "reflex/model/rl_agent_config.json",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "add86d075280f9a3b87b2ec59ce767d752707d95",
+      "filename": "weights/model/rl_agent_config.json",
+      "bytes": 717,
+      "sha256": "48248a6f1a118fa3eaf3576168bd77f8007e455007b51b00a2b6b5547895d7e2"
+    },
+    {
+      "id": "reflex-meta-tokenizer.json",
+      "path": "reflex/model/tokenizer/tokenizer.json",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "add86d075280f9a3b87b2ec59ce767d752707d95",
+      "filename": "weights/model/tokenizer/tokenizer.json",
+      "bytes": 34363188,
+      "sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+    },
+    {
+      "id": "reflex-meta-tokenizer_config.json",
+      "path": "reflex/model/tokenizer/tokenizer_config.json",
+      "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+      "revision": "add86d075280f9a3b87b2ec59ce767d752707d95",
+      "filename": "weights/model/tokenizer/tokenizer_config.json",
+      "bytes": 624,
+      "sha256": "f2ff584a8f78ac9f3b6fd0afcf9ab310e41c2d445ef628f9ab4b0d594e992b7a"
+    },
+    {
+      "id": "whisper-large-v3-model.bin",
+      "path": "speech/large-v3/model.bin",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "model.bin",
+      "bytes": 3087284237,
+      "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1"
+    },
+    {
+      "id": "whisper-large-v3-config.json",
+      "path": "speech/large-v3/config.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "config.json",
+      "bytes": 2394,
+      "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9"
+    },
+    {
+      "id": "whisper-large-v3-preprocessor_config.json",
+      "path": "speech/large-v3/preprocessor_config.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "preprocessor_config.json",
+      "bytes": 340,
+      "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
+    },
+    {
+      "id": "whisper-large-v3-tokenizer.json",
+      "path": "speech/large-v3/tokenizer.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "tokenizer.json",
+      "bytes": 2480617,
+      "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"
+    },
+    {
+      "id": "whisper-large-v3-vocabulary.json",
+      "path": "speech/large-v3/vocabulary.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "vocabulary.json",
+      "bytes": 1068114,
+      "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+    }
+  ],
+  "models": [
+    {
+      "id": "echo",
+      "label": "ECHO 3T",
+      "description": "OpenCore APEX with an exact ECHO archive",
+      "precision": "Mixed GGUF",
+      "contextTokens": 262144,
+      "artifacts": [
+        "opencore-apex",
+        "opencore-runtime-ggml-base.dll",
+        "opencore-runtime-ggml-cpu.dll",
+        "opencore-runtime-ggml-cuda.dll",
+        "opencore-runtime-ggml.dll",
+        "opencore-runtime-llama-common.dll",
+        "opencore-runtime-llama-server-impl.dll",
+        "opencore-runtime-llama-server.exe",
+        "opencore-runtime-llama.dll",
+        "opencore-runtime-mtmd.dll",
+        "opencore-vision"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "3T is an archive scaling goal, not simultaneous attention. Private weights require Hugging Face access.",
+      "selectable": true
+    },
+    {
+      "id": "native1m",
+      "label": "1M extended",
+      "description": "OpenCore APEX with YaRN context extension",
+      "precision": "Mixed GGUF",
+      "contextTokens": 1000000,
+      "artifacts": [
+        "opencore-apex",
+        "opencore-runtime-ggml-base.dll",
+        "opencore-runtime-ggml-cpu.dll",
+        "opencore-runtime-ggml-cuda.dll",
+        "opencore-runtime-ggml.dll",
+        "opencore-runtime-llama-common.dll",
+        "opencore-runtime-llama-server-impl.dll",
+        "opencore-runtime-llama-server.exe",
+        "opencore-runtime-llama.dll",
+        "opencore-runtime-mtmd.dll",
+        "opencore-vision"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Trained context 262,144; long-context quality at 1M has not been validated.",
+      "selectable": true
+    },
+    {
+      "id": "doucode",
+      "label": "DuoCore",
+      "description": "K2 and Nanbeige generate and cross-review candidates",
+      "precision": "Q6_K",
+      "contextTokens": 65536,
+      "artifacts": [
+        "k2-q6",
+        "nanbeige-q6"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Self-reported review scores are not correctness probabilities.",
+      "selectable": true
+    },
+    {
+      "id": "dualcore-kv",
+      "label": "DualCore KV",
+      "description": "Two identical LFM brains cooperate through drafts and blind reviews",
+      "precision": "Q8_0 MAX",
+      "contextTokens": 131072,
+      "artifacts": [
+        "lfm-q8"
+      ],
+      "license": "LFM Open License v1.0",
+      "experimental": true,
+      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Native F16 KV/state; one selected answer.",
+      "selectable": true
+    },
+    {
+      "id": "dualcore-echo",
+      "label": "DualCore ECHO",
+      "description": "Two identical LFM brains with ECHO archive retrieval",
+      "precision": "Q8_0 MAX",
+      "contextTokens": 32768,
+      "artifacts": [
+        "lfm-q8"
+      ],
+      "license": "LFM Open License v1.0",
+      "experimental": true,
+      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Recompute each brain prefix per token; transient attention buffers remain. Exact archived history is separate.",
+      "selectable": true
+    },
+    {
+      "id": "fusioncore-kv",
+      "label": "FusionCore KV",
+      "description": "Two full LFM towers coupled in one token generation loop",
+      "precision": "Q8_0 MAX",
+      "contextTokens": 131072,
+      "artifacts": [
+        "lfm-q8"
+      ],
+      "license": "LFM Open License v1.0",
+      "experimental": true,
+      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Untuned hidden feedback; native F16 KV/state. No quality gain claimed.",
+      "selectable": true
+    },
+    {
+      "id": "fusioncore-echo",
+      "label": "FusionCore ECHO",
+      "description": "One coupled token loop with ECHO retrieval and prefix recomputation",
+      "precision": "Q8_0 MAX",
+      "contextTokens": 8192,
+      "artifacts": [
+        "lfm-q8"
+      ],
+      "license": "LFM Open License v1.0",
+      "experimental": true,
+      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. No retained cross-token cache; transient attention buffers remain. Slower prefix recomputation.",
+      "selectable": true
+    },
+    {
+      "id": "reflex-vision",
+      "label": "Holo 3.1 0.8B",
+      "description": "Holo 3.1 0.8B optional component",
+      "precision": "Q8_0 + F16 vision",
+      "contextTokens": 0,
+      "artifacts": [
+        "reflex-vision-reflex-vision-0.8b-q8_0.gguf",
+        "reflex-vision-reflex-vision-0.8b-mmproj-f16.gguf",
+        "opencore-runtime-ggml-base.dll",
+        "opencore-runtime-ggml-cpu.dll",
+        "opencore-runtime-ggml-cuda.dll",
+        "opencore-runtime-ggml.dll",
+        "opencore-runtime-llama-common.dll",
+        "opencore-runtime-llama-server-impl.dll",
+        "opencore-runtime-llama-server.exe",
+        "opencore-runtime-llama.dll",
+        "opencore-runtime-mtmd.dll"
+      ],
+      "license": "Apache-2.0",
+      "experimental": false,
+      "note": "On-demand computer-use vision. Includes its matching native runtime; chat model and Python components install separately.",
+      "selectable": false
+    },
+    {
+      "id": "reflex-policy",
+      "label": "Reflex decision policy",
+      "description": "Reflex decision policy optional component",
+      "precision": "BF16",
+      "contextTokens": 0,
+      "artifacts": [
+        "reflex-policy-model.safetensors",
+        "reflex-meta-config.json",
+        "reflex-meta-rl_agent_config.json",
+        "reflex-meta-tokenizer.json",
+        "reflex-meta-tokenizer_config.json"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Optional typed decision classifier. A confidence score is not a correctness guarantee.",
+      "selectable": false
+    },
+    {
+      "id": "whisper-large-v3",
+      "label": "Whisper large-v3",
+      "description": "Whisper large-v3 optional component",
+      "precision": "F16",
+      "contextTokens": 0,
+      "artifacts": [
+        "whisper-large-v3-model.bin",
+        "whisper-large-v3-config.json",
+        "whisper-large-v3-preprocessor_config.json",
+        "whisper-large-v3-tokenizer.json",
+        "whisper-large-v3-vocabulary.json"
+      ],
+      "license": "MIT",
+      "experimental": false,
+      "note": "On-demand speech-to-text. Requires the local faster-whisper Python environment; unloaded after transcription.",
+      "selectable": false
+    }
+  ]
+}

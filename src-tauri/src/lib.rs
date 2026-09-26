@@ -15,6 +15,7 @@ mod connector_config;
 mod gateway;
 mod history;
 mod models;
+mod model_catalog;
 mod native_browser;
 mod project_paths;
 mod project_memory;
@@ -392,6 +393,10 @@ async fn start_profile(
     core: tauri::State<'_, Arc<AppCore>>,
     request: StartProfileRequest,
 ) -> Result<models::RuntimeSnapshot, String> {
+    if model_catalog::list(core.runtime.install_root())?.progress.is_some_and(|p|
+        matches!(p.phase.as_str(), "preparing" | "downloading" | "verifying" | "uninstalling")) {
+        return Err("Finish the model installation before starting a runtime".into());
+    }
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || runtime.start(&request.profile, request.attach_url))
         .await
@@ -401,6 +406,32 @@ async fn start_profile(
 #[tauri::command]
 fn select_profile(core: tauri::State<'_, Arc<AppCore>>, profile: String) -> Result<(), String> {
     core.runtime.select_profile(&profile)
+}
+
+#[tauri::command]
+fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<model_catalog::Library, String> {
+    model_catalog::list(core.runtime.install_root())
+}
+#[tauri::command]
+fn install_model(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<(), String> {
+    if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before installing a model".into()); }
+    model_catalog::begin(&id)?;
+    let root = core.runtime.install_root().to_path_buf();
+    tauri::async_runtime::spawn(model_catalog::install(root, id));
+    Ok(())
+}
+#[tauri::command]
+fn cancel_model_install() { model_catalog::cancel(); }
+#[tauri::command]
+async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<(), String> {
+    if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before uninstalling a model".into()); }
+    if id == "whisper-large-v3" && core.speech.is_active().await {
+        return Err("Finish the microphone session before uninstalling Whisper".into());
+    }
+    if id == "reflex-vision" { core.vision.stop(); }
+    if id == "reflex-policy" { core.reflex.stop(); }
+    let root = core.runtime.install_root().to_path_buf();
+    tauri::async_runtime::spawn_blocking(move || model_catalog::uninstall(&root, &id)).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -879,6 +910,13 @@ async fn echo_working_set(core: tauri::State<'_, Arc<AppCore>>, conversation_id:
         let mut context: Value = serde_json::from_str(&value).map_err(|e| e.to_string())?;
         context["windowTokens"] = json!(core.runtime.snapshot().context_size.max(1));
         return Ok(context);
+    }
+    let runtime = core.runtime.snapshot();
+    if !runtime::echo_profile(&runtime.profile) {
+        let telemetry = core.runtime.telemetry();
+        return Ok(json!({"available": runtime.status == "running", "windowTokens": runtime.context_size,
+            "modelContextTokens": runtime.context_size, "modelActiveTokens": telemetry.prompt_tokens,
+            "active": false, "contextMode": "native-kv"}));
     }
     let client = reqwest::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(4)).build().map_err(|e| e.to_string())?;
     let response = client.get(format!("http://127.0.0.1:{}/echo/context", core.runtime.snapshot().echo_port))
@@ -1391,7 +1429,7 @@ async fn send_chat_message(
     let prior = core.store.conversation_messages(&id)?;
     let is_new = prior.is_empty();
     core.store.ensure_conversation(&id, "OpenCore", &runtime_snapshot.profile, "New conversation")?;
-    if !is_new && matches!(runtime_snapshot.profile.as_str(), "echo" | "native1m" | "unsloth-echo" | "doucode") {
+    if !is_new && runtime::echo_profile(&runtime_snapshot.profile) {
         sync_chat_activity(&core, &id).await
             .map_err(|error| format!("ECHO could not restore pending chat activity: {error}"))?;
     }
@@ -1624,7 +1662,7 @@ pub fn run() {
                 pending_approvals: Mutex::new(HashMap::new()),
                 browser: Arc::new(browser_bridge::BrowserBridge::new()),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
-                vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf())),
+                vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
             });
             let browser_state = core.browser.clone();
             let browser_log = store.clone();
@@ -1706,6 +1744,10 @@ pub fn run() {
             get_conversation,
             select_profile,
             start_profile,
+            list_model_library,
+            install_model,
+            uninstall_model,
+            cancel_model_install,
             stop_runtime,
             restart_runtime,
             rename_conversation,

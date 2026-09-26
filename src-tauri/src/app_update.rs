@@ -276,9 +276,12 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
         return Ok(());
     }
 
-    emit_notice(&app, "restarting", Some(version), None, None);
+    emit_notice(&app, "installing", Some(version.clone()), None, None);
+    // Give the webview a moment to paint the in-app applying state before the
+    // Windows updater starts and exits this process.
+    tokio::time::sleep(Duration::from_millis(500)).await;
     if update.install(bytes).is_err() {
-        emit_notice(&app, "failed", None, None, None);
+        emit_notice(&app, "failed", Some(version), None, None);
     } else {
         app.restart();
     }

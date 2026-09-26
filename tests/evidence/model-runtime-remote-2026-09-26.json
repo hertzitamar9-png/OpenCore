@@ -1,0 +1,74 @@
+[
+  {
+    "path": "runtime/ggml-base.dll",
+    "bytes": 650752,
+    "sha256": "200bba9b6d3d2d8eb575a24366ba7e361bc8a4880db06e94056c6a6ceaf67ba4",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/ggml-base.dll"
+  },
+  {
+    "path": "runtime/ggml-cpu.dll",
+    "bytes": 897536,
+    "sha256": "a3847b16ac57b669ab86b4c881b2ff25e1bae6eddc1cde54558598249980d11b",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/ggml-cpu.dll"
+  },
+  {
+    "path": "runtime/ggml-cuda.dll",
+    "bytes": 53116928,
+    "sha256": "b33a44b70572f61cd3ca1ec21194d2d636ac8bc23a9482c1ccff29eac980082c",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/ggml-cuda.dll"
+  },
+  {
+    "path": "runtime/ggml.dll",
+    "bytes": 67072,
+    "sha256": "b215f47cca0951ef4a38ef60c22fdb465d60f151d88c4966a4b4e74358a64d8a",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/ggml.dll"
+  },
+  {
+    "path": "runtime/llama-common.dll",
+    "bytes": 9300992,
+    "sha256": "6933121148c73598183050ff1262ce43a91ee96b76a19d89474fee26fb7eaf88",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/llama-common.dll"
+  },
+  {
+    "path": "runtime/llama-server-impl.dll",
+    "bytes": 6972416,
+    "sha256": "08a1a4bd94f7a2496c8061bb8f5e9ec34ddd68d4bb40a422a28e2ebe92c26abb",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/llama-server-impl.dll"
+  },
+  {
+    "path": "runtime/llama-server.exe",
+    "bytes": 10752,
+    "sha256": "3c830680aa79d1163415d3386b45341c8f84195a87d1b66f48f64ef08f5a73a1",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/llama-server.exe"
+  },
+  {
+    "path": "runtime/llama.dll",
+    "bytes": 2531328,
+    "sha256": "de071e4491522a9be07e2d3326a9fef46a6c39a50d63208fd8f56a6b05048833",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/llama.dll"
+  },
+  {
+    "path": "runtime/mtmd.dll",
+    "bytes": 1014272,
+    "sha256": "81f747f4b86091fdbf253136b652acea5c298f08671a8a3c3a2d131e3783e467",
+    "repo": "Pita-Ai/OpenCore-runtime-windows-20260926",
+    "revision": "3494c7c5b1e1c32b07df3a263473a0a4f032404e",
+    "filename": "runtime/mtmd.dll"
+  }
+]

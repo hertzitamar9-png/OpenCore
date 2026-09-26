@@ -7,7 +7,7 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "node scripts/prepare-claude-harness.mjs && npm run build",
+    "beforeBuildCommand": "node scripts/verify-doucode-runtime.mjs && node scripts/verify-lfm-runtime.mjs && node scripts/prepare-claude-harness.mjs && npm run build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -66,7 +66,16 @@
       "resources/echo/evoagent/echo_context.py": "echo/evoagent/echo_context.py",
       "resources/echo/evoagent/echo_output.py": "echo/evoagent/echo_output.py",
       "resources/claude/": "claude/",
-      "resources/doucode/": "doucode/"
+      "resources/doucode/": "doucode/",
+      "resources/lfm/checkpoint.json": "lfm/checkpoint.json",
+      "resources/lfm/LICENSE.weights.txt": "lfm/LICENSE.weights.txt",
+      "resources/lfm/README.md": "lfm/README.md",
+      "resources/lfm/fusion.py": "lfm/fusion.py",
+      "resources/lfm/dual.py": "lfm/dual.py",
+      "resources/lfm/protocol.py": "lfm/protocol.py",
+      "resources/lfm/serve_lfm.py": "lfm/serve_lfm.py",
+      "resources/lfm/native/fusioncore.dll": "lfm/native/fusioncore.dll",
+      "resources/lfm/native/build-info.json": "lfm/native/build-info.json"
     },
     "windows": {
       "nsis": {
@@ -82,7 +91,7 @@
         "https://github.com/hertzitamar9-png/OpenCore/releases/latest/download/latest.json"
       ],
       "windows": {
-        "installMode": "passive"
+        "installMode": "quiet"
       }
     }
   }

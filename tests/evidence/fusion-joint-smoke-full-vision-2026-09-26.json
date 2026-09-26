@@ -1,0 +1,63 @@
+{
+  "task": "full_checkpoint_joint_fusion_text_step",
+  "quantization": "bitsandbytes NF4 double quantization",
+  "gpu_fraction_limit": 0.88,
+  "adapter": "untrained reference bridge; no quality claim",
+  "gpu_free_before_mib": 11108.0,
+  "gpu_total_mib": 12281.5,
+  "verified_source_seconds": 20.437,
+  "qwen_loaded_seconds": 40.049,
+  "qwen_memory": {
+    "cuda_allocated_mib": 7293.3,
+    "cuda_reserved_mib": 7426.0,
+    "process_rss_gib": 3.89,
+    "system_available_gib": 16.97
+  },
+  "qwen_embedding_offloaded": true,
+  "qwen_vision_present": true,
+  "qwen_vision_cpu": true,
+  "qwen_after_offload": {
+    "cuda_allocated_mib": 5353.3,
+    "cuda_reserved_mib": 7390.0,
+    "process_rss_gib": 5.78,
+    "system_available_gib": 15.08
+  },
+  "k2_loaded_seconds": 53.251,
+  "joint_memory_before_step": {
+    "cuda_allocated_mib": 8437.0,
+    "cuda_reserved_mib": 9716.0,
+    "process_rss_gib": 6.98,
+    "system_available_gib": 13.87
+  },
+  "aligned_token_pieces": 128098,
+  "step_seconds": 1.123,
+  "qwen_native_logits_shape": [
+    1,
+    248320
+  ],
+  "k2_native_logits_shape": [
+    1,
+    250624
+  ],
+  "single_stream_logits_shape": [
+    1,
+    248320
+  ],
+  "scores_finite": true,
+  "generated_text": " a + b",
+  "generated_tokens": 3,
+  "generation_seconds": 0.63,
+  "generation_tokens_per_second": 4.762,
+  "final_qwen_token_count": 12,
+  "final_k2_token_count": 11,
+  "peak_allocated_mib": 9702.4,
+  "peak_reserved_mib": 9738.0,
+  "status": "ok",
+  "elapsed_seconds": 57.571,
+  "memory_at_exit": {
+    "cuda_allocated_mib": 8450.3,
+    "cuda_reserved_mib": 9738.0,
+    "process_rss_gib": 7.98,
+    "system_available_gib": 12.81
+  }
+}

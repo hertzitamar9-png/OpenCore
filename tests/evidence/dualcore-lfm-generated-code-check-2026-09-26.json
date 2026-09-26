@@ -1,0 +1,8 @@
+{
+  "source": "tests\\evidence\\dualcore-lfm-echo-generation-review-2026-09-26.json",
+  "source_sha256": "df427a295337987e29422dfdcb08c522f235f8cf25479603060c2295e7841fbc",
+  "function": "is_palindrome",
+  "cases": 7,
+  "passed": true,
+  "scope": "One prior generated function; ignores spaces and case, not punctuation; no general coding benchmark claim"
+}

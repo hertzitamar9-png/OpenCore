@@ -1,0 +1,39 @@
+{
+  "id": "lfm-a262f9378d3d4af5b183c1513d719002",
+  "object": "chat.completion",
+  "model": "DualCore KV",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_duocore_1b40b44fccf748da8c87dd9d0277e8db",
+            "type": "function",
+            "function": {
+              "name": "sum_numbers",
+              "arguments": "{\"a\":19,\"b\":23}"
+            }
+          }
+        ],
+        "reasoning_content": "The user wants me to use the sum_numbers tool to add 19 and 23, but explicitly states \"Do not answer directly.\" This means I should make the tool call first and then provide the result without stating the calculation steps or giving away the answer directly in my response text.\n\nLet me make the tool call with a=19 and b=23."
+      },
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 327,
+    "completion_tokens": 162,
+    "total_tokens": 489
+  },
+  "lfm": {
+    "selected_brain": 1,
+    "reviews": [],
+    "finish_reason": "stop",
+    "confidence_note": "Self-reported scores are uncalibrated, not correctness probabilities.",
+    "execution_mode": "cooperating_candidate_brains",
+    "seconds": 1.4539263999904506
+  }
+}

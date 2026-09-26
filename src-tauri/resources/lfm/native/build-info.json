@@ -1,0 +1,18 @@
+{
+  "source_commit": "42adf019f76013dac873b5b43950d54d5ab27216",
+  "compiler": "MSVC 19.44.35228.0",
+  "coupling_strength": 0.02,
+  "coupling_trained": false,
+  "files": [
+    {
+      "path": "fusioncore.cpp",
+      "bytes": 15606,
+      "sha256": "01cababc181e49a3d07a5d9cb87d16b868e99e9635193ad57dac76b8a54bf85c"
+    },
+    {
+      "path": "fusioncore.dll",
+      "bytes": 37376,
+      "sha256": "2e450f3732d83a82ae8fe8c1766ba6d8309058ef601cc214507019b5b5bb1fe1"
+    }
+  ]
+}

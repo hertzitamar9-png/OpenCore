@@ -1,0 +1,112 @@
+{
+  "source_repository": "MBZUAI-IFM/llama.cpp",
+  "source_branch": "model/K2Horizon",
+  "source_commit": "42adf019f76013dac873b5b43950d54d5ab27216",
+  "cuda_architectures": "75-virtual;89-real",
+  "cuda_toolkit": "13.3",
+  "compiler": "MSVC 19.44.35228.0",
+  "build_system": "CMake + Ninja",
+  "build_flags": {
+    "GGML_CUDA": true,
+    "GGML_BUILD_TESTS": false,
+    "GGML_BUILD_EXAMPLES": false,
+    "GGML_BUILD_SERVER": true
+  },
+  "supported_model_architectures": [
+    "k2-horizon",
+    "nanbeige",
+    "lfm2"
+  ],
+  "files": [
+    {
+      "path": "CUDA-EULA.txt",
+      "bytes": 69791,
+      "sha256": "7771f1ef8e9300ba175cf58e9dcc1df55d9dd82d3fc960c4c6db0c66354e418c"
+    },
+    {
+      "path": "CUDA-LICENSE.txt",
+      "bytes": 68070,
+      "sha256": "088381bc2d891e719a2a9398645b00bb45f3b24231473a8283ac7e3e66b8a028"
+    },
+    {
+      "path": "LICENSE.llama.cpp",
+      "bytes": 1099,
+      "sha256": "bcd8ec749126d45cb06737d0690295d73df4b6e7e194205bcf91190368f27285"
+    },
+    {
+      "path": "MSVCP140.dll",
+      "bytes": 643512,
+      "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
+    },
+    {
+      "path": "VCOMP140.DLL",
+      "bytes": 212920,
+      "sha256": "95d4ce4a6802d1e18b5e0e1722cc30ea72ca7e033f83828f05c0b7b993fe7cbf"
+    },
+    {
+      "path": "VCRUNTIME140.dll",
+      "bytes": 178616,
+      "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+    },
+    {
+      "path": "VCRUNTIME140_1.dll",
+      "bytes": 50112,
+      "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
+    },
+    {
+      "path": "cublas64_13.dll",
+      "bytes": 52697712,
+      "sha256": "8c6bac24474af29627ec96500025a5d410a1b7e8ffa00e1fe13b1781fc6b3ddc"
+    },
+    {
+      "path": "cublasLt64_13.dll",
+      "bytes": 463655536,
+      "sha256": "e323abd89e0f03c1db91a09d7aeb1928de08e1f86192cc713b335fefe3e368a9"
+    },
+    {
+      "path": "ggml-base.dll",
+      "bytes": 658944,
+      "sha256": "b7b3e451761cb21ef734ebb2eda77f1630f62ae15e7195817e7c81cbba9a6064"
+    },
+    {
+      "path": "ggml-cpu.dll",
+      "bytes": 904704,
+      "sha256": "b519755da1ca0160337a06f84303de1acf083f4e8346fe3b61601a826818a88f"
+    },
+    {
+      "path": "ggml-cuda.dll",
+      "bytes": 50951680,
+      "sha256": "9af590a59531df233455187266742bc93845b2e9362cec3d0c62c52c46b74a85"
+    },
+    {
+      "path": "ggml.dll",
+      "bytes": 67072,
+      "sha256": "874e055fa5e943f1a6d3342a01d31dd9aca377bcf24d64a99d10ef3faa31fa0f"
+    },
+    {
+      "path": "llama-common.dll",
+      "bytes": 8198656,
+      "sha256": "7270f14eb41b55d5d596b214dd9cae66a202897b8e0bb60bf2e8e7bbf4434308"
+    },
+    {
+      "path": "llama-server-impl.dll",
+      "bytes": 3171328,
+      "sha256": "abdb94724d60a9d07f47de0fc61d0dce977f66afabaa42a55dfd9305abcfb4ef"
+    },
+    {
+      "path": "llama-server.exe",
+      "bytes": 10752,
+      "sha256": "aed80ff1f7e7230c9e405cd213865ac956222f3e9289763e66153c034251b8ce"
+    },
+    {
+      "path": "llama.dll",
+      "bytes": 2583552,
+      "sha256": "0f528ce50a1f55d3ad9318773a679cdc5e28904835284e1a5c25f4d0bcd0150e"
+    },
+    {
+      "path": "mtmd.dll",
+      "bytes": 2379776,
+      "sha256": "7f26ab7a81ba30d518f4d2a0af090090b958179c86df8e0604501847074846df"
+    }
+  ]
+}

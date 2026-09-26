@@ -23,6 +23,7 @@ pub struct VisionManager {
     child: Mutex<Option<Child>>,
     starting: tokio::sync::Mutex<()>,
     install_root: PathBuf,
+    resource_root: Option<PathBuf>,
 }
 
 /// A window image and where its top-left pixel sits in the window's own coordinates
@@ -35,8 +36,8 @@ pub struct Frame {
 }
 
 impl VisionManager {
-    pub fn new(install_root: PathBuf) -> Self {
-        Self { child: Mutex::new(None), starting: tokio::sync::Mutex::new(()), install_root }
+    pub fn new(install_root: PathBuf, resource_root: Option<PathBuf>) -> Self {
+        Self { child: Mutex::new(None), starting: tokio::sync::Mutex::new(()), install_root, resource_root }
     }
 
     fn files(&self) -> Result<[PathBuf; 3], String> {
@@ -70,11 +71,13 @@ impl VisionManager {
     /// Start the vision server if needed. While it sleeps it still answers health checks,
     /// and the next request wakes it, so a sleeping server counts as running.
     pub async fn ensure_running(&self) -> Result<(), String> {
+        crate::model_catalog::require_idle()?;
         let _one_start = self.starting.lock().await;
         if self.running() && Self::healthy().await { return Ok(()); }
         let [server, model, projector] = self.files()?;
         if !self.running() {
             let mut command = Command::new(&server);
+            crate::child_guard::inference_dependencies(&mut command, self.resource_root.as_deref());
             command.args(["-m", model.to_string_lossy().as_ref(), "--mmproj", projector.to_string_lossy().as_ref()])
                 .args(["--host", "127.0.0.1", "--port", &PORT.to_string()])
                 // Full detail up to a 4K window (8192 image tokens), the setting that scored
@@ -219,7 +222,7 @@ mod tests {
     #[ignore = "needs open windows and the installed Reflex Vision weights"]
     async fn live_grounding_matches_accessibility_bounds() {
         let home = PathBuf::from(std::env::var_os("USERPROFILE").unwrap()).join("OpenCore");
-        let vision = VisionManager::new(home);
+        let vision = VisionManager::new(home, None);
         let listed = crate::windows_control::command("list".into(), json!({})).await.unwrap();
         let kinds = [("Button", "button"), ("MenuItem", "menu item"), ("TabItem", "tab"), ("ListItem", "list item"),
                      ("Hyperlink", "link"), ("CheckBox", "checkbox"), ("RadioButton", "option"), ("TreeItem", "tree item"),
@@ -270,7 +273,7 @@ mod tests {
     #[ignore = "needs the click test page open and the installed Reflex Vision weights"]
     async fn live_clicks_land_on_the_described_control() {
         let home = PathBuf::from(std::env::var_os("USERPROFILE").unwrap()).join("OpenCore");
-        let vision = VisionManager::new(home);
+        let vision = VisionManager::new(home, None);
         // Hebrew Windows wraps window titles in bidi embedding marks.
         let plain = |title: &str| title.chars()
             .filter(|c| !matches!(c, '\u{200e}' | '\u{200f}' | '\u{202a}'..='\u{202e}')).collect::<String>();

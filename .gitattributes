@@ -2,3 +2,9 @@
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+src-tauri/resources/doucode/runtime/*.dll filter=lfs diff=lfs merge=lfs -text
+src-tauri/resources/doucode/runtime/*.exe filter=lfs diff=lfs merge=lfs -text
+src-tauri/resources/lfm/native/*.dll filter=lfs diff=lfs merge=lfs -text
+src-tauri/resources/lfm/native/fusioncore.cpp text eol=lf
+src-tauri/resources/doucode/runtime/*.txt -text -whitespace
+src-tauri/resources/doucode/runtime/LICENSE.* -text -whitespace

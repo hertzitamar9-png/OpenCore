@@ -4,6 +4,17 @@
 
 use std::process::Child;
 
+/// Reuse the signed app bundle's CUDA and VC dependencies for optional runtimes.
+/// Keep the user's global PATH unchanged and avoid another half-gigabyte copy.
+pub fn inference_dependencies(command: &mut std::process::Command, resources: Option<&std::path::Path>) {
+    if let Some(directory) = resources.map(|root| root.join("doucode/runtime"))
+        .filter(|path| path.join("cublas64_13.dll").is_file()) {
+        let mut paths = vec![directory];
+        if let Some(existing) = std::env::var_os("PATH") { paths.extend(std::env::split_paths(&existing)); }
+        if let Ok(value) = std::env::join_paths(paths) { command.env("PATH", value); }
+    }
+}
+
 #[cfg(windows)]
 pub fn adopt(child: &Child) {
     use std::os::windows::io::AsRawHandle;

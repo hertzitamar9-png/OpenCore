@@ -1,0 +1,23 @@
+[
+  {
+    "repo": "Pita-Ai/OpenCore-LFM-DualCore-FusionCore-Q8",
+    "revision": "ce439b410db322b6b410099d679374154f05ce17",
+    "files": 12,
+    "bytes": 101828,
+    "verified": true
+  },
+  {
+    "repo": "Pita-Ai/OpenCore-DuoCore-K2-Nanbeige-Q6",
+    "revision": "32a514f44719b1698039dafcd290532b31025d18",
+    "files": 9,
+    "bytes": 60323,
+    "verified": true
+  },
+  {
+    "repo": "Pita-Ai/OpenCore-TwinCore-experimental",
+    "revision": "0bc7ea981ce2590b5bc34dd97191d104d366260d",
+    "files": 10,
+    "bytes": 48051,
+    "verified": true
+  }
+]

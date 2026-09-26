@@ -1,0 +1,44 @@
+{
+  "id": "lfm-38a513eff4e14e9b8ac8c4c32bdd2d49",
+  "object": "chat.completion",
+  "model": "FusionCore KV",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "<think>The user is asking a simple arithmetic question: \"What is 19 plus 23?\" They want the answer with the number only, and they've specified \"/no_think\" which seems to be a directive to not show reasoning. I should just provide the answer directly.\n\n19 + 23 = 42\n\nThe answer should be just \"42\" with no additional text.</think>42"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 44,
+    "completion_tokens": 79,
+    "total_tokens": 123
+  },
+  "lfm": {
+    "profile": "fusioncore-kv",
+    "checkpoint": {
+      "repo": "DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF",
+      "revision": "36fe18b06b8198bf93e5b5055c77b72e186e83db",
+      "filename": "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+      "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e",
+      "bytes": 3120573088,
+      "precision": "Q8_0 MAX",
+      "license": "lfm1.0",
+      "copies_in_memory": 2,
+      "copies_on_disk": 1,
+      "published_context_tokens": 131072,
+      "bf16_available": false,
+      "bf16_note": "The supplied repository has only quantized GGUFs. Casting/dequantizing Q8 to BF16 would not restore original precision."
+    },
+    "complete_towers": 2,
+    "parameters": 5394397184,
+    "execution_mode": "single_coupled_token_stream",
+    "cache_mode": "KV",
+    "memory_note": "ECHO archive retrieval has finite active inference; recomputation still needs transient attention buffers.",
+    "quality": "experimental; no benchmark improvement claimed",
+    "seconds": 1.6304417999926955
+  }
+}

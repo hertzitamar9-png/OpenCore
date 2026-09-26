@@ -21,12 +21,13 @@ impl SpeechManager {
     }
 
     pub async fn start(&self) -> Result<String, String> {
+        crate::model_catalog::require_idle()?;
         let mut guard = self.session.lock().await;
         if guard.is_some() { return Err("A microphone session is already active".into()); }
         let python = self.root.join("venv/Scripts/python.exe");
         let model = self.root.join("large-v3");
         if !python.is_file() || !model.join("model.bin").is_file() || !self.script.is_file() {
-            return Err("Whisper large-v3 is not installed. Install OpenCore's local speech runtime first.".into());
+            return Err("Whisper large-v3 is not installed. Install it from the Models tab and provide the local speech Python runtime.".into());
         }
         let id = uuid::Uuid::new_v4().to_string();
         let audio = std::env::temp_dir().join(format!("opencore-speech-{id}.audio"));
@@ -109,6 +110,8 @@ impl SpeechManager {
             let _ = wait_result(&mut session.result).await;
         }
     }
+
+    pub async fn is_active(&self) -> bool { self.session.lock().await.is_some() }
 }
 
 async fn wait_result(receiver: &mut watch::Receiver<Outcome>) -> Result<Value, String> {

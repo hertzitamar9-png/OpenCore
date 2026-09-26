@@ -1139,16 +1139,27 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
   position: fixed;
   z-index: 10000;
   right: 18px;
-  bottom: 18px;
-  max-width: min(440px, calc(100vw - 36px));
-  padding: 12px 16px;
-  border: 1px solid #3e7fbc;
-  border-radius: 10px;
-  background: #10243a;
+  bottom: 54px;
+  width: min(420px, calc(100vw - 36px));
+  box-sizing: border-box;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #315777;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #10243a, #0c1723 78%);
   color: #e5f3ff;
-  box-shadow: 0 8px 28px #0008;
+  box-shadow: 0 12px 36px #000a, inset 0 1px #ffffff0c;
   font-size: 13px;
 }
+.auto-update-heading { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.auto-update-indicator { width: 8px; height: 8px; flex: none; border-radius: 50%; background: #38d9a9; box-shadow: 0 0 12px #38d9a988; }
+.auto-update-progress { height: 6px; overflow: hidden; border-radius: 999px; background: #203447; box-shadow: inset 0 1px 2px #0008; }
+.auto-update-progress > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #27b9e6, #61e5b3); box-shadow: 0 0 12px #27b9e666; transition: width 180ms ease-out; }
+.auto-update-progress.is-indeterminate > span { width: 35%; animation: auto-update-sweep 1.2s ease-in-out infinite alternate; }
+.auto-update-progress-text { color: #a9c2d8; font-size: 11px; font-variant-numeric: tabular-nums; }
+@keyframes auto-update-sweep { from { transform: translateX(0); } to { transform: translateX(185%); } }
+@media (prefers-reduced-motion: reduce) { .auto-update-progress > span { transition: none; } .auto-update-progress.is-indeterminate > span { animation: none; width: 55%; } }
 
 /* Composer shortcuts, model selector, and compact status context meter. */
 .app-shell { grid-template-rows: 70px minmax(0, 1fr) 36px; }
@@ -1231,3 +1242,29 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
   .statusbar-context-reading { grid-column:2; grid-row:1; }
   .composer-action-popover { left:20px; }
 }
+:root { --model-muted: #a9c6da; }
+.model-library { margin-bottom: 24px; }
+.model-library-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:12px; }
+.model-library-heading h2 { margin:0 0 8px; font-size:21px; }
+.model-library-heading p,.model-library-note { color:var(--model-muted); line-height:1.5; margin:0 0 12px; }
+.model-storage { display:flex; align-items:center; gap:8px; white-space:nowrap; color:var(--model-muted); border:1px solid #304858; padding:9px 12px; border-radius:10px; }
+.model-library-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(315px,1fr)); gap:16px; margin-top:20px; }
+.model-library-card { display:flex; flex-direction:column; border:1px solid #304858; border-radius:14px; background:#111f2a; padding:20px; gap:14px; }
+.model-library-card.selected { border-color:#6caee9; }
+.model-library-card header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.model-library-card h3 { font-size:18px; margin:0 0 5px; }
+.model-library-card header div>span { font-size:12px; color:#a9c6da; }
+.model-install-state { font-size:11px; white-space:nowrap; padding:5px 8px; border:1px solid #38556b; border-radius:6px; color:#b6cbdc; }
+.model-install-state.installed { color:#88e6c4; border-color:#2d715e; }
+.model-library-card p { line-height:1.5; margin:0; color:#d9e8f2; }
+.model-library-card dl { margin:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.model-library-card dt { font-size:11px; color:#a9c6da; margin-bottom:5px; }
+.model-library-card dd { margin:0; font-size:13px; }
+.model-library-card>small { line-height:1.6; color:#a9c6da; flex:1; }
+.model-library-card footer { display:flex; gap:10px; }
+.model-library-card footer button { display:flex; align-items:center; justify-content:center; gap:7px; flex:1; padding:10px; border-radius:8px; }
+.model-license { color:#92afc4; font-size:11px; }
+.model-install-progress { padding:16px; margin:16px 0; border:1px solid #38556b; border-radius:12px; background:#102b37; }
+.model-install-progress>div { display:flex; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.model-install-progress progress { width:100%; height:8px; accent-color:#80ccff; }
+.model-install-progress small { display:block; margin:10px 0; color:#a9c6da; overflow-wrap:anywhere; }

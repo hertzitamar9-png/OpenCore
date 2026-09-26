@@ -5,15 +5,27 @@ export interface UpdateNotice {
   total?: number;
 }
 
+export function updateNoticePercent(notice: UpdateNotice): number | null {
+  if (
+    notice.downloaded == null ||
+    notice.total == null ||
+    !Number.isFinite(notice.downloaded) ||
+    !Number.isFinite(notice.total) ||
+    notice.total <= 0
+  ) return null;
+
+  return Math.max(0, Math.min(100, Math.floor((notice.downloaded / notice.total) * 100)));
+}
+
 export function updateNoticeMessage(notice: UpdateNotice): string | null {
   switch (notice.state) {
     case "auth-required":
       return "Sign in to GitHub CLI to enable private app updates.";
     case "downloading": {
-      const progress = notice.total && notice.downloaded != null
-        ? ` ${Math.min(100, Math.floor(notice.downloaded * 100 / notice.total))}%`
-        : "";
-      return `Updating OpenCore${notice.version ? ` to ${notice.version}` : ""}…${progress}`;
+      return `Downloading OpenCore update${notice.version ? ` ${notice.version}` : ""}…`;
+    }
+    case "installing": {
+      return "Applying update… OpenCore will reopen automatically.";
     }
     case "waiting":
       return "Update found. OpenCore will install it when the model and chats are idle.";

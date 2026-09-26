@@ -1,0 +1,18 @@
+{
+  "model": "qwen3.5-9b",
+  "source": "Qwen-Qwen3.5-9B-c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+  "quantization": "bnb_nf4_double",
+  "gpu_fraction_limit": 0.75,
+  "load_seconds": 14.402,
+  "status": "ok",
+  "forward_seconds": 1.25,
+  "logits_shape": [
+    1,
+    1,
+    248320
+  ],
+  "elapsed_seconds": 15.652,
+  "peak_allocated_mib": 7365.3,
+  "peak_reserved_mib": 7404.0,
+  "ram_available_gib": 16.86
+}

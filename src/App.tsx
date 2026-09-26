@@ -46,7 +46,8 @@ import { AssistantConversation } from "./AssistantConversation";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
-import { ModelProfileOptions, profileDescription, profileLabel } from "./ModelProfiles";
+import { ModelProfileOptions, profileDescription, profileLabel, selectableModelProfiles } from "./ModelProfiles";
+import { ModelLibrary } from "./ModelLibrary";
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
 type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "connectors" | "settings" | "troubleshooting";
@@ -144,7 +145,7 @@ function modelLoaderDetail(snapshot: AppSnapshot): { text: string; loaded: numbe
 const readProfilePreference = (): RuntimeProfile => {
   try {
     const stored = window.localStorage.getItem("opencore.model-profile");
-    if (stored === "echo" || stored === "native1m" || stored === "unsloth-echo" || stored === "doucode") return stored;
+    if (stored === "unsloth-echo" || selectableModelProfiles.some((profile) => profile.id === stored)) return stored as RuntimeProfile;
   } catch { /* Use the first-run profile when storage is unavailable. */ }
   return "doucode";
 };
@@ -402,12 +403,12 @@ function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAct
   };
   return <div className="workspace runtime-workspace">
     <section className="runtime-main">
-      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · one runtime at a time</span><button className={selectedProfile === "echo" ? "active" : ""} onClick={() => setSelectedProfile("echo")} disabled={active}><b>ECHO 3T</b><small>Addressable-history target · exact archive</small></button><button className={selectedProfile === "native1m" ? "active" : ""} onClick={() => setSelectedProfile("native1m")} disabled={active}><b>1M extended</b><small>YaRN window · trained at 262K</small></button><button className={selectedProfile === "doucode" ? "active" : ""} onClick={() => setSelectedProfile("doucode")} disabled={active}><b>doUcode</b><small>K2 + Nanbeige · persistent ECHO archive</small></button></div></div>
+      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · one runtime at a time</span>{selectableModelProfiles.map((model) => <button key={model.id} className={selectedProfile === model.id ? "active" : ""} onClick={() => setSelectedProfile(model.id)} disabled={active}><b>{model.label}</b><small>{model.description}</small></button>)}</div></div>
       <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
       <RuntimeLogs logs={snapshot.logs} />
     </section>
     <aside className="runtime-inspector">
-      <InspectorSection title="Model & Download"><div className="model-line"><div><span>{profileLabel(selectedProfile)}</span><strong>{selectedProfile === "doucode" ? "K2 + Nanbeige + TwinCore bridge" : "OpenCore-Code-Single-File.gguf"}</strong><small>{runtime.modelPath}</small></div><StatusDot state={runtime.profile === selectedProfile ? runtime.status : "stopped"} /></div><KeyValue label="Runtime status" value={runtime.profile === selectedProfile ? runtime.status : "Selected · model unloaded"} />{selectedProfile === "doucode" ? <><KeyValue label="Backbones" value="K2 + Nanbeige start together" /><KeyValue label="Laya" value="Bundled, not used in bilateral agreement" /><p className="appearance-note">Selecting doUcode does not load either model. Press Start to launch both backbones and the ECHO archive.</p></> : null}<button className="wide" onClick={() => void revealLocalPath(modelDir, actions.notice)}><FolderOpen size={14} /> Open model folder</button></InspectorSection>
+      <InspectorSection title="Model & Download"><div className="model-line"><div><span>{profileLabel(selectedProfile)}</span><strong>{selectedProfile === "doucode" ? "K2 + Nanbeige candidate selection" : "OpenCore-Code-Single-File.gguf"}</strong><small>{runtime.modelPath}</small></div><StatusDot state={runtime.profile === selectedProfile ? runtime.status : "stopped"} /></div><KeyValue label="Runtime status" value={runtime.profile === selectedProfile ? runtime.status : "Selected · model unloaded"} />{selectedProfile === "doucode" ? <><KeyValue label="Backbones" value="K2 + Nanbeige generate and score answers together" /><p className="appearance-note">Selecting DuoCore does not load either model. Press Start to launch both backbones and the ECHO archive.</p></> : null}<button className="wide" onClick={() => void revealLocalPath(modelDir, actions.notice)}><FolderOpen size={14} /> Open model folder</button></InspectorSection>
       <InspectorSection title="Resource Usage"><ResourceRow label="GPU VRAM" value={`${(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)} / ${(snapshot.telemetry.vramTotalMib / 1024).toFixed(0)} GB`} /><ResourceRow label="System RAM" value={`${(snapshot.telemetry.systemMemoryUsedMib / 1024).toFixed(1)} / ${(snapshot.telemetry.systemMemoryTotalMib / 1024).toFixed(0)} GB`} /><ResourceRow label="Disk free" value={`${snapshot.telemetry.diskFreeGib.toFixed(1)} GiB`} /></InspectorSection>
       <InspectorSection title="Endpoints"><Endpoint label="Gateway · use this" value={`http://127.0.0.1:${runtime.gatewayPort}/v1`} /><Endpoint label="Direct · bypasses capture" value={`http://127.0.0.1:${runtime.backendPort}/v1`} /><Endpoint label="ECHO internal" value={`http://127.0.0.1:${runtime.echoPort}/v1`} /></InspectorSection>
       <InspectorSection title="Process Supervision"><KeyValue label="Status" value={runtime.status} /><KeyValue label="Recovery" value="Manual restart available" /><KeyValue label="No console windows" value="Enabled" /><KeyValue label="Last error" value={runtime.error || "None"} /></InspectorSection>
@@ -481,7 +482,7 @@ function ArchiveEventCard({ event, onNotice }: { event: ArchiveEvent; onNotice: 
   </article>;
 }
 
-function SupportingView({ view, snapshot, selectedProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; onAppearanceChange: (value: Appearance) => void }) {
+function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; onSelectProfile: (profile: RuntimeProfile) => void; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; onAppearanceChange: (value: Appearance) => void }) {
   const [connectorForm, setConnectorForm] = useState({ name: "", endpoint: "", matchPattern: "", kind: "openai" });
   const [connectorNotice, setConnectorNotice] = useState("");
   const [memoryQuery, setMemoryQuery] = useState("");
@@ -838,7 +839,8 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
   </div>;
 
   if (view === "models") return <div className="support-page">
-    <div className="page-heading"><div><h1>Models</h1><p>Verify the actual local model package and open its installation folder.</p></div></div>
+    <div className="page-heading"><div><h1>Models</h1><p>Install and remove local models, then choose which one to use.</p></div><button onClick={() => void revealLocalPath(modelDir, onNotice)}><FolderOpen size={14} /> Open model folder</button></div>
+    <ModelLibrary selectedProfile={selectedProfile} onSelect={onSelectProfile} runtimeActive={["running", "starting"].includes(snapshot.runtime.status) || Boolean(snapshot.activeConversationIds?.length)} onNotice={onNotice} />
     <div className="settings-grid">
       <section className="model-activity" aria-label="Model activity">
         <div className="model-activity-heading"><div><h2>Model activity</h2><span>{snapshot.runtime.loadingPhase || snapshot.runtime.status}</span></div><strong>{snapshot.runtime.status === "starting" ? `${((snapshot.runtime.loadingElapsedMs || 0) / 1000).toFixed(1)}s` : snapshot.runtime.loadingElapsedMs != null ? `Loaded in ${(snapshot.runtime.loadingElapsedMs / 1000).toFixed(1)}s` : "—"}</strong></div>
@@ -852,25 +854,6 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
           <div><small>Token speed</small><strong>{(recentDecoderSpeed(snapshot.logs) ?? snapshot.telemetry.tokensPerSecond).toFixed(1)} /s</strong><small>{recentDecoderSpeed(snapshot.logs) === null ? "Last reported" : "Live decoder sample"}</small></div>
         </div>
       </section>
-      <InspectorSection title="OpenCore model">
-        <KeyValue label="Model class" value="Qwen3.5-derived · about 5B parameters" />
-        <KeyValue label="Vision" value="BF16 projector auto-loads from vision/mmproj-BF16.gguf" />
-        <KeyValue label="Path" value={snapshot.runtime.modelPath} />
-        <KeyValue label="Status" value={snapshot.runtime.status} />
-        <KeyValue label="Context" value={snapshot.runtime.contextSize.toLocaleString()} />
-        <button className="wide" onClick={async () => { try { onNotice(await api.verifyModel()); } catch (error) { onNotice(String(error)); } }}><ShieldCheck size={14} /> Verify SHA-256</button>
-        <button className="wide" onClick={() => void revealLocalPath(modelDir, onNotice)}><FolderOpen size={14} /> Open model folder</button>
-      </InspectorSection>
-      <InspectorSection title="doUcode">
-        <KeyValue label="Package" value="K2 + Nanbeige shared-state coding model" />
-        <KeyValue label="Language model" value="Laya multilingual · 322M encoder" />
-        <KeyValue label="Laya runtime" value="Bundled but not loaded; doUcode uses bilateral agreement" />
-        <KeyValue label="Live context" value="262,144 tokens in the package configuration" />
-        <KeyValue label="Current status" value="Alignment trained; end to end coding quality unverified" />
-        <p className="appearance-note">The two generator backbones negotiate an answer/action directly; neither gets to choose the other's output. Laya's bundled classifier is not loaded or used for selection.</p>
-        <button className="wide" onClick={() => void revealLocalPath("C:\\Users\\hertz\\Documents\\Best ai model in the world\\release\\doUcode", onNotice)}><FolderOpen size={14} /> Open doUcode package</button>
-      </InspectorSection>
-      <InspectorSection title="Profiles"><KeyValue label="ECHO 3T" value="3T addressable-history target · exact disk archive" /><KeyValue label="doUcode" value="K2 + Nanbeige · persistent ECHO archive" /><KeyValue label="1M extended" value="1,000,000-token YaRN window · trained context 262,144" /><KeyValue label="Selected profile" value={profileLabel(selectedProfile)} /><KeyValue label="Loaded profile" value={profileLabel(snapshot.runtime.profile)} /></InspectorSection>
       <InspectorSection title="Live context"><EchoContextStatus conversationId={selectedConversation} running={snapshot.runtime.status === "running"} configuredContextTokens={snapshot.runtime.contextSize} attentionKvLocation={snapshot.runtime.attentionKvLocation} attentionKvType={snapshot.runtime.attentionKvType} /><button className="wide" onClick={() => onNavigate("context")}><BrainCircuit size={14} /> Open live context</button></InspectorSection>
     </div>
   </div>;
@@ -908,7 +891,7 @@ function SupportingView({ view, snapshot, selectedProfile, selectedConversation,
       <InspectorSection title="Model & context">
         <KeyValue label="ECHO 3T model" value="Qwen3.5-derived 5B class + BF16 vision projector" />
         <KeyValue label="ECHO model native window" value="262,144 tokens per inference" />
-        <KeyValue label="doUcode package context" value="262,144 tokens" />
+        <KeyValue label="DuoCore package context" value="65,536 live tokens · ECHO keeps the exact archive" />
         <KeyValue label="1M extended profile" value="1,000,000-token YaRN window; original trained context 262,144" />
         <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
         <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
@@ -974,10 +957,10 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
     return () => { active = false; window.clearInterval(timer); };
   }, [conversationId, profile, runtime.profile, runtime.status]);
 
-  if (profile === "echo" || profile === "native1m" || profile === "unsloth-echo" || profile === "doucode") {
+  if (["echo", "native1m", "unsloth-echo", "doucode", "dualcore-echo", "fusioncore-echo"].includes(profile)) {
     const archived = workingSet?.offloadedMessages;
     const reportedLimit = workingSet?.available ? workingSet.modelContextTokens ?? workingSet.windowTokens : undefined;
-    const fallbackLimit = runtime.contextSize || (profile === "native1m" ? 1_000_000 : 32768);
+    const fallbackLimit = runtime.contextSize || (profile === "native1m" ? 1_000_000 : profile === "doucode" ? 65_536 : 32768);
     const maximum = Math.max(1, reportedLimit ?? fallbackLimit);
     const liveValue = workingSet?.modelActiveTokens ?? (workingSet?.available ? workingSet.promptTokens ?? workingSet.liveTokens : undefined);
     const measured = typeof liveValue === "number";
@@ -1341,7 +1324,7 @@ export default function App() {
     <Navigation active={view} onChange={setView} running={running} />
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
-      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
+      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
   </div></div>;

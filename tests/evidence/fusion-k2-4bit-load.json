@@ -1,0 +1,18 @@
+{
+  "model": "k2-horizon-3.7b",
+  "source": "K2-Horizon-3.7B-85f683bc15947495341baa91ae1246dcecc47407",
+  "quantization": "bnb_nf4_double",
+  "gpu_fraction_limit": 0.55,
+  "load_seconds": 11.591,
+  "status": "ok",
+  "forward_seconds": 0.546,
+  "logits_shape": [
+    1,
+    1,
+    250624
+  ],
+  "elapsed_seconds": 12.137,
+  "peak_allocated_mib": 4371.2,
+  "peak_reserved_mib": 4384.0,
+  "ram_available_gib": 17.11
+}

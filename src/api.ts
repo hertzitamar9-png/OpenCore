@@ -10,8 +10,35 @@ export const speechCancel = (sessionId: string) => invoke<void>("speech_cancel",
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AppSnapshot, ArchiveEvent, ArchiveOverview, ArchivePageRef, ArchiveSearchHit, ApprovalMode, ChatSendResult, ConnectorInput, ConnectorStatus, OperationRecord, ProjectSummary, ReasoningEffort, RuntimeProfile, TimelineEntry } from "./types";
 import { previewSnapshot, previewTimeline } from "./mock";
+import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
 const desktop = () => "__TAURI_INTERNALS__" in window;
+
+export interface InstalledModel {
+  id: string; label: string; description: string; selectable: boolean;
+  precision: string; contextTokens: number; license: string; experimental: boolean; note: string;
+  installed: boolean; downloadBytes: number; totalBytes: number;
+}
+export interface ModelLibrary {
+  models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
+  progress: { modelId: string; phase: string; downloadedBytes: number; totalBytes: number; currentFile: string; error: string | null } | null;
+}
+export async function modelLibrary(): Promise<ModelLibrary> {
+  if (desktop()) return invoke<ModelLibrary>("list_model_library");
+  return { models: modelCatalog.models.map((model) => ({ ...model, installed: false,
+    downloadBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0),
+    totalBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0) })),
+    diskFreeBytes: 240e9, minimumFreeBytes: 200e9, progress: null };
+}
+export async function installModel(id: string): Promise<void> {
+  if (!desktop()) throw new Error("Model installation requires the desktop application.");
+  await invoke("install_model", { id });
+}
+export async function uninstallModel(id: string): Promise<void> {
+  if (!desktop()) throw new Error("Model installation requires the desktop application.");
+  await invoke("uninstall_model", { id });
+}
+export const cancelModelInstall = () => invoke<void>("cancel_model_install");
 
 export type ArtifactPreview = { id: string; name: string; mime: string; size: number; dataUrl: string; text: string | null };
 export type BrowserStatus = { port: number; token: string; connected: boolean; extensionPath?: string };

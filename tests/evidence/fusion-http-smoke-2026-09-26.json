@@ -1,0 +1,20 @@
+{
+  "model": "opencore-fusion-experimental",
+  "server_context_tokens": 1024,
+  "stream_done": true,
+  "delta_count": 2,
+  "deltas": [
+    "Hello",
+    " world"
+  ],
+  "text": "Hello world",
+  "first_delta_seconds": 1.959,
+  "elapsed_seconds": 2.779,
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 18,
+    "completion_tokens": 2,
+    "total_tokens": 20
+  },
+  "status": "ok"
+}

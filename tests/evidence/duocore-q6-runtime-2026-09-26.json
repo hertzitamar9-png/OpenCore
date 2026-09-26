@@ -1,0 +1,77 @@
+{
+  "precision": "Q6_K",
+  "active_context": 65536,
+  "passed": true,
+  "scope": "Short runtime/tool integration; not a benchmark",
+  "load_seconds": 16.830583400005708,
+  "gpu": "7898 MiB, 12282 MiB",
+  "props": {
+    "model": "DuoCore",
+    "n_ctx": 65536,
+    "default_generation_settings": {
+      "n_ctx": 65536
+    }
+  },
+  "completion": {
+    "id": "duocore-1790451935754",
+    "object": "chat.completion",
+    "created": 1790451935,
+    "model": "DuoCore",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "call_duocore_3508948f44a840b78abc013b5d4dfca6",
+              "type": "function",
+              "function": {
+                "name": "sum_numbers",
+                "arguments": "{\"a\":19,\"b\":23}"
+              }
+            }
+          ]
+        },
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 519,
+      "completion_tokens": 68,
+      "total_tokens": 587
+    },
+    "duocore": {
+      "status": "selected",
+      "selection_method": "both_models_returned_the_same_valid_candidate",
+      "selected_model": "K2",
+      "candidates_valid": {
+        "K2": true,
+        "Nanbeige": true
+      },
+      "candidate_scores": {
+        "K2": 100.0,
+        "Nanbeige": 100.0
+      },
+      "review_confidence_mean": 0.0,
+      "review_confidence_note": "Model-reported and uncalibrated; not a correctness probability.",
+      "reviews": [],
+      "generation_errors": {},
+      "review_errors": {},
+      "usage": {
+        "prompt_tokens": 519,
+        "completion_tokens": 68,
+        "total_tokens": 587
+      },
+      "models": [
+        "K2",
+        "Nanbeige"
+      ],
+      "inference_passes_max": 4,
+      "seconds": 6.3578045000031125,
+      "live_window_tokens": 65536,
+      "execution_mode": "pairwise_candidate_selection"
+    }
+  }
+}

@@ -23,8 +23,21 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 /// conversation archive is separate and has no token-count cap (storage bound).
 /// KV stays in system RAM so context does not reserve the model's VRAM budget.
 const ECHO_MODEL_CONTEXT: u64 = 262_144;
-const DOUCODE_MODEL_CONTEXT: u64 = 262_144;
+const DOUCODE_MODEL_CONTEXT: u64 = 65_536;
 const DOUCODE_DEFAULT_PORT: u16 = 8840;
+const LFM_DEFAULT_PORT: u16 = 8850;
+const LFM_FILE: &str = "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf";
+pub fn supported_profile(profile: &str) -> bool {
+    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" |
+        "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo")
+}
+pub fn echo_profile(profile: &str) -> bool {
+    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "dualcore-echo" | "fusioncore-echo")
+}
+fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
+fn lfm_context(profile: &str) -> u64 {
+    match profile { "dualcore-echo" => 32_768, "fusioncore-echo" => 8_192, _ => 131_072 }
+}
 /// Context checkpoints let the hybrid recurrent model resume from the end of the previous
 /// prompt instead of re-reading everything when an assistant turn is re-rendered.
 const CONTEXT_CHECKPOINT_ARGS: [&str; 4] = ["--ctx-checkpoints", "64", "--checkpoint-min-step", "256"];
@@ -132,7 +145,7 @@ impl RuntimeManager {
 
     pub fn upstream_url(&self) -> String {
         let inner = self.inner.lock().expect("runtime lock");
-        if matches!(inner.profile.as_str(), "echo" | "native1m" | "unsloth-echo" | "doucode") {
+        if echo_profile(&inner.profile) {
             return format!("http://127.0.0.1:{}", self.echo_port);
         }
         if let Some(url) = &inner.attached_backend {
@@ -146,8 +159,8 @@ impl RuntimeManager {
     }
 
     pub fn select_profile(&self, profile: &str) -> Result<(), String> {
-        if !matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode") {
-            return Err("profile must be echo, native1m, unsloth-echo, or doucode".into());
+        if !supported_profile(profile) {
+            return Err("Unknown model profile".into());
         }
         let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
         if matches!(inner.status.as_str(), "starting" | "running") && inner.profile != profile {
@@ -166,6 +179,7 @@ impl RuntimeManager {
         if profile == "doucode" {
             return format!("http://127.0.0.1:{DOUCODE_DEFAULT_PORT}");
         }
+        if lfm_profile(profile) { return format!("http://127.0.0.1:{LFM_DEFAULT_PORT}"); }
         format!("http://127.0.0.1:{}", self.backend_port)
     }
 
@@ -263,7 +277,7 @@ impl RuntimeManager {
     }
 
     fn wait_ready(&self, port: u16, path: &str, service: &str, generation: u64) -> Result<(), String> {
-        let timeout = if service == "TwinCore" { 600 } else { 180 };
+        let timeout = if matches!(service, "DuoCore" | "DualCore" | "FusionCore") { 600 } else { 180 };
         let deadline = Instant::now() + Duration::from_secs(timeout);
         loop {
             if self.stop_generation.load(Ordering::SeqCst) != generation {
@@ -275,7 +289,7 @@ impl RuntimeManager {
             }
             {
                 let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
-                let child = if matches!(service, "model" | "TwinCore") { inner.model.as_mut() } else { inner.echo.as_mut() };
+                let child = if matches!(service, "model" | "DuoCore") { inner.model.as_mut() } else { inner.echo.as_mut() };
                 if let Some(child) = child {
                     if let Ok(Some(status)) = child.try_wait() {
                         return Err(format!("{service} exited before becoming ready ({status}). Check Runtime & Logs."));
@@ -336,8 +350,9 @@ impl RuntimeManager {
         !Self::port_open(port)
     }
 
-    fn command(path: &Path) -> Command {
+    fn command(&self, path: &Path) -> Command {
         let mut command = Command::new(path);
+        crate::child_guard::inference_dependencies(&mut command, self.resource_root.as_deref());
         #[cfg(windows)]
         command.creation_flags(CREATE_NO_WINDOW);
         command
@@ -395,29 +410,38 @@ impl RuntimeManager {
         if let Some(path) = std::env::var_os("OPENCORE_DOUCODE_RELEASE").map(PathBuf::from) {
             return path;
         }
-        let profile_root = std::env::var_os("USERPROFILE").map(PathBuf::from).unwrap_or_default();
-        let workspace_package = profile_root
-            .join("Documents")
-            .join("Best ai model in the world")
-            .join("release")
-            .join("doUcode");
-        if workspace_package.join("twincore-config.json").is_file() {
-            return workspace_package;
-        }
         self.install_root.join("doUcode")
     }
 
     fn doucode_script_path(&self) -> Option<PathBuf> {
         self.resource_root.iter()
-            .map(|root| root.join("doucode").join("serve_twincore_consensus.py"))
-            .chain(std::iter::once(self.install_root.join("doucode").join("serve_twincore_consensus.py")))
+            .map(|root| root.join("doucode").join("serve_duocore.py"))
+            .chain(std::iter::once(self.install_root.join("doucode").join("serve_duocore.py")))
             .find(|path| path.is_file())
     }
 
+    fn doucode_config_path(&self, release: &Path) -> PathBuf {
+        self.resource_root
+            .as_ref()
+            .map(|root| root.join("doucode").join("duocore-config.json"))
+            .filter(|path| path.is_file())
+            .unwrap_or_else(|| release.join("twincore-config.json"))
+    }
+
     fn doucode_llama_server(&self) -> PathBuf {
-        std::env::var_os("OPENCORE_TWINCORE_LLAMA_SERVER")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| self.install_root.join("runtime").join("llama-server.exe"))
+        let configured_path = std::env::var_os("OPENCORE_DUOCORE_LLAMA_SERVER")
+            .or_else(|| std::env::var_os("OPENCORE_TWINCORE_LLAMA_SERVER"));
+        if let Some(path) = configured_path {
+            return PathBuf::from(path);
+        }
+        let bundled = self.resource_root.as_ref()
+            .map(|root| root.join("doucode").join("runtime").join("llama-server.exe"));
+        let package = self.doucode_release_dir().join("runtime").join("llama-server.exe");
+        let installed = self.install_root.join("doUcode").join("runtime").join("llama-server.exe");
+        let legacy = self.install_root.join("runtime").join("llama-server.exe");
+        bundled.into_iter().chain([package, installed, legacy.clone()])
+            .find(|path| path.is_file())
+            .unwrap_or(legacy)
     }
 
     pub fn start(&self, profile: &str, attach_url: Option<String>) -> Result<RuntimeSnapshot, String> {
@@ -428,27 +452,27 @@ impl RuntimeManager {
 
     fn start_doucode(&self, generation: u64) -> Result<RuntimeSnapshot, String> {
         let release = self.doucode_release_dir();
-        let config_path = release.join("twincore-config.json");
+        let config_path = self.doucode_config_path(&release);
         let config_bytes = match std::fs::read(&config_path) {
             Ok(bytes) => bytes,
             Err(error) => return self.fail_start("doucode", format!(
-                "doUcode package config not found at {}: {error}. Set OPENCORE_DOUCODE_RELEASE to its folder.",
+                "DuoCore package config not found at {}: {error}. Set OPENCORE_DOUCODE_RELEASE to its folder.",
                 config_path.display()
             )),
         };
         let config: serde_json::Value = match serde_json::from_slice(&config_bytes) {
             Ok(value) => value,
-            Err(error) => return self.fail_start("doucode", format!("Invalid doUcode config: {error}")),
+            Err(error) => return self.fail_start("doucode", format!("Invalid DuoCore config: {error}")),
         };
         if config.get("host").and_then(serde_json::Value::as_str) != Some("127.0.0.1") {
-            return self.fail_start("doucode", "doUcode must bind to 127.0.0.1; refusing a non-loopback model endpoint".into());
+            return self.fail_start("doucode", "DuoCore must bind to 127.0.0.1; refusing a non-loopback model endpoint".into());
         }
         let config_port = |key: &str, parent: Option<&str>| -> Result<u16, String> {
             let value = parent.and_then(|name| config.get(name)).unwrap_or(&config);
             let port = value.get(key).and_then(serde_json::Value::as_u64)
-                .ok_or_else(|| format!("doUcode config is missing {key}"))?;
+                .ok_or_else(|| format!("DuoCore config is missing {key}"))?;
             u16::try_from(port).ok().filter(|port| *port != 0)
-                .ok_or_else(|| format!("doUcode config has an invalid {key}"))
+                .ok_or_else(|| format!("DuoCore config has an invalid {key}"))
         };
         let service_port = match config_port("port", None) {
             Ok(port) => port,
@@ -472,11 +496,9 @@ impl RuntimeManager {
             .and_then(|name| model_path(&format!("backbones/k2/{name}")));
         let nanbeige_file = config.get("nanbeige").and_then(|value| value.get("gguf_file")).and_then(serde_json::Value::as_str)
             .and_then(|name| model_path(&format!("backbones/nanbeige/{name}")));
-        let bridge_file = config.get("bridge_checkpoint").and_then(serde_json::Value::as_str)
-            .and_then(model_path);
-        for (label, path) in [("K2 GGUF", k2_file), ("Nanbeige GGUF", nanbeige_file), ("TwinCore bridge", bridge_file)] {
+        for (label, path) in [("K2 GGUF", k2_file), ("Nanbeige GGUF", nanbeige_file)] {
             let Some(path) = path else {
-                return self.fail_start("doucode", format!("doUcode config is missing a safe path for {label}"));
+                return self.fail_start("doucode", format!("DuoCore config is missing a safe path for {label}"));
             };
             if !path.is_file() {
                 return self.fail_start("doucode", format!("{label} not found: {}", path.display()));
@@ -484,23 +506,23 @@ impl RuntimeManager {
         }
         let script = match self.doucode_script_path() {
             Some(path) => path,
-            None => return self.fail_start("doucode", "Bundled TwinCore runtime is missing from this OpenCore build".into()),
+            None => return self.fail_start("doucode", "Bundled DuoCore runtime is missing from this OpenCore build".into()),
         };
         let python = match self.python_path() {
             Some(path) => path,
-            None => return self.fail_start("doucode", "doUcode requires Python with PyTorch; install a CUDA-enabled Python environment or set PATH".into()),
+            None => return self.fail_start("doucode", "DuoCore requires Python; install Python or add it to PATH".into()),
         };
         let llama_server = self.doucode_llama_server();
         if !llama_server.is_file() {
             return self.fail_start("doucode", format!(
-                "TwinCore llama-server not found: {}. Set OPENCORE_TWINCORE_LLAMA_SERVER to the K2-compatible llama-server.exe.",
+                "DuoCore llama-server not found: {}. Set OPENCORE_DUOCORE_LLAMA_SERVER to the K2-compatible llama-server.exe.",
                 llama_server.display()
             ));
         }
-        for (port, name) in [(service_port, "TwinCore"), (k2_port, "K2"), (nanbeige_port, "Nanbeige"), (self.echo_port, "ECHO")] {
+        for (port, name) in [(service_port, "DuoCore"), (k2_port, "K2"), (nanbeige_port, "Nanbeige"), (self.echo_port, "ECHO")] {
             if Self::port_open(port) {
                 return self.fail_start("doucode", format!(
-                    "Cannot start doUcode: {name} port {port} is already in use. The existing process was left untouched."
+                    "Cannot start DuoCore: {name} port {port} is already in use. The existing process was left untouched."
                 ));
             }
         }
@@ -511,11 +533,13 @@ impl RuntimeManager {
             inner.loading_phase = "Starting K2 and Nanbeige".into();
             inner.loading_step = 1;
         }
-        let mut command = Self::command(&python);
+        let mut command = self.command(&python);
+        let release_arg = release.to_string_lossy().into_owned();
+        let config_arg = config_path.to_string_lossy().into_owned();
         command
             .current_dir(&release)
             .arg(&script)
-            .args(["--release", release.to_string_lossy().as_ref(), "--start-backbones", "--llama-server"])
+            .args(["--release", release_arg.as_str(), "--config", config_arg.as_str(), "--start-backbones", "--llama-server"])
             .arg(&llama_server)
             .env("PYTHONUNBUFFERED", "1")
             .env("PYTHONIOENCODING", "utf-8")
@@ -523,19 +547,19 @@ impl RuntimeManager {
             .stderr(Stdio::piped());
         let mut child = match command.spawn() {
             Ok(child) => child,
-            Err(error) => return self.fail_start("doucode", format!("Could not start the TwinCore runtime: {error}")),
+            Err(error) => return self.fail_start("doucode", format!("Could not start the DuoCore runtime: {error}")),
         };
         crate::child_guard::adopt(&child);
-        Self::pipe_logs(self.store.clone(), "doUcode", &mut child);
+        Self::pipe_logs(self.store.clone(), "DuoCore", &mut child);
         {
             let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
             inner.model = Some(child);
             inner.attached_backend = Some(format!("http://127.0.0.1:{service_port}"));
-            inner.loading_phase = "Starting TwinCore service".into();
+            inner.loading_phase = "Starting DuoCore service".into();
             inner.loading_step = 2;
         }
         let upstream = format!("http://127.0.0.1:{service_port}");
-        if let Err(error) = self.wait_ready(service_port, "/health", "TwinCore", generation) {
+        if let Err(error) = self.wait_ready(service_port, "/health", "DuoCore", generation) {
             return self.fail_start("doucode", error);
         }
         if let Ok(mut inner) = self.inner.lock() {
@@ -583,9 +607,10 @@ impl RuntimeManager {
     }
 
     fn start_inner(&self, profile: &str, attach_url: Option<String>, generation: u64) -> Result<RuntimeSnapshot, String> {
+        crate::model_catalog::require_idle()?;
         if self.stop_generation.load(Ordering::SeqCst) != generation { return Err("Runtime loading stopped".into()); }
-        if !matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode") {
-            return Err("profile must be echo, native1m, unsloth-echo, or doucode".into());
+        if !supported_profile(profile) {
+            return Err("Unknown model profile".into());
         }
         self.stop_inner()?;
         let unsloth_upstream = if profile == "unsloth-echo" {
@@ -640,12 +665,16 @@ impl RuntimeManager {
             drop(inner);
             return self.start_doucode(generation);
         }
+        if lfm_profile(profile) {
+            drop(inner);
+            return self.start_lfm(profile, generation);
+        }
 
         let model = self.install_root.join("OpenCore-Code-Single-File.gguf");
         let server = self.install_root.join("runtime").join("llama-server.exe");
         drop(inner);
         if !model.is_file() {
-            return self.fail_start(profile, format!("Model not found: {}", model.display()));
+            return self.fail_start(profile, "Install this model from the Models tab before starting it".into());
         }
         if !server.is_file() {
             return self.fail_start(profile, format!("Runtime not found: {}", server.display()));
@@ -660,7 +689,7 @@ impl RuntimeManager {
             ));
         }
 
-        let mut command = Self::command(&server);
+        let mut command = self.command(&server);
         command
             .current_dir(&self.install_root)
             .env("OPENCORE_BF16_RESIDENT_POOL", "1")
@@ -748,7 +777,7 @@ impl RuntimeManager {
                 self.echo_port
             ));
         }
-        let mut command = Self::command(&python);
+        let mut command = self.command(&python);
         command
             .current_dir(&self.install_root)
             .arg(script)
@@ -768,6 +797,54 @@ impl RuntimeManager {
         Self::pipe_logs(self.store.clone(), "echo", &mut child);
         self.inner.lock().map_err(|e| e.to_string())?.echo = Some(child);
         Ok(())
+    }
+
+    fn start_lfm(&self, profile: &str, generation: u64) -> Result<RuntimeSnapshot, String> {
+        let checkpoint = self.install_root.join("models/lfm").join(LFM_FILE);
+        if !checkpoint.is_file() { return self.fail_start(profile, "Install this model from the Models tab before starting it".into()); }
+        let script = self.resource_root.iter().map(|root| root.join("lfm/serve_lfm.py"))
+            .chain(std::iter::once(self.install_root.join("lfm/serve_lfm.py"))).find(|path| path.is_file());
+        let Some(script) = script else { return self.fail_start(profile, "The bundled LFM runtime is missing".into()); };
+        let Some(python) = self.python_path() else { return self.fail_start(profile, "Install Python before loading local models".into()); };
+        let backend = self.doucode_llama_server();
+        let Some(runtime) = backend.parent().filter(|_| backend.is_file()) else {
+            return self.fail_start(profile, "The bundled native inference runtime is missing".into());
+        };
+        let mut ports = vec![LFM_DEFAULT_PORT];
+        if profile.starts_with("dualcore-") { ports.extend([LFM_DEFAULT_PORT + 1, LFM_DEFAULT_PORT + 2]); }
+        if echo_profile(profile) { ports.push(self.echo_port); }
+        if let Some(port) = ports.iter().find(|port| Self::port_open(**port)) {
+            return self.fail_start(profile, format!("Model port {port} is in use; stop that runtime first"));
+        }
+        if self.stop_generation.load(Ordering::SeqCst) != generation { return Err("Runtime loading stopped".into()); }
+        let mut command = self.command(&python);
+        command.arg(script).args(["--profile", profile, "--checkpoint"]).arg(checkpoint)
+            .arg("--runtime").arg(runtime).args(["--port", &LFM_DEFAULT_PORT.to_string()])
+            .env("PYTHONUNBUFFERED", "1").env("PYTHONIOENCODING", "utf-8")
+            .stdout(Stdio::piped()).stderr(Stdio::piped());
+        let mut child = match command.spawn() {
+            Ok(child) => child, Err(error) => return self.fail_start(profile, format!("Could not start LFM: {error}")),
+        };
+        crate::child_guard::adopt(&child);
+        Self::pipe_logs(self.store.clone(), "LFM", &mut child);
+        {
+            let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
+            inner.model = Some(child); inner.attached_backend = Some(format!("http://127.0.0.1:{LFM_DEFAULT_PORT}"));
+            inner.loading_phase = "Loading both LFM towers".into(); inner.loading_step = 1;
+        }
+        let service = if profile.starts_with("dualcore-") { "DualCore" } else { "FusionCore" };
+        if let Err(error) = self.wait_ready(LFM_DEFAULT_PORT, "/health", service, generation) { return self.fail_start(profile, error); }
+        if echo_profile(profile) {
+            if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = "Starting ECHO archive".into(); inner.loading_step = 2; }
+            if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{LFM_DEFAULT_PORT}"), Some(lfm_context(profile))) {
+                return self.fail_start(profile, error);
+            }
+            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) { return self.fail_start(profile, error); }
+        }
+        let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
+        inner.status = "running".into(); inner.loading_phase = "Ready".into(); inner.loading_step = 3;
+        inner.load_duration_ms = inner.loading_started.take().map(|start| start.elapsed().as_millis() as u64);
+        Ok(self.snapshot_locked(&mut inner))
     }
 
     pub fn stop(&self) -> Result<(), String> {
@@ -802,10 +879,9 @@ impl RuntimeManager {
         if let Some(child) = inner.model.as_mut() {
             if let Ok(Some(status)) = child.try_wait() {
                 inner.status = "error".into();
-                inner.error = Some(if inner.profile == "doucode" {
-                    format!("TwinCore service exited with {status}")
-                } else {
-                    format!("llama-server exited with {status}")
+                inner.error = Some(match inner.profile.as_str() {
+                    "doucode" => format!("DuoCore service exited with {status}"),
+                    _ => format!("llama-server exited with {status}"),
                 });
             }
         }
@@ -821,6 +897,8 @@ impl RuntimeManager {
             match inner.profile.as_str() {
                 "echo" | "native1m" | "doucode" => ("system RAM".to_string(), "Q4_0".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
+                "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
+                "dualcore-echo" | "fusioncore-echo" => ("GPU transient buffers".to_string(), "F16; prefix recomputed per token".to_string()),
                 _ => ("not loaded".to_string(), "none".to_string()),
             }
         };
@@ -832,11 +910,15 @@ impl RuntimeManager {
         let backend_port = inner.attached_backend.as_deref()
             .and_then(|url| url.rsplit(':').next())
             .and_then(|port| port.parse::<u16>().ok())
-            .unwrap_or_else(|| if selected_profile == "doucode" { DOUCODE_DEFAULT_PORT } else { self.backend_port });
-        let model_path = if selected_profile == "doucode" {
-            self.doucode_release_dir().display().to_string()
-        } else {
-            self.install_root.join("OpenCore-Code-Single-File.gguf").display().to_string()
+            .unwrap_or_else(|| match selected_profile {
+                "doucode" => DOUCODE_DEFAULT_PORT,
+                "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => LFM_DEFAULT_PORT,
+                _ => self.backend_port,
+            });
+        let model_path = match selected_profile {
+            "doucode" => self.doucode_release_dir().display().to_string(),
+            "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => self.install_root.join("models/lfm").join(LFM_FILE).display().to_string(),
+            _ => self.install_root.join("OpenCore-Code-Single-File.gguf").display().to_string(),
         };
         RuntimeSnapshot {
             profile: inner.profile.clone(),
@@ -849,7 +931,12 @@ impl RuntimeManager {
             echo_pid: inner.echo.as_ref().map(Child::id),
             model_path,
             archive_path: self.install_root.join("echo").join("archives").display().to_string(),
-            context_size: if selected_profile == "native1m" { 1_000_000 } else if selected_profile == "doucode" { DOUCODE_MODEL_CONTEXT } else { ECHO_MODEL_CONTEXT },
+            context_size: match selected_profile {
+                "native1m" => 1_000_000,
+                "doucode" => DOUCODE_MODEL_CONTEXT,
+                "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => lfm_context(selected_profile),
+                _ => ECHO_MODEL_CONTEXT,
+            },
             attention_kv_location,
             attention_kv_type,
             error: inner.error.clone(),
@@ -874,7 +961,7 @@ impl RuntimeManager {
                 }
             }
         }
-        let output = Self::command(Path::new("nvidia-smi.exe"))
+        let output = self.command(Path::new("nvidia-smi.exe"))
             .args([
                 "--query-gpu=name,memory.used,memory.total,utilization.gpu,power.draw",
                 "--format=csv,noheader,nounits",
@@ -1084,4 +1171,5 @@ mod tests {
         drop(manager);
         let _ = std::fs::remove_file(path);
     }
+
 }

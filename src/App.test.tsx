@@ -470,16 +470,16 @@ describe("OpenCore", () => {
     expect(screen.getAllByRole("button", { name: "Sync history" }).length).toBeGreaterThanOrEqual(2);
   });
 
-  it("opens the styled model picker with doUcode selectable and keeps Unsloth out of runtime profiles", async () => {
+  it("opens the styled model picker with DuoCore selectable and keeps Unsloth out of runtime profiles", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
     const topbar = within(document.querySelector(".topbar") as HTMLElement);
-    const picker = topbar.getByRole("button", { name: /Choose model profile, currently doUcode/ });
+    const picker = topbar.getByRole("button", { name: /Choose model profile, currently DuoCore/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     expect(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
-    expect(screen.getByRole("button", { name: /doUcode K2 \+ Nanbeige · persistent ECHO archive/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /DuoCore K2 \+ Nanbeige · competing drafts, one selected answer/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
@@ -498,7 +498,7 @@ describe("OpenCore", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
     expect(screen.getByRole("menu", { name: "Composer actions" })).toBeVisible();
     expect(screen.getByRole("menuitem", { name: "Upload files or images" })).toBeVisible();
-    fireEvent.click(screen.getByRole("menuitem", { name: /Model doUcode/ }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Model DuoCore/ }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
 
@@ -554,14 +554,14 @@ describe("OpenCore", () => {
     }
   });
 
-  it("shows ECHO's addressable history target in the bottom status bar for doUcode", async () => {
+  it("shows ECHO's addressable history target in the bottom status bar for DuoCore", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     const target = await screen.findByLabelText("ECHO context and archive");
     const statusbar = target.closest("footer");
     expect(statusbar).toHaveClass("statusbar");
     expect(target).toHaveTextContent("3T archive goal");
-    expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently doUcode" }));
+    expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently DuoCore" }));
     expect(statusbar?.textContent).toContain("VRAM");
     expect(statusbar?.textContent).toContain("tokens/s");
     expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();

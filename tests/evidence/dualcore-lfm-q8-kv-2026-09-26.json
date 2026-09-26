@@ -1,0 +1,28 @@
+{
+  "id": "lfm-675d83fce591476dba1f3220b4ac3df6",
+  "object": "chat.completion",
+  "model": "DualCore KV",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "42",
+        "reasoning_content": "The user is asking for the sum of 19 and 23, and wants the answer as just the number. This is a simple arithmetic question: 19 + 23 = 42.\n\nI need to provide only the number 42 as my response, with no additional text or explanation."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 79,
+    "completion_tokens": 123,
+    "total_tokens": 202
+  },
+  "lfm": {
+    "selected_brain": 1,
+    "reviews": [],
+    "confidence_note": "Self-reported scores are uncalibrated, not correctness probabilities.",
+    "execution_mode": "cooperating_candidate_brains",
+    "seconds": 1.3076443999889307
+  }
+}

@@ -13,6 +13,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -34,8 +36,14 @@ jobs:
         run: python scripts/echo_archive_scale.py
       - name: Test ECHO conversation and archive runtime
         run: python scripts/test_echo_live.py
-      - name: Test TwinCore context API
-        run: python scripts/test_twincore_server.py
+      - name: Verify bundled DuoCore runtime
+        run: node scripts/verify-doucode-runtime.mjs
+      - name: Test DuoCore context API
+        run: python scripts/test_duocore_server.py
+      - name: Verify LFM native runtime and tool boundaries
+        run: |
+          node scripts/verify-lfm-runtime.mjs
+          python scripts/test_lfm_protocol.py
       - name: Test frontend
         run: npm test
       - name: Test Rust

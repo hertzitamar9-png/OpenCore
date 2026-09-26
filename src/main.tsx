@@ -6,7 +6,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
 import App from "./App";
 import DesktopActivity from "./DesktopActivity";
-import { updateNoticeMessage, updateNoticeTimeout, type UpdateNotice } from "./update-notices";
+import { updateNoticeMessage, updateNoticePercent, updateNoticeTimeout, type UpdateNotice } from "./update-notices";
 import { installExternalLinkGuard } from "./external-links";
 import "./styles.css";
 
@@ -54,7 +54,38 @@ function AutoUpdaterBootstrap() {
   if (!notice) return null;
   const message = updateNoticeMessage(notice);
   if (!message) return null;
-  return <div className="auto-update-notice" role="status">{message}</div>;
+  const downloading = notice.state === "downloading";
+  const applying = notice.state === "installing";
+  const progress = downloading ? updateNoticePercent(notice) : null;
+  const progressText = downloading && notice.downloaded != null
+    ? notice.total != null && notice.total > 0
+      ? `${(notice.downloaded / 1_048_576).toFixed(1)} of ${(notice.total / 1_048_576).toFixed(1)} MB${progress == null ? "" : ` · ${progress}%`}`
+      : `${(notice.downloaded / 1_048_576).toFixed(1)} MB downloaded`
+    : null;
+
+  return (
+    <div className="auto-update-notice" role="status" aria-live="polite">
+      <div className="auto-update-heading">
+        <span className="auto-update-indicator" aria-hidden="true" />
+        <span>{message}</span>
+      </div>
+      {(downloading || applying) && (
+        <div
+          className={`auto-update-progress${progress == null ? " is-indeterminate" : ""}`}
+          role="progressbar"
+          aria-label={downloading ? "Downloading OpenCore update" : "Applying OpenCore update"}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progress ?? undefined}
+          aria-valuetext={progress == null ? "Progress is being determined" : `${progress}%`}
+          aria-busy={progress == null}
+        >
+          <span style={progress == null ? undefined : { width: `${progress}%` }} />
+        </div>
+      )}
+      {progressText && <div className="auto-update-progress-text">{progressText}</div>}
+    </div>
+  );
 }
 
 createRoot(document.getElementById("root")!).render(

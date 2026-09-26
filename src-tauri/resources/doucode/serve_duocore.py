@@ -12,9 +12,9 @@ import uuid
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from twincore.gpu_budget import gpu_startup_budget  # noqa: E402
-from twincore.runtime import TwinCoreEngine, launch_llama_server, wait_healthy  # noqa: E402
-from twincore.spec import TwinCoreConfig, default_twincore_config  # noqa: E402
+from duocore.gpu_budget import gpu_startup_budget, host_ram_startup_budget  # noqa: E402
+from duocore.runtime import DuoCoreEngine, launch_llama_server, stop_llama_server, wait_healthy  # noqa: E402
+from duocore.spec import DuoCoreConfig, default_duocore_config  # noqa: E402
 
 
 def endpoints_healthy(ports: tuple[int, int]) -> tuple[bool, bool]:
@@ -29,9 +29,9 @@ def endpoints_healthy(ports: tuple[int, int]) -> tuple[bool, bool]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="TwinCore K2 + Nanbeige consensus model server")
+    parser = argparse.ArgumentParser(description="DuoCore K2 + Nanbeige candidate-selection model server")
     parser.add_argument("--release", type=Path, required=True)
-    parser.add_argument("--config", type=Path, help="Consensus config file; defaults to twincore-config.json inside the release package")
+    parser.add_argument("--config", type=Path, help="DuoCore config file; defaults to twincore-config.json inside the release package")
     parser.add_argument(
         "--llama-server",
         type=Path,
@@ -43,8 +43,8 @@ def main() -> int:
     args = parser.parse_args()
 
     config_path = args.config or (args.release / "twincore-config.json")
-    config = default_twincore_config() if not config_path.is_file() else TwinCoreConfig.load(config_path)
-    engine = TwinCoreEngine(config, args.release)
+    config = default_duocore_config() if not config_path.is_file() else DuoCoreConfig.load(config_path)
+    engine = DuoCoreEngine(config, args.release)
     children = []
     if args.start_backbones and not all(endpoints_healthy((config.k2.port, config.nanbeige.port))):
         required_mib, free_mib, k2_layers, nb_layers = gpu_startup_budget(
@@ -55,13 +55,27 @@ def main() -> int:
         )
         if required_mib and free_mib < required_mib:
             raise RuntimeError(
-                f"Not enough free VRAM to start both doUcode backbones safely: "
+                f"Not enough free VRAM to start both DuoCore backbones safely: "
                 f"need about {required_mib} MiB; {free_mib} MiB is free. "
                 "Close the other GPU model or use fewer GPU layers."
             )
         args.k2_gpu_layers, args.nanbeige_gpu_layers = k2_layers, nb_layers
+        required_ram_mib, free_ram_mib = host_ram_startup_budget(
+            config, args.release, k2_layers, nb_layers
+        )
+        if free_ram_mib < required_ram_mib:
+            raise RuntimeError(
+                f"Not enough free system RAM to start DuoCore with a {config.live_window_tokens:,}-token context: "
+                f"estimated need {required_ram_mib:,} MiB after GPU layer placement, including a 5 GiB desktop reserve; "
+                f"{free_ram_mib:,} MiB is currently free. Lower the context or close other applications."
+            )
         print(
-            f"[twincore] VRAM fit selected K2 {k2_layers}/{config.k2.num_hidden_layers} and "
+            f"[duocore] Host RAM preflight: estimated {required_ram_mib} MiB needed; "
+            f"{free_ram_mib} MiB available after GPU placement; retaining a 5 GiB desktop reserve",
+            flush=True,
+        )
+        print(
+            f"[duocore] VRAM fit selected K2 {k2_layers}/{config.k2.num_hidden_layers} and "
             f"Nanbeige {nb_layers}/{config.nanbeige.num_hidden_layers} GPU layers "
             f"({required_mib} MiB budget; {free_mib} MiB free)",
             flush=True,
@@ -77,30 +91,29 @@ def main() -> int:
                     wait_healthy(backbone, child)
 
         if not engine.k2.healthy() or not engine.nanbeige.healthy():
-            raise RuntimeError("Both TwinCore backbone servers must be healthy before serving")
+            raise RuntimeError("Both DuoCore backbone servers must be healthy before serving")
     except Exception:
         for child in children:
-            child.terminate()
-            child.wait(timeout=10)
+            stop_llama_server(child)
         raise
 
-    server = ThreadingHTTPServer((config.host, config.port), TwinCoreHandler)
+    server = ThreadingHTTPServer((config.host, config.port), DuoCoreHandler)
     server.engine = engine
     server.config = config
-    print(f"TwinCore listening on http://{config.host}:{config.port}", flush=True)
+    print(f"DuoCore listening on http://{config.host}:{config.port}", flush=True)
     print(f"K2: {engine.k2.base_url} | Nanbeige: {engine.nanbeige.base_url}", flush=True)
     try:
         server.serve_forever()
     finally:
         for child in children:
-            child.terminate()
+            stop_llama_server(child)
     return 0
 
 
-class TwinCoreHandler(BaseHTTPRequestHandler):
-    """OpenAI-compatible HTTP surface for TwinCore and its context telemetry."""
+class DuoCoreHandler(BaseHTTPRequestHandler):
+    """OpenAI-compatible HTTP surface for DuoCore and its context telemetry."""
 
-    server_version = "TwinCoreConsensus/0.1"
+    server_version = "DuoCoreSelection/0.2"
 
     def _json(self, status: int, value: dict):
         raw = json.dumps(value, ensure_ascii=False).encode("utf-8")
@@ -111,7 +124,7 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def log_message(self, fmt, *args):
-        sys.stderr.write("[twincore] " + (fmt % args) + "\n")
+        sys.stderr.write("[duocore] " + (fmt % args) + "\n")
 
     def _write_sse(self, value: dict):
         raw = json.dumps(value, ensure_ascii=False).encode("utf-8")
@@ -137,7 +150,7 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
             )
             choice = result["choices"][0]
             chunk = {
-                "id": result.get("id", f"twincore-{generation}"),
+                "id": result.get("id", f"duocore-{generation}"),
                 "object": "chat.completion.chunk",
                 "created": result.get("created"),
                 "model": result.get("model"),
@@ -162,13 +175,20 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
         engine = self.server.engine
         config = self.server.config
         if self.path == "/health":
-            judge = getattr(engine, "judge", None)
-            self._json(200, {
-                "status": "ok",
-                "k2": engine.k2.healthy(),
-                "nanbeige": engine.nanbeige.healthy(),
-                "judge": getattr(judge, "status", {"enabled": False}),
-                "bridge": {"loaded": getattr(engine, "bridge", None) is not None},
+            k2_healthy = engine.k2.healthy()
+            nanbeige_healthy = engine.nanbeige.healthy()
+            ready = k2_healthy and nanbeige_healthy
+            self._json(200 if ready else 503, {
+                "status": "ok" if ready else "unavailable",
+                "ready": ready,
+                "k2": k2_healthy,
+                "nanbeige": nanbeige_healthy,
+                "selection": {
+                    "strategy": "pairwise_candidate_selection",
+                    "models": ["K2", "Nanbeige"],
+                    "third_party_judge": False,
+                    "latent_bridge": False,
+                },
             })
             return
         if self.path.startswith("/v1/models"):
@@ -221,7 +241,7 @@ class TwinCoreHandler(BaseHTTPRequestHandler):
             self._json(200, result)
         except Exception as error:
             message = f"{type(error).__name__}: {error}"
-            print("[twincore] ERROR " + message, file=sys.stderr, flush=True)
+            print("[duocore] ERROR " + message, file=sys.stderr, flush=True)
             self._json(500, {"error": {"message": message}})
 
 

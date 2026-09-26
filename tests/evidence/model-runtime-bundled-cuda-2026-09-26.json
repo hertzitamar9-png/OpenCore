@@ -1,0 +1,6 @@
+{
+  "scope": "Original OpenCore runtime finds bundled CUDA dependencies without a CUDA toolkit PATH",
+  "exit_code": 0,
+  "output": "Available devices:\n  CUDA0: NVIDIA GeForce RTX 4070 (12281 MiB, 11108 MiB free)\n",
+  "passed": true
+}

@@ -60,6 +60,7 @@ impl ReflexManager {
     }
 
     pub async fn ensure_running(&self) -> Result<(), String> {
+        crate::model_catalog::require_idle()?;
         if Self::healthy().await { return Ok(()); }
         let script = self.script().ok_or("OpenCore Reflex is not installed with this app")?;
         let model = self.model_dir();
