@@ -1,0 +1,209 @@
+{
+  "scope": "OpenCore installation, research release folders and inventoried Hub weight caches; unrelated active MinecraftCreator weights retained",
+  "minimum_free_bytes": 200000000000,
+  "free_bytes": 268431708160,
+  "remaining_weight_files": [],
+  "model_library_installed": {
+    "echo": false,
+    "native1m": false,
+    "doucode": false,
+    "dualcore-kv": false,
+    "dualcore-echo": false,
+    "fusioncore-kv": false,
+    "fusioncore-echo": false,
+    "reflex-vision": false,
+    "reflex-policy": false,
+    "whisper-large-v3": false
+  },
+  "removed_weight_copies": 25,
+  "immutable_weight_references": [
+    {
+      "sha256": "261ef6c572bf9916f9ea5097bc156da0ee0ef6d631d52cf59dbcf293f416b7ae",
+      "bytes": 5476762688,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-code-10kexperts-1mcontext-apex-max",
+        "revision": "569070f8539fe2de9d7d0b78bfa8c6570b7d05fe",
+        "filename": "OpenCore-Code-Single-File.gguf",
+        "bytes": 5476762688
+      }
+    },
+    {
+      "sha256": "8bcc9da9a1da0ceb20cd5000cd6d6c6323e565c5126811e1e229f2aa0f7b94dc",
+      "bytes": 323972008,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "75a570eff28dd14be30ee3da7465b55c6bc01e84",
+        "filename": "weights/OpenCore-APEX-WEAVE-v1/apex-weave-sidecar.safetensors",
+        "bytes": 323972008
+      }
+    },
+    {
+      "sha256": "48be8dcac089286a1cec3d7fae755244314e13fb5982bd32219c73b2609cde0f",
+      "bytes": 8411900792,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "025d34c837378267be7ccd46a7ff90c8766110ac",
+        "filename": "weights/OpenCore-APEX-Dequantised-HF-corrected-v1/model.safetensors",
+        "bytes": 8411900792
+      }
+    },
+    {
+      "sha256": "9aa5003103ddcce2e82c77c18e414712ab30f3340131dc29a689ca7028382614",
+      "bytes": 33090373,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "9f1ca915a03d6d1f4adaa5569048ed1752a282a4",
+        "filename": "weights/bridge/twincore-bridge-v1.pt",
+        "bytes": 33090373
+      }
+    },
+    {
+      "sha256": "07773aed93890d4f5d08b421430000d5c8d73cefc74fbdc32e67d820f23207b2",
+      "bytes": 3156598144,
+      "remote": {
+        "repo": "IFM/K2-Horizon-3.7B-GGUF",
+        "revision": "a81d5fec318b47b9c7144a839f538f6b9006291c",
+        "filename": "K2-Horizon-4B-Q4_K_M.gguf",
+        "bytes": 3156598144
+      }
+    },
+    {
+      "sha256": "2180f3ca4eb4906a109b364a98740778fd8dcd9969e270b0d34036d18ee33232",
+      "bytes": 4161403264,
+      "remote": {
+        "repo": "IFM/K2-Horizon-3.7B-GGUF",
+        "revision": "a81d5fec318b47b9c7144a839f538f6b9006291c",
+        "filename": "K2-Horizon-4B-Q6_K.gguf",
+        "bytes": 4161403264
+      }
+    },
+    {
+      "sha256": "8203991019c36dd618145aa76246097252e45283a4f75c0991a0ce902a0ad7d3",
+      "bytes": 5386404224,
+      "remote": {
+        "repo": "IFM/K2-Horizon-3.7B-GGUF",
+        "revision": "a81d5fec318b47b9c7144a839f538f6b9006291c",
+        "filename": "K2-Horizon-4B-Q8_0.gguf",
+        "bytes": 5386404224
+      }
+    },
+    {
+      "sha256": "b92d2e35c9876b0c4bc671996360204f4149d0546c23d5954d5eb3b106c81f24",
+      "bytes": 2684023968,
+      "remote": {
+        "repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
+        "revision": "17562eefe9752007209148d5f7a6e275fc8d8077",
+        "filename": "Nanbeige_Nanbeige4.2-3B-Q4_K_M.gguf",
+        "bytes": 2684023968
+      }
+    },
+    {
+      "sha256": "93f884a2d8d6cafc5406df84be64f197a407889904b18db7c6e82fd35f2b0170",
+      "bytes": 3595603104,
+      "remote": {
+        "repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
+        "revision": "17562eefe9752007209148d5f7a6e275fc8d8077",
+        "filename": "Nanbeige_Nanbeige4.2-3B-Q6_K.gguf",
+        "bytes": 3595603104
+      }
+    },
+    {
+      "sha256": "837ba713ef3a3b5c9aee82e5dcba07600ea7db36ae392419f982b3bfaec04ef2",
+      "bytes": 4434787488,
+      "remote": {
+        "repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
+        "revision": "17562eefe9752007209148d5f7a6e275fc8d8077",
+        "filename": "Nanbeige_Nanbeige4.2-3B-Q8_0.gguf",
+        "bytes": 4434787488
+      }
+    },
+    {
+      "sha256": "e3e6480e486f2a755f07cd64abd3c8eb25bf3eec4e472c88902b2f57ac7cef4c",
+      "bytes": 16548921,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "0d68e02a0a2ab68f7366dbb2c23b69dc5e83b8ea",
+        "filename": "weights/bridge/twincore-bridge-init.pt",
+        "bytes": 16548921
+      }
+    },
+    {
+      "sha256": "302b92d565080b9cc0281186979ae75a7429ec23d14f6f7607a035539b21f3a6",
+      "bytes": 675569344,
+      "remote": {
+        "repo": "unsloth/Qwen3.5-4B-GGUF",
+        "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
+        "filename": "mmproj-BF16.gguf",
+        "bytes": 675569344
+      }
+    },
+    {
+      "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e",
+      "bytes": 3120573088,
+      "remote": {
+        "repo": "DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF",
+        "revision": "36fe18b06b8198bf93e5b5055c77b72e186e83db",
+        "filename": "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+        "bytes": 3120573088
+      }
+    },
+    {
+      "sha256": "aec3bbb96ad6c1c224aa3134b1e60cba65c6bb0633bdb3a93e5fa3ba0af003c8",
+      "bytes": 643835524,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "714327f351164f9674d32b167a40c9521c6a7855",
+        "filename": "weights/model/model.safetensors",
+        "bytes": 643835524
+      }
+    },
+    {
+      "sha256": "daa7bade4e4e4f80d44787ffd1584303e4ad5701cd2a9de739e6b9b63488ebd7",
+      "bytes": 204987776,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "05ce5ef2d9f035ec85084ce490d1814c1b8dbd5c",
+        "filename": "weights/vision/reflex-vision-0.8b-mmproj-f16.gguf",
+        "bytes": 204987776
+      }
+    },
+    {
+      "sha256": "ee95a9adb5046273fb8487a300d12f54b0ca0b0d54ffa123503d4bd9fde6e4d9",
+      "bytes": 811844256,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+        "revision": "4a0de4e720d5efe1d5579afb46d31c029d9a997d",
+        "filename": "weights/vision/reflex-vision-0.8b-q8_0.gguf",
+        "bytes": 811844256
+      }
+    },
+    {
+      "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1",
+      "bytes": 3087284237,
+      "remote": {
+        "repo": "Systran/faster-whisper-large-v3",
+        "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+        "filename": "model.bin",
+        "bytes": 3087284237
+      }
+    },
+    {
+      "sha256": "727adfc7bcb6805ebc73d09aa42e3382e2d1f9d46324b552fa55d1098d82c9c4",
+      "bytes": 5476762080,
+      "remote": {
+        "repo": "Pita-Ai/OpenCore-code-10kexperts-1mcontext-apex-max",
+        "revision": "cd0a94781fb3a9fdcd660c3373bc2279de47973f",
+        "filename": "OpenCore-Code-Single-File.gguf",
+        "bytes": 5476762080
+      }
+    }
+  ],
+  "archives_preserved": true,
+  "minecraft_v16_retained": true,
+  "source_archive_metadata": {
+    "repo": "Pita-Ai/OpenCore-source-archive-20260926",
+    "revision": "5730081d362ca621602a4a8a4da2413d8316471b",
+    "files_verified": 6,
+    "all_weight_references_verified": true
+  }
+}
