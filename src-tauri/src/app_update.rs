@@ -206,6 +206,8 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
     emit_notice(&app, "restarting", Some(version), None, None);
     if update.install(bytes).is_err() {
         emit_notice(&app, "failed", None, None, None);
+    } else {
+        app.restart();
     }
     Ok(())
 }
