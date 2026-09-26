@@ -20,7 +20,7 @@ The NSIS installer is written under `src-tauri/target/release/bundle/nsis/`.
 
 ## Build on each push
 
-`.github/workflows/build.yml` tests and builds a Windows installer on every push to `main`. Each successful run publishes a new versioned release in this private repository. GitHub access is required to download those releases. Installed copies do not yet install private updates automatically; that requires an authenticated updater endpoint.
+`.github/workflows/build.yml` tests and builds a signed Windows installer on every push to `main`, then publishes a versioned release in this private repository. Installed copies check the private release feed 12 seconds after launch and every five minutes. The updater downloads and installs a signed release only while the model runtime and chats are idle, then restarts OpenCore. Because the repository is private, the same Windows account must have GitHub CLI installed and authenticated with access to this repository (`gh auth login`). The updater keeps the credential in Rust memory and does not expose it to the webview. If GitHub CLI is missing or unauthenticated, OpenCore reports that private updates are unavailable.
 
 The runtime looks for model assets under `OPENCORE_HOME` or the user's OpenCore installation directory. A successful app build verifies the desktop code and installer packaging, not model inference quality.
 
