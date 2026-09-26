@@ -73,4 +73,4 @@ const cancellationMs=Date.now()-cancelStarted;
 console.log(JSON.stringify({cancellationMs,cancelStarted,requestClosed}));
 assert.ok(cancelStarted>0&&cancellationMs<5000);assert.ok(requestClosed);
 const report={provider:'deterministic mock',sdk:'0.3.282',permissionCount,denied,markerCreated:existsSync(marker),streamDeltas,cancellationMs,requestClosed,passed:true};
-writeFileSync('artifacts/claude-protocol-test.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+writeFileSync(path.join(root,'claude-protocol-test.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
