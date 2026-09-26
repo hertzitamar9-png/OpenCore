@@ -111,7 +111,7 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
                 context["promptTokens"] = usage.get("totalTokens").cloned().unwrap_or(json!(0));
                 context["windowTokens"] = json!(context_window_tokens);
                 context["autoCompactThreshold"] = usage.get("autoCompactThreshold").cloned().unwrap_or(Value::Null);
-                context["autoCompactEnabled"] = usage.get("isAutoCompactEnabled").cloned().unwrap_or(json!(true));
+                context["autoCompactEnabled"] = usage.get("isAutoCompactEnabled").cloned().unwrap_or(json!(false));
                 core.store.set_setting(&key,&context.to_string())?;
                 core.store.log("info","claude-context",&event["usage"].to_string());
                 continue;

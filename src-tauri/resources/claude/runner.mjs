@@ -66,7 +66,10 @@ async function run(config) {
   });
   const options = {
     cwd: config.cwd, env, abortController, model: `opencore:${config.effort}`, resume: config.resume || undefined,
-    settingSources: config.projectSkillsEnabled ? ['project'] : [], settings: { autoCompactEnabled: true },
+    // ECHO keeps the exact session transcript and performs archive-backed
+    // working-set eviction. SDK summary compaction would create a second,
+    // lossy history path and can thrash as the local model refills the window.
+    settingSources: config.projectSkillsEnabled ? ['project'] : [], settings: { autoCompactEnabled: false },
     systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
     // Keep the official Claude Code tool surface as the default. OpenCore MCP
     // tools are added below; subagent policy and approval still pass through

@@ -9,7 +9,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 const root=mkdtempSync(path.join(tmpdir(),'opencore-sdk-test-'));
 const marker=path.join(root,'must-not-exist.txt');
-let count=0,denied=false,permissionCount=0,streamDeltas=0;
+let count=0,denied=false,permissionCount=0,streamDeltas=0,contextReports=[];
 function event(res,value){res.write(`event: ${value.type}\ndata: ${JSON.stringify(value)}\n\n`);}
 const server=http.createServer(async(req,res)=>{
   let raw='';for await(const chunk of req)raw+=chunk;
@@ -39,12 +39,15 @@ createInterface({input:child.stdout}).on('line',line=>{
   if(event.kind==='permission'){permissionCount++;child.stdin.write(JSON.stringify({kind:'reply',id:event.id,value:false})+'\n');}
   if(event.kind==='sdk'&&event.message.type==='result')result=event.message;
   if(event.kind==='sdk'&&event.message.type==='stream_event'&&event.message.event.delta?.text)streamDeltas++;
+  if(event.kind==='context')contextReports.push(event.usage);
 });
 child.stdin.write(JSON.stringify({kind:'start',cwd:root,configDir:path.join(root,'config'),conversationId:'protocol-test',effort:'off',content:'Run the requested marker command.',tools:[],instructions:'Test the given tool.',gateway:`http://127.0.0.1:${server.address().port}`})+'\n');
 const timer=setTimeout(()=>child.kill(),30000);
 await new Promise(r=>child.on('exit',r));clearTimeout(timer);server.close();
 assert.ok(result&&!result.is_error,errors||JSON.stringify(result));
 assert.ok(permissionCount>0);assert.ok(denied);assert.ok(!existsSync(marker));assert.ok(streamDeltas>=2);
+assert.ok(contextReports.some(usage=>usage.isAutoCompactEnabled===false),
+  `ECHO-managed session must disable SDK auto-compaction; got ${JSON.stringify(contextReports)}`);
 let cancelChild,requestClosed=false,cancelStarted=0;
 const slow=http.createServer(async(req,res)=>{
   for await(const ignored of req){}

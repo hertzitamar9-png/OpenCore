@@ -26,6 +26,10 @@ jobs:
           workspaces: src-tauri
       - name: Install JavaScript dependencies
         run: npm ci
+      - name: Prepare Claude Agent SDK runtime
+        run: node scripts/prepare-claude-harness.mjs
+      - name: Test Claude Agent SDK transport and ECHO context policy
+        run: node scripts/test-claude-protocol.mjs
       - name: Benchmark exact ECHO archive scaling
         run: python scripts/echo_archive_scale.py
       - name: Test ECHO conversation and archive runtime
