@@ -1,7 +1,7 @@
 use crate::gateway::{capture_completion, capture_request, conversation_id, GatewayState};
 use crate::redaction::redact_json;
 use axum::body::Body;
-use axum::http::{HeaderMap, Response, StatusCode};
+use axum::http::{HeaderMap, HeaderValue, Response, StatusCode};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -97,8 +97,17 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
 }
 
 async fn call_chat(state: &GatewayState, payload: &Value) -> Result<Value, Response<Body>> {
+    call_chat_with_conversation(state, payload, None, false).await
+}
+
+async fn call_chat_with_conversation(state: &GatewayState, payload: &Value,
+                                     conversation: Option<&str>, app_owns_timeline: bool) -> Result<Value, Response<Body>> {
     let url = format!("{}/v1/chat/completions", state.runtime.upstream_url());
-    let response = state.client.post(url).json(payload).send().await.map_err(|error| {
+    let mut request = state.client.post(url);
+    if let Some(conversation) = conversation {
+        request = with_echo_conversation(request, conversation, app_owns_timeline);
+    }
+    let response = request.json(payload).send().await.map_err(|error| {
         json_response(StatusCode::BAD_GATEWAY, &json!({"error":{"message":error.to_string()}}))
     })?;
     let status = response.status();
@@ -114,6 +123,28 @@ async fn call_chat(state: &GatewayState, payload: &Value) -> Result<Value, Respo
     }
     state.runtime.record_response_metrics(&value);
     Ok(value)
+}
+
+pub(crate) fn anthropic_stream_upstream(runtime: &crate::runtime::RuntimeManager) -> String {
+    // Even the embedded Agent SDK must use the selected public route: for ECHO
+    // profiles that is the memory proxy, not the model's direct backend URL.
+    runtime.upstream_url()
+}
+
+fn echo_conversation_header(conversation: &str) -> Option<HeaderValue> {
+    HeaderValue::from_str(conversation).ok()
+}
+
+fn with_echo_conversation(request: reqwest::RequestBuilder, conversation: &str,
+                          app_owns_timeline: bool) -> reqwest::RequestBuilder {
+    let mut request = match echo_conversation_header(conversation) {
+        Some(value) => request.header("x-echo-conversation", value),
+        None => request,
+    };
+    if app_owns_timeline {
+        request = request.header("x-opencore-timeline-owner", "app");
+    }
+    request
 }
 fn anthropic_messages(payload: &Value) -> Vec<Value> {
     let mut out = Vec::new();
@@ -327,7 +358,7 @@ pub async fn anthropic(
     if payload["stream"] == true {
         return anthropic_live(state.clone(), chat, requested_model.to_string(), conversation, embedded).await;
     }
-    let openai = match call_chat(state, &chat).await {
+    let openai = match call_chat_with_conversation(state, &chat, Some(&conversation), embedded).await {
         Ok(value) => value,
         Err(response) => return response,
     };
@@ -343,10 +374,11 @@ pub async fn anthropic(
 // Emit genuine partial content as it arrives. Tool arguments are only committed
 // after the complete, validated backend message; truncated calls never execute.
 async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, conversation: String, embedded: bool) -> Response<Body> {
-    let upstream = if embedded { state.runtime.direct_backend_url() } else { state.runtime.upstream_url() };
+    let upstream = anthropic_stream_upstream(&state.runtime);
     chat["stream"] = json!(true);
     chat["stream_options"] = json!({"include_usage":true});
-    let response = match state.client.post(format!("{upstream}/v1/chat/completions")).json(&chat).send().await {
+    let request = with_echo_conversation(state.client.post(format!("{upstream}/v1/chat/completions")), &conversation, embedded).json(&chat);
+    let response = match request.send().await {
         Ok(r) if r.status().is_success() => r,
         Ok(r) => { let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY); return json_response(status,&json!({"error":{"type":"api_error","message":r.text().await.unwrap_or_default()}})); },
         Err(e) => return json_response(StatusCode::BAD_GATEWAY,&json!({"error":{"type":"api_error","message":e.to_string()}})),
@@ -717,6 +749,26 @@ pub async fn responses_compact(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gateway_forwards_the_app_conversation_id_to_echo() {
+        let request = with_echo_conversation(
+            reqwest::Client::new().post("http://127.0.0.1:1/v1/chat/completions"),
+            "app-conversation-42",
+            false,
+        ).build().unwrap();
+        assert_eq!(request.headers().get("x-echo-conversation").unwrap(), "app-conversation-42");
+    }
+
+    #[test]
+    fn embedded_harness_marks_the_app_as_the_timeline_owner() {
+        let request = with_echo_conversation(
+            reqwest::Client::new().post("http://127.0.0.1:1/v1/chat/completions"),
+            "app-conversation-42",
+            true,
+        ).build().unwrap();
+        assert_eq!(request.headers().get("x-opencore-timeline-owner").unwrap(), "app");
+    }
 
     #[test]
     fn anthropic_tools_translate_to_openai() {

@@ -6,6 +6,7 @@ import json
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -14,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src-tauri/resources/echo"))
-from echo_server import ArchiveSet, EchoState, Handler, tool_call_error
+from echo_server import ArchiveSet, EchoState, Handler, _conversation_id, tool_call_error
 from evoagent.echo_context import LiveTranscript
 from evoagent.echo_memory import BoundedPageCache, EchoArchive, MemoryPage
 import echo_import
@@ -22,6 +23,84 @@ from echo_import import import_stream
 
 
 class EchoLiveTests(unittest.TestCase):
+    def test_concurrent_requests_for_one_conversation_queue_instead_of_conflicting(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = EchoState(ArchiveSet(Path(folder), idle_seconds=0), 'http://127.0.0.1:1', 10000, 4, False)
+            metrics = {'active': 0, 'maximum': 0}
+            metrics_lock = threading.Lock()
+
+            class SerialHandler(Handler):
+                def _controlled_context_serial(self, payload, conversation, level, archive_input=True):
+                    with metrics_lock:
+                        metrics['active'] += 1
+                        metrics['maximum'] = max(metrics['maximum'], metrics['active'])
+                    time.sleep(0.08)
+                    with metrics_lock:
+                        metrics['active'] -= 1
+                    return self._send_json(200, {'conversation': conversation})
+
+            SerialHandler.state = state
+            server = ThreadingHTTPServer(('127.0.0.1', 0), SerialHandler)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            url = 'http://127.0.0.1:%d/v1/chat/completions' % server.server_port
+
+            def send():
+                request = urllib.request.Request(url, data=json.dumps({
+                    'conversation_id': 'same-conversation',
+                    'messages': [{'role': 'user', 'content': 'hi'}],
+                    'stream': False,
+                }).encode(), headers={'Content-Type': 'application/json'})
+                try:
+                    with urllib.request.urlopen(request, timeout=3) as response:
+                        return response.status
+                except urllib.error.HTTPError as error:
+                    return error.code
+
+            try:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                    statuses = list(pool.map(lambda _: send(), range(2)))
+                self.assertEqual(statuses, [200, 200])
+                self.assertEqual(metrics['maximum'], 1)
+                self.assertNotIn('same-conversation', state._context_active)
+            finally:
+                server.shutdown()
+                server.server_close()
+                state.archives.close()
+
+    def test_forwarded_app_conversation_id_selects_the_matching_echo_archive(self):
+        from email.message import Message
+        headers = Message()
+        headers["x-echo-conversation"] = "app-conversation-42"
+        self.assertEqual(_conversation_id({}, headers), "app-conversation-42")
+
+    def test_app_timeline_owner_leaves_exact_event_archiving_to_the_app_sync(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = EchoState(ArchiveSet(Path(folder), idle_seconds=0), 'http://127.0.0.1:1', 10000, 4, False)
+            archive_input_values = []
+
+            class AppOwnedHandler(Handler):
+                def _controlled_context_serial(self, payload, conversation, level, archive_input=True):
+                    archive_input_values.append(archive_input)
+                    return self._send_json(200, {'conversation': conversation})
+
+            AppOwnedHandler.state = state
+            server = ThreadingHTTPServer(('127.0.0.1', 0), AppOwnedHandler)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            try:
+                request = urllib.request.Request(
+                    'http://127.0.0.1:%d/v1/chat/completions' % server.server_port,
+                    data=json.dumps({'messages': [{'role': 'user', 'content': 'hi'}]}).encode(),
+                    headers={'Content-Type': 'application/json',
+                             'X-Echo-Conversation': 'app-conversation-42',
+                             'X-OpenCore-Timeline-Owner': 'app'})
+                with urllib.request.urlopen(request, timeout=3) as response:
+                    self.assertEqual(response.status, 200)
+                self.assertEqual(archive_input_values, [False])
+            finally:
+                server.shutdown()
+                server.server_close()
+                state.archives.close()
+
     def test_echo_state_has_no_fixed_reply_continuation_cap_by_default(self):
         with tempfile.TemporaryDirectory() as folder:
             state = EchoState(ArchiveSet(Path(folder), idle_seconds=0), 'http://127.0.0.1:1', 0, 12, False)

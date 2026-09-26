@@ -1043,6 +1043,17 @@ mod tests {
     }
 
     #[test]
+    fn claude_agent_sdk_stream_route_keeps_echo_in_front_of_the_model() {
+        let path = std::env::temp_dir().join(format!("opencore-runtime-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = Arc::new(EventStore::open(&path).unwrap());
+        let manager = RuntimeManager::new(store);
+        manager.inner.lock().unwrap().profile = "echo".into();
+        assert_eq!(crate::compat::anthropic_stream_upstream(&manager), "http://127.0.0.1:8813");
+        drop(manager);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
     fn bundled_echo_proxy_takes_precedence_over_the_older_model_package_script() {
         let root = std::env::temp_dir().join(format!("opencore-bundled-{}", uuid::Uuid::new_v4()));
         let database = root.join("events.sqlite3");

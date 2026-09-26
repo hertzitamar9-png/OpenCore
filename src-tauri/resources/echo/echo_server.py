@@ -375,6 +375,7 @@ class EchoState:
         self.autonomous_context = True
         self.context_steps = 0
         self._context_active = set()
+        self._context_active_counts: dict[str, int] = {}
         # The local llama server owns one persistent recurrent slot. Serialize
         # ECHO generations so different conversations cannot interleave their
         # append-only suffixes into that state.
@@ -398,6 +399,22 @@ class EchoState:
                 # The desktop app can be restarted while this server is still
                 # listening. A closed log pipe must not break HTTP responses.
                 pass
+
+    def begin_context(self, conversation: str) -> None:
+        """Mark an active or queued request without rejecting same-chat work."""
+        with self.lock:
+            self._context_active_counts[conversation] = self._context_active_counts.get(conversation, 0) + 1
+            self._context_active.add(conversation)
+
+    def end_context(self, conversation: str) -> None:
+        """Clear activity only after every queued request for this chat exits."""
+        with self.lock:
+            remaining = self._context_active_counts.get(conversation, 0) - 1
+            if remaining > 0:
+                self._context_active_counts[conversation] = remaining
+            else:
+                self._context_active_counts.pop(conversation, None)
+                self._context_active.discard(conversation)
 
     # -- window management -------------------------------------------------
 
@@ -939,10 +956,7 @@ class Handler(BaseHTTPRequestHandler):
                            % (level, settings["budget"], settings["passes"]))
 
         if self.state.autonomous_context:
-            with self.state.lock:
-                if conversation in self.state._context_active:
-                    return self._send_json(409, {"error": {"message": "Conversation already active"}})
-                self.state._context_active.add(conversation)
+            self.state.begin_context(conversation)
             try:
                 return self._controlled_context(payload, conversation, level,
                                                 archive_input=not app_owns_timeline)
@@ -950,8 +964,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send_json(502 if isinstance(error, urllib.error.URLError) else 400,
                                        {"error": {"message": str(error)}})
             finally:
-                with self.state.lock:
-                    self.state._context_active.discard(conversation)
+                self.state.end_context(conversation)
 
         try:
             messages = self.state.prepare_messages(
