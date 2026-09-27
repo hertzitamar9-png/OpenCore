@@ -36,6 +36,45 @@ fn provisional_generation_event(conversation: &str, run_id: &str, preview: &Valu
     }))
 }
 
+#[derive(Default)]
+struct AnthropicStreamBlocks {
+    sent_text: String,
+    text_open: bool,
+    reasoning_sent: String,
+    thinking_open: bool,
+}
+
+impl AnthropicStreamBlocks {
+    fn push(&mut self, preview: &Value) -> Vec<Value> {
+        // Anthropic deltas cannot replace an earlier draft when another brain
+        // wins selection. The app receives these via its separate preview event.
+        if preview["provisional"] == true { return Vec::new(); }
+        let mut events = Vec::new();
+        if let Some(current) = preview["reasoning"].as_str() {
+            if !self.text_open && current.len() > self.reasoning_sent.len() && current.starts_with(&self.reasoning_sent) {
+                if !self.thinking_open {
+                    events.push(json!({"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}));
+                    self.thinking_open = true;
+                }
+                events.push(json!({"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":&current[self.reasoning_sent.len()..]}}));
+                self.reasoning_sent = current.to_string();
+            }
+        }
+        if let Some(current) = preview["content"].as_str() {
+            if current.len() > self.sent_text.len() && current.starts_with(&self.sent_text) {
+                if !self.text_open {
+                    if self.thinking_open { events.push(json!({"type":"content_block_stop","index":0})); }
+                    events.push(json!({"type":"content_block_start","index":usize::from(self.thinking_open),"content_block":{"type":"text","text":""}}));
+                    self.text_open = true;
+                }
+                events.push(json!({"type":"content_block_delta","index":usize::from(self.thinking_open),"delta":{"type":"text_delta","text":&current[self.sent_text.len()..]}}));
+                self.sent_text = current.to_string();
+            }
+        }
+        events
+    }
+}
+
 fn flatten_text(content: &Value) -> String {
     if let Some(text) = content.as_str() {
         return text.to_string();
@@ -403,10 +442,7 @@ async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, con
     let send = move |value: Value| { let _ = tx.send(format!("event: {}\ndata: {}\n\n", value["type"].as_str().unwrap_or("error"), value)); };
     let task = tokio::spawn(async move {
         send(json!({"type":"message_start","message":{"id":format!("msg_{}",Uuid::new_v4().simple()),"type":"message","role":"assistant","model":model,"content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"output_tokens":0}}}));
-        let mut sent_text = String::new();
-        let mut text_open = false;
-        let mut reasoning_sent = String::new();
-        let mut thinking_open = false;
+        let mut blocks = AnthropicStreamBlocks::default();
         let result = crate::chat_stream::read(response, |preview| {
             if preview["provisional"] == true {
                 if let Some(run_id) = live_run.as_ref() {
@@ -416,34 +452,18 @@ async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, con
                     }
                 }
             }
-            if let Some(current) = preview["reasoning"].as_str() {
-                if !text_open && current.len() > reasoning_sent.len() && current.starts_with(&reasoning_sent) {
-                    if !thinking_open { send(json!({"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}})); thinking_open = true; }
-                    send(json!({"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":&current[reasoning_sent.len()..]}}));
-                    reasoning_sent = current.to_string();
-                }
-            }
-            if let Some(current) = preview["content"].as_str() {
-                if current.len() > sent_text.len() && current.starts_with(&sent_text) {
-                    if !text_open {
-                        if thinking_open { send(json!({"type":"content_block_stop","index":0})); }
-                        send(json!({"type":"content_block_start","index":usize::from(thinking_open),"content_block":{"type":"text","text":""}})); text_open = true;
-                    }
-                    send(json!({"type":"content_block_delta","index":usize::from(thinking_open),"delta":{"type":"text_delta","text":&current[sent_text.len()..]}}));
-                    sent_text = current.to_string();
-                }
-            }
+            for event in blocks.push(&preview) { send(event); }
         }).await;
         match result {
             Ok(value) => {
                 state.runtime.record_response_metrics(&value);
                 if !embedded { capture_completion(&state.store, &conversation, "Claude Code", &redact_json(&value)); }
                 let output = anthropic_output(&value, &model);
-                if text_open { send(json!({"type":"content_block_stop","index":usize::from(thinking_open)})); }
-                else if thinking_open { send(json!({"type":"content_block_stop","index":0})); }
-                let mut index = usize::from(text_open) + usize::from(thinking_open);
+                if blocks.text_open { send(json!({"type":"content_block_stop","index":usize::from(blocks.thinking_open)})); }
+                else if blocks.thinking_open { send(json!({"type":"content_block_stop","index":0})); }
+                let mut index = usize::from(blocks.text_open) + usize::from(blocks.thinking_open);
                 for block in output["content"].as_array().into_iter().flatten() {
-                    if block["type"] == "text" && text_open { continue; }
+                    if block["type"] == "text" && blocks.text_open { continue; }
                     if block["type"] == "tool_use" {
                         send(json!({"type":"content_block_start","index":index,"content_block":{"type":"tool_use","id":block["id"],"name":block["name"],"input":{}}}));
                         send(json!({"type":"content_block_delta","index":index,"delta":{"type":"input_json_delta","partial_json":block["input"].to_string()}}));
@@ -802,6 +822,58 @@ mod tests {
         assert_eq!(event["runId"], "run-1");
         assert_eq!(event["content"], "draft answer");
         assert!(provisional_generation_event("conversation-1", "run-1", &json!({"content":"verified answer"})).is_none());
+    }
+
+    #[test]
+    fn anthropic_client_receives_selected_answer_instead_of_provisional_draft() {
+        let mut blocks = AnthropicStreamBlocks::default();
+        let draft = blocks.push(&json!({"provisional":true,"content":"A long discarded draft.","reasoning":"Discarded thought."}));
+        let answer = blocks.push(&json!({"content":"Checked answer.","reasoning":"Checked thought."}));
+        assert!(draft.is_empty(), "A candidate draft is not committed Anthropic content");
+        let text: String = answer.iter().filter_map(|event| event.pointer("/delta/text").and_then(Value::as_str)).collect();
+        let thinking: String = answer.iter().filter_map(|event| event.pointer("/delta/thinking").and_then(Value::as_str)).collect();
+        assert_eq!(text, "Checked answer.");
+        assert_eq!(thinking, "Checked thought.");
+    }
+
+    #[tokio::test]
+    async fn committed_text_is_emitted_before_the_upstream_stream_finishes() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (finish, wait_for_finish) = tokio::sync::oneshot::channel();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            socket.read(&mut request).await.unwrap();
+            socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n\r\n").await.unwrap();
+            socket.write_all(b"data: {\"choices\":[{\"delta\":{\"content\":\"First words.\"}}]}\n\n").await.unwrap();
+            socket.flush().await.unwrap();
+            wait_for_finish.await.unwrap();
+            socket.write_all(b"data: {\"choices\":[{\"delta\":{\"content\":\" More words.\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n").await.unwrap();
+        });
+        let response = reqwest::Client::builder().no_proxy().build().unwrap()
+            .get(format!("http://{address}/")).send().await.unwrap();
+        let (observed, mut updates) = tokio::sync::mpsc::unbounded_channel();
+        let reader = tokio::spawn(async move {
+            let mut blocks = AnthropicStreamBlocks::default();
+            crate::chat_stream::read(response, |preview| {
+                for event in blocks.push(&preview) { observed.send(event).unwrap(); }
+            }).await
+        });
+        let partial = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                let event = updates.recv().await.unwrap();
+                if event["delta"]["type"] == "text_delta" { break event; }
+            }
+        }).await.expect("No text arrived while upstream was still open");
+        assert_eq!(partial["delta"]["text"], "First words.");
+        assert!(!reader.is_finished());
+        finish.send(()).unwrap();
+        let result = reader.await.unwrap().unwrap();
+        server.await.unwrap();
+        assert_eq!(result["choices"][0]["message"]["content"], "First words. More words.");
+        assert_eq!(updates.recv().await.unwrap()["delta"]["text"], " More words.");
     }
 
     #[test]

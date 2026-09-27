@@ -1,0 +1,827 @@
+{
+  "schema": 1,
+  "benchmark": "humaneval",
+  "dataset_manifest_sha256": "032ab2ae707f9c3e18119a14f71966c8b6fc9521e69b9362cacb0503317daa92",
+  "rows": [
+    {
+      "id": "HumanEval/0",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \"\"\"\n",
+      "prompt_sha256": "2a1468c7f8cff7478340bf0ed269017b47f513daca257a8dbe0f6dadc0e6398e"
+    },
+    {
+      "id": "HumanEval/1",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef separate_paren_groups(paren_string: str) -> List[str]:\n    \"\"\" Input to this function is a string containing multiple groups of nested parentheses. Your goal is to\n    separate those group into separate strings and return the list of those.\n    Separate groups are balanced (each open brace is properly closed) and not nested within each other\n    Ignore any spaces in the input string.\n    >>> separate_paren_groups('( ) (( )) (( )( ))')\n    ['()', '(())', '(()())']\n    \"\"\"\n",
+      "prompt_sha256": "e35c4ced32077de790e497b48fe528306bde0822d29b89ebc8b2167c0479e12c"
+    },
+    {
+      "id": "HumanEval/2",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef truncate_number(number: float) -> float:\n    \"\"\" Given a positive floating point number, it can be decomposed into\n    and integer part (largest integer smaller than given number) and decimals\n    (leftover part always smaller than 1).\n\n    Return the decimal part of the number.\n    >>> truncate_number(3.5)\n    0.5\n    \"\"\"\n",
+      "prompt_sha256": "5e3651acd6c23c479cdc20a66354471f90eda6af4bd13606cb601fe918fae4a5"
+    },
+    {
+      "id": "HumanEval/3",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef below_zero(operations: List[int]) -> bool:\n    \"\"\" You're given a list of deposit and withdrawal operations on a bank account that starts with\n    zero balance. Your task is to detect if at any point the balance of account fallls below zero, and\n    at that point function should return True. Otherwise it should return False.\n    >>> below_zero([1, 2, 3])\n    False\n    >>> below_zero([1, 2, -4, 5])\n    True\n    \"\"\"\n",
+      "prompt_sha256": "0784c543e50ce7232489881fafe2c33bc2d359eb9970cc7ba4af227689917186"
+    },
+    {
+      "id": "HumanEval/4",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef mean_absolute_deviation(numbers: List[float]) -> float:\n    \"\"\" For a given list of input numbers, calculate Mean Absolute Deviation\n    around the mean of this dataset.\n    Mean Absolute Deviation is the average absolute difference between each\n    element and a centerpoint (mean in this case):\n    MAD = average | x - x_mean |\n    >>> mean_absolute_deviation([1.0, 2.0, 3.0, 4.0])\n    1.0\n    \"\"\"\n",
+      "prompt_sha256": "e6f7965bb5f358bf5835787ff65b87ccda2da3d1f29c891acdadc3717f4c4cf9"
+    },
+    {
+      "id": "HumanEval/5",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef intersperse(numbers: List[int], delimeter: int) -> List[int]:\n    \"\"\" Insert a number 'delimeter' between every two consecutive elements of input list `numbers'\n    >>> intersperse([], 4)\n    []\n    >>> intersperse([1, 2, 3], 4)\n    [1, 4, 2, 4, 3]\n    \"\"\"\n",
+      "prompt_sha256": "e738988e2a7dae91589451fb5977752eef01fd174797556d59e55ac779064778"
+    },
+    {
+      "id": "HumanEval/6",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef parse_nested_parens(paren_string: str) -> List[int]:\n    \"\"\" Input to this function is a string represented multiple groups for nested parentheses separated by spaces.\n    For each of the group, output the deepest level of nesting of parentheses.\n    E.g. (()()) has maximum two levels of nesting while ((())) has three.\n\n    >>> parse_nested_parens('(()()) ((())) () ((())()())')\n    [2, 3, 1, 3]\n    \"\"\"\n",
+      "prompt_sha256": "fa1985710668a20a432f0257834142d4c1b1a3d17e34435e9ba3afba48ab3961"
+    },
+    {
+      "id": "HumanEval/7",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef filter_by_substring(strings: List[str], substring: str) -> List[str]:\n    \"\"\" Filter an input list of strings only for ones that contain given substring\n    >>> filter_by_substring([], 'a')\n    []\n    >>> filter_by_substring(['abc', 'bacd', 'cde', 'array'], 'a')\n    ['abc', 'bacd', 'array']\n    \"\"\"\n",
+      "prompt_sha256": "6fb9ea62c1afb2537905d42fde378cf2e419f8b075e6f0244c1a04c905fe86e9"
+    },
+    {
+      "id": "HumanEval/8",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List, Tuple\n\n\ndef sum_product(numbers: List[int]) -> Tuple[int, int]:\n    \"\"\" For a given list of integers, return a tuple consisting of a sum and a product of all the integers in a list.\n    Empty sum should be equal to 0 and empty product should be equal to 1.\n    >>> sum_product([])\n    (0, 1)\n    >>> sum_product([1, 2, 3, 4])\n    (10, 24)\n    \"\"\"\n",
+      "prompt_sha256": "d4cfbbbffac3443d524d7a5c9e6aab5f51246da581936e096a7c94df19e887d7"
+    },
+    {
+      "id": "HumanEval/9",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List, Tuple\n\n\ndef rolling_max(numbers: List[int]) -> List[int]:\n    \"\"\" From a given list of integers, generate a list of rolling maximum element found until given moment\n    in the sequence.\n    >>> rolling_max([1, 2, 3, 2, 3, 4, 2])\n    [1, 2, 3, 3, 3, 4, 4]\n    \"\"\"\n",
+      "prompt_sha256": "b9e11c86161b99f85b2a17701b49f9e21477eef34a8d3ee408a833cd22291b32"
+    },
+    {
+      "id": "HumanEval/10",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef is_palindrome(string: str) -> bool:\n    \"\"\" Test if given string is a palindrome \"\"\"\n    return string == string[::-1]\n\n\ndef make_palindrome(string: str) -> str:\n    \"\"\" Find the shortest palindrome that begins with a supplied string.\n    Algorithm idea is simple:\n    - Find the longest postfix of supplied string that is a palindrome.\n    - Append to the end of the string reverse of a string prefix that comes before the palindromic suffix.\n    >>> make_palindrome('')\n    ''\n    >>> make_palindrome('cat')\n    'catac'\n    >>> make_palindrome('cata')\n    'catac'\n    \"\"\"\n",
+      "prompt_sha256": "15f110ae732716b01689d1502801006dcd1d2fd4068a92fd737bd66b94ea7219"
+    },
+    {
+      "id": "HumanEval/11",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef string_xor(a: str, b: str) -> str:\n    \"\"\" Input are two strings a and b consisting only of 1s and 0s.\n    Perform binary XOR on these inputs and return result also as a string.\n    >>> string_xor('010', '110')\n    '100'\n    \"\"\"\n",
+      "prompt_sha256": "6ea04a59b3870c6c42f75117faaa3df5d94f51a344c2b88a235a2ac89ef70d62"
+    },
+    {
+      "id": "HumanEval/12",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List, Optional\n\n\ndef longest(strings: List[str]) -> Optional[str]:\n    \"\"\" Out of list of strings, return the longest one. Return the first one in case of multiple\n    strings of the same length. Return None in case the input list is empty.\n    >>> longest([])\n\n    >>> longest(['a', 'b', 'c'])\n    'a'\n    >>> longest(['a', 'bb', 'ccc'])\n    'ccc'\n    \"\"\"\n",
+      "prompt_sha256": "d62f7e921091d1ad63b4721c0ae2aee4c8705cae05a20bc71ac86319292d49af"
+    },
+    {
+      "id": "HumanEval/13",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef greatest_common_divisor(a: int, b: int) -> int:\n    \"\"\" Return a greatest common divisor of two integers a and b\n    >>> greatest_common_divisor(3, 5)\n    1\n    >>> greatest_common_divisor(25, 15)\n    5\n    \"\"\"\n",
+      "prompt_sha256": "211f84d0fac81c8a665116dc686130a5bd071f1666919eac94b89b24ec37bca4"
+    },
+    {
+      "id": "HumanEval/14",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef all_prefixes(string: str) -> List[str]:\n    \"\"\" Return list of all prefixes from shortest to longest of the input string\n    >>> all_prefixes('abc')\n    ['a', 'ab', 'abc']\n    \"\"\"\n",
+      "prompt_sha256": "53d5cbf378e35e46b93dac882900ce7d2425d04a981f78576fce87fa61c80b36"
+    },
+    {
+      "id": "HumanEval/15",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef string_sequence(n: int) -> str:\n    \"\"\" Return a string containing space-delimited numbers starting from 0 upto n inclusive.\n    >>> string_sequence(0)\n    '0'\n    >>> string_sequence(5)\n    '0 1 2 3 4 5'\n    \"\"\"\n",
+      "prompt_sha256": "9b169857bd0c92dafec7cc8f2cc958669141720c709750c915edf0ed16460ebf"
+    },
+    {
+      "id": "HumanEval/16",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef count_distinct_characters(string: str) -> int:\n    \"\"\" Given a string, find out how many distinct characters (regardless of case) does it consist of\n    >>> count_distinct_characters('xyzXYZ')\n    3\n    >>> count_distinct_characters('Jerry')\n    4\n    \"\"\"\n",
+      "prompt_sha256": "4ff4bf69ddce0ce217a9b89275c016d17f3f6e6627d9930a26f6d38e9a6b5f9b"
+    },
+    {
+      "id": "HumanEval/17",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef parse_music(music_string: str) -> List[int]:\n    \"\"\" Input to this function is a string representing musical notes in a special ASCII format.\n    Your task is to parse this string and return list of integers corresponding to how many beats does each\n    not last.\n\n    Here is a legend:\n    'o' - whole note, lasts four beats\n    'o|' - half note, lasts two beats\n    '.|' - quater note, lasts one beat\n\n    >>> parse_music('o o| .| o| o| .| .| .| .| o o')\n    [4, 2, 1, 2, 2, 1, 1, 1, 1, 4, 4]\n    \"\"\"\n",
+      "prompt_sha256": "582f0a0fa90a8853b53a0abe53b8df8fb6bb28621697f683a4a7f92baaccb4c2"
+    },
+    {
+      "id": "HumanEval/18",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef how_many_times(string: str, substring: str) -> int:\n    \"\"\" Find how many times a given substring can be found in the original string. Count overlaping cases.\n    >>> how_many_times('', 'a')\n    0\n    >>> how_many_times('aaa', 'a')\n    3\n    >>> how_many_times('aaaa', 'aa')\n    3\n    \"\"\"\n",
+      "prompt_sha256": "e0b8fe8d7d2f2aa2efc45e38f02595901c13a13de72d1ee8071b1fa41be28588"
+    },
+    {
+      "id": "HumanEval/19",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef sort_numbers(numbers: str) -> str:\n    \"\"\" Input is a space-delimited string of numberals from 'zero' to 'nine'.\n    Valid choices are 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight' and 'nine'.\n    Return the string with numbers sorted from smallest to largest\n    >>> sort_numbers('three one five')\n    'one three five'\n    \"\"\"\n",
+      "prompt_sha256": "4866d20189d686654d6c41ca7496b9fc28d284cfc921c26043f969abd1b5fdad"
+    },
+    {
+      "id": "HumanEval/20",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List, Tuple\n\n\ndef find_closest_elements(numbers: List[float]) -> Tuple[float, float]:\n    \"\"\" From a supplied list of numbers (of length at least two) select and return two that are the closest to each\n    other and return them in order (smaller number, larger number).\n    >>> find_closest_elements([1.0, 2.0, 3.0, 4.0, 5.0, 2.2])\n    (2.0, 2.2)\n    >>> find_closest_elements([1.0, 2.0, 3.0, 4.0, 5.0, 2.0])\n    (2.0, 2.0)\n    \"\"\"\n",
+      "prompt_sha256": "5ff3535595b95025ff621b69d3245344504f8f4564be273fa3d79ee6ae28ef7e"
+    },
+    {
+      "id": "HumanEval/21",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef rescale_to_unit(numbers: List[float]) -> List[float]:\n    \"\"\" Given list of numbers (of at least two elements), apply a linear transform to that list,\n    such that the smallest number will become 0 and the largest will become 1\n    >>> rescale_to_unit([1.0, 2.0, 3.0, 4.0, 5.0])\n    [0.0, 0.25, 0.5, 0.75, 1.0]\n    \"\"\"\n",
+      "prompt_sha256": "26eea0541cdc1c7583f38c5ba3f0b33bbaa538708cd5c85d9edaad7eb22b8e0d"
+    },
+    {
+      "id": "HumanEval/22",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List, Any\n\n\ndef filter_integers(values: List[Any]) -> List[int]:\n    \"\"\" Filter given list of any python values only for integers\n    >>> filter_integers(['a', 3.14, 5])\n    [5]\n    >>> filter_integers([1, 2, 3, 'abc', {}, []])\n    [1, 2, 3]\n    \"\"\"\n",
+      "prompt_sha256": "ef9fec2b3043d2982ef3786447950611437b52e06a04f213aa302e096ee06e47"
+    },
+    {
+      "id": "HumanEval/23",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef strlen(string: str) -> int:\n    \"\"\" Return length of given string\n    >>> strlen('')\n    0\n    >>> strlen('abc')\n    3\n    \"\"\"\n",
+      "prompt_sha256": "9dee70b7eb4b65ab928d92ee311b4485b14449b4f3b3d4c194c0819f9f6c0088"
+    },
+    {
+      "id": "HumanEval/24",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef largest_divisor(n: int) -> int:\n    \"\"\" For a given number n, find the largest number that divides n evenly, smaller than n\n    >>> largest_divisor(15)\n    5\n    \"\"\"\n",
+      "prompt_sha256": "95bf438ea5d7dd1af0b91293c7d09869ba4bb536b876e85d11cb8097bc1ac3cc"
+    },
+    {
+      "id": "HumanEval/25",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef factorize(n: int) -> List[int]:\n    \"\"\" Return list of prime factors of given integer in the order from smallest to largest.\n    Each of the factors should be listed number of times corresponding to how many times it appeares in factorization.\n    Input number should be equal to the product of all factors\n    >>> factorize(8)\n    [2, 2, 2]\n    >>> factorize(25)\n    [5, 5]\n    >>> factorize(70)\n    [2, 5, 7]\n    \"\"\"\n",
+      "prompt_sha256": "8ea26899913016c22990b7bc358351cef0868ea98ec6e029e2823e300971b301"
+    },
+    {
+      "id": "HumanEval/26",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef remove_duplicates(numbers: List[int]) -> List[int]:\n    \"\"\" From a list of integers, remove all elements that occur more than once.\n    Keep order of elements left the same as in the input.\n    >>> remove_duplicates([1, 2, 3, 2, 4])\n    [1, 3, 4]\n    \"\"\"\n",
+      "prompt_sha256": "1b4292542f3d043c63559208483ae8fb1fb0641071de415682e8eda9e6dde6e1"
+    },
+    {
+      "id": "HumanEval/27",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef flip_case(string: str) -> str:\n    \"\"\" For a given string, flip lowercase characters to uppercase and uppercase to lowercase.\n    >>> flip_case('Hello')\n    'hELLO'\n    \"\"\"\n",
+      "prompt_sha256": "b3eff855a6101613b5feb59a07cf5e484e5beba557a6cafae01875cd3c494510"
+    },
+    {
+      "id": "HumanEval/28",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef concatenate(strings: List[str]) -> str:\n    \"\"\" Concatenate list of strings into a single string\n    >>> concatenate([])\n    ''\n    >>> concatenate(['a', 'b', 'c'])\n    'abc'\n    \"\"\"\n",
+      "prompt_sha256": "96f32fa067147fd44b808c9b7a8c2376cb4c8728a2f81e211bdb99a774840e86"
+    },
+    {
+      "id": "HumanEval/29",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nfrom typing import List\n\n\ndef filter_by_prefix(strings: List[str], prefix: str) -> List[str]:\n    \"\"\" Filter an input list of strings only for ones that start with a given prefix.\n    >>> filter_by_prefix([], 'a')\n    []\n    >>> filter_by_prefix(['abc', 'bcd', 'cde', 'array'], 'a')\n    ['abc', 'array']\n    \"\"\"\n",
+      "prompt_sha256": "237e192728ff2708a953e65d3c59499c1bdba7b98ec577147a0c0b68d5cb9145"
+    },
+    {
+      "id": "HumanEval/30",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n",
+      "prompt_sha256": "6b81bdb1a9f8c70d1ebfc090558fae5c23f5bd1c9d6ff59ce884213d4a97b63e"
+    },
+    {
+      "id": "HumanEval/31",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef is_prime(n):\n    \"\"\"Return true if a given number is prime, and false otherwise.\n    >>> is_prime(6)\n    False\n    >>> is_prime(101)\n    True\n    >>> is_prime(11)\n    True\n    >>> is_prime(13441)\n    True\n    >>> is_prime(61)\n    True\n    >>> is_prime(4)\n    False\n    >>> is_prime(1)\n    False\n    \"\"\"\n",
+      "prompt_sha256": "c8800c5050f743fdd8ec074c5926974ea62f2fd206ba8207ed52ab6eea1cddd9"
+    },
+    {
+      "id": "HumanEval/32",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\nimport math\n\n\ndef poly(xs: list, x: float):\n    \"\"\"\n    Evaluates polynomial with coefficients xs at point x.\n    return xs[0] + xs[1] * x + xs[1] * x^2 + .... xs[n] * x^n\n    \"\"\"\n    return sum([coeff * math.pow(x, i) for i, coeff in enumerate(xs)])\n\n\ndef find_zero(xs: list):\n    \"\"\" xs are coefficients of a polynomial.\n    find_zero find x such that poly(x) = 0.\n    find_zero returns only only zero point, even if there are many.\n    Moreover, find_zero only takes list xs having even number of coefficients\n    and largest non zero coefficient as it guarantees\n    a solution.\n    >>> round(find_zero([1, 2]), 2) # f(x) = 1 + 2x\n    -0.5\n    >>> round(find_zero([-6, 11, -6, 1]), 2) # (x - 1) * (x - 2) * (x - 3) = -6 + 11x - 6x^2 + x^3\n    1.0\n    \"\"\"\n",
+      "prompt_sha256": "551512e1bbf348682463996ed830e8ee102db0f52e4f91a92528a4e608456aa2"
+    },
+    {
+      "id": "HumanEval/33",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef sort_third(l: list):\n    \"\"\"This function takes a list l and returns a list l' such that\n    l' is identical to l in the indicies that are not divisible by three, while its values at the indicies that are divisible by three are equal\n    to the values of the corresponding indicies of l, but sorted.\n    >>> sort_third([1, 2, 3])\n    [1, 2, 3]\n    >>> sort_third([5, 6, 3, 4, 8, 9, 2])\n    [2, 6, 3, 4, 8, 9, 5]\n    \"\"\"\n",
+      "prompt_sha256": "a82e599cdb2505591833ecad4cdfc62f6de0f64752438d14bbc46f4efab87144"
+    },
+    {
+      "id": "HumanEval/34",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef unique(l: list):\n    \"\"\"Return sorted unique elements in a list\n    >>> unique([5, 3, 5, 2, 3, 3, 9, 0, 123])\n    [0, 2, 3, 5, 9, 123]\n    \"\"\"\n",
+      "prompt_sha256": "72f8dc42a7d47d89b199d5540be61d1dcbc44f73fcbbd8145b10b8318181d2e1"
+    },
+    {
+      "id": "HumanEval/35",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef max_element(l: list):\n    \"\"\"Return maximum element in the list.\n    >>> max_element([1, 2, 3])\n    3\n    >>> max_element([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    123\n    \"\"\"\n",
+      "prompt_sha256": "e04a8926eb048cd99b467fdae72150529afa206057340c7470ba599611153b43"
+    },
+    {
+      "id": "HumanEval/36",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef fizz_buzz(n: int):\n    \"\"\"Return the number of times the digit 7 appears in integers less than n which are divisible by 11 or 13.\n    >>> fizz_buzz(50)\n    0\n    >>> fizz_buzz(78)\n    2\n    >>> fizz_buzz(79)\n    3\n    \"\"\"\n",
+      "prompt_sha256": "d294e81d4228abfd2e066f425d0d7ae37f6e4fe571d8aca8f0aab272b35146a5"
+    },
+    {
+      "id": "HumanEval/37",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef sort_even(l: list):\n    \"\"\"This function takes a list l and returns a list l' such that\n    l' is identical to l in the odd indicies, while its values at the even indicies are equal\n    to the values of the even indicies of l, but sorted.\n    >>> sort_even([1, 2, 3])\n    [1, 2, 3]\n    >>> sort_even([5, 6, 3, 4])\n    [3, 6, 5, 4]\n    \"\"\"\n",
+      "prompt_sha256": "47da7f016fa71795467a2dda546cea667cd69b71efc177d132f8e206113c7b72"
+    },
+    {
+      "id": "HumanEval/38",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef encode_cyclic(s: str):\n    \"\"\"\n    returns encoded string by cycling groups of three characters.\n    \"\"\"\n    # split string to groups. Each of length 3.\n    groups = [s[(3 * i):min((3 * i + 3), len(s))] for i in range((len(s) + 2) // 3)]\n    # cycle elements in each group. Unless group has fewer elements than 3.\n    groups = [(group[1:] + group[0]) if len(group) == 3 else group for group in groups]\n    return \"\".join(groups)\n\n\ndef decode_cyclic(s: str):\n    \"\"\"\n    takes as input string encoded with encode_cyclic function. Returns decoded string.\n    \"\"\"\n",
+      "prompt_sha256": "05521467825cacda1ca1832c9a840543e8c2ac16bce4d384514a226acb5c7bd4"
+    },
+    {
+      "id": "HumanEval/39",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef prime_fib(n: int):\n    \"\"\"\n    prime_fib returns n-th number that is a Fibonacci number and it's also prime.\n    >>> prime_fib(1)\n    2\n    >>> prime_fib(2)\n    3\n    >>> prime_fib(3)\n    5\n    >>> prime_fib(4)\n    13\n    >>> prime_fib(5)\n    89\n    \"\"\"\n",
+      "prompt_sha256": "cd6922bb94e8cad0d1405cc48604de984ef8f9e2f81b3b870e13a026d89d7ad6"
+    },
+    {
+      "id": "HumanEval/40",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef triples_sum_to_zero(l: list):\n    \"\"\"\n    triples_sum_to_zero takes a list of integers as an input.\n    it returns True if there are three distinct elements in the list that\n    sum to zero, and False otherwise.\n\n    >>> triples_sum_to_zero([1, 3, 5, 0])\n    False\n    >>> triples_sum_to_zero([1, 3, -2, 1])\n    True\n    >>> triples_sum_to_zero([1, 2, 3, 7])\n    False\n    >>> triples_sum_to_zero([2, 4, -5, 3, 9, 7])\n    True\n    >>> triples_sum_to_zero([1])\n    False\n    \"\"\"\n",
+      "prompt_sha256": "e86b64602572ee61212f5d65285475fe907e9218f8e595846eb291918c97a48b"
+    },
+    {
+      "id": "HumanEval/41",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef car_race_collision(n: int):\n    \"\"\"\n    Imagine a road that's a perfectly straight infinitely long line.\n    n cars are driving left to right;  simultaneously, a different set of n cars\n    are driving right to left.   The two sets of cars start out being very far from\n    each other.  All cars move in the same speed.  Two cars are said to collide\n    when a car that's moving left to right hits a car that's moving right to left.\n    However, the cars are infinitely sturdy and strong; as a result, they continue moving\n    in their trajectory as if they did not collide.\n\n    This function outputs the number of such collisions.\n    \"\"\"\n",
+      "prompt_sha256": "c23d5bac3e11c7f29a288d7beb503f4385b4aafabc8641ce9c8b96f5f89fb234"
+    },
+    {
+      "id": "HumanEval/42",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef incr_list(l: list):\n    \"\"\"Return list with elements incremented by 1.\n    >>> incr_list([1, 2, 3])\n    [2, 3, 4]\n    >>> incr_list([5, 3, 5, 2, 3, 3, 9, 0, 123])\n    [6, 4, 6, 3, 4, 4, 10, 1, 124]\n    \"\"\"\n",
+      "prompt_sha256": "da8153d59e5f3388514e352d79cb6b31381043ee52a3b1290665e787fbec4cd1"
+    },
+    {
+      "id": "HumanEval/43",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef pairs_sum_to_zero(l):\n    \"\"\"\n    pairs_sum_to_zero takes a list of integers as an input.\n    it returns True if there are two distinct elements in the list that\n    sum to zero, and False otherwise.\n    >>> pairs_sum_to_zero([1, 3, 5, 0])\n    False\n    >>> pairs_sum_to_zero([1, 3, -2, 1])\n    False\n    >>> pairs_sum_to_zero([1, 2, 3, 7])\n    False\n    >>> pairs_sum_to_zero([2, 4, -5, 3, 5, 7])\n    True\n    >>> pairs_sum_to_zero([1])\n    False\n    \"\"\"\n",
+      "prompt_sha256": "3934f891dd8870dfa95ce42f01cadb80b49a8f327e6136a3945394e18dc1b322"
+    },
+    {
+      "id": "HumanEval/44",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef change_base(x: int, base: int):\n    \"\"\"Change numerical base of input number x to base.\n    return string representation after the conversion.\n    base numbers are less than 10.\n    >>> change_base(8, 3)\n    '22'\n    >>> change_base(8, 2)\n    '1000'\n    >>> change_base(7, 2)\n    '111'\n    \"\"\"\n",
+      "prompt_sha256": "003f325d95c07413ab0aa0c81fed9b3fe19bad95c9559695726eb01e42f19869"
+    },
+    {
+      "id": "HumanEval/45",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef triangle_area(a, h):\n    \"\"\"Given length of a side and high return area for a triangle.\n    >>> triangle_area(5, 3)\n    7.5\n    \"\"\"\n",
+      "prompt_sha256": "09cbc595422191f48d71ea661dc3232e39ba80eb72cf77f28d584fb8f4e594b9"
+    },
+    {
+      "id": "HumanEval/46",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef fib4(n: int):\n    \"\"\"The Fib4 number sequence is a sequence similar to the Fibbonacci sequnece that's defined as follows:\n    fib4(0) -> 0\n    fib4(1) -> 0\n    fib4(2) -> 2\n    fib4(3) -> 0\n    fib4(n) -> fib4(n-1) + fib4(n-2) + fib4(n-3) + fib4(n-4).\n    Please write a function to efficiently compute the n-th element of the fib4 number sequence.  Do not use recursion.\n    >>> fib4(5)\n    4\n    >>> fib4(6)\n    8\n    >>> fib4(7)\n    14\n    \"\"\"\n",
+      "prompt_sha256": "eb0005fa31d14f961ea2001dc2f602684e1ca9363b9d47d2bb693d8725a080ce"
+    },
+    {
+      "id": "HumanEval/47",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef median(l: list):\n    \"\"\"Return median of elements in the list l.\n    >>> median([3, 1, 2, 4, 5])\n    3\n    >>> median([-10, 4, 6, 1000, 10, 20])\n    15.0\n    \"\"\"\n",
+      "prompt_sha256": "03925dba395ac35c06dafb58a68e4d4dc5d1a2e23237ce37bc4c3c525d5616fa"
+    },
+    {
+      "id": "HumanEval/48",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef is_palindrome(text: str):\n    \"\"\"\n    Checks if given string is a palindrome\n    >>> is_palindrome('')\n    True\n    >>> is_palindrome('aba')\n    True\n    >>> is_palindrome('aaaaa')\n    True\n    >>> is_palindrome('zbcd')\n    False\n    \"\"\"\n",
+      "prompt_sha256": "645c64f535dd44d4ab5bd47a46e0638a92eaea1235340a1b77ba25052b94ce56"
+    },
+    {
+      "id": "HumanEval/49",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef modp(n: int, p: int):\n    \"\"\"Return 2^n modulo p (be aware of numerics).\n    >>> modp(3, 5)\n    3\n    >>> modp(1101, 101)\n    2\n    >>> modp(0, 101)\n    1\n    >>> modp(3, 11)\n    8\n    >>> modp(100, 101)\n    1\n    \"\"\"\n",
+      "prompt_sha256": "7d3141c7929645cb085cd8456f761d304fc25d6ab02b6ad160d966b0098acd78"
+    },
+    {
+      "id": "HumanEval/50",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef encode_shift(s: str):\n    \"\"\"\n    returns encoded string by shifting every character by 5 in the alphabet.\n    \"\"\"\n    return \"\".join([chr(((ord(ch) + 5 - ord(\"a\")) % 26) + ord(\"a\")) for ch in s])\n\n\ndef decode_shift(s: str):\n    \"\"\"\n    takes as input string encoded with encode_shift function. Returns decoded string.\n    \"\"\"\n",
+      "prompt_sha256": "844bd57fbe41959602685f5e860a94915a2bb0690fac7dd7e2968e7b1287af3b"
+    },
+    {
+      "id": "HumanEval/51",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef remove_vowels(text):\n    \"\"\"\n    remove_vowels is a function that takes string and returns string without vowels.\n    >>> remove_vowels('')\n    ''\n    >>> remove_vowels(\"abcdef\\nghijklm\")\n    'bcdf\\nghjklm'\n    >>> remove_vowels('abcdef')\n    'bcdf'\n    >>> remove_vowels('aaaaa')\n    ''\n    >>> remove_vowels('aaBAA')\n    'B'\n    >>> remove_vowels('zbcd')\n    'zbcd'\n    \"\"\"\n",
+      "prompt_sha256": "face685cea36db8f5f5a8ab4d3fd02ea7ef39643ed5f90d77b5de9f5cde9bf38"
+    },
+    {
+      "id": "HumanEval/52",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef below_threshold(l: list, t: int):\n    \"\"\"Return True if all numbers in the list l are below threshold t.\n    >>> below_threshold([1, 2, 4, 10], 100)\n    True\n    >>> below_threshold([1, 20, 4, 10], 5)\n    False\n    \"\"\"\n",
+      "prompt_sha256": "42121a838d8641fb6636a63644126738d649f779e69463533bfaea472c9842cf"
+    },
+    {
+      "id": "HumanEval/53",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef add(x: int, y: int):\n    \"\"\"Add two numbers x and y\n    >>> add(2, 3)\n    5\n    >>> add(5, 7)\n    12\n    \"\"\"\n",
+      "prompt_sha256": "a8eaf0f4e44f150fbc9a1f4d16967d92df0fd6d3af80462399621fd4f7ef7dad"
+    },
+    {
+      "id": "HumanEval/54",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef same_chars(s0: str, s1: str):\n    \"\"\"\n    Check if two words have the same characters.\n    >>> same_chars('eabcdzzzz', 'dddzzzzzzzddeddabc')\n    True\n    >>> same_chars('abcd', 'dddddddabc')\n    True\n    >>> same_chars('dddddddabc', 'abcd')\n    True\n    >>> same_chars('eabcd', 'dddddddabc')\n    False\n    >>> same_chars('abcd', 'dddddddabce')\n    False\n    >>> same_chars('eabcdzzzz', 'dddzzzzzzzddddabc')\n    False\n    \"\"\"\n",
+      "prompt_sha256": "d6da26238e7ae0e1f518585659d14b0c089a5f4c461c0177225b4a1b33f96655"
+    },
+    {
+      "id": "HumanEval/55",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef fib(n: int):\n    \"\"\"Return n-th Fibonacci number.\n    >>> fib(10)\n    55\n    >>> fib(1)\n    1\n    >>> fib(8)\n    21\n    \"\"\"\n",
+      "prompt_sha256": "7a03aafd274c48719cda951745eea81e91d4e10398db1f46ca488c7dda79c91c"
+    },
+    {
+      "id": "HumanEval/56",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef correct_bracketing(brackets: str):\n    \"\"\" brackets is a string of \"<\" and \">\".\n    return True if every opening bracket has a corresponding closing bracket.\n\n    >>> correct_bracketing(\"<\")\n    False\n    >>> correct_bracketing(\"<>\")\n    True\n    >>> correct_bracketing(\"<<><>>\")\n    True\n    >>> correct_bracketing(\"><<>\")\n    False\n    \"\"\"\n",
+      "prompt_sha256": "5e9a389a298c150c58dfbd8acee4c4c596f41348631b56dd2f1553759809051d"
+    },
+    {
+      "id": "HumanEval/57",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n",
+      "prompt_sha256": "c3a7725e90f9d739a6b21bed4b8edf3642cc8212ad4ec866e9ccfe27c3d49537"
+    },
+    {
+      "id": "HumanEval/58",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef common(l1: list, l2: list):\n    \"\"\"Return sorted unique common elements for two lists.\n    >>> common([1, 4, 3, 34, 653, 2, 5], [5, 7, 1, 5, 9, 653, 121])\n    [1, 5, 653]\n    >>> common([5, 3, 2, 8], [3, 2])\n    [2, 3]\n\n    \"\"\"\n",
+      "prompt_sha256": "0e374287be85181e6046b2ea1f43643b3a7d8814fdeef22a7ea850fb3e6a998c"
+    },
+    {
+      "id": "HumanEval/59",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef largest_prime_factor(n: int):\n    \"\"\"Return the largest prime factor of n. Assume n > 1 and is not a prime.\n    >>> largest_prime_factor(13195)\n    29\n    >>> largest_prime_factor(2048)\n    2\n    \"\"\"\n",
+      "prompt_sha256": "088e24fcbe497a74cdff140d060c858fe687d86dafeaa82fddcba935009ba8ee"
+    },
+    {
+      "id": "HumanEval/60",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef sum_to_n(n: int):\n    \"\"\"sum_to_n is a function that sums numbers from 1 to n.\n    >>> sum_to_n(30)\n    465\n    >>> sum_to_n(100)\n    5050\n    >>> sum_to_n(5)\n    15\n    >>> sum_to_n(10)\n    55\n    >>> sum_to_n(1)\n    1\n    \"\"\"\n",
+      "prompt_sha256": "5945ce41dd1f48dcf7ccad0beff7eb3107992697d62ccac78c7fa8da2efaf0a2"
+    },
+    {
+      "id": "HumanEval/61",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef correct_bracketing(brackets: str):\n    \"\"\" brackets is a string of \"(\" and \")\".\n    return True if every opening bracket has a corresponding closing bracket.\n\n    >>> correct_bracketing(\"(\")\n    False\n    >>> correct_bracketing(\"()\")\n    True\n    >>> correct_bracketing(\"(()())\")\n    True\n    >>> correct_bracketing(\")(()\")\n    False\n    \"\"\"\n",
+      "prompt_sha256": "02450bcbd78af7b3ea0fc2b6ca6c4c090e3f528c3599f840d3e578ce2dc5704b"
+    },
+    {
+      "id": "HumanEval/62",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef derivative(xs: list):\n    \"\"\" xs represent coefficients of a polynomial.\n    xs[0] + xs[1] * x + xs[2] * x^2 + ....\n     Return derivative of this polynomial in the same form.\n    >>> derivative([3, 1, 2, 4, 5])\n    [1, 4, 12, 20]\n    >>> derivative([1, 2, 3])\n    [2, 6]\n    \"\"\"\n",
+      "prompt_sha256": "1c4ee96402c094dedc166f384ea986f9157e60bad644740e12f9604f23714c14"
+    },
+    {
+      "id": "HumanEval/63",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef fibfib(n: int):\n    \"\"\"The FibFib number sequence is a sequence similar to the Fibbonacci sequnece that's defined as follows:\n    fibfib(0) == 0\n    fibfib(1) == 0\n    fibfib(2) == 1\n    fibfib(n) == fibfib(n-1) + fibfib(n-2) + fibfib(n-3).\n    Please write a function to efficiently compute the n-th element of the fibfib number sequence.\n    >>> fibfib(1)\n    0\n    >>> fibfib(5)\n    4\n    >>> fibfib(8)\n    24\n    \"\"\"\n",
+      "prompt_sha256": "ee17b2e1352b167216ab6e7b8b33fef1ccff62be94f646fdb6c5c974ce6cf62e"
+    },
+    {
+      "id": "HumanEval/64",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\nFIX = \"\"\"\nAdd more test cases.\n\"\"\"\n\ndef vowels_count(s):\n    \"\"\"Write a function vowels_count which takes a string representing\n    a word as input and returns the number of vowels in the string.\n    Vowels in this case are 'a', 'e', 'i', 'o', 'u'. Here, 'y' is also a\n    vowel, but only when it is at the end of the given word.\n\n    Example:\n    >>> vowels_count(\"abcde\")\n    2\n    >>> vowels_count(\"ACEDY\")\n    3\n    \"\"\"\n",
+      "prompt_sha256": "3cc12568114e14d551c7dc0901236a8196343b1bebe58329a4d2327401f2d992"
+    },
+    {
+      "id": "HumanEval/65",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef circular_shift(x, shift):\n    \"\"\"Circular shift the digits of the integer x, shift the digits right by shift\n    and return the result as a string.\n    If shift > number of digits, return digits reversed.\n    >>> circular_shift(12, 1)\n    \"21\"\n    >>> circular_shift(12, 2)\n    \"12\"\n    \"\"\"\n",
+      "prompt_sha256": "f5b710482492f4c66a0d99dc5816f6dcf2e00d9551e8b66a1a570bffcf23165a"
+    },
+    {
+      "id": "HumanEval/66",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef digitSum(s):\n    \"\"\"Task\n    Write a function that takes a string as input and returns the sum of the upper characters only'\n    ASCII codes.\n\n    Examples:\n        digitSum(\"\") => 0\n        digitSum(\"abAB\") => 131\n        digitSum(\"abcCd\") => 67\n        digitSum(\"helloE\") => 69\n        digitSum(\"woArBld\") => 131\n        digitSum(\"aAaaaXa\") => 153\n    \"\"\"\n",
+      "prompt_sha256": "73ae102e46d67fa67259eb4ef80778b507cbb7b33c6e3e4c283c841974a32e4c"
+    },
+    {
+      "id": "HumanEval/67",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef fruit_distribution(s,n):\n    \"\"\"\n    In this task, you will be given a string that represents a number of apples and oranges \n    that are distributed in a basket of fruit this basket contains \n    apples, oranges, and mango fruits. Given the string that represents the total number of \n    the oranges and apples and an integer that represent the total number of the fruits \n    in the basket return the number of the mango fruits in the basket.\n    for examble:\n    fruit_distribution(\"5 apples and 6 oranges\", 19) ->19 - 5 - 6 = 8\n    fruit_distribution(\"0 apples and 1 oranges\",3) -> 3 - 0 - 1 = 2\n    fruit_distribution(\"2 apples and 3 oranges\", 100) -> 100 - 2 - 3 = 95\n    fruit_distribution(\"100 apples and 1 oranges\",120) -> 120 - 100 - 1 = 19\n    \"\"\"\n",
+      "prompt_sha256": "c326ca8e87b83790cbf5983045be3bdba936c9e586dff19a172def43f032d36e"
+    },
+    {
+      "id": "HumanEval/68",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef pluck(arr):\n    \"\"\"\n    \"Given an array representing a branch of a tree that has non-negative integer nodes\n    your task is to pluck one of the nodes and return it.\n    The plucked node should be the node with the smallest even value.\n    If multiple nodes with the same smallest even value are found return the node that has smallest index.\n\n    The plucked node should be returned in a list, [ smalest_value, its index ],\n    If there are no even values or the given array is empty, return [].\n\n    Example 1:\n        Input: [4,2,3]\n        Output: [2, 1]\n        Explanation: 2 has the smallest even value, and 2 has the smallest index.\n\n    Example 2:\n        Input: [1,2,3]\n        Output: [2, 1]\n        Explanation: 2 has the smallest even value, and 2 has the smallest index. \n\n    Example 3:\n        Input: []\n        Output: []\n    \n    Example 4:\n        Input: [5, 0, 3, 0, 4, 2]\n        Output: [0, 1]\n        Explanation: 0 is the smallest value, but  there are two zeros,\n                     so we will choose the first zero, which has the smallest index.\n\n    Constraints:\n        * 1 <= nodes.length <= 10000\n        * 0 <= node.value\n    \"\"\"\n",
+      "prompt_sha256": "162de0a64ec2a5ae54d6877a647cbc8433086222a5fb15376a4bcf0d212eff33"
+    },
+    {
+      "id": "HumanEval/69",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef search(lst):\n    '''\n    You are given a non-empty list of positive integers. Return the greatest integer that is greater than \n    zero, and has a frequency greater than or equal to the value of the integer itself. \n    The frequency of an integer is the number of times it appears in the list.\n    If no such a value exist, return -1.\n    Examples:\n        search([4, 1, 2, 2, 3, 1]) == 2\n        search([1, 2, 2, 3, 3, 3, 4, 4, 4]) == 3\n        search([5, 5, 4, 4, 4]) == -1\n    '''\n",
+      "prompt_sha256": "13624d52793bbfb214d973c42ddc13eb5978797b77d8cfb2ed9fb1cce81d7e73"
+    },
+    {
+      "id": "HumanEval/70",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef strange_sort_list(lst):\n    '''\n    Given list of integers, return list in strange order.\n    Strange sorting, is when you start with the minimum value,\n    then maximum of the remaining integers, then minimum and so on.\n\n    Examples:\n    strange_sort_list([1, 2, 3, 4]) == [1, 4, 2, 3]\n    strange_sort_list([5, 5, 5, 5]) == [5, 5, 5, 5]\n    strange_sort_list([]) == []\n    '''\n",
+      "prompt_sha256": "ea80ed042a45f5ba5e6773418447a0b217ea23797bd6f094b3312c61dbaecaee"
+    },
+    {
+      "id": "HumanEval/71",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef triangle_area(a, b, c):\n    '''\n    Given the lengths of the three sides of a triangle. Return the area of\n    the triangle rounded to 2 decimal points if the three sides form a valid triangle. \n    Otherwise return -1\n    Three sides make a valid triangle when the sum of any two sides is greater \n    than the third side.\n    Example:\n    triangle_area(3, 4, 5) == 6.00\n    triangle_area(1, 2, 10) == -1\n    '''\n",
+      "prompt_sha256": "031f477c62ea2ef4166fa36665b0a9ad7f8df3fe8b52969b7446789ac7c7c562"
+    },
+    {
+      "id": "HumanEval/72",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef will_it_fly(q,w):\n    '''\n    Write a function that returns True if the object q will fly, and False otherwise.\n    The object q will fly if it's balanced (it is a palindromic list) and the sum of its elements is less than or equal the maximum possible weight w.\n\n    Example:\n    will_it_fly([1, 2], 5) ➞ False \n    # 1+2 is less than the maximum possible weight, but it's unbalanced.\n\n    will_it_fly([3, 2, 3], 1) ➞ False\n    # it's balanced, but 3+2+3 is more than the maximum possible weight.\n\n    will_it_fly([3, 2, 3], 9) ➞ True\n    # 3+2+3 is less than the maximum possible weight, and it's balanced.\n\n    will_it_fly([3], 5) ➞ True\n    # 3 is less than the maximum possible weight, and it's balanced.\n    '''\n",
+      "prompt_sha256": "61c59b22e1768c7f83aad2af0eb2d6f0d1ecd9d15a7ba64c2733e8edd613f860"
+    },
+    {
+      "id": "HumanEval/73",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef smallest_change(arr):\n    \"\"\"\n    Given an array arr of integers, find the minimum number of elements that\n    need to be changed to make the array palindromic. A palindromic array is an array that\n    is read the same backwards and forwards. In one change, you can change one element to any other element.\n\n    For example:\n    smallest_change([1,2,3,5,4,7,9,6]) == 4\n    smallest_change([1, 2, 3, 4, 3, 2, 2]) == 1\n    smallest_change([1, 2, 3, 2, 1]) == 0\n    \"\"\"\n",
+      "prompt_sha256": "22be29a2f9ebba9109503d829c3d0f56a935cb79a95ea700600c1d8ace7f46e9"
+    },
+    {
+      "id": "HumanEval/74",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef total_match(lst1, lst2):\n    '''\n    Write a function that accepts two lists of strings and returns the list that has \n    total number of chars in the all strings of the list less than the other list.\n\n    if the two lists have the same number of chars, return the first list.\n\n    Examples\n    total_match([], []) ➞ []\n    total_match(['hi', 'admin'], ['hI', 'Hi']) ➞ ['hI', 'Hi']\n    total_match(['hi', 'admin'], ['hi', 'hi', 'admin', 'project']) ➞ ['hi', 'admin']\n    total_match(['hi', 'admin'], ['hI', 'hi', 'hi']) ➞ ['hI', 'hi', 'hi']\n    total_match(['4'], ['1', '2', '3', '4', '5']) ➞ ['4']\n    '''\n",
+      "prompt_sha256": "ac05839936afebb721817d7f30a703a63ae09c2464e694db5c71fbe51c7c5c17"
+    },
+    {
+      "id": "HumanEval/75",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_multiply_prime(a):\n    \"\"\"Write a function that returns true if the given number is the multiplication of 3 prime numbers\n    and false otherwise.\n    Knowing that (a) is less then 100. \n    Example:\n    is_multiply_prime(30) == True\n    30 = 2 * 3 * 5\n    \"\"\"\n",
+      "prompt_sha256": "a2bdc57cfe9cca93efd8b1c63ac7049ce077f51c9949f12cade118e7a927f7b0"
+    },
+    {
+      "id": "HumanEval/76",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_simple_power(x, n):\n    \"\"\"Your task is to write a function that returns true if a number x is a simple\n    power of n and false in other cases.\n    x is a simple power of n if n**int=x\n    For example:\n    is_simple_power(1, 4) => true\n    is_simple_power(2, 2) => true\n    is_simple_power(8, 2) => true\n    is_simple_power(3, 2) => false\n    is_simple_power(3, 1) => false\n    is_simple_power(5, 3) => false\n    \"\"\"\n",
+      "prompt_sha256": "306cf77557c661a891a2568893098a0ed7b8b4fec333534f4aa69fae4a8d414e"
+    },
+    {
+      "id": "HumanEval/77",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef iscube(a):\n    '''\n    Write a function that takes an integer a and returns True \n    if this ingeger is a cube of some integer number.\n    Note: you may assume the input is always valid.\n    Examples:\n    iscube(1) ==> True\n    iscube(2) ==> False\n    iscube(-1) ==> True\n    iscube(64) ==> True\n    iscube(0) ==> True\n    iscube(180) ==> False\n    '''\n",
+      "prompt_sha256": "6674110b82b0c67b404cccc24f0b932afa9a5a6ceb82d9a2efc081535129cc0d"
+    },
+    {
+      "id": "HumanEval/78",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef hex_key(num):\n    \"\"\"You have been tasked to write a function that receives \n    a hexadecimal number as a string and counts the number of hexadecimal \n    digits that are primes (prime number, or a prime, is a natural number \n    greater than 1 that is not a product of two smaller natural numbers).\n    Hexadecimal digits are 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F.\n    Prime numbers are 2, 3, 5, 7, 11, 13, 17,...\n    So you have to determine a number of the following digits: 2, 3, 5, 7, \n    B (=decimal 11), D (=decimal 13).\n    Note: you may assume the input is always correct or empty string, \n    and symbols A,B,C,D,E,F are always uppercase.\n    Examples:\n    For num = \"AB\" the output should be 1.\n    For num = \"1077E\" the output should be 2.\n    For num = \"ABED1A33\" the output should be 4.\n    For num = \"123456789ABCDEF0\" the output should be 6.\n    For num = \"2020\" the output should be 2.\n    \"\"\"\n",
+      "prompt_sha256": "2d59599f44abdf691b7089a27341f1f9dc2ddf26595b2de2b5f4c650a932c70c"
+    },
+    {
+      "id": "HumanEval/79",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef decimal_to_binary(decimal):\n    \"\"\"You will be given a number in decimal form and your task is to convert it to\n    binary format. The function should return a string, with each character representing a binary\n    number. Each character in the string will be '0' or '1'.\n\n    There will be an extra couple of characters 'db' at the beginning and at the end of the string.\n    The extra characters are there to help with the format.\n\n    Examples:\n    decimal_to_binary(15)   # returns \"db1111db\"\n    decimal_to_binary(32)   # returns \"db100000db\"\n    \"\"\"\n",
+      "prompt_sha256": "cc5a508bd76d4dcca3cce28f3421df364107d785c846723f998c3de4f0dae4dd"
+    },
+    {
+      "id": "HumanEval/80",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_happy(s):\n    \"\"\"You are given a string s.\n    Your task is to check if the string is happy or not.\n    A string is happy if its length is at least 3 and every 3 consecutive letters are distinct\n    For example:\n    is_happy(a) => False\n    is_happy(aa) => False\n    is_happy(abcd) => True\n    is_happy(aabb) => False\n    is_happy(adb) => True\n    is_happy(xyy) => False\n    \"\"\"\n",
+      "prompt_sha256": "1bc68c93e84723891f43a552bf1f32fd458bc07bf0cc36a636e6781b71c7bd77"
+    },
+    {
+      "id": "HumanEval/81",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef numerical_letter_grade(grades):\n    \"\"\"It is the last week of the semester and the teacher has to give the grades\n    to students. The teacher has been making her own algorithm for grading.\n    The only problem is, she has lost the code she used for grading.\n    She has given you a list of GPAs for some students and you have to write \n    a function that can output a list of letter grades using the following table:\n             GPA       |    Letter grade\n              4.0                A+\n            > 3.7                A \n            > 3.3                A- \n            > 3.0                B+\n            > 2.7                B \n            > 2.3                B-\n            > 2.0                C+\n            > 1.7                C\n            > 1.3                C-\n            > 1.0                D+ \n            > 0.7                D \n            > 0.0                D-\n              0.0                E\n    \n\n    Example:\n    grade_equation([4.0, 3, 1.7, 2, 3.5]) ==> ['A+', 'B', 'C-', 'C', 'A-']\n    \"\"\"\n",
+      "prompt_sha256": "c3b5aba3611d91d4bc01c451850eb01b31098e5885bdab7781c71f89b7092ba8"
+    },
+    {
+      "id": "HumanEval/82",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef prime_length(string):\n    \"\"\"Write a function that takes a string and returns True if the string\n    length is a prime number or False otherwise\n    Examples\n    prime_length('Hello') == True\n    prime_length('abcdcba') == True\n    prime_length('kittens') == True\n    prime_length('orange') == False\n    \"\"\"\n",
+      "prompt_sha256": "4a62ef313bf870188c128fd6d1b6fd15ac7f754d9af0a7e822588563ba0f805c"
+    },
+    {
+      "id": "HumanEval/83",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef starts_one_ends(n):\n    \"\"\"\n    Given a positive integer n, return the count of the numbers of n-digit\n    positive integers that start or end with 1.\n    \"\"\"\n",
+      "prompt_sha256": "30745454f85365a1b400dc94c0a281dc5744500d49f595919a2be830a6110f35"
+    },
+    {
+      "id": "HumanEval/84",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef solve(N):\n    \"\"\"Given a positive integer N, return the total sum of its digits in binary.\n    \n    Example\n        For N = 1000, the sum of digits will be 1 the output should be \"1\".\n        For N = 150, the sum of digits will be 6 the output should be \"110\".\n        For N = 147, the sum of digits will be 12 the output should be \"1100\".\n    \n    Variables:\n        @N integer\n             Constraints: 0 ≤ N ≤ 10000.\n    Output:\n         a string of binary number\n    \"\"\"\n",
+      "prompt_sha256": "a20ff03b9a8e711f8bae0e605c21d0040d02fa2ee34e30e94289addc2709374d"
+    },
+    {
+      "id": "HumanEval/85",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef add(lst):\n    \"\"\"Given a non-empty list of integers lst. add the even elements that are at odd indices..\n\n\n    Examples:\n        add([4, 2, 6, 7]) ==> 2 \n    \"\"\"\n",
+      "prompt_sha256": "65f502f6b21fd964b0f433aa4a73104d3ca65e856a6f9584697cf6c816a43725"
+    },
+    {
+      "id": "HumanEval/86",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef anti_shuffle(s):\n    \"\"\"\n    Write a function that takes a string and returns an ordered version of it.\n    Ordered version of string, is a string where all words (separated by space)\n    are replaced by a new word where all the characters arranged in\n    ascending order based on ascii value.\n    Note: You should keep the order of words and blank spaces in the sentence.\n\n    For example:\n    anti_shuffle('Hi') returns 'Hi'\n    anti_shuffle('hello') returns 'ehllo'\n    anti_shuffle('Hello World!!!') returns 'Hello !!!Wdlor'\n    \"\"\"\n",
+      "prompt_sha256": "591853a70ea773312993037a99b6046239cb31cc8ba80621614b103851f2f568"
+    },
+    {
+      "id": "HumanEval/87",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef get_row(lst, x):\n    \"\"\"\n    You are given a 2 dimensional data, as a nested lists,\n    which is similar to matrix, however, unlike matrices,\n    each row may contain a different number of columns.\n    Given lst, and integer x, find integers x in the list,\n    and return list of tuples, [(x1, y1), (x2, y2) ...] such that\n    each tuple is a coordinate - (row, columns), starting with 0.\n    Sort coordinates initially by rows in ascending order.\n    Also, sort coordinates of the row by columns in descending order.\n    \n    Examples:\n    get_row([\n      [1,2,3,4,5,6],\n      [1,2,3,4,1,6],\n      [1,2,3,4,5,1]\n    ], 1) == [(0, 0), (1, 4), (1, 0), (2, 5), (2, 0)]\n    get_row([], 1) == []\n    get_row([[], [1], [1, 2, 3]], 3) == [(2, 2)]\n    \"\"\"\n",
+      "prompt_sha256": "d611eee5961d182fff147afbc699cf7f11d062ec88dbf8586802cd7a5a1700ac"
+    },
+    {
+      "id": "HumanEval/88",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef sort_array(array):\n    \"\"\"\n    Given an array of non-negative integers, return a copy of the given array after sorting,\n    you will sort the given array in ascending order if the sum( first index value, last index value) is odd,\n    or sort it in descending order if the sum( first index value, last index value) is even.\n\n    Note:\n    * don't change the given array.\n\n    Examples:\n    * sort_array([]) => []\n    * sort_array([5]) => [5]\n    * sort_array([2, 4, 3, 0, 1, 5]) => [0, 1, 2, 3, 4, 5]\n    * sort_array([2, 4, 3, 0, 1, 5, 6]) => [6, 5, 4, 3, 2, 1, 0]\n    \"\"\"\n",
+      "prompt_sha256": "e91060358eb78a15398b0074e5e2d7ec31959284dec7db0d7873f95ea3504b81"
+    },
+    {
+      "id": "HumanEval/89",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef encrypt(s):\n    \"\"\"Create a function encrypt that takes a string as an argument and\n    returns a string encrypted with the alphabet being rotated. \n    The alphabet should be rotated in a manner such that the letters \n    shift down by two multiplied to two places.\n    For example:\n    encrypt('hi') returns 'lm'\n    encrypt('asdfghjkl') returns 'ewhjklnop'\n    encrypt('gf') returns 'kj'\n    encrypt('et') returns 'ix'\n    \"\"\"\n",
+      "prompt_sha256": "eb91060938c10408648881b4bcd2889abe45c394709cfc090ab0dac54590ea6b"
+    },
+    {
+      "id": "HumanEval/90",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef next_smallest(lst):\n    \"\"\"\n    You are given a list of integers.\n    Write a function next_smallest() that returns the 2nd smallest element of the list.\n    Return None if there is no such element.\n    \n    next_smallest([1, 2, 3, 4, 5]) == 2\n    next_smallest([5, 1, 4, 3, 2]) == 2\n    next_smallest([]) == None\n    next_smallest([1, 1]) == None\n    \"\"\"\n",
+      "prompt_sha256": "959f692e2dbf10a5b1ca6563a558ee5b9afa9bcce7f046101a2ce95cdf916f4b"
+    },
+    {
+      "id": "HumanEval/91",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_bored(S):\n    \"\"\"\n    You'll be given a string of words, and your task is to count the number\n    of boredoms. A boredom is a sentence that starts with the word \"I\".\n    Sentences are delimited by '.', '?' or '!'.\n   \n    For example:\n    >>> is_bored(\"Hello world\")\n    0\n    >>> is_bored(\"The sky is blue. The sun is shining. I love this weather\")\n    1\n    \"\"\"\n",
+      "prompt_sha256": "c91d647298e9867f12234f8ec8e000e3c0261a67701ea44c1a32d8a66c7eabb2"
+    },
+    {
+      "id": "HumanEval/92",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef any_int(x, y, z):\n    '''\n    Create a function that takes 3 numbers.\n    Returns true if one of the numbers is equal to the sum of the other two, and all numbers are integers.\n    Returns false in any other cases.\n    \n    Examples\n    any_int(5, 2, 7) ➞ True\n    \n    any_int(3, 2, 2) ➞ False\n\n    any_int(3, -2, 1) ➞ True\n    \n    any_int(3.6, -2.2, 2) ➞ False\n  \n\n    \n    '''\n",
+      "prompt_sha256": "2990b1e5522a3e8714453adc6c73d6f651d981e5a8fb4d1473970a5875282b57"
+    },
+    {
+      "id": "HumanEval/93",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef encode(message):\n    \"\"\"\n    Write a function that takes a message, and encodes in such a \n    way that it swaps case of all letters, replaces all vowels in \n    the message with the letter that appears 2 places ahead of that \n    vowel in the english alphabet. \n    Assume only letters. \n    \n    Examples:\n    >>> encode('test')\n    'TGST'\n    >>> encode('This is a message')\n    'tHKS KS C MGSSCGG'\n    \"\"\"\n",
+      "prompt_sha256": "75a33d50d01ef52ade830472f37b71a01816f4bf24fd2035bb1c0e9c2bdeac27"
+    },
+    {
+      "id": "HumanEval/94",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef skjkasdkd(lst):\n    \"\"\"You are given a list of integers.\n    You need to find the largest prime value and return the sum of its digits.\n\n    Examples:\n    For lst = [0,3,2,1,3,5,7,4,5,5,5,2,181,32,4,32,3,2,32,324,4,3] the output should be 10\n    For lst = [1,0,1,8,2,4597,2,1,3,40,1,2,1,2,4,2,5,1] the output should be 25\n    For lst = [1,3,1,32,5107,34,83278,109,163,23,2323,32,30,1,9,3] the output should be 13\n    For lst = [0,724,32,71,99,32,6,0,5,91,83,0,5,6] the output should be 11\n    For lst = [0,81,12,3,1,21] the output should be 3\n    For lst = [0,8,1,2,1,7] the output should be 7\n    \"\"\"\n",
+      "prompt_sha256": "9b98b565a9534bb9c0432d1055ae3620d2398724a48e53919ae6ff48462f429b"
+    },
+    {
+      "id": "HumanEval/95",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef check_dict_case(dict):\n    \"\"\"\n    Given a dictionary, return True if all keys are strings in lower \n    case or all keys are strings in upper case, else return False.\n    The function should return False is the given dictionary is empty.\n    Examples:\n    check_dict_case({\"a\":\"apple\", \"b\":\"banana\"}) should return True.\n    check_dict_case({\"a\":\"apple\", \"A\":\"banana\", \"B\":\"banana\"}) should return False.\n    check_dict_case({\"a\":\"apple\", 8:\"banana\", \"a\":\"apple\"}) should return False.\n    check_dict_case({\"Name\":\"John\", \"Age\":\"36\", \"City\":\"Houston\"}) should return False.\n    check_dict_case({\"STATE\":\"NC\", \"ZIP\":\"12345\" }) should return True.\n    \"\"\"\n",
+      "prompt_sha256": "9b63dc3d4ed45e4c33f95b0e94b49feea836c8181aa4e75fca5a82948fc61948"
+    },
+    {
+      "id": "HumanEval/96",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef count_up_to(n):\n    \"\"\"Implement a function that takes an non-negative integer and returns an array of the first n\n    integers that are prime numbers and less than n.\n    for example:\n    count_up_to(5) => [2,3]\n    count_up_to(11) => [2,3,5,7]\n    count_up_to(0) => []\n    count_up_to(20) => [2,3,5,7,11,13,17,19]\n    count_up_to(1) => []\n    count_up_to(18) => [2,3,5,7,11,13,17]\n    \"\"\"\n",
+      "prompt_sha256": "dccfc757fda9cb342591b663da538e19ce5248fe3e2e208689be402fb53938b3"
+    },
+    {
+      "id": "HumanEval/97",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef multiply(a, b):\n    \"\"\"Complete the function that takes two integers and returns \n    the product of their unit digits.\n    Assume the input is always valid.\n    Examples:\n    multiply(148, 412) should return 16.\n    multiply(19, 28) should return 72.\n    multiply(2020, 1851) should return 0.\n    multiply(14,-15) should return 20.\n    \"\"\"\n",
+      "prompt_sha256": "fadc62c1bb5d0b5ca6ddb753ba3332676e8906617041cdba3321a551862567c3"
+    },
+    {
+      "id": "HumanEval/98",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef count_upper(s):\n    \"\"\"\n    Given a string s, count the number of uppercase vowels in even indices.\n    \n    For example:\n    count_upper('aBCdEf') returns 1\n    count_upper('abcdefg') returns 0\n    count_upper('dBBE') returns 0\n    \"\"\"\n",
+      "prompt_sha256": "04c6083f258c84224f9d924bc7307821ff2a9027fa37e44570aa2e2ce3e512a5"
+    },
+    {
+      "id": "HumanEval/99",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef closest_integer(value):\n    '''\n    Create a function that takes a value (string) representing a number\n    and returns the closest integer to it. If the number is equidistant\n    from two integers, round it away from zero.\n\n    Examples\n    >>> closest_integer(\"10\")\n    10\n    >>> closest_integer(\"15.3\")\n    15\n\n    Note:\n    Rounding away from zero means that if the given number is equidistant\n    from two integers, the one you should return is the one that is the\n    farthest from zero. For example closest_integer(\"14.5\") should\n    return 15 and closest_integer(\"-14.5\") should return -15.\n    '''\n",
+      "prompt_sha256": "738eb989637578fecc34ed3dcfa2d4ef437b23088d641084d59d47c1611604f6"
+    },
+    {
+      "id": "HumanEval/100",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef make_a_pile(n):\n    \"\"\"\n    Given a positive integer n, you have to make a pile of n levels of stones.\n    The first level has n stones.\n    The number of stones in the next level is:\n        - the next odd number if n is odd.\n        - the next even number if n is even.\n    Return the number of stones in each level in a list, where element at index\n    i represents the number of stones in the level (i+1).\n\n    Examples:\n    >>> make_a_pile(3)\n    [3, 5, 7]\n    \"\"\"\n",
+      "prompt_sha256": "6bfbcf3e455163075d509b906faac7468d5fcd08638705463fce5d1799a165ba"
+    },
+    {
+      "id": "HumanEval/101",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef words_string(s):\n    \"\"\"\n    You will be given a string of words separated by commas or spaces. Your task is\n    to split the string into words and return an array of the words.\n    \n    For example:\n    words_string(\"Hi, my name is John\") == [\"Hi\", \"my\", \"name\", \"is\", \"John\"]\n    words_string(\"One, two, three, four, five, six\") == [\"One\", \"two\", \"three\", \"four\", \"five\", \"six\"]\n    \"\"\"\n",
+      "prompt_sha256": "5a1e974a876b8501149e4dd2cc25720c84dd8ca5551abdff820af68484ecf35b"
+    },
+    {
+      "id": "HumanEval/102",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef choose_num(x, y):\n    \"\"\"This function takes two positive numbers x and y and returns the\n    biggest even integer number that is in the range [x, y] inclusive. If \n    there's no such number, then the function should return -1.\n\n    For example:\n    choose_num(12, 15) = 14\n    choose_num(13, 12) = -1\n    \"\"\"\n",
+      "prompt_sha256": "d25c0850d771f58c80bf728c0ccaa4cc999e028a1d4cde0311623b4955259ebd"
+    },
+    {
+      "id": "HumanEval/103",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef rounded_avg(n, m):\n    \"\"\"You are given two positive integers n and m, and your task is to compute the\n    average of the integers from n through m (including n and m). \n    Round the answer to the nearest integer and convert that to binary.\n    If n is greater than m, return -1.\n    Example:\n    rounded_avg(1, 5) => \"0b11\"\n    rounded_avg(7, 5) => -1\n    rounded_avg(10, 20) => \"0b1111\"\n    rounded_avg(20, 33) => \"0b11010\"\n    \"\"\"\n",
+      "prompt_sha256": "124cb856c537c4b095c86bf2410dceb87b291624d8b6cd3250b6fe4c9dfd40dd"
+    },
+    {
+      "id": "HumanEval/104",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef unique_digits(x):\n    \"\"\"Given a list of positive integers x. return a sorted list of all \n    elements that hasn't any even digit.\n\n    Note: Returned list should be sorted in increasing order.\n    \n    For example:\n    >>> unique_digits([15, 33, 1422, 1])\n    [1, 15, 33]\n    >>> unique_digits([152, 323, 1422, 10])\n    []\n    \"\"\"\n",
+      "prompt_sha256": "cf03e5058e00eb65635a9a0e042a40e601a8dbde41a11eb0d4e368d4c3a70bd7"
+    },
+    {
+      "id": "HumanEval/105",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef by_length(arr):\n    \"\"\"\n    Given an array of integers, sort the integers that are between 1 and 9 inclusive,\n    reverse the resulting array, and then replace each digit by its corresponding name from\n    \"One\", \"Two\", \"Three\", \"Four\", \"Five\", \"Six\", \"Seven\", \"Eight\", \"Nine\".\n\n    For example:\n      arr = [2, 1, 1, 4, 5, 8, 2, 3]   \n            -> sort arr -> [1, 1, 2, 2, 3, 4, 5, 8] \n            -> reverse arr -> [8, 5, 4, 3, 2, 2, 1, 1]\n      return [\"Eight\", \"Five\", \"Four\", \"Three\", \"Two\", \"Two\", \"One\", \"One\"]\n    \n      If the array is empty, return an empty array:\n      arr = []\n      return []\n    \n      If the array has any strange number ignore it:\n      arr = [1, -1 , 55] \n            -> sort arr -> [-1, 1, 55]\n            -> reverse arr -> [55, 1, -1]\n      return = ['One']\n    \"\"\"\n",
+      "prompt_sha256": "f022175380c69260f3afa44ddbd7bf89d9765653f6eee7c1f4859eb8d899f847"
+    },
+    {
+      "id": "HumanEval/106",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef f(n):\n    \"\"\" Implement the function f that takes n as a parameter,\n    and returns a list of size n, such that the value of the element at index i is the factorial of i if i is even\n    or the sum of numbers from 1 to i otherwise.\n    i starts from 1.\n    the factorial of i is the multiplication of the numbers from 1 to i (1 * 2 * ... * i).\n    Example:\n    f(5) == [1, 2, 6, 24, 15]\n    \"\"\"\n",
+      "prompt_sha256": "9f6565e36237c820298b020397de19602b77158a787cfa6060ac8f8ce26b1d42"
+    },
+    {
+      "id": "HumanEval/107",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef even_odd_palindrome(n):\n    \"\"\"\n    Given a positive integer n, return a tuple that has the number of even and odd\n    integer palindromes that fall within the range(1, n), inclusive.\n\n    Example 1:\n\n        Input: 3\n        Output: (1, 2)\n        Explanation:\n        Integer palindrome are 1, 2, 3. one of them is even, and two of them are odd.\n\n    Example 2:\n\n        Input: 12\n        Output: (4, 6)\n        Explanation:\n        Integer palindrome are 1, 2, 3, 4, 5, 6, 7, 8, 9, 11. four of them are even, and 6 of them are odd.\n\n    Note:\n        1. 1 <= n <= 10^3\n        2. returned tuple has the number of even and odd integer palindromes respectively.\n    \"\"\"\n",
+      "prompt_sha256": "af66156f783bebbe3e6f786bb9336c84ff606c89ce3ca92d0d7e8dd5ccf2c562"
+    },
+    {
+      "id": "HumanEval/108",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef count_nums(arr):\n    \"\"\"\n    Write a function count_nums which takes an array of integers and returns\n    the number of elements which has a sum of digits > 0.\n    If a number is negative, then its first signed digit will be negative:\n    e.g. -123 has signed digits -1, 2, and 3.\n    >>> count_nums([]) == 0\n    >>> count_nums([-1, 11, -11]) == 1\n    >>> count_nums([1, 1, 2]) == 3\n    \"\"\"\n",
+      "prompt_sha256": "d7000eea766c26585bdfd7a6fe7a94c872fadcbc385b7ec158f73f465100b901"
+    },
+    {
+      "id": "HumanEval/109",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef move_one_ball(arr):\n    \"\"\"We have an array 'arr' of N integers arr[1], arr[2], ..., arr[N].The\n    numbers in the array will be randomly ordered. Your task is to determine if\n    it is possible to get an array sorted in non-decreasing order by performing \n    the following operation on the given array:\n        You are allowed to perform right shift operation any number of times.\n    \n    One right shift operation means shifting all elements of the array by one\n    position in the right direction. The last element of the array will be moved to\n    the starting position in the array i.e. 0th index. \n\n    If it is possible to obtain the sorted array by performing the above operation\n    then return True else return False.\n    If the given array is empty then return True.\n\n    Note: The given list is guaranteed to have unique elements.\n\n    For Example:\n    \n    move_one_ball([3, 4, 5, 1, 2])==>True\n    Explanation: By performin 2 right shift operations, non-decreasing order can\n                 be achieved for the given array.\n    move_one_ball([3, 5, 4, 1, 2])==>False\n    Explanation:It is not possible to get non-decreasing order for the given\n                array by performing any number of right shift operations.\n                \n    \"\"\"\n",
+      "prompt_sha256": "70382e00108d99061c37513440585ee907e76f15e89adfb2224f3b8226bb99e1"
+    },
+    {
+      "id": "HumanEval/110",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef exchange(lst1, lst2):\n    \"\"\"In this problem, you will implement a function that takes two lists of numbers,\n    and determines whether it is possible to perform an exchange of elements\n    between them to make lst1 a list of only even numbers.\n    There is no limit on the number of exchanged elements between lst1 and lst2.\n    If it is possible to exchange elements between the lst1 and lst2 to make\n    all the elements of lst1 to be even, return \"YES\".\n    Otherwise, return \"NO\".\n    For example:\n    exchange([1, 2, 3, 4], [1, 2, 3, 4]) => \"YES\"\n    exchange([1, 2, 3, 4], [1, 5, 3, 4]) => \"NO\"\n    It is assumed that the input lists will be non-empty.\n    \"\"\"\n",
+      "prompt_sha256": "5da65f4a3743c86ef93c12ee0105dd06edcd3289a26ecbf4a79c550bd5f4aedd"
+    },
+    {
+      "id": "HumanEval/111",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef histogram(test):\n    \"\"\"Given a string representing a space separated lowercase letters, return a dictionary\n    of the letter with the most repetition and containing the corresponding count.\n    If several letters have the same occurrence, return all of them.\n    \n    Example:\n    histogram('a b c') == {'a': 1, 'b': 1, 'c': 1}\n    histogram('a b b a') == {'a': 2, 'b': 2}\n    histogram('a b c a b') == {'a': 2, 'b': 2}\n    histogram('b b b b a') == {'b': 4}\n    histogram('') == {}\n\n    \"\"\"\n",
+      "prompt_sha256": "67833f2b548ed12931c68df6c0046952c46c8aa7c9f8170b76b53eab9204f8b6"
+    },
+    {
+      "id": "HumanEval/112",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef reverse_delete(s,c):\n    \"\"\"Task\n    We are given two strings s and c, you have to deleted all the characters in s that are equal to any character in c\n    then check if the result string is palindrome.\n    A string is called palindrome if it reads the same backward as forward.\n    You should return a tuple containing the result string and True/False for the check.\n    Example\n    For s = \"abcde\", c = \"ae\", the result should be ('bcd',False)\n    For s = \"abcdef\", c = \"b\"  the result should be ('acdef',False)\n    For s = \"abcdedcba\", c = \"ab\", the result should be ('cdedc',True)\n    \"\"\"\n",
+      "prompt_sha256": "d5e49576c320d332a06be7b89af793d61d5579c6b79a594576030370441f5f1e"
+    },
+    {
+      "id": "HumanEval/113",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef odd_count(lst):\n    \"\"\"Given a list of strings, where each string consists of only digits, return a list.\n    Each element i of the output should be \"the number of odd elements in the\n    string i of the input.\" where all the i's should be replaced by the number\n    of odd digits in the i'th string of the input.\n\n    >>> odd_count(['1234567'])\n    [\"the number of odd elements 4n the str4ng 4 of the 4nput.\"]\n    >>> odd_count(['3',\"11111111\"])\n    [\"the number of odd elements 1n the str1ng 1 of the 1nput.\",\n     \"the number of odd elements 8n the str8ng 8 of the 8nput.\"]\n    \"\"\"\n",
+      "prompt_sha256": "64db7896cab38eb67f780832de09b207aa2f45ecb1d3f6447a40340aaad2aa5e"
+    },
+    {
+      "id": "HumanEval/114",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef minSubArraySum(nums):\n    \"\"\"\n    Given an array of integers nums, find the minimum sum of any non-empty sub-array\n    of nums.\n    Example\n    minSubArraySum([2, 3, 4, 1, 2, 4]) == 1\n    minSubArraySum([-1, -2, -3]) == -6\n    \"\"\"\n",
+      "prompt_sha256": "52d59395a51de036c1d3afc4c1d6cdf70b7870647e10eee35fac5bcfd48aa829"
+    },
+    {
+      "id": "HumanEval/115",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef max_fill(grid, capacity):\n    import math\n    \"\"\"\n    You are given a rectangular grid of wells. Each row represents a single well,\n    and each 1 in a row represents a single unit of water.\n    Each well has a corresponding bucket that can be used to extract water from it, \n    and all buckets have the same capacity.\n    Your task is to use the buckets to empty the wells.\n    Output the number of times you need to lower the buckets.\n\n    Example 1:\n        Input: \n            grid : [[0,0,1,0], [0,1,0,0], [1,1,1,1]]\n            bucket_capacity : 1\n        Output: 6\n\n    Example 2:\n        Input: \n            grid : [[0,0,1,1], [0,0,0,0], [1,1,1,1], [0,1,1,1]]\n            bucket_capacity : 2\n        Output: 5\n    \n    Example 3:\n        Input: \n            grid : [[0,0,0], [0,0,0]]\n            bucket_capacity : 5\n        Output: 0\n\n    Constraints:\n        * all wells have the same length\n        * 1 <= grid.length <= 10^2\n        * 1 <= grid[:,1].length <= 10^2\n        * grid[i][j] -> 0 | 1\n        * 1 <= capacity <= 10\n    \"\"\"\n",
+      "prompt_sha256": "2c4e134468c79f894b34c26d49027d7844d2984c4b254427f91d544f4395bc01"
+    },
+    {
+      "id": "HumanEval/116",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef sort_array(arr):\n    \"\"\"\n    In this Kata, you have to sort an array of non-negative integers according to\n    number of ones in their binary representation in ascending order.\n    For similar number of ones, sort based on decimal value.\n\n    It must be implemented like this:\n    >>> sort_array([1, 5, 2, 3, 4]) == [1, 2, 3, 4, 5]\n    >>> sort_array([-2, -3, -4, -5, -6]) == [-6, -5, -4, -3, -2]\n    >>> sort_array([1, 0, 2, 3, 4]) [0, 1, 2, 3, 4]\n    \"\"\"\n",
+      "prompt_sha256": "d4a28de50e6279b10f4143a373eb28c3db0f489740edf2574e0d2a4cdc86a1c9"
+    },
+    {
+      "id": "HumanEval/117",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef select_words(s, n):\n    \"\"\"Given a string s and a natural number n, you have been tasked to implement \n    a function that returns a list of all words from string s that contain exactly \n    n consonants, in order these words appear in the string s.\n    If the string s is empty then the function should return an empty list.\n    Note: you may assume the input string contains only letters and spaces.\n    Examples:\n    select_words(\"Mary had a little lamb\", 4) ==> [\"little\"]\n    select_words(\"Mary had a little lamb\", 3) ==> [\"Mary\", \"lamb\"]\n    select_words(\"simple white space\", 2) ==> []\n    select_words(\"Hello world\", 4) ==> [\"world\"]\n    select_words(\"Uncle sam\", 3) ==> [\"Uncle\"]\n    \"\"\"\n",
+      "prompt_sha256": "fe75b6cd2a79827587ddd459b96e61b8d79883b05999ab21d2c7dba144be6b80"
+    },
+    {
+      "id": "HumanEval/118",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef get_closest_vowel(word):\n    \"\"\"You are given a word. Your task is to find the closest vowel that stands between \n    two consonants from the right side of the word (case sensitive).\n    \n    Vowels in the beginning and ending doesn't count. Return empty string if you didn't\n    find any vowel met the above condition. \n\n    You may assume that the given string contains English letter only.\n\n    Example:\n    get_closest_vowel(\"yogurt\") ==> \"u\"\n    get_closest_vowel(\"FULL\") ==> \"U\"\n    get_closest_vowel(\"quick\") ==> \"\"\n    get_closest_vowel(\"ab\") ==> \"\"\n    \"\"\"\n",
+      "prompt_sha256": "ca07840f48bb05d78f416c2c5d7588de2f6b63caf45430280cea5f03430d53af"
+    },
+    {
+      "id": "HumanEval/119",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef match_parens(lst):\n    '''\n    You are given a list of two strings, both strings consist of open\n    parentheses '(' or close parentheses ')' only.\n    Your job is to check if it is possible to concatenate the two strings in\n    some order, that the resulting string will be good.\n    A string S is considered to be good if and only if all parentheses in S\n    are balanced. For example: the string '(())()' is good, while the string\n    '())' is not.\n    Return 'Yes' if there's a way to make a good string, and return 'No' otherwise.\n\n    Examples:\n    match_parens(['()(', ')']) == 'Yes'\n    match_parens([')', ')']) == 'No'\n    '''\n",
+      "prompt_sha256": "5ebedb4ad602fc1999ddcfd97271da04d900e8eab83bdc6b46552f5285a20f5c"
+    },
+    {
+      "id": "HumanEval/120",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef maximum(arr, k):\n    \"\"\"\n    Given an array arr of integers and a positive integer k, return a sorted list \n    of length k with the maximum k numbers in arr.\n\n    Example 1:\n\n        Input: arr = [-3, -4, 5], k = 3\n        Output: [-4, -3, 5]\n\n    Example 2:\n\n        Input: arr = [4, -4, 4], k = 2\n        Output: [4, 4]\n\n    Example 3:\n\n        Input: arr = [-3, 2, 1, 2, -1, -2, 1], k = 1\n        Output: [2]\n\n    Note:\n        1. The length of the array will be in the range of [1, 1000].\n        2. The elements in the array will be in the range of [-1000, 1000].\n        3. 0 <= k <= len(arr)\n    \"\"\"\n",
+      "prompt_sha256": "c77c00a4c9aa54d53c081c2cd6fc5e0f433ccb34553d645eb2cf3eed32aef8f8"
+    },
+    {
+      "id": "HumanEval/121",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef solution(lst):\n    \"\"\"Given a non-empty list of integers, return the sum of all of the odd elements that are in even positions.\n    \n\n    Examples\n    solution([5, 8, 7, 1]) ==> 12\n    solution([3, 3, 3, 3, 3]) ==> 9\n    solution([30, 13, 24, 321]) ==>0\n    \"\"\"\n",
+      "prompt_sha256": "8be293a6b6b452bbc0a3d01e498696beb377932138174bfce85ecc64749d2693"
+    },
+    {
+      "id": "HumanEval/122",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef add_elements(arr, k):\n    \"\"\"\n    Given a non-empty array of integers arr and an integer k, return\n    the sum of the elements with at most two digits from the first k elements of arr.\n\n    Example:\n\n        Input: arr = [111,21,3,4000,5,6,7,8,9], k = 4\n        Output: 24 # sum of 21 + 3\n\n    Constraints:\n        1. 1 <= len(arr) <= 100\n        2. 1 <= k <= len(arr)\n    \"\"\"\n",
+      "prompt_sha256": "84e78761420ba93ca5f3741251e3b9b723951ffc4547bdf2612553000a1a39ab"
+    },
+    {
+      "id": "HumanEval/123",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef get_odd_collatz(n):\n    \"\"\"\n    Given a positive integer n, return a sorted list that has the odd numbers in collatz sequence.\n\n    The Collatz conjecture is a conjecture in mathematics that concerns a sequence defined\n    as follows: start with any positive integer n. Then each term is obtained from the \n    previous term as follows: if the previous term is even, the next term is one half of \n    the previous term. If the previous term is odd, the next term is 3 times the previous\n    term plus 1. The conjecture is that no matter what value of n, the sequence will always reach 1.\n\n    Note: \n        1. Collatz(1) is [1].\n        2. returned list sorted in increasing order.\n\n    For example:\n    get_odd_collatz(5) returns [1, 5] # The collatz sequence for 5 is [5, 16, 8, 4, 2, 1], so the odd numbers are only 1, and 5.\n    \"\"\"\n",
+      "prompt_sha256": "9134ebdf6c79de2228e60b59fb778bd77162fc7677fc7a67519a4720a6f9577c"
+    },
+    {
+      "id": "HumanEval/124",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef valid_date(date):\n    \"\"\"You have to write a function which validates a given date string and\n    returns True if the date is valid otherwise False.\n    The date is valid if all of the following rules are satisfied:\n    1. The date string is not empty.\n    2. The number of days is not less than 1 or higher than 31 days for months 1,3,5,7,8,10,12. And the number of days is not less than 1 or higher than 30 days for months 4,6,9,11. And, the number of days is not less than 1 or higher than 29 for the month 2.\n    3. The months should not be less than 1 or higher than 12.\n    4. The date should be in the format: mm-dd-yyyy\n\n    for example: \n    valid_date('03-11-2000') => True\n\n    valid_date('15-01-2012') => False\n\n    valid_date('04-0-2040') => False\n\n    valid_date('06-04-2020') => True\n\n    valid_date('06/04/2020') => False\n    \"\"\"\n",
+      "prompt_sha256": "20f80ae3656674388b57fb2144327044487a0828be97143ede5c2b9fa932a619"
+    },
+    {
+      "id": "HumanEval/125",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef split_words(txt):\n    '''\n    Given a string of words, return a list of words split on whitespace, if no whitespaces exists in the text you\n    should split on commas ',' if no commas exists you should return the number of lower-case letters with odd order in the\n    alphabet, ord('a') = 0, ord('b') = 1, ... ord('z') = 25\n    Examples\n    split_words(\"Hello world!\") ➞ [\"Hello\", \"world!\"]\n    split_words(\"Hello,world!\") ➞ [\"Hello\", \"world!\"]\n    split_words(\"abcdef\") == 3 \n    '''\n",
+      "prompt_sha256": "5cf5e19b2e1a0b1c53741c44119229ffd5f2221191e1121f24ef84f9dd87eaa2"
+    },
+    {
+      "id": "HumanEval/126",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_sorted(lst):\n    '''\n    Given a list of numbers, return whether or not they are sorted\n    in ascending order. If list has more than 1 duplicate of the same\n    number, return False. Assume no negative numbers and only integers.\n\n    Examples\n    is_sorted([5]) ➞ True\n    is_sorted([1, 2, 3, 4, 5]) ➞ True\n    is_sorted([1, 3, 2, 4, 5]) ➞ False\n    is_sorted([1, 2, 3, 4, 5, 6]) ➞ True\n    is_sorted([1, 2, 3, 4, 5, 6, 7]) ➞ True\n    is_sorted([1, 3, 2, 4, 5, 6, 7]) ➞ False\n    is_sorted([1, 2, 2, 3, 3, 4]) ➞ True\n    is_sorted([1, 2, 2, 2, 3, 4]) ➞ False\n    '''\n",
+      "prompt_sha256": "0998ce7c24cf4f4f7e5b2ccb5c04ca2bb68e918c3e12324b01d78c8befdb2732"
+    },
+    {
+      "id": "HumanEval/127",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef intersection(interval1, interval2):\n    \"\"\"You are given two intervals,\n    where each interval is a pair of integers. For example, interval = (start, end) = (1, 2).\n    The given intervals are closed which means that the interval (start, end)\n    includes both start and end.\n    For each given interval, it is assumed that its start is less or equal its end.\n    Your task is to determine whether the length of intersection of these two \n    intervals is a prime number.\n    Example, the intersection of the intervals (1, 3), (2, 4) is (2, 3)\n    which its length is 1, which not a prime number.\n    If the length of the intersection is a prime number, return \"YES\",\n    otherwise, return \"NO\".\n    If the two intervals don't intersect, return \"NO\".\n\n\n    [input/output] samples:\n    intersection((1, 2), (2, 3)) ==> \"NO\"\n    intersection((-1, 1), (0, 4)) ==> \"NO\"\n    intersection((-3, -1), (-5, 5)) ==> \"YES\"\n    \"\"\"\n",
+      "prompt_sha256": "bbed83b8f5bd792c26424e57741279675723e612fb8901376a7203c0b594f834"
+    },
+    {
+      "id": "HumanEval/128",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef prod_signs(arr):\n    \"\"\"\n    You are given an array arr of integers and you need to return\n    sum of magnitudes of integers multiplied by product of all signs\n    of each number in the array, represented by 1, -1 or 0.\n    Note: return None for empty arr.\n\n    Example:\n    >>> prod_signs([1, 2, 2, -4]) == -9\n    >>> prod_signs([0, 1]) == 0\n    >>> prod_signs([]) == None\n    \"\"\"\n",
+      "prompt_sha256": "76a4b631095a207b3369389be3d707a7867a0942363345c33200df6f00dd557f"
+    },
+    {
+      "id": "HumanEval/129",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef minPath(grid, k):\n    \"\"\"\n    Given a grid with N rows and N columns (N >= 2) and a positive integer k, \n    each cell of the grid contains a value. Every integer in the range [1, N * N]\n    inclusive appears exactly once on the cells of the grid.\n\n    You have to find the minimum path of length k in the grid. You can start\n    from any cell, and in each step you can move to any of the neighbor cells,\n    in other words, you can go to cells which share an edge with you current\n    cell.\n    Please note that a path of length k means visiting exactly k cells (not\n    necessarily distinct).\n    You CANNOT go off the grid.\n    A path A (of length k) is considered less than a path B (of length k) if\n    after making the ordered lists of the values on the cells that A and B go\n    through (let's call them lst_A and lst_B), lst_A is lexicographically less\n    than lst_B, in other words, there exist an integer index i (1 <= i <= k)\n    such that lst_A[i] < lst_B[i] and for any j (1 <= j < i) we have\n    lst_A[j] = lst_B[j].\n    It is guaranteed that the answer is unique.\n    Return an ordered list of the values on the cells that the minimum path go through.\n\n    Examples:\n\n        Input: grid = [ [1,2,3], [4,5,6], [7,8,9]], k = 3\n        Output: [1, 2, 1]\n\n        Input: grid = [ [5,9,3], [4,1,6], [7,8,2]], k = 1\n        Output: [1]\n    \"\"\"\n",
+      "prompt_sha256": "a885c455b65b45d63e03d9303bae6f8416aa7eff0c02b5a8baa523bdad0954d4"
+    },
+    {
+      "id": "HumanEval/130",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef tri(n):\n    \"\"\"Everyone knows Fibonacci sequence, it was studied deeply by mathematicians in \n    the last couple centuries. However, what people don't know is Tribonacci sequence.\n    Tribonacci sequence is defined by the recurrence:\n    tri(1) = 3\n    tri(n) = 1 + n / 2, if n is even.\n    tri(n) =  tri(n - 1) + tri(n - 2) + tri(n + 1), if n is odd.\n    For example:\n    tri(2) = 1 + (2 / 2) = 2\n    tri(4) = 3\n    tri(3) = tri(2) + tri(1) + tri(4)\n           = 2 + 3 + 3 = 8 \n    You are given a non-negative integer number n, you have to a return a list of the \n    first n + 1 numbers of the Tribonacci sequence.\n    Examples:\n    tri(3) = [1, 3, 2, 8]\n    \"\"\"\n",
+      "prompt_sha256": "e272495cd859e60d5c2bb2970b788897a12c267812c6a7db56c4043eece08c85"
+    },
+    {
+      "id": "HumanEval/131",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef digits(n):\n    \"\"\"Given a positive integer n, return the product of the odd digits.\n    Return 0 if all digits are even.\n    For example:\n    digits(1)  == 1\n    digits(4)  == 0\n    digits(235) == 15\n    \"\"\"\n",
+      "prompt_sha256": "cab68d7e6fbd0449ac97e1f1e84871997cc5efe52dcfec36f63ab86a7f33f7a4"
+    },
+    {
+      "id": "HumanEval/132",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_nested(string):\n    '''\n    Create a function that takes a string as input which contains only square brackets.\n    The function should return True if and only if there is a valid subsequence of brackets \n    where at least one bracket in the subsequence is nested.\n\n    is_nested('[[]]') ➞ True\n    is_nested('[]]]]]]][[[[[]') ➞ False\n    is_nested('[][]') ➞ False\n    is_nested('[]') ➞ False\n    is_nested('[[][]]') ➞ True\n    is_nested('[[]][[') ➞ True\n    '''\n",
+      "prompt_sha256": "6ed40b1ba63502404fcae344a79a804c9490ccc72a7b0fb91a2da2598fedefc4"
+    },
+    {
+      "id": "HumanEval/133",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\ndef sum_squares(lst):\n    \"\"\"You are given a list of numbers.\n    You need to return the sum of squared numbers in the given list,\n    round each element in the list to the upper int(Ceiling) first.\n    Examples:\n    For lst = [1,2,3] the output should be 14\n    For lst = [1,4,9] the output should be 98\n    For lst = [1,3,5,7] the output should be 84\n    For lst = [1.4,4.2,0] the output should be 29\n    For lst = [-2.4,1,1] the output should be 6\n    \n\n    \"\"\"\n",
+      "prompt_sha256": "2bdbe99899d7a60c59d9ce6634e080a7df7666e9f45b956069c0bcfbe010da6e"
+    },
+    {
+      "id": "HumanEval/134",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef check_if_last_char_is_a_letter(txt):\n    '''\n    Create a function that returns True if the last character\n    of a given string is an alphabetical character and is not\n    a part of a word, and False otherwise.\n    Note: \"word\" is a group of characters separated by space.\n\n    Examples:\n    check_if_last_char_is_a_letter(\"apple pie\") ➞ False\n    check_if_last_char_is_a_letter(\"apple pi e\") ➞ True\n    check_if_last_char_is_a_letter(\"apple pi e \") ➞ False\n    check_if_last_char_is_a_letter(\"\") ➞ False \n    '''\n",
+      "prompt_sha256": "16defdb4dad9bf184334b6929dc0a77b47210853d53679d6bf55767baa56e6f9"
+    },
+    {
+      "id": "HumanEval/135",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef can_arrange(arr):\n    \"\"\"Create a function which returns the largest index of an element which\n    is not greater than or equal to the element immediately preceding it. If\n    no such element exists then return -1. The given array will not contain\n    duplicate values.\n\n    Examples:\n    can_arrange([1,2,4,3,5]) = 3\n    can_arrange([1,2,3]) = -1\n    \"\"\"\n",
+      "prompt_sha256": "2538ec44eb320375589de9230884095642420533961bceac48e53a4f12df829d"
+    },
+    {
+      "id": "HumanEval/136",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef largest_smallest_integers(lst):\n    '''\n    Create a function that returns a tuple (a, b), where 'a' is\n    the largest of negative integers, and 'b' is the smallest\n    of positive integers in a list.\n    If there is no negative or positive integers, return them as None.\n\n    Examples:\n    largest_smallest_integers([2, 4, 1, 3, 5, 7]) == (None, 1)\n    largest_smallest_integers([]) == (None, None)\n    largest_smallest_integers([0]) == (None, None)\n    '''\n",
+      "prompt_sha256": "070ea88f1ab68bf492b7f6a4dad0923c38ec0af44523f1ffd1bb1d9b345f7d57"
+    },
+    {
+      "id": "HumanEval/137",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef compare_one(a, b):\n    \"\"\"\n    Create a function that takes integers, floats, or strings representing\n    real numbers, and returns the larger variable in its given variable type.\n    Return None if the values are equal.\n    Note: If a real number is represented as a string, the floating point might be . or ,\n\n    compare_one(1, 2.5) ➞ 2.5\n    compare_one(1, \"2,3\") ➞ \"2,3\"\n    compare_one(\"5,1\", \"6\") ➞ \"6\"\n    compare_one(\"1\", 1) ➞ None\n    \"\"\"\n",
+      "prompt_sha256": "cc7676774c1ba07d56cfa4a42e844f0610aac5cb124eb4b7e3a3bd59c88c50e5"
+    },
+    {
+      "id": "HumanEval/138",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef is_equal_to_sum_even(n):\n    \"\"\"Evaluate whether the given number n can be written as the sum of exactly 4 positive even numbers\n    Example\n    is_equal_to_sum_even(4) == False\n    is_equal_to_sum_even(6) == False\n    is_equal_to_sum_even(8) == True\n    \"\"\"\n",
+      "prompt_sha256": "58b843471a70a89c061810bbdef6f9a8828f3499ec89b3023df72ea161228c55"
+    },
+    {
+      "id": "HumanEval/139",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef special_factorial(n):\n    \"\"\"The Brazilian factorial is defined as:\n    brazilian_factorial(n) = n! * (n-1)! * (n-2)! * ... * 1!\n    where n > 0\n\n    For example:\n    >>> special_factorial(4)\n    288\n\n    The function will receive an integer as input and should return the special\n    factorial of this integer.\n    \"\"\"\n",
+      "prompt_sha256": "f8408d20107ac94b6eef74b769c02adc73600312cbd781e1900718a16ad69017"
+    },
+    {
+      "id": "HumanEval/140",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef fix_spaces(text):\n    \"\"\"\n    Given a string text, replace all spaces in it with underscores, \n    and if a string has more than 2 consecutive spaces, \n    then replace all consecutive spaces with - \n    \n    fix_spaces(\"Example\") == \"Example\"\n    fix_spaces(\"Example 1\") == \"Example_1\"\n    fix_spaces(\" Example 2\") == \"_Example_2\"\n    fix_spaces(\" Example   3\") == \"_Example-3\"\n    \"\"\"\n",
+      "prompt_sha256": "4d21813f6d67ae8b9f9c4191d07dc48065f8f1844759f57f6e2b22a661d04a2f"
+    },
+    {
+      "id": "HumanEval/141",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef file_name_check(file_name):\n    \"\"\"Create a function which takes a string representing a file's name, and returns\n    'Yes' if the the file's name is valid, and returns 'No' otherwise.\n    A file's name is considered to be valid if and only if all the following conditions \n    are met:\n    - There should not be more than three digits ('0'-'9') in the file's name.\n    - The file's name contains exactly one dot '.'\n    - The substring before the dot should not be empty, and it starts with a letter from \n    the latin alphapet ('a'-'z' and 'A'-'Z').\n    - The substring after the dot should be one of these: ['txt', 'exe', 'dll']\n    Examples:\n    file_name_check(\"example.txt\") # => 'Yes'\n    file_name_check(\"1example.dll\") # => 'No' (the name should start with a latin alphapet letter)\n    \"\"\"\n",
+      "prompt_sha256": "b18ce3583c163ef514ea9ec14adf65dfd8ec9117434b3a884cd2ae52d82de85c"
+    },
+    {
+      "id": "HumanEval/142",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\n\n\ndef sum_squares(lst):\n    \"\"\"\"\n    This function will take a list of integers. For all entries in the list, the function shall square the integer entry if its index is a \n    multiple of 3 and will cube the integer entry if its index is a multiple of 4 and not a multiple of 3. The function will not \n    change the entries in the list whose indexes are not a multiple of 3 or 4. The function shall then return the sum of all entries. \n    \n    Examples:\n    For lst = [1,2,3] the output should be 6\n    For lst = []  the output should be 0\n    For lst = [-1,-5,2,-1,-5]  the output should be -126\n    \"\"\"\n",
+      "prompt_sha256": "3921ea24f5a72151a812a30066cafa3c30179c8b83557f556a8b1e4ed1e0d9e3"
+    },
+    {
+      "id": "HumanEval/143",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef words_in_sentence(sentence):\n    \"\"\"\n    You are given a string representing a sentence,\n    the sentence contains some words separated by a space,\n    and you have to return a string that contains the words from the original sentence,\n    whose lengths are prime numbers,\n    the order of the words in the new string should be the same as the original one.\n\n    Example 1:\n        Input: sentence = \"This is a test\"\n        Output: \"is\"\n\n    Example 2:\n        Input: sentence = \"lets go for swimming\"\n        Output: \"go for\"\n\n    Constraints:\n        * 1 <= len(sentence) <= 100\n        * sentence contains only letters\n    \"\"\"\n",
+      "prompt_sha256": "f6a1a0dc6b9238030757deabc1dc3d13d1d36bd4caa9d0dfc7afd99fe45d0299"
+    },
+    {
+      "id": "HumanEval/144",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef simplify(x, n):\n    \"\"\"Your task is to implement a function that will simplify the expression\n    x * n. The function returns True if x * n evaluates to a whole number and False\n    otherwise. Both x and n, are string representation of a fraction, and have the following format,\n    <numerator>/<denominator> where both numerator and denominator are positive whole numbers.\n\n    You can assume that x, and n are valid fractions, and do not have zero as denominator.\n\n    simplify(\"1/5\", \"5/1\") = True\n    simplify(\"1/6\", \"2/1\") = False\n    simplify(\"7/10\", \"10/2\") = False\n    \"\"\"\n",
+      "prompt_sha256": "2bed66615292784261306b083628a2c5640b8267f7f9f2cff6eb186385d795eb"
+    },
+    {
+      "id": "HumanEval/145",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef order_by_points(nums):\n    \"\"\"\n    Write a function which sorts the given list of integers\n    in ascending order according to the sum of their digits.\n    Note: if there are several items with similar sum of their digits,\n    order them based on their index in original list.\n\n    For example:\n    >>> order_by_points([1, 11, -1, -11, -12]) == [-1, -11, 1, -12, 11]\n    >>> order_by_points([]) == []\n    \"\"\"\n",
+      "prompt_sha256": "58cad6ac195de5dd1eb9afd8110929e9fafb6dc8471d4062611f2893b14837a3"
+    },
+    {
+      "id": "HumanEval/146",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef specialFilter(nums):\n    \"\"\"Write a function that takes an array of numbers as input and returns \n    the number of elements in the array that are greater than 10 and both \n    first and last digits of a number are odd (1, 3, 5, 7, 9).\n    For example:\n    specialFilter([15, -73, 14, -15]) => 1 \n    specialFilter([33, -2, -3, 45, 21, 109]) => 2\n    \"\"\"\n",
+      "prompt_sha256": "05fdeceb39696eba47e34e4c6cdb7e13de3212fd5ada6048863e6e7116630992"
+    },
+    {
+      "id": "HumanEval/147",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef get_max_triples(n):\n    \"\"\"\n    You are given a positive integer n. You have to create an integer array a of length n.\n        For each i (1 ≤ i ≤ n), the value of a[i] = i * i - i + 1.\n        Return the number of triples (a[i], a[j], a[k]) of a where i < j < k, \n    and a[i] + a[j] + a[k] is a multiple of 3.\n\n    Example :\n        Input: n = 5\n        Output: 1\n        Explanation: \n        a = [1, 3, 7, 13, 21]\n        The only valid triple is (1, 7, 13).\n    \"\"\"\n",
+      "prompt_sha256": "136bd58e035a3e433dbda322f83bc92456f6660882c5a7460848e57bdc937434"
+    },
+    {
+      "id": "HumanEval/148",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef bf(planet1, planet2):\n    '''\n    There are eight planets in our solar system: the closerst to the Sun \n    is Mercury, the next one is Venus, then Earth, Mars, Jupiter, Saturn, \n    Uranus, Neptune.\n    Write a function that takes two planet names as strings planet1 and planet2. \n    The function should return a tuple containing all planets whose orbits are \n    located between the orbit of planet1 and the orbit of planet2, sorted by \n    the proximity to the sun. \n    The function should return an empty tuple if planet1 or planet2\n    are not correct planet names. \n    Examples\n    bf(\"Jupiter\", \"Neptune\") ==> (\"Saturn\", \"Uranus\")\n    bf(\"Earth\", \"Mercury\") ==> (\"Venus\")\n    bf(\"Mercury\", \"Uranus\") ==> (\"Venus\", \"Earth\", \"Mars\", \"Jupiter\", \"Saturn\")\n    '''\n",
+      "prompt_sha256": "f87a1423c9e39126689167709eee02b6aca9ca56b3da612532f801217b91c478"
+    },
+    {
+      "id": "HumanEval/149",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef sorted_list_sum(lst):\n    \"\"\"Write a function that accepts a list of strings as a parameter,\n    deletes the strings that have odd lengths from it,\n    and returns the resulted list with a sorted order,\n    The list is always a list of strings and never an array of numbers,\n    and it may contain duplicates.\n    The order of the list should be ascending by length of each word, and you\n    should return the list sorted by that rule.\n    If two words have the same length, sort the list alphabetically.\n    The function should return a list of strings in sorted order.\n    You may assume that all words will have the same length.\n    For example:\n    assert list_sort([\"aa\", \"a\", \"aaa\"]) => [\"aa\"]\n    assert list_sort([\"ab\", \"a\", \"aaa\", \"cd\"]) => [\"ab\", \"cd\"]\n    \"\"\"\n",
+      "prompt_sha256": "1e7a9dbbc338988e4ab2f75e11af863ee295101adb75191c27af55d3512d94c9"
+    },
+    {
+      "id": "HumanEval/150",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef x_or_y(n, x, y):\n    \"\"\"A simple program which should return the value of x if n is \n    a prime number and should return the value of y otherwise.\n\n    Examples:\n    for x_or_y(7, 34, 12) == 34\n    for x_or_y(15, 8, 5) == 5\n    \n    \"\"\"\n",
+      "prompt_sha256": "65fa4bd52b131114cf0d5f098cdbdf1f12a95a0b19b7e2e1e703d6b6abb18228"
+    },
+    {
+      "id": "HumanEval/151",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef double_the_difference(lst):\n    '''\n    Given a list of numbers, return the sum of squares of the numbers\n    in the list that are odd. Ignore numbers that are negative or not integers.\n    \n    double_the_difference([1, 3, 2, 0]) == 1 + 9 + 0 + 0 = 10\n    double_the_difference([-1, -2, 0]) == 0\n    double_the_difference([9, -2]) == 81\n    double_the_difference([0]) == 0  \n   \n    If the input list is empty, return 0.\n    '''\n",
+      "prompt_sha256": "576bc8753deb9a9dfc397d801eabb2b7889ed623dacd2389521af2fd5f56cbaf"
+    },
+    {
+      "id": "HumanEval/152",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef compare(game,guess):\n    \"\"\"I think we all remember that feeling when the result of some long-awaited\n    event is finally known. The feelings and thoughts you have at that moment are\n    definitely worth noting down and comparing.\n    Your task is to determine if a person correctly guessed the results of a number of matches.\n    You are given two arrays of scores and guesses of equal length, where each index shows a match. \n    Return an array of the same length denoting how far off each guess was. If they have guessed correctly,\n    the value is 0, and if not, the value is the absolute difference between the guess and the score.\n    \n    \n    example:\n\n    compare([1,2,3,4,5,1],[1,2,3,4,2,-2]) -> [0,0,0,0,3,3]\n    compare([0,5,0,0,0,4],[4,1,1,0,0,-2]) -> [4,4,1,0,0,6]\n    \"\"\"\n",
+      "prompt_sha256": "ac9d4c31d883f42076873cd40694407bd7ea063db7b0a7dd499354eea44b8055"
+    },
+    {
+      "id": "HumanEval/153",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef Strongest_Extension(class_name, extensions):\n    \"\"\"You will be given the name of a class (a string) and a list of extensions.\n    The extensions are to be used to load additional classes to the class. The\n    strength of the extension is as follows: Let CAP be the number of the uppercase\n    letters in the extension's name, and let SM be the number of lowercase letters \n    in the extension's name, the strength is given by the fraction CAP - SM. \n    You should find the strongest extension and return a string in this \n    format: ClassName.StrongestExtensionName.\n    If there are two or more extensions with the same strength, you should\n    choose the one that comes first in the list.\n    For example, if you are given \"Slices\" as the class and a list of the\n    extensions: ['SErviNGSliCes', 'Cheese', 'StuFfed'] then you should\n    return 'Slices.SErviNGSliCes' since 'SErviNGSliCes' is the strongest extension \n    (its strength is -1).\n    Example:\n    for Strongest_Extension('my_class', ['AA', 'Be', 'CC']) == 'my_class.AA'\n    \"\"\"\n",
+      "prompt_sha256": "f10f82dc1a94253413ff8994dd1c1cffb11d95756e7f5d3c2da7502772d8560c"
+    },
+    {
+      "id": "HumanEval/154",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef cycpattern_check(a , b):\n    \"\"\"You are given 2 words. You need to return True if the second word or any of its rotations is a substring in the first word\n    cycpattern_check(\"abcd\",\"abd\") => False\n    cycpattern_check(\"hello\",\"ell\") => True\n    cycpattern_check(\"whassup\",\"psus\") => False\n    cycpattern_check(\"abab\",\"baa\") => True\n    cycpattern_check(\"efef\",\"eeff\") => False\n    cycpattern_check(\"himenss\",\"simen\") => True\n\n    \"\"\"\n",
+      "prompt_sha256": "ae13cf4532f04c9b777eafe367f8b2ff44e87e4538c8bc276f0c913df9e246c6"
+    },
+    {
+      "id": "HumanEval/155",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef even_odd_count(num):\n    \"\"\"Given an integer. return a tuple that has the number of even and odd digits respectively.\n\n     Example:\n        even_odd_count(-12) ==> (1, 1)\n        even_odd_count(123) ==> (1, 2)\n    \"\"\"\n",
+      "prompt_sha256": "b649bed1da2a78a2db2186efaf80dc85b680aae89c3d7597d3b4c22f42fbd9fa"
+    },
+    {
+      "id": "HumanEval/156",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef int_to_mini_roman(number):\n    \"\"\"\n    Given a positive integer, obtain its roman numeral equivalent as a string,\n    and return it in lowercase.\n    Restrictions: 1 <= num <= 1000\n\n    Examples:\n    >>> int_to_mini_roman(19) == 'xix'\n    >>> int_to_mini_roman(152) == 'clii'\n    >>> int_to_mini_roman(426) == 'cdxxvi'\n    \"\"\"\n",
+      "prompt_sha256": "29adbfd5f4c0a31b1120ef3bc80e6c4ca64c044e4d0bfa2a3275b1bdebbab6b1"
+    },
+    {
+      "id": "HumanEval/157",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef right_angle_triangle(a, b, c):\n    '''\n    Given the lengths of the three sides of a triangle. Return True if the three\n    sides form a right-angled triangle, False otherwise.\n    A right-angled triangle is a triangle in which one angle is right angle or \n    90 degree.\n    Example:\n    right_angle_triangle(3, 4, 5) == True\n    right_angle_triangle(1, 2, 3) == False\n    '''\n",
+      "prompt_sha256": "4812e39ae342a7b1b6f9a2735416718849dee0b69d5f51a55d5523d4040ef76a"
+    },
+    {
+      "id": "HumanEval/158",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef find_max(words):\n    \"\"\"Write a function that accepts a list of strings.\n    The list contains different words. Return the word with maximum number\n    of unique characters. If multiple strings have maximum number of unique\n    characters, return the one which comes first in lexicographical order.\n\n    find_max([\"name\", \"of\", \"string\"]) == \"string\"\n    find_max([\"name\", \"enam\", \"game\"]) == \"enam\"\n    find_max([\"aaaaaaa\", \"bb\" ,\"cc\"]) == \"\"aaaaaaa\"\n    \"\"\"\n",
+      "prompt_sha256": "be89a2afa260580d419daa3f3b830e2828cbb766877342b8553b4d2a21c838c1"
+    },
+    {
+      "id": "HumanEval/159",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef eat(number, need, remaining):\n    \"\"\"\n    You're a hungry rabbit, and you already have eaten a certain number of carrots,\n    but now you need to eat more carrots to complete the day's meals.\n    you should return an array of [ total number of eaten carrots after your meals,\n                                    the number of carrots left after your meals ]\n    if there are not enough remaining carrots, you will eat all remaining carrots, but will still be hungry.\n    \n    Example:\n    * eat(5, 6, 10) -> [11, 4]\n    * eat(4, 8, 9) -> [12, 1]\n    * eat(1, 10, 10) -> [11, 0]\n    * eat(2, 11, 5) -> [7, 0]\n    \n    Variables:\n    @number : integer\n        the number of carrots that you have eaten.\n    @need : integer\n        the number of carrots that you need to eat.\n    @remaining : integer\n        the number of remaining carrots thet exist in stock\n    \n    Constrain:\n    * 0 <= number <= 1000\n    * 0 <= need <= 1000\n    * 0 <= remaining <= 1000\n\n    Have fun :)\n    \"\"\"\n",
+      "prompt_sha256": "1933372cd72591ec5e4259ed954d989f5b3b12fd67389494a4e4421d773f5ba4"
+    },
+    {
+      "id": "HumanEval/160",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef do_algebra(operator, operand):\n    \"\"\"\n    Given two lists operator, and operand. The first list has basic algebra operations, and \n    the second list is a list of integers. Use the two given lists to build the algebric \n    expression and return the evaluation of this expression.\n\n    The basic algebra operations:\n    Addition ( + ) \n    Subtraction ( - ) \n    Multiplication ( * ) \n    Floor division ( // ) \n    Exponentiation ( ** ) \n\n    Example:\n    operator['+', '*', '-']\n    array = [2, 3, 4, 5]\n    result = 2 + 3 * 4 - 5\n    => result = 9\n\n    Note:\n        The length of operator list is equal to the length of operand list minus one.\n        Operand is a list of of non-negative integers.\n        Operator list has at least one operator, and operand list has at least two operands.\n\n    \"\"\"\n",
+      "prompt_sha256": "92c74681ea60ab62c6e9e7c8793d8c88d2a87cc01a7ea3f7bc0b8c7790925400"
+    },
+    {
+      "id": "HumanEval/161",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef solve(s):\n    \"\"\"You are given a string s.\n    if s[i] is a letter, reverse its case from lower to upper or vise versa, \n    otherwise keep it as it is.\n    If the string contains no letters, reverse the string.\n    The function should return the resulted string.\n    Examples\n    solve(\"1234\") = \"4321\"\n    solve(\"ab\") = \"AB\"\n    solve(\"#a@C\") = \"#A@c\"\n    \"\"\"\n",
+      "prompt_sha256": "964a0af222b7124c3f97824744e799dbb9aa9ba638391b69005e094fbd6ebaf5"
+    },
+    {
+      "id": "HumanEval/162",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef string_to_md5(text):\n    \"\"\"\n    Given a string 'text', return its md5 hash equivalent string.\n    If 'text' is an empty string, return None.\n\n    >>> string_to_md5('Hello world') == '3e25960a79dbc69b674cd4ec67a72c62'\n    \"\"\"\n",
+      "prompt_sha256": "27a1d92a5213d48587e3ad62a27d1ab5b7b5f0ba704e95100b0807363ed85e7b"
+    },
+    {
+      "id": "HumanEval/163",
+      "prompt": "\nRead the following function signature and docstring, and fully implement\nthe function described. Your response should only contain the code for\nthis function.\n\n\ndef generate_integers(a, b):\n    \"\"\"\n    Given two positive integers a and b, return the even digits between a\n    and b, in ascending order.\n\n    For example:\n    generate_integers(2, 8) => [2, 4, 6, 8]\n    generate_integers(8, 2) => [2, 4, 6, 8]\n    generate_integers(10, 14) => []\n    \"\"\"\n",
+      "prompt_sha256": "32c7285c7f7af931f4b48074ca7d62838261515bd27c3664a2f01bed54ccb2a1"
+    }
+  ]
+}

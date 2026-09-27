@@ -1,0 +1,1443 @@
+{
+  "status": "scored",
+  "scope": "Actual captured model answers graded by the unchanged official task scorer",
+  "model_quality_measured": true,
+  "inference_model": "DualCore KV",
+  "inference_identity": {
+    "schema": 1,
+    "evidence_kind": "real_model",
+    "model": "DualCore KV",
+    "profile": "dualcore-kv",
+    "created": "2026-09-27T01:07:32.671073+00:00",
+    "checkpoint": {
+      "repo": "DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF",
+      "revision": "36fe18b06b8198bf93e5b5055c77b72e186e83db",
+      "filename": "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+      "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e",
+      "bytes": 3120573088,
+      "precision": "Q8_0 MAX",
+      "license": "lfm1.0",
+      "copies_in_memory": 2,
+      "copies_on_disk": 1,
+      "published_context_tokens": 131072,
+      "bf16_available": false,
+      "bf16_note": "The supplied repository has only quantized GGUFs. Casting/dequantizing Q8 to BF16 would not restore original precision."
+    },
+    "artifacts": [
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\artifacts\\evaluations\\profile-suite-20260926\\temp-weights\\lfm\\LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+        "bytes": 3120573088,
+        "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e"
+      }
+    ],
+    "runtime_files": [
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\duocore\\runtime.py",
+        "bytes": 26902,
+        "sha256": "ae3737ba60c0f84ea321ffb537ec746cd8bfeba59980ecb117e50c7d6ed3a6a0"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\duocore\\selection.py",
+        "bytes": 6808,
+        "sha256": "4d4bcda284cbcd09c950fc5a9121f22f16f28160485a435833dd63be966f142c"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\duocore\\spec.py",
+        "bytes": 3077,
+        "sha256": "d2b64a4b420169de79d7bda05452b638c0f28a2d53034870d6b57cd0aa10dac5"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\build-info.json",
+        "bytes": 3374,
+        "sha256": "b7aa280a99a91b536673f0a23ddaa28c5aa953195bdcc7dab19bdc6bf0531f38"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\cublas64_13.dll",
+        "bytes": 52697712,
+        "sha256": "8c6bac24474af29627ec96500025a5d410a1b7e8ffa00e1fe13b1781fc6b3ddc"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\cublasLt64_13.dll",
+        "bytes": 463655536,
+        "sha256": "e323abd89e0f03c1db91a09d7aeb1928de08e1f86192cc713b335fefe3e368a9"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml-base.dll",
+        "bytes": 658944,
+        "sha256": "b7b3e451761cb21ef734ebb2eda77f1630f62ae15e7195817e7c81cbba9a6064"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml-cpu.dll",
+        "bytes": 904704,
+        "sha256": "b519755da1ca0160337a06f84303de1acf083f4e8346fe3b61601a826818a88f"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml-cuda.dll",
+        "bytes": 50951680,
+        "sha256": "9af590a59531df233455187266742bc93845b2e9362cec3d0c62c52c46b74a85"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml.dll",
+        "bytes": 67072,
+        "sha256": "874e055fa5e943f1a6d3342a01d31dd9aca377bcf24d64a99d10ef3faa31fa0f"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama-common.dll",
+        "bytes": 8198656,
+        "sha256": "7270f14eb41b55d5d596b214dd9cae66a202897b8e0bb60bf2e8e7bbf4434308"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama-server-impl.dll",
+        "bytes": 3171328,
+        "sha256": "abdb94724d60a9d07f47de0fc61d0dce977f66afabaa42a55dfd9305abcfb4ef"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama-server.exe",
+        "bytes": 10752,
+        "sha256": "aed80ff1f7e7230c9e405cd213865ac956222f3e9289763e66153c034251b8ce"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama.dll",
+        "bytes": 2583552,
+        "sha256": "0f528ce50a1f55d3ad9318773a679cdc5e28904835284e1a5c25f4d0bcd0150e"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\MSVCP140.dll",
+        "bytes": 643512,
+        "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\mtmd.dll",
+        "bytes": 2379776,
+        "sha256": "7f26ab7a81ba30d518f4d2a0af090090b958179c86df8e0604501847074846df"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\VCOMP140.DLL",
+        "bytes": 212920,
+        "sha256": "95d4ce4a6802d1e18b5e0e1722cc30ea72ca7e033f83828f05c0b7b993fe7cbf"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\VCRUNTIME140.dll",
+        "bytes": 178616,
+        "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\VCRUNTIME140_1.dll",
+        "bytes": 50112,
+        "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\checkpoint.json",
+        "bytes": 610,
+        "sha256": "c045139e458fc7bb856606d6fec952eab34fc08febda86a4d1391e3ed18ccc61"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\dual.py",
+        "bytes": 8523,
+        "sha256": "37c1d2faa8974d15ca46bc7cb7433bedf30600a771a590d734c99e350dee6e98"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\fusion.py",
+        "bytes": 5879,
+        "sha256": "59bdc69fd3fc56f5ea81650deefb2574dc4864b426747fc2afef70ca7a92bade"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\native\\build-info.json",
+        "bytes": 495,
+        "sha256": "219a8ae464fb52bcd5f3518dba48e791d5c677bcee0c4015150312663c36e000"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\native\\fusioncore.cpp",
+        "bytes": 15606,
+        "sha256": "01cababc181e49a3d07a5d9cb87d16b868e99e9635193ad57dac76b8a54bf85c"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\native\\fusioncore.dll",
+        "bytes": 37376,
+        "sha256": "2e450f3732d83a82ae8fe8c1766ba6d8309058ef601cc214507019b5b5bb1fe1"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\protocol.py",
+        "bytes": 6011,
+        "sha256": "5e37adc405108e0b67b459fd2bd1eadd92a6707cc0973ef59c10acae37aba8a3"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\lfm\\serve_lfm.py",
+        "bytes": 11664,
+        "sha256": "bd068cc5822ad006688178d94482e7d905136e7f1c1819e334227fb6176441f0"
+      }
+    ],
+    "app_git_base": "ea30cfe4724bab4e6d12efae9e7230ae01ab64a6",
+    "runtime_source_note": "File hashes bind the actual selected runtime source; the Git base alone is not an artifact identity.",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "gpu_at_identity_recording": "NVIDIA GeForce RTX 4070, 616.92, 12282 MiB, 11305 MiB",
+    "health": {
+      "status": "ok",
+      "ready": true,
+      "model": "DualCore KV",
+      "precision": "Q8_0 MAX"
+    },
+    "properties": {
+      "model": "DualCore KV",
+      "n_ctx": 131072,
+      "default_generation_settings": {
+        "n_ctx": 131072
+      },
+      "lfm": {
+        "profile": "dualcore-kv",
+        "checkpoint": {
+          "repo": "DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF",
+          "revision": "36fe18b06b8198bf93e5b5055c77b72e186e83db",
+          "filename": "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+          "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e",
+          "bytes": 3120573088,
+          "precision": "Q8_0 MAX",
+          "license": "lfm1.0",
+          "copies_in_memory": 2,
+          "copies_on_disk": 1,
+          "published_context_tokens": 131072,
+          "bf16_available": false,
+          "bf16_note": "The supplied repository has only quantized GGUFs. Casting/dequantizing Q8 to BF16 would not restore original precision."
+        },
+        "complete_towers": 2,
+        "parameters": null,
+        "execution_mode": "cooperating_candidate_brains",
+        "cache_mode": "KV",
+        "memory_note": "ECHO archive retrieval has finite active inference; recomputation still needs transient attention buffers.",
+        "quality": "experimental; no benchmark improvement claimed"
+      }
+    },
+    "complete_towers": 2,
+    "candidate_budget": 2,
+    "sampling": {
+      "evaluation_temperature": 0,
+      "draft_temperature": 0,
+      "review_temperature": 0,
+      "repeat_penalty": 1.08,
+      "review_order": "randomized blind opposing orders"
+    },
+    "coupling_trained": null,
+    "scope": "Exact shipped Q8 source; profile engineering is experimental. This identity is not a quality result."
+  },
+  "official_provenance": {
+    "all_recorded_hashes_match": true,
+    "samples": 164,
+    "provenance_sha256": "032ab2ae707f9c3e18119a14f71966c8b6fc9521e69b9362cacb0503317daa92",
+    "official_task_source_sha256": "ebffdeb39b4f02cbc1366a82afa38d7d11c2d25059e92164924908954f9ee350",
+    "dataset_revision": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+    "dataset_revisions": null,
+    "release_date": null
+  },
+  "generation_settings": {
+    "inputs_sha256": "54a2f8fba2824b111eda74e110d5b1354c134bebe2ed9fbfdfaa4e6aa0398b99",
+    "identity_sha256": "882b89380bbff54bbb947760049ba4b3d4e841eb0acfc9b756c27b2f9cd33e95",
+    "model": "DualCore KV",
+    "max_tokens": 4096,
+    "temperature": 0,
+    "stream": false
+  },
+  "grading_transport_model": "mockllm/recorded-api-answers",
+  "grading_platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "inputs_sha256": "54a2f8fba2824b111eda74e110d5b1354c134bebe2ed9fbfdfaa4e6aa0398b99",
+  "responses_sha256": "33074a69c3d33f8c0dd1a9eeac8502626482f07d41b11064a78cd3e537f10934",
+  "capture_manifest_sha256": "0ade1926642caa8c321ba64caace86ab642cd24aa8a23e5e06afe96009d66ca6",
+  "grading_script_sha256": "f0e283f0f7598d0f5b44f054629a96754f2eca96f340d3932fcffeead6ba62b9",
+  "samples": 164,
+  "expected_samples": 164,
+  "sample_errors": [],
+  "finish_reasons": {
+    "stop": 155,
+    "length": 9
+  },
+  "generation_seconds": 4030.5772611001157,
+  "results": {
+    "total_samples": 164,
+    "completed_samples": 164,
+    "logged_samples": null,
+    "early_stopping": null,
+    "scores": [
+      {
+        "name": "verify",
+        "scorer": "verify",
+        "reducer": null,
+        "scored_samples": 164,
+        "unscored_samples": 0,
+        "params": {},
+        "metrics": {
+          "accuracy": {
+            "name": "accuracy",
+            "group": null,
+            "value": 0.8719512195121951,
+            "params": {},
+            "metadata": null
+          },
+          "stderr": {
+            "name": "stderr",
+            "group": null,
+            "value": 0.02617218707128662,
+            "params": {},
+            "metadata": null
+          }
+        },
+        "metadata": null
+      }
+    ],
+    "headline": {
+      "scorer": "verify",
+      "score": "verify",
+      "metric": "accuracy",
+      "reducer": null
+    },
+    "metadata": null
+  },
+  "per_sample": [
+    {
+      "id": "HumanEval/0",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/1",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/10",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/100",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/101",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/102",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/103",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/104",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/105",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/106",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/107",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/108",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/109",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/11",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/110",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/111",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/112",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/113",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/114",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/115",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/116",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/117",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/118",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/119",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/12",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/120",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/121",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/122",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/123",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/124",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/125",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/126",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/127",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/128",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/129",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/13",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/130",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/131",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/132",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/133",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/134",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/135",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/136",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/137",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/138",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/139",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/14",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/140",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/141",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/142",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/143",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/144",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/145",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/146",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/147",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/148",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/149",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/15",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/150",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/151",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/152",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/153",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/154",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/155",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/156",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/157",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/158",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/159",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/16",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/160",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/161",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/162",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/163",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/17",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/18",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/19",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/2",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/20",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/21",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/22",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/23",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/24",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/25",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/26",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/27",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/28",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/29",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/3",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/30",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/31",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/32",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/33",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/34",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/35",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/36",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/37",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/38",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/39",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/4",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/40",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/41",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/42",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/43",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/44",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/45",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/46",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/47",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/48",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/49",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/5",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/50",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/51",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/52",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/53",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/54",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/55",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/56",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/57",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/58",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/59",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/6",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/60",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/61",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/62",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/63",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/64",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/65",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/66",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/67",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/68",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/69",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/7",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/70",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/71",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/72",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/73",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/74",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/75",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/76",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/77",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/78",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/79",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/8",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/80",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/81",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/82",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/83",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/84",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/85",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/86",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/87",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/88",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/89",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/9",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/90",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/91",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/92",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/93",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/94",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/95",
+      "scores": {
+        "verify": "I"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/96",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/97",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/98",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    },
+    {
+      "id": "HumanEval/99",
+      "scores": {
+        "verify": "C"
+      },
+      "error": null
+    }
+  ]
+}

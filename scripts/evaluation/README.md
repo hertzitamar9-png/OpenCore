@@ -122,9 +122,18 @@ identity; it verifies hashes and never copies model weights.
 
 ## Result scope
 
-Completed local results as of 2026-09-27: single LFM Q8 baseline 113/164 (68.90%);
-FusionCore KV 137/164 (83.54%), both with zero evaluation errors. FusionCore's
-hidden-state feedback is untuned. These are full public HumanEval scores for
+Completed local results as of 2026-09-27, all with zero evaluation errors:
+
+| Inference profile | HumanEval pass@1 | Generation configuration |
+| --- | --- | --- |
+| Single LFM Q8 baseline | 113/164 (68.90%) | One model, one draft |
+| FusionCore KV | 137/164 (83.54%) | Two complete towers, one fused stream; untuned feedback |
+| DualCore KV | 143/164 (87.20%) | Two drafts, then two blind reviews of up to 384 tokens each |
+
+Each draft has the same 4,096-token evaluation budget. DualCore uses more
+inference compute than the single-model baseline; these scores do not establish
+an equal-compute improvement. DualCore reached the length limit on nine tasks.
+These are full public HumanEval scores for
 the specified inference configurations, not evidence of general coding,
 infinite attention, trained coupling, or agent quality. Other profiles and model
 LiveBench scores remain pending. Their live progress is not a final score.
@@ -136,6 +145,13 @@ Historical source identities and machine paths remain as recorded; they must
 not be rewritten to resemble newly prepared provenance. The baseline identity's
 `complete_towers=1` records its actual profile; nested checkpoint metadata also
 describes the paired model family's default two-copy configuration.
+
+The completed DualCore KV run is retained separately under
+[results/2026-09-27-dualcore-kv](results/2026-09-27-dualcore-kv).
+An independent CPU replay matched all 164 original per-task scores and verified
+the exact original identity file hash. Its earlier interrupted 32-answer run is
+not included in this completed result. The model source snapshot, original and
+replayed summaries, raw answers and full execution log remain hash-bound.
 
 Replay the published FusionCore capture without loading model weights:
 

@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "status": "completed_evidence_copied_and_hash_verified",
+  "models": {
+    "DualCore KV": {
+      "correct": 143,
+      "samples": 164
+    }
+  },
+  "model_weights_copied": 0,
+  "files": [
+    {
+      "file": "humaneval-inputs.json",
+      "bytes": 129822,
+      "sha256": "54a2f8fba2824b111eda74e110d5b1354c134bebe2ed9fbfdfaa4e6aa0398b99"
+    },
+    {
+      "file": "humaneval-provenance.json",
+      "bytes": 37416,
+      "sha256": "032ab2ae707f9c3e18119a14f71966c8b6fc9521e69b9362cacb0503317daa92"
+    },
+    {
+      "file": "captures/capture-manifest.json",
+      "bytes": 13312,
+      "sha256": "0ade1926642caa8c321ba64caace86ab642cd24aa8a23e5e06afe96009d66ca6"
+    },
+    {
+      "file": "captures/responses.jsonl",
+      "bytes": 1101677,
+      "sha256": "33074a69c3d33f8c0dd1a9eeac8502626482f07d41b11064a78cd3e537f10934"
+    },
+    {
+      "file": "model-identity.json",
+      "bytes": 10841,
+      "sha256": "882b89380bbff54bbb947760049ba4b3d4e841eb0acfc9b756c27b2f9cd33e95"
+    },
+    {
+      "file": "grading-summary.json",
+      "bytes": 31964,
+      "sha256": "56398594a6db573e63d6164982e049cf041a1c288e3817c3800db8810c1ebe2e"
+    },
+    {
+      "file": "original-grading-summary.json",
+      "bytes": 31703,
+      "sha256": "5fa980b81dd9a1f81947c4894837a3ca926758d4a532e407ac6cc96d200770a8"
+    },
+    {
+      "file": "source-snapshot/00-runtime.py",
+      "bytes": 26902,
+      "sha256": "ae3737ba60c0f84ea321ffb537ec746cd8bfeba59980ecb117e50c7d6ed3a6a0"
+    },
+    {
+      "file": "source-snapshot/01-selection.py",
+      "bytes": 6808,
+      "sha256": "4d4bcda284cbcd09c950fc5a9121f22f16f28160485a435833dd63be966f142c"
+    },
+    {
+      "file": "source-snapshot/02-spec.py",
+      "bytes": 3077,
+      "sha256": "d2b64a4b420169de79d7bda05452b638c0f28a2d53034870d6b57cd0aa10dac5"
+    },
+    {
+      "file": "source-snapshot/03-build-info.json",
+      "bytes": 3374,
+      "sha256": "b7aa280a99a91b536673f0a23ddaa28c5aa953195bdcc7dab19bdc6bf0531f38"
+    },
+    {
+      "file": "source-snapshot/04-checkpoint.json",
+      "bytes": 610,
+      "sha256": "c045139e458fc7bb856606d6fec952eab34fc08febda86a4d1391e3ed18ccc61"
+    },
+    {
+      "file": "source-snapshot/05-dual.py",
+      "bytes": 8523,
+      "sha256": "37c1d2faa8974d15ca46bc7cb7433bedf30600a771a590d734c99e350dee6e98"
+    },
+    {
+      "file": "source-snapshot/06-fusion.py",
+      "bytes": 5879,
+      "sha256": "59bdc69fd3fc56f5ea81650deefb2574dc4864b426747fc2afef70ca7a92bade"
+    },
+    {
+      "file": "source-snapshot/07-build-info.json",
+      "bytes": 495,
+      "sha256": "219a8ae464fb52bcd5f3518dba48e791d5c677bcee0c4015150312663c36e000"
+    },
+    {
+      "file": "source-snapshot/08-fusioncore.cpp",
+      "bytes": 15606,
+      "sha256": "01cababc181e49a3d07a5d9cb87d16b868e99e9635193ad57dac76b8a54bf85c"
+    },
+    {
+      "file": "source-snapshot/09-fusioncore.dll",
+      "bytes": 37376,
+      "sha256": "2e450f3732d83a82ae8fe8c1766ba6d8309058ef601cc214507019b5b5bb1fe1"
+    },
+    {
+      "file": "source-snapshot/10-protocol.py",
+      "bytes": 6011,
+      "sha256": "5e37adc405108e0b67b459fd2bd1eadd92a6707cc0973ef59c10acae37aba8a3"
+    },
+    {
+      "file": "source-snapshot/11-serve_lfm.py",
+      "bytes": 11664,
+      "sha256": "bd068cc5822ad006688178d94482e7d905136e7f1c1819e334227fb6176441f0"
+    },
+    {
+      "file": "source-snapshot/snapshot-manifest.json",
+      "bytes": 4041,
+      "sha256": "0dc53941df00a99261141ce915eaf1f31cbc41e99790eea37a902aa4f7f4cca2"
+    },
+    {
+      "file": "inspect-logs/2026-09-27T02-15-42-00-00_humaneval_iLqsCySSVtKuVdHxNtUJFM.eval",
+      "bytes": 661851,
+      "sha256": "8a85088cfc4208281f64667bd100b177f287cb6249902dc001369a847d63bd39"
+    }
+  ],
+  "total_bytes": 2148952,
+  "scope": "Two Q8 LFM copies, two drafts plus selection; full dated public HumanEval only"
+}
