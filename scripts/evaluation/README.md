@@ -107,8 +107,18 @@ whose builder names [Magicoder-Evol-Instruct-110K](https://huggingface.co/datase
 and [CodeFeedback-Filtered-Instruction](https://huggingface.co/datasets/m-a-p/CodeFeedback-Filtered-Instruction).
 It contains 512 training and 64 validation records with exact local source-line,
 prompt, answer and corpus hashes. The original upstream download revisions and
-row IDs were not retained and were not found in the inspected local dataset cache.
-Current source-card review revisions cannot replace those missing identities.
+row IDs were not retained. A later streaming verification matched all 576 exact
+prompts and reconstructed answers against these immutable snapshots:
+
+- Magicoder: `b0079beaa0361d82412520b873715bee59cc7dd4`, raw JSONL SHA-256
+  `99d8bab4c443050e5bb4bc339f709de8bcccf81cb83e15ef8d53369c5d8dc495`.
+- CodeFeedback: `a08c213a9748c66c15d0225814be80a2e77adf4a`, raw JSONL SHA-256
+  `6dd3f7797cd86a7e437de660ad259c50835812f8e309d893f09de77b2ee80063`.
+
+Both complete files were hashed during streaming, with 267,709 source records.
+The verification keeps per-example source record indexes and reconstruction
+hashes without retaining the full downloaded files. This establishes exact
+matches at the reviewed snapshots; historical download revisions remain unknown.
 CodeFeedback's authors explicitly disclose model-generated material; this
 training data must not be described as human-only or free of distillation.
 Syntax validation and lexical benchmark screening do not establish answer
