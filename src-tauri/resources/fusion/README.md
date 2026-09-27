@@ -79,6 +79,33 @@ gradients through the frozen head projection are exact for its dequantized linea
 operation. This is **truncated feedback training**, not end-to-end base training.
 Held-out token loss cannot establish general coding quality.
 
+`scripts/fusion/run_training.py` runs those two stages sequentially. It stops
+before training if resources are unavailable, the GPU changes, or the probe
+does not confirm both complete pinned Q6 towers and their release. It keeps
+separate console logs, the qualification receipt and a `sequence.json` status.
+After the training child exits it checks the small CPU adapter tensors, exact
+corpus/driver/qualification identities and completed epoch schedule. The final
+status is `adapter_validated_unbenchmarked`; benchmark and app activation remain
+separate gates. It does not queue another model or start a benchmark.
+
+For example, from the app repository, with existing files and a fresh output:
+
+```powershell
+python scripts/fusion/run_training.py `
+  --nanbeige "C:\path\Nanbeige_Nanbeige4.2-3B-Q6_K.gguf" `
+  --k2 "C:\path\K2-Horizon-4B-Q6_K.gguf" `
+  --corpus "C:\path\corpus.jsonl" --corpus-sha256 "<exact SHA-256>" `
+  --output "C:\path\fresh-training-run" --context 1024
+```
+
+Add `--prepare-only` to save commands and current source/corpus identities
+without querying the GPU, importing a tensor framework or starting a child.
+Use a new output directory to execute later. A prepared manifest is not a
+resource qualification or completed training artifact. If training fails,
+its bounded `adapter.checkpoints` store is preserved; supply that path as
+`--resume` with a fresh sequence output to recover. Interrupting the sequence
+terminates only its own child process and retains earlier checkpoints.
+
 Training saves a resume-only state every eight completed examples by default
 (`--checkpoint-every`) and after the last example. Each state binds the adapter,
 AdamW moments, exact sample order and shuffle RNG cursor. The store keeps the
