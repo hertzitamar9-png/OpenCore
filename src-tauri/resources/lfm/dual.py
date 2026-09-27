@@ -103,6 +103,22 @@ class DualCoreEngine:
         usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
         for reply in replies:
             DuoCoreEngine._add_usage(usage, DuoCoreEngine._usage_for_reply(reply))
+        finish_reasons = [reply.raw['choices'][0].get('finish_reason') or 'stop' for reply in replies]
+        if not any(valid) and all(
+            finish == 'length' and not reply.message.get('tool_calls')
+            and not reply.content.strip() and reply.message.get('reasoning_content', '').strip()
+            for reply, finish in zip(replies, finish_reasons)
+        ):
+            # A generation budget can expire entirely in reasoning. Preserve
+            # the actual unfinished output; it is neither a chosen answer nor
+            # permission to execute an invalid or truncated tool call.
+            return dict(replies[0].message), usage, {
+                'status': 'incomplete', 'selected_brain': None, 'reviews': [],
+                'finish_reason': 'length', 'candidate_finish_reasons': finish_reasons,
+                'draft_temperature': 0.0 if self.native else temperature,
+                'review_temperature': 0.0,
+                'execution_mode': 'cooperating_candidate_brains',
+            }
         reviews = []
         if all(valid) and DuoCoreEngine._same_candidate(*candidates):
             selected = 0

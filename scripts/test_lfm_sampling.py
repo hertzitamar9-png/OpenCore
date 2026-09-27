@@ -26,6 +26,18 @@ class RecordingBrain:
         })
 
 
+class FixedReplyBrain:
+    def __init__(self, message, finish_reason):
+        self.message, self.finish_reason, self.calls = message, finish_reason, []
+
+    def chat(self, messages, **kwargs):
+        self.calls.append(kwargs)
+        return BackboneReply(self.message['content'], dict(self.message), {
+            'choices': [{'message': dict(self.message), 'finish_reason': self.finish_reason}],
+            'usage': {'prompt_tokens': 5, 'completion_tokens': 32, 'total_tokens': 37},
+        })
+
+
 class SamplingTests(unittest.TestCase):
     def setUp(self):
         self.engine = DualCoreEngine(Path('unused-fixture.gguf'), 18000)
@@ -75,6 +87,47 @@ class SamplingTests(unittest.TestCase):
                     self.request(value)
                 self.assertEqual(caught.exception.code, 400)
         self.assertEqual([brain.calls for brain in self.engine.brains], [[], []])
+
+    def test_reasoning_only_budget_exhaustion_is_unfinished_response_not_server_failure(self):
+        self.engine.brains = [FixedReplyBrain({'role': 'assistant', 'content': '',
+                                              'reasoning_content': text}, 'length')
+                              for text in ('First unfinished reasoning', 'Second unfinished reasoning')]
+        try:
+            response = self.request(0)
+        except urllib.error.HTTPError as error:
+            self.fail(f'Budget exhaustion became HTTP {error.code}: {error.read().decode()}')
+        choice = response['choices'][0]
+        self.assertEqual(choice['finish_reason'], 'length')
+        self.assertEqual(choice['message'], {'role': 'assistant', 'content': '',
+                                             'reasoning_content': 'First unfinished reasoning'})
+        self.assertEqual(response['usage'], {'prompt_tokens': 10, 'completion_tokens': 64, 'total_tokens': 74})
+        self.assertIsNone(response['lfm']['selected_brain'])
+        self.assertEqual(response['lfm']['status'], 'incomplete')
+        self.assertEqual(response['lfm']['candidate_finish_reasons'], ['length', 'length'])
+        self.assertEqual([len(brain.calls) for brain in self.engine.brains], [1, 1])
+
+    def test_complete_peer_is_selected_over_reasoning_only_truncation(self):
+        self.engine.brains = [FixedReplyBrain({'role': 'assistant', 'content': '',
+                                              'reasoning_content': 'Unfinished'}, 'length'), RecordingBrain()]
+        response = self.request(0)
+        self.assertEqual(response['choices'][0]['message']['content'], 'Identical valid answer')
+        self.assertEqual(response['choices'][0]['finish_reason'], 'stop')
+        self.assertEqual(response['lfm']['selected_brain'], 2)
+
+    def test_truncated_unregistered_actions_are_never_returned_as_reasoning_only(self):
+        self.engine.brains = [FixedReplyBrain({'role': 'assistant', 'content': '',
+                                              'reasoning_content': 'Incomplete action',
+                                              'tool_calls': [{'function': {'name': 'unregistered', 'arguments': '{}'}}]},
+                                             'length') for _ in range(2)]
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            self.request(0)
+        self.assertEqual(caught.exception.code, 500)
+
+    def test_empty_finished_responses_remain_failures(self):
+        self.engine.brains = [FixedReplyBrain({'role': 'assistant', 'content': ''}, 'stop') for _ in range(2)]
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            self.request(0)
+        self.assertEqual(caught.exception.code, 500)
 
 
 if __name__ == '__main__':
