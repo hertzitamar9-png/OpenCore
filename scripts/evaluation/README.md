@@ -102,6 +102,18 @@ actual token admission is still checked by both native tokenizers. Conservative
 Q6 accounting at 8K requires 11,515,102,752 GPU bytes. This is a load estimate,
 not proof of fit, measured long-context quality, or million-token capacity.
 
+The prepared TwinCore corpus comes from the existing local coding corpus,
+whose builder names [Magicoder-Evol-Instruct-110K](https://huggingface.co/datasets/ise-uiuc/Magicoder-Evol-Instruct-110K)
+and [CodeFeedback-Filtered-Instruction](https://huggingface.co/datasets/m-a-p/CodeFeedback-Filtered-Instruction).
+It contains 512 training and 64 validation records with exact local source-line,
+prompt, answer and corpus hashes. The original upstream download revisions and
+row IDs were not retained and were not found in the inspected local dataset cache.
+Current source-card review revisions cannot replace those missing identities.
+CodeFeedback's authors explicitly disclose model-generated material; this
+training data must not be described as human-only or free of distillation.
+Syntax validation and lexical benchmark screening do not establish answer
+correctness or complete semantic decontamination.
+
 ```sh
 .venv-evaluation/bin/python scripts/evaluation/benchmark_capture.py --url http://127.0.0.1:18610 --model 'FusionCore KV' --inputs scripts/evaluation/runs/humaneval/humaneval-inputs.json --identity model-identity.json --output scripts/evaluation/runs/fusioncore-kv/captures --max-tokens 4096
 ```
