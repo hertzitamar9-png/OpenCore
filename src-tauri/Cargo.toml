@@ -1,6 +1,6 @@
 [package]
 name = "opencore-control-center"
-version = "0.1.0"
+version = "0.1.30"
 description = "OpenCore runtime control and observability"
 authors = ["OpenCore"]
 edition = "2021"

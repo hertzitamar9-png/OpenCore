@@ -90,11 +90,12 @@ class DualCoreEngine:
         if self.native:
             self.native.close()
 
-    def complete(self, messages, tools, max_tokens, preview=None):
+    def complete(self, messages, tools, max_tokens, preview=None, *, temperature=0.35):
         instructions = ('Construct a complete answer while preserving all user requirements.',
                         'Independently solve the task and check errors and missing requirements.')
         futures = [self.pool.submit(brain.chat, [{'role': 'system', 'content': instructions[i]}, *messages],
-                                   tools=tools, max_tokens=max_tokens, on_delta=preview if i == 0 else None)
+                                   tools=tools, max_tokens=max_tokens, temperature=temperature,
+                                   on_delta=preview if i == 0 else None)
                    for i, brain in enumerate(self.brains)]
         replies = [future.result() for future in futures]
         candidates = [DuoCoreEngine._candidate_from_message(reply.message) for reply in replies]
@@ -135,6 +136,8 @@ class DualCoreEngine:
         return message, usage, {
             'selected_brain': selected+1, 'reviews': reviews,
             'finish_reason': replies[selected].raw['choices'][0].get('finish_reason') or 'stop',
+            'draft_temperature': 0.0 if self.native else temperature,
+            'review_temperature': 0.0,
             'confidence_note': 'Self-reported scores are uncalibrated, not correctness probabilities.',
             'execution_mode': 'cooperating_candidate_brains',
         }

@@ -43,11 +43,11 @@ describe("buildResponseSegments", () => {
     ]);
   });
 
-  it("groups a tool loop without narration into one reasoning block and one tool group", () => {
+  it("keeps later reasoning below the preceding tool result even without narration", () => {
     expect(shape([
       row(1, "thinking"), row(2, "tool_call", "browser_use"), row(3, "tool_result"),
       row(4, "thinking"), row(5, "tool_call", "browser_use"), row(6, "tool_result"),
-    ])).toEqual(["reasoning×2", "inferred", "tools×2"]);
+    ])).toEqual(["reasoning×1", "inferred", "tools×1", "reasoning×1", "inferred", "tools×1"]);
   });
 
   it("starts a new step at each narration, as the model describes its next action", () => {

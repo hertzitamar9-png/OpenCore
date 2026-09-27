@@ -3,6 +3,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import json
+import math
 import os
 from pathlib import Path
 import secrets
@@ -30,6 +31,14 @@ class BackboneReply:
     content: str
     message: dict[str, Any]
     raw: dict[str, Any]
+
+
+def request_temperature(payload: dict[str, Any]) -> float:
+    value = payload.get("temperature", 0.35)
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or not 0 <= value <= 2):
+        raise ValueError("temperature must be a finite number from 0 to 2")
+    return float(value)
 
 
 def read_chat_stream(response, on_delta: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any]:
@@ -331,17 +340,18 @@ class DuoCoreEngine:
         tools: list[dict[str, Any]] | None,
         max_tokens: int,
         on_preview: Callable[[dict[str, Any]], None] | None,
+        temperature: float = 0.35,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         k2_reply, nanbeige_reply = None, None
         generation_errors = {}
         usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         (k2_reply, nanbeige_reply), (k2_error, nanbeige_error) = self._collect_pair(
             lambda: self.k2.chat(
-                messages, tools=tools, max_tokens=max_tokens, temperature=0.35,
+                messages, tools=tools, max_tokens=max_tokens, temperature=temperature,
                 on_delta=on_preview,
             ),
             lambda: self.nanbeige.chat(
-                messages, tools=tools, max_tokens=max_tokens, temperature=0.35,
+                messages, tools=tools, max_tokens=max_tokens, temperature=temperature,
             ),
         )
         if k2_error:
@@ -350,6 +360,11 @@ class DuoCoreEngine:
             generation_errors["Nanbeige"] = nanbeige_error
         self._add_usage(usage, self._usage_for_reply(k2_reply))
         self._add_usage(usage, self._usage_for_reply(nanbeige_reply))
+        finish_reasons = {}
+        for name, reply in (("K2", k2_reply), ("Nanbeige", nanbeige_reply)):
+            if reply is not None:
+                choices = reply.raw.get("choices") or [{}]
+                finish_reasons[name] = choices[0].get("finish_reason") or "stop"
 
         exact_count = requested_list_count(messages)
         candidates = {
@@ -442,6 +457,10 @@ class DuoCoreEngine:
             "generation_errors": generation_errors,
             "review_errors": review_errors,
             "usage": usage,
+            "draft_temperature": temperature,
+            "review_temperature": 0.0,
+            "candidate_finish_reasons": finish_reasons,
+            "selected_finish_reason": finish_reasons.get(selected),
         }
         return final, evidence
 
@@ -451,6 +470,7 @@ class DuoCoreEngine:
         on_preview: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         messages = list(payload.get("messages") or [])
+        temperature = request_temperature(payload)
         tools = payload.get("tools")
         requested_tokens = payload.get("max_tokens")
         if requested_tokens is None:
@@ -463,7 +483,7 @@ class DuoCoreEngine:
         # passes. The only per-pass bound is the real configured model window.
         max_tokens = min(requested_tokens, self.config.live_window_tokens)
         started = time.perf_counter()
-        message, selection = self._select_candidates(messages, tools, max_tokens, on_preview)
+        message, selection = self._select_candidates(messages, tools, max_tokens, on_preview, temperature)
         elapsed = time.perf_counter() - started
         return {
             "id": f"duocore-{int(time.time() * 1000)}",
@@ -473,7 +493,8 @@ class DuoCoreEngine:
             "choices": [{
                 "index": 0,
                 "message": message,
-                "finish_reason": "tool_calls" if message.get("tool_calls") else "stop",
+                "finish_reason": ("tool_calls" if message.get("tool_calls")
+                                  else selection["selected_finish_reason"] or "stop"),
             }],
             "usage": selection["usage"],
             "duocore": {

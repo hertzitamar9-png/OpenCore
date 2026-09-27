@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from duocore.gpu_budget import gpu_startup_budget, host_ram_startup_budget  # noqa: E402
-from duocore.runtime import DuoCoreEngine, launch_llama_server, stop_llama_server, wait_healthy  # noqa: E402
+from duocore.runtime import DuoCoreEngine, launch_llama_server, request_temperature, stop_llama_server, wait_healthy  # noqa: E402
 from duocore.spec import DuoCoreConfig, default_duocore_config  # noqa: E402
 
 
@@ -234,11 +234,14 @@ class DuoCoreHandler(BaseHTTPRequestHandler):
             if self.path not in ("/v1/chat/completions", "/chat/completions"):
                 self._json(404, {"error": {"message": "not found"}})
                 return
+            request_temperature(payload)
             if payload.get("stream") is True:
                 self._stream_completion(engine, payload)
                 return
             result = engine.chat_completion(payload)
             self._json(200, result)
+        except (ValueError, TypeError) as error:
+            self._json(400, {"error": {"message": str(error), "type": "invalid_request_error"}})
         except Exception as error:
             message = f"{type(error).__name__}: {error}"
             print("[duocore] ERROR " + message, file=sys.stderr, flush=True)

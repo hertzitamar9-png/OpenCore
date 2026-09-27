@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "scope": "Automated app tests and separately opted-in installed-model API smoke checks, not complete UI or model-quality verification",
+  "frontend_tests": 108,
+  "node_tests": 6,
+  "native_tests": 106,
+  "native_ignored": 12,
+  "duocore_sampling_tests": 6,
+  "lfm_sampling_tests": 4,
+  "initial_failed_report": "model-loading-regression-ui-initial-failed.json",
+  "corrected_failures": [
+    "missing Open Models recovery action",
+    "lost unsent draft on navigation",
+    "hidden actual reasoning content",
+    "outdated timeline/tool queries",
+    "LFM readiness selected ECHO child",
+    "Stop retained nested model backends",
+    "recording cancellation waited for audio",
+    "database selection could restore deleted chats"
+  ],
+  "model_smoke_profiles": [
+    "doucode",
+    "fusioncore-kv"
+  ]
+}

@@ -66,8 +66,11 @@ function savedReasoningEffort(): ReasoningEffort {
   } catch { return "medium"; }
 }
 
+export type ComposerDraft = { text: string; files: string[] };
 type Props = {
   conversationId?: string;
+  initialDraft?: ComposerDraft;
+  onDraftChange?: (draft: ComposerDraft) => void;
   title: string;
   client: string;
   entries: TimelineEntry[];
@@ -122,7 +125,7 @@ function convertTurn(turn: ConversationTurn, active: boolean): ThreadMessageLike
   };
 }
 
-type ArtifactActions = { preview: (id: string) => void; download: (id: string) => void; remoteImage: (url: string) => void };
+type ArtifactActions = { preview: (id: string) => void; previewAttachment: (path: string) => void; download: (id: string) => void; remoteImage: (url: string) => void };
 const ArtifactActionsContext = createContext<ArtifactActions | null>(null);
 
 function MessageImage({ src, alt }: { src?: string; alt?: string }) {
@@ -164,6 +167,9 @@ function filesFromTransfer(transfer: DataTransfer | null): File[] {
     .filter((file): file is File => file !== null);
 }
 
+const LARGE_TEXT_PASTE_THRESHOLD = 12_000;
+const MAX_PASTED_TEXT_ATTACHMENT_BYTES = 32 * 1024 * 1024;
+
 function transferHasFiles(transfer: DataTransfer | null): boolean {
   return !!transfer && (Array.from(transfer.types).includes("Files") || filesFromTransfer(transfer).length > 0);
 }
@@ -181,9 +187,15 @@ function AttachedFilePreview({ file, onRemove }: { file: AttachedFile; onRemove?
     preview.then((url) => { if (active) setImageUrl(url); }).catch(() => { if (active) setImageUrl(""); });
     return () => { active = false; };
   }, [file.artifactId, file.path, isImage]);
+  const openPreview = () => {
+    if (file.artifactId) actions?.preview(file.artifactId);
+    else if (file.path) actions?.previewAttachment(file.path);
+  };
   return <div className={`attachment-preview ${imageUrl ? "has-image" : ""}`}>
-    {imageUrl ? <button type="button" className="attachment-preview-image" aria-label={`Preview ${file.name}`} onClick={() => file.artifactId ? actions?.preview(file.artifactId) : actions?.remoteImage(imageUrl)}><img src={imageUrl} alt={file.name} /></button> : <FileText size={18} aria-hidden="true" />}
-    <span title={file.name}>{file.name}</span>
+    <button type="button" className={`attachment-preview-open ${imageUrl ? "has-image" : ""}`} aria-label={`Preview ${file.name}`} onClick={openPreview}>
+      {imageUrl ? <img src={imageUrl} alt={file.name} /> : <FileText size={18} aria-hidden="true" />}
+      <span title={file.name}>{file.name}</span>
+    </button>
     {onRemove ? <button type="button" className="attachment-remove" aria-label={`Remove ${file.name}`} onClick={onRemove}><X size={13} /></button> : null}
   </div>;
 }
@@ -325,12 +337,12 @@ function reasoningStepSummary(events: TimelineEntry[], segments: ResponseSegment
   return `Next: ${actionSummary(step)}`;
 }
 
-function ReasoningDisclosure({ summary, active }: { summary: string; active: boolean }) {
+function ReasoningDisclosure({ summary, content, active }: { summary: string; content: string; active: boolean }) {
   const [expanded, setExpanded] = useState(active);
   useEffect(() => { setExpanded(active); }, [active]);
   return <details className="assistant-disclosure kind-thinking" open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
     <summary><BrainCircuit size={14} /><strong>{active ? "Reasoning summary" : "Reasoned"}</strong><span title={summary}>{summary}</span></summary>
-    <div className="reasoning-text">{summary}</div>
+    <div className="reasoning-text">{content || summary}</div>
   </details>;
 }
 
@@ -353,7 +365,7 @@ function ResponseActivity({ events, active }: { events: TimelineEntry[]; active:
   const segments = buildResponseSegments(events);
   return <div className="assistant-response">
     {segments.map((segment, index) => segment.type === "reasoning"
-      ? <ReasoningDisclosure key={segment.key} summary={reasoningStepSummary(events, segments, index)} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
+      ? <ReasoningDisclosure key={segment.key} summary={reasoningStepSummary(events, segments, index)} content={segment.entries.map((entry) => displayText(entry.content)).join("\n\n")} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
       : segment.type === "narration"
         ? segment.entry.metadata.source === "tool_intent" ? null : <p key={segment.key} className="assistant-progress">{displayText(segment.entry.content)}</p>
       : segment.type === "inferred"
@@ -424,12 +436,12 @@ function MessageActions() {
   </ActionBarPrimitive.Root>;
 }
 export const AssistantConversation = memo(function AssistantConversation({
-  conversationId, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, selectedProfile, onSelectProfile, liveTokenSpeed, promptProgress, backendActive,
+  conversationId, initialDraft, onDraftChange, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, selectedProfile, onSelectProfile, liveTokenSpeed, promptProgress, backendActive,
   onConversationId, onRefresh, onNotice, onExport, onRename, onDelete,
   pinned, project, projectId, projects, onPin, onMoveProject, onCreateProject,
   defaultSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens,
 }: Props) {
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(initialDraft?.text || "");
   const draftInput = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const input = draftInput.current;
@@ -448,7 +460,8 @@ export const AssistantConversation = memo(function AssistantConversation({
   const defaultSkillsKey = defaultSkills.join("\u0000");
   useEffect(() => { setSelectedSkills([...defaultSkills]); }, [defaultSkillsKey]);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
-  const [files, setFiles] = useState<string[]>([]);
+  const [files, setFiles] = useState<string[]>(() => [...(initialDraft?.files || [])]);
+  useEffect(() => { onDraftChange?.({ text: draft, files: [...files] }); }, [draft, files, onDraftChange]);
   const [draggingFiles, setDraggingFiles] = useState(false);
   const [composerMenu, setComposerMenu] = useState<"actions" | "model" | null>(null);
   const [queue, setQueue] = useState<ChatQueueItem[]>([]);
@@ -463,7 +476,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   const approvalPreviewRef = useRef<number | null>(null);
   const [confirmApproval, setConfirmApproval] = useState<ApprovalMode | null>(null);
   const [pendingTool, setPendingTool] = useState<ToolApprovalRequest | null>(null);
-  const [artifactPreview, setArtifactPreview] = useState<api.ArtifactPreview | { remoteImage: string } | null>(null);
+  const [artifactPreview, setArtifactPreview] = useState<api.ArtifactPreview | api.ComposerAttachmentPreview | { remoteImage: string } | null>(null);
   const [artifactLoading, setArtifactLoading] = useState(false);
   const [nativeBrowserOpen, setNativeBrowserOpen] = useState(false);
   const [browserWidth, setBrowserWidth] = useState(() => { try { return Number(window.localStorage.getItem("opencore.browser.width")) || 580; } catch { return 580; } });
@@ -474,7 +487,6 @@ export const AssistantConversation = memo(function AssistantConversation({
   const pendingToolRef = useRef<ToolApprovalRequest | null>(null);
   const composerMenuRef = useRef<HTMLDivElement>(null);
   const composerMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  const nativeFileDragRef = useRef(false);
   useEffect(() => {
     let dispose: (() => void) | undefined;
     if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
@@ -496,6 +508,10 @@ export const AssistantConversation = memo(function AssistantConversation({
     preview: (id) => {
       setArtifactLoading(true);
       void api.previewArtifact(id).then((item) => { setArtifactPreview(item); setNativeBrowserOpen(true); }).catch((error: unknown) => onNotice(`Could not preview file: ${String(error)}`)).finally(() => setArtifactLoading(false));
+    },
+    previewAttachment: (path) => {
+      setArtifactLoading(true);
+      void api.previewComposerAttachment(path).then((item) => { setArtifactPreview(item); setNativeBrowserOpen(true); }).catch((error: unknown) => onNotice(`Could not preview file: ${String(error)}`)).finally(() => setArtifactLoading(false));
     },
     download: (id) => { void api.downloadArtifact(id).then((path) => onNotice(`Downloaded to ${path}`)).catch((error: unknown) => onNotice(`Could not download file: ${String(error)}`)); },
     remoteImage: (url) => { setArtifactPreview({ remoteImage: url }); setNativeBrowserOpen(true); },
@@ -772,39 +788,13 @@ export const AssistantConversation = memo(function AssistantConversation({
     if (returnFocus && paths.length) await focusDraft();
   };
 
-  useEffect(() => {
-    if (!("__TAURI_INTERNALS__" in window)) return;
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-    const insideComposer = (x: number, y: number) => {
-      const rect = controlsRef.current?.getBoundingClientRect();
-      if (!rect) return false;
-      const scale = window.devicePixelRatio || 1;
-      const left = x / scale;
-      const top = y / scale;
-      return left >= rect.left && left <= rect.right && top >= rect.top && top <= rect.bottom;
-    };
-    void getCurrentWebview().onDragDropEvent(({ payload }) => {
-      if (payload.type === "leave") {
-        nativeFileDragRef.current = false;
-        setDraggingFiles(false);
-        return;
-      }
-      if (payload.type === "enter") nativeFileDragRef.current = payload.paths.length > 0;
-      if (payload.type === "enter" || payload.type === "over") {
-        setDraggingFiles(nativeFileDragRef.current && insideComposer(payload.position.x, payload.position.y));
-        return;
-      }
-      const accepted = nativeFileDragRef.current && insideComposer(payload.position.x, payload.position.y);
-      nativeFileDragRef.current = false;
-      setDraggingFiles(false);
-      if (accepted && payload.paths.length) {
-        addFilePaths(payload.paths);
-        void focusDraft();
-      }
-    }).then((stop) => { if (disposed) stop(); else unlisten = stop; }).catch(() => {});
-    return () => { disposed = true; unlisten?.(); };
-  }, []);
+  const attachPastedText = async (file: File, characterCount: number) => {
+    try {
+      const path = await api.stageComposerAttachment(file);
+      addFilePaths([path]);
+      onNotice(`Attached long paste as pasted-text.txt (${characterCount.toLocaleString()} characters).`);
+    } catch (error) { onNotice(`Could not attach pasted text: ${String(error)}`); }
+  };
 
   const removeQueued = (id: string) => {
     setQueueBoth(queueRef.current.filter((item) => item.id !== id));
@@ -835,7 +825,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     setDraft((current) => resolveSlashSkill(current, id));
     setSkillPickerOpen(false);
   };
-  return <main className={`assistant-thread-panel chat-mode ${nativeBrowserOpen ? "browser-open" : ""} ${browserSide === "left" ? "browser-left" : ""}`} style={nativeBrowserOpen ? { "--browser-width": `${browserWidth}px` } as React.CSSProperties : undefined}>
+  return <ArtifactActionsContext.Provider value={artifactActions}><main className={`assistant-thread-panel chat-mode ${nativeBrowserOpen ? "browser-open" : ""} ${browserSide === "left" ? "browser-left" : ""}`} style={nativeBrowserOpen ? { "--browser-width": `${browserWidth}px` } as React.CSSProperties : undefined}>
     <div className="timeline-heading compact">
       <div className="chat-title">
         <h2>{title || "New conversation"}</h2>
@@ -855,7 +845,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     {nativeBrowserOpen ? <NativeBrowserPanel onClose={() => setNativeBrowserOpen(false)} onNotice={onNotice} preview={artifactPreview} onDownload={artifactActions.download} width={browserWidth} onWidthChange={setBrowserWidth} side={browserSide} onSideChange={setBrowserSide} snapPx={browserSnap} onSnapChange={setBrowserSnap} obscured={controlOpen !== null} /> : null}
     {desktopOpen ? <DesktopPanel onClose={() => setDesktopOpen(false)} onNotice={onNotice} /> : null}
 
-    <ArtifactActionsContext.Provider value={artifactActions}><AssistantRuntimeProvider runtime={runtime}>
+    <AssistantRuntimeProvider runtime={runtime}>
       <ThreadPrimitive.Root className="aui-thread-root">
         <ThreadPrimitive.Viewport className="aui-thread-viewport">
           <ThreadPrimitive.Empty>
@@ -873,7 +863,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           </div>}
         </ThreadPrimitive.Viewport>
       </ThreadPrimitive.Root>
-    </AssistantRuntimeProvider></ArtifactActionsContext.Provider>
+    </AssistantRuntimeProvider>
 
     <div className="chat-composer-wrap">
       {matchingSkills.length > 0 ? <div className="composer-skill-menu" role="listbox" aria-label="Skills">{matchingSkills.map((skill) => <button type="button" role="option" aria-selected={selectedSkills.includes(skill.id)} key={skill.id} onClick={() => selectSkill(skill.id)}><strong>/{skill.id}</strong><small>{skill.description}</small></button>)}</div> : null}
@@ -896,23 +886,22 @@ export const AssistantConversation = memo(function AssistantConversation({
         className={`chat-composer ${draggingFiles ? "file-drop-active" : ""}`}
         ref={controlsRef}
         onDragEnter={(event) => {
-          if ("__TAURI_INTERNALS__" in window || !transferHasFiles(event.dataTransfer)) return;
+          if (!transferHasFiles(event.dataTransfer)) return;
           event.preventDefault();
           setDraggingFiles(true);
         }}
         onDragOver={(event) => {
-          if ("__TAURI_INTERNALS__" in window || !transferHasFiles(event.dataTransfer)) return;
+          if (!transferHasFiles(event.dataTransfer)) return;
           event.preventDefault();
           setDraggingFiles(true);
         }}
         onDragLeave={(event) => {
-          if ("__TAURI_INTERNALS__" in window) return;
           const next = event.relatedTarget;
           if (next instanceof Node && event.currentTarget.contains(next)) return;
           setDraggingFiles(false);
         }}
         onDrop={(event) => {
-          if ("__TAURI_INTERNALS__" in window || !transferHasFiles(event.dataTransfer)) return;
+          if (!transferHasFiles(event.dataTransfer)) return;
           event.preventDefault();
           setDraggingFiles(false);
           void attachTransferredFiles(event.dataTransfer, true);
@@ -946,6 +935,18 @@ export const AssistantConversation = memo(function AssistantConversation({
           }}
           onPaste={(event) => {
             const pastedFiles = filesFromTransfer(event.clipboardData);
+            const pastedText = event.clipboardData.getData("text/plain");
+            if (pastedText.length >= LARGE_TEXT_PASTE_THRESHOLD) {
+              const textFile = new File([pastedText], "pasted-text.txt", { type: "text/plain" });
+              if (textFile.size > MAX_PASTED_TEXT_ATTACHMENT_BYTES) {
+                onNotice("This paste exceeds the 32 MiB attachment limit, so it will stay as composer text.");
+                return;
+              }
+              event.preventDefault();
+              if (pastedFiles.length) void attachTransferredFiles(event.clipboardData);
+              void attachPastedText(textFile, pastedText.length);
+              return;
+            }
             if (!pastedFiles.length) return;
             if (!event.clipboardData.getData("text/plain")) event.preventDefault();
             void attachTransferredFiles(event.clipboardData);
@@ -993,5 +994,5 @@ export const AssistantConversation = memo(function AssistantConversation({
       <div className="modal-actions"><button onClick={() => void answerToolApproval(false)}>Deny</button><button className="primary" onClick={() => void answerToolApproval(true)}>Approve</button></div>
     </FloatingWindow></> : null}
     {artifactLoading ? <div className="artifact-loading" role="status">Opening preview…</div> : null}
-  </main>;
+  </main></ArtifactActionsContext.Provider>;
 });

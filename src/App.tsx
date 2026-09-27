@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import * as api from "./api";
 import opencoreLogo from "./assets/opencore-logo.png";
-import { AssistantConversation } from "./AssistantConversation";
+import { AssistantConversation, type ComposerDraft } from "./AssistantConversation";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
@@ -972,8 +972,10 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
       : `ECHO live model window capacity: ${maximum.toLocaleString()} tokens. The 3T figure is an unvalidated archive scaling goal, not measured archive capacity; it is not simultaneous model attention.`;
     return <div className="statusbar-context statusbar-echo-context" aria-label="ECHO context and archive" title={title}>
       <span className="statusbar-context-label">ECHO</span>
-      <span className="statusbar-context-reading">3T archive goal · {liveLabel}
-        {archived ? <small aria-label="ECHO archived messages">{archived} archived</small> : null}
+      <span className="statusbar-context-reading">
+        <span>Model context · {liveLabel}</span>
+        <small style={{ display: "block" }}>3T archive goal · unvalidated, not live context</small>
+        {archived ? <small style={{ display: "block" }} aria-label="ECHO archived messages">{archived} archived</small> : null}
       </span>
       <progress aria-label="ECHO model context usage" value={used} max={maximum} />
     </div>;
@@ -1041,6 +1043,12 @@ export default function App() {
   const [selectedProfile, setSelectedProfileState] = useState<RuntimeProfile>(readProfilePreference);
   const [selectedConversation, setSelectedConversation] = useState<string>();
   const [conversationEpoch, setConversationEpoch] = useState(0);
+  const composerDrafts = useRef(new Map<string, ComposerDraft>());
+  const draftKey = selectedConversation || `new-${conversationEpoch}`;
+  const rememberDraft = useCallback((draft: ComposerDraft) => {
+    if (draft.text || draft.files.length) composerDrafts.current.set(draftKey, draft);
+    else composerDrafts.current.delete(draftKey);
+  }, [draftKey]);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [liveGeneration, setLiveGeneration] = useState<{ conversationId: string; runId: string; content?: string; reasoning?: string; segments?: { kind: "thinking" | "text"; content: string }[]; phase?: string }>();
   const [busy, setBusy] = useState(false);
@@ -1282,6 +1290,8 @@ export default function App() {
       <AssistantConversation
         key={`chat-${conversationEpoch}`}
         conversationId={selectedConversation}
+        initialDraft={composerDrafts.current.get(draftKey)}
+        onDraftChange={rememberDraft}
         title={selected?.title || "New conversation"}
         client={selected?.client || "OpenCore"}
         entries={visibleTimeline}
@@ -1313,7 +1323,7 @@ export default function App() {
         compactAtTokens={appearance.compactAtTokens}
       />
       <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} className="conversation-statusbar" />
-      {notice && <div className="toast conversation-toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
+      {notice && <div className="toast conversation-toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
       {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
       {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
     </div></div>;
@@ -1326,6 +1336,6 @@ export default function App() {
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
-    {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
+    {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
   </div></div>;
 }

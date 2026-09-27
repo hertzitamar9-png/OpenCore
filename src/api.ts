@@ -1,5 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 export const speechStart = () => invoke<string>("speech_start");
+export interface SpeechStatus { installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; }
+const defaultSpeechStatus: SpeechStatus = { installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" };
+export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
+export const setSpeechEnabled = (enabled: boolean) => invoke<SpeechStatus>("speech_set_enabled", { enabled });
+export const setSpeechIdleMode = (mode: "cold" | "ram") => invoke<SpeechStatus>("speech_set_idle_mode", { mode });
 export interface EchoWorkingSet { available: boolean; liveTokens?: number; promptTokens?: number; windowTokens: number; modelSessionTokens?: number; modelActiveTokens?: number; modelContextTokens?: number; modelSessionActive?: boolean; contextMode?: string; autoCompactThreshold?: number | null; autoCompactEnabled?: boolean; compactions?: number; offloadedMessages?: number; active?: boolean; warmCache?: { budgetBytes: number; residentBytes: number; pages: number; hits: number; misses: number; evictions: number; oversized: number; hitRate: number }; harness?: { name: string; status: string; tasks: { id: number; desc: string; status: string }[]; reviews: number; toolCount: number; unverified: string[]; ledgerPath: string } }
 export async function echoWorkingSet(conversationId: string): Promise<EchoWorkingSet> {
   if (!desktop()) return { available: false, windowTokens: 262144 };
@@ -41,6 +46,7 @@ export async function uninstallModel(id: string): Promise<void> {
 export const cancelModelInstall = () => invoke<void>("cancel_model_install");
 
 export type ArtifactPreview = { id: string; name: string; mime: string; size: number; dataUrl: string; text: string | null };
+export type ComposerAttachmentPreview = { name: string; mime: string; size: number; dataUrl: string; text: string | null };
 export type BrowserStatus = { port: number; token: string; connected: boolean; extensionPath?: string };
 export type BrowserTab = { tabId: number; title: string; url: string; active: boolean };
 export type BrowserShot = { tabId: number; dataUrl: string; viewport: { width: number; height: number } };
@@ -80,10 +86,15 @@ export async function previewAttachmentImage(path: string): Promise<string> {
   return invoke<string>("preview_attachment_image", { path });
 }
 
+export async function previewComposerAttachment(path: string): Promise<ComposerAttachmentPreview> {
+  if (!desktop()) throw new Error("File preview requires the desktop application.");
+  return invoke<ComposerAttachmentPreview>("preview_composer_attachment", { path });
+}
+
 export async function stageComposerAttachment(file: File): Promise<string> {
   if (!desktop()) throw new Error("Pasting file attachments requires the OpenCore desktop app.");
   const maximumBytes = 32 * 1024 * 1024;
-  if (file.size > maximumBytes) throw new Error("Pasted files are limited to 32 MiB; drag larger files into the composer instead.");
+  if (file.size > maximumBytes) throw new Error("Pasted and dropped files are limited to 32 MiB. Use Attach files to select larger files directly.");
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   let binary = "";

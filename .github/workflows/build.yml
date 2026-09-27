@@ -39,11 +39,14 @@ jobs:
       - name: Verify bundled DuoCore runtime
         run: node scripts/verify-doucode-runtime.mjs
       - name: Test DuoCore context API
-        run: python scripts/test_duocore_server.py
+        run: |
+          python scripts/test_duocore_server.py
+          python scripts/test_duocore_sampling.py
       - name: Verify LFM native runtime and tool boundaries
         run: |
           node scripts/verify-lfm-runtime.mjs
           python scripts/test_lfm_protocol.py
+          python scripts/test_lfm_sampling.py
       - name: Test frontend
         run: npm test
       - name: Test Rust

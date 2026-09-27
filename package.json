@@ -1,12 +1,12 @@
 {
   "name": "opencore-control-center",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.30",
   "type": "module",
   "scripts": {
     "dev": "vite --port 1420",
     "build": "tsc && vite build",
-    "test": "vitest run && node --test tests/context-budget.test.mjs",
+    "test": "vitest run && node --test tests/context-budget.test.mjs tests/file-drop-windows.test.mjs",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build --bundles nsis"

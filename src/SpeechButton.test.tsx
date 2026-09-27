@@ -78,12 +78,14 @@ it('unmounting during GPU startup cancels and never inserts text', async () => {
   const transcript = vi.fn();
   const view = render(<SpeechButton onTranscript={transcript} onError={vi.fn()} />);
   fireEvent.click(screen.getByRole('button'));
-  await screen.findByRole('button', { name: 'Recording — click to stop' });
+  await screen.findByRole('button', { name: 'Loading Microphone… click again to cancel' });
+  await waitFor(() => expect(api.speechStart).toHaveBeenCalled());
   view.unmount();
   await act(async () => { ready('session'); });
   await waitFor(() => expect(api.speechCancel).toHaveBeenCalledWith('session'));
   expect(api.speechTranscribe).not.toHaveBeenCalled();
   expect(transcript).not.toHaveBeenCalled();
+  expect(stopTrack).toHaveBeenCalled();
 });
 it('reports a transcription failure and returns the GPU session to sleep', async () => {
   vi.mocked(api.speechTranscribe).mockRejectedValue(new Error('GPU is full'));

@@ -3,6 +3,7 @@ import argparse
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 from pathlib import Path
 import sys
 import threading
@@ -89,6 +90,10 @@ class Handler(BaseHTTPRequestHandler):
             if any(not isinstance(message, dict) or not isinstance(message.get('content', ''), str) for message in messages):
                 raise ValueError('LFM is text-only. Use the vision-capable OpenCore profile for images.')
             tools = payload.get('tools') or None
+            temperature = payload.get('temperature', 0.35)
+            if (isinstance(temperature, bool) or not isinstance(temperature, (int, float))
+                    or not math.isfinite(temperature) or not 0 <= temperature <= 2):
+                raise ValueError('temperature must be a finite number between 0 and 2')
             streaming = payload.get('stream') is True
             generation = 'lfm-' + uuid.uuid4().hex
             if streaming:
@@ -132,7 +137,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     preview = (lambda delta: self.send_event({'echo_preview': {'generation': generation,
                                'phase': 'drafting', 'delta': delta}})) if streaming else None
-                    message, usage, evidence = state['engine'].complete(messages, tools, limit, preview)
+                    message, usage, evidence = state['engine'].complete(
+                        messages, tools, limit, preview, temperature=temperature)
                     finish = 'tool_calls' if message.get('tool_calls') else evidence.get('finish_reason', 'stop')
                     if streaming:
                         delta = dict(message)

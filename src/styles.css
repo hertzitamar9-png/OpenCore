@@ -383,6 +383,7 @@ code, pre, .log-canvas { font-family: "Cascadia Code", Consolas, monospace; }
 .speech-control { position:relative; display:grid; place-items:center; }
 .speech-button { position:relative; }
 .speech-button.recording { background:#12352c; color:#839d95; box-shadow:0 0 0 1px #36b989; }
+.speech-button.starting { color:#a4f7cb; background:#12352c; box-shadow:0 0 0 1px #36b989, 0 0 14px #36b98955; }
 .speech-icon { position:relative; display:block; width:22px; height:22px; }
 .speech-level { position:absolute; inset:0; color:#53f0a2; filter:drop-shadow(0 0 3px #36dd9277); }
 .speech-level path:first-child { fill:currentColor; }
@@ -456,14 +457,16 @@ code, pre, .log-canvas { font-family: "Cascadia Code", Consolas, monospace; }
 .attachment-row { max-width: 980px; margin: 0 auto 8px; display: flex; flex-wrap: wrap; gap: 8px; }
 .attachment-preview { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 230px; min-height: 40px; padding: 6px 30px 6px 8px; border: 1px solid #35536a; border-radius: 10px; background: #142433; color: #d7e5ee; font-size: 11px; }
 .attachment-preview.has-image { width: 128px; min-height: 112px; flex-direction: column; align-items: stretch; padding: 5px; }
-.attachment-preview-image { display: block; width: 100%; height: 78px; min-height: 78px; padding: 0; border: 0; border-radius: 7px; background: #0b1924; overflow: hidden; cursor: zoom-in; }
-.attachment-preview-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.attachment-preview-open { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.attachment-preview-open > svg { flex: none; }
+.attachment-preview-open.has-image { display: flex; flex: none; flex-direction: column; align-items: stretch; width: 100%; height: 78px; min-height: 78px; padding: 0; border-radius: 7px; background: #0b1924; overflow: hidden; cursor: zoom-in; }
+.attachment-preview-open img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: cover; }
 .attachment-preview span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.attachment-preview.has-image span { padding-inline: 3px 23px; }
+.attachment-preview-open.has-image span { padding-inline: 3px 23px; }
 .attachment-remove { position: absolute; top: 4px; right: 4px; width: 21px; height: 21px; min-height: 21px; padding: 0; border: 1px solid #53687d; border-radius: 50%; background: #122637e6; color: #e7f3fb; }
 .message-attachments { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
 .message-attachments .attachment-preview.has-image { width: min(230px,100%); min-height: 182px; }
-.message-attachments .attachment-preview-image { height: 145px; }
+.message-attachments .attachment-preview-open.has-image { height: 145px; }
 .generated-artifact { display: grid; gap: 8px; max-width: 620px; margin-block: 8px; }
 .artifact-card { display: flex; align-items: center; gap: 12px; max-width: 620px; padding: 14px; border: 1px solid #365974; border-radius: 14px; background: #132b3d; overflow: hidden; }
 .artifact-card > svg { flex: none; color: #8fc9f2; }
@@ -810,6 +813,7 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 .queue-item button { min-height: 25px; height: 25px; padding: 0 7px; font-size: 8px; }
 .queue-item .queue-remove { width: 25px; padding: 0; border: 0; background: transparent; }
 .conversation-toast { bottom: 16px; }
+.toast .model-install-action { display: block; margin-top: 7px; padding: 4px 10px; border: 1px solid #496177; border-radius: 5px; color: var(--text); background: #21364c; }
 .overview-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
 .overview-grid > button { min-height: 116px; padding: 18px; justify-content: flex-start; text-align: left; border-radius: 12px; background: linear-gradient(145deg,#102334,#0b1823); }
 .overview-grid > button > svg { width: 28px; height: 28px; color: #61acff; }
@@ -1263,6 +1267,21 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .model-library-card>small { line-height:1.6; color:#a9c6da; flex:1; }
 .model-library-card footer { display:flex; gap:10px; }
 .model-library-card footer button { display:flex; align-items:center; justify-content:center; gap:7px; flex:1; padding:10px; border-radius:8px; }
+.whisper-controls { display:grid; gap:13px; padding:14px; border:1px solid #304858; border-radius:11px; background:#0b1821; }
+.whisper-enable-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.whisper-enable-row>div,.whisper-controls fieldset label span { display:grid; gap:5px; }
+.whisper-enable-row strong,.whisper-controls fieldset strong { font-size:12px; }
+.whisper-enable-row small,.whisper-controls fieldset small,.whisper-runtime-status { margin:0; color:#a9c6da; font-size:11px; line-height:1.5; }
+.whisper-toggle { display:flex; align-items:center; gap:8px; min-width:68px; justify-content:center; padding:6px 10px; border-radius:18px; color:#b7cbd8; }
+.whisper-toggle>span { width:9px; height:9px; border-radius:50%; background:#728494; }
+.whisper-toggle.on { color:#a4f7cb; border-color:#368568; }
+.whisper-toggle.on>span { background:#42daa0; box-shadow:0 0 10px #42daa088; }
+.whisper-controls fieldset { margin:0; padding:0; border:0; display:grid; gap:9px; }
+.whisper-controls fieldset legend { margin-bottom:8px; color:#a9c6da; font-size:11px; }
+.whisper-controls fieldset label { display:flex; align-items:flex-start; gap:9px; padding:9px; border:1px solid #253d4d; border-radius:8px; cursor:pointer; }
+.whisper-controls fieldset label:has(input:checked) { border-color:#4e91b5; background:#102638; }
+.whisper-controls fieldset input { margin-top:3px; accent-color:#56bbf5; }
+.whisper-runtime-status { padding-top:9px; border-top:1px solid #203646; }
 .model-license { color:#92afc4; font-size:11px; }
 .model-install-progress { padding:16px; margin:16px 0; border:1px solid #38556b; border-radius:12px; background:#102b37; }
 .model-install-progress>div { display:flex; justify-content:space-between; gap:12px; margin-bottom:12px; }

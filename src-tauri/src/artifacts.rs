@@ -23,6 +23,16 @@ pub(crate) struct ArtifactPreview {
     pub text: Option<String>,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct AttachmentPreview {
+    pub name: String,
+    pub mime: String,
+    pub size: usize,
+    pub data_url: String,
+    pub text: Option<String>,
+}
+
 pub(crate) fn tool_spec() -> serde_json::Value {
     json!({"type":"function","function":{
         "name":"create_artifact",
@@ -47,9 +57,16 @@ fn mime_for_name(name: &str) -> Option<&'static str> {
         "txt" => Some("text/plain"),
         "md" => Some("text/markdown"),
         "json" => Some("application/json"),
-        "js" => Some("text/javascript"),
+        "js" | "mjs" | "jsx" => Some("text/javascript"),
         "css" => Some("text/css"),
         "py" => Some("text/x-python"),
+        "rs" => Some("text/x-rust"),
+        "ts" | "tsx" => Some("text/typescript"),
+        "xml" => Some("application/xml"),
+        "csv" => Some("text/csv"),
+        "yaml" | "yml" => Some("text/yaml"),
+        "toml" => Some("text/toml"),
+        "log" => Some("text/plain"),
         _ => None,
     }
 }
@@ -140,6 +157,24 @@ pub(crate) fn preview_attached_image(path: &Path) -> Result<String, String> {
     Ok(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
 }
 
+pub(crate) fn preview_attached_file(path: &Path) -> Result<AttachmentPreview, String> {
+    let name = path.file_name().and_then(|value| value.to_str()).ok_or("File has no filename")?.to_string();
+    safe_name(&name)?;
+    let size = path.metadata().map_err(|error| error.to_string())?.len();
+    if size > MAX_ARTIFACT_BYTES as u64 { return Err("File previews are limited to 16 MiB".into()); }
+    let bytes = std::fs::read(path).map_err(|error| error.to_string())?;
+    let mime = match mime_for_name(&name) {
+        Some(mime) => mime,
+        None if std::str::from_utf8(&bytes).is_ok() => "text/plain",
+        None => return Err("In-app preview supports text, HTML, images, and PDF files".into()),
+    };
+    let text = if mime.starts_with("text/") || matches!(mime, "application/json" | "application/xml" | "image/svg+xml") {
+        Some(String::from_utf8(bytes.clone()).map_err(|_| "Text file is not valid UTF-8")?)
+    } else { None };
+    let data_url = format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(&bytes));
+    Ok(AttachmentPreview { name, mime: mime.into(), size: bytes.len(), data_url, text })
+}
+
 fn load(root: &Path, id: &str) -> Result<(ArtifactInfo, Vec<u8>), String> {
     let meta = std::fs::read(stored_path(root, id, "json")?).map_err(|_| "Artifact is unavailable")?;
     let info: ArtifactInfo = serde_json::from_slice(&meta).map_err(|_| "Artifact metadata is invalid")?;
@@ -226,6 +261,26 @@ mod tests {
         let saved = store_attached_image(&root.join("artifacts"), &image).unwrap();
         std::fs::remove_file(image).unwrap();
         assert_eq!(preview(&root.join("artifacts"), &saved.id).unwrap().data_url, draft);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn local_text_and_html_attachments_can_be_previewed_without_storing_artifacts() {
+        let root = std::env::temp_dir().join(format!("opencore-attachment-preview-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let text = root.join("notes.txt");
+        std::fs::write(&text, "keep this note").unwrap();
+        let text_preview = preview_attached_file(&text).unwrap();
+        assert_eq!(text_preview.name, "notes.txt");
+        assert_eq!(text_preview.mime, "text/plain");
+        assert_eq!(text_preview.text.as_deref(), Some("keep this note"));
+
+        let html = root.join("game.html");
+        std::fs::write(&html, "<h1>Preview</h1>").unwrap();
+        let html_preview = preview_attached_file(&html).unwrap();
+        assert_eq!(html_preview.mime, "text/html");
+        assert_eq!(html_preview.text.as_deref(), Some("<h1>Preview</h1>"));
+
         std::fs::remove_dir_all(root).unwrap();
     }
 }

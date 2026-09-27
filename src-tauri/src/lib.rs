@@ -3,6 +3,7 @@ mod artifacts;
 mod app_update;
 mod chat_stream;
 mod composer_attachments;
+mod conversation_database;
 mod speech;
 mod dev_tool;
 mod archive_view;
@@ -414,11 +415,12 @@ fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<model_cata
     model_catalog::list(core.runtime.install_root())
 }
 #[tauri::command]
-fn install_model(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<(), String> {
+fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id: String) -> Result<(), String> {
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before installing a model".into()); }
     model_catalog::begin(&id)?;
     let root = core.runtime.install_root().to_path_buf();
-    tauri::async_runtime::spawn(model_catalog::install(root, id));
+    let resource_dir = app.path().resource_dir().ok();
+    tauri::async_runtime::spawn(model_catalog::install(root, id, resource_dir));
     Ok(())
 }
 #[tauri::command]
@@ -429,6 +431,7 @@ async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Re
     if id == "whisper-large-v3" && core.speech.is_active().await {
         return Err("Finish the microphone session before uninstalling Whisper".into());
     }
+    if id == "whisper-large-v3" { core.speech.set_enabled(false).await?; }
     if id == "reflex-vision" { core.vision.stop(); }
     if id == "reflex-policy" { core.reflex.stop(); }
     let root = core.runtime.install_root().to_path_buf();
@@ -1406,7 +1409,7 @@ async fn send_chat_message(
     // Clipboard and temporary image files can disappear while the model starts.
     let (attachment_prompt, attachment_meta, attachment_images) = read_chat_attachments(&request.files, &artifact_root(&app)?)?;
     if !attachment_images.is_empty() && !core.runtime.install_root().join("vision/mmproj-BF16.gguf").is_file() {
-        return Err("The main model vision projector is missing. Install the matching Qwen3.5-4B projector before sending images.".into());
+        return Err("Image attachments need the matching vision projector. In Models, install ECHO 3T, which includes its projector, then retry the image.".into());
     }
     let token = CancellationToken::new();
     {
@@ -1595,10 +1598,11 @@ fn data_path(app: &tauri::App) -> Result<PathBuf, String> {
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?;
-    // This installation's original WAL is locked/corrupt. Keep it untouched and use the
-    // integrity-checked recovery copy when present; other installations retain the usual path.
+    // A recovery copy can be older than the active database. Keep both files intact and
+    // open whichever contains the most recent saved conversation.
+    let primary = root.join("control-center.sqlite3");
     let recovered = root.join("control-center.recovered.sqlite3");
-    Ok(if recovered.is_file() { recovered } else { root.join("control-center.sqlite3") })
+    conversation_database::select_database(&primary, &recovered)
 }
 
 fn artifact_root(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -1613,6 +1617,11 @@ fn preview_artifact(app: tauri::AppHandle, id: String) -> Result<artifacts::Arti
 #[tauri::command]
 fn preview_attachment_image(path: String) -> Result<String, String> {
     artifacts::preview_attached_image(Path::new(&path))
+}
+
+#[tauri::command]
+fn preview_composer_attachment(path: String) -> Result<artifacts::AttachmentPreview, String> {
+    artifacts::preview_attached_file(Path::new(&path))
 }
 
 #[tauri::command]
@@ -1746,6 +1755,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             app_update::auto_update,
+            speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
@@ -1797,6 +1807,7 @@ pub fn run() {
             ,configure_unsloth
             ,preview_artifact
             ,preview_attachment_image
+            ,preview_composer_attachment
             ,stage_composer_attachment
             ,download_artifact
             ,browser_bridge_status

@@ -46,8 +46,11 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
       stream.current = audio;
       if (!recordingRequested.current || !alive.current) { releaseTracks(); busy.current = false; if (alive.current) setPhase("idle"); return; }
       session.current = api.speechStart();
-      // Attach a rejection handler immediately while microphone capture continues.
-      void session.current.catch((error) => { if (alive.current) onError(String(error)); finish(true); });
+      const sessionId = await session.current;
+      if (!recordingRequested.current || !alive.current || cancelled.current) {
+        await api.speechCancel(sessionId);
+        releaseTracks(); busy.current = false; if (alive.current) setPhase("idle"); return;
+      }
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(type => MediaRecorder.isTypeSupported?.(type));
       const capture = new MediaRecorder(audio, mimeType ? { mimeType } : undefined);
       recorder.current = capture;
@@ -107,7 +110,7 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
       if (alive.current) { setPhase("idle"); onError(String(error)); }
     }
   };
-  const label = phase === "idle" ? "Whisper large-v3: click to dictate" : phase === "starting" ? "Opening microphone…" : phase === "recording" ? "Recording — click to stop" : "Transcribing — GPU unloads when finished";
+  const label = phase === "idle" ? "Whisper large-v3: click to dictate" : phase === "starting" ? "Loading Microphone… click again to cancel" : phase === "recording" ? "Recording — click to stop" : "Transcribing — Whisper releases GPU memory when finished";
   return <span className="speech-control"><button ref={button} type="button" className={`speech-button ${phase}`} title={label} aria-label={label} aria-pressed={phase === 'recording'}
     disabled={phase === "transcribing"}
     onPointerDown={(event) => { if (event.button === 0) event.preventDefault(); }}
@@ -117,5 +120,5 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
       {phase === 'recording' && <span className="speech-level" style={{ clipPath: `inset(${(1 - level) * 100}% 0 0 0)` }}><Mic size={22} /></span>}
     </span>
     {(phase === 'starting' || phase === 'transcribing') && <LoaderCircle size={12} className="speech-spinner" />}
-  </button>{phase !== 'idle' && <span className="speech-status" role="status">{phase === 'recording' ? level > .12 ? 'Listening' : 'Listening · quiet' : phase === 'starting' ? 'Opening mic' : 'Transcribing'}</span>}</span>;
+  </button>{phase !== 'idle' && <span className="speech-status" role="status">{phase === 'recording' ? level > .12 ? 'Listening' : 'Listening · quiet' : phase === 'starting' ? 'Loading Microphone' : 'Transcribing'}</span>}</span>;
 }

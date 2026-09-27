@@ -11,8 +11,12 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [library, setLibrary] = useState<api.ModelLibrary | null>(null);
   const [error, setError] = useState("");
   const [pending, setPending] = useState<string | null>(null);
+  const [speech, setSpeech] = useState<api.SpeechStatus>({ installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
   const refresh = useCallback(async () => {
-    try { setLibrary(await api.modelLibrary()); setError(""); }
+    try {
+      const [models, status] = await Promise.all([api.modelLibrary(), api.speechStatus()]);
+      setLibrary(models); setSpeech(status); setError("");
+    }
     catch (cause) { setError(String(cause)); }
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
@@ -31,6 +35,12 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     } catch (cause) { onNotice(String(cause)); }
     finally { setPending(null); }
   }
+  async function updateSpeech(changeSetting: () => Promise<api.SpeechStatus>) {
+    setPending("whisper-large-v3");
+    try { setSpeech(await changeSetting()); }
+    catch (cause) { onNotice(String(cause)); }
+    finally { setPending(null); }
+  }
   const progress = library?.progress;
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Your model library</h2><p>Choose what to install. Weights download from pinned Hugging Face revisions and are verified before use.</p></div>
@@ -41,7 +51,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
       <div><strong>{library?.models.find((model) => model.id === progress.modelId)?.label || progress.modelId}</strong><span>{progress.phase}</span></div>
-      {installing ? <><progress aria-label="Model download" value={progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{gb(progress.downloadedBytes)} / {gb(progress.totalBytes)} · {progress.currentFile || "Preparing download"}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
+      {installing ? <><progress aria-label="Model download" value={progress.phase === "preparing" ? undefined : progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{progress.currentFile === "Preparing speech runtime" ? "Setting up Whisper so the microphone works as soon as the model finishes downloading." : `${gb(progress.downloadedBytes)} / ${gb(progress.totalBytes)} · ${progress.currentFile || "Preparing download"}`}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
       {progress.error ? <p>{progress.error}</p> : null}
     </div> : null}
     <div className="model-library-grid">{library?.models.map((model) => <article key={model.id} className={`model-library-card ${model.id === selectedProfile ? "selected" : ""}`}>
@@ -49,6 +59,21 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       <p>{model.description}</p>
       <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.downloadBytes ? gb(model.downloadBytes) : "Already downloaded"}</dd></div></dl>
       <small>{model.note}</small>
+      {model.id === "whisper-large-v3" ? <div className="whisper-controls" aria-label="Whisper speech settings">
+        <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>Turn Whisper on or off. Off releases its RAM and GPU allocations.</small></div>
+          <button type="button" role="switch" aria-checked={speech.enabled} aria-label="Whisper speech to text" className={`whisper-toggle ${speech.enabled ? "on" : ""}`}
+            disabled={!model.installed || Boolean(pending)} onClick={() => void updateSpeech(() => api.setSpeechEnabled(!speech.enabled))}><span />{speech.enabled ? "On" : "Off"}</button>
+        </div>
+        <fieldset disabled={!model.installed || Boolean(pending)}><legend>When the microphone starts</legend>
+          <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "cold"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("cold"))} />
+            <span><strong>Load from disk each time</strong><small>Default · about {speech.coldStartMs == null ? "measured on first use" : `${(speech.coldStartMs / 1000).toFixed(2)} s on this PC`}</small></span>
+          </label>
+          <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "ram"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("ram"))} />
+            <span><strong>Keep sleeping in RAM</strong><small>Faster wake · about {speech.warmWakeMs == null ? "measured when enabled" : `${(speech.warmWakeMs / 1000).toFixed(2)} s on this PC`}; weights leave the GPU while asleep.</small></span>
+          </label>
+        </fieldset>
+        <p className="whisper-runtime-status" role="status">{!model.installed ? "Install Whisper to enable the microphone." : speech.phase === "warming" ? "Loading Whisper to measure its RAM wake time…" : speech.enabled ? speech.idleMode === "ram" ? "Whisper is on and sleeping in RAM." : "Whisper is on and will load from disk when you click the microphone." : "Whisper is off. Its model stays installed on disk."}</p>
+      </div> : null}
       <footer><button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
         {model.installed ? <Trash2 size={15} /> : <Download size={15} />}{pending === model.id ? "Working…" : model.installed ? "Uninstall" : "Install"}
       </button>{model.selectable ? <button className={selectedProfile === model.id ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>

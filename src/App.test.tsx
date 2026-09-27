@@ -17,6 +17,22 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("opens model installation from a failed send and preserves the unsent draft", async () => {
+    const send = vi.spyOn(api, "sendChatMessage").mockRejectedValue(new Error("DuoCore is not installed. Open Models and choose Install."));
+    try {
+      render(<App />);
+      const input = await screen.findByLabelText("Message OpenCore");
+      fireEvent.change(input, { target: { value: "Keep this question for DuoCore" } });
+      fireEvent.click(screen.getByTitle("Send"));
+      const openModels = await screen.findByRole("button", { name: "Open Models" });
+      expect(input).toHaveValue("Keep this question for DuoCore");
+      fireEvent.click(openModels);
+      await screen.findByRole("heading", { name: "Models", level: 1 });
+      fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
+      expect(await screen.findByLabelText("Message OpenCore")).toHaveValue("Keep this question for DuoCore");
+    } finally { send.mockRestore(); }
+  });
+
   it("returns keyboard focus to the draft after an attachment dialog is cancelled or fails", async () => {
     render(<App />);
     const input = await screen.findByLabelText('Message OpenCore');
@@ -79,6 +95,42 @@ describe("OpenCore", () => {
     expect(paste.defaultPrevented).toBe(false);
     expect(stageClipboardAttachment).not.toHaveBeenCalled();
   });
+  it("keeps a text paste below the large-paste threshold inline", async () => {
+    render(<App />);
+    const input = await screen.findByLabelText("Message OpenCore");
+    const content = "x".repeat(11_999);
+    const transfer = { files: [], items: [{ kind: "string", getAsFile: () => null }], types: ["text/plain"], getData: () => content };
+    const paste = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: transfer });
+    fireEvent(input, paste);
+
+    expect(paste.defaultPrevented).toBe(false);
+    expect(stageClipboardAttachment).not.toHaveBeenCalled();
+  });
+  it("turns a text paste at the large-paste threshold into a .txt attachment", async () => {
+    stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\pasted-text.txt");
+    render(<App />);
+    const input = await screen.findByLabelText("Message OpenCore");
+    const content = "x".repeat(12_000);
+    const transfer = { files: [], items: [{ kind: "string", getAsFile: () => null }], types: ["text/plain"], getData: () => content };
+    const paste = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: transfer });
+    fireEvent(input, paste);
+
+    expect(paste.defaultPrevented).toBe(true);
+    await screen.findByText("pasted-text.txt");
+    expect(stageClipboardAttachment).toHaveBeenCalledOnce();
+    const stagedFile = stageClipboardAttachment.mock.calls[0][0] as File;
+    expect(stagedFile.name).toBe("pasted-text.txt");
+    expect(stagedFile.type).toBe("text/plain");
+    const stagedText = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(stagedFile);
+    });
+    expect(stagedText).toBe(content);
+  });
   it("shows a drop target and attaches files dropped on the composer", async () => {
     stageClipboardAttachment.mockResolvedValueOnce("C:\\temp\\dropped-notes.txt");
     render(<App />);
@@ -97,6 +149,40 @@ describe("OpenCore", () => {
     expect(drop.defaultPrevented).toBe(true);
     await screen.findByText("dropped-notes.txt");
     expect(stageClipboardAttachment).toHaveBeenCalledOnce();
+  });
+
+  it("opens a selected text attachment in the in-app browser before sending", async () => {
+    const path = "C:\\Temp\\notes.txt";
+    const picker = vi.mocked(dialog.open).mockResolvedValueOnce(path);
+    const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "notes.txt", mime: "text/plain", size: 18, dataUrl: "data:text/plain;base64,cHJldmlldyB0ZXh0", text: "preview text" });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
+      await screen.findByText("notes.txt");
+      fireEvent.click(screen.getByRole("button", { name: "Preview notes.txt" }));
+      expect(await screen.findByRole("region", { name: "OpenCore Browser" })).toBeInTheDocument();
+      expect(await screen.findByText("preview text")).toBeInTheDocument();
+      expect(preview).toHaveBeenCalledWith(path);
+    } finally { picker.mockReset(); preview.mockRestore(); }
+  });
+
+  it("previews attached HTML in the in-app browser", async () => {
+    const path = "C:\\Temp\\game.html";
+    const picker = vi.mocked(dialog.open).mockResolvedValueOnce(path);
+    const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "game.html", mime: "text/html", size: 16, dataUrl: "data:text/html;base64,PGgxPlBsYXk8L2gxPg==", text: "<h1>Play</h1>" });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button", { name: "Add files or choose model" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
+      await screen.findByText("game.html");
+      fireEvent.click(screen.getByRole("button", { name: "Preview game.html" }));
+      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      await waitFor(() => expect(browser.querySelector("iframe")).toHaveAttribute("srcdoc", "<h1>Play</h1>"));
+      expect(preview).toHaveBeenCalledWith(path);
+    } finally { picker.mockReset(); preview.mockRestore(); }
   });
   it("streams answer and reasoning segments live in their actual order", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockImplementation(() => new Promise(() => {}));
@@ -401,6 +487,7 @@ describe("OpenCore", () => {
     const dataUrl = "data:image/png;base64,iVBORw0KGgo=";
     const picker = vi.mocked(dialog.open).mockResolvedValue(path);
     const preview = vi.spyOn(api, "previewAttachmentImage").mockResolvedValue(dataUrl);
+    const openPreview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "draft.png", mime: "image/png", size: 12, dataUrl, text: null });
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
@@ -408,9 +495,14 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
       expect(await screen.findByRole("img", { name: "draft.png" })).toHaveAttribute("src", dataUrl);
       expect(preview).toHaveBeenCalledWith(path);
+      fireEvent.click(screen.getByRole("button", { name: "Preview draft.png" }));
+      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      await waitFor(() => expect(browser.querySelector(".workspace-file-view img")).toHaveAttribute("src", dataUrl));
+      expect(openPreview).toHaveBeenCalledWith(path);
+      fireEvent.click(screen.getByRole("button", { name: "Close browser" }));
       fireEvent.click(screen.getByRole("button", { name: "Remove draft.png" }));
       expect(screen.queryByRole("img", { name: "draft.png" })).not.toBeInTheDocument();
-    } finally { picker.mockReset(); preview.mockRestore(); }
+    } finally { picker.mockReset(); preview.mockRestore(); openPreview.mockRestore(); }
   });
 
   it("shows project tool activity while the model is still working", async () => {
@@ -433,7 +525,7 @@ describe("OpenCore", () => {
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Read the project" } });
       fireEvent.click(screen.getByTitle("Send"));
-      expect(await screen.findByText("Read files", {}, { timeout: 4000 })).toBeInTheDocument();
+      expect(await screen.findByText("Read files", { selector: "summary span" }, { timeout: 4000 })).toBeInTheDocument();
       view.unmount();
     } finally { send.mockRestore(); history.mockRestore(); }
   });
@@ -455,21 +547,24 @@ describe("OpenCore", () => {
     ]);
     try {
       render(<App />);
-      await screen.findByText("Used 2 tools");
+      await screen.findAllByText("Used 1 tool");
       expect(screen.queryByText("I'll check which Windows apps are open.")).not.toBeInTheDocument();
       expect(Array.from(document.querySelector(".assistant-response")!.children).map((node) =>
         node.classList.contains("kind-thinking") ? "reasoning" : node.classList.contains("tool-group") ? "tools"
           : node.classList.contains("assistant-progress") ? "narration" : "other"
-      )).toEqual(["reasoning", "tools"]);
+      )).toEqual(["reasoning", "tools", "reasoning", "tools"]);
       const reasoning = document.querySelectorAll<HTMLDetailsElement>(".kind-thinking");
-      expect(reasoning).toHaveLength(1);
+      expect(reasoning).toHaveLength(2);
       expect(reasoning[0]).not.toHaveAttribute("open");
       expect(reasoning[0].textContent).toContain("Find open windows");
-      expect(reasoning[0].textContent).toContain("Use the browser");
-      expect(screen.getAllByText("Reasoned")).toHaveLength(1);
-      const group = document.querySelector<HTMLDetailsElement>(".tool-group")!;
-      expect(group).toHaveTextContent("Used 2 tools");
-      expect(group.querySelectorAll(".tool-chain li")).toHaveLength(2);
+      expect(reasoning[1].textContent).toContain("Use the browser");
+      expect(screen.getAllByText("Reasoned")).toHaveLength(2);
+      const groups = document.querySelectorAll<HTMLDetailsElement>(".tool-group");
+      expect(groups).toHaveLength(2);
+      for (const group of groups) {
+        expect(group).toHaveTextContent("Used 1 tool");
+        expect(group.querySelectorAll(".tool-chain li")).toHaveLength(1);
+      }
     } finally { snapshot.mockRestore(); history.mockRestore(); }
   });
 
@@ -501,7 +596,7 @@ describe("OpenCore", () => {
     expect(screen.queryByText("Telemetry")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Runtime & Logs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
-    expect(await screen.findByText("Ran a command")).toBeInTheDocument();
+    expect(await screen.findByText("Ran a command", { selector: "summary span" })).toBeInTheDocument();
     await waitFor(() => expect(document.querySelector(".aui-md pre code")).toBeInTheDocument());
     expect(screen.queryByText("You", { selector: ".aui-message-meta span" })).not.toBeInTheDocument();
   });

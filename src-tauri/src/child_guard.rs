@@ -4,6 +4,54 @@
 
 use std::process::Child;
 
+/// A runtime owns its own nested job so Stop ends its complete process tree,
+/// without ending speech or other services that share the app lifetime job.
+pub struct ProcessJob {
+    #[cfg(windows)]
+    handle: usize,
+}
+
+impl ProcessJob {
+    pub fn new(child: &Child) -> Result<Self, String> {
+        #[cfg(windows)]
+        unsafe {
+            use std::os::windows::io::AsRawHandle;
+            use windows::Win32::Foundation::{CloseHandle, HANDLE};
+            use windows::Win32::System::JobObjects::{
+                AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+                SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+            };
+            let job = CreateJobObjectW(None, windows::core::PCWSTR::null()).map_err(|e| e.to_string())?;
+            let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
+            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            let configured = SetInformationJobObject(job, JobObjectExtendedLimitInformation,
+                &limits as *const _ as *const core::ffi::c_void,
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32)
+                .and_then(|_| AssignProcessToJobObject(job, HANDLE(child.as_raw_handle())));
+            if let Err(error) = configured {
+                let _ = CloseHandle(job);
+                return Err(format!("Could not own the runtime process tree: {error}"));
+            }
+            Ok(Self { handle: job.0 as usize })
+        }
+        #[cfg(not(windows))]
+        {
+            let _ = child;
+            Ok(Self {})
+        }
+    }
+}
+
+impl Drop for ProcessJob {
+    fn drop(&mut self) {
+        #[cfg(windows)]
+        unsafe {
+            use windows::Win32::Foundation::{CloseHandle, HANDLE};
+            let _ = CloseHandle(HANDLE(self.handle as *mut core::ffi::c_void));
+        }
+    }
+}
+
 /// Reuse the signed app bundle's CUDA and VC dependencies for optional runtimes.
 /// Keep the user's global PATH unchanged and avoid another half-gigabyte copy.
 pub fn inference_dependencies(command: &mut std::process::Command, resources: Option<&std::path::Path>) {

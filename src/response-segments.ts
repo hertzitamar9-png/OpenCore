@@ -18,11 +18,9 @@ export function visibleEchoReceiptGroups(events: TimelineEntry[], active: boolea
 /**
  * Fold one response's activity into readable steps.
  *
- * Narration (the model's short "I'm opening the browser" sentences) separates
- * steps. Between two narrations, all reasoning reads as one "Reasoned" block and
- * all tool calls as one "Used N tools" group, so a long tool loop no longer shows
- * as a stack of identical rows. A run with tools but no narration gets one
- * sentence inferred from its first recorded call.
+ * Adjacent reasoning and tool events are grouped, while changes between
+ * reasoning, tools and answer text preserve their chronological position.
+ * Inferred step metadata is separate from model-written narration.
  */
 export function buildResponseSegments(events: TimelineEntry[]): ResponseSegment[] {
   const segments: ResponseSegment[] = [];

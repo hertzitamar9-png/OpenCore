@@ -95,6 +95,12 @@ fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
     model_receipt(root, model).is_file() && model.artifacts.iter().all(|id|
         data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))
 }
+pub fn require_installed(root: &Path, id: &str) -> Result<(), String> {
+    let data = manifest()?;
+    let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
+    if installed(root, model, &data) { Ok(()) }
+    else { Err(format!("{} is not installed. Open Models and choose Install.", model.label)) }
+}
 pub fn free_bytes(root: &Path) -> u64 {
     Disks::new_with_refreshed_list().list().iter().filter(|d| root.starts_with(d.mount_point()))
         .max_by_key(|d| d.mount_point().components().count()).map(|d| d.available_space()).unwrap_or(0)
@@ -165,11 +171,20 @@ fn hub_token() -> Option<String> {
         std::fs::read_to_string(path).ok().map(|t| t.trim().to_owned()).filter(|s| !s.is_empty())
     })
 }
-async fn install_inner(root: &Path, id: &str) -> Result<(), String> {
+async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Result<(), String> {
     let data = manifest()?;
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
     let files: Vec<_> = data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).collect();
-    reserve_space(root, files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum())?;
+    let whisper = id == "whisper-large-v3";
+    let runtime_reserve = if whisper && !root.join("speech/runtime.json").is_file() { 2_000_000_000 } else { 0 };
+    reserve_space(root, files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum::<u64>().saturating_add(runtime_reserve))?;
+    if whisper {
+        update("preparing", 0, "Preparing speech runtime", None);
+        let root = root.to_path_buf();
+        let setup_script = resources.map(|p|p.join("speech/prepare_runtime.py"));
+        let preparation = tauri::async_runtime::spawn_blocking(move || prepare_speech_runtime(&root, setup_script.as_deref()));
+        preparation.await.map_err(|e| e.to_string())??;
+    }
     let client = reqwest::Client::builder().connect_timeout(std::time::Duration::from_secs(30))
         .timeout(std::time::Duration::from_secs(7200)).build().map_err(|e| e.to_string())?;
     let mut completed = 0u64;
@@ -251,8 +266,39 @@ async fn install_inner(root: &Path, id: &str) -> Result<(), String> {
     update("complete", completed, "", None);
     Ok(())
 }
-pub async fn install(root: PathBuf, id: String) {
-    if let Err(error) = install_inner(&root, &id).await { update("failed", 0, "", Some(error)); }
+
+fn prepare_speech_runtime(root: &Path, bundled_script: Option<&Path>) -> Result<(), String> {
+    let development_script = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/speech/prepare_runtime.py");
+    let script = bundled_script.filter(|p|p.is_file()).unwrap_or(&development_script);
+    let python = root.join("speech/venv/Scripts/python.exe");
+    let mut command = if python.is_file() {
+        let mut cmd = std::process::Command::new(python);
+        cmd.arg(&script);
+        cmd
+    } else {
+        let mut cmd = std::process::Command::new("py");
+        cmd.args(["-3.12", script.to_str().ok_or("Invalid speech setup path")?]);
+        cmd
+    };
+    command.arg("--root").arg(root.join("speech"))
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+    #[cfg(windows)] {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x0800_0000);
+    }
+    let output = command.output().map_err(|e| format!("Could not start Python 3.12 for Whisper setup: {e}. Install Python 3.12 and retry."))?;
+    if !output.status.success() {
+        let detail = String::from_utf8_lossy(&output.stderr);
+        let detail = detail.trim();
+        return Err(if detail.is_empty() { "Whisper's speech runtime setup failed.".into() }
+            else { format!("Whisper's speech runtime setup failed: {}", detail.chars().rev().take(500).collect::<String>().chars().rev().collect::<String>()) });
+    }
+    Ok(())
+}
+pub async fn install(root: PathBuf, id: String, resources: Option<PathBuf>) {
+    if let Err(error) = install_inner(&root, &id, resources.as_deref()).await { update("failed", 0, "", Some(error)); }
 }
 pub fn uninstall(root: &Path, id: &str) -> Result<(), String> {
     let data = manifest()?;
@@ -283,6 +329,30 @@ fn uninstall_inner(root: &Path, id: &str, data: &Manifest) -> Result<(), String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    #[ignore = "Explicit opt-in only; verifies and registers already-present user-selected model files"]
+    async fn register_existing_requested_models() {
+        let root = PathBuf::from(std::env::var_os("OPENCORE_REGISTER_EXISTING_ROOT")
+            .expect("Set OPENCORE_REGISTER_EXISTING_ROOT explicitly"));
+        let ids = std::env::var("OPENCORE_REGISTER_EXISTING_IDS")
+            .expect("Set OPENCORE_REGISTER_EXISTING_IDS explicitly");
+        assert!(root.is_absolute() && root.is_dir());
+        let data = manifest().unwrap();
+        for id in ids.split(',') {
+            assert!(matches!(id, "doucode" | "fusioncore-kv"), "This check only registers the requested models");
+            let model = data.models.iter().find(|m| m.id == id).unwrap();
+            for file in data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)) {
+                let path = safe_path(&root, &file.path).unwrap();
+                assert_eq!(path.metadata().unwrap().len(), file.bytes, "No files will be downloaded by this check");
+                assert_eq!(digest(&path).unwrap(), file.sha256, "Existing model must match its exact pin");
+            }
+            begin(id).unwrap();
+            install_inner(&root, id, None).await.unwrap();
+            require_installed(&root, id).unwrap();
+            println!("Verified existing model installed: {}", model.label);
+        }
+    }
+
     #[test] fn catalog_is_pinned_and_paths_cannot_escape() {
         let catalog = manifest().unwrap();
         assert_eq!(catalog.models.iter().filter(|m| m.id.starts_with("dualcore") || m.id.starts_with("fusioncore")).count(), 4);

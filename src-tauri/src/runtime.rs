@@ -42,6 +42,8 @@ fn lfm_context(profile: &str) -> u64 {
 /// prompt instead of re-reading everything when an assistant turn is re-rendered.
 const CONTEXT_CHECKPOINT_ARGS: [&str; 4] = ["--ctx-checkpoints", "64", "--checkpoint-min-step", "256"];
 
+enum RuntimeChild { Model, Echo }
+
 struct RuntimeInner {
     profile: String,
     preferred_profile: String,
@@ -50,6 +52,8 @@ struct RuntimeInner {
     error: Option<String>,
     model: Option<Child>,
     echo: Option<Child>,
+    model_job: Option<crate::child_guard::ProcessJob>,
+    echo_job: Option<crate::child_guard::ProcessJob>,
     attached_backend: Option<String>,
     tokens_per_second: f64,
     prompt_tokens: u64,
@@ -101,6 +105,8 @@ impl RuntimeManager {
                 error: None,
                 model: None,
                 echo: None,
+                model_job: None,
+                echo_job: None,
                 attached_backend: None,
                 tokens_per_second: 0.0,
                 prompt_tokens: 0,
@@ -276,8 +282,8 @@ impl RuntimeManager {
         status.starts_with("HTTP/1.1 200 ") || status.starts_with("HTTP/1.0 200 ")
     }
 
-    fn wait_ready(&self, port: u16, path: &str, service: &str, generation: u64) -> Result<(), String> {
-        let timeout = if matches!(service, "DuoCore" | "DualCore" | "FusionCore") { 600 } else { 180 };
+    fn wait_ready(&self, port: u16, path: &str, service: &str, owner: RuntimeChild, generation: u64) -> Result<(), String> {
+        let timeout = if matches!(owner, RuntimeChild::Model) { 600 } else { 180 };
         let deadline = Instant::now() + Duration::from_secs(timeout);
         loop {
             if self.stop_generation.load(Ordering::SeqCst) != generation {
@@ -289,7 +295,7 @@ impl RuntimeManager {
             }
             {
                 let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
-                let child = if matches!(service, "model" | "DuoCore") { inner.model.as_mut() } else { inner.echo.as_mut() };
+                let child = match owner { RuntimeChild::Model => inner.model.as_mut(), RuntimeChild::Echo => inner.echo.as_mut() };
                 if let Some(child) = child {
                     if let Ok(Some(status)) = child.try_wait() {
                         return Err(format!("{service} exited before becoming ready ({status}). Check Runtime & Logs."));
@@ -382,6 +388,15 @@ impl RuntimeManager {
                 }
             });
         }
+    }
+
+    fn own_child(child: &mut Child) -> Result<crate::child_guard::ProcessJob, String> {
+        crate::child_guard::adopt(child);
+        crate::child_guard::ProcessJob::new(child).map_err(|error| {
+            let _ = child.kill();
+            let _ = child.wait();
+            error
+        })
     }
 
     pub fn python_path(&self) -> Option<PathBuf> {
@@ -549,17 +564,20 @@ impl RuntimeManager {
             Ok(child) => child,
             Err(error) => return self.fail_start("doucode", format!("Could not start the DuoCore runtime: {error}")),
         };
-        crate::child_guard::adopt(&child);
+        let job = match Self::own_child(&mut child) {
+            Ok(job) => job, Err(error) => return self.fail_start("doucode", error),
+        };
         Self::pipe_logs(self.store.clone(), "DuoCore", &mut child);
         {
             let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
             inner.model = Some(child);
+            inner.model_job = Some(job);
             inner.attached_backend = Some(format!("http://127.0.0.1:{service_port}"));
             inner.loading_phase = "Starting DuoCore service".into();
             inner.loading_step = 2;
         }
         let upstream = format!("http://127.0.0.1:{service_port}");
-        if let Err(error) = self.wait_ready(service_port, "/health", "DuoCore", generation) {
+        if let Err(error) = self.wait_ready(service_port, "/health", "DuoCore", RuntimeChild::Model, generation) {
             return self.fail_start("doucode", error);
         }
         if let Ok(mut inner) = self.inner.lock() {
@@ -569,7 +587,7 @@ impl RuntimeManager {
         if let Err(error) = self.start_echo(&upstream, Some(context_size)) {
             return self.fail_start("doucode", error);
         }
-        if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) {
+        if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
             return self.fail_start("doucode", error);
         }
         let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
@@ -612,6 +630,9 @@ impl RuntimeManager {
         if !supported_profile(profile) {
             return Err("Unknown model profile".into());
         }
+        if profile != "unsloth-echo" && !(profile == "doucode" && std::env::var_os("OPENCORE_DOUCODE_RELEASE").is_some()) {
+            crate::model_catalog::require_installed(&self.install_root, profile)?;
+        }
         self.stop_inner()?;
         let unsloth_upstream = if profile == "unsloth-echo" {
             Some(match attach_url {
@@ -650,7 +671,7 @@ impl RuntimeManager {
                 return self.fail_start(profile, error);
             }
             if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = "Starting ECHO".into(); inner.loading_step = 2; }
-            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) {
+            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
                 return self.fail_start(profile, error);
             }
             let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
@@ -733,11 +754,17 @@ impl RuntimeManager {
             Ok(child) => child,
             Err(error) => return self.fail_start(profile, format!("Could not start llama-server: {error}")),
         };
-        crate::child_guard::adopt(&child);
+        let job = match Self::own_child(&mut child) {
+            Ok(job) => job, Err(error) => return self.fail_start(profile, error),
+        };
         Self::pipe_logs(self.store.clone(), "runtime", &mut child);
-        self.inner.lock().map_err(|e| e.to_string())?.model = Some(child);
+        {
+            let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
+            inner.model = Some(child);
+            inner.model_job = Some(job);
+        }
 
-        if let Err(error) = self.wait_ready(self.backend_port, "/health", "model", generation) {
+        if let Err(error) = self.wait_ready(self.backend_port, "/health", "model", RuntimeChild::Model, generation) {
             return self.fail_start(profile, error);
         }
 
@@ -751,7 +778,7 @@ impl RuntimeManager {
             if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{}", self.backend_port), context_size) {
                 return self.fail_start(profile, error);
             }
-            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) {
+            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
                 return self.fail_start(profile, error);
             }
         }
@@ -793,9 +820,13 @@ impl RuntimeManager {
             command.args(["--context-size", &size.to_string()]);
         }
         let mut child = command.spawn().map_err(|e| format!("Could not start ECHO: {e}"))?;
-        crate::child_guard::adopt(&child);
+        let job = Self::own_child(&mut child)?;
         Self::pipe_logs(self.store.clone(), "echo", &mut child);
-        self.inner.lock().map_err(|e| e.to_string())?.echo = Some(child);
+        {
+            let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
+            inner.echo = Some(child);
+            inner.echo_job = Some(job);
+        }
         Ok(())
     }
 
@@ -825,21 +856,24 @@ impl RuntimeManager {
         let mut child = match command.spawn() {
             Ok(child) => child, Err(error) => return self.fail_start(profile, format!("Could not start LFM: {error}")),
         };
-        crate::child_guard::adopt(&child);
+        let job = match Self::own_child(&mut child) {
+            Ok(job) => job, Err(error) => return self.fail_start(profile, error),
+        };
         Self::pipe_logs(self.store.clone(), "LFM", &mut child);
         {
             let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
             inner.model = Some(child); inner.attached_backend = Some(format!("http://127.0.0.1:{LFM_DEFAULT_PORT}"));
+            inner.model_job = Some(job);
             inner.loading_phase = "Loading both LFM towers".into(); inner.loading_step = 1;
         }
         let service = if profile.starts_with("dualcore-") { "DualCore" } else { "FusionCore" };
-        if let Err(error) = self.wait_ready(LFM_DEFAULT_PORT, "/health", service, generation) { return self.fail_start(profile, error); }
+        if let Err(error) = self.wait_ready(LFM_DEFAULT_PORT, "/health", service, RuntimeChild::Model, generation) { return self.fail_start(profile, error); }
         if echo_profile(profile) {
             if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = "Starting ECHO archive".into(); inner.loading_step = 2; }
             if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{LFM_DEFAULT_PORT}"), Some(lfm_context(profile))) {
                 return self.fail_start(profile, error);
             }
-            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", generation) { return self.fail_start(profile, error); }
+            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) { return self.fail_start(profile, error); }
         }
         let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
         inner.status = "running".into(); inner.loading_phase = "Ready".into(); inner.loading_step = 3;
@@ -855,11 +889,13 @@ impl RuntimeManager {
 
     fn stop_inner(&self) -> Result<(), String> {
         let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
+        drop(inner.echo_job.take());
         if let Some(mut process) = inner.echo.take() {
             let _ = process.kill();
             let _ = process.wait();
             self.store.log("info", "echo", "Process stopped by OpenCore");
         }
+        drop(inner.model_job.take());
         if let Some(mut process) = inner.model.take() {
             let _ = process.kill();
             let _ = process.wait();
@@ -1170,6 +1206,157 @@ mod tests {
         assert!(manager.select_profile("not-a-profile").is_err());
         drop(manager);
         let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn missing_model_install_does_not_replace_a_running_profile() {
+        let root = std::env::temp_dir().join(format!("opencore-missing-install-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = Arc::new(EventStore::open(&root.join("events.sqlite3")).unwrap());
+        let mut manager = RuntimeManager::new(store);
+        manager.install_root = root.clone();
+        {
+            let mut inner = manager.inner.lock().unwrap();
+            inner.profile = "echo".into();
+            inner.status = "running".into();
+        }
+        let error = manager.start("doucode", None).err().expect("An uninstalled model must fail before loading");
+        assert!(error.contains("DuoCore is not installed"), "{error}");
+        assert!(error.contains("Open Models and choose Install"), "{error}");
+        let snapshot = manager.snapshot();
+        assert_eq!(snapshot.status, "running");
+        assert_eq!(snapshot.profile, "echo");
+        assert_eq!(snapshot.model_pid, None);
+        drop(manager);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn lfm_readiness_waits_for_its_model_child_without_an_echo_process() {
+        for service in ["DualCore", "FusionCore"] {
+            let root = std::env::temp_dir().join(format!("opencore-lfm-readiness-{}", uuid::Uuid::new_v4()));
+            std::fs::create_dir_all(&root).unwrap();
+            let store = Arc::new(EventStore::open(&root.join("events.sqlite3")).unwrap());
+            let manager = RuntimeManager::new(store);
+            let mut command = manager.command(&manager.python_path().expect("The runtime's Python is available"));
+            command.args(["-c", "import time; time.sleep(10)"]).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+            manager.inner.lock().unwrap().model = Some(command.spawn().unwrap());
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            let port = listener.local_addr().unwrap().port();
+            let server = std::thread::spawn(move || {
+                for status in ["503 Service Unavailable", "200 OK"] {
+                    let (mut stream, _) = listener.accept().unwrap();
+                    let mut request = [0u8; 512];
+                    let mut used = 0;
+                    while used < request.len() {
+                        let read = stream.read(&mut request[used..]).unwrap();
+                        if read == 0 { break; }
+                        used += read;
+                        if request[..used].windows(4).any(|part| part == b"\r\n\r\n") { break; }
+                    }
+                    assert!(request[..used].starts_with(b"GET /health HTTP/1.1\r\n"));
+                    write!(stream, "HTTP/1.1 {status}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").unwrap();
+                    stream.flush().unwrap();
+                }
+            });
+            manager.wait_ready(port, "/health", service, RuntimeChild::Model, 0).unwrap();
+            server.join().unwrap();
+            manager.stop().unwrap();
+            drop(manager);
+            std::fs::remove_dir_all(root).unwrap();
+        }
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires explicitly selected installed weights and an idle GPU; uses the actual desktop runtime start path"]
+    async fn installed_model_start_and_generation() {
+        let profile = std::env::var("OPENCORE_MODEL_RECOVERY_PROFILE").expect("Select the smoke-test profile explicitly");
+        assert!(matches!(profile.as_str(), "doucode" | "fusioncore-kv"));
+        let resources = PathBuf::from(std::env::var_os("OPENCORE_MODEL_RECOVERY_RESOURCES").expect("Select the installed resource directory explicitly"));
+        let output = PathBuf::from(std::env::var_os("OPENCORE_MODEL_RECOVERY_OUTPUT").expect("Select a new evidence output file explicitly"));
+        assert!(!output.exists(), "Do not overwrite an earlier smoke-test result");
+        let root = std::env::temp_dir().join(format!("opencore-model-recovery-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = Arc::new(EventStore::open(&root.join("events.sqlite3")).unwrap());
+        let manager = RuntimeManager::new_with_resources(store.clone(), Some(resources.clone()));
+        let started = manager.start(&profile, None).unwrap();
+        assert_eq!(started.status, "running");
+        assert_eq!(started.profile, profile);
+        let client = reqwest::Client::builder().timeout(Duration::from_secs(180)).build().unwrap();
+        let endpoint = manager.upstream_url();
+        let models: serde_json::Value = client.get(format!("{endpoint}/v1/models")).send().await.unwrap()
+            .error_for_status().unwrap().json().await.unwrap();
+        let model = models["data"][0]["id"].as_str().unwrap();
+        let response: serde_json::Value = client.post(format!("{endpoint}/v1/chat/completions"))
+            .json(&serde_json::json!({ "model": model, "conversation_id": format!("model-recovery-{}", uuid::Uuid::new_v4()),
+                "messages": [{"role":"user","content":"What is 2 + 2? Answer with the number only."}],
+                "temperature":0, "max_tokens":128, "stream":false }))
+            .send().await.unwrap().error_for_status().unwrap().json().await.unwrap();
+        let answer = response["choices"][0]["message"]["content"].as_str().unwrap();
+        assert!(!answer.trim().is_empty(), "The installed model must produce an actual response");
+        manager.stop().unwrap();
+        let stopped = manager.snapshot();
+        assert_eq!(stopped.status, "stopped");
+        assert_eq!(stopped.model_pid, None);
+        assert_eq!(stopped.echo_pid, None);
+        let ports = if profile == "doucode" { vec![8840, 8841, 8842, 8813] } else { vec![8850] };
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while ports.iter().any(|port| RuntimeManager::port_open(*port)) && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(ports.iter().all(|port| !RuntimeManager::port_open(*port)),
+            "The complete model backend tree must stop while the app remains alive");
+        std::fs::write(&output, serde_json::to_vec_pretty(&serde_json::json!({
+            "status":"actual_installed_model_started_generated_and_stopped", "profile":profile,
+            "resources":resources, "started":started, "models":models, "response":response,
+            "stopped":stopped, "scope":"Native desktop runtime loading and API generation only; not a benchmark score or full UI/harness verification"
+        })).unwrap()).unwrap();
+        println!("Installed profile generated and unloaded; evidence: {}", output.display());
+        drop(manager);
+        // The pipe readers finish after the owned process exits and release their store clones.
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while Arc::strong_count(&store) > 1 && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(Arc::strong_count(&store), 1, "Runtime log readers must exit after unloading");
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn stop_releases_backends_spawned_by_the_model_service() {
+        let root = std::env::temp_dir().join(format!("opencore-owned-tree-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = Arc::new(EventStore::open(&root.join("events.sqlite3")).unwrap());
+        let manager = RuntimeManager::new(store);
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        drop(listener);
+        let nested_code = format!("import socket,time; s=socket.socket(); s.bind(('127.0.0.1',{port})); s.listen(); time.sleep(60)");
+        let parent_code = format!("import subprocess,sys,time; subprocess.Popen([sys.executable,'-c',{nested_code:?}]); time.sleep(60)");
+        let mut command = manager.command(&manager.python_path().unwrap());
+        command.args(["-c", &parent_code]).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+        let mut child = command.spawn().unwrap();
+        let job = RuntimeManager::own_child(&mut child).unwrap();
+        {
+            let mut inner = manager.inner.lock().unwrap();
+            inner.model = Some(child);
+            inner.model_job = Some(job);
+        }
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while !RuntimeManager::port_open(port) && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(RuntimeManager::port_open(port), "The nested backend must start before testing Stop");
+        manager.stop().unwrap();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while RuntimeManager::port_open(port) && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(!RuntimeManager::port_open(port), "Stop must release the nested backend while the app remains alive");
+        drop(manager);
+        std::fs::remove_dir_all(root).unwrap();
     }
 
 }
