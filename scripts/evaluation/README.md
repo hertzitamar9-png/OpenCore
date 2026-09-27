@@ -92,6 +92,16 @@ a fresh conversation for each benchmark sample. Full model qualification,
 training and TwinCore benchmark scores remain pending. Finish all requested
 HumanEval profiles before starting their full public LiveBench captures.
 
+The full HumanEval run requests 4,096 output tokens. A 1,024-token TwinCore
+resource probe cannot be used for that capture: native admission reserves the
+prompt and the entire requested response. Prepare qualification and training
+with `--context 8192`, then measure its actual GPU fit before loading the server.
+Stored-template rendering of all 164 pinned prompts puts the largest UTF-8
+prefix plus a 128-token special-token margin and the output budget at 5,929;
+actual token admission is still checked by both native tokenizers. Conservative
+Q6 accounting at 8K requires 11,515,102,752 GPU bytes. This is a load estimate,
+not proof of fit, measured long-context quality, or million-token capacity.
+
 ```sh
 .venv-evaluation/bin/python scripts/evaluation/benchmark_capture.py --url http://127.0.0.1:18610 --model 'FusionCore KV' --inputs scripts/evaluation/runs/humaneval/humaneval-inputs.json --identity model-identity.json --output scripts/evaluation/runs/fusioncore-kv/captures --max-tokens 4096
 ```
