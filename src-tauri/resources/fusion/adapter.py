@@ -27,6 +27,12 @@ def tensor_fingerprint(bridge):
     return _tensor_map_fingerprint(bridge.state_dict())
 
 
+def _source_digests():
+    return {name: file_digest(Path(__file__).with_name(name)) for name in
+            ('bridge.py', 'alignment.py', 'native.py', 'native_library.py', 'q6_identity.py',
+             'canonical.py', 'chat_template.py', 'training.py', 'adapter.py', 'qualification.py', 'checkpoints.py')}
+
+
 def make_binding(bridge, checkpoints, native_identity):
     if checkpoints != CHECKPOINTS:
         raise ValueError('TwinCore checkpoint identity must match both complete Q6 files')
@@ -37,15 +43,13 @@ def make_binding(bridge, checkpoints, native_identity):
     })
     return {'schema': 1, 'checkpoints': json.loads(canonical(checkpoints)),
             'native': json.loads(canonical(native_identity)), 'alignment_sha256': alignment,
-            'coupling_sources': {name: file_digest(Path(__file__).with_name(name)) for name in
-                ('bridge.py', 'alignment.py', 'native.py', 'native_library.py', 'q6_identity.py',
-                 'canonical.py', 'chat_template.py', 'training.py', 'adapter.py', 'qualification.py')},
+            'coupling_sources': _source_digests(),
             'geometry': {'nanbeige_hidden': bridge.nanbeige_hidden, 'k2_hidden': bridge.k2_hidden,
                          'nanbeige_vocab': bridge.alignment.nanbeige_vocab_size,
                          'k2_vocab': bridge.alignment.k2_vocab_size, 'rank': bridge.rank}}
 
 
-def _validate_training(training, final_fingerprint):
+def _validate_training(training, final_fingerprint, *, checkpoint=False):
     validation = training.get('validation', {})
     if (not isinstance(training.get('steps'), int) or training['steps'] < 1
             or not isinstance(training.get('tokens'), int) or training['tokens'] < 1
@@ -56,6 +60,9 @@ def _validate_training(training, final_fingerprint):
             or any(not isinstance(validation.get(key), (float, int)) or not math.isfinite(validation[key])
                    or validation[key] < 0 for key in ('loss', 'baseline_loss'))):
         raise ValueError('Adapter requires completed training and held-out validation evidence')
+    if not checkpoint and (training.get('validation_is_current', True) is not True
+            or training.get('validation_step', training['steps']) != training['steps']):
+        raise ValueError('Completed adapter requires current held-out validation')
     if training['initial_bridge_sha256'] == final_fingerprint:
         raise ValueError('An initialized or untrained adapter cannot be saved as trained')
 
@@ -84,10 +91,12 @@ def _pack_optimizer(optimizer):
     return tensors, {'algorithm': 'AdamW', 'entries': entries, 'param_groups': state['param_groups']}
 
 
-def save_adapter(destination: Path, bridge, binding, training, *, optimizer=None):
+def save_adapter(destination: Path, bridge, binding, training, *, optimizer=None, checkpoint=False):
+    if type(checkpoint) is not bool or checkpoint and optimizer is None:
+        raise ValueError('Training checkpoints require an optimizer resume state')
     _validate_binding(bridge, binding)
     fingerprint = tensor_fingerprint(bridge)
-    _validate_training(training, fingerprint)
+    _validate_training(training, fingerprint, checkpoint=checkpoint)
     tensors = {name: value.detach().cpu().contiguous().clone() for name, value in bridge.state_dict().items()}
     if any(value.is_floating_point() and not torch.isfinite(value).all() for value in tensors.values()):
         raise ValueError('Cannot save nonfinite adapter tensors')
@@ -110,6 +119,7 @@ def save_adapter(destination: Path, bridge, binding, training, *, optimizer=None
     destination.mkdir(exist_ok=False)
     save_file(tensors, str(destination / 'bridge.safetensors'))
     receipt = {'schema': 1, 'binding': binding, 'training': training, 'tensor_fingerprint': fingerprint,
+               'checkpoint': checkpoint,
                'files': {'bridge.safetensors': file_digest(destination / 'bridge.safetensors')},
                'scope': 'Frozen native Q6 adapter training; validation loss alone is not coding quality'}
     if optimizer is not None:
@@ -174,22 +184,66 @@ def _restore_optimizer(receipt, tensors, optimizer):
     return {'state': states, 'param_groups': incoming}
 
 
-def load_adapter(destination: Path, bridge, expected_binding, *, optimizer=None):
+def _read_adapter_receipt(destination: Path, expected_binding, *, allow_checkpoint=False):
     destination = Path(destination)
     receipt = json.loads((destination / 'receipt.json').read_text(encoding='utf-8'))
     digest = receipt.pop('receipt_sha256', None)
     if receipt.get('schema') != 1 or hashlib.sha256(canonical(receipt)).hexdigest() != digest:
         raise ValueError('Adapter receipt integrity mismatch')
     receipt['receipt_sha256'] = digest
-    _validate_binding(bridge, expected_binding)
+    checkpoint = receipt.get('checkpoint', False)
+    if type(checkpoint) is not bool:
+        raise ValueError('Adapter checkpoint identity mismatch')
+    if checkpoint and (not allow_checkpoint or 'optimizer.safetensors' not in receipt.get('files', {})):
+        raise ValueError('A training checkpoint is resume-only; inference requires completed training')
     if canonical(receipt.get('binding')) != canonical(expected_binding):
         raise ValueError('Adapter runtime/checkpoint/alignment identity mismatch')
-    _validate_training(receipt['training'], receipt['tensor_fingerprint'])
+    _validate_training(receipt['training'], receipt['tensor_fingerprint'], checkpoint=checkpoint)
     for name, expected in receipt['files'].items():
         if name not in ('bridge.safetensors', 'optimizer.safetensors') or file_digest(destination / name) != expected:
             raise ValueError('Adapter tensor integrity mismatch')
     if 'bridge.safetensors' not in receipt['files']:
         raise ValueError('Adapter weight integrity binding is missing')
+    return receipt
+
+
+def inspect_adapter(destination: Path, expected_binding):
+    """Validate and load only small CPU adapter tensors before native allocation."""
+    from .alignment import ExactSurfaceAlignment
+    from .bridge import CouplingBridge
+    if (not isinstance(expected_binding, dict) or expected_binding.get('schema') != 1
+            or expected_binding.get('checkpoints') != CHECKPOINTS):
+        raise ValueError('TwinCore checkpoint identity mismatch')
+    if expected_binding.get('coupling_sources') != _source_digests():
+        raise ValueError('TwinCore coupling source identity mismatch')
+    destination = Path(destination)
+    _read_adapter_receipt(destination, expected_binding)
+    weights = load_file(str(destination / 'bridge.safetensors'), device='cpu')
+    geometry = expected_binding.get('geometry', {})
+    names = ('nanbeige_hidden', 'k2_hidden', 'nanbeige_vocab', 'k2_vocab', 'rank')
+    if set(geometry) != set(names) or any(type(geometry[name]) is not int or geometry[name] < 1 for name in names):
+        raise ValueError('Adapter tensor geometry identity mismatch')
+    n_ids, k_ids = weights.get('alignment.nanbeige_ids'), weights.get('alignment.k2_ids')
+    if (n_ids is None or k_ids is None or n_ids.dtype != torch.int64 or k_ids.dtype != torch.int64
+            or n_ids.ndim != 1 or n_ids.shape != k_ids.shape or n_ids.numel() < 1
+            or n_ids.min() < 0 or n_ids.max() >= geometry['nanbeige_vocab']
+            or k_ids.min() < 0 or k_ids.max() >= geometry['k2_vocab']):
+        raise ValueError('Adapter alignment geometry identity mismatch')
+    # Preserve caller RNG state; the verified learned tensors replace these
+    # temporary CPU initializers before either frozen native model is loaded.
+    with torch.random.fork_rng(devices=[]):
+        bridge = CouplingBridge(ExactSurfaceAlignment(n_ids.tolist(), k_ids.tolist(),
+                                    geometry['nanbeige_vocab'], geometry['k2_vocab']),
+                                nanbeige_hidden=geometry['nanbeige_hidden'],
+                                k2_hidden=geometry['k2_hidden'], rank=geometry['rank'])
+    receipt = load_adapter(destination, bridge, expected_binding)
+    return bridge, receipt
+
+
+def load_adapter(destination: Path, bridge, expected_binding, *, optimizer=None):
+    destination = Path(destination)
+    receipt = _read_adapter_receipt(destination, expected_binding, allow_checkpoint=optimizer is not None)
+    _validate_binding(bridge, expected_binding)
     weights = load_file(str(destination / 'bridge.safetensors'), device='cpu')
     existing = bridge.state_dict()
     if set(weights) != set(existing) or any(weights[name].shape != value.shape or weights[name].dtype != value.dtype

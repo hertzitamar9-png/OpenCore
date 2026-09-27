@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import threading
 
-from .q6_identity import file_digest
+from .q6_identity import canonical, file_digest
 from .q6_preflight import preflight
 from .qualification import execution_configuration, validate_qualification
 
@@ -18,15 +18,23 @@ class TwinCoreEngine:
         # Reject a missing training artifact before allocating any model.
         if not (Path(adapter) / 'receipt.json').is_file():
             raise ValueError('A trained, hash-bound TwinCore adapter is required')
-        from .adapter import load_adapter
+        from .adapter import inspect_adapter
         from .generation import SingleStreamDecoder
+        from .native import verify_build
         from .q6_pair import open_pair
+        expected_binding = report.get('binding')
+        if (not isinstance(expected_binding, dict)
+                or canonical(expected_binding.get('native')) != canonical(verify_build(dll, runtime))):
+            raise ValueError('TwinCore native runtime identity mismatch')
+        trained_bridge, receipt = inspect_adapter(Path(adapter), expected_binding)
         self.pair = open_pair(nanbeige, k2, dll, runtime, context=context_tokens,
                               rank=rank, seed=seed, recompute=recompute)
         try:
             validate_qualification(report, self.pair.configuration,
                                    self.pair.resource_plan['gpu']['uuid'], binding=self.pair.binding)
-            receipt = load_adapter(Path(adapter), self.pair.bridge, self.pair.binding)
+            # The actual full models still verify geometry/alignment and their
+            # own content against the qualification before adopting this state.
+            self.pair.bridge = trained_bridge
             self.decoder = SingleStreamDecoder(self.pair.native, self.pair.bridge)
             self.context_tokens = context_tokens
             self.model_id = 'opencore-twincore-q6-' + ('echo' if recompute else 'kv')

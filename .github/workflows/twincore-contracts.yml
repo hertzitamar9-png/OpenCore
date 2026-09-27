@@ -6,6 +6,7 @@ on:
     paths:
       - 'src-tauri/resources/fusion/**'
       - 'scripts/fusion/**'
+      - 'scripts/publish-model-packages.py'
       - 'tests/fusion/**'
       - '.gitattributes'
       - '.github/workflows/twincore-contracts.yml'
@@ -13,6 +14,7 @@ on:
     paths:
       - 'src-tauri/resources/fusion/**'
       - 'scripts/fusion/**'
+      - 'scripts/publish-model-packages.py'
       - 'tests/fusion/**'
       - '.gitattributes'
       - '.github/workflows/twincore-contracts.yml'

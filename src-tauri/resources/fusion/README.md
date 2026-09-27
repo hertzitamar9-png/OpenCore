@@ -29,6 +29,9 @@ The server requires a trained, hash-bound adapter and a resource qualification
 for the requested GPU and execution configuration. There is no untrained or NF4
 fallback. An initialized adapter, changed checkpoint/runtime/alignment, incomplete
 AdamW state, or substituted numerical DLL is rejected.
+The server checks the saved receipt, tensors, alignment, geometry and current
+coupling sources on CPU before allocating either full checkpoint. A damaged,
+stale or resume-only training state cannot trigger a full model load.
 
 ## Resource and precision accounting
 
@@ -76,6 +79,19 @@ gradients through the frozen head projection are exact for its dequantized linea
 operation. This is **truncated feedback training**, not end-to-end base training.
 Held-out token loss cannot establish general coding quality.
 
+Training saves a resume-only state every eight completed examples by default
+(`--checkpoint-every`) and after the last example. Each state binds the adapter,
+AdamW moments, exact sample order and shuffle RNG cursor. The store keeps the
+last two successfully saved states; a failed write leaves the previous pointer
+usable. Deletion is limited to verified directories created by that store, and
+the 200 GB free-space reserve applies to each save.
+
+To recover, pass either a saved step directory or its parent checkpoint store
+to `--resume`, and use a fresh `--output` name. The corpus, epoch count, seed and
+target budget must match the checkpoint. Completed examples are not repeated.
+The resumed run must finish a new held-out evaluation before saving an adapter
+that inference may load; an old validation snapshot cannot qualify that adapter.
+
 The trainer checks every complete answer and both native prefix sequences before
 decoder or optimizer work. Its default target budget is 512 tokens; smaller
 budgets that would truncate the corpus are rejected. SentencePiece's standalone
@@ -98,3 +114,12 @@ instantaneous kernel preemption. Current decoding is deterministic (`temperature
 The Transformers checkpoint manifest/reference remains for architecture tests.
 It is not used by the Q6 server and does not make its optional dependency tests
 evidence of actual full-model GPU qualification.
+
+## Source packaging
+
+`scripts/publish-model-packages.py` includes the native headers and CMake file
+in its deterministic source inventory. Importing that inventory performs no
+remote operation; publishing happens only through the script's entry point.
+Generated build/runtime directories and weight tensors remain excluded. The
+experimental TwinCore HF package remains source only until trained artifacts
+and the runtime/evaluation gates are qualified.
