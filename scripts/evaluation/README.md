@@ -102,6 +102,27 @@ actual token admission is still checked by both native tokenizers. Conservative
 Q6 accounting at 8K requires 11,515,102,752 GPU bytes. This is a load estimate,
 not proof of fit, measured long-context quality, or million-token capacity.
 
+An actual vocabulary-only CPU measurement subsequently checked all 164
+HumanEval and 1,000 pinned LiveBench prefixes with each checkpoint's native
+tokenizer, its stored template, and native BOS/EOS pieces. Both complete GGUF
+file hashes and the numerical library matched their pins. With 4,096 response
+tokens reserved, every prefix fits the prepared 8K request budget:
+
+| Benchmark | Nanbeige maximum prefix / reserved total | K2 maximum prefix / reserved total |
+| --- | ---: | ---: |
+| HumanEval (164) | 497 / 4,593 | 429 / 4,525 |
+| LiveBench (1,000) | 2,922 / 7,018 | 2,547 / 6,643 |
+
+The native loader confirmed it skipped weight tensors; both vocabulary handles
+were released, and no inference context or tensor framework was created.
+Receipt: `twincore-native-benchmark-prefix-capacity-20260927-r2.json`, SHA-256
+`1e8fb7efc8c935cec369ce1070ba534cb7280c3fe00333c00dca57cec7c61b12`.
+This proves prefix token counts only. Actual GPU fit, generation admission,
+trained quality and larger context capacities remain separate gates.
+
+KV and ECHO also have separate qualification/training preparations. ECHO uses
+`--recompute` in both stages; a KV qualification is not substituted for it.
+
 The prepared TwinCore corpus comes from the existing local coding corpus,
 whose builder names [Magicoder-Evol-Instruct-110K](https://huggingface.co/datasets/ise-uiuc/Magicoder-Evol-Instruct-110K)
 and [CodeFeedback-Filtered-Instruction](https://huggingface.co/datasets/m-a-p/CodeFeedback-Filtered-Instruction).
