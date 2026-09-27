@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sys
-from threading import Thread
+from threading import Event, Thread
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -125,3 +125,90 @@ def test_generation_error_releases_lock_and_does_not_return_partial_success(serv
     engine.generate = original
     with post(url, "/v1/chat/completions", payload) as response:
         assert json.load(response)["choices"][0]["message"]["content"] == "Hello world"
+
+
+def test_first_text_delta_arrives_before_generation_finishes(server):
+    url, engine = server
+    release = Event()
+
+    def held(_prepared, _max):
+        yield 'first'
+        assert release.wait(2), 'Test did not release the second decoding step'
+        yield ' second'
+
+    engine.generate = held
+    try:
+        with post(url, '/v1/chat/completions', {'messages': [{'role': 'user', 'content': 'hello'}],
+                                                'max_tokens': 2, 'stream': True}) as response:
+            line = response.readline().decode()
+            assert json.loads(line.removeprefix('data: '))['choices'][0]['delta']['content'] == 'first'
+            assert not release.is_set()
+            release.set()
+            assert '[DONE]' in response.read().decode()
+    finally:
+        release.set()
+
+
+def test_native_unicode_token_usage_counts_tokens_and_eos_instead_of_text_chunks(server):
+    from fusion.generation import GenerationEvent
+    url, engine = server
+    engine.generate = lambda *_: iter([GenerationEvent('', 1), GenerationEvent('א', 2), GenerationEvent('', 3, 'stop')])
+    with post(url, '/v1/chat/completions', {'messages': [{'role': 'user', 'content': 'hello'}], 'max_tokens': 4}) as response:
+        result = json.load(response)
+    assert result['choices'][0]['message']['content'] == 'א'
+    assert result['usage']['completion_tokens'] == 3
+    assert result['choices'][0]['finish_reason'] == 'stop'
+
+
+TOOLS = [{'type': 'function', 'function': {'name': 'dev', 'parameters': {
+    'type': 'object', 'properties': {'action': {'type': 'string', 'enum': ['read', 'patch']}},
+    'required': ['action'], 'additionalProperties': False}}}]
+
+
+def test_model_tool_call_is_structured_and_registered(server):
+    url, engine = server
+    engine.generate = lambda *_: iter(['<tool_call>{"name":"dev","arguments":{"action":"read"}}</tool_call>'])
+    with post(url, '/v1/chat/completions', {'messages': [{'role': 'user', 'content': 'Inspect'}],
+                                         'max_tokens': 8, 'tools': TOOLS}) as response:
+        result = json.load(response)
+    message = result['choices'][0]['message']
+    call = message['tool_calls'][0]
+    assert result['choices'][0]['finish_reason'] == 'tool_calls'
+    assert call['id'].startswith('call_twincore_') and call['function']['name'] == 'dev'
+    assert json.loads(call['function']['arguments']) == {'action': 'read'}
+    assert message['content'] == ''
+
+
+@pytest.mark.parametrize('arguments', ['{}', '{"action":"erase"}', '{"action":"read","unexpected":1}'])
+def test_invalid_tool_arguments_fail_without_selected_action_or_partial_success(server, arguments):
+    url, engine = server
+    engine.generate = lambda *_: iter(['<tool_call>{"name":"dev","arguments":' + arguments + '}</tool_call>'])
+    with pytest.raises(HTTPError) as failed:
+        post(url, '/v1/chat/completions', {'messages': [{'role': 'user', 'content': 'Inspect'}],
+                                         'max_tokens': 8, 'tools': TOOLS})
+    assert failed.value.code == 500
+    assert 'tool' in json.load(failed.value)['error']['message'].lower()
+
+
+def test_explicit_cancellation_is_accepted_while_generation_is_blocked(server):
+    from fusion.generation import GenerationCancelled
+    url, engine = server
+    stopped = Event()
+    engine.cancel = stopped.set
+
+    def held(*_):
+        yield 'first'
+        assert stopped.wait(2), 'The server did not deliver cancellation'
+        raise GenerationCancelled('TwinCore generation cancelled')
+
+    engine.generate = held
+    try:
+        with post(url, '/v1/chat/completions', {'messages': [{'role': 'user', 'content': 'hello'}],
+                                                'max_tokens': 2, 'stream': True}) as response:
+            assert 'first' in response.readline().decode()
+            with post(url, '/cancel', {}) as cancellation:
+                assert json.load(cancellation)['cancel_requested'] is True
+            remaining = response.read().decode()
+            assert 'cancelled' in remaining and '[DONE]' not in remaining
+    finally:
+        stopped.set()

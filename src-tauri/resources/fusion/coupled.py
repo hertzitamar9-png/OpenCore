@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Iterator
 
 import torch
@@ -10,23 +9,10 @@ import torch.nn.functional as F
 from torch import nn
 
 from .alignment import ExactSurfaceAlignment
+from .bridge import CouplingBridge, CoupledFeedback, CoupledStep
 
 
-@dataclass
-class CoupledFeedback:
-    nanbeige: torch.Tensor
-    k2: torch.Tensor
-
-
-@dataclass
-class CoupledStep:
-    logits: torch.Tensor
-    feedback: CoupledFeedback
-    nanbeige_native_logits: torch.Tensor
-    k2_native_logits: torch.Tensor
-
-
-class CoupledFusion(nn.Module):
+class CoupledFusion(CouplingBridge):
     """Reference Fusion: two frozen full towers, trainable bidirectional adapter.
 
     Prefixes are recomputed each step. This is intentionally slower than a
@@ -43,27 +29,11 @@ class CoupledFusion(nn.Module):
         k2_hidden: int,
         rank: int = 256,
     ) -> None:
-        super().__init__()
-        if min(nanbeige_hidden, k2_hidden, rank) <= 0:
-            raise ValueError("Hidden dimensions and bridge rank must be positive")
+        super().__init__(alignment, nanbeige_hidden=nanbeige_hidden, k2_hidden=k2_hidden,
+                         rank=rank, nanbeige_device=nanbeige.get_output_embeddings().weight.device,
+                         k2_device=k2.get_output_embeddings().weight.device)
         self.nanbeige = nanbeige.requires_grad_(False).eval()
         self.k2 = k2.requires_grad_(False).eval()
-        self.alignment = alignment
-        self.k2_to_nanbeige = nn.Sequential(
-            nn.Linear(k2_hidden, rank, bias=False), nn.SiLU(),
-            nn.Linear(rank, nanbeige_hidden, bias=False),
-        )
-        self.nanbeige_to_k2 = nn.Sequential(
-            nn.Linear(nanbeige_hidden, rank, bias=False), nn.SiLU(),
-            nn.Linear(rank, k2_hidden, bias=False),
-        )
-        nanbeige_device = nanbeige.get_output_embeddings().weight.device
-        k_device = k2.get_output_embeddings().weight.device
-        self.k2_to_nanbeige.to(nanbeige_device)
-        self.nanbeige_to_k2.to(k_device)
-        self.nanbeige_gate = nn.Parameter(torch.tensor(-6.0, device=nanbeige_device))
-        self.k2_gate = nn.Parameter(torch.tensor(-6.0, device=k_device))
-        self.lexical_gate = nn.Parameter(torch.tensor(-6.0, device=nanbeige_device))
         self.last_text = ""
         self.last_k2_ids: list[int] = []
         self.last_generated_text = ""
@@ -73,13 +43,6 @@ class CoupledFusion(nn.Module):
         self.nanbeige.eval()
         self.k2.eval()
         return self
-
-    def bridge_parameters(self):
-        for module in (self.k2_to_nanbeige, self.nanbeige_to_k2):
-            yield from module.parameters()
-        yield self.nanbeige_gate
-        yield self.k2_gate
-        yield self.lexical_gate
 
     @staticmethod
     def _tower(model, ids: torch.Tensor, bias: torch.Tensor | None):
@@ -148,28 +111,8 @@ class CoupledFusion(nn.Module):
         k_hidden, k_native = self._tower(
             self.k2, k2_ids, None if feedback is None else feedback.k2
         )
-        n_bridge = self.k2_to_nanbeige[0].weight
-        k_bridge = self.nanbeige_to_k2[0].weight
-        n_delta = torch.sigmoid(self.nanbeige_gate) * self.k2_to_nanbeige(
-            k_hidden.to(device=n_bridge.device, dtype=n_bridge.dtype)
-        )
-        k_delta = torch.sigmoid(self.k2_gate) * self.nanbeige_to_k2(
-            n_hidden.to(device=k_bridge.device, dtype=k_bridge.dtype)
-        )
-        n_head = self.nanbeige.get_output_embeddings()
-        k_head = self.k2.get_output_embeddings()
-        n_delta = n_delta.to(dtype=n_head.weight.dtype, device=n_head.weight.device)
-        k_delta = k_delta.to(dtype=k_head.weight.dtype, device=k_head.weight.device)
-        n_scores = n_native + n_head(n_delta)
-        k_scores = k_native + k_head(k_delta)
-        lexical = self.alignment.project(k_scores).to(n_scores.device)
-        fused = n_scores.float() + torch.sigmoid(self.lexical_gate) * lexical
-        return CoupledStep(
-            logits=fused,
-            feedback=CoupledFeedback(nanbeige=n_delta, k2=k_delta),
-            nanbeige_native_logits=n_native,
-            k2_native_logits=k_native,
-        )
+        return super().forward(n_hidden, k_hidden, n_native, k_native,
+                               self.nanbeige.get_output_embeddings(), self.k2.get_output_embeddings())
 
     def stream_text(
         self,

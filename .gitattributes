@@ -10,3 +10,11 @@ src-tauri/resources/doucode/runtime/*.txt -text -whitespace
 src-tauri/resources/doucode/runtime/LICENSE.* -text -whitespace
 scripts/evaluation/results/** -text -whitespace
 scripts/evaluation/*.py text eol=lf
+src-tauri/resources/fusion/*.py text eol=lf
+src-tauri/resources/fusion/native/*.cpp text eol=lf
+src-tauri/resources/fusion/native/*.h text eol=lf
+src-tauri/resources/fusion/native/CMakeLists.txt text eol=lf
+scripts/fusion/*.py text eol=lf
+tests/fusion/*.py text eol=lf
+tests/fusion/*.cpp text eol=lf
+tests/fusion/fixtures/*.json text eol=lf
