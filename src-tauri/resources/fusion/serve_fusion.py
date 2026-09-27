@@ -89,7 +89,8 @@ class FusionHandler(BaseHTTPRequestHandler):
         elif self.path == "/props":
             self._json(200, {"n_ctx": engine.context_tokens,
                              "model": engine.model_id, "experimental": True,
-                             "configuration": getattr(engine, 'configuration', None)})
+                             "configuration": getattr(engine, 'configuration', None),
+                             "runtime_identity": getattr(engine, 'evidence', None)})
         elif self.path in ("/v1/models", "/models"):
             self._json(200, {"object": "list", "data": [{"id": engine.model_id,
                           "object": "model", "owned_by": "opencore"}]})

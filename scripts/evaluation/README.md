@@ -72,6 +72,26 @@ this recorder does not attest arbitrary remote processes. A model name alone
 is insufficient. Recording source hashes performs CPU file reads, not GPU
 generation.
 
+For a qualified **TwinCore Q6** endpoint, use `record_twincore_identity.py`.
+It checks both complete GGUFs, the trained adapter and fresh validation receipt,
+the matching full-GPU qualification, actual loaded numerical libraries and GPU
+placement, and source files against the compiled native build. The endpoint's
+`/props` must disclose those identities. It rejects unfinished training
+checkpoints and imports no tensor framework or model weights into memory.
+
+```sh
+python scripts/evaluation/record_twincore_identity.py --profile twincore-kv --nanbeige /actual/models/Nanbeige_Nanbeige4.2-3B-Q6_K.gguf --k2 /actual/models/K2-Horizon-4B-Q6_K.gguf --adapter /actual/trained-adapter --qualification /actual/full-gpu-qualification.json --dll /actual/native/twincore.dll --runtime /actual/numerical-runtime --resources /actual/runtime/resources --context 8192 --url http://127.0.0.1:18620 --output twincore-identity.json
+python scripts/evaluation/snapshot_model_source.py --identity twincore-identity.json --output twincore-source-snapshot
+python scripts/evaluation/benchmark_capture.py --url http://127.0.0.1:18620 --model opencore-twincore-q6-kv --inputs scripts/evaluation/runs/humaneval/humaneval-inputs.json --identity twincore-identity.json --output scripts/evaluation/runs/twincore-kv/captures --max-tokens 4096
+```
+
+Use the exact context/rank/seed qualified by the GPU receipt; this example does
+not establish an 8K fit or a larger context capacity. Select `twincore-echo` and
+its corresponding recompute qualification for ECHO; the identity then requests
+a fresh conversation for each benchmark sample. Full model qualification,
+training and TwinCore benchmark scores remain pending. Finish all requested
+HumanEval profiles before starting their full public LiveBench captures.
+
 ```sh
 .venv-evaluation/bin/python scripts/evaluation/benchmark_capture.py --url http://127.0.0.1:18610 --model 'FusionCore KV' --inputs scripts/evaluation/runs/humaneval/humaneval-inputs.json --identity model-identity.json --output scripts/evaluation/runs/fusioncore-kv/captures --max-tokens 4096
 ```
@@ -117,8 +137,9 @@ timings, and executed-code logs remain separate evidence files.
 
 The controls check known passing and failing answers across all six categories.
 They are explicitly marked as non-model evidence. `snapshot_model_source.py`
-can retain the exact small Python/C++/JSON source files listed in a runtime
-identity; it verifies hashes and never copies model weights.
+can retain the exact small Python/C++/header/JSON/build sources and native
+wrappers listed in a runtime identity. It verifies source hashes and the 200 GB
+reserve before creating a snapshot, and never copies model weights.
 
 ## Result scope
 

@@ -111,6 +111,13 @@ returns registered structured tool calls after schema validation, and accepts
 is cooperative between decode batches and head chunks; it does not promise
 instantaneous kernel preemption. Current decoding is deterministic (`temperature=0`).
 
+`/props` also reports the loaded adapter/qualification digests, full checkpoint
+binding, measured GPU placement and actually mapped numerical libraries.
+`scripts/evaluation/record_twincore_identity.py` verifies these against local
+artifacts and compiled source before benchmark capture. Its source snapshots
+include the native header and build file. This prepares reproducible evaluation;
+it does not establish a trained model or a benchmark score.
+
 The Transformers checkpoint manifest/reference remains for architecture tests.
 It is not used by the Q6 server and does not make its optional dependency tests
 evidence of actual full-model GPU qualification.

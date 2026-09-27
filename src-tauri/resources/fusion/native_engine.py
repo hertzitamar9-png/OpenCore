@@ -41,6 +41,8 @@ class TwinCoreEngine:
             self.configuration = configuration
             self.evidence = {'precision': 'Q6_K', 'binding': self.pair.binding,
                 'adapter_receipt_sha256': receipt['receipt_sha256'], 'qualification_sha256': file_digest(qualification),
+                'gpu_uuid': self.pair.resource_plan['gpu']['uuid'], 'placement': self.pair.placement,
+                'loaded_libraries': self.pair.native.api.loaded_libraries,
                 'scope': 'Trained frozen-Q6 coupling. Native generation and coding benchmarks remain independent qualification gates.'}
             self._cancel = threading.Event()
         except Exception:

@@ -69,6 +69,15 @@ def test_health_models_props_and_tokenizer(server):
         assert len(json.load(response)["tokens"]) == 3
 
 
+def test_props_discloses_the_identity_of_the_loaded_runtime(server):
+    url, engine = server
+    engine.evidence = {'binding': {'schema': 1}, 'adapter_receipt_sha256': 'a' * 64,
+                       'qualification_sha256': 'b' * 64}
+    with urlopen(url + '/props') as response:
+        result = json.load(response)
+    assert result['runtime_identity'] == engine.evidence
+
+
 def test_stream_yields_each_delta_before_done(server):
     url, engine = server
     payload = {"messages": [{"role": "user", "content": "Say hello"}],

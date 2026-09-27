@@ -94,9 +94,10 @@ def test_matching_trained_adapter_is_loaded_on_cpu_before_model_allocation(tmp_p
         return result
 
     monkeypatch.setattr(adapter, 'inspect_adapter', inspect)
-    pair = SimpleNamespace(native=SimpleNamespace(closed=False), bridge=bridge(),
+    loaded = {'twincore.dll': {'path': 'twincore.dll', 'bytes': 4, 'sha256': 'c' * 64}}
+    pair = SimpleNamespace(native=SimpleNamespace(closed=False, api=SimpleNamespace(loaded_libraries=loaded)), bridge=bridge(),
                            binding=report['binding'], configuration=report['configuration'],
-                           resource_plan={'gpu': {'uuid': 'GPU-fixture'}})
+                           resource_plan={'gpu': {'uuid': 'GPU-fixture'}}, placement=report['placement'])
     def open_pair(*_, **__):
         assert len(inspected) == 1
         assert adapter.tensor_fingerprint(inspected[0][0]) == receipt['tensor_fingerprint']
@@ -107,3 +108,6 @@ def test_matching_trained_adapter_is_loaded_on_cpu_before_model_allocation(tmp_p
                                          'native.dll', 'runtime', rank=4)
     assert engine.pair.bridge is inspected[0][0]
     assert adapter.tensor_fingerprint(engine.pair.bridge) == receipt['tensor_fingerprint']
+    assert engine.evidence['gpu_uuid'] == 'GPU-fixture'
+    assert engine.evidence['placement'] == report['placement']
+    assert engine.evidence['loaded_libraries'] == loaded
