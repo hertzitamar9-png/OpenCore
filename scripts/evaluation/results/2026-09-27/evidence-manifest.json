@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "status": "completed_evidence_copied_and_hash_verified",
+  "models": {
+    "lfm-baseline-q8": {
+      "correct": 113,
+      "samples": 164
+    },
+    "FusionCore KV": {
+      "correct": 137,
+      "samples": 164
+    }
+  },
+  "model_weights_copied": 0,
+  "files": [
+    {
+      "file": "humaneval-inputs.json",
+      "bytes": 129822,
+      "sha256": "54a2f8fba2824b111eda74e110d5b1354c134bebe2ed9fbfdfaa4e6aa0398b99"
+    },
+    {
+      "file": "humaneval-provenance.json",
+      "bytes": 37416,
+      "sha256": "032ab2ae707f9c3e18119a14f71966c8b6fc9521e69b9362cacb0503317daa92"
+    },
+    {
+      "file": "fusioncore-kv/captures/capture-manifest.json",
+      "bytes": 13296,
+      "sha256": "fbd196b20f4979247a6e644b2d48354d3921c60e1971f058f3f6de0bd204e0fe"
+    },
+    {
+      "file": "fusioncore-kv/captures/responses.jsonl",
+      "bytes": 1157096,
+      "sha256": "1e6ba06b1fac9737b450845b31221477dc4b8d1f053aeed7ed8f119ab3744278"
+    },
+    {
+      "file": "fusioncore-kv/grading-summary.json",
+      "bytes": 31621,
+      "sha256": "72fa3c36fb615e2a1c4ef1b0a8c85413f307a90627b37adf4c66aace5651a427"
+    },
+    {
+      "file": "fusioncore-kv/paired-comparison.json",
+      "bytes": 2883,
+      "sha256": "b56524d81fa7f12eccb1d6af879db8c7ca63472fe1d18e9ac24013c5ee82d8e9"
+    },
+    {
+      "file": "fusioncore-kv/model-identity.json",
+      "bytes": 10812,
+      "sha256": "f775320bc447b4550bd05fc2436089e08e12f9c18a5381908f34099dc603393c"
+    },
+    {
+      "file": "lfm-baseline/audited-result.json",
+      "bytes": 97079,
+      "sha256": "743d1e06e598b9b9ecd69c634ceb87b9dc99439ddf2db3159ff9f1f90554be7a"
+    },
+    {
+      "file": "lfm-baseline/run-summary.json",
+      "bytes": 29351,
+      "sha256": "d4224c59d95302fcf51587175edc3989dd986c2bf25774bb1785be5b1f5c5fda"
+    },
+    {
+      "file": "qualification/livebench-scorer-validation.json",
+      "bytes": 3126,
+      "sha256": "6ffc9062331f83b4b4a6ede9b989b8f1ae65c1911ab70d407a140c1acd1c3c19"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/00-runtime.py",
+      "bytes": 25851,
+      "sha256": "7f287682959bc56fc7a02e1b97b70a4f74e53148223da1230a902e310a07f3ba"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/01-selection.py",
+      "bytes": 6808,
+      "sha256": "4d4bcda284cbcd09c950fc5a9121f22f16f28160485a435833dd63be966f142c"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/02-spec.py",
+      "bytes": 3077,
+      "sha256": "d2b64a4b420169de79d7bda05452b638c0f28a2d53034870d6b57cd0aa10dac5"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/03-build-info.json",
+      "bytes": 3374,
+      "sha256": "b7aa280a99a91b536673f0a23ddaa28c5aa953195bdcc7dab19bdc6bf0531f38"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/04-checkpoint.json",
+      "bytes": 610,
+      "sha256": "c045139e458fc7bb856606d6fec952eab34fc08febda86a4d1391e3ed18ccc61"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/05-dual.py",
+      "bytes": 7501,
+      "sha256": "f24c5090c2b28589018a481911090b62760df4ae3b62482a6fd8a565f9706f5e"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/06-fusion.py",
+      "bytes": 5879,
+      "sha256": "59bdc69fd3fc56f5ea81650deefb2574dc4864b426747fc2afef70ca7a92bade"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/07-build-info.json",
+      "bytes": 495,
+      "sha256": "219a8ae464fb52bcd5f3518dba48e791d5c677bcee0c4015150312663c36e000"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/08-fusioncore.cpp",
+      "bytes": 15606,
+      "sha256": "01cababc181e49a3d07a5d9cb87d16b868e99e9635193ad57dac76b8a54bf85c"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/09-fusioncore.dll",
+      "bytes": 37376,
+      "sha256": "2e450f3732d83a82ae8fe8c1766ba6d8309058ef601cc214507019b5b5bb1fe1"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/10-protocol.py",
+      "bytes": 6011,
+      "sha256": "5e37adc405108e0b67b459fd2bd1eadd92a6707cc0973ef59c10acae37aba8a3"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/11-serve_lfm.py",
+      "bytes": 11664,
+      "sha256": "bd068cc5822ad006688178d94482e7d905136e7f1c1819e334227fb6176441f0"
+    },
+    {
+      "file": "fusioncore-kv/source-snapshot/snapshot-manifest.json",
+      "bytes": 4041,
+      "sha256": "e40786510795abfca20bb4da0125dbcd032a9afe2b69c894fc1227a8603d3b0b"
+    },
+    {
+      "file": "lfm-baseline/inspect-logs/2026-09-26T21-26-15-00-00_humaneval_DdPXXTNoSpMBjTk7q96uKu.eval",
+      "bytes": 970456,
+      "sha256": "149dad46eb9aeabdbabc0e173e50f1aa9ebfc204239ed0c7ee69dba1a8e3c985"
+    }
+  ],
+  "total_bytes": 2611251,
+  "scope": "Exact historic answers and score evidence; no new inference, training or harness claim"
+}

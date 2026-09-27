@@ -1,0 +1,32 @@
+name: Evaluation integrity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/evaluation/**'
+      - '.github/workflows/evaluation-integrity.yml'
+  pull_request:
+    paths:
+      - 'scripts/evaluation/**'
+      - '.github/workflows/evaluation-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/evaluation/requirements.txt
+      - name: Install CPU grading dependencies
+        run: python -m pip install -r scripts/evaluation/requirements.txt
+      - name: Test capture and grading integrity without model inference
+        run: python -m unittest discover -s scripts/evaluation -p 'test_*.py'

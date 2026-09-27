@@ -1,0 +1,142 @@
+{
+  "scope": "Scorer infrastructure validation using synthetic positive and negative controls",
+  "model_quality_measured": false,
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "inspect_ai": "0.3.270",
+  "inspect_evals": "0.22.0",
+  "livebench_revision": "1c4c65530fb69f797f7e6101c367b51c05f8cb64",
+  "fixture_release_date": "2024-11-25T00:00:00",
+  "fixture_source_sha256": "bae99498d2a099270136096de14391ecf9cc454a18c71f43b0275004b710c472",
+  "status": "success",
+  "samples": 16,
+  "fixtures": [
+    {
+      "id": "control-0-0",
+      "category": "math",
+      "task": "aime_i_2024",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-0-1",
+      "category": "math",
+      "task": "aime_i_2024",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    },
+    {
+      "id": "control-1-0",
+      "category": "math",
+      "task": "amps_hard_derivatives",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-1-1",
+      "category": "math",
+      "task": "amps_hard_derivatives",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    },
+    {
+      "id": "control-2-0",
+      "category": "reasoning",
+      "task": "web_of_lies_v2",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-2-1",
+      "category": "reasoning",
+      "task": "web_of_lies_v2",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    },
+    {
+      "id": "control-3-0",
+      "category": "data_analysis",
+      "task": "cta",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-3-1",
+      "category": "data_analysis",
+      "task": "cta",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    },
+    {
+      "id": "control-4-0",
+      "category": "language",
+      "task": "typos",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-4-1",
+      "category": "language",
+      "task": "typos",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    },
+    {
+      "id": "control-5-0",
+      "category": "instruction_following",
+      "task": "keywords",
+      "expected": 0.0,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "id": "control-5-1",
+      "category": "instruction_following",
+      "task": "keywords",
+      "expected": 1.0,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "id": "control-6-0",
+      "category": "coding",
+      "task": "LCB_generation",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-6-1",
+      "category": "coding",
+      "task": "LCB_generation",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    },
+    {
+      "id": "control-7-0",
+      "category": "coding",
+      "task": "coding_completion",
+      "expected": 0.0,
+      "score": 0,
+      "error": null
+    },
+    {
+      "id": "control-7-1",
+      "category": "coding",
+      "task": "coding_completion",
+      "expected": 1.0,
+      "score": 1,
+      "error": null
+    }
+  ]
+}

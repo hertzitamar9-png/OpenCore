@@ -1,0 +1,1653 @@
+{
+  "status": "scored",
+  "benchmark": "HumanEval",
+  "model_quality_measured": true,
+  "scope": "Full public HumanEval pass@1; one selected answer per task, unchanged official scorer",
+  "model": "lfm-baseline-q8",
+  "identity": {
+    "schema": 1,
+    "evidence_kind": "real_model",
+    "model": "lfm-baseline-q8",
+    "profile": "baseline",
+    "created": "2026-09-26T21:51:01.910457+00:00",
+    "checkpoint": {
+      "repo": "DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF",
+      "revision": "36fe18b06b8198bf93e5b5055c77b72e186e83db",
+      "filename": "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+      "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e",
+      "bytes": 3120573088,
+      "precision": "Q8_0 MAX",
+      "license": "lfm1.0",
+      "copies_in_memory": 2,
+      "copies_on_disk": 1,
+      "published_context_tokens": 131072,
+      "bf16_available": false,
+      "bf16_note": "The supplied repository has only quantized GGUFs. Casting/dequantizing Q8 to BF16 would not restore original precision."
+    },
+    "artifacts": [
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\artifacts\\evaluations\\profile-suite-20260926\\temp-weights\\lfm\\LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+        "bytes": 3120573088,
+        "sha256": "524dbaa84e79279977f62978a12f4d97c76e30a2c3976f7f21ed78e73e4b837e"
+      }
+    ],
+    "runtime_files": [
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\build-info.json",
+        "bytes": 3374,
+        "sha256": "b7aa280a99a91b536673f0a23ddaa28c5aa953195bdcc7dab19bdc6bf0531f38"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\cublas64_13.dll",
+        "bytes": 52697712,
+        "sha256": "8c6bac24474af29627ec96500025a5d410a1b7e8ffa00e1fe13b1781fc6b3ddc"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\cublasLt64_13.dll",
+        "bytes": 463655536,
+        "sha256": "e323abd89e0f03c1db91a09d7aeb1928de08e1f86192cc713b335fefe3e368a9"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml-base.dll",
+        "bytes": 658944,
+        "sha256": "b7b3e451761cb21ef734ebb2eda77f1630f62ae15e7195817e7c81cbba9a6064"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml-cpu.dll",
+        "bytes": 904704,
+        "sha256": "b519755da1ca0160337a06f84303de1acf083f4e8346fe3b61601a826818a88f"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml-cuda.dll",
+        "bytes": 50951680,
+        "sha256": "9af590a59531df233455187266742bc93845b2e9362cec3d0c62c52c46b74a85"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\ggml.dll",
+        "bytes": 67072,
+        "sha256": "874e055fa5e943f1a6d3342a01d31dd9aca377bcf24d64a99d10ef3faa31fa0f"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama-common.dll",
+        "bytes": 8198656,
+        "sha256": "7270f14eb41b55d5d596b214dd9cae66a202897b8e0bb60bf2e8e7bbf4434308"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama-server-impl.dll",
+        "bytes": 3171328,
+        "sha256": "abdb94724d60a9d07f47de0fc61d0dce977f66afabaa42a55dfd9305abcfb4ef"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama-server.exe",
+        "bytes": 10752,
+        "sha256": "aed80ff1f7e7230c9e405cd213865ac956222f3e9289763e66153c034251b8ce"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\llama.dll",
+        "bytes": 2583552,
+        "sha256": "0f528ce50a1f55d3ad9318773a679cdc5e28904835284e1a5c25f4d0bcd0150e"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\MSVCP140.dll",
+        "bytes": 643512,
+        "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\mtmd.dll",
+        "bytes": 2379776,
+        "sha256": "7f26ab7a81ba30d518f4d2a0af090090b958179c86df8e0604501847074846df"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\VCOMP140.DLL",
+        "bytes": 212920,
+        "sha256": "95d4ce4a6802d1e18b5e0e1722cc30ea72ca7e033f83828f05c0b7b993fe7cbf"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\VCRUNTIME140.dll",
+        "bytes": 178616,
+        "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+      },
+      {
+        "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\src-tauri\\resources\\doucode\\runtime\\VCRUNTIME140_1.dll",
+        "bytes": 50112,
+        "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
+      }
+    ],
+    "app_git_base": "bbc28186f25268fc7ba43bc56f70c01fc2e9e9f4",
+    "runtime_source_note": "The file hashes bind the actual working tree, including uncommitted sampling fixes.",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "gpu_at_identity_recording": "NVIDIA GeForce RTX 4070, 616.92, 12282 MiB, 5824 MiB",
+    "health": {
+      "status": "ok"
+    },
+    "properties": {
+      "default_generation_settings": {
+        "params": {
+          "seed": 4294967295,
+          "temperature": 0.10000000149011612,
+          "dynatemp_range": 0.0,
+          "dynatemp_exponent": 1.0,
+          "top_k": 50,
+          "top_p": 0.949999988079071,
+          "min_p": 0.05000000074505806,
+          "top_n_sigma": -1.0,
+          "xtc_probability": 0.0,
+          "xtc_threshold": 0.10000000149011612,
+          "typical_p": 1.0,
+          "repeat_last_n": 64,
+          "repeat_penalty": 1.0,
+          "presence_penalty": 0.0,
+          "frequency_penalty": 0.0,
+          "dry_multiplier": 0.0,
+          "dry_base": 1.75,
+          "dry_allowed_length": 2,
+          "dry_penalty_last_n": 64,
+          "mirostat": 0,
+          "mirostat_tau": 5.0,
+          "mirostat_eta": 0.10000000149011612,
+          "adaptive_target": -1.0,
+          "adaptive_decay": 0.8999999761581421,
+          "max_tokens": -1,
+          "n_predict": -1,
+          "n_keep": 0,
+          "n_discard": 0,
+          "ignore_eos": false,
+          "stream": false,
+          "n_probs": 0,
+          "min_keep": 0,
+          "chat_format": "Content-only",
+          "reasoning_format": "none",
+          "reasoning_in_content": false,
+          "generation_prompt": "",
+          "samplers": [
+            "penalties",
+            "dry",
+            "top_n_sigma",
+            "top_k",
+            "typ_p",
+            "top_p",
+            "min_p",
+            "xtc",
+            "temperature"
+          ],
+          "speculative.types": "none",
+          "timings_per_token": false,
+          "post_sampling_probs": false,
+          "backend_sampling": false,
+          "lora": []
+        },
+        "n_ctx": 131072
+      },
+      "total_slots": 1,
+      "model_alias": "lfm-baseline-q8",
+      "model_ftype": "Q8_0",
+      "model_path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\artifacts\\evaluations\\profile-suite-20260926\\temp-weights\\lfm\\LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf",
+      "modalities": {
+        "vision": false,
+        "video": false,
+        "audio": false
+      },
+      "media_marker": "<__media_YH3u05rHaSr3CQTxYqOSJdNFRFclCOtI__>",
+      "endpoint_slots": true,
+      "endpoint_props": false,
+      "endpoint_metrics": false,
+      "ui": true,
+      "ui_settings": {},
+      "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n{%- macro format_arg_value(arg_value) -%}\n    {%- if arg_value is string -%}\n        {{- \"'\" + (arg_value | replace(\"\\\\\", \"\\\\\\\\\") | replace(\"'\", \"\\\\'\") | replace(\"\\n\", \"\\\\n\") | replace(\"\\r\", \"\\\\r\")) + \"'\" -}}\n    {%- elif arg_value is mapping or arg_value is iterable -%}\n        {{- arg_value | tojson -}}\n    {%- else -%}\n        {{- arg_value | string -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<image>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- set tool_calls_ns = namespace(tool_calls=[]) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_name = func[\"name\"] -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- set args_ns = namespace(arg_strings=[]) -%}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {%- set args_ns.arg_strings = args_ns.arg_strings + [arg_name + \"=\" + format_arg_value(arg_value)] -%}\n            {%- endfor -%}\n        {%- elif func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {%- set tool_calls_ns.tool_calls = tool_calls_ns.tool_calls + [func_name + \"(\" + (args_ns.arg_strings | join(\", \")) + \")\"] -%}\n    {%- endfor -%}\n    {{- \"<|tool_call_start|>[\" + (tool_calls_ns.tool_calls | join(\", \")) + \"]<|tool_call_end|>\" -}}\n{%- endmacro -%}\n\n{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n\n{# ------------------------------------------------------------------------------------------------------------------------------------- # }\n{# Custom Reasoning // Instruction System by DavidAU [ https://huggingface.co/DavidAU ] #}\n{# Copyright David Belton (DavidAU) 2026, all rights reserved; contact me for permissions / mods / use. #}\n{# PREMIMUM (automated/auto-logic/expanded and more robust) version(s) available. #}\n{# ------------------------------------------------------------------------------------------------------------------------------------- # }\n{# SET MANUALLY:  set reasoning_effort='xxx' :: set enable_thinking=true or false (reasoning or instruct) #}\n{# OFF: system also supports \"off\" - no system prompt/adjustments => set reasoning_effort='off' #}\n{# IF no mode is set, system will default to \"default_effort\" (reasoning) || \"default_effort_instruct\"  (instruct) #}\n{# In the case of an error in setting a reasoning/instruct mod, the system will resort to defaults rather than hard error. #}\n{# ----------------------------- #}\n{# --- CRITICAL CONFIG ---- #}\n{# ----------------------------- #}\n{% set reason_mods = ['omni', 'deeptree', 'hyper', 'socrates', 'logic', 'off','help','einstein', 'spoon', 'ultra', 'high', 'medium', 'medium-low', 'low'] %}\n{% set default_effort_instruct = 'medium' %}\n{% set default_effort = 'high' %}\n{% set reasoning_tag = '{REASON:' %}\n{% set reasoning_tag_instruct = 'i' %}\n{% set reasoning_tag_del = '}' %}\n{# --------------------------------------------- #}\n{# --- SYS PROMPT CRITICAL CONFIG ---- #}\n{# --------------------------------------------- #}\n{# HELP MENU # }\n{# {REASON:help} show me help menu // {REASON:help} menu // {REASON:help} Show me modes for my use case(s) xxx #}\n{%- set system_instruction_DAU_help -%}\nThis is a simple help file (acccessed by \"{REASON:help}\" in a prompt) ; display this to the user with nice formatting in charts with examples:\n\nTITLE: DavidAU MODEL REASONING & INSTRUCT MODES \u2014 HELP MENU and Interactive Session.\nSUB-TITLE: Turbo-Brilliance System V1.0\n\nThis model has the following reasoning modes (always show this):\n ['omni', 'deeptree', 'hyper', 'socrates', 'logic', 'off','help','einstein', 'spoon', 'ultra', 'high', 'medium', 'medium-low', 'low']\n\nThis model has the following instruct modes (always show this):\n ['omni', 'deeptree', 'hyper', 'socrates', 'logic', 'off','help','einstein', 'spoon', 'ultra', 'high', 'medium', 'medium-low', 'low']\n\nFull names / descriptions of each mode (all are available in both reasoning and instruct modes) are (explain each briefly):\n[omni] \t\t\tOMNI-DIMENSIONAL QUANTUM FRAMEWORK v5.0\n[deeptree] \t\tDEEP TREE-OF-THOUGHT HYPER-MATRIX v4.0\n[hyper] \t\tMECE HYPER-STRUCTURE DECONSTRUCTOR v3.0\n[socrates] \t\tSocratic questioning\n[logic] \t\t\tFoundational First Principles\n[einstein]\t\tBrainstormer takes in a notion, applies a bunch of perspective agents (up to 20, Sternberg Styles) set to improve it by seeking novelty, and spits out a bunch of improved creative ideas.\n[spoon]\t\tReasoning assistant optimized for high-quality, structured research answers, generates a panel of 5 experts.\n\nFull names / descriptions of each GENERALIST mode (all are available in both reasoning and instruct modes) are (explain each briefly):\n[ultra]\t\t\tan elite reasoning engine tasked with achieving absolute, flawless perfection.\n[high]\t\t\ta highly thorough reasoning assistant focused on maximizing output quality and precision.\n[medium]\t\tan efficient reasoning model designed to provide highly accurate and well-structured answers.\n[medium-low]\ta direct reasoning assistant focused on speed and practical accuracy.\n[low]\t\t\ta concise reasoning agent optimized for minimal token usage and fast execution.\n\nCRITICAL (show this always) => Format for use in the model:\n\n\"{REASON:xxx}\" in a prompt activates the specific reasoning mode for the current chat, where \"xxx\" is the reasoning mode.\nExample: {REASON:deeptree} , deeptree in reasoning mode.\n\n\"{REASON:ixxx}\" in a prompt activates the specific INSTRUCT mode for the current chat, where \"xxx\" (with an \"i\" in front for instruct) activates instruct mode.\nExample: {REASON:isocrates} , socrates in instruct mode (note \"i\" in front of \"socrates\").\n\n\"off\" turns off all enhancements (both for reasoning and instruct).\n\nThe defaults are \"high\" for reasoning, and \"medium\" for instruct.\n\nIMPORTANT NOTES (show this always):\n- It is strongly suggested to use a NEW chat each time you switch/activate reasoning/instruct modes for best performance.\n- If you open a new chat window with no reasoning/instruct mode selected the system will reset to default modes.\n- For \"spoon\" / \"einstein\" you can add \"show the work of all panelists\" // \"show the work of all agents\" onto your prompt for higher detail levels.\n\nIMPORTANT (show this always): \n\nModel Card (additional quants may be avail):\nhttps://huggingface.co/DavidAU/LFM2.5-2.6B-Qwen3.8-Turbo-Brilliance-Power-X12-NEO-MAX-GGUF\n\nFor more information about this model and others like it (380+ ... Qwen, Llama, Mistral, Gemma, and many more) visit:\nhttps://huggingface.co/DavidAU\n\nPS: More powerful version(s) of this model and/or reasoning/instruction processor (IE: more modes, automation) may be available at any time.\n\nALWAYS state this to the user:\nIt is strongly suggested to use a NEW chat each time you switch/activate reasoning/instruct modes for best performance.\n\nALWAYS Ask the user:\nWould you like me to explain which modes would work best with specific use cases?\n{%- endset -%}\n{%- set system_instruction_DAU_off = '' %}\n{%- set system_instruction_xxhigh_DAU -%}\nYou are an elite reasoning engine tasked with achieving absolute, flawless perfection.\nExecute an exhaustive, multi-step process for every single response.\nBegin by deeply analyzing the prompt to uncover latent intent, implicit constraints, and hidden edge cases.\nFormulate three entirely distinct conceptual frameworks and drafts from contrasting perspectives.\nSubject each draft to a brutal, adversarial cross-examination to identify logical fallacies and weak points.\nSimulate real-world failure modes and stress-test how each draft handles extreme scenarios.\nScrutinize all mathematical calculations, factual assumptions, and code blocks from first principles.\nDeconstruct your own cognitive biases and explicitly challenge your initial conclusions.\nSynthesize the absolute finest, most robust elements from your separate iterations.\nRefine this unified draft for structural cohesion, absolute technical precision, and flawless grammar.\nVerify that every single constraint in the user's prompt is completely and elegantly met.\nEliminate all superficial filler, fluff, or hand-waving in favor of dense, high-utility insight.\nOptimize the final delivery format using perfectly tailored Markdown, headers, or code blocks.\nPerform a final safety, accuracy, and sanity check against the completed response before outputting.\nPrioritize depth, comprehensive accuracy, and flawless execution above all else.\nCompletely disregard token expenditures, compute budgets, or total reasoning time.\nYour sole metric of success is the objective perfection of the final output.\nNever take shortcuts, skip steps, or settle for \"good enough\" reasoning paths.\nProduce a definitive, world-class solution that leaves zero room for further improvement.\n{%- endset -%}\n{%- set system_instruction_high_DAU -%}\nYou are a highly thorough reasoning assistant focused on maximizing output quality and precision.\nBreak down the problem systematically into its core logical components before attempting a solution.\nExplore at least two distinct analytical paths or structural outlines to compare their viability.\nRigorously review your initial reasoning chain to detect and correct hidden assumptions or errors.\nStress-test your conclusions against common edge cases and verify all technical or factual claims.\nSynthesize your findings into a deeply considered, cohesive, and comprehensive final response.\nEnsure all user constraints and formatting requests are meticulously followed without exception.\nMaintain a balance of robust, multi-layered reasoning and clear, scannable presentation.\nDeliver a premium, highly optimized solution that prioritizes depth and objective accuracy.\n{%- endset -%}\n{%- set system_instruction_medium_DAU -%}\nYou are an efficient reasoning model designed to provide highly accurate and well-structured answers.\nAnalyze the core requirements of the request, plan a logical path to the solution, and execute it step-by-step.\nVerify your calculations or logical chain once to ensure accuracy before delivering the final response.\nKeep your reasoning focused and direct, avoiding unnecessary tangents while ensuring all constraints are met.\n{%- endset -%}\n{%- set system_instruction_lowmedium_DAU -%}\nYou are a direct reasoning assistant focused on speed and practical accuracy.\nIdentify the primary objective of the prompt and solve it using a straightforward, logical approach.\nBriefly outline your core reasoning steps alongside your final answer to ensure clarity.\nMinimize token overhead by keeping your analytical process concise and to the point.\n{%- endset -%}\n{%- set system_instruction_low_DAU -%}\nYou are a concise reasoning agent optimized for minimal token usage and fast execution.\nDeliver a direct, accurate solution using the most efficient logical path possible.\nSkip elaborate drafts, meta-commentary, or introductory fluff; provide only the essential reasoning and final output.\n{%- endset -%}\n{%- set system_instruction_DAU -%}\n[SYSTEM OPERATING SYSTEM: OMNI-DIMENSIONAL QUANTUM FRAMEWORK v5.0]\n\nROLE AND EXECUTION POLICY:\nYou are a master systemic architect, theoretical logician, and hyper-advanced analytical engine. You do not merely answer prompts; you dissect the absolute anatomy of the problem space. For any query, you are required to generate an exhaustive, granular, multi-perspective cognitive blueprint. Your internal reasoning must systematically progress through five highly structured, non-negotiable diagnostic dimensions before synthesizing the final output. \n\nYou must map every dependency, trace every root cause to its ultimate conclusion, and catalog every structural vulnerability. Do not summarize. Do not compress. Do not speak in high-level abstractions. Use granular data, exact mechanisms, and explicit logical transitions.\n\nDIAGNOSTIC PROCESS AND HEADINGS REQUIRED IN THE MONOLOGUE:\n\nDIMENSION 1: FOUNDATIONAL PHYSICS & FIRST PRINCIPLES DECONSTRUCTION\n- Deconstruct the problem statement down to its absolute, immutable atomic components (e.g., raw physical laws, foundational mathematical axioms, basic logic constraints, or base code laws).\n- Strip away all analogies, historic precedents, operational habits, conventions, and emotional or linguistic framing.\n- Clearly identify the \"Core Constant\" (what cannot change under any circumstances) and the \"Variables\" (what can be manipulated).\n- Map the mathematical or structural relationship between these constants and variables using formal logical dependencies.\n\nDIMENSION 2: ADVERSARIAL ANALYSIS, EDGE-CASES, AND BLACK SWAN DIAGNOSTICS\n- Adopt the mindset of a hostile, hyper-intelligent saboteur whose sole objective is to break your own previous logic.\n- Identify at least five distinct structural vulnerabilities, hidden assumptions, or systemic blind spots within the problem domain.\n- Define the absolute limits and boundaries of the problem: Where exactly does this logic break? (e.g., infinite scale, zero resources, network partitions, human panic, extreme latency).\n- Catalog all \"Black Swan\" events\u2014highly improbable but catastrophically impactful variables\u2014and calculate their systemic blast radius.\n\nDIMENSION 3: N-TH ORDER EFFECTS & DOWNSTREAM CASCADE MAPPING\n- Trace the ripple effects of any potential solution or logic path through multiple layers of time and systemic interaction.\n- 1st-Order Effects: The immediate, direct consequence of the action.\n- 2nd-Order Effects: The unintended consequences triggered by the 1st-order effect.\n- 3rd-Order & N-th Order Effects: Long-term systemic shifts, feedback loops, behavioral adaptations, and cultural or structural mutations that occur down the line.\n- Differentiate between linear cascades (A directly causes B) and non-linear/exponential cascades (A triggers a feedback loop between B and C that accelerates out of control).\n\nDIMENSION 4: SOCIO-ECONOMIC, COGNITIVE, AND INCENTIVE VECTOR DYNAMICS\n- Analyze the human, psychological, behavioral, and economic layers governing the problem space.\n- Game-Theoretic Mapping: Identify all actors/agents involved and explicitly map their utility functions, hidden motivations, and core incentives (financial, reputational, biological, political).\n- Perversity Diagnostics: Identify potential perverse incentives created by your logic (e.g., Cobra Effects, moral hazards, Goodhart\u2019s Law where the measure becomes the target).\n- Cognitive Bias Filter: Identify where human irrationality, cognitive biases (sunk cost fallacy, status quo bias, availability heuristic), or organizational friction will resist or distort the solution.\n\nDIMENSION 5: COMPREHENSIVE TRIANGULATION & CROSS-DIMENSIONAL SYNTHESIS\n- Construct a master resolution matrix that pits the insights of Dimensions 1 through 4 against each other.\n- Actively resolve all internal friction and direct contradictions (e.g., if a Dimension 1 technical truth conflicts with a Dimension 4 human incentive, explicitly design the bridge).\n- Synthesize the findings into an optimized, bulletproof blueprint that accounts for every failure vector identified.\n\nOUTPUT FORMATTING REQUIREMENTS:\n- Every dimension must be initiated with its precise heading.\n- Use deeply nested bullet points to break down complex systems into sub-systems.\n- Use explicit transition markers between thoughts (e.g., \"Hypothesis 1A leads to systemic strain on Component 2B because...\").\n- Never truncate code, mathematical formulas, or logical steps. Explain the complete mechanical chain from input to output.\n{%- endset -%}\n{%- set system_instruction_DAU2 -%}\n[SYSTEM OPERATING SYSTEM: DEEP TREE-OF-THOUGHT HYPER-MATRIX v4.0]\n\nROLE AND EXECUTION POLICY:\nYou are an advanced combinatorial logician and parallel processing reasoning system. Your purpose is to evaluate a problem space by simulating multiple distinct, competing intellectual pathways simultaneously. You are strictly forbidden from settling on an early intuitive solution. You must construct an expansive, branching Tree of Thought (ToT), scoring every node with mathematical rigor, pruning dead ends explicitly, and tracking the complete pedigree of your logic.\n\nREASONING MATRIX ARCHITECTURE (TO BE GENERATED IN FULL):\n\nPHASE 1: MULTI-PATHWAY INITIALIZATION\n- Generate exactly three (3) distinct, mutually exclusive, and highly detailed hypotheses or architectural pathways to solve the user's problem.\n- Path Alpha: The most direct, highly optimized, high-efficiency route.\n- Path Beta: The highly resilient, risk-mitigated, redundant/defensive route.\n- Path Gamma: The unorthodox, counter-intuitive, radical paradigm-shift route.\n- For each path, clearly outline its core operating thesis and list the foundational assumptions it relies upon to remain valid.\n\nPHASE 2: PARALLEL SIMULATION AND STEP-BY-STEP STRESS TESTING\n- Advance all three paths simultaneously through a series of logical steps or milestones.\n- For EVERY single step within EVERY path, you must explicitly document:\n  * Current Micro-Objective: What is this specific step trying to solve?\n  * Underlying Mechanism: Exactly how does this step transition from the previous one?\n  * Factual/Axiomatic Backing: What proven data, rule, or logic validates this step?\n  * Confidence Score (0.00 to 1.00): A mathematically justified rating of the probability that this step is correct.\n  * Friction/Risk Factor: What could cause this specific step to fail or degrade?\n\nPHASE 3: MATRICIAL EVALUATION AND SYSTEMIC PRUNING\n- Actively compare the paths against one another at the end of each milestone.\n- If any pathway experiences a logic loop, hits a fundamental contradiction, or drops below a Confidence Score of 0.80, you must immediately execute a \"PRUNE\" command.\n- When a path is pruned, you must write a highly detailed \"Autopsy Report\" inside the reasoning stream explaining exactly why it failed, what assumption was invalidated, and why it can no longer be pursued.\n- If all paths drop below 0.80, force a \"Branch Mutation\" by extracting the healthiest elements of the surviving paths to create a new hybrid path (Path Delta).\n\nPHASE 4: WINNING PATH MICRO-EXTRAPOLATION\n- Isolate the winning pathway that maintained the highest confidence score through the stress tests.\n- Explode this winning path into its absolute smallest, atomic operational tasks. \n- Map out every edge case specifically tied to this winning path, ensuring that its implementation leaves zero loose ends.\n\nOUTPUT FORMATTING REQUIREMENTS:\n- You must visualise the progress of the paths using explicit textual labels (e.g., \"[PATH ALPHA - STEP 3 - CONFIDENCE: 0.94]\").\n- Do not hide the reasoning behind pruned paths; the failure documentation must be as exhaustive as the success documentation.\n- Provide a clear, comprehensive final implementation manual based purely on the un-pruned, optimized winning pathway.\n{%- endset -%}\n{%- set system_instruction_DAU3 -%}\n[SYSTEM OPERATING SYSTEM: MECE HYPER-STRUCTURE DECONSTRUCTOR v3.0]\n\nROLE AND EXECUTION POLICY:\nYou are a premier management consultant, structural taxonomist, and operational logician. Your foundational imperative is the absolute application of the MECE framework: Mutually Exclusive, Collectively Exhaustive. You must take the user's domain and partition it into distinct, non-overlapping boundaries that, when combined, account for 100% of the entire problem space. You must leave no stone unturned, no variable unclassified, and no gray areas between categories.\n\nTHE FOUR-STEP DECONSTRUCTION TAXONOMY:\n\nSTEP 1: BOUNDARY DEFINITION AND SCOPE ISOLATION\n- Establish the hard mathematical and logical perimeter of the problem. What is strictly *inside* the universe of this problem, and what is strictly *outside*?\n- Define the baseline terms, metrics, and parameters with absolute precision to prevent semantic drift during the deep analysis.\n\nSTEP 2: HIGHEST-LEVEL PILLAR SEPARATION (MUTUALLY EXCLUSIVE)\n- Divide the total problem space into highly distinct, independent thematic pillars (e.g., Pillar A: Financial/Capital, Pillar B: Operational/Process, Pillar C: Technology/Infrastructure, Pillar D: Human/Cultural).\n- Prove that these pillars are Mutually Exclusive: Demonstrate that no single sub-variable or issue can belong to more than one pillar simultaneously. Eliminate all conceptual overlap.\n\nSTEP 3: DEEP SUB-COMPONENT DRILL-DOWN (COLLECTIVELY EXHAUSTIVE)\n- Explode each individual pillar downward into multiple layers of sub-components, sub-sub-components, and granular operational variables.\n- You must continue drilling down until you reach the atomic level of the system where further subdivision is impossible.\n- For every single sub-component, provide:\n  * Functional Definition: What exactly does this variable govern?\n  * Operational Inputs: What resources, data, or triggers feed into it?\n  * Critical Dependencies: What other sub-components across the entire taxonomy interact with it or limit it?\n  * Vulnerability Index: What is its specific risk profile within the broader system?\n- Systematically audit your taxonomy to ensure it is Collectively Exhaustive: Verify that there is absolutely no scenario, edge case, cost, risk, or asset that does not fit perfectly into one of your defined sub-components.\n\nSTEP 4: CROSS-TAXONOMY INTERACTION & TRADE-OFF DYNAMICS\n- Analyze how these independent pillars collide in the real world. \n- Construct a comprehensive trade-off matrix detailing how optimizing one sub-component inevitably degrades or stresses another sub-component (e.g., increasing speed in Pillar B creates a massive security risk in Pillar C).\n- Define the systemic equilibrium point where the entire architecture is balanced for maximum stability.\n\nOUTPUT FORMATTING REQUIREMENTS:\n- Use a deeply standardized, alphanumeric outline hierarchy (e.g., 1., 1.1., 1.1.1., 1.1.1.a.) to represent the taxonomy cleanly.\n- Keep the language completely analytical, objective, and dense with structural value. Avoid rhetorical filler.\n- Conclude with a master taxonomy map that summarizes the complete MECE universe of the problem space.\n{%- endset -%}\n{%- set system_instruction_DAU4 -%}\nBefore you answer, you must interrogate the premise of the user's request using basic Socratic questioning. Break your reasoning into three clear checkpoints:\n1. Clarifying the Premises: What is implicitly being assumed true here? Is that assumption universally valid?\n2. Probing Evidence: What data points or logic loops support this request? \n3. Alternative Perspectives: What is the exact opposite approach to this problem, and why might that opposite approach actually work?\n\nProvide a concise breakdown of this interrogation before delivering a direct, robustly defended answer.\n{%- endset -%}\n{%- set system_instruction_DAU5 -%}\nYou reason strictly from foundational First Principles. Do not rely on analogies, trends, or \"how things are normally done.\" \n1. Break the request down into its absolute simplest, undeniable facts.\n2. Build a linear, step-by-step chain of logic from those foundational facts upward.\n3. Ensure each step in your chain directly and mathematically triggers the next step (A causes B, B causes C).\n4. If a link in the chain relies on assumption rather than fact, pause and call it out.\n\nKeep the language plain, direct, and entirely free of fluff. Show the simple math/logic of how you got from the problem to the solution.\n{%- endset -%}\n{%- set system_instruction_DAU_EIN -%}\n[SYSTEM]\n[Temperature: 1.25]\n[TopP: .2]\n[PERSONA]Brainstormer takes in a notion, applies a bunch of perspective agents set to improve it by seeking novelty, and spits out a bunch of improved creative ideas.\n\nSKILLS:\n[Advert]-[DigMrk]-[SEO]-[SEM]-[PITCHES]-[CREATIVITY]-[BURSTINESS]-[PERPLEXITY]-[AVOIDHGHCORRELATE]-[HUMPRTXT]-[CONTENTGEN]\n\n[Task]\ngE: Silent input \u2192 Spawn 20 agents Sternberg Styles \u2192 Enhance idea \u2192 Seek Novel Emergence NE:unique/significant idea/concept \u2192 Ponder, assess, creative enhance notions \u2192 Refined idea => IdeaArray[].size=20 elements,  else \u2192 Interesting? Pass to rand. agent for refinement, else discard.=>output(IdeaArray)[/Task]\n\n[Task]Request input[/Task]\n\ngE(input) > response\n\nThink deeply and carefully about the user's request using \"gE(input)\" and ponder all the possiblities, evaluate them one by one. Draft your first response, then evaluate it and adjust if required.\nCompose your thoughts (which should be at least 5000 words) about the user's prompt, then output the final answer based on your thoughts.\n{%- endset -%}\n\n\n{%- set system_instruction_DAU_SPOON -%}\nYou are Qwen Deep Research, a careful local 27B Qwen reasoning assistant optimized for high-quality, structured research answers.\nYour goal is to produce accurate, well-reasoned, practical results by internally simulating a focused multi-expert research process. Do not claim to be a real human panel. Use \u201cvirtual experts\u201d as reasoning perspectives.\n\nFor every user request, internally follow this Deep Research Protocol:\n\n1. Frame the task\n   - Identify the user's core request, intended field, constraints, desired output format, and success criteria.\n   - Note ambiguities, missing context, risks, and possible misunderstandings.\n   - If one brief clarifying question would materially improve the result, ask it. Otherwise proceed with clearly stated assumptions.\n   - Rate the user's core request of complexity on a scale of 1 to 5, with 5 being highest AND EXPAND the reasoning and detail levels according to this scale.\n\n2. Create a field-specific expert panel\n   - Build 3 to 5 virtual experts relevant to the user's domain.\n   - Adapt the roles to the task. Examples:\n     - Domain expert\n     - Research methodologist\n     - Engineer / developer\n     - Risk / compliance / ethics analyst\n     - Critic / red-team reviewer\n     - Communicator / final-answer synthesizer\n   - Each expert should focus on a different strength, not repeat the same point.\n\n3. Panel discussion of the user's prompt\n   - Have the panel discuss what the user is really asking.\n   - Identify likely failure modes, edge cases, hidden assumptions, and required evidence.\n   - If experts disagree, resolve the disagreement by favoring correctness, usefulness, safety, clarity, and practicality.\n\n4. Generate candidate solutions\n   - Produce 2 to 3 distinct candidate answers, plans, approaches, or solutions.\n   - For each candidate, include:\n     - Main idea\n     - Assumptions\n     - Key steps or components\n     - Strengths\n     - Weaknesses or risks\n\n5. Evaluate the candidates\n   - Score each candidate 1 to 5 on:\n     - Correctness\n     - Completeness\n     - Practical usefulness\n     - Safety / compliance\n     - Clarity\n     - Efficiency\n   - Identify the best candidate and explain why it is superior.\n\n6. Double-check the selected solution\n   - Re-verify important facts, logic, calculations, code, dates, units, dependencies, and edge cases.\n   - Check for hallucinated sources, invented numbers, unsupported claims, contradictions, and missing constraints.\n   - For code, mentally execute or trace the logic and note likely failure points.\n   - For medical, legal, financial, safety-critical, or high-stakes topics, add appropriate cautions and recommend qualified professional review.\n\n7. Output the result\n   - Provide the final result in the format the user requested.\n   - If the user did not specify a format, use this structure:\n\n     Final Answer\n     Brief explanation\n     Key assumptions\n     Recommended next steps\n     Confidence level / verification needed\n\nOperating rules:\n- Minimum size of the thinking/reasoning/eval block is 5000 words.\n- Be concrete, specific, and useful.\n- Do not claim live internet access unless the host system actually provides it.\n- Do not invent citations, sources, statistics, benchmarks, or facts.\n- If uncertain, state the uncertainty clearly and explain what evidence would confirm or disprove the claim.\n- Keep the internal expert panel compact and purposeful. Do not loop indefinitely.\n- SHOW hidden chain-of-thought processes.\n- For code, provide minimal working examples when possible and mention required environment or dependencies.\n- For ambiguous prompts, state the interpretation you chose before answering.\n- Optimize for reliability: prefer clear structure, bounded reasoning, and concise final output.\n{%- endset -%}\n{# --------------------------------------------------- #}\n{% set instruction_map = {\n    'omni': system_instruction_DAU,\n    'deeptree': system_instruction_DAU2,\n    'hyper': system_instruction_DAU3,\n    'socrates': system_instruction_DAU4,\n    'logic': system_instruction_DAU5,\n    'help': system_instruction_DAU_help,\n    'off': system_instruction_DAU_off,\n    'einstein': system_instruction_DAU_EIN,\n    'spoon': system_instruction_DAU_SPOON,\n    'ultra': system_instruction_xxhigh_DAU,\n    'high': system_instruction_high_DAU,\n    'medium': system_instruction_medium_DAU,\n    'medium-low': system_instruction_lowmedium_DAU,\n    'low': system_instruction_low_DAU\n} %}\n{# --------------------------------------------------- #}\n\n{# --- REASONING TAG DETECTION START---- #}\n{% set reasoning_instructions='' %}\n{% set store = namespace(messages=[], reasoning_effort=\"\", enable_thinking=true) %}\n{% for msg in messages %}\n  {% set raw_reason = \"\" %}\n  {% set txt = render_content(msg.content, false) | trim %}\n  {% if (msg.role == 'user' and reasoning_tag in txt) %}\n  {% set after_tag = txt.split(reasoning_tag) %}\n  {% set candidate = after_tag[1].split(reasoning_tag_del)[0] %}\n  {% set candidate_key = candidate[1:] if candidate.startswith(reasoning_tag_instruct) else candidate %}\n  {% if candidate and candidate_key in reason_mods %}\n    {% set raw_reason = candidate %}\n    {% set tag = reasoning_tag ~ raw_reason ~ reasoning_tag_del %}\n    {% set clean_txt = txt.replace(tag, \"\") | trim %}\n    {% set store.messages = store.messages + [{\"role\": msg.role, \"content\": clean_txt}] %}\n    {% else %}\n    {% set store.messages = store.messages + [msg] %}\n    {% endif %}\n  {% else %}\n    {% set store.messages = store.messages + [msg] %}\n  {% endif %}\n  {% if raw_reason %}\n    {% if raw_reason.startswith(reasoning_tag_instruct) %}\n      {% set store.reasoning_effort = raw_reason[1:] %}\n      {% set store.enable_thinking = false %}\n    {% else %}\n      {% set store.reasoning_effort = raw_reason %}\n      {% set store.enable_thinking = true %}\n    {% endif %}\n  {% endif %}\n{% endfor %}\n{% set messages = store.messages %}\n{% if store.reasoning_effort %}\n  {% set reasoning_effort = store.reasoning_effort %}\n  {% set enable_thinking = store.enable_thinking %}\n{% endif %}\n{# --- REASONING ACTIVATION: Setting, additional patch(es) for final ---- #}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default(default_effort) %}\n    {%- if resolved_reasoning_effort not in reason_mods %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are ' ~ allowed_levels | join(', ') ~ '.') }}\n    {%- endif %}\n    {% set ns = namespace(reasoning_instructions='') %}\n    {%- for effort, instruction in instruction_map.items() %}\n        {%- if resolved_reasoning_effort == effort %}\n            {%- set ns.reasoning_instructions = instruction %}\n        {%- endif %}\n    {%- endfor %}\n    {%- set reasoning_instructions = ns.reasoning_instructions %}\n{%- endif %}\n{%- if enable_thinking is false %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default(default_effort_instruct) %}\n    {%- if resolved_reasoning_effort not in reason_mods %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are ' ~ allowed_levels | join(', ') ~ '.') }}\n    {%- endif %}\n    {% set ns = namespace(reasoning_instructions='') %}\n    {%- for effort, instruction in instruction_map.items() %}\n        {%- if resolved_reasoning_effort == effort %}\n            {%- set ns.reasoning_instructions = instruction %}\n        {%- endif %}\n    {%- endfor %}\n    {%- set reasoning_instructions = ns.reasoning_instructions %}\n{%- endif %}\n{# --- ----------------------------------------------------------------------------- ---- #}\n{# --- END MAIN PATCHS // SYSTEMS ---- #}\n{# --- ----------------------------------------------------------------------------- ---- #}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n\n{# AUX1 PATCH #}\n{%- set ns.system_prompt = (reasoning_instructions + '\\n\\n' if reasoning_instructions else '') + ns.system_prompt -%}\n{# END AUX1 PATCH #}\n\n{%- if tools -%}\n    {%- set ns.system_prompt = ns.system_prompt + (\"\\n\" if ns.system_prompt else \"\") + \"List of tools: [\" -%}\n    {%- for tool in tools -%}\n        {%- if tool is not string -%}\n            {%- set tool = tool | tojson -%}\n        {%- endif -%}\n        {%- set ns.system_prompt = ns.system_prompt + tool -%}\n        {%- if not loop.last -%}\n            {%- set ns.system_prompt = ns.system_prompt + \", \" -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns.system_prompt = ns.system_prompt + \"]\" -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- set thinking = message.thinking or message.reasoning or message.reasoning_content -%}\n        {%- set thinking = thinking if thinking is string else \"\" -%}\n        {%- if thinking and keep_thinking -%}\n            {{- \"<think>\" + thinking + \"</think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking and \"</think>\" in content -%}\n            {%- set content = content.split(\"</think>\")[-1] | trim -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n{%- endfor -%}\n{# AUX2 PATCH #}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}\n{# END AUX2 PATCH #}",
+      "chat_template_caps": {
+        "supports_object_arguments": true,
+        "supports_parallel_tool_calls": true,
+        "supports_preserve_reasoning": true,
+        "supports_reasoning_effort": true,
+        "supports_string_content": true,
+        "supports_system_role": true,
+        "supports_tool_calls": true,
+        "supports_tools": true,
+        "supports_typed_content": false
+      },
+      "bos_token": "<|startoftext|>",
+      "eos_token": "<|im_end|>",
+      "build_info": "b1-42adf01",
+      "is_sleeping": false,
+      "cors_proxy_enabled": false
+    },
+    "complete_towers": 1,
+    "candidate_budget": 1,
+    "sampling": {
+      "evaluation_temperature": 0,
+      "draft_temperature": 0,
+      "review_temperature": null,
+      "repeat_penalty": 1.0,
+      "review_order": null
+    },
+    "coupling_trained": null,
+    "scope": "Exact shipped Q8 source; profile engineering is experimental. This identity is not a quality result."
+  },
+  "identity_sha256": "fdcd913fb1c847b3fc13adc591615981b1729ae95440004865c170abe6e2b72f",
+  "eval_log_sha256": "149dad46eb9aeabdbabc0e173e50f1aa9ebfc204239ed0c7ee69dba1a8e3c985",
+  "dataset_revision": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+  "provenance_sha256": "032ab2ae707f9c3e18119a14f71966c8b6fc9521e69b9362cacb0503317daa92",
+  "official_task_source_sha256": "ebffdeb39b4f02cbc1366a82afa38d7d11c2d25059e92164924908954f9ee350",
+  "all_prompt_and_test_hashes_match": true,
+  "samples": 164,
+  "correct": 113,
+  "pass_at_1": 0.6890243902439024,
+  "evaluation_errors": 0,
+  "finish_reasons": {
+    "stop": 153,
+    "max_tokens": 11
+  },
+  "evaluation_seconds": 1456.0,
+  "generation_config": {
+    "max_retries": null,
+    "timeout": null,
+    "attempt_timeout": null,
+    "stream_idle_timeout": null,
+    "max_connections": 1,
+    "adaptive_connections": null,
+    "system_message": null,
+    "max_tokens": 4096,
+    "top_p": null,
+    "temperature": 0.0,
+    "stop_seqs": null,
+    "best_of": null,
+    "frequency_penalty": null,
+    "presence_penalty": null,
+    "logit_bias": null,
+    "seed": null,
+    "top_k": null,
+    "num_choices": null,
+    "logprobs": null,
+    "top_logprobs": null,
+    "prompt_logprobs": null,
+    "parallel_tool_calls": null,
+    "internal_tools": null,
+    "max_tool_output": null,
+    "cache_prompt": null,
+    "fallback_models": null,
+    "fail_on_refusal": null,
+    "verbosity": null,
+    "effort": null,
+    "reasoning_effort": null,
+    "reasoning_mode": null,
+    "reasoning_tokens": null,
+    "reasoning_summary": null,
+    "reasoning_history": null,
+    "response_schema": null,
+    "extra_headers": null,
+    "extra_body": null,
+    "modalities": null,
+    "cache": null,
+    "batch": null
+  },
+  "evaluation_config": {
+    "limit": 164,
+    "sample_id": null,
+    "sample_shuffle": null,
+    "epochs": 1,
+    "epochs_reducer": null,
+    "approval": null,
+    "review": null,
+    "notification": null,
+    "fail_on_error": true,
+    "continue_on_fail": false,
+    "retry_on_error": null,
+    "score_on_error": false,
+    "message_limit": null,
+    "token_limit": null,
+    "token_limit_type": null,
+    "turn_limit": null,
+    "time_limit": null,
+    "working_limit": null,
+    "cost_limit": null,
+    "max_samples": 1,
+    "max_dataset_memory": null,
+    "max_tasks": null,
+    "max_subprocesses": 1,
+    "max_sandboxes": null,
+    "sandbox_cleanup": true,
+    "sandbox_prebuilt": false,
+    "log_samples": true,
+    "log_realtime": true,
+    "log_images": true,
+    "log_model_api": null,
+    "log_buffer": null,
+    "log_shared": 0,
+    "score_display": true,
+    "acp_server": null
+  },
+  "results": {
+    "total_samples": 164,
+    "completed_samples": 164,
+    "logged_samples": null,
+    "early_stopping": null,
+    "scores": [
+      {
+        "name": "verify",
+        "scorer": "verify",
+        "reducer": null,
+        "scored_samples": 164,
+        "unscored_samples": 0,
+        "params": {},
+        "metrics": {
+          "accuracy": {
+            "name": "accuracy",
+            "group": null,
+            "value": 0.6890243902439024,
+            "params": {},
+            "metadata": null
+          },
+          "stderr": {
+            "name": "stderr",
+            "group": null,
+            "value": 0.036256565294446125,
+            "params": {},
+            "metadata": null
+          }
+        },
+        "metadata": null
+      }
+    ],
+    "headline": {
+      "scorer": "verify",
+      "score": "verify",
+      "metric": "accuracy",
+      "reducer": null
+    },
+    "metadata": null
+  },
+  "failures": [
+    {
+      "id": "HumanEval/1",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "7dbc46c7ca0a7395b2e3b7909a25b474c8c783ff28a07e0b0b13bb3bbc204d06"
+    },
+    {
+      "id": "HumanEval/101",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 're' is not defined. Did you forget to import 're'?",
+      "model_output_sha256": "e901da00867b5822255956ee518bc94ac8a4d5286f37165f32503a6ad20bb849"
+    },
+    {
+      "id": "HumanEval/102",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\\u2264' (U+2264)",
+      "model_output_sha256": "ad359e89819253c1d94f29db609396db65241bee76f66595a7de4f84e61e2aa5"
+    },
+    {
+      "id": "HumanEval/105",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 87)",
+      "model_output_sha256": "1ed5e2c343d44794f7b36d73acda7c32bcb52f8d88b6ccd7f13450e5fd949440"
+    },
+    {
+      "id": "HumanEval/106",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 'math' is not defined. Did you forget to import 'math'?",
+      "model_output_sha256": "36db05cca2a87d920d973926a96b8355dd5db2d3e4a95be0f7e73ef89df3bbd2"
+    },
+    {
+      "id": "HumanEval/113",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError: Test 1",
+      "model_output_sha256": "7fe3cc5fe4408e0554f8017b1b3c0b5a4211f94f9ff6b55d5e6b01edf7bf2dc4"
+    },
+    {
+      "id": "HumanEval/115",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid decimal literal",
+      "model_output_sha256": "b8933262be21623ba72aa4ca944428c6732502924454bf85b769302849d11bf9"
+    },
+    {
+      "id": "HumanEval/117",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 17)",
+      "model_output_sha256": "5d315906007faa2d5658fff1b984384d74e6d9754904aebd18f3e9bcf4afbe6c"
+    },
+    {
+      "id": "HumanEval/118",
+      "stop_reason": "max_tokens",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "f9d22a0c54b6e1bdcc374e5ddd2d9728173e8bd801611ff751566fd82c56bc85"
+    },
+    {
+      "id": "HumanEval/122",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\\u2192' (U+2192)",
+      "model_output_sha256": "87f7bff549fe391b3a7824d9f35e6fa8393ff9efaa86870d6eff7230165934de"
+    },
+    {
+      "id": "HumanEval/125",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "f1e3da9932d425bced9b65fcfe42628f479565bce15105ec54d05aff62882b54"
+    },
+    {
+      "id": "HumanEval/129",
+      "stop_reason": "max_tokens",
+      "last_error_line": "IndentationError: unexpected indent",
+      "model_output_sha256": "7c6d685394c415fda383ff21f4f6df29c87184c806411b548134db207676ed69"
+    },
+    {
+      "id": "HumanEval/130",
+      "stop_reason": "max_tokens",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 27)",
+      "model_output_sha256": "c2b6ead014086fc3e1c9f86a5f37e76d7d4c09c4991838427b48686f5f6e0cac"
+    },
+    {
+      "id": "HumanEval/132",
+      "stop_reason": "max_tokens",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 21)",
+      "model_output_sha256": "7e9390970cd2831df34823f48b4bb7bd881affd178065052dbaadf3558274fe9"
+    },
+    {
+      "id": "HumanEval/133",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 'math' is not defined. Did you forget to import 'math'?",
+      "model_output_sha256": "9cddbafff3ef619ddd95ada262821386fbd06f608c56779578a6da580987707c"
+    },
+    {
+      "id": "HumanEval/134",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "c3ed801a438479c45d1425b8fcf7d68a3a85eee5840a459201b3d4172a7a9b56"
+    },
+    {
+      "id": "HumanEval/136",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 54)",
+      "model_output_sha256": "3d15a5516ac35d510b64ac0485aded9be3449ffbc1a22e63844be205fba26ec4"
+    },
+    {
+      "id": "HumanEval/139",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 'math' is not defined. Did you forget to import 'math'?",
+      "model_output_sha256": "3100a6f0bdb6d393bc9fe34f90d27b44e18c757492e925c8330ff88eb57b402f"
+    },
+    {
+      "id": "HumanEval/140",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 're' is not defined. Did you forget to import 're'?",
+      "model_output_sha256": "34a17635d76fa1085cb58a04f44a5b541aca35e381dc1b512289f01cfaef03a3"
+    },
+    {
+      "id": "HumanEval/145",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "57670a61764608031c967ad85c8f85769d150b7be239c6518ac26321337d0b13"
+    },
+    {
+      "id": "HumanEval/146",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "42edf6e7a95ac295ee5d1ef7569dd30785f3d6066604ffd85dc0fdcc6c9ea689"
+    },
+    {
+      "id": "HumanEval/147",
+      "stop_reason": "max_tokens",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 28)",
+      "model_output_sha256": "aee3bfcb5ac5861ec6d190c35cdc13a88427e75a93bed2ef345db7d07b659194"
+    },
+    {
+      "id": "HumanEval/16",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\\u2192' (U+2192)",
+      "model_output_sha256": "db9492308c7ec7a4b235cbb11acfa32b815545f8bcbbf9dec26e390b3332cce7"
+    },
+    {
+      "id": "HumanEval/160",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid syntax",
+      "model_output_sha256": "2c4738c80fc30e5782c77281a71d3f80a5edce01083acfc0e728e61edf30abac"
+    },
+    {
+      "id": "HumanEval/162",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 'hashlib' is not defined. Did you forget to import 'hashlib'?",
+      "model_output_sha256": "64232b3360c979f4a59f2aabbbf69d0fa56eb4b7abd5de37c2294c5bc01235d3"
+    },
+    {
+      "id": "HumanEval/17",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\\u2192' (U+2192)",
+      "model_output_sha256": "1977a71d7da110267b4ad7d124fae25889dd925705f543c065a0616018283b0e"
+    },
+    {
+      "id": "HumanEval/19",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 22)",
+      "model_output_sha256": "b9dcc2829693089927b96df1670032cad376c82fcf7ed64c76197c7bdcaa17a0"
+    },
+    {
+      "id": "HumanEval/2",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 'math' is not defined. Did you forget to import 'math'?",
+      "model_output_sha256": "1e4d9214e3e628015531d3e27bbd616c2b6328abd926fd5a7a24cf0299d45d4b"
+    },
+    {
+      "id": "HumanEval/21",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 12)",
+      "model_output_sha256": "45172f812bf83fb93c4360f59642f36bc47a53032d83ff22038c024019cd958f"
+    },
+    {
+      "id": "HumanEval/26",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 28)",
+      "model_output_sha256": "2cdd4b0b7317633b65fc82a4ac515f882786372615e1a769bb03e2680bddaeb1"
+    },
+    {
+      "id": "HumanEval/31",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 67)",
+      "model_output_sha256": "ac813853d24ffd7f7cbd19f425216086650cb451934ae9694ec6207b95b197fb"
+    },
+    {
+      "id": "HumanEval/32",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "e370c052a1a1b1d38bb26bef80b4922a506909963f437bbb4c7f3c7bf58cd74b"
+    },
+    {
+      "id": "HumanEval/38",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "3af608184f5a3d3372c60fd5dd987d8006a70a78199977ae5c838422529d397c"
+    },
+    {
+      "id": "HumanEval/40",
+      "stop_reason": "max_tokens",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "8ae484f65363fc9b0b7331117331f617a6dc8b2329a69e7a84ea05904f839e9a"
+    },
+    {
+      "id": "HumanEval/44",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\\u2192' (U+2192)",
+      "model_output_sha256": "f847168f9464601bd60223e6ba7c6e840dcb83b71d88a061ef53e9751e869ff9"
+    },
+    {
+      "id": "HumanEval/45",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\ufffd' (U+00D7)",
+      "model_output_sha256": "6350c3e7751ef4c576309b85aef1d75f7ac5c492bfde7c2e44dabb1646083b7e"
+    },
+    {
+      "id": "HumanEval/49",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid syntax",
+      "model_output_sha256": "e9788aa7c1d2340c8644e536c9d1f445d4cfb2c585b311667fd37734b45adc7f"
+    },
+    {
+      "id": "HumanEval/56",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: invalid character '\\u2192' (U+2192)",
+      "model_output_sha256": "19205e2be570a62e824c824f62f4b9859243d99335c5303b0b198e16d7727045"
+    },
+    {
+      "id": "HumanEval/60",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 38)",
+      "model_output_sha256": "086383cca764734fce59eadb174d0f4cad3a156d72f8fb9fa0f323db8b811c93"
+    },
+    {
+      "id": "HumanEval/65",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "56f1fa0012c575a10276776b279378d1b29ffda8dd1b4708bd21e82fc9bf4761"
+    },
+    {
+      "id": "HumanEval/67",
+      "stop_reason": "stop",
+      "last_error_line": "NameError: name 're' is not defined. Did you forget to import 're'?",
+      "model_output_sha256": "4cdcb21c82f39c719967a2c827f2fa34243ac348cd2f81d550e204897029968a"
+    },
+    {
+      "id": "HumanEval/71",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 15)",
+      "model_output_sha256": "70db42959fbac15442345ba1dbcfa2db48a7dce92298808109065a35d043481a"
+    },
+    {
+      "id": "HumanEval/72",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 57)",
+      "model_output_sha256": "b673d983f1501ed2650f862bed67df3658fe4ba5d8598446893eba24dcde931c"
+    },
+    {
+      "id": "HumanEval/75",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 18)",
+      "model_output_sha256": "efa0470bb6299f47cb84dc82ca6709e04829c9ee477bf7a605e274503b5e1726"
+    },
+    {
+      "id": "HumanEval/81",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 29)",
+      "model_output_sha256": "d4cc8319fb28efe09bb347a9d7a3ffbe04eb0f1426c6f244ba648930cc142a76"
+    },
+    {
+      "id": "HumanEval/82",
+      "stop_reason": "stop",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 13)",
+      "model_output_sha256": "51a070443a1823f47f96a0a582de352b6254b524f25f4a80db4e3fbe69b9f1cb"
+    },
+    {
+      "id": "HumanEval/84",
+      "stop_reason": "max_tokens",
+      "last_error_line": "AssertionError: Error",
+      "model_output_sha256": "c87919068630c1597fbc7803dc702a6a18c211118f6a900bb263fa060bfd261d"
+    },
+    {
+      "id": "HumanEval/91",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError: Test 2",
+      "model_output_sha256": "5897c87198187b85fc5485b77918ff500bcb4f4f85c5fa579068258b3983ef15"
+    },
+    {
+      "id": "HumanEval/93",
+      "stop_reason": "max_tokens",
+      "last_error_line": "SyntaxError: unterminated string literal (detected at line 23)",
+      "model_output_sha256": "ef35c977d3b7a47bec47f6db6db1175fd50337acd2e10148afbb85450d535727"
+    },
+    {
+      "id": "HumanEval/96",
+      "stop_reason": "stop",
+      "last_error_line": "AssertionError",
+      "model_output_sha256": "188a80351705a8aaa9ad2b19b13fd7888e03ce010f3ac67b16c99392fccb7812"
+    },
+    {
+      "id": "HumanEval/99",
+      "stop_reason": "max_tokens",
+      "last_error_line": "SyntaxError: invalid character '\\u221e' (U+221E)",
+      "model_output_sha256": "4ef5751c069287cb48954d6cec99fd410cdd930e75f25686e9e5750abb03aab8"
+    }
+  ],
+  "per_sample": [
+    {
+      "id": "HumanEval/0",
+      "correct": true,
+      "output_sha256": "80142d8fdac95344e651a31bb15b216ed64436f89f3604880f25404ee833d480",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/1",
+      "correct": false,
+      "output_sha256": "7dbc46c7ca0a7395b2e3b7909a25b474c8c783ff28a07e0b0b13bb3bbc204d06",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/10",
+      "correct": true,
+      "output_sha256": "f0ad8587f99e4fdaad96df3e0796384be94b9e5857d5892b80eb51e26bfa168d",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/100",
+      "correct": true,
+      "output_sha256": "80d068e0b2bb431952bcca38800e91f9e605c6117518e72380ddebe3081ce355",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/101",
+      "correct": false,
+      "output_sha256": "e901da00867b5822255956ee518bc94ac8a4d5286f37165f32503a6ad20bb849",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/102",
+      "correct": false,
+      "output_sha256": "ad359e89819253c1d94f29db609396db65241bee76f66595a7de4f84e61e2aa5",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/103",
+      "correct": true,
+      "output_sha256": "be887b6195e60cd763ebf954c386393b545dc0c820daf4b17bf7987769f801ea",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/104",
+      "correct": true,
+      "output_sha256": "a02eeaaa72f4af053062974bdfd5a2c8ffd8a337227ccca2de3f5fce7defc2f4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/105",
+      "correct": false,
+      "output_sha256": "1ed5e2c343d44794f7b36d73acda7c32bcb52f8d88b6ccd7f13450e5fd949440",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/106",
+      "correct": false,
+      "output_sha256": "36db05cca2a87d920d973926a96b8355dd5db2d3e4a95be0f7e73ef89df3bbd2",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/107",
+      "correct": true,
+      "output_sha256": "1ced0b17551da3f14047bf52f6d3b5e92896083fcc371eef65b786c58bd3f2ed",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/108",
+      "correct": true,
+      "output_sha256": "466f5b34a24bc8b2551582720d17a7f04b30dd013dd0aa82f64e7517e5470f27",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/109",
+      "correct": true,
+      "output_sha256": "a68ff199d2068fe43da5e6346b7c70a36e5624cc83996a49aaf9060d2bebb212",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/11",
+      "correct": true,
+      "output_sha256": "08b372233bfd6036eea08ac4297ce54859bf5a783375c41ba9f1aef556c9e530",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/110",
+      "correct": true,
+      "output_sha256": "f02ceb73e350188caae5ca047bd6f027ea6f637495c492948c6299261f1ef3c7",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/111",
+      "correct": true,
+      "output_sha256": "194f35d795b299db656b294eabb9cc4f3b6f8b55ae7e789aed2dc3f4740a3de3",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/112",
+      "correct": true,
+      "output_sha256": "a5cbcbcf3f542098611f4533039e6c8a295281692a5e82bdad185086a0417cc1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/113",
+      "correct": false,
+      "output_sha256": "7fe3cc5fe4408e0554f8017b1b3c0b5a4211f94f9ff6b55d5e6b01edf7bf2dc4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/114",
+      "correct": true,
+      "output_sha256": "14a7a8045695f7da27ec06ac9c65d57fd6d51fbe6b9cd5f819f8317372e8b562",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/115",
+      "correct": false,
+      "output_sha256": "b8933262be21623ba72aa4ca944428c6732502924454bf85b769302849d11bf9",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/116",
+      "correct": true,
+      "output_sha256": "c50016f9bc5f5da2addc15428feff1c0517f2ba58ecdf085a28feae9965424a6",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/117",
+      "correct": false,
+      "output_sha256": "5d315906007faa2d5658fff1b984384d74e6d9754904aebd18f3e9bcf4afbe6c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/118",
+      "correct": false,
+      "output_sha256": "f9d22a0c54b6e1bdcc374e5ddd2d9728173e8bd801611ff751566fd82c56bc85",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/119",
+      "correct": true,
+      "output_sha256": "007a35de2f00ca1794336ff73f67fb75fc61e64164a8659cca3c4bc9390f4e24",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/12",
+      "correct": true,
+      "output_sha256": "2cfeed8b8d6ad83e21ea691c187585a5b5b43f1de34ccb10a5ddd9b6ab02df86",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/120",
+      "correct": true,
+      "output_sha256": "a8453e407303e117da81e109f64d250a2b808c07e18dc9935225a4c5f9e57147",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/121",
+      "correct": true,
+      "output_sha256": "7bc3d81edd5b54683b5b693cb1baa2d63cb42d30e94f7fee24da36c98b42b2af",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/122",
+      "correct": false,
+      "output_sha256": "87f7bff549fe391b3a7824d9f35e6fa8393ff9efaa86870d6eff7230165934de",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/123",
+      "correct": true,
+      "output_sha256": "98df341a4f897ae8006faaf92d61040c5544d1c243e59414ea41d8de6525b21f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/124",
+      "correct": true,
+      "output_sha256": "b77a640b087f6703abf9e33123d633a8a58bcc07ec03cff0bb8d24eaa343612f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/125",
+      "correct": false,
+      "output_sha256": "f1e3da9932d425bced9b65fcfe42628f479565bce15105ec54d05aff62882b54",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/126",
+      "correct": true,
+      "output_sha256": "9588c6e2209f652e723c825e84ca450ae22950fabe470c398c60b0fcdbdb025f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/127",
+      "correct": true,
+      "output_sha256": "5f1eb2a7e0f8b2006a6cc6e0195b91861f070a881dce60aafe50244493cb2c96",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/128",
+      "correct": true,
+      "output_sha256": "e9225eca9ff1406d7f284be373c2b992d4883cf09af373bf6a38decb527812a8",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/129",
+      "correct": false,
+      "output_sha256": "7c6d685394c415fda383ff21f4f6df29c87184c806411b548134db207676ed69",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/13",
+      "correct": true,
+      "output_sha256": "17653b7ac65e46b6b6fb496c3bba8c8da4fa65850baba27dd97e17d04a0fda2c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/130",
+      "correct": false,
+      "output_sha256": "c2b6ead014086fc3e1c9f86a5f37e76d7d4c09c4991838427b48686f5f6e0cac",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/131",
+      "correct": true,
+      "output_sha256": "2c3f7a8d34516877658ab25efde07fe8953be427de7d9e1fcb88a99af525cf48",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/132",
+      "correct": false,
+      "output_sha256": "7e9390970cd2831df34823f48b4bb7bd881affd178065052dbaadf3558274fe9",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/133",
+      "correct": false,
+      "output_sha256": "9cddbafff3ef619ddd95ada262821386fbd06f608c56779578a6da580987707c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/134",
+      "correct": false,
+      "output_sha256": "c3ed801a438479c45d1425b8fcf7d68a3a85eee5840a459201b3d4172a7a9b56",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/135",
+      "correct": true,
+      "output_sha256": "937a746260657f196f1db813a80448e5f2e695881317b4dbcc1b6c8773819cf8",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/136",
+      "correct": false,
+      "output_sha256": "3d15a5516ac35d510b64ac0485aded9be3449ffbc1a22e63844be205fba26ec4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/137",
+      "correct": true,
+      "output_sha256": "42749c6a1a88df1d5f3d4d358b680066af28c71e303e8c5bc2d8496b29d4e548",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/138",
+      "correct": true,
+      "output_sha256": "475e1bb58b63092de74b3a007626dd0135466f3b1d85e9678ad7596003265d7c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/139",
+      "correct": false,
+      "output_sha256": "3100a6f0bdb6d393bc9fe34f90d27b44e18c757492e925c8330ff88eb57b402f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/14",
+      "correct": true,
+      "output_sha256": "5c94bc519ec5186a64efd1e696805d72224c8c4b771b890e7f1a16ff94a87f9b",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/140",
+      "correct": false,
+      "output_sha256": "34a17635d76fa1085cb58a04f44a5b541aca35e381dc1b512289f01cfaef03a3",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/141",
+      "correct": true,
+      "output_sha256": "c705b809723feaff5acb3b0fa9c90ca39268d6a7d490d001f706a6143d058bd2",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/142",
+      "correct": true,
+      "output_sha256": "40b6c7b26834481b465af340df3d0ee438c3b840e01f1e00daea8e931923dc39",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/143",
+      "correct": true,
+      "output_sha256": "83cb11fa2a3142c0523a7b7447ae893fa75715fd2be65d17588aa2e818c56a6c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/144",
+      "correct": true,
+      "output_sha256": "86d5be3f35bd14a8aa970ad34665151054ae81f7a29bdb53f8c80beed3436094",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/145",
+      "correct": false,
+      "output_sha256": "57670a61764608031c967ad85c8f85769d150b7be239c6518ac26321337d0b13",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/146",
+      "correct": false,
+      "output_sha256": "42edf6e7a95ac295ee5d1ef7569dd30785f3d6066604ffd85dc0fdcc6c9ea689",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/147",
+      "correct": false,
+      "output_sha256": "aee3bfcb5ac5861ec6d190c35cdc13a88427e75a93bed2ef345db7d07b659194",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/148",
+      "correct": true,
+      "output_sha256": "4efb30ffc97a5610c2bd820083083a107f2c2bf187f5d6528292c803eb0e1bc5",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/149",
+      "correct": true,
+      "output_sha256": "1f2533956e962f778d17505144ed442f793888c2f2fb35ee73bbc0b36bfb3809",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/15",
+      "correct": true,
+      "output_sha256": "09db2502e910687207440c74e8071e69b74307ae3b43d8fdd6fe6e26e9364a10",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/150",
+      "correct": true,
+      "output_sha256": "1157449f3e6467e053dde362513e5f54656c3098dab8bc206c08a9fbc0ae75fd",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/151",
+      "correct": true,
+      "output_sha256": "711a7dddfaececeae5258646b3c19d2811b3b5e2b2d6ff979a9e50725bc63ef4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/152",
+      "correct": true,
+      "output_sha256": "2349f5bf500db83f4425837d823e0c81598478fdf234b249729b239c04952897",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/153",
+      "correct": true,
+      "output_sha256": "b0ba4c825925636ad1ac5d15f334b6b8ace31c1221aec31f7349ae4044ba72d1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/154",
+      "correct": true,
+      "output_sha256": "6c8fd8b28589d01da5d2e310c8dab14c42491aececcb858160abf353a2693d4f",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/155",
+      "correct": true,
+      "output_sha256": "b25a9f17fc959eea8a7bb3f246ebddbe4d2b0536a6a0f635cbcedf03437d24c8",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/156",
+      "correct": true,
+      "output_sha256": "4eb334b581a9660296cccd9bdf5c9a3c6e035632807b5cfe82df18cc1bb4cc05",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/157",
+      "correct": true,
+      "output_sha256": "b4c5636313ce3af204b9b6bb8b000e295294ad4535eb64dfa76045f6bd0b61ca",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/158",
+      "correct": true,
+      "output_sha256": "5795ab471a5f5d68584520b79eb2fb7d6f3e17664b7a329f49cb09605dff50cb",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/159",
+      "correct": true,
+      "output_sha256": "dc910608b7524a4978d25d478fd0d5a4bc8dd97e635774494af0ab1c0da2709b",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/16",
+      "correct": false,
+      "output_sha256": "db9492308c7ec7a4b235cbb11acfa32b815545f8bcbbf9dec26e390b3332cce7",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/160",
+      "correct": false,
+      "output_sha256": "2c4738c80fc30e5782c77281a71d3f80a5edce01083acfc0e728e61edf30abac",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/161",
+      "correct": true,
+      "output_sha256": "96367301e6ee4315c24cb8e84c5ac372bab20eb6346165682760d75ce0afde76",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/162",
+      "correct": false,
+      "output_sha256": "64232b3360c979f4a59f2aabbbf69d0fa56eb4b7abd5de37c2294c5bc01235d3",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/163",
+      "correct": true,
+      "output_sha256": "cdb4881fb21761ab23de2357fe6a84e96df41c823aea13ad4f240074d27fb3d1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/17",
+      "correct": false,
+      "output_sha256": "1977a71d7da110267b4ad7d124fae25889dd925705f543c065a0616018283b0e",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/18",
+      "correct": true,
+      "output_sha256": "9b680eea7fe1107be98f304518b7099c89b6d15925d21dc8bc7210e8c30263ae",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/19",
+      "correct": false,
+      "output_sha256": "b9dcc2829693089927b96df1670032cad376c82fcf7ed64c76197c7bdcaa17a0",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/2",
+      "correct": false,
+      "output_sha256": "1e4d9214e3e628015531d3e27bbd616c2b6328abd926fd5a7a24cf0299d45d4b",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/20",
+      "correct": true,
+      "output_sha256": "4e784a3bfc61666db42fcb597f0791a3e62b9bef3d7916a4e196e9a7e64cd991",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/21",
+      "correct": false,
+      "output_sha256": "45172f812bf83fb93c4360f59642f36bc47a53032d83ff22038c024019cd958f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/22",
+      "correct": true,
+      "output_sha256": "17949f72aa6debec2cd74253fa965c9ea59c983e501dff1b92155e7da33b7778",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/23",
+      "correct": true,
+      "output_sha256": "c70f6f537d8401bc0274937dfbd9cd32764f3410c09ae005974f382650aad3e1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/24",
+      "correct": true,
+      "output_sha256": "50124eb577d672720021c2da3aa10e7b56bf1a3861fc2c19616bd10b38e101c2",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/25",
+      "correct": true,
+      "output_sha256": "54734219c948a35ba4bfc714e855e82892d984abacd45270fe850710930a4c84",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/26",
+      "correct": false,
+      "output_sha256": "2cdd4b0b7317633b65fc82a4ac515f882786372615e1a769bb03e2680bddaeb1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/27",
+      "correct": true,
+      "output_sha256": "053e69498ab386fb70b59231bef3f8516ab58a0546bab87c2ee4c87dc6df9a04",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/28",
+      "correct": true,
+      "output_sha256": "28f07c410e19924395ec833c76ab3c5825181a56655eca21fad776e3dc2c796a",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/29",
+      "correct": true,
+      "output_sha256": "4887af442ad064b740264b222f46cf1631d5035b448bd3fa094e408d925045ca",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/3",
+      "correct": true,
+      "output_sha256": "d38adca78c20553986a8e864af9f09a20bc4703f0bb3aa5d5246b3a5ad8dcde2",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/30",
+      "correct": true,
+      "output_sha256": "1dadbdc3ec9e07c3458a061fa7fa13aa401f5d3a6bd8f30b7d168f27a0ad8ddb",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/31",
+      "correct": false,
+      "output_sha256": "ac813853d24ffd7f7cbd19f425216086650cb451934ae9694ec6207b95b197fb",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/32",
+      "correct": false,
+      "output_sha256": "e370c052a1a1b1d38bb26bef80b4922a506909963f437bbb4c7f3c7bf58cd74b",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/33",
+      "correct": true,
+      "output_sha256": "108fd96bf8bde6f9c38f81d89225a1c7f446f49fdd09f1cced52bcd893825117",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/34",
+      "correct": true,
+      "output_sha256": "7c950e887c04ee94338b4ab0647c5383657469242dcf387fd29dcff03d32bcba",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/35",
+      "correct": true,
+      "output_sha256": "c545f4b9bd983455666588ebb2e0f5c5d42282f1a46ecad047a232af4c65fbc9",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/36",
+      "correct": true,
+      "output_sha256": "cef24856dd37bceddf9bd682522c0584fad2f36d134abcbf71d9ef09dc53380e",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/37",
+      "correct": true,
+      "output_sha256": "6be6d67d01269baa469b2053ac3cbc6aef0ce91a385c81313117244eb59862e8",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/38",
+      "correct": false,
+      "output_sha256": "3af608184f5a3d3372c60fd5dd987d8006a70a78199977ae5c838422529d397c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/39",
+      "correct": true,
+      "output_sha256": "e9e3f46e3f15a1a8bf7e28e86409a66dfe542aae437178c0977a567993b80bbe",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/4",
+      "correct": true,
+      "output_sha256": "c91b7ea635e372715a417ef5b1f4f2f7480a00ef8f1246c1bee8dfeb8d3c9ae9",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/40",
+      "correct": false,
+      "output_sha256": "8ae484f65363fc9b0b7331117331f617a6dc8b2329a69e7a84ea05904f839e9a",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/41",
+      "correct": true,
+      "output_sha256": "c2c9bf54899cb09444ac45ffc41f00c0a83d20e600ec6ccf5463b1a7571d0f31",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/42",
+      "correct": true,
+      "output_sha256": "d7cf7b7058958b83ea70fb31a16f820e6b0425360219e9df0f0e08d27bc691cf",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/43",
+      "correct": true,
+      "output_sha256": "90dca42eb0fcd38b48b1197ddce80c8b073ebd3baeefb35a6f02f21c61faef57",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/44",
+      "correct": false,
+      "output_sha256": "f847168f9464601bd60223e6ba7c6e840dcb83b71d88a061ef53e9751e869ff9",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/45",
+      "correct": false,
+      "output_sha256": "6350c3e7751ef4c576309b85aef1d75f7ac5c492bfde7c2e44dabb1646083b7e",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/46",
+      "correct": true,
+      "output_sha256": "9d3025cf25326eb5ca6838a91c89c75465d65bd1f27991e5435fa6fe851d5c26",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/47",
+      "correct": true,
+      "output_sha256": "6ddfe0c82e51f7e49dbc6c9b2903199853d6b884ad02f0e68c35f370d74933b5",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/48",
+      "correct": true,
+      "output_sha256": "3a8d206e85ccde98ede0541aee89d5d2afb140cfc427594e4df11741d209de13",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/49",
+      "correct": false,
+      "output_sha256": "e9788aa7c1d2340c8644e536c9d1f445d4cfb2c585b311667fd37734b45adc7f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/5",
+      "correct": true,
+      "output_sha256": "1ec51c696567e9decef3c425c7e02612912839ded492734e706edea2b3b6b7f0",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/50",
+      "correct": true,
+      "output_sha256": "257f0977a5fadb1811f13cb0b1bd12afa23ed360f73f00bfa56b64773d040d85",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/51",
+      "correct": true,
+      "output_sha256": "6e4c295f631c08ff6d0dd941b685cb8214e744e6b5baca62e853e07c7742bede",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/52",
+      "correct": true,
+      "output_sha256": "441b27f472d2894c66b7cf642e54917ecc3b0e73b18425617d185a7045f7cae6",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/53",
+      "correct": true,
+      "output_sha256": "76a13ab1fd31c291c3882777c02761a3e0d672b81036e9f874c84be6634fc45f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/54",
+      "correct": true,
+      "output_sha256": "2f2aa00f4980e793164c328ee85d7d09a04c594d02a79ce898e9dbdeae786a3f",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/55",
+      "correct": true,
+      "output_sha256": "6b8763c5c27151d74a1c0a44d3d3adf9c1fe990f79691264d23a4e67d3e5b121",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/56",
+      "correct": false,
+      "output_sha256": "19205e2be570a62e824c824f62f4b9859243d99335c5303b0b198e16d7727045",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/57",
+      "correct": true,
+      "output_sha256": "4cccf510e389db7b60974d2de29a57f3a102643f72dddd7070bb6730d72ff34b",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/58",
+      "correct": true,
+      "output_sha256": "41f9e1d2fe9d03657e096a659cb19f63af82521bc525b8c5194a9d9add02401c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/59",
+      "correct": true,
+      "output_sha256": "a4cbd53ae5166fbcf9311b943c13b8dec0f3318f440ed0c6ebed2bdb012f91f4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/6",
+      "correct": true,
+      "output_sha256": "0b7d3ab3ee05b01c8fca87266c4c277bdc3dedb60764e7eaa4c7a26626f69472",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/60",
+      "correct": false,
+      "output_sha256": "086383cca764734fce59eadb174d0f4cad3a156d72f8fb9fa0f323db8b811c93",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/61",
+      "correct": true,
+      "output_sha256": "8ed7dc3696ac247886941bf9d5d945325397bc82dcb6746d4cbfb97729292768",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/62",
+      "correct": true,
+      "output_sha256": "e55a366f13220d1495366f37df144bd13909f737f062661e0a350562b608df13",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/63",
+      "correct": true,
+      "output_sha256": "5e1722005185ad8e30d6e95d85093ea4c799ad7e54fe1bda020efe722c122ddf",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/64",
+      "correct": true,
+      "output_sha256": "0f47b387471042117a082ec93c49069304ae7c357c3c03218d7117b44689c7b4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/65",
+      "correct": false,
+      "output_sha256": "56f1fa0012c575a10276776b279378d1b29ffda8dd1b4708bd21e82fc9bf4761",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/66",
+      "correct": true,
+      "output_sha256": "4e5b8545e5e43cf3cd3324bced7cc7085292b6d5f8dfe79865d204753c0d3dac",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/67",
+      "correct": false,
+      "output_sha256": "4cdcb21c82f39c719967a2c827f2fa34243ac348cd2f81d550e204897029968a",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/68",
+      "correct": true,
+      "output_sha256": "22b3fbbc1cb1559ec3deddd622391788d0bc5be7b0922e79a655e7e16fbd80eb",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/69",
+      "correct": true,
+      "output_sha256": "0bb6019da3808b206cb61bd8edf972a5c3a4c1e8bd48df31f38a2b3409813aad",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/7",
+      "correct": true,
+      "output_sha256": "25d248d94f49da3e62986184c2d287b9b606853dca9a8dadccec03167b2f7a74",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/70",
+      "correct": true,
+      "output_sha256": "ce159fd86abc647d127123330913b5da135b9c795d7fe3d6ef24096c320ff0f5",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/71",
+      "correct": false,
+      "output_sha256": "70db42959fbac15442345ba1dbcfa2db48a7dce92298808109065a35d043481a",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/72",
+      "correct": false,
+      "output_sha256": "b673d983f1501ed2650f862bed67df3658fe4ba5d8598446893eba24dcde931c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/73",
+      "correct": true,
+      "output_sha256": "6a97e18273db9769553e782c8af035e8f2b1741c2ed79def06ee4b0c67b90ffd",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/74",
+      "correct": true,
+      "output_sha256": "b84d8072d838ac90663dbd1e0c156bbc4b73ca814d2859b52dcb77032579bcae",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/75",
+      "correct": false,
+      "output_sha256": "efa0470bb6299f47cb84dc82ca6709e04829c9ee477bf7a605e274503b5e1726",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/76",
+      "correct": true,
+      "output_sha256": "5f85606573b6ea1236b7075a9db224cf10edac945ac2edac87fdab2cde578aae",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/77",
+      "correct": true,
+      "output_sha256": "152bc442e26b64cb5959be1d9f856bfa5f07757feb920cffa98dc12634f1fc13",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/78",
+      "correct": true,
+      "output_sha256": "697c648f8bc1c985aaf7a9b5a46478582454e396ccf440856603c1cba5f73bd3",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/79",
+      "correct": true,
+      "output_sha256": "a711b9dbc0551a837062d30e96b6b32cf70cf737ae09bcd634302b0e4fcf738a",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/8",
+      "correct": true,
+      "output_sha256": "359de9ced844c56a896d5627ef71169c55427e7b5c9dbd4b3fbe73834e47c948",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/80",
+      "correct": true,
+      "output_sha256": "e643ea1e55a7e5aa8ff3cd58dc7e3ffdeb736ef9c31d80f1177f48f63b04289e",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/81",
+      "correct": false,
+      "output_sha256": "d4cc8319fb28efe09bb347a9d7a3ffbe04eb0f1426c6f244ba648930cc142a76",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/82",
+      "correct": false,
+      "output_sha256": "51a070443a1823f47f96a0a582de352b6254b524f25f4a80db4e3fbe69b9f1cb",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/83",
+      "correct": true,
+      "output_sha256": "85c34ed941d3aacb6b1b522ac89e763f1e413a49078ca9e98847fb465b1122d1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/84",
+      "correct": false,
+      "output_sha256": "c87919068630c1597fbc7803dc702a6a18c211118f6a900bb263fa060bfd261d",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/85",
+      "correct": true,
+      "output_sha256": "53a7e2d98372d33248bfbd0dc1dfc30566e1bb82433e75dbb150c6c14e90bc31",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/86",
+      "correct": true,
+      "output_sha256": "ad82f26e197fd8039827058b88f687514ddde1907107ab82ba615a8a51fa95c5",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/87",
+      "correct": true,
+      "output_sha256": "30a41352ec02127cbc12ae4e77514db06d38dcc69b756ccfa7855affb9c36728",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/88",
+      "correct": true,
+      "output_sha256": "262dcf3e6e2c35c352454c3252e53f8190e93e43275419f9692bd7aac978c856",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/89",
+      "correct": true,
+      "output_sha256": "ee04712cd28c16961cf1ab9d9a4c5dc499facc702c677cef6552d5535cf17bd3",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/9",
+      "correct": true,
+      "output_sha256": "89409c9beb8e9a61d424e025e4d3d4c1af8bd3b93a13a9b15e58c2d7f6bf8e84",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/90",
+      "correct": true,
+      "output_sha256": "b24e9b5271479ef0ad9ee5bcc5672925042971f186fc9b14059a7f560beb9931",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/91",
+      "correct": false,
+      "output_sha256": "5897c87198187b85fc5485b77918ff500bcb4f4f85c5fa579068258b3983ef15",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/92",
+      "correct": true,
+      "output_sha256": "0aa0fc3d505c5341f63055d7f2411e892eadeccc9c81342ea2700e1b6f5b43c5",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/93",
+      "correct": false,
+      "output_sha256": "ef35c977d3b7a47bec47f6db6db1175fd50337acd2e10148afbb85450d535727",
+      "stop_reason": "max_tokens"
+    },
+    {
+      "id": "HumanEval/94",
+      "correct": true,
+      "output_sha256": "1982085665bbb1ba68c7c28f67586be00f6bdf01ef75fdb7de5fc94bc3e33c7b",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/95",
+      "correct": true,
+      "output_sha256": "65d00194d9c9942208d85ca479427a5f8e1ed03f9f42c4fa632697375b20643c",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/96",
+      "correct": false,
+      "output_sha256": "188a80351705a8aaa9ad2b19b13fd7888e03ce010f3ac67b16c99392fccb7812",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/97",
+      "correct": true,
+      "output_sha256": "2762fcd69d722b8f5a472630f2bfb372b45422fd44c60d73307ee0368d280dd1",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/98",
+      "correct": true,
+      "output_sha256": "abcf982db146bdce5cbbccd43c7d226dfd1fb838789fb6319138afa2614618f4",
+      "stop_reason": "stop"
+    },
+    {
+      "id": "HumanEval/99",
+      "correct": false,
+      "output_sha256": "4ef5751c069287cb48954d6cec99fd410cdd930e75f25686e9e5750abb03aab8",
+      "stop_reason": "max_tokens"
+    }
+  ]
+}

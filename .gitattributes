@@ -8,3 +8,5 @@ src-tauri/resources/lfm/native/*.dll filter=lfs diff=lfs merge=lfs -text
 src-tauri/resources/lfm/native/fusioncore.cpp text eol=lf
 src-tauri/resources/doucode/runtime/*.txt -text -whitespace
 src-tauri/resources/doucode/runtime/LICENSE.* -text -whitespace
+scripts/evaluation/results/** -text -whitespace
+scripts/evaluation/*.py text eol=lf
