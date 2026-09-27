@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenCore Browser Control",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pair Chrome tabs with OpenCore.",
   "minimum_chrome_version": "116",
   "permissions": ["debugger", "tabs", "storage", "alarms"],

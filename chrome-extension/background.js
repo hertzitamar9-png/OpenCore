@@ -1,6 +1,12 @@
 const PORT = 8814;
 let socket = null;
 let reconnectTimer = null;
+let connectionPromise = null;
+let connectionVersion = 0;
+let rejectHandshake = null;
+let connectionError = "";
+let pairingRevision = 0;
+let pairingWrites = Promise.resolve();
 const attachedTabs = new Set();
 
 function isHttpUrl(value) {
@@ -131,44 +137,132 @@ async function handle(command) {
   throw new Error("Unsupported browser action");
 }
 
-async function connect() {
-  if (socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(socket.readyState)) return;
-  const { pairingToken } = await chrome.storage.local.get("pairingToken");
-  if (!pairingToken) return;
-  const activeSocket = new WebSocket(`ws://127.0.0.1:${PORT}/ws?token=${encodeURIComponent(pairingToken)}`);
-  socket = activeSocket;
-  activeSocket.onopen = () => chrome.action.setBadgeText({ text: "ON" });
-  activeSocket.onmessage = async (event) => {
-    let command;
-    try { command = JSON.parse(event.data); } catch { return; }
-    if (!command?.id) return;
-    try {
-      const result = await handle(command);
-      if (activeSocket.readyState === WebSocket.OPEN) activeSocket.send(JSON.stringify({ id: command.id, ok: true, result }));
-    } catch (error) {
-      if (activeSocket.readyState === WebSocket.OPEN) activeSocket.send(JSON.stringify({ id: command.id, ok: false, error: String(error?.message || error) }));
-    }
-  };
-  activeSocket.onclose = () => {
-    if (socket !== activeSocket) return;
-    chrome.action.setBadgeText({ text: "" });
-    socket = null;
-    clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(connect, 3000);
-  };
-  activeSocket.onerror = () => {};
+function resetConnection() {
+  connectionVersion += 1;
+  clearTimeout(reconnectTimer);
+  const previous = socket;
+  socket = null;
+  rejectHandshake?.(new Error("Pairing attempt was replaced."));
+  rejectHandshake = null;
+  connectionPromise = null;
+  connectionError = "";
+  previous?.close();
+  chrome.action.setBadgeText({ text: "" });
+}
+
+function connect() {
+  if (socket?.readyState === WebSocket.OPEN) return Promise.resolve(true);
+  if (connectionPromise) return connectionPromise;
+  const version = connectionVersion;
+  const attempt = (async () => {
+    const { pairingToken } = await chrome.storage.local.get("pairingToken");
+    if (version !== connectionVersion) throw new Error("Pairing attempt was replaced.");
+    if (!pairingToken) return false;
+    return new Promise((resolve, reject) => {
+      const activeSocket = new WebSocket(`ws://127.0.0.1:${PORT}/ws?token=${encodeURIComponent(pairingToken)}`);
+      socket = activeSocket;
+      let settled = false;
+      let timeout;
+      const fail = error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        if (rejectHandshake === fail) rejectHandshake = null;
+        if (socket === activeSocket) connectionError = error.message;
+        reject(error);
+      };
+      rejectHandshake = fail;
+      timeout = setTimeout(() => {
+        fail(new Error("Connection timed out. Open OpenCore and check the pairing code."));
+        activeSocket.close();
+      }, 8000);
+      activeSocket.onopen = () => {
+        if (socket !== activeSocket || version !== connectionVersion) {
+          fail(new Error("Pairing attempt was replaced."));
+          activeSocket.close();
+          return;
+        }
+        settled = true;
+        clearTimeout(timeout);
+        if (rejectHandshake === fail) rejectHandshake = null;
+        connectionError = "";
+        chrome.action.setBadgeText({ text: "ON" });
+        resolve(true);
+      };
+      activeSocket.onmessage = async event => {
+        let command;
+        try { command = JSON.parse(event.data); } catch { return; }
+        if (!command?.id || socket !== activeSocket) return;
+        try {
+          const result = await handle(command);
+          if (socket === activeSocket && activeSocket.readyState === WebSocket.OPEN) activeSocket.send(JSON.stringify({ id: command.id, ok: true, result }));
+        } catch (error) {
+          if (socket === activeSocket && activeSocket.readyState === WebSocket.OPEN) activeSocket.send(JSON.stringify({ id: command.id, ok: false, error: String(error?.message || error) }));
+        }
+      };
+      activeSocket.onclose = () => {
+        fail(new Error("Could not connect. Open OpenCore and check the pairing code."));
+        if (socket !== activeSocket) return;
+        chrome.action.setBadgeText({ text: "" });
+        socket = null;
+        if (!connectionError) connectionError = "OpenCore disconnected.";
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => connect().catch(() => {}), 3000);
+      };
+      activeSocket.onerror = () => {
+        fail(new Error("Could not connect. Open OpenCore and check the pairing code."));
+        activeSocket.close();
+      };
+    });
+  })();
+  connectionPromise = attempt;
+  attempt.then(() => {
+    if (connectionPromise === attempt) connectionPromise = null;
+  }, error => {
+    if (connectionPromise === attempt) connectionPromise = null;
+    if (version === connectionVersion && !connectionError) connectionError = String(error?.message || error);
+  });
+  return attempt;
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === "connection_status") {
+    sendResponse({ connected: socket?.readyState === WebSocket.OPEN,
+      connecting: socket?.readyState === WebSocket.CONNECTING, error: connectionError });
+    return false;
+  }
   if (message?.type !== "pair") return;
-  chrome.storage.local.set({ pairingToken: String(message.token || "").trim() })
-    .then(() => { socket?.close(); socket = null; return connect(); })
-    .then(() => sendResponse({ ok: true }))
-    .catch(error => sendResponse({ ok: false, error: String(error) }));
+  const token = String(message.token || "").trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
+    sendResponse({ ok: false, error: "Paste the pairing code shown in OpenCore." });
+    return false;
+  }
+  const revision = ++pairingRevision;
+  resetConnection();
+  const saved = pairingWrites.then(async () => {
+    if (revision !== pairingRevision) throw new Error("Pairing attempt was replaced.");
+    await chrome.storage.local.set({ pairingToken: token });
+  });
+  pairingWrites = saved.catch(() => {});
+  saved
+    .then(() => {
+      if (revision !== pairingRevision) throw new Error("Pairing attempt was replaced.");
+      // An alarm may have reconnected with the previous stored code while
+      // this write was pending. Authenticate again with the committed code.
+      resetConnection();
+      return connect();
+    })
+    .then(() => {
+      if (revision !== pairingRevision) throw new Error("Pairing attempt was replaced.");
+      const connected = socket?.readyState === WebSocket.OPEN;
+      sendResponse(connected ? { ok: true, connected: true }
+        : { ok: false, error: "OpenCore disconnected before pairing finished." });
+    })
+    .catch(error => sendResponse({ ok: false, error: String(error?.message || error) }));
   return true;
 });
 
 chrome.alarms.create("opencore-reconnect", { periodInMinutes: 0.5 });
-chrome.alarms.onAlarm.addListener((alarm) => { if (alarm.name === "opencore-reconnect") connect(); });
+chrome.alarms.onAlarm.addListener((alarm) => { if (alarm.name === "opencore-reconnect") connect().catch(() => {}); });
 setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "ping" })); }, 20000);
-connect();
+connect().catch(() => {});

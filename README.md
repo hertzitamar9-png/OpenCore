@@ -24,6 +24,21 @@ The NSIS installer is written under `src-tauri/target/release/bundle/nsis/`.
 
 The runtime looks for model assets under `OPENCORE_HOME` or the user's OpenCore installation directory. A successful app build verifies the desktop code and installer packaging, not model inference quality.
 
+## Chrome extension
+
+Use the Chrome setup controls in OpenCore to open the bundled `chrome-extension`
+folder and copy its pairing code. In Chrome's Extensions page, enable Developer
+mode, load that folder as an unpacked extension, then paste the code into the
+OpenCore Browser Control popup and select **Connect**. The extension controls tabs
+in the Chrome profile where it is installed. Its debugger permission enables
+page inspection, input, screenshots and DevTools evaluation.
+
+The app saves its pairing identity in its local database, so future restarts keep
+the same code. The popup reports **Connected** only after the authenticated socket
+opens; failed handshakes and an eight-second timeout show an error. Upgrading from
+a build that used temporary codes requires pairing once again. When extension
+files change, use **Reload** on its Chrome Extensions card to load the new worker.
+
 ## Optional model library
 
 Open **Models** to install, uninstall, or select a model. Nothing downloads on startup.

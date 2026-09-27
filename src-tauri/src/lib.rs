@@ -1677,7 +1677,7 @@ pub fn run() {
                 active_chats: Mutex::new(HashMap::new()),
                 live_generation_runs: Arc::new(Mutex::new(HashMap::new())),
                 pending_approvals: Mutex::new(HashMap::new()),
-                browser: Arc::new(browser_bridge::BrowserBridge::new()),
+                browser: Arc::new(browser_bridge::BrowserBridge::from_store(&store)?),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
                 vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
             });

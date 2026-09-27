@@ -21,6 +21,12 @@ pub(crate) struct BrowserBridge {
 }
 
 impl BrowserBridge {
+    pub(crate) fn from_store(store: &crate::store::EventStore) -> Result<Self, String> {
+        Ok(Self { token: store.get_or_create_pairing_token("browser_pairing_token_v1")?,
+            sender: Mutex::new(None), pending: Mutex::new(HashMap::new()) })
+    }
+
+    #[cfg(test)]
     pub(crate) fn new() -> Self {
         Self { token: uuid::Uuid::new_v4().to_string(), sender: Mutex::new(None), pending: Mutex::new(HashMap::new()) }
     }
@@ -128,6 +134,49 @@ pub(crate) async fn serve(bridge: Arc<BrowserBridge>) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::store::EventStore;
+
+    #[test]
+    fn pairing_identity_survives_reopening_the_app_database() {
+        let path = std::env::temp_dir().join(format!("opencore-browser-pairing-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = EventStore::open(&path).unwrap();
+        let first = BrowserBridge::from_store(&store).unwrap().token;
+        drop(store);
+        let reopened = EventStore::open(&path).unwrap();
+        let second = BrowserBridge::from_store(&reopened).unwrap().token;
+        assert_eq!(first, second);
+        assert_eq!(uuid::Uuid::parse_str(&first).unwrap().get_version_num(), 4);
+        drop(reopened);
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn invalid_saved_pairing_identity_is_repaired_once() {
+        let path = std::env::temp_dir().join(format!("opencore-browser-pairing-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = EventStore::open(&path).unwrap();
+        store.set_setting("browser_pairing_token_v1", "00000000-0000-0000-0000-000000000000").unwrap();
+        let repaired = BrowserBridge::from_store(&store).unwrap().token;
+        assert_ne!(repaired, "00000000-0000-0000-0000-000000000000");
+        assert_eq!(BrowserBridge::from_store(&store).unwrap().token, repaired);
+        drop(store);
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn two_app_connections_share_one_saved_pairing_identity() {
+        let path = std::env::temp_dir().join(format!("opencore-browser-pairing-{}.sqlite3", uuid::Uuid::new_v4()));
+        let one = EventStore::open(&path).unwrap();
+        let two = EventStore::open(&path).unwrap();
+        let barrier = std::sync::Barrier::new(2);
+        std::thread::scope(|scope| {
+            let first = scope.spawn(|| { barrier.wait(); BrowserBridge::from_store(&one).unwrap().token });
+            let second = scope.spawn(|| { barrier.wait(); BrowserBridge::from_store(&two).unwrap().token });
+            assert_eq!(first.join().unwrap(), second.join().unwrap());
+        });
+        drop(one);
+        drop(two);
+        std::fs::remove_file(path).unwrap();
+    }
     #[test]
     fn chrome_bridge_does_not_conflict_with_echo() {
         assert_ne!(PORT, 8813);

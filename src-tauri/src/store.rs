@@ -404,6 +404,29 @@ impl EventStore {
         Ok(())
     }
 
+    pub fn get_or_create_pairing_token(&self, key: &str) -> Result<String, String> {
+        let mut connection = self.connection.lock().map_err(|e| e.to_string())?;
+        let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|e| e.to_string())?;
+        let saved: Option<String> = transaction.query_row(
+            "SELECT value FROM settings WHERE key=?1", [key], |row| row.get(0)
+        ).optional().map_err(|e| e.to_string())?;
+        let token = match saved {
+            Some(value) if uuid::Uuid::parse_str(&value).is_ok_and(|id|
+                id.get_version_num() == 4 && id.get_variant() == uuid::Variant::RFC4122) => value,
+            _ => {
+                let value = uuid::Uuid::new_v4().to_string();
+                transaction.execute(
+                    "INSERT INTO settings(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                    params![key, value],
+                ).map_err(|e| e.to_string())?;
+                value
+            }
+        };
+        transaction.commit().map_err(|e| e.to_string())?;
+        Ok(token)
+    }
+
     pub fn open(path: &Path) -> Result<Self, String> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
