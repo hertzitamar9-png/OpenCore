@@ -212,7 +212,7 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      expect(screen.queryByRole("button", { name: "Maximize OpenCore" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Maximize OpenCore" })).toBeVisible();
       expect(screen.queryByRole("button", { name: /Move conversations|Dock conversations/ })).not.toBeInTheDocument();
       expect(screen.queryByRole("slider", { name: "Reasoning effort" })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: /Effort/ }));

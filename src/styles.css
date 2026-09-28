@@ -749,6 +749,8 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 .window-titlebrand img { width:19px; height:19px; border-radius:5px; }
 .window-controls { display:flex; align-self:stretch; }
 .window-controls button { width:47px; min-width:47px; height:35px; min-height:35px; padding:0; border:0; border-radius:0; background:transparent; color:#cbd2df; }
+.window-controls button.window-maximize { display:inline-flex; flex:0 0 47px; width:47px; min-width:47px; visibility:visible; opacity:1; }
+.window-controls button.window-maximize svg { display:block; visibility:visible; }
 .window-controls button:hover { background:#ffffff18 !important; border:0 !important; }
 .window-controls .window-close:hover { background:#bd3348 !important; color:white; }
 .window-controls button:focus-visible { outline:2px solid #ba94ff; outline-offset:-3px; }
