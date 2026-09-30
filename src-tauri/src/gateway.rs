@@ -254,10 +254,14 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
     let upstream = format!("{}{}", state.runtime.upstream_url(), path);
     let mut builder = state.client.request(method, &upstream).body(body);
     for (name, value) in &headers {
-        if matches!(name.as_str(), "host" | "connection" | "content-length" | "authorization" | "cookie") {
+        if matches!(name.as_str(), "host" | "connection" | "content-length" | "authorization" | "cookie" | "x-echo-project-scopes") {
             continue;
         }
         builder = builder.header(name, value);
+    }
+    if is_chat {
+        builder = builder.header("x-echo-conversation", &conversation);
+        builder = crate::compat::with_echo_project_scope(&state, builder, &conversation);
     }
     let response = match builder.send().await {
         Ok(response) => response,

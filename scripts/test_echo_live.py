@@ -30,6 +30,107 @@ from echo_import import import_stream
 
 
 class EchoLiveTests(unittest.TestCase):
+    def test_latest_idle_window_setting_supersedes_an_older_deferred_setting(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archives = ArchiveSet(Path(folder), idle_seconds=0)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            state._ctx_size = 262144
+            try:
+                for latest in (16384, 32768):
+                    state.active_window_tokens = 32768
+                    config = state.memory_configuration()
+                    state.begin_context('active')
+                    config['activeWindowTokens'] = 8192
+                    state.configure_memory(config)
+                    state.end_context('active')
+                    config['activeWindowTokens'] = latest
+                    self.assertEqual(state.configure_memory(config)['activeWindowTokens'], latest)
+                    state.apply_pending_window()
+                    self.assertEqual(state.context_size(), latest)
+                    self.assertIsNone(state.pending_active_window_tokens)
+            finally:
+                state.memory_controller.close()
+                archives.close()
+
+    def test_configured_working_window_is_capped_by_backend_capacity(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archives = ArchiveSet(Path(folder), idle_seconds=0)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            state._ctx_size = 262144
+            self.assertEqual(state.context_size(), 32768)
+            config = state.memory_configuration()
+            config['activeWindowTokens'] = 8192
+            state.configure_memory(config)
+            self.assertEqual(state.context_size(), 8192)
+            state._ctx_size = 4096
+            self.assertEqual(state.context_size(), 4096)
+            self.assertTrue(state._backend_needs_reset)
+            state.begin_context('active')
+            config['activeWindowTokens'] = 16384
+            state.configure_memory(config)
+            self.assertEqual(state.active_window_tokens, 8192)
+            state.apply_pending_window()
+            self.assertEqual(state.active_window_tokens, 16384)
+            state.end_context('active')
+            state.memory_controller.close()
+            archives.close()
+
+    def test_page_fault_evidence_survives_a_following_refresh_boundary(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archives = ArchiveSet(Path(folder), idle_seconds=0)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            state._ctx_size = 8192
+            state.count_tokens = lambda text: len(text) // 4
+            archive = archives.get('fault')
+            archive.append('PhysicsController launch key is blue-garnet-742.', 'fault')
+            live = LiveTranscript(archive, 'fault')
+            live.start_turn('We were fixing menus.', state.count_tokens)
+            live.open = False
+            live.save()
+            handler = object.__new__(Handler)
+            handler.state = state
+            handler._send_json = lambda code, value: value
+            seen = []
+            def generate(body, phase):
+                seen.append(body)
+                content = '<echo>{"op":"fault","query":"PhysicsController"}</echo>' if len(seen) == 1 else 'The key is blue-garnet-742.'
+                return {'choices':[{'finish_reason':'stop','message':{'role':'assistant','content':content}}], 'usage':{'completion_tokens':128}}
+            handler._generate_live = generate
+            try:
+                handler._controlled_context({'messages':[{'role':'user','content':'Explain the render failure.'}], 'max_tokens':1024, 'echo_max_calls':2}, 'fault')
+                self.assertIn('blue-garnet-742', json.dumps(seen[1]['messages']))
+            finally:
+                state.memory_controller.close()
+                archives.close()
+
+    def test_recall_leaves_the_same_framing_and_output_reserve_as_generation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archives = ArchiveSet(Path(folder), idle_seconds=0)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            state._ctx_size = 8192
+            state.count_tokens = lambda text: len(text) // 4
+            for i in range(9):
+                archives.get('small').append(f'PhysicsController detail{i} ' + 'x' * 900, 'small')
+            live = LiveTranscript(archives.get('small'), 'small')
+            live.start_turn('Unrelated recent menu work.', state.count_tokens)
+            live.open = False
+            live.save()
+            handler = object.__new__(Handler)
+            handler.state = state
+            handler._send_json = lambda code, value: value
+            seen = []
+            def generate(body, phase):
+                seen.append(body)
+                return {'choices':[{'finish_reason':'stop','message':{'role':'assistant','content':'The fix is available.'}}]}
+            handler._generate_live = generate
+            try:
+                handler._controlled_context({'messages':[{'role':'system','content':'x'*10500}, {'role':'user','content':'Recall PhysicsController'}], 'max_tokens':1024}, 'small')
+                self.assertTrue(seen)
+                self.assertGreaterEqual(seen[0]['max_tokens'], 1024)
+            finally:
+                state.memory_controller.close()
+                archives.close()
+
     def test_tokenizer_result_cache_evicts_old_entries_at_its_capacity(self):
         cache = BoundedTokenCountCache(max_entries=2)
         first = cache.key_for('first old turn')
@@ -508,15 +609,15 @@ class EchoLiveTests(unittest.TestCase):
                 self.assertTrue(seen[1]['echo_append'])
                 self.assertEqual(seen[1]['id_slot'], 0)
                 self.assertEqual(len(seen[1]['echo_session_id']), 64)
-                self.assertEqual([message['role'] for message in second_messages], ['user', 'user'])
-                self.assertIn('SPIRAL-ANCHOR-47', json.dumps(second_messages))
+                self.assertEqual([message['role'] for message in second_messages], ['user'])
+                self.assertIn('SPIRAL-ANCHOR-47', json.dumps(after_first.messages))
                 self.assertIn('What key did we decide to keep?', json.dumps(second_messages))
                 self.assertTrue(seen[0]['messages'][0]['role'] == 'system')
                 self.assertFalse(seen[0]['echo_append'])
                 self.assertTrue(after_first.entries[1]['backend_sent'])
                 after_second = LiveTranscript(archives.get('turn-scoped'), 'turn-scoped')
                 self.assertEqual([message['role'] for message in after_second.messages],
-                                 ['user', 'assistant', 'user', 'user', 'assistant'])
+                                 ['user', 'assistant', 'user', 'assistant'])
                 self.assertEqual(after_second.offloaded_messages, 0)
 
                 handler._controlled_context({'messages':[{'role':'user','content':'Start a separate chat.'}],
@@ -759,7 +860,7 @@ class EchoLiveTests(unittest.TestCase):
     def test_checkpoint_result_releases_completed_work_before_next_model_call(self):
         with tempfile.TemporaryDirectory() as folder:
             archives = ArchiveSet(Path(folder), 0)
-            state = EchoState(archives, 'http://127.0.0.1:1', 10000, 4, False)
+            state = EchoState(archives, 'http://127.0.0.1:1', 10000, 4, False, automatic_recall_tokens=0)
             state._ctx_size = 32768
             state.count_tokens = lambda text: max(1, len(text) // 4)
             handler = object.__new__(Handler)
@@ -775,9 +876,15 @@ class EchoLiveTests(unittest.TestCase):
                 live.append({'role': 'assistant', 'content': 'Completed running step ' + str(index) + ' x' * 4000}, state.count_tokens)
             call = {'id': 'checkpoint', 'type': 'function', 'function': {'name': 'dev', 'arguments': '{"action":"checkpoint"}'}}
             live.append({'role': 'assistant', 'content': '', 'tool_calls': [call]}, state.count_tokens)
+            live.model_fingerprint = state.memory_adapter().identity
+            live.mark_backend_sent()
+            state._backend_conversation = 'game'
+            state.backend_session_metrics = lambda conversation: {'modelSessionTokens': 9000}
             live.save()
             seen = []
+            bodies = []
             def generate(body, phase):
+                bodies.append(body)
                 seen.append(json.dumps(body['messages']))
                 return {'choices': [{'message': {'role': 'assistant', 'content': 'Walking is next.'}, 'finish_reason': 'stop'}]}
             handler._generate_live = generate
@@ -789,6 +896,8 @@ class EchoLiveTests(unittest.TestCase):
                 ], 'max_tokens': 1024}, 'game')
                 self.assertIn('Add running and walking', seen[0])
                 self.assertIn('checkpointSaved', seen[0])
+                self.assertTrue(bodies[0].get('echo_reset'))
+                self.assertFalse(bodies[0].get('echo_append'))
                 self.assertNotIn('Completed running step 0', seen[0])
                 self.assertTrue(archive.retrieve('Completed running step', conversation_id='game').pages)
             finally:

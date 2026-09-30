@@ -42,7 +42,9 @@ jobs:
         if: ${{ !contains(github.event.head_commit.message, '[skip-archive-scale]') }}
         run: python scripts/echo_archive_scale.py
       - name: Test ECHO cross-turn archive continuity
-        run: python src-tauri/resources/echo/test_echo_memory_continuity.py
+        run: |
+          python src-tauri/resources/echo/test_echo_memory_continuity.py
+          python src-tauri/resources/echo/test_echo_virtual.py
       - name: Test ECHO conversation and archive runtime
         run: python scripts/test_echo_live.py
       - name: Verify bundled DuoCore runtime

@@ -66,6 +66,8 @@
       "resources/echo/echo_salience.py": "echo/echo_salience.py",
       "resources/echo/evoagent/echo_memory.py": "echo/evoagent/echo_memory.py",
       "resources/echo/evoagent/echo_context.py": "echo/evoagent/echo_context.py",
+      "resources/echo/evoagent/echo_adapters.py": "echo/evoagent/echo_adapters.py",
+      "resources/echo/evoagent/echo_virtual.py": "echo/evoagent/echo_virtual.py",
       "resources/echo/evoagent/echo_output.py": "echo/evoagent/echo_output.py",
       "resources/claude/": "claude/",
       "resources/doucode/": "doucode/",

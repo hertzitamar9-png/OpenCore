@@ -1025,22 +1025,111 @@ async fn archive_overview(core: tauri::State<'_, Arc<AppCore>>) -> Result<archiv
 
 #[tauri::command]
 async fn echo_working_set(core: tauri::State<'_, Arc<AppCore>>, conversation_id: String) -> Result<Value, String> {
-    if let Some(value) = core.store.get_setting(&format!("claude_context:{conversation_id}"))? {
-        let mut context: Value = serde_json::from_str(&value).map_err(|e| e.to_string())?;
-        context["windowTokens"] = json!(core.runtime.snapshot().context_size.max(1));
-        return Ok(context);
-    }
     let runtime = core.runtime.snapshot();
+    let sdk = core.store.get_setting(&format!("claude_context:{conversation_id}"))?
+        .and_then(|value| serde_json::from_str::<Value>(&value).ok());
     if !runtime::echo_profile(&runtime.profile) {
+        if let Some(mut context) = sdk {
+            context["windowTokens"] = json!(runtime.context_size.max(1));
+            return Ok(context);
+        }
         let telemetry = core.runtime.telemetry();
         return Ok(json!({"available": runtime.status == "running", "windowTokens": runtime.context_size,
             "modelContextTokens": runtime.context_size, "modelActiveTokens": telemetry.prompt_tokens,
             "active": false, "contextMode": "native-kv"}));
     }
+    if runtime.status != "running" {
+        if let Some(value) = core.store.get_setting(&format!("echo_context:{conversation_id}"))? {
+            let mut context: Value = serde_json::from_str(&value).map_err(|e| e.to_string())?;
+            context["active"] = json!(false);
+            return Ok(context);
+        }
+        return Ok(json!({"available":false,"windowTokens":runtime.context_size,"contextMode":"persistent_echo"}));
+    }
     let client = reqwest::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(4)).build().map_err(|e| e.to_string())?;
     let response = client.get(format!("http://127.0.0.1:{}/echo/context", core.runtime.snapshot().echo_port))
-        .query(&[("conversation", conversation_id)]).send().await.map_err(|e| e.to_string())?;
-    response.error_for_status().map_err(|e| e.to_string())?.json().await.map_err(|e| e.to_string())
+        .query(&[("conversation", &conversation_id)]).send().await.map_err(|e| e.to_string())?;
+    let echo: Value = response.error_for_status().map_err(|e| e.to_string())?.json().await.map_err(|e| e.to_string())?;
+    let context = merge_echo_context(sdk.as_ref(), echo);
+    core.store.set_setting(&format!("echo_context:{conversation_id}"), &context.to_string())?;
+    Ok(context)
+}
+
+fn merge_echo_context(sdk: Option<&Value>, mut echo: Value) -> Value {
+    if let Some(sdk) = sdk {
+        echo["sdkContextTokens"] = sdk.get("promptTokens").cloned().unwrap_or(Value::Null);
+        for key in ["autoCompactEnabled", "autoCompactThreshold", "harness"] {
+            if let Some(value) = sdk.get(key) { echo[key] = value.clone(); }
+        }
+    }
+    echo
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct EchoMemoryConfiguration {
+    memory_tokens: u32, refresh_tokens: u32, warm_cache_mib: u32,
+    #[serde(default = "default_echo_active_window")] active_window_tokens: u32,
+}
+fn default_echo_active_window() -> u32 { 32768 }
+
+impl Default for EchoMemoryConfiguration {
+    fn default() -> Self { Self { memory_tokens: 4096, refresh_tokens: 128, warm_cache_mib: 128, active_window_tokens: default_echo_active_window() } }
+}
+
+impl EchoMemoryConfiguration {
+    fn validate(&self) -> Result<(), String> {
+        if self.memory_tokens > 65536 || !(64..=4096).contains(&self.refresh_tokens) || self.warm_cache_mib > 512 || !(4096..=1000000).contains(&self.active_window_tokens) {
+            return Err("ECHO recall must be 0–65,536 tokens, refresh 64–4,096 tokens, RAM cache 0–512 MiB and active window 4,096–1,000,000 tokens".into());
+        }
+        Ok(())
+    }
+}
+
+#[tauri::command]
+fn get_echo_memory_configuration(core: tauri::State<'_, Arc<AppCore>>) -> Result<EchoMemoryConfiguration, String> {
+    let path = PathBuf::from(core.runtime.snapshot().archive_path).join("memory-config.json");
+    if !path.exists() { return Ok(EchoMemoryConfiguration::default()); }
+    let config: EchoMemoryConfiguration = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    config.validate()?;
+    Ok(config)
+}
+
+#[tauri::command]
+async fn save_echo_memory_configuration(core: tauri::State<'_, Arc<AppCore>>, configuration: EchoMemoryConfiguration) -> Result<Value, String> {
+    configuration.validate()?;
+    let runtime = core.runtime.snapshot();
+    let root = PathBuf::from(&runtime.archive_path);
+    std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+    let temporary = root.join(format!("memory-config-{}.tmp", uuid::Uuid::new_v4()));
+    std::fs::write(&temporary, serde_json::to_vec(&configuration).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    std::fs::rename(&temporary, root.join("memory-config.json")).map_err(|e| e.to_string())?;
+    let applied = if runtime.status == "running" && runtime::echo_profile(&runtime.profile) {
+        let client = reqwest::Client::builder().no_proxy().timeout(std::time::Duration::from_secs(4)).build().map_err(|e| e.to_string())?;
+        match client.post(format!("http://127.0.0.1:{}/echo/config", runtime.echo_port)).json(&configuration).send().await {
+            Ok(response) => response.status().is_success(), Err(_) => false,
+        }
+    } else { false };
+    Ok(json!({"configuration":configuration,"applied":applied}))
+}
+
+#[cfg(test)]
+mod echo_virtual_control_tests {
+    use super::*;
+    #[test] fn sdk_reading_does_not_hide_actual_echo_working_memory() {
+        let result = merge_echo_context(Some(&json!({"promptTokens":99000,"harness":{"status":"working"},"autoCompactThreshold":200000})),
+            json!({"promptTokens":9000,"echoVirtualMemory":{"retrieved_tokens":1200},"contextMode":"persistent_echo"}));
+        assert_eq!(result["promptTokens"], 9000);
+        assert_eq!(result["sdkContextTokens"], 99000);
+        assert_eq!(result["echoVirtualMemory"]["retrieved_tokens"], 1200);
+        assert_eq!(result["autoCompactThreshold"], 200000);
+    }
+    #[test] fn echo_configuration_rejects_unbounded_cache_and_bad_refresh() {
+        assert!(EchoMemoryConfiguration::default().validate().is_ok());
+        assert!(EchoMemoryConfiguration { memory_tokens: 999999, ..Default::default() }.validate().is_err());
+        assert!(EchoMemoryConfiguration { refresh_tokens: 0, ..Default::default() }.validate().is_err());
+        assert!(EchoMemoryConfiguration { warm_cache_mib: 513, ..Default::default() }.validate().is_err());
+    }
 }
 
 #[tauri::command]
@@ -1923,6 +2012,8 @@ pub fn run() {
             ,search_archive
             ,archive_overview
             ,echo_working_set
+            ,get_echo_memory_configuration
+            ,save_echo_memory_configuration
             ,read_archive_page
             ,list_archive_pages
             ,list_archive_events

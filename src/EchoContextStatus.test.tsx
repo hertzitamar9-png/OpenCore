@@ -3,6 +3,33 @@ import { expect, it, vi } from 'vitest';
 import { EchoContextStatus } from './EchoContextStatus';
 import * as api from './api';
 
+it('shows the ECHO working budget within a larger native backend allocation', async () => {
+  const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({available:true,windowTokens:32768,modelContextTokens:262144,modelActiveTokens:12000,contextMode:'persistent_echo'});
+  try {
+    render(<EchoContextStatus conversationId="game" running={false} />);
+    expect(await screen.findByRole('progressbar')).toHaveAttribute('max','32768');
+  } finally { read.mockRestore(); }
+});
+
+it('distinguishes addressable history, active attention, and safe materialization', async () => {
+  const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({available:true,windowTokens:32768,contextMode:'persistent_echo',echoVirtualMemory:{
+    recent_tokens:18000,pinned_tokens:1000,retrieved_tokens:4000,reserve_tokens:2048,
+    virtual_history_tokens:1000000,virtual_history_bytes:4000000,
+    refreshes:3,page_faults:1,last_refresh_reason:'page_fault',retrieval_ms:12,rematerialization_prepare_ms:8,refresh_ms:20,
+    materialization_cache_hits:2,materialization_cache_misses:1,materialization_ram_bytes:1024,candidates_considered:12,diagnostics:[],
+    adapter:{adapter:'qwen',materialization_mode:'rematerialization',supports_direct_kv_reuse:false},
+    active_pages:[{page_id:'old-source',source_hash:'verified-hash',timestamp:1,tier:'HOT active prompt',score:2.4,signals:{exact_symbol:2}}],
+  }});
+  try {
+    render(<EchoContextStatus conversationId="game" running={false} />);
+    expect(await screen.findByText('ECHO virtual memory · 1 active pages')).toBeVisible();
+    expect(screen.getByText(/1,000,000 archived token estimate/)).toBeInTheDocument();
+    expect(screen.getByText(/Recent 18,000 · pinned 1,000 · recalled 4,000/)).toBeInTheDocument();
+    expect(screen.getByText(/direct KV reuse disabled/)).toBeInTheDocument();
+    expect(screen.getByText(/backend prefill not reported/)).toBeInTheDocument();
+  } finally { read.mockRestore(); }
+});
+
 it('shows prompt use, request capacity, and archived activity for the selected conversation', async () => {
   const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({available:true,liveTokens:5600,promptTokens:7000,windowTokens:32768,compactions:3,offloadedMessages:18,warmCache:{budgetBytes:128*1024*1024,residentBytes:7.5*1024*1024,pages:12,hits:6,misses:2,evictions:1,oversized:0,hitRate:0.75}});
   try {

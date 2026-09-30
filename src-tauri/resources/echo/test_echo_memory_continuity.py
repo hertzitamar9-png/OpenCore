@@ -13,6 +13,22 @@ from echo_server import ArchiveSet, EchoState  # noqa: E402
 
 
 class EchoMemoryContinuityTests(unittest.TestCase):
+    def test_completed_turn_does_not_archive_promoted_memory_again(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = EchoArchive(Path(temporary) / "archive.db")
+            self.addCleanup(archive.close)
+            page = archive.append("The exact original physics decision.", "project-a")[0]
+            live = LiveTranscript(archive, "project-a")
+            live.append_memory_pages([page], lambda text: len(text.split()), 256)
+            live.start_turn("Explain physics", lambda text: len(text.split()))
+            live.append_generated({"role": "assistant", "content": "Explanation"}, lambda text: len(text.split()))
+            live.open = False
+            live.archive_completed()
+            with archive._lock:
+                copied = archive.db.execute("SELECT content FROM source_events WHERE content LIKE '%ECHO automatic recall%'").fetchall()
+            archive.close()
+            self.assertEqual(copied, [])
+
     def test_each_new_turn_can_promote_exact_old_archive_pages_into_live_transcript(self):
         with tempfile.TemporaryDirectory(prefix="opencore-echo-live-recall-") as temporary:
             root = Path(temporary)

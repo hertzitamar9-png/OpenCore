@@ -1,4 +1,5 @@
 import { EchoContextStatus } from "./EchoContextStatus";
+import { EchoMemorySettings } from "./EchoMemorySettings";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { listen } from "@tauri-apps/api/event";
@@ -948,6 +949,9 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
         <p className="appearance-note">Effective trigger for the configured {snapshot.runtime.contextSize.toLocaleString()}-token model window: <strong>{effectiveCompactTokens.toLocaleString()} tokens</strong>{effectiveCompactTokens < appearance.compactAtTokens ? " (lowered to leave room for the response and tool results)" : ""}. Native profiles compact automatically at this point. ECHO profiles preserve the exact conversation history in the archive; compaction only bounds the active model window.</p>
         <p className="appearance-note">This is an exact token count. The configured inference window sets the per-request ceiling. YaRN length extension does not mean the model was trained at that length. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
+      </InspectorSection>
+      <InspectorSection title="ECHO virtual memory">
+        <EchoMemorySettings />
       </InspectorSection>
       <InspectorSection title="Chrome extension">
         <KeyValue label="Bridge" value={browserStatus?.connected ? "Connected" : "Not connected"} /><KeyValue label="Local port" value={String(browserStatus?.port || 8814)} />

@@ -17,6 +17,10 @@
 !/e2e/
 !/tests/
 !/scripts/
+!/docs/
+/docs/*
+!/docs/echo-virtual-context.md
+!/docs/echo-virtual-execution.md
 !/.github/
 
 **/node_modules/

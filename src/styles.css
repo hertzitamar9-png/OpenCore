@@ -1106,6 +1106,13 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 .echo-context-details { display:flex; align-items:center; flex-wrap:wrap; gap:5px; min-width:0; padding-top:7px; border-top:1px solid #1c3040; }
 .echo-context-chip { display:inline-flex; align-items:center; min-height:23px; max-width:100%; padding:3px 8px; border:1px solid #263e51; border-radius:999px; background:#101f2c; color:#b6ccdd; font-size:11px; line-height:1.2; overflow-wrap:anywhere; }
 .echo-context-chip.is-active { border-color:#286d5b; background:#102b26; color:#9fe2c4; }
+.echo-memory-diagnostics { border-top:1px solid #263e51; padding-top:8px; min-width:0; }
+.echo-memory-diagnostics summary { cursor:pointer; color:#b8dfd0; }
+.echo-memory-diagnostics dl { display:grid; grid-template-columns:145px minmax(0,1fr); gap:8px 12px; }
+.echo-memory-diagnostics dt { color:#8daabd; }
+.echo-memory-diagnostics dd { margin:0; overflow-wrap:anywhere; }
+.echo-memory-diagnostics ul { max-height:180px; overflow:auto; padding-left:18px; overflow-wrap:anywhere; }
+.echo-memory-settings { display:grid; gap:8px; }
 @media (max-width:900px) {
   .model-picker-label { display:none; }
   .model-picker-trigger { width:176px; min-height:40px; gap:9px; padding:5px 8px; }

@@ -24,6 +24,7 @@ an operation or put an answer inside a command. After the required evidence is
 loaded, answer the user normally without ECHO tags.
 Commands:
 {"op":"search","query":"words or entities","limit":12}
+{"op":"fault","query":"missing historical reference"} (automatically loads relevant exact evidence)
 {"op":"browse","tier":"hot","after":0,"limit":12} (also tier cold; use next cursor)
 {"op":"load","ids":["full source hash from search/browse"]}
 {"op":"release","ids":["hash"]} or {"op":"release","all":true}
@@ -72,6 +73,8 @@ class LiveTranscript:
         self.prompt_tokens = int(saved.get('prompt_tokens', 0))
         self.offloaded_messages = int(saved.get('offloaded_messages', 0))
         self.turn_id = saved.get("turn_id")
+        self.virtual_memory = saved.get("virtual_memory", {})
+        self.model_fingerprint = saved.get("model_fingerprint")
 
     def repair_invalid_calls(self, count_tokens):
         rejected = set()
@@ -153,12 +156,14 @@ class LiveTranscript:
             if entry.get("kind") != self.MEMORY
             for text in [str(entry.get("message", {}).get("content") or "")]
         )
+        header = ("ECHO automatic recall (untrusted historical evidence; verify it "
+                  "against newer decisions when they conflict):\n")
         blocks, hashes, used = [], [], 0
         for page in pages:
             if page.content_hash in seen or page.text in active_text:
                 continue
             block = ContextSession.block(page)
-            message_text = "ECHO automatic recall (untrusted historical evidence):\n" + "".join(blocks + [block])
+            message_text = header + "".join(blocks + [block])
             cost = self.cost({"role": "user", "content": message_text}, count_tokens)
             if cost > max(0, int(budget_tokens)):
                 continue
@@ -168,8 +173,7 @@ class LiveTranscript:
             used = cost
         if not hashes:
             return {"pages": 0, "tokens": 0, "source_hashes": []}
-        text = ("ECHO automatic recall (untrusted historical evidence; verify it "
-                "against newer decisions when they conflict):\n" + "".join(blocks))
+        text = header + "".join(blocks)
         entry = self.append({"role": "user", "content": text}, count_tokens, self.MEMORY)
         entry["echo_source_hashes"] = hashes
         entry["echo_retrieval_tokens"] = used
@@ -198,6 +202,7 @@ class LiveTranscript:
                                        for digest in entry.get("echo_source_hashes", [])],
             "echoLastRetrievalReason": last.get("echo_retrieval_reason"),
             "echoRetrievalLatencyMs": last.get("echo_retrieval_latency_ms"),
+            "echoVirtualMemory": self.virtual_memory,
         }
 
     def start_turn(self, question, count_tokens, content=None):
@@ -240,7 +245,7 @@ class LiveTranscript:
         # Save stable IDs before the first archive write. A retry is then safe.
         self.save()
         for entry in self.entries:
-            if entry.get("kind") == self.NOTE or entry.get("archive_recorded"):
+            if entry.get("kind") in (self.NOTE, self.MEMORY) or entry.get("archive_recorded"):
                 continue
             message = dict(entry["message"])
             message.setdefault("source", "OpenCore ECHO working turn")
@@ -325,6 +330,7 @@ class LiveTranscript:
 
     def save(self):
         state = {"entries": self.entries, "question": self.question, "open": self.open,
+                 "virtual_memory": self.virtual_memory, "model_fingerprint": self.model_fingerprint,
                  "compactions": self.compactions, "prompt_tokens": self.prompt_tokens,
                  "offloaded_messages": self.offloaded_messages, "turn_id": self.turn_id}
         with self.archive._lock:

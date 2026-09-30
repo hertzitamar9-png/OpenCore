@@ -57,6 +57,8 @@ for candidate in (Path(__file__).resolve().parent, ROOT / "src"):
 from evoagent.echo_memory import BoundedPageCache, EchoArchive, RetrievalResult  # noqa: E402
 from evoagent.echo_context import ContextSession, LiveTranscript, COMMAND, INSTRUCTIONS  # noqa: E402
 from evoagent.echo_output import OutputLedger, word_target  # noqa: E402
+from evoagent.echo_adapters import adapter_for  # noqa: E402
+from evoagent.echo_virtual import EchoMemoryController  # noqa: E402
 from echo_summarize import summarize, format_result  # noqa: E402
 def harness_status(_archive_root, _conversation):
     # Legacy GVS5H is intentionally disabled. Claude Agent SDK is the only harness.
@@ -418,6 +420,11 @@ class EchoState:
         self.reasoning = reasoning
         self.allow_model_search = allow_model_search
         self.automatic_recall_tokens = max(0, int(automatic_recall_tokens))
+        self.active_window_tokens = 32768
+        self.pending_active_window_tokens = None
+        self.memory_controller = EchoMemoryController(self.automatic_recall_tokens)
+        self._memory_adapter = None
+        self._model_props = {}
         self.lock = threading.Lock()
         self.token_count_cache = BoundedTokenCountCache()
         # Cold SQLite handles each own a bounded 2 MiB SQLite page cache.
@@ -436,6 +443,7 @@ class EchoState:
         # append-only suffixes into that state.
         self._backend_lock = threading.RLock()
         self._backend_conversation = None
+        self._backend_needs_reset = False
         self._backend_append_disabled = set()
         self._backend_metrics_lock = threading.Lock()
         self._backend_metrics_key = None
@@ -454,6 +462,47 @@ class EchoState:
                 # The desktop app can be restarted while this server is still
                 # listening. A closed log pipe must not break HTTP responses.
                 pass
+
+    def memory_configuration(self):
+        return {"memoryTokens": self.memory_controller.memory_tokens,
+                "refreshTokens": self.memory_controller.refresh_tokens,
+                "activeWindowTokens": self.pending_active_window_tokens or self.active_window_tokens,
+                "warmCacheMib": self.archives.page_cache.budget_bytes // (1024 * 1024)}
+
+    def configure_memory(self, configuration):
+        bounds = {"memoryTokens": (0, 65536), "refreshTokens": (64, 4096), "warmCacheMib": (0, 512), "activeWindowTokens": (4096, 1000000)}
+        if isinstance(configuration, dict):
+            configuration = {"activeWindowTokens": 32768, **configuration}
+        if not isinstance(configuration, dict) or set(configuration) != set(bounds):
+            raise ValueError("Expected memoryTokens, refreshTokens, warmCacheMib and activeWindowTokens")
+        for key, (low, high) in bounds.items():
+            value = configuration[key]
+            if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
+                raise ValueError(f"{key} must be an integer between {low} and {high}")
+        with self.memory_controller.lock:
+            self.memory_controller.memory_tokens = configuration["memoryTokens"]
+            self.automatic_recall_tokens = configuration["memoryTokens"]
+            self.memory_controller.refresh_tokens = configuration["refreshTokens"]
+            if self._context_active:
+                self.pending_active_window_tokens = configuration["activeWindowTokens"]
+            else:
+                self.pending_active_window_tokens = None
+                if self.active_window_tokens != configuration["activeWindowTokens"]:
+                    self._memory_adapter = None
+                    self._backend_needs_reset = True
+                    self._backend_conversation = None
+                    self.active_window_tokens = configuration["activeWindowTokens"]
+            self.archives.page_cache.resize(configuration["warmCacheMib"] * 1024 * 1024)
+        return self.memory_configuration()
+
+    def apply_pending_window(self):
+        with self.memory_controller.lock:
+            if self.pending_active_window_tokens is not None:
+                self.active_window_tokens = self.pending_active_window_tokens
+                self.pending_active_window_tokens = None
+                self._memory_adapter = None
+                self._backend_needs_reset = True
+                self._backend_conversation = None
 
     def begin_context(self, conversation: str) -> None:
         """Mark an active or queued request without rejecting same-chat work."""
@@ -476,24 +525,27 @@ class EchoState:
     def context_size(self) -> int:
         """The model's real window, asked once and remembered."""
         if self._ctx_size is None:
-            self._ctx_size = 262144
+            detected = None
             try:
                 with urllib.request.urlopen(urllib.request.Request(self.upstream + "/props",
                                             headers=self.upstream_headers()), timeout=15) as r:
                     props = json.loads(r.read())
+                self._model_props = props
                 for key in ("n_ctx", "default_generation_settings"):
                     value = props.get(key)
                     if isinstance(value, int) and value > 0:
-                        self._ctx_size = value
+                        detected = value
                         break
-                    if isinstance(value, dict) and isinstance(value.get("n_ctx"), int):
-                        self._ctx_size = value["n_ctx"]
+                    if isinstance(value, dict) and isinstance(value.get("n_ctx"), int) and value["n_ctx"] > 0:
+                        detected = value["n_ctx"]
                         break
             except Exception as error:
-                self.log("  echo: could not read /props (%s); assuming %d"
-                         % (error, self._ctx_size))
+                self.log("  echo: could not read /props (%s)" % error)
+            if detected is None:
+                raise ValueError("Backend context capacity is unavailable; configure --context-size to match the backend")
+            self._ctx_size = detected
             self.log("  echo: model window is %d tokens" % self._ctx_size)
-        return self._ctx_size
+        return min(self._ctx_size, self.active_window_tokens)
 
     def backend_session_metrics(self, conversation: str) -> dict:
         """Read the model slot's real rolling occupancy and lifetime token count."""
@@ -533,9 +585,10 @@ class EchoState:
     def count_tokens(self, text: str) -> int:
         """Exact count from the server when possible.
 
-        The fallback is 3.10 characters per token, measured on this tokenizer
-        earlier in the project. It is only a fallback: guessing the budget is
-        how a window overflows, and overflowing is the thing being prevented.
+        If tokenization is temporarily unavailable, UTF-8 byte length provides
+        a conservative text allowance for byte-based tokenizers. Multimodal
+        and chat framing costs are separately reserved; backend prefill remains
+        the authority on the actual attention window.
         """
         if not text:
             return 0
@@ -620,6 +673,48 @@ class EchoState:
             else:
                 skipped += 1
         return {"imported": imported, "skipped": skipped}
+
+    def memory_adapter(self):
+        if self._memory_adapter is None:
+            window = self.context_size()
+            if not self._model_props:
+                try:
+                    with urllib.request.urlopen(urllib.request.Request(self.upstream + "/props", headers=self.upstream_headers()), timeout=2) as response:
+                        props = json.load(response)
+                        self._model_props = props if isinstance(props, dict) else {}
+                except (OSError, ValueError):
+                    pass
+            properties = {"backend": self.upstream, "physical_context": window, **self._model_props}
+            # An opaque remote alias does not prove checkpoint/tokenizer identity.
+            # Such providers get an epoch-bound cost cache instead of silently
+            # reusing another model's prepared counts after a runtime restart.
+            path = properties.get("model_path")
+            try:
+                stat = Path(path).stat() if isinstance(path, str) else None
+            except OSError:
+                stat = None
+            if stat is not None:
+                properties["checkpoint_file"] = {"path": path, "size": stat.st_size, "mtime_ns": stat.st_mtime_ns}
+            elif not properties.get("model_fingerprint") or not properties.get("tokenizer_fingerprint"):
+                properties["unverified_provider_epoch"] = uuid.uuid4().hex
+            self._memory_adapter = adapter_for(properties, self.count_tokens)
+        return self._memory_adapter
+
+    def refresh_memory(self, live, query, conversation, pinned_tokens=0, reserve_tokens=0,
+                       reason="new_turn", force=False, scopes=None):
+        archives = [(self.archives.get(conversation), conversation)]
+        for source_scope in dict.fromkeys([conversation] + list(scopes or [])):
+            if source_scope != conversation and self.archives.path_for(source_scope).exists():
+                archives.append((self.archives.get(source_scope), source_scope))
+            cold = self.cold_archive_for(source_scope)
+            if cold is not None:
+                archives.append((cold, source_scope))
+        result = self.memory_controller.refresh(live, query, archives, self.memory_adapter(),
+            self.context_size(), pinned_tokens, reserve_tokens, reason, force)
+        if result["layout_changed"]:
+            self._backend_conversation = None
+            self._backend_needs_reset = True
+        return result
 
     def append_automatic_recall(self, live, query, conversation, budget_tokens=None):
         """Promote relevant canonical archive pages before each new live turn."""
@@ -955,6 +1050,8 @@ class Handler(BaseHTTPRequestHandler):
         return urllib.request.urlopen(request, timeout=None if stream else 3600)
 
     def do_GET(self):
+        if self.path == "/echo/config":
+            return self._send_json(200, self.state.memory_configuration())
         if self.path.startswith('/echo/context?'):
             conversation = parse_qs(urlsplit(self.path).query).get('conversation', [''])[0]
             if not conversation or len(conversation) > 500:
@@ -1018,6 +1115,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)
+        if self.path == "/echo/config" and (self.headers.get("Origin") or length > 4096):
+            return self._send_json(403, {"error": "ECHO configuration is a local app control"})
         if self.path == "/echo/import" and (length <= 0 or length > 16 * 1024 * 1024):
             return self._send_json(413, {"error": {"message": "ECHO import batch must be 1-16 MiB"}})
         raw = self.rfile.read(length) if length else b"{}"
@@ -1025,6 +1124,12 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(raw or b"{}")
         except json.JSONDecodeError as error:
             return self._send_json(400, {"error": {"message": "bad JSON: %s" % error}})
+
+        if self.path == "/echo/config":
+            try:
+                return self._send_json(200, self.state.configure_memory(payload))
+            except ValueError as error:
+                return self._send_json(400, {"error": str(error)})
 
         if self.path == "/echo/import":
             conversation = payload.get("conversation_id")
@@ -1154,6 +1259,16 @@ class Handler(BaseHTTPRequestHandler):
         window on every call. The model still controls its disk memory with
         ECHO commands; their results are appended rather than re-rendered.
         """
+        self.state.apply_pending_window()
+        scopes = [conversation]
+        raw_scopes = getattr(self, "headers", {}).get("x-echo-project-scopes", "")
+        if raw_scopes and len(raw_scopes) <= 32768:
+            try:
+                permitted = json.loads(raw_scopes)
+                if isinstance(permitted, list) and len(permitted) <= 128 and all(isinstance(s, str) and 0 < len(s) <= 128 for s in permitted):
+                    scopes = list(dict.fromkeys([conversation] + permitted))
+            except ValueError:
+                pass
         supplied = payload.get("messages") or []
         count = self.state.count_tokens
         question = _last_user_message(supplied)
@@ -1165,6 +1280,9 @@ class Handler(BaseHTTPRequestHandler):
         pinned = [m for m in supplied if m.get("role") in ("system", "developer")]
         window = self.state.context_size()
         live = LiveTranscript(self.state.archives.get(conversation), conversation)
+        if self.state.memory_adapter().prepare_transcript(live):
+            self.state._backend_conversation = None
+            self.state._backend_needs_reset = True
         if live.repair_invalid_calls(count):
             # The backend already saw the malformed call. Rebuild the working
             # transcript once so its hidden state agrees with the repaired log.
@@ -1201,8 +1319,6 @@ class Handler(BaseHTTPRequestHandler):
                 live.abandon_open_turn(count)
             if not live.entries:
                 self._seed_transcript(live, conversation, question, min(2048, int(window * 0.25)))
-            else:
-                self.state.append_automatic_recall(live, question, conversation)
             live.start_turn(question, count, supplied[user_index].get("content") if user_index >= 0 else question)
 
         system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] +
@@ -1222,7 +1338,11 @@ class Handler(BaseHTTPRequestHandler):
         if completed_checkpoint:
             # The model explicitly marked a component complete, with exact source
             # snapshots and a next-step record. Archive completed exchanges now.
-            live.compact(4096, count)
+            if live.compact(4096, count):
+                self.state._backend_conversation = None
+                self.state._backend_needs_reset = True
+                for entry in live.entries:
+                    entry["backend_sent"] = False
             live.save()
 
 
@@ -1237,6 +1357,8 @@ class Handler(BaseHTTPRequestHandler):
             before = live.tokens
             moved = live.compact(max(0, int(window * self.state.live_low) - fixed), count)
             if moved:
+                self.state._backend_conversation = None
+                self.state._backend_needs_reset = True
                 self.state.log("  echo: live window reached %d tokens; moved %d older message(s) to the "
                                "archive (%d -> %d live tokens)" % (system_tokens + before, moved,
                                                                    before, live.tokens))
@@ -1258,13 +1380,19 @@ class Handler(BaseHTTPRequestHandler):
             raise ValueError(
                 "the question and its instructions alone do not leave room to "
                 "answer in a %d-token window" % window)
-        reserve = min(asked, max(1024, room))
+        reserve = min(asked, max(1024, room), max(1024, window // 4))
         if reserve < asked:
             self.state.log("  echo: %s tokens requested, %s fit per pass - "
                            "continuing across passes" % (f"{asked:,}", f"{reserve:,}"))
             payload = dict(payload)
             payload["max_tokens"] = reserve
             payload.pop("max_completion_tokens", None)
+        self.state.refresh_memory(live, question, conversation, system_tokens, reserve,
+                                  "tool_result" if client_tail else "new_turn", scopes=scopes)
+        room = window - system_tokens - live.tokens - 2560
+        reserve = min(reserve, max(0, room))
+        if reserve < 1:
+            raise ValueError("The active ECHO prompt leaves no generation room")
         session = ContextSession(self.state, conversation, max(0, room - reserve))
         session.budget = session.capacity
         session._fit()
@@ -1275,6 +1403,8 @@ class Handler(BaseHTTPRequestHandler):
         completed_operations = []
         calls = 0
         generated_tokens = 0
+        memory_query = question
+        refreshed_at_tokens = 0
         call_limit = int(payload.get("echo_max_calls", self.state.context_steps))
         if call_limit < 0:
             raise ValueError("echo_max_calls must be nonnegative")
@@ -1328,7 +1458,7 @@ class Handler(BaseHTTPRequestHandler):
                 body["echo_append"] = False
             body["stream"] = bool(payload.get("stream"))
             body["cache_prompt"] = True
-            if same_backend_session and not append_live:
+            if (same_backend_session and not append_live) or self.state._backend_needs_reset:
                 body["echo_reset"] = True
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
@@ -1378,13 +1508,18 @@ class Handler(BaseHTTPRequestHandler):
                     live.save()
                     raise
             self.state._backend_conversation = conversation
+            self.state._backend_needs_reset = False
             live.mark_backend_sent()
             calls += 1
             choice = parsed["choices"][0]
             message = choice.get("message", {})
             usage = parsed.get("usage") or {}
+            timings = parsed.get("timings") or {}
+            prefill_ms = timings.get("prompt_ms")
+            if isinstance(prefill_ms, (int, float)) and prefill_ms >= 0:
+                live.virtual_memory["prefill_ms"] = round(prefill_ms, 2)
             completion_tokens = usage.get("completion_tokens")
-            if total_output_budget is not None and completion_tokens is not None:
+            if completion_tokens is not None:
                 try:
                     generated_tokens += max(0, int(completion_tokens))
                 except (TypeError, ValueError):
@@ -1415,7 +1550,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self._finish_live(parsed)
                 return self._send_json(200, parsed)
             text = message.get("content") or ""
-            if total_output_budget is not None and completion_tokens is None:
+            if completion_tokens is None:
                 generated_tokens += max(0, count(text))
             output_budget_reached = (total_output_budget is not None
                                      and generated_tokens >= total_output_budget)
@@ -1434,7 +1569,14 @@ class Handler(BaseHTTPRequestHandler):
                 before = list(session.ids)
                 try:
                     command = json.loads(match.group(1))
-                    result = session.execute(command)
+                    if command.get("op") == "fault":
+                        memory_query = str(command.get("query") or question)
+                        recalled = self.state.refresh_memory(live, memory_query,
+                            conversation, system_tokens, reserve, "page_fault", True, scopes=scopes)
+                        refreshed_at_tokens = generated_tokens
+                        result = {key: recalled[key] for key in ("pages", "tokens", "source_hashes", "reason")}
+                    else:
+                        result = session.execute(command)
                     if "error" not in result:
                         completed_operations.append(command.get("op"))
                         completed_operations = completed_operations[-12:]
@@ -1462,6 +1604,10 @@ class Handler(BaseHTTPRequestHandler):
                 if repeated_controls >= 8:
                     break
                 ensure_room(reserve)
+                if generated_tokens - refreshed_at_tokens >= self.state.memory_controller.refresh_tokens:
+                    self.state.refresh_memory(live, memory_query, conversation, system_tokens, reserve,
+                                              "generation_block", scopes=scopes)
+                    refreshed_at_tokens = generated_tokens
                 continue
             if "<echo>" in text or "</echo>" in text:
                 malformed_controls += 1
@@ -1503,6 +1649,10 @@ class Handler(BaseHTTPRequestHandler):
                 previous_command = None
                 paragraph_break = choice.get("finish_reason") != "length" and bool(text) and not text[-1].isspace()
                 ensure_room(reserve)
+                if generated_tokens - refreshed_at_tokens >= self.state.memory_controller.refresh_tokens:
+                    self.state.refresh_memory(live, memory_query, conversation, system_tokens, reserve,
+                                              "generation_block", scopes=scopes)
+                    refreshed_at_tokens = generated_tokens
                 continue
             session.save()
             review = None
@@ -2110,7 +2260,7 @@ def main() -> int:
                              "requests; it reopens on the next one")
     parser.add_argument("--warm-cache-budget-mb", type=int, default=128,
                         help="maximum accounted RAM for decoded exact ECHO pages; 0 disables the warm cache")
-    parser.add_argument("--hibernate-seconds", type=float, default=900.0,
+    parser.add_argument("--hibernate-seconds", type=float, default=0.0,
                         help="after this long idle, drop the rebuildable "
                              "indexes and shrink the archive on disk; 0 to "
                              "never hibernate")
@@ -2161,6 +2311,12 @@ def main() -> int:
                               args.offload_every, args.reasoning,
                               args.model_search, args.automatic_recall_tokens)
     Handler.state.autonomous_context = not args.legacy_context and args.model_search
+    config_path = args.archive / "memory-config.json"
+    if config_path.is_file():
+        try:
+            Handler.state.configure_memory(json.loads(config_path.read_text(encoding="utf-8")))
+        except (ValueError, OSError) as error:
+            Handler.state.log(f"ECHO configuration fallback to defaults: {error}")
     Handler.state.context_steps = args.context_steps
     if not 0 < args.live_low < args.live_high <= 1:
         parser.error("need 0 < live-low < live-high <= 1")
@@ -2175,8 +2331,7 @@ def main() -> int:
     print("  archives    %s" % args.archive)
     print("  holding     %d conversation(s), %.1f MB on disk"
           % (disk["conversations"], disk["total_bytes"] / 1e6))
-    print("  ceiling     3.17 trillion tokens per conversation "
-          "(17.59 TB), no limit on conversations")
+    print("  history     canonical archive grows within available disk; physical attention stays bounded")
     print("  memory      %s" % ("all free space in the model's window"
                                  if args.budget_chars <= 0
                                  else "%s chars per request" % f"{args.budget_chars:,}"))
@@ -2274,6 +2429,7 @@ def main() -> int:
     except KeyboardInterrupt:
         print("\nstopping")
     finally:
+        Handler.state.memory_controller.close()
         archives.close()
     return 0
 

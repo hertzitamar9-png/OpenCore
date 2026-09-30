@@ -157,6 +157,7 @@ async fn call_chat_with_conversation(state: &GatewayState, payload: &Value,
     let mut request = state.client.post(url);
     if let Some(conversation) = conversation {
         request = with_echo_conversation(request, conversation, app_owns_timeline);
+        request = with_echo_project_scope(state, request, conversation);
     }
     let response = request.json(payload).send().await.map_err(|error| {
         json_response(StatusCode::BAD_GATEWAY, &json!({"error":{"message":error.to_string()}}))
@@ -196,6 +197,18 @@ fn with_echo_conversation(request: reqwest::RequestBuilder, conversation: &str,
         request = request.header("x-opencore-timeline-owner", "app");
     }
     request
+}
+
+pub(crate) fn with_echo_project_scope(state: &GatewayState, request: reqwest::RequestBuilder,
+                                     conversation: &str) -> reqwest::RequestBuilder {
+    // Authorization comes from the app's project assignments, never a client's
+    // arbitrary scope header or text. Cap the active lookup fanout.
+    let mut scopes = state.store.echo_conversation_scope(conversation)
+        .unwrap_or_else(|_| vec![conversation.to_string()]);
+    scopes.retain(|id| id != conversation);
+    scopes.insert(0, conversation.to_string());
+    scopes.truncate(128);
+    request.header("x-echo-project-scopes", serde_json::to_string(&scopes).unwrap_or_else(|_| "[]".into()))
 }
 fn anthropic_messages(payload: &Value) -> Vec<Value> {
     let mut out = Vec::new();
@@ -428,7 +441,7 @@ async fn anthropic_live(state: GatewayState, mut chat: Value, model: String, con
     let upstream = anthropic_stream_upstream(&state.runtime);
     chat["stream"] = json!(true);
     chat["stream_options"] = json!({"include_usage":true});
-    let request = with_echo_conversation(state.client.post(format!("{upstream}/v1/chat/completions")), &conversation, embedded).json(&chat);
+    let request = with_echo_project_scope(&state, with_echo_conversation(state.client.post(format!("{upstream}/v1/chat/completions")), &conversation, embedded), &conversation).json(&chat);
     let response = match request.send().await {
         Ok(r) if r.status().is_success() => r,
         Ok(r) => { let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY); return json_response(status,&json!({"error":{"type":"api_error","message":r.text().await.unwrap_or_default()}})); },

@@ -191,6 +191,14 @@ class BoundedPageCache:
             if previous is not None:
                 self._resident_bytes -= previous[1]
 
+    def resize(self, budget_bytes: int) -> None:
+        with self._lock:
+            self.budget_bytes = max(0, int(budget_bytes))
+            while self._pages and self._resident_bytes > self.budget_bytes:
+                _, (_, removed_size) = self._pages.popitem(last=False)
+                self._resident_bytes -= removed_size
+                self._evictions += 1
+
     def snapshot(self) -> dict:
         with self._lock:
             accesses = self._hits + self._misses
@@ -653,6 +661,26 @@ class EchoArchive:
         )
         cur.execute("CREATE INDEX IF NOT EXISTS pages_conv ON pages(conversation_id, timestamp)")
         cur.execute("CREATE INDEX IF NOT EXISTS pages_time ON pages(timestamp)")
+        # One additive migration, then transactional counters for every append.
+        # Reading virtual-history size must not rescan an ever-growing archive.
+        counters_exist = cur.execute("SELECT 1 FROM sqlite_master WHERE name='echo_scope_totals'").fetchone()
+        if not cur.in_transaction:
+            cur.execute("BEGIN IMMEDIATE")
+        cur.execute("CREATE TABLE IF NOT EXISTS echo_scope_totals (scope TEXT PRIMARY KEY, pages INTEGER NOT NULL, source_bytes INTEGER NOT NULL)")
+        if not counters_exist:
+            cur.execute("INSERT INTO echo_scope_totals SELECT conversation_id,COUNT(*),COALESCE(SUM(offset_end-offset_start),0) FROM pages GROUP BY conversation_id")
+        cur.execute("""
+          CREATE TRIGGER IF NOT EXISTS echo_total_insert AFTER INSERT ON pages BEGIN
+            INSERT INTO echo_scope_totals VALUES(NEW.conversation_id,1,NEW.offset_end-NEW.offset_start)
+            ON CONFLICT(scope) DO UPDATE SET pages=pages+1,source_bytes=source_bytes+NEW.offset_end-NEW.offset_start;
+          END
+        """)
+        cur.execute("""
+          CREATE TRIGGER IF NOT EXISTS echo_total_delete AFTER DELETE ON pages BEGIN
+            UPDATE echo_scope_totals SET pages=pages-1,source_bytes=source_bytes-(OLD.offset_end-OLD.offset_start) WHERE scope=OLD.conversation_id;
+          END
+        """)
+        cur.commit()
         # Derived, rebuildable: lexical postings.
         cur.execute(
             "CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5("
@@ -853,6 +881,10 @@ class EchoArchive:
                 # Each archive shard belongs to one conversation, so its text-import
                 # fingerprints can also be cleared without affecting another chat.
                 self.db.execute("DELETE FROM imported_messages")
+                for table, column in (("echo_virtual_state", "scope"), ("echo_page_links", "scope"),
+                                      ("echo_materializations", "scope"), ("echo_live_transcript", "conversation")):
+                    if self.db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone():
+                        self.db.execute(f"DELETE FROM {table} WHERE {column}=?", (conversation_id,))
                 self.db.commit()
             except Exception:
                 self.db.rollback()
@@ -932,6 +964,7 @@ class EchoArchive:
             cached = self.page_cache.get(cache_key)
             if cached is not None:
                 return cached
+        started = time.perf_counter()
         with self._lock:
             row = self.db.execute("SELECT * FROM pages WHERE page_id=?",
                                   (page_id,)).fetchone()
@@ -949,7 +982,17 @@ class EchoArchive:
         )
         if self.page_cache is not None:
             self.page_cache.put(cache_key, page)
+        with self._lock:
+            self._source_bytes_read = getattr(self, "_source_bytes_read", 0) + len(row["compressed_bytes"])
+            self._source_read_ms = getattr(self, "_source_read_ms", 0) + (time.perf_counter() - started) * 1000
         return page
+
+    def scope_usage(self, scope: str) -> dict:
+        with self._lock:
+            row = self.db.execute("SELECT pages,source_bytes FROM echo_scope_totals WHERE scope=?", (scope,)).fetchone()
+        return {"pages": row[0] if row else 0, "source_bytes": row[1] if row else 0,
+                "source_bytes_read": getattr(self, "_source_bytes_read", 0),
+                "source_read_ms": round(getattr(self, "_source_read_ms", 0), 2)}
 
     def stats(self) -> dict:
         with self._lock:

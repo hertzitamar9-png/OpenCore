@@ -5,7 +5,26 @@ const defaultSpeechStatus: SpeechStatus = { installed: false, enabled: false, id
 export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
 export const setSpeechEnabled = (enabled: boolean) => invoke<SpeechStatus>("speech_set_enabled", { enabled });
 export const setSpeechIdleMode = (mode: "cold" | "ram") => invoke<SpeechStatus>("speech_set_idle_mode", { mode });
-export interface EchoWorkingSet { available: boolean; liveTokens?: number; promptTokens?: number; windowTokens: number; modelSessionTokens?: number; modelActiveTokens?: number; modelContextTokens?: number; modelSessionActive?: boolean; contextMode?: string; autoCompactThreshold?: number | null; autoCompactEnabled?: boolean; compactions?: number; offloadedMessages?: number; echoRecalledTokens?: number; echoActivePages?: number; echoActiveSourceHashes?: string[]; echoLastRetrievalReason?: string; echoRetrievalLatencyMs?: number; active?: boolean; warmCache?: { budgetBytes: number; residentBytes: number; pages: number; hits: number; misses: number; evictions: number; oversized: number; hitRate: number }; harness?: { name: string; status: string; tasks: { id: number; desc: string; status: string }[]; reviews: number; toolCount: number; unverified: string[]; ledgerPath: string } }
+export interface EchoMemoryConfiguration { memoryTokens: number; refreshTokens: number; warmCacheMib: number; activeWindowTokens: number }
+export interface EchoVirtualMemory {
+  recent_tokens: number; pinned_tokens: number; retrieved_tokens: number; reserve_tokens: number;
+  refreshes: number; page_faults: number; last_refresh_reason: string;
+  retrieval_ms: number; rematerialization_prepare_ms: number; refresh_ms: number; prefill_ms?: number;
+  materialization_cache_hits: number; materialization_cache_misses: number; materialization_ram_bytes: number;
+  candidates_considered: number; diagnostics: string[];
+  adapter: { adapter: string; materialization_mode: string; supports_direct_kv_reuse: boolean };
+  active_pages: { page_id: string; source_hash: string; timestamp: number; tier: string; score: number; signals: Record<string, number> }[];
+  virtual_history_tokens?: number; virtual_history_bytes?: number;
+  source_bytes_read?: number; source_read_ms?: number;
+  materialization_disk_bytes?: number;
+}
+export async function getEchoMemoryConfiguration(): Promise<EchoMemoryConfiguration> {
+  return desktop() ? invoke("get_echo_memory_configuration") : { memoryTokens: 4096, refreshTokens: 128, warmCacheMib: 128, activeWindowTokens: 32768 };
+}
+export async function saveEchoMemoryConfiguration(configuration: EchoMemoryConfiguration): Promise<{ configuration: EchoMemoryConfiguration; applied: boolean }> {
+  return desktop() ? invoke("save_echo_memory_configuration", { configuration }) : { configuration, applied: false };
+}
+export interface EchoWorkingSet { echoVirtualMemory?: EchoVirtualMemory; sdkContextTokens?: number; available: boolean; liveTokens?: number; promptTokens?: number; windowTokens: number; modelSessionTokens?: number; modelActiveTokens?: number; modelContextTokens?: number; modelSessionActive?: boolean; contextMode?: string; autoCompactThreshold?: number | null; autoCompactEnabled?: boolean; compactions?: number; offloadedMessages?: number; echoRecalledTokens?: number; echoActivePages?: number; echoActiveSourceHashes?: string[]; echoLastRetrievalReason?: string; echoRetrievalLatencyMs?: number; active?: boolean; warmCache?: { budgetBytes: number; residentBytes: number; pages: number; hits: number; misses: number; evictions: number; oversized: number; hitRate: number }; harness?: { name: string; status: string; tasks: { id: number; desc: string; status: string }[]; reviews: number; toolCount: number; unverified: string[]; ledgerPath: string } }
 export async function echoWorkingSet(conversationId: string): Promise<EchoWorkingSet> {
   if (!desktop()) return { available: false, windowTokens: 262144 };
   return invoke<EchoWorkingSet>("echo_working_set", { conversationId });
