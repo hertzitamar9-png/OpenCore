@@ -55,6 +55,25 @@ class EchoMemoryContinuityTests(unittest.TestCase):
             self.assertEqual(sum(entry.get("kind") == LiveTranscript.MEMORY for entry in live.entries), 1)
             archives.close()
 
+    def test_zero_auto_recall_budget_leaves_the_live_context_unchanged(self):
+        with tempfile.TemporaryDirectory(prefix="opencore-echo-no-auto-recall-") as temporary:
+            archives = ArchiveSet(Path(temporary), idle_seconds=60)
+            self.addCleanup(archives.close)
+            self.addCleanup(archives.close)
+            state = EchoState(archives, "http://127.0.0.1:1", 0, 4, False,
+                              automatic_recall_tokens=0)
+            state.count_tokens = lambda text: max(1, len(text.split()))
+            archive = archives.get("project-a")
+            archive.append("A unique automatic recall budget fixture.", "project-a", timestamp=1.0)
+            live = LiveTranscript(archive, "project-a")
+
+            result = state.append_automatic_recall(
+                live, "Find the unique automatic recall budget fixture", "project-a")
+
+            self.assertEqual(result["pages"], 0)
+            self.assertEqual(live.entries, [])
+            archives.close()
+
     def test_compaction_does_not_rearchive_synthetic_recalled_memory(self):
         with tempfile.TemporaryDirectory(prefix="opencore-echo-no-duplicate-") as temporary:
             root = Path(temporary)

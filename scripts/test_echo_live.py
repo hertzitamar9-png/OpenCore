@@ -508,14 +508,15 @@ class EchoLiveTests(unittest.TestCase):
                 self.assertTrue(seen[1]['echo_append'])
                 self.assertEqual(seen[1]['id_slot'], 0)
                 self.assertEqual(len(seen[1]['echo_session_id']), 64)
-                self.assertEqual([message['role'] for message in second_messages], ['user'])
-                self.assertNotIn('SPIRAL-ANCHOR-47', json.dumps(second_messages))
+                self.assertEqual([message['role'] for message in second_messages], ['user', 'user'])
+                self.assertIn('SPIRAL-ANCHOR-47', json.dumps(second_messages))
                 self.assertIn('What key did we decide to keep?', json.dumps(second_messages))
                 self.assertTrue(seen[0]['messages'][0]['role'] == 'system')
                 self.assertFalse(seen[0]['echo_append'])
                 self.assertTrue(after_first.entries[1]['backend_sent'])
                 after_second = LiveTranscript(archives.get('turn-scoped'), 'turn-scoped')
-                self.assertEqual([message['role'] for message in after_second.messages], ['user', 'assistant', 'user', 'assistant'])
+                self.assertEqual([message['role'] for message in after_second.messages],
+                                 ['user', 'assistant', 'user', 'user', 'assistant'])
                 self.assertEqual(after_second.offloaded_messages, 0)
 
                 handler._controlled_context({'messages':[{'role':'user','content':'Start a separate chat.'}],

@@ -624,9 +624,13 @@ class EchoState:
     def append_automatic_recall(self, live, query, conversation, budget_tokens=None):
         """Promote relevant canonical archive pages before each new live turn."""
         started = time.monotonic()
+        allowance = self.automatic_recall_tokens if budget_tokens is None else max(0, int(budget_tokens))
         if len(str(query).strip()) < self.min_query_chars:
             return {"pages": 0, "tokens": 0, "source_hashes": [],
                     "reason": "query below retrieval threshold", "latency_ms": 0}
+        if allowance == 0:
+            return {"pages": 0, "tokens": 0, "source_hashes": [],
+                    "reason": "automatic recall disabled by zero token budget", "latency_ms": 0}
         archives = [self.archives.get(conversation)]
         cold = self.cold_archive_for(conversation)
         if cold is not None:
@@ -640,7 +644,6 @@ class EchoState:
                     if page.content_hash not in seen:
                         merged.append(page)
                         seen.add(page.content_hash)
-        allowance = self.automatic_recall_tokens if budget_tokens is None else max(0, int(budget_tokens))
         recalled = live.append_memory_pages(merged, self.count_tokens, allowance)
         reasons = [result.reason for result in ranked if result.reason]
         recalled["reason"] = "; ".join(reasons) if reasons else "no archived candidate pages"
