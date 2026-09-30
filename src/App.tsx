@@ -929,8 +929,9 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         <KeyValue label="ECHO model native window" value="262,144 tokens per inference" />
         <KeyValue label="DuoCore package context" value="Up to 65,536 live tokens · auto-fits free RAM; ECHO keeps the exact archive" />
         <KeyValue label="1M extended profile" value="1,000,000-token YaRN window; original trained context 262,144" />
-        <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
+        <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact the active model context after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
         <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
+        <p className="appearance-note">Native profiles compact their active model context automatically. ECHO profiles keep the exact conversation history in the ECHO archive and retrieve older details as needed; compaction only bounds the active model window.</p>
         <p className="appearance-note">This is an exact token count. The configured inference window sets the per-request ceiling. YaRN length extension does not mean the model was trained at that length. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
       </InspectorSection>
       <InspectorSection title="Chrome extension">
@@ -993,7 +994,7 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
     return () => { active = false; window.clearInterval(timer); };
   }, [conversationId, profile, runtime.profile, runtime.status]);
 
-  if (["echo", "native1m", "unsloth-echo", "doucode", "dualcore-echo", "fusioncore-echo"].includes(profile)) {
+  if (["echo", "native1m", "unsloth-echo", "doucode", "nanbeige-bf16-echo", "dualcore-echo", "fusioncore-echo"].includes(profile)) {
     const archived = workingSet?.offloadedMessages;
     const reportedLimit = workingSet?.available ? workingSet.modelContextTokens ?? workingSet.windowTokens : undefined;
     const fallbackLimit = runtime.contextSize || (profile === "native1m" ? 1_000_000 : profile === "doucode" ? 65_536 : 32768);
@@ -1012,6 +1013,9 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
         <span>Model context · {liveLabel}</span>
         <small style={{ display: "block" }}>3T archive goal · unvalidated, not live context</small>
         {archived ? <small style={{ display: "block" }} aria-label="ECHO archived messages">{archived} archived</small> : null}
+        {workingSet?.autoCompactEnabled === true && typeof workingSet.autoCompactThreshold === "number" && workingSet.autoCompactThreshold > 0
+          ? <small className="statusbar-context-compaction">Auto compact · {workingSet.autoCompactThreshold.toLocaleString()} · {workingSet.compactions ?? 0}</small>
+          : null}
       </span>
       <progress aria-label="ECHO model context usage" value={used} max={maximum} />
     </div>;
@@ -1028,6 +1032,9 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
     <span className="statusbar-context-label">Context</span>
     <progress aria-label="Model context usage" value={used} max={maximum} />
     <span className="statusbar-context-reading">{measured ? compactTokenCount(used) : "—"} / {compactTokenCount(maximum)}</span>
+    {workingSet?.autoCompactEnabled === true && typeof workingSet.autoCompactThreshold === "number" && workingSet.autoCompactThreshold > 0
+      ? <small className="statusbar-context-compaction">Auto compact · {workingSet.autoCompactThreshold.toLocaleString()} tokens · {workingSet.compactions ?? 0} compactions</small>
+      : null}
   </div>;
 }
 

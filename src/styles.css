@@ -1200,6 +1200,7 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .statusbar-context progress::-webkit-progress-value { border-radius:999px; background:linear-gradient(90deg,#267eae,#78cbef); box-shadow:0 0 8px #53b1dd66; }
 .statusbar-context progress::-moz-progress-bar { border-radius:999px; background:linear-gradient(90deg,#267eae,#78cbef); }
 .statusbar-context-reading { color:#dfe9f0; font-size:9px; white-space:nowrap; }
+.statusbar-context-compaction { grid-column:1 / -1; color:#83cdb5; font-size:8px; line-height:1.2; white-space:nowrap; }
 .statusbar-echo-context { flex:none; grid-template-columns:auto minmax(100px,1fr); grid-template-rows:auto auto; color:#b4dcca; white-space:nowrap; }
 .statusbar-echo-context progress { grid-column:1 / -1; grid-row:2; }
 .statusbar-echo-context > svg { color:#76d5ae; }

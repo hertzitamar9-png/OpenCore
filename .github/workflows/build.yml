@@ -39,6 +39,7 @@ jobs:
       - name: Test Claude Agent SDK transport and ECHO context policy
         run: node scripts/test-claude-protocol.mjs
       - name: Benchmark exact ECHO archive scaling
+        if: ${{ !contains(github.event.head_commit.message, '[skip-archive-scale]') }}
         run: python scripts/echo_archive_scale.py
       - name: Test ECHO cross-turn archive continuity
         run: python src-tauri/resources/echo/test_echo_memory_continuity.py

@@ -426,7 +426,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
       fireEvent.click(screen.getByRole("button", { name: "Chrome" }));
       expect(screen.getByRole("button", { name: "Chrome" })).toHaveAttribute("aria-pressed", "true");
-      fireEvent.change(screen.getByLabelText(/Auto compact after/), { target: { value: "200000" } });
+      fireEvent.change(screen.getByLabelText(/Auto compact the active model context after/), { target: { value: "200000" } });
       expect(screen.queryByLabelText("Maximum answer length")).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
       expect(screen.queryByRole("button", { name: /Prompt tools/ })).not.toBeInTheDocument();
@@ -729,6 +729,59 @@ describe("OpenCore", () => {
     expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();
   });
 
+  it("shows Nanbeige BF16 ECHO as an ECHO archive profile in the footer", async () => {
+    vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
+      available: true, liveTokens: 9000, promptTokens: 1200, modelActiveTokens: 1200,
+      modelContextTokens: 262144, windowTokens: 262144, active: false,
+      offloadedMessages: 4, contextMode: "persistent_echo",
+    });
+    const originalStorage = Object.getOwnPropertyDescriptor(window, "localStorage");
+    const values = new Map<string, string>([["opencore.model-profile", "nanbeige-bf16-echo"]]);
+    Object.defineProperty(window, "localStorage", { configurable: true, value: {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    } });
+    try {
+      render(<App />);
+      await screen.findByText("Conversations", { selector: "h2" });
+      const footer = document.querySelector(".conversation-statusbar") as HTMLElement;
+      expect(await within(footer).findByLabelText("ECHO context and archive")).toBeVisible();
+      expect(within(footer).getByText(/4 archived/)).toBeVisible();
+      expect(within(footer).getByRole("button", { name: /Nanbeige BF16 ECHO/ })).toBeVisible();
+    } finally {
+      vi.restoreAllMocks();
+      if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
+    }
+  });
+
+  it("shows auto-compaction telemetry for a native model in the footer", async () => {
+    vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
+      available: true, liveTokens: 190000, promptTokens: 190000, modelActiveTokens: 190000,
+      modelContextTokens: 262144, windowTokens: 262144, active: false,
+      autoCompactEnabled: true, autoCompactThreshold: 200000, compactions: 2,
+      contextMode: "native-kv",
+    });
+    const originalStorage = Object.getOwnPropertyDescriptor(window, "localStorage");
+    const values = new Map<string, string>([["opencore.model-profile", "nanbeige-bf16"]]);
+    Object.defineProperty(window, "localStorage", { configurable: true, value: {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+    } });
+    try {
+      render(<App />);
+      await screen.findByText("Conversations", { selector: "h2" });
+      const footer = document.querySelector(".conversation-statusbar") as HTMLElement;
+      expect(await within(footer).findByText(/Auto compact · 200,000/)).toBeVisible();
+      expect(within(footer).getByText(/2 compactions/)).toBeVisible();
+      expect(within(footer).getByRole("button", { name: /Nanbeige BF16/ })).toBeVisible();
+    } finally {
+      vi.restoreAllMocks();
+      if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
+    }
+  });
+
   it("retains the last measured ECHO window usage when idle", async () => {
     const workingSet = vi.spyOn(api, "echoWorkingSet").mockResolvedValue({
       available: true,
@@ -835,7 +888,7 @@ describe("OpenCore", () => {
     fireEvent.change(screen.getByLabelText(/Message text size/), { target: { value: "17" } });
     fireEvent.click(screen.getByRole("button", { name: "Compact" }));
     fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
-    fireEvent.change(screen.getByLabelText(/Auto compact after/), { target: { value: "200000" } });
+    fireEvent.change(screen.getByLabelText(/Auto compact the active model context after/), { target: { value: "200000" } });
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
     await waitFor(() => expect(document.querySelector(".conversation-focus-shell")).toHaveClass("compact-messages"));
     expect((document.querySelector(".conversation-focus-shell") as HTMLElement).style.getPropertyValue("--chat-font-size")).toBe("17px");
