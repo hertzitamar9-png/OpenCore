@@ -296,6 +296,150 @@
       "filename": "vocab.json",
       "bytes": 1036558,
       "sha256": "e2aa043ef015641d363d8288e7c241c85e36a5c761fb303598e0710233344387"
+    },
+    {
+      "id": "phonon-2-phonon-2-bps-tar-zst",
+      "path": "speech/phonon-2/phonon-2.bps.tar.zst",
+      "repo": "FermionResearch/Phonon-2",
+      "revision": "9c7fef3584499a88fe8d394427f45851bbb8b446",
+      "filename": "phonon-2.bps.tar.zst",
+      "sha256": "98125795b6dda72f5c6eee9ba33d19815df65dcb18b50a357bf9f73c9935309e",
+      "bytes": 163515201
+    },
+    {
+      "id": "phonon-2-fermion-container-py",
+      "path": "speech/phonon-2/fermion_container.py",
+      "repo": "FermionResearch/Phonon-2",
+      "revision": "9c7fef3584499a88fe8d394427f45851bbb8b446",
+      "filename": "fermion_container.py",
+      "sha256": "5cf172e8cf6b313e951c4ef588ca913c7285b0aa3b92de413c3d7ec2b939c0e4",
+      "bytes": 3915
+    },
+    {
+      "id": "phonon-2-reference-transformers-py",
+      "path": "speech/phonon-2/reference_transformers.py",
+      "repo": "FermionResearch/Phonon-2",
+      "revision": "9c7fef3584499a88fe8d394427f45851bbb8b446",
+      "filename": "reference_transformers.py",
+      "sha256": "dd51dc042bda14b9578ef797ea9b137b73d09d801f8ce421c7f3eb3b6ddd40d1",
+      "bytes": 6828
+    },
+    {
+      "id": "phonon-2-LICENSE-CODE-Apache-2-0-txt",
+      "path": "speech/phonon-2/LICENSE-CODE-Apache-2.0.txt",
+      "repo": "FermionResearch/Phonon-2",
+      "revision": "9c7fef3584499a88fe8d394427f45851bbb8b446",
+      "filename": "LICENSE-CODE-Apache-2.0.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358
+    },
+    {
+      "id": "phonon-2-LICENSE-WEIGHTS-CC-BY-4-0-txt",
+      "path": "speech/phonon-2/LICENSE-WEIGHTS-CC-BY-4.0.txt",
+      "repo": "FermionResearch/Phonon-2",
+      "revision": "9c7fef3584499a88fe8d394427f45851bbb8b446",
+      "filename": "LICENSE-WEIGHTS-CC-BY-4.0.txt",
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+      "bytes": 18657
+    },
+    {
+      "id": "phonon-2-NOTICE",
+      "path": "speech/phonon-2/NOTICE",
+      "repo": "FermionResearch/Phonon-2",
+      "revision": "9c7fef3584499a88fe8d394427f45851bbb8b446",
+      "filename": "NOTICE",
+      "sha256": "00624a5043e7ce74029317b024132ca5286116d6fbf3191d226374bc8273789f",
+      "bytes": 2741
+    },
+    {
+      "id": "phonon-processor-config-json",
+      "path": "speech/phonon-2/processor/config.json",
+      "repo": "nvidia/parakeet-tdt-0.6b-v3",
+      "revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
+      "filename": "config.json",
+      "sha256": "e747b85e1bdfd300c8b8ac63bac8dd5221f8fe9bc275b48d06c735fcd6971b6e",
+      "bytes": 1153
+    },
+    {
+      "id": "phonon-processor-generation-config-json",
+      "path": "speech/phonon-2/processor/generation_config.json",
+      "repo": "nvidia/parakeet-tdt-0.6b-v3",
+      "revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
+      "filename": "generation_config.json",
+      "sha256": "b141de6ec6d7f982ece13f98f604e3fe1807ea9c0e839185d0ab7064604209d0",
+      "bytes": 289
+    },
+    {
+      "id": "phonon-processor-processor-config-json",
+      "path": "speech/phonon-2/processor/processor_config.json",
+      "repo": "nvidia/parakeet-tdt-0.6b-v3",
+      "revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
+      "filename": "processor_config.json",
+      "sha256": "8346a93a3b987fa1dec57a78f045cd0817d21786589a5a096b41a57a446fd1d7",
+      "bytes": 392
+    },
+    {
+      "id": "phonon-processor-tokenizer-json",
+      "path": "speech/phonon-2/processor/tokenizer.json",
+      "repo": "nvidia/parakeet-tdt-0.6b-v3",
+      "revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
+      "filename": "tokenizer.json",
+      "sha256": "bd321b096832a3f270bd3b2a88823957920f1a5c5ada71114a26ea729d0cbe91",
+      "bytes": 1159960
+    },
+    {
+      "id": "phonon-processor-tokenizer-config-json",
+      "path": "speech/phonon-2/processor/tokenizer_config.json",
+      "repo": "nvidia/parakeet-tdt-0.6b-v3",
+      "revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
+      "filename": "tokenizer_config.json",
+      "sha256": "0b2fe0037599ee335f0b972fa682bf0ece74e4ccfec755cb7daa3405d3d3e874",
+      "bytes": 290
+    },
+    {
+      "id": "whisper-full-v3-config-json",
+      "path": "speech/large-v3/config.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "config.json",
+      "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9",
+      "bytes": 2394
+    },
+    {
+      "id": "whisper-full-v3-model-bin",
+      "path": "speech/large-v3/model.bin",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "model.bin",
+      "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1",
+      "bytes": 3087284237
+    },
+    {
+      "id": "whisper-full-v3-preprocessor_config-json",
+      "path": "speech/large-v3/preprocessor_config.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "preprocessor_config.json",
+      "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711",
+      "bytes": 340
+    },
+    {
+      "id": "whisper-full-v3-tokenizer-json",
+      "path": "speech/large-v3/tokenizer.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "tokenizer.json",
+      "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca",
+      "bytes": 2480617
+    },
+    {
+      "id": "whisper-full-v3-vocabulary-json",
+      "path": "speech/large-v3/vocabulary.json",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "filename": "vocabulary.json",
+      "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1",
+      "bytes": 1068114
     }
   ],
   "models": [
@@ -365,10 +509,12 @@
     {
       "id": "nanbeige-bf16",
       "label": "Nanbeige BF16",
-      "description": "Standalone Nanbeige4.2-3B · BF16 weights",
+      "description": "Standalone Nanbeige4.2-3B \u00c3\u201a\u00c2\u00b7 BF16 weights",
       "precision": "BF16",
       "contextTokens": 262144,
-      "artifacts": ["nanbeige-bf16-gguf"],
+      "artifacts": [
+        "nanbeige-bf16-gguf"
+      ],
       "license": "Apache-2.0",
       "experimental": true,
       "note": "Single-model profile using the pinned BF16 GGUF. Native 262,144-token context; speed and long-context quality are not yet qualified.",
@@ -377,10 +523,12 @@
     {
       "id": "nanbeige-bf16-echo",
       "label": "Nanbeige BF16 ECHO",
-      "description": "Standalone Nanbeige4.2-3B · ECHO archive retrieval",
+      "description": "Standalone Nanbeige4.2-3B \u00c3\u201a\u00c2\u00b7 ECHO archive retrieval",
       "precision": "BF16",
       "contextTokens": 262144,
-      "artifacts": ["nanbeige-bf16-gguf"],
+      "artifacts": [
+        "nanbeige-bf16-gguf"
+      ],
       "license": "Apache-2.0",
       "experimental": true,
       "note": "Uses the same single BF16 checkpoint with ECHO archive retrieval. Active model context is 262,144 tokens; this is not unbounded simultaneous attention.",
@@ -485,8 +633,8 @@
       "selectable": false
     },
     {
-      "id": "whisper-large-v3",
-      "label": "Whisper Large V3 Turbo",
+      "id": "whisper-large-v3-turbo",
+      "label": "Whisper large-v3 turbo",
       "description": "OpenAI's multilingual Whisper Turbo checkpoint for speech transcription in the spoken language",
       "precision": "F16",
       "contextTokens": 0,
@@ -506,7 +654,52 @@
       "license": "Apache-2.0",
       "experimental": false,
       "note": "Offline multilingual transcription with task=transcribe (no translation). This is the general Turbo checkpoint, not a Hebrew fine-tune. RAM sleep keeps weights in system RAM and clears GPU use after dictation; cold start unloads the process after each use.",
-      "selectable": false
+      "selectable": false,
+      "speechLanguage": "Multilingual"
+    },
+    {
+      "id": "whisper-large-v3",
+      "label": "Whisper large-v3",
+      "description": "OpenAI's full large-v3 speech recognition checkpoint, including Hebrew.",
+      "precision": "F16",
+      "contextTokens": 0,
+      "artifacts": [
+        "whisper-full-v3-config-json",
+        "whisper-full-v3-model-bin",
+        "whisper-full-v3-preprocessor_config-json",
+        "whisper-full-v3-tokenizer-json",
+        "whisper-full-v3-vocabulary-json"
+      ],
+      "license": "Apache-2.0",
+      "experimental": false,
+      "note": "Full large-v3, separate from Turbo. Multilingual transcription in the spoken language. Uses the pinned F16 CTranslate2 conversion of OpenAI weights, or an existing full Transformers checkpoint. Releases GPU memory after dictation; optional RAM standby.",
+      "selectable": false,
+      "speechLanguage": "Multilingual"
+    },
+    {
+      "id": "phonon-2",
+      "label": "Phonon-2",
+      "description": "Fermion Research's English speech recognition model, based on Parakeet TDT.",
+      "precision": "Five-value checkpoint",
+      "contextTokens": 0,
+      "artifacts": [
+        "phonon-2-phonon-2-bps-tar-zst",
+        "phonon-2-fermion-container-py",
+        "phonon-2-reference-transformers-py",
+        "phonon-2-LICENSE-CODE-Apache-2-0-txt",
+        "phonon-2-LICENSE-WEIGHTS-CC-BY-4-0-txt",
+        "phonon-2-NOTICE",
+        "phonon-processor-config-json",
+        "phonon-processor-generation-config-json",
+        "phonon-processor-processor-config-json",
+        "phonon-processor-tokenizer-json",
+        "phonon-processor-tokenizer-config-json"
+      ],
+      "license": "CC-BY-4.0 weights \u00c2\u00b7 Apache-2.0 reference code",
+      "experimental": false,
+      "note": "English only. About 164 MB compressed download. Windows uses the reference runtime: expanded FP32 weights use about 2.5 GB, with additional audio buffers. Optional RAM standby; GPU memory is released after dictation.",
+      "selectable": false,
+      "speechLanguage": "English only"
     }
   ]
 }

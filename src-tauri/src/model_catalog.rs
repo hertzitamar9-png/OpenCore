@@ -27,6 +27,8 @@ pub struct Model {
     pub context_tokens: u64, pub artifacts: Vec<String>, pub license: String,
     pub experimental: bool, pub note: String,
     pub selectable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speech_language: Option<String>,
 }
 #[derive(Deserialize)]
 struct Manifest { artifacts: Vec<Artifact>, models: Vec<Model> }
@@ -96,18 +98,52 @@ fn complete_whisper_checkpoint(path: &Path) -> bool {
         (path.join("tokenizer.json").is_file() ||
             (path.join("vocab.json").is_file() && path.join("merges.txt").is_file()))
 }
-pub fn external_whisper_model() -> Option<PathBuf> {
+fn existing_large_v3_ct2(root: &Path) -> Option<PathBuf> {
+    let path=root.join("speech/large-v3");
+    let metadata=["config.json","preprocessor_config.json","tokenizer.json","vocabulary.json"];
+    (metadata.iter().all(|name|path.join(name).is_file()) &&
+        path.join("model.bin").metadata().is_ok_and(|m|m.len()==3087284237)).then_some(path)
+}
+fn externally_managed_speech(root: &Path, id: &str) -> bool {
+    external_whisper_model_for(id).is_some() || (id == "whisper-large-v3" &&
+        existing_large_v3_ct2(root).is_some() && !std::fs::read(root.join("models/receipts/model-whisper-large-v3.json")).ok()
+            .and_then(|b|serde_json::from_slice::<Vec<String>>(&b).ok()).is_some_and(|ids|ids.iter().any(|id|id=="whisper-full-v3-model-bin")))
+}
+pub fn is_speech_model(id: &str) -> bool {
+    matches!(id, "whisper-large-v3-turbo" | "whisper-large-v3" | "phonon-2")
+}
+pub fn external_whisper_model_for(id: &str) -> Option<PathBuf> {
+    let layers = match id { "whisper-large-v3-turbo" => 4, "whisper-large-v3" => 32, _ => return None };
     let configured = std::env::var_os("OPENCORE_WHISPER_MODEL").map(PathBuf::from);
     let profile = std::env::var_os("USERPROFILE").map(PathBuf::from)
-        .map(|home| home.join("OpenCore-Model-Test/asr/whisper-large-v3-turbo"));
-    configured.into_iter().chain(profile).find(|path| path.is_absolute() && complete_whisper_checkpoint(path))
+        .map(|home| home.join("OpenCore-Model-Test/asr").join(id));
+    configured.into_iter().chain(profile).find(|path| {
+        path.is_absolute() && complete_whisper_checkpoint(path) &&
+        std::fs::read(path.join("config.json")).ok().and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+            .is_some_and(|config| config["model_type"] == "whisper" && config["decoder_layers"] == layers)
+    })
 }
-pub fn whisper_model_path(root: &Path) -> PathBuf {
-    external_whisper_model().unwrap_or_else(|| root.join("speech/large-v3-turbo"))
+pub fn speech_model_path(root: &Path, id: &str) -> Option<PathBuf> {
+    match id {
+        "whisper-large-v3-turbo" => Some(external_whisper_model_for(id).unwrap_or_else(|| root.join("speech/large-v3-turbo"))),
+        "whisper-large-v3" => Some(external_whisper_model_for(id).or_else(||existing_large_v3_ct2(root)).unwrap_or_else(|| root.join("speech/large-v3"))),
+        "phonon-2" => Some(root.join("speech/phonon-2")),
+        _ => None,
+    }
 }
-pub fn whisper_model_available(root: &Path) -> bool { complete_whisper_checkpoint(&whisper_model_path(root)) }
-fn speech_runtime_ready(root: &Path) -> bool {
-    root.join("speech/runtime.json").is_file() && root.join("speech/venv/Scripts/python.exe").is_file()
+pub fn speech_python_path(root: &Path, id: &str) -> PathBuf {
+    root.join(if id == "phonon-2" { "speech/phonon-venv/Scripts/python.exe" } else { "speech/whisper-venv/Scripts/python.exe" })
+}
+fn speech_runtime_ready(root: &Path, id: &str) -> bool {
+    std::fs::read(root.join(if id == "phonon-2" { "speech/phonon-runtime.json" } else { "speech/whisper-runtime.json" })).ok()
+        .and_then(|b|serde_json::from_slice::<serde_json::Value>(&b).ok()).is_some_and(|receipt|receipt["schema"]==2)
+        && speech_python_path(root, id).is_file()
+}
+fn valid_model_receipt(root: &Path, model: &Model) -> bool {
+    let read = |path: PathBuf| std::fs::read(path).ok()
+        .and_then(|b| serde_json::from_slice::<Vec<String>>(&b).ok()).is_some_and(|ids| ids == model.artifacts);
+    read(model_receipt(root, model)) || (model.id == "whisper-large-v3-turbo" &&
+        read(root.join("models/receipts/model-whisper-large-v3.json")))
 }
 fn verified_file(root: &Path, file: &Artifact) -> bool {
     let Ok(path) = safe_path(root, &file.path) else { return false; };
@@ -118,10 +154,14 @@ fn verified_file(root: &Path, file: &Artifact) -> bool {
         modified(&path).ok() == Some(receipt.modified_nanos)
 }
 fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
-    if model.id == "whisper-large-v3" {
-        return speech_runtime_ready(root) && (external_whisper_model().is_some() ||
-            (model_receipt(root, model).is_file() && model.artifacts.iter().all(|id|
-                data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))));
+    if is_speech_model(&model.id) {
+        let complete = if model.id == "phonon-2" {
+            root.join("speech/phonon-2/model.fermion").metadata().is_ok_and(|m|m.len() == 177438361)
+        } else { externally_managed_speech(root,&model.id) };
+        return speech_runtime_ready(root, &model.id) && (if model.id != "phonon-2" && complete { true } else {
+            valid_model_receipt(root, model) && (model.id != "phonon-2" || complete) && model.artifacts.iter().all(|id|
+                data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))
+        });
     }
     model_receipt(root, model).is_file() && model.artifacts.iter().all(|id|
         data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))
@@ -147,7 +187,7 @@ pub fn list(root: &Path) -> Result<Library, String> {
     let data = manifest()?;
     let models = data.models.iter().map(|m| {
         let files: Vec<_> = data.artifacts.iter().filter(|f| m.artifacts.contains(&f.id)).collect();
-        let external_managed = m.id == "whisper-large-v3" && external_whisper_model().is_some();
+        let external_managed = externally_managed_speech(root, &m.id);
         ModelInfo { model: m.clone(), installed: installed(root, m, &data), external_managed,
             download_bytes: if external_managed { 0 } else { files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum() },
             total_bytes: files.iter().map(|f| f.bytes).sum() }
@@ -178,7 +218,7 @@ pub fn begin(id: &str) -> Result<(), String> {
         return Err("Another model operation is in progress".into());
     }
     CANCEL.store(false, Ordering::SeqCst);
-    let external_whisper = id == "whisper-large-v3" && external_whisper_model().is_some();
+    let external_whisper = external_whisper_model_for(id).is_some();
     *state = Some(InstallProgress { model_id: id.into(), phase: "preparing".into(), downloaded_bytes: 0,
         total_bytes: if external_whisper { 0 } else { data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).map(|f| f.bytes).sum() },
         current_file: String::new(), error: None });
@@ -207,20 +247,37 @@ fn hub_token() -> Option<String> {
 async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Result<(), String> {
     let data = manifest()?;
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
-    let whisper = id == "whisper-large-v3";
-    let external = whisper && external_whisper_model().is_some();
+    let speech = is_speech_model(id);
+    let external = externally_managed_speech(root, id);
     let files: Vec<_> = if external { Vec::new() } else { data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).collect() };
-    let runtime_reserve = if whisper && !speech_runtime_ready(root) { 6_000_000_000 } else { 0 };
-    reserve_space(root, files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum::<u64>().saturating_add(runtime_reserve))?;
-    if whisper {
+    // Register verified existing downloads before calculating additional disk use.
+    // This must work even when another task has brought free space below the download reserve.
+    for file in &files {
+        if verified_file(root,file) { continue; }
+        let path=safe_path(root,&file.path)?;
+        if path.metadata().is_ok_and(|m|m.is_file() && m.len()==file.bytes) {
+            update("verifying",0,&file.path,None);
+            let check=path.clone();
+            if tauri::async_runtime::spawn_blocking(move ||digest(&check)).await.map_err(|e|e.to_string())??==file.sha256 {
+                record_file(root,file,&path)?;
+            }
+        }
+    }
+    let shared_torch = std::env::var_os("LOCALAPPDATA").map(PathBuf::from).is_some_and(|p|p.join("OpenCore/training-envs/lfm-bf16-py311/Scripts/python.exe").is_file());
+    let runtime_reserve = if speech && !speech_runtime_ready(root, id) { if shared_torch {1_000_000_000} else {6_000_000_000} }
+        else if id == "phonon-2" && !root.join("speech/phonon-2/model.fermion").is_file() { 177_438_361 } else { 0 };
+    let additional=files.iter().filter(|f| !verified_file(root,f)).map(|f|f.bytes).sum::<u64>().saturating_add(runtime_reserve);
+    if additional>0 { reserve_space(root,additional)?; }
+    if speech && !speech_runtime_ready(root, id) {
         update("preparing", 0, "Preparing speech runtime", None);
         let root = root.to_path_buf();
-        let setup_script = resources.map(|p|p.join("speech/prepare_runtime.py"));
-        let preparation = tauri::async_runtime::spawn_blocking(move || prepare_speech_runtime(&root, setup_script.as_deref()));
+        let script_name = if id == "phonon-2" { "prepare_phonon_runtime.py" } else { "prepare_runtime.py" };
+        let setup_script = resources.map(|p|p.join("speech").join(script_name));
+        let preparation = tauri::async_runtime::spawn_blocking(move || prepare_speech_runtime(&root, setup_script.as_deref(), script_name, false));
         preparation.await.map_err(|e| e.to_string())??;
     }
     if external {
-        update("complete", 0, "Using the existing Whisper Large V3 Turbo checkpoint", None);
+        update("complete", 0, &format!("Using the existing {} checkpoint", model.label), None);
         return Ok(());
     }
     let client = reqwest::Client::builder().connect_timeout(std::time::Duration::from_secs(30))
@@ -298,6 +355,12 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
         record_file(root, file, &path)?;
         completed += file.bytes;
     }
+    if id == "phonon-2" {
+        update("preparing", completed, "Preparing speech model", None);
+        let setup = resources.map(|p| p.join("speech/prepare_phonon_runtime.py"));
+        let root = root.to_path_buf();
+        tauri::async_runtime::spawn_blocking(move || prepare_speech_runtime(&root, setup.as_deref(), "prepare_phonon_runtime.py", true)).await.map_err(|e| e.to_string())??;
+    }
     let receipt = safe_path(root, &format!("models/receipts/model-{}.json", model.id))?;
     std::fs::create_dir_all(receipt.parent().unwrap()).map_err(|e| e.to_string())?;
     std::fs::write(receipt, serde_json::to_vec(&model.artifacts).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
@@ -305,11 +368,15 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
     Ok(())
 }
 
-fn prepare_speech_runtime(root: &Path, bundled_script: Option<&Path>) -> Result<(), String> {
-    let development_script = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/speech/prepare_runtime.py");
+fn prepare_speech_runtime(root: &Path, bundled_script: Option<&Path>, script_name: &str, prepare_model: bool) -> Result<(), String> {
+    let development_script = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources/speech").join(script_name);
     let script = bundled_script.filter(|p|p.is_file()).unwrap_or(&development_script);
-    let python = root.join("speech/venv/Scripts/python.exe");
-    let mut command = if python.is_file() {
+    let candidates = [Some(root.join("speech/whisper-venv/Scripts/python.exe")),
+        Some(root.join("speech/phonon-venv/Scripts/python.exe")),
+        std::env::var_os("OPENCORE_SPEECH_TORCH_PYTHON").map(PathBuf::from),
+        std::env::var_os("LOCALAPPDATA").map(|p|PathBuf::from(p).join("OpenCore/training-envs/lfm-bf16-py311/Scripts/python.exe"))];
+    let python = candidates.into_iter().flatten().find(|p|p.is_file());
+    let mut command = if let Some(python) = python {
         let mut cmd = std::process::Command::new(python);
         cmd.arg(&script);
         cmd
@@ -322,16 +389,17 @@ fn prepare_speech_runtime(root: &Path, bundled_script: Option<&Path>) -> Result<
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
+    if prepare_model { command.arg("--prepare-model"); }
     #[cfg(windows)] {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x0800_0000);
     }
-    let output = command.output().map_err(|e| format!("Could not start Python 3.12 for Whisper setup: {e}. Install Python 3.12 and retry."))?;
+    let output = command.output().map_err(|e| format!("Could not start Python for speech setup: {e}. Install Python 3.12 and retry."))?;
     if !output.status.success() {
         let detail = String::from_utf8_lossy(&output.stderr);
         let detail = detail.trim();
-        return Err(if detail.is_empty() { "Whisper's speech runtime setup failed.".into() }
-            else { format!("Whisper's speech runtime setup failed: {}", detail.chars().rev().take(500).collect::<String>().chars().rev().collect::<String>()) });
+        return Err(if detail.is_empty() { "Speech runtime setup failed.".into() }
+            else { format!("Speech runtime setup failed: {}", detail.chars().rev().take(500).collect::<String>().chars().rev().collect::<String>()) });
     }
     Ok(())
 }
@@ -344,8 +412,8 @@ pub fn uninstall(root: &Path, id: &str) -> Result<(), String> {
 }
 fn uninstall_inner(root: &Path, id: &str, data: &Manifest) -> Result<(), String> {
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
-    if id == "whisper-large-v3" && external_whisper_model().is_some() {
-        return Err("Whisper weights are in the user-managed OpenCore-Model-Test folder and were not removed.".into());
+    if externally_managed_speech(root, id) {
+        return Err("These speech weights are user-managed and were not removed.".into());
     }
     begin(id)?;
     update("uninstalling", 0, "", None);
@@ -353,6 +421,10 @@ fn uninstall_inner(root: &Path, id: &str, data: &Manifest) -> Result<(), String>
         let used: HashSet<_> = data.models.iter().filter(|m| m.id != id && installed(root, m, &data))
             .flat_map(|m| m.artifacts.iter().cloned()).collect();
         // Exact allowlisted files only. Conversations, archives, and unrelated models are untouched.
+        if id == "phonon-2" {
+            let derived = safe_path(root, "speech/phonon-2/model.fermion")?;
+            if derived.is_file() { std::fs::remove_file(derived).map_err(|e|e.to_string())?; }
+        }
         for file in data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id) && !used.contains(&f.id)) {
             for relative in [&file.path, &format!("{}.partial", file.path), &format!("models/receipts/file-{}.json", file.id)] {
                 let path = safe_path(root, relative)?;
@@ -370,6 +442,46 @@ fn uninstall_inner(root: &Path, id: &str, data: &Manifest) -> Result<(), String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    #[ignore = "Explicit opt-in only; registers and verifies already-present speech checkpoints"]
+    async fn register_existing_speech_models() {
+        let _test_guard = MODEL_CATALOG_TEST_LOCK.lock().unwrap();
+        let root = PathBuf::from(std::env::var_os("OPENCORE_REGISTER_EXISTING_ROOT").expect("Set explicit model root"));
+        assert!(root.is_absolute() && root.is_dir());
+        let data = manifest().unwrap();
+        for id in ["whisper-large-v3-turbo", "whisper-large-v3", "phonon-2"] {
+            let model = data.models.iter().find(|m|m.id==id).unwrap();
+            let external = external_whisper_model_for(id);
+            for file in data.artifacts.iter().filter(|f|model.artifacts.contains(&f.id)) {
+                let path = external.as_ref().map(|p|p.join(&file.filename)).unwrap_or_else(||safe_path(&root,&file.path).unwrap());
+                assert_eq!(path.metadata().unwrap().len(), file.bytes, "No files may be downloaded by this check: {}", file.path);
+                assert_eq!(digest(&path).unwrap(),file.sha256,"Existing speech file must match its exact pin: {}",file.path);
+            }
+            assert!(speech_runtime_ready(&root,id));
+            begin(id).unwrap();
+            install_inner(&root,id,None).await.unwrap();
+            require_installed(&root,id).unwrap();
+            println!("Verified installed speech model: {}",model.label);
+        }
+    }
+    #[test]
+    fn speech_profiles_have_distinct_checkpoints_and_explicit_language_support() {
+        let data = manifest().unwrap();
+        let turbo=data.models.iter().find(|m|m.id=="whisper-large-v3-turbo").unwrap();
+        let full=data.models.iter().find(|m|m.id=="whisper-large-v3").unwrap();
+        let phonon=data.models.iter().find(|m|m.id=="phonon-2").unwrap();
+        assert_eq!(turbo.speech_language.as_deref(),Some("Multilingual"));
+        assert_eq!(full.speech_language.as_deref(),Some("Multilingual"));
+        assert_eq!(phonon.speech_language.as_deref(),Some("English only"));
+        assert!(turbo.artifacts.iter().all(|id|!full.artifacts.contains(id)));
+        assert!(data.artifacts.iter().filter(|f|full.artifacts.contains(&f.id)).all(|f|f.repo=="Systran/faster-whisper-large-v3"));
+        let root=std::env::temp_dir().join(format!("opencore-speech-receipt-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(root.join("models/receipts")).unwrap();
+        std::fs::write(model_receipt(&root,full),serde_json::to_vec(&turbo.artifacts).unwrap()).unwrap();
+        assert!(valid_model_receipt(&root,turbo));
+        assert!(!valid_model_receipt(&root,full));
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[tokio::test]
     #[ignore = "Explicit opt-in only; verifies and registers already-present user-selected model files"]
     async fn register_existing_requested_models() {

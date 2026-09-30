@@ -45,6 +45,9 @@
     "resources": {
       "resources/speech/whisper_worker.py": "speech/whisper_worker.py",
       "resources/speech/prepare_runtime.py": "speech/prepare_runtime.py",
+      "resources/speech/phonon_worker.py": "speech/phonon_worker.py",
+      "resources/speech/prepare_phonon_runtime.py": "speech/prepare_phonon_runtime.py",
+      "resources/speech/runtime_setup.py": "speech/runtime_setup.py",
       "resources/configure_unsloth.py": "resources/configure_unsloth.py",
       "../reflex/server.py": "reflex/server.py",
       "../reflex/reflex_model.py": "reflex/reflex_model.py",

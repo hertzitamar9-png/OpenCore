@@ -1,4 +1,4 @@
-"""Offline Whisper Large V3 Turbo worker for OpenCore dictation.
+"""Offline multilingual Whisper large-v3 / Turbo worker for OpenCore dictation.
 
 The model stays in CPU RAM only in the optional RAM standby mode. It is moved to
 CUDA for a recording and returned to CPU after transcription. Cold mode runs in
@@ -7,14 +7,11 @@ its own process and is fully released when Rust stops that process.
 import argparse
 import gc
 import json
+import os
 from pathlib import Path
 import sys
 import time
 
-MODEL_MIN_GPU_FREE = 6 * 1024**3
-CPU_MODEL_MIN_FREE = 15 * 1024**3
-RAM_STANDBY_MIN_FREE = 9 * 1024**3
-CPU_WAKE_MIN_FREE = 10 * 1024**3
 ASR_CHUNK_LENGTH_SECONDS = 3
 ASR_STRIDE_LENGTH_SECONDS = (0.75, 0.75)
 
@@ -81,6 +78,137 @@ def transcribe_code_switched(recognizer, audio):
     )
 
 
+def transcribe_ct2(model, audio):
+    segments, info = model.transcribe(audio, task="transcribe", language=None,
+        multilingual=True, condition_on_previous_text=False)
+    return {"text": " ".join(segment.text.strip() for segment in segments).strip(),
+        "language": info.language}
+
+
+class CTranslateWhisper:
+    def __init__(self, directory, torch, psutil, awake):
+        self.directory, self.torch, self.psutil = directory, torch, psutil
+        self.minimum_gpu = 4 * 1024**3
+        self.dll_handles = []
+        if os.name == "nt":
+            # Reuse the installed CUDA runtime; never download a second DLL set.
+            lib = str(Path(torch.__file__).parent / "lib")
+            self.dll_handles.append(os.add_dll_directory(lib))
+            os.environ["PATH"] = lib + os.pathsep + os.environ.get("PATH", "")
+        from faster_whisper import WhisperModel
+        self.factory = WhisperModel
+        self.model = None
+        self.origin = None
+        self.device = "cpu"
+        self.load("cuda" if awake and gpu_free(torch) >= self.minimum_gpu else "cpu")
+
+    def load(self, device):
+        if device == "cpu":
+            require_ram(self.psutil, 8 * 1024**3, "full Whisper CPU transcription")
+        if self.model is not None:
+            self.model.model.unload_model()
+            self.model = None
+            gc.collect()
+        try:
+            self.model = self.factory(str(self.directory), device=device,
+                compute_type="float16" if device == "cuda" else "float32",
+                cpu_threads=2, num_workers=1, local_files_only=True)
+        except RuntimeError as error:
+            if device != "cuda" or "out of memory" not in str(error).lower():
+                raise
+            self.load("cpu")
+            return
+        self.origin = device
+        self.device = "cuda:0" if device == "cuda" else "cpu"
+
+    def activate(self):
+        started = time.monotonic()
+        if gpu_free(self.torch) >= self.minimum_gpu:
+            try:
+                if self.origin == "cuda":
+                    self.model.model.load_model()
+                    self.device = "cuda:0"
+                else:
+                    self.load("cuda")
+            except RuntimeError as error:
+                if "out of memory" not in str(error).lower():
+                    raise
+                self.load("cpu")
+        elif self.origin != "cpu":
+            self.load("cpu")
+        return round((time.monotonic() - started) * 1000)
+
+    def sleep(self):
+        if self.device.startswith("cuda"):
+            self.model.model.unload_model(to_cpu=True)
+        self.device = "cpu"
+
+    def transcribe(self, audio):
+        try:
+            return transcribe_ct2(self.model, audio)
+        except RuntimeError as error:
+            if self.device != "cuda:0" or "out of memory" not in str(error).lower():
+                raise
+            self.load("cpu")
+            return transcribe_ct2(self.model, audio)
+
+
+class TransformersWhisper:
+    def __init__(self, directory, torch, psutil, awake):
+        from transformers import AutoProcessor, WhisperForConditionalGeneration, pipeline
+        config = json.loads((directory / "config.json").read_text(encoding="utf-8"))
+        self.minimum_gpu = (2.5 if config.get("decoder_layers") == 4 else 4) * 1024**3
+        self.cpu_ram = (4 if config.get("decoder_layers") == 4 else 8) * 1024**3
+        self.torch, self.psutil = torch, psutil
+        require_ram(psutil, self.cpu_ram, "Whisper checkpoint loading")
+        processor = AutoProcessor.from_pretrained(str(directory), local_files_only=True)
+        self.model = WhisperForConditionalGeneration.from_pretrained(str(directory),
+            local_files_only=True, use_safetensors=True, torch_dtype=torch.float16,
+            low_cpu_mem_usage=True)
+        self.model.generation_config.language = None
+        self.model.generation_config.task = "transcribe"
+        self.model.generation_config.forced_decoder_ids = None
+        self.recognizer = pipeline("automatic-speech-recognition", model=self.model,
+            tokenizer=processor.tokenizer, feature_extractor=processor.feature_extractor, device=-1)
+        self.device = "cpu"
+        if awake:
+            self.activate()
+
+    def activate(self):
+        started = time.monotonic()
+        if gpu_free(self.torch) >= self.minimum_gpu:
+            try:
+                self.model.to(device="cuda:0", dtype=self.torch.float16)
+                self.recognizer.device = self.torch.device("cuda:0")
+                self.device = "cuda:0"
+                return round((time.monotonic() - started) * 1000)
+            except self.torch.cuda.OutOfMemoryError:
+                self.sleep()
+        self.use_cpu()
+        return round((time.monotonic() - started) * 1000)
+
+    def use_cpu(self):
+        require_ram(self.psutil, self.cpu_ram, "Whisper CPU fallback")
+        self.model.to(device="cpu", dtype=self.torch.float32)
+        self.recognizer.device = self.torch.device("cpu")
+        self.device = "cpu"
+        self.torch.cuda.empty_cache()
+
+    def sleep(self):
+        self.model.to(device="cpu", dtype=self.torch.float16)
+        self.device = "cpu"
+        self.recognizer.device = self.torch.device("cpu")
+        self.torch.cuda.empty_cache()
+        gc.collect()
+
+    def transcribe(self, audio):
+        try:
+            return transcribe_code_switched(self.recognizer, audio)
+        except self.torch.cuda.OutOfMemoryError:
+            self.use_cpu()
+            return transcribe_code_switched(self.recognizer, audio)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
@@ -94,81 +222,23 @@ def main():
         import numpy as np
         import psutil
         import torch
-        from transformers import AutoProcessor, WhisperForConditionalGeneration, pipeline
         torch.set_num_threads(2)
         try:
             torch.set_num_interop_threads(1)
         except RuntimeError:
             pass
 
-        if not (model_dir / "config.json").is_file() or not (
-            (model_dir / "model.safetensors").is_file() or
-            (model_dir / "model.safetensors.index.json").is_file()
-        ):
-            raise RuntimeError(f"Whisper Large V3 Turbo checkpoint is incomplete: {model_dir}")
-
         started = time.monotonic()
-        cuda_room = gpu_free(torch) >= MODEL_MIN_GPU_FREE
-        if args.idle_mode == "cold" and not cuda_room:
-            require_ram(psutil, CPU_MODEL_MIN_FREE, "CPU speech recognition")
-            dtype = torch.float32
+        if (model_dir / "model.bin").is_file():
+            engine = CTranslateWhisper(model_dir, torch, psutil, args.awake)
+        elif (model_dir / "config.json").is_file() and ((model_dir / "model.safetensors").is_file() or
+                (model_dir / "model.safetensors.index.json").is_file()):
+            engine = TransformersWhisper(model_dir, torch, psutil, args.awake)
         else:
-            require_ram(psutil, RAM_STANDBY_MIN_FREE, "Whisper model standby")
-            dtype = torch.float16
-
-        processor = AutoProcessor.from_pretrained(str(model_dir), local_files_only=True)
-        model = WhisperForConditionalGeneration.from_pretrained(
-            str(model_dir), local_files_only=True, use_safetensors=True,
-            torch_dtype=dtype, low_cpu_mem_usage=True,
-        )
-        model.generation_config.language = None
-        model.generation_config.task = "transcribe"
-        model.generation_config.forced_decoder_ids = None
-        recognizer = pipeline(
-            "automatic-speech-recognition", model=model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
-            device=-1,
-        )
-        current_device = "cpu"
-        current_dtype = dtype
-
-        def activate():
-            nonlocal current_device, current_dtype
-            wake_started = time.monotonic()
-            available_gpu = gpu_free(torch)
-            if torch.cuda.is_available() and available_gpu >= MODEL_MIN_GPU_FREE:
-                try:
-                    model.to(device="cuda:0", dtype=torch.float16)
-                    recognizer.device = torch.device("cuda:0")
-                    current_device = "cuda:0"
-                    current_dtype = torch.float16
-                    return round((time.monotonic() - wake_started) * 1000)
-                except torch.cuda.OutOfMemoryError:
-                    model.to(device="cpu", dtype=torch.float16)
-                    torch.cuda.empty_cache()
-            if current_dtype != torch.float32:
-                require_ram(psutil, CPU_WAKE_MIN_FREE, "CPU fallback transcription")
-                model.to(device="cpu", dtype=torch.float32)
-                current_dtype = torch.float32
-            recognizer.device = torch.device("cpu")
-            current_device = "cpu"
-            return round((time.monotonic() - wake_started) * 1000)
-
-        def sleep_in_ram():
-            nonlocal current_device, current_dtype
-            if current_device.startswith("cuda"):
-                model.to(device="cpu", dtype=torch.float16)
-                torch.cuda.empty_cache()
-                gc.collect()
-                current_dtype = torch.float16
-            current_device = "cpu"
-            recognizer.device = torch.device("cpu")
-
-        wake_ms = None
-        if args.awake:
-            wake_ms = activate()
-        emit({"ready": True, "coldStartMs": round((time.monotonic() - started) * 1000), "wakeMs": wake_ms})
+            raise RuntimeError(f"Whisper checkpoint is incomplete: {model_dir}")
+        elapsed = round((time.monotonic() - started) * 1000)
+        emit({"ready": True, "coldStartMs": elapsed, "wakeMs": elapsed if args.awake else None,
+            "device": engine.device})
 
         for line in sys.stdin:
             try:
@@ -177,29 +247,34 @@ def main():
                 if action == "shutdown":
                     break
                 if action == "wake":
-                    wake_ms = activate()
-                    emit({"awake": True, "wakeMs": wake_ms, "device": current_device})
+                    wake_ms = engine.activate()
+                    emit({"awake": True, "wakeMs": wake_ms, "device": engine.device})
                     continue
                 if action == "transcribe":
                     audio = load_audio(request["audio"], av, np)
                     # Always preserve the spoken language; never invoke Whisper translation.
-                    result = transcribe_code_switched(recognizer, audio)
+                    result = engine.transcribe(audio)
                     text = result.get("text", "").strip()
                     language = result.get("language") or "auto"
-                    if args.idle_mode == "ram":
-                        sleep_in_ram()
-                    emit({"text": text, "language": language, "device": current_device})
+                    used_device = engine.device
+                    engine.sleep()
+                    emit({"text": text, "language": language, "device": used_device,
+                        "standbyDevice": engine.device, "gpuModelBytes": sum(t.numel()*t.element_size()
+                            for t in list(engine.model.parameters())+list(engine.model.buffers()) if t.is_cuda)
+                            if isinstance(engine,TransformersWhisper) else
+                            (0 if engine.origin=="cpu" or not engine.model.model.model_is_loaded else None),
+                        "torchGpuBytes": torch.cuda.memory_allocated() if torch.cuda.is_available() else 0})
                     continue
                 emit({"error": f"Unknown speech action: {action}"})
             except Exception as error:
                 if args.idle_mode == "ram":
                     try:
-                        sleep_in_ram()
+                        engine.sleep()
                     except Exception:
                         pass
                 emit({"error": str(error)})
 
-        del recognizer, model, processor
+        del engine
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         gc.collect()

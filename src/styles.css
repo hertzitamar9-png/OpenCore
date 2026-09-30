@@ -1096,9 +1096,9 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 }
 
 .echo-context-status { display:grid; gap:8px; width:min(100%,820px); min-width:0; margin:7px auto 0; padding:9px 12px; border:1px solid #284459; border-radius:10px; background:linear-gradient(115deg,#0e1b27,#0a151f 72%,#101b27); color:#c5d8e8; font-size:11px; line-height:1.35; box-shadow:inset 0 1px #ffffff06; }
-.echo-context-meter { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 12px; min-width:0; }
+.echo-context-meter { display:grid; grid-template-columns:minmax(0,1fr); align-items:center; gap:6px; min-width:0; }
 .echo-context-meter > strong { color:#eaf5ff; font-size:13px; font-weight:700; letter-spacing:.01em; }
-.echo-context-reading { color:#c5d9e8; font-size:12px; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+.echo-context-reading { min-width:0; color:#c5d9e8; font-size:12px; font-variant-numeric:tabular-nums; text-align:left; white-space:normal; overflow-wrap:anywhere; }
 .echo-context-meter progress { display:block; grid-column:1 / -1; width:100%; height:7px; border:0; border-radius:999px; overflow:hidden; background:#1a2b39; accent-color:#42c9a0; }
 .echo-context-meter progress::-webkit-progress-bar { border-radius:999px; background:#1a2b39; }
 .echo-context-meter progress::-webkit-progress-value { border-radius:999px; background:linear-gradient(90deg,#24ad83,#52d7b1); box-shadow:0 0 10px #28bc9160; }

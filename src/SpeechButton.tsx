@@ -110,7 +110,7 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
       if (alive.current) { setPhase("idle"); onError(String(error)); }
     }
   };
-  const label = phase === "idle" ? "Whisper Large V3 Turbo: click to dictate" : phase === "starting" ? "Loading Microphone… click again to cancel" : phase === "recording" ? "Recording — click to stop" : "Transcribing — Whisper releases GPU memory when finished";
+  const label = phase === "idle" ? "Microphone: click to dictate" : phase === "starting" ? "Loading Microphone… click again to cancel" : phase === "recording" ? "Recording — click to stop" : "Transcribing — GPU memory is released when finished";
   return <span className="speech-control"><button ref={button} type="button" className={`speech-button ${phase}`} title={label} aria-label={label} aria-pressed={phase === 'recording'}
     disabled={phase === "transcribing"}
     onPointerDown={(event) => { if (event.button === 0) event.preventDefault(); }}

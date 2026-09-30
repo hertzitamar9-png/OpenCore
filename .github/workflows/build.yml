@@ -60,6 +60,8 @@ jobs:
           python scripts/test_lfm_sampling.py
       - name: Test frontend
         run: npm test
+      - name: Test speech language routing and safe checkpoint preparation
+        run: python -m unittest discover -s src-tauri/resources/speech -p "test*.py"
       - name: Test Rust
         working-directory: src-tauri
         run: cargo test --lib

@@ -429,10 +429,10 @@ fn cancel_model_install() { model_catalog::cancel(); }
 #[tauri::command]
 async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<(), String> {
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before uninstalling a model".into()); }
-    if id == "whisper-large-v3" && core.speech.is_active().await {
-        return Err("Finish the microphone session before uninstalling Whisper".into());
+    if model_catalog::is_speech_model(&id) && core.speech.is_active().await {
+        return Err("Finish the microphone session before uninstalling a speech model".into());
     }
-    if id == "whisper-large-v3" { core.speech.set_enabled(false).await?; }
+    if model_catalog::is_speech_model(&id) && core.speech.selected_model()==id { core.speech.set_enabled(false).await?; }
     if id == "reflex-vision" { core.vision.stop(); }
     if id == "reflex-policy" { core.reflex.stop(); }
     let root = core.runtime.install_root().to_path_buf();
@@ -1976,7 +1976,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             app_update::auto_update,
-            speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode,
+            speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode, speech::speech_set_model,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,

@@ -1,10 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 export const speechStart = () => invoke<string>("speech_start");
-export interface SpeechStatus { installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; }
-const defaultSpeechStatus: SpeechStatus = { installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" };
+export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; }
+const defaultSpeechStatus: SpeechStatus = { modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" };
 export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
 export const setSpeechEnabled = (enabled: boolean) => invoke<SpeechStatus>("speech_set_enabled", { enabled });
 export const setSpeechIdleMode = (mode: "cold" | "ram") => invoke<SpeechStatus>("speech_set_idle_mode", { mode });
+export const setSpeechModel = (modelId: string) => invoke<SpeechStatus>("speech_set_model", { modelId });
 export interface EchoMemoryConfiguration { memoryTokens: number; refreshTokens: number; warmCacheMib: number; activeWindowTokens: number }
 export interface EchoVirtualMemory {
   recent_tokens: number; pinned_tokens: number; retrieved_tokens: number; reserve_tokens: number;
@@ -42,6 +43,7 @@ export interface InstalledModel {
   id: string; label: string; description: string; selectable: boolean;
   precision: string; contextTokens: number; license: string; experimental: boolean; note: string;
   installed: boolean; externalManaged: boolean; downloadBytes: number; totalBytes: number;
+  speechLanguage?: string;
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
