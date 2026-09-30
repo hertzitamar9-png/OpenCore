@@ -11,6 +11,8 @@ use sysinfo::Disks;
 const MIN_FREE_BYTES: u64 = 100_000_000_000;
 static CANCEL: AtomicBool = AtomicBool::new(false);
 static PROGRESS: Mutex<Option<InstallProgress>> = Mutex::new(None);
+#[cfg(test)]
+pub(crate) static MODEL_CATALOG_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -371,6 +373,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "Explicit opt-in only; verifies and registers already-present user-selected model files"]
     async fn register_existing_requested_models() {
+        let _test_guard = MODEL_CATALOG_TEST_LOCK.lock().unwrap();
         let root = PathBuf::from(std::env::var_os("OPENCORE_REGISTER_EXISTING_ROOT")
             .expect("Set OPENCORE_REGISTER_EXISTING_ROOT explicitly"));
         let ids = std::env::var("OPENCORE_REGISTER_EXISTING_IDS")
@@ -415,6 +418,7 @@ mod tests {
         }
     }
     #[test] fn removing_one_variant_preserves_shared_weights_and_history() {
+        let _test_guard = MODEL_CATALOG_TEST_LOCK.lock().unwrap();
         let root = std::env::temp_dir().join(format!("opencore-catalog-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let mut data = manifest().unwrap();

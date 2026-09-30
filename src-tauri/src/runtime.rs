@@ -1236,6 +1236,7 @@ mod tests {
 
     #[test]
     fn missing_model_install_does_not_replace_a_running_profile() {
+        let _test_guard = crate::model_catalog::MODEL_CATALOG_TEST_LOCK.lock().unwrap();
         let root = std::env::temp_dir().join(format!("opencore-missing-install-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let store = Arc::new(EventStore::open(&root.join("events.sqlite3")).unwrap());
