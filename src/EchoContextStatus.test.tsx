@@ -3,6 +3,15 @@ import { expect, it, vi } from 'vitest';
 import { EchoContextStatus } from './EchoContextStatus';
 import * as api from './api';
 
+it.each([{}, {active_pages:[]}])('keeps legacy conversations visible before virtual-memory telemetry exists (%j)', async (legacy) => {
+  const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({available:true,windowTokens:32768,liveTokens:1931,contextMode:'persistent_echo',echoVirtualMemory:legacy as unknown as api.EchoVirtualMemory});
+  try {
+    render(<EchoContextStatus conversationId="legacy" running={false} />);
+    expect(await screen.findByText('1,931 retained across turns / 32,768 tokens · 6%')).toBeVisible();
+    expect(screen.queryByText(/ECHO virtual memory ·/)).not.toBeInTheDocument();
+  } finally { read.mockRestore(); }
+});
+
 it('shows the ECHO working budget within a larger native backend allocation', async () => {
   const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({available:true,windowTokens:32768,modelContextTokens:262144,modelActiveTokens:12000,contextMode:'persistent_echo'});
   try {

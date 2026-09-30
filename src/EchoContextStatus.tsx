@@ -33,7 +33,12 @@ export function EchoContextStatus({ conversationId, running, configuredContextTo
     : state?.active ? "active" : persistentEcho ? "retained across turns" : "last request";
   const percent = usedTokens == null ? null : Math.min(100, Math.round(usedTokens / windowTokens * 100));
   const warmCache = state?.warmCache;
-  const memory = state?.echoVirtualMemory;
+  const candidateMemory = state?.echoVirtualMemory;
+  const memory = candidateMemory && Array.isArray(candidateMemory.active_pages)
+    && Array.isArray(candidateMemory.diagnostics) && candidateMemory.adapter
+    && [candidateMemory.recent_tokens, candidateMemory.pinned_tokens,
+      candidateMemory.retrieved_tokens, candidateMemory.reserve_tokens].every(Number.isFinite)
+    ? candidateMemory : null;
   const warmCacheLabel = warmCache
     ? `ECHO RAM cache · ${(warmCache.residentBytes / 1024 / 1024).toFixed(1)} / ${(warmCache.budgetBytes / 1024 / 1024).toFixed(0)} MiB · ${Math.round(warmCache.hitRate * 100)}% hits`
     : null;

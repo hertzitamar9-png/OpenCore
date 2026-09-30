@@ -13,6 +13,15 @@ from echo_server import ArchiveSet, EchoState  # noqa: E402
 
 
 class EchoMemoryContinuityTests(unittest.TestCase):
+    def test_legacy_transcript_has_no_virtual_telemetry_before_first_refresh(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = EchoArchive(Path(temporary) / "archive.db")
+            try:
+                live = LiveTranscript(archive, "legacy")
+                self.assertIsNone(live.memory_status()["echoVirtualMemory"])
+            finally:
+                archive.close()
+
     def test_completed_turn_does_not_archive_promoted_memory_again(self):
         with tempfile.TemporaryDirectory() as temporary:
             archive = EchoArchive(Path(temporary) / "archive.db")

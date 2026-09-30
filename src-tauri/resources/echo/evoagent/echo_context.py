@@ -202,7 +202,7 @@ class LiveTranscript:
                                        for digest in entry.get("echo_source_hashes", [])],
             "echoLastRetrievalReason": last.get("echo_retrieval_reason"),
             "echoRetrievalLatencyMs": last.get("echo_retrieval_latency_ms"),
-            "echoVirtualMemory": self.virtual_memory,
+            "echoVirtualMemory": self.virtual_memory or None,
         }
 
     def start_turn(self, question, count_tokens, content=None):

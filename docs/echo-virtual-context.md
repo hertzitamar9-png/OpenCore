@@ -77,6 +77,10 @@ and an older deferred window setting overriding a newer idle setting.
 Focused regression tests cover all five. Latest backend prefill telemetry is
 preserved through subsequent refreshes.
 
+Desktop integration also reproduced an empty-telemetry crash when opening legacy
+conversations before their first virtual-memory refresh. Uninitialized telemetry
+is now null, and the viewer accepts legacy empty/partial objects without crashing.
+
 ## Verified real inference — 2026-09-30
 
 `scripts/echo_virtual_inference_smoke.py` used the existing original ECHO
@@ -127,8 +131,10 @@ faults, tool/checkpoint boundaries, image preservation and live streaming.
 - Prepared-text latency is not KV reconstruction latency. Native prefill timing
   is the actual backend measurement. The configured RAM budget is conservative
   object accounting, not a guarantee on the entire process working set.
-- No HumanEval/LiveBench run, model training, new model download, ASR cleanup or
-  precision conversion was performed. Nanbeige BF16 native/ECHO profiles remain
+- No HumanEval/LiveBench run, model training, ASR cleanup or precision conversion
+  was performed. Release activation repaired the existing ECHO installation:
+  the original weights were checksum-verified and their receipt refreshed; the
+  missing pinned BF16 vision projector was restored. Nanbeige BF16 native/ECHO profiles remain
   available in the app; their checkpoint was not installed for this verification.
 
 This is a working bounded virtual-context inference path, with truthful backend
