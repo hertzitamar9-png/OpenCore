@@ -1126,10 +1126,8 @@ class Handler(BaseHTTPRequestHandler):
             # transcript once so its hidden state agrees with the repaired log.
             self.state._backend_conversation = None
         completed_checkpoint = False
-        memory_active = False
 
         if live.open and live.question == question and client_tail:
-            memory_active = bool(live.entries)
             # The client is returning results for calls this transcript already holds.
             answered = live.tool_result_ids()
             recorded = {call.get("id") for m in live.messages for call in (m.get("tool_calls") or [])}
@@ -1159,15 +1157,11 @@ class Handler(BaseHTTPRequestHandler):
                 live.abandon_open_turn(count)
             if not live.entries:
                 self._seed_transcript(live, conversation, question, min(2048, int(window * 0.25)))
-            # A first, self-contained request has no prior memory to manage.
-            # Keep ECHO's control protocol out of its prompt until actual history
-            # has been loaded or a prior turn is present.
-            memory_active = bool(live.entries)
             live.start_turn(question, count, supplied[user_index].get("content") if user_index >= 0 else question)
 
         system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] +
-                                   ([INSTRUCTIONS] if memory_active else []))
-        system_messages = [{"role": "system", "content": system_text}] if system_text else []
+                                   [INSTRUCTIONS])
+        system_messages = [{"role": "system", "content": system_text}]
         system_tokens = count(system_text) + count(json.dumps(payload.get('tools') or [])) + 8
 
         # Seed from pre-existing history before archiving this request. Otherwise
