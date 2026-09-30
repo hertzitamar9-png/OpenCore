@@ -62,6 +62,19 @@ type Appearance = {
 const appearanceKey = "opencore.appearance.v2";
 const defaultAppearance: Appearance = { chatFontSize: 15, terminalFontSize: 13, compactMessages: false, keepUserWindowInFront: false, defaultComputerUse: false, defaultBrowserUse: false, defaultChromeControl: false, subagentsEnabled: true, maxSubagents: 3, projectSkillsEnabled: true, compactAtTokens: 200000 };
 
+function effectiveCompactAtTokens(requestedTokens: number, configuredWindowTokens: number): number {
+  const contextWindowTokens = Math.max(8_192, Math.floor(configuredWindowTokens) || 32_768);
+  const headroomTokens = Math.min(
+    Math.floor(contextWindowTokens * 0.3),
+    Math.max(10_240, Math.floor(contextWindowTokens * 0.2)),
+  );
+  return Math.min(
+    Math.max(1_024, Math.floor(requestedTokens) || defaultAppearance.compactAtTokens),
+    Math.max(1_024, contextWindowTokens - headroomTokens),
+    Math.min(contextWindowTokens, 1_000_000),
+  );
+}
+
 async function revealLocalPath(path: string, onNotice: (message: string) => void) {
   try { await api.openLocalPath(path); }
   catch (error) { onNotice(`Could not open folder: ${String(error)}`); }
@@ -894,6 +907,8 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     </div>
   </div>;
 
+  const effectiveCompactTokens = effectiveCompactAtTokens(appearance.compactAtTokens, snapshot.runtime.contextSize);
+
   if (view === "settings") return <div className="support-page settings-page">
     <div className="page-heading"><div><h1>Settings</h1><p>Real local controls for storage, privacy, history, and diagnostics.</p></div></div>
     <div className="settings-grid">
@@ -929,9 +944,9 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         <KeyValue label="ECHO model native window" value="262,144 tokens per inference" />
         <KeyValue label="DuoCore package context" value="Up to 65,536 live tokens · auto-fits free RAM; ECHO keeps the exact archive" />
         <KeyValue label="1M extended profile" value="1,000,000-token YaRN window; original trained context 262,144" />
-        <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact the active model context after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
+        <label className="appearance-label" htmlFor="context-compact-tokens">Requested native-model auto-compaction trigger <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
         <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
-        <p className="appearance-note">Native profiles compact their active model context automatically. ECHO profiles keep the exact conversation history in the ECHO archive and retrieve older details as needed; compaction only bounds the active model window.</p>
+        <p className="appearance-note">Effective trigger for the configured {snapshot.runtime.contextSize.toLocaleString()}-token model window: <strong>{effectiveCompactTokens.toLocaleString()} tokens</strong>{effectiveCompactTokens < appearance.compactAtTokens ? " (lowered to leave room for the response and tool results)" : ""}. Native profiles compact automatically at this point. ECHO profiles preserve the exact conversation history in the archive; compaction only bounds the active model window.</p>
         <p className="appearance-note">This is an exact token count. The configured inference window sets the per-request ceiling. YaRN length extension does not mean the model was trained at that length. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
       </InspectorSection>
       <InspectorSection title="Chrome extension">

@@ -426,7 +426,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
       fireEvent.click(screen.getByRole("button", { name: "Chrome" }));
       expect(screen.getByRole("button", { name: "Chrome" })).toHaveAttribute("aria-pressed", "true");
-      fireEvent.change(screen.getByLabelText(/Auto compact the active model context after/), { target: { value: "200000" } });
+      fireEvent.change(screen.getByLabelText(/Requested native-model auto-compaction trigger/), { target: { value: "200000" } });
       expect(screen.queryByLabelText("Maximum answer length")).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
       expect(screen.queryByRole("button", { name: /Prompt tools/ })).not.toBeInTheDocument();
@@ -888,11 +888,12 @@ describe("OpenCore", () => {
     fireEvent.change(screen.getByLabelText(/Message text size/), { target: { value: "17" } });
     fireEvent.click(screen.getByRole("button", { name: "Compact" }));
     fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
-    fireEvent.change(screen.getByLabelText(/Auto compact the active model context after/), { target: { value: "200000" } });
+    fireEvent.change(screen.getByLabelText(/Requested native-model auto-compaction trigger/), { target: { value: "250000" } });
+    expect(screen.getByText(/Effective trigger for the configured .* model window:/)).toHaveTextContent("209,716 tokens");
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
     await waitFor(() => expect(document.querySelector(".conversation-focus-shell")).toHaveClass("compact-messages"));
     expect((document.querySelector(".conversation-focus-shell") as HTMLElement).style.getPropertyValue("--chat-font-size")).toBe("17px");
-    expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v2") || "{}")).toMatchObject({ chatFontSize: 17, compactMessages: true, projectSkillsEnabled: false, compactAtTokens: 200000 });
+    expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v2") || "{}")).toMatchObject({ chatFontSize: 17, compactMessages: true, projectSkillsEnabled: false, compactAtTokens: 250000 });
     if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
   });
 
