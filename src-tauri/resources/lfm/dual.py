@@ -2,8 +2,11 @@
 from concurrent.futures import ThreadPoolExecutor
 import codecs
 import ctypes as C
+import json
 import secrets
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -34,7 +37,54 @@ class LfmBackbone(LlamaBackbone):
         def preview(delta):
             for parsed in decoder.feed(delta.get('content') or '', tools=tools):
                 on_delta(parsed)
-        reply = super().chat(with_tools(messages, tools), on_delta=preview if on_delta else None, **kwargs)
+        prepared_messages = with_tools(messages, tools)
+        try:
+            reply = super().chat(prepared_messages, on_delta=preview if on_delta else None, **kwargs)
+        except RuntimeError as error:
+            # llama.cpp's peg-native parser can reject ordinary generated text
+            # (notably malformed UTF-8 emitted by multilingual tokenizers)
+            # after generation has completed. Retry non-streaming requests via
+            # its template and raw completion endpoints; keep streaming calls
+            # on the normal path so a retry cannot duplicate visible tokens.
+            if on_delta or 'expected peg-native format' not in str(error):
+                raise
+            template_request = urllib.request.Request(
+                self.base_url + '/apply-template',
+                data=json.dumps({'messages': prepared_messages,
+                                 'chat_template_kwargs': template_kwargs}, ensure_ascii=False).encode('utf-8'),
+                headers={'Content-Type': 'application/json'},
+            )
+            try:
+                with urllib.request.urlopen(template_request, timeout=900) as response:
+                    prompt = json.load(response)['prompt']
+            except (urllib.error.HTTPError, KeyError, TypeError) as template_error:
+                raise RuntimeError(f'{self.spec.name} could not apply its chat template after peg parse failure: '
+                                   f'{template_error}') from template_error
+            completion_request = urllib.request.Request(
+                self.base_url + '/v1/completions',
+                data=json.dumps({
+                    'prompt': prompt,
+                    'max_tokens': kwargs.get('max_tokens', 1024),
+                    'temperature': kwargs.get('temperature', 0.35),
+                    'top_p': 0.95,
+                    'repeat_penalty': kwargs.get('repeat_penalty', 1.08),
+                    'stream': False,
+                }, ensure_ascii=False).encode('utf-8'),
+                headers={'Content-Type': 'application/json'},
+            )
+            try:
+                with urllib.request.urlopen(completion_request, timeout=900) as response:
+                    result = json.load(response)
+            except urllib.error.HTTPError as completion_error:
+                detail = completion_error.read().decode('utf-8', errors='replace')
+                raise RuntimeError(f'{self.spec.name} raw completion retry failed: HTTP '
+                                   f'{completion_error.code}: {detail[:1200]}') from completion_error
+            choice = (result.get('choices') or [{}])[0]
+            content = str(choice.get('text') or '')
+            raw = {'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': content},
+                                'finish_reason': choice.get('finish_reason') or 'stop'}],
+                   'usage': result.get('usage', {})}
+            reply = BackboneReply(content, raw['choices'][0]['message'], raw)
         if on_delta:
             for delta in decoder.feed('', final=True, tools=tools):
                 on_delta(delta)
@@ -107,15 +157,32 @@ class DualCoreEngine:
                                    thinking_budget_tokens=thinking_budget_tokens,
                                    on_delta=preview if i == 0 else None)
                    for i, brain in enumerate(self.brains)]
-        replies = [future.result() for future in futures]
-        candidates = [DuoCoreEngine._candidate_from_message(reply.message) for reply in replies]
+        replies = []
+        candidate_errors = []
+        for index, future in enumerate(futures):
+            try:
+                replies.append(future.result())
+            except Exception as error:
+                # A malformed stream from one backend must not discard a
+                # complete, valid answer from the other independent brain.
+                replies.append(None)
+                candidate_errors.append({
+                    'brain': index + 1,
+                    'error': f'{type(error).__name__}: {error}'[:1200],
+                })
+        candidates = [DuoCoreEngine._candidate_from_message(reply.message) if reply else None
+                      for reply in replies]
         valid = [DuoCoreEngine._candidate_is_valid(candidate, tools, None) for candidate in candidates]
         usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
         for reply in replies:
-            DuoCoreEngine._add_usage(usage, DuoCoreEngine._usage_for_reply(reply))
-        finish_reasons = [reply.raw['choices'][0].get('finish_reason') or 'stop' for reply in replies]
+            if reply:
+                DuoCoreEngine._add_usage(usage, DuoCoreEngine._usage_for_reply(reply))
+        finish_reasons = [
+            reply.raw['choices'][0].get('finish_reason') or 'stop' if reply else 'error'
+            for reply in replies
+        ]
         if not any(valid) and all(
-            finish == 'length' and not reply.message.get('tool_calls')
+            reply is not None and finish == 'length' and not reply.message.get('tool_calls')
             and not reply.content.strip() and reply.message.get('reasoning_content', '').strip()
             for reply, finish in zip(replies, finish_reasons)
         ):
@@ -176,11 +243,13 @@ class DualCoreEngine:
                 DuoCoreEngine._add_usage(usage, DuoCoreEngine._usage_for_reply(reply))
             selected = max(range(2), key=lambda index: (scores[index], -index))
         else:
-            raise RuntimeError('Neither LFM brain produced a valid candidate')
+            details = '; '.join(item['error'] for item in candidate_errors)
+            suffix = f': {details}' if details else ''
+            raise RuntimeError(f'Neither LFM brain produced a valid candidate{suffix}')
         message = DuoCoreEngine._message_for_candidate(candidates[selected])
         if replies[selected].message.get('reasoning_content'):
             message['reasoning_content'] = replies[selected].message['reasoning_content']
-        return message, usage, {
+        metadata = {
             'selected_brain': selected+1, 'reviews': reviews,
             'finish_reason': replies[selected].raw['choices'][0].get('finish_reason') or 'stop',
             'draft_temperature': 0.0 if self.native else temperature,
@@ -188,3 +257,6 @@ class DualCoreEngine:
             'confidence_note': 'Self-reported scores are uncalibrated, not correctness probabilities.',
             'execution_mode': 'cooperating_candidate_brains',
         }
+        if candidate_errors:
+            metadata['candidate_errors'] = candidate_errors
+        return message, usage, metadata

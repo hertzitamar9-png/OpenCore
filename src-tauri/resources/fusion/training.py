@@ -73,6 +73,107 @@ def read_corpus(path: Path, *, expected_sha256=None, forbidden_prompt_hashes=())
     return Corpus(train, validation, sha256)
 
 
+def read_hf_split_pair(
+    train_path: Path,
+    validation_path: Path,
+    *,
+    expected_train_sha256: str,
+    expected_validation_sha256: str,
+    expected_source: str,
+    expected_source_config: str,
+    expected_license: str,
+    forbidden_prompt_hashes=(),
+):
+    """Read source JSONL splits whose final assistant message is the target.
+
+    The caller must bind both exact file hashes and explicitly choose the
+    reviewed source/license identity. This prevents a changing Hub card or an
+    unreviewed local conversion from silently entering a training run.
+    """
+    bindings = (
+        ('train', Path(train_path), expected_train_sha256),
+        ('validation', Path(validation_path), expected_validation_sha256),
+    )
+    for split, _, expected in bindings:
+        if (not isinstance(expected, str) or len(expected) != 64
+                or any(char not in '0123456789abcdefABCDEF' for char in expected)):
+            raise ValueError(f'{split} source SHA-256 binding is invalid')
+    if not all(isinstance(value, str) and value.strip() for value in
+               (expected_source, expected_source_config, expected_license)):
+        raise ValueError('Source, configuration and reviewed license bindings are required')
+
+    forbidden = set(forbidden_prompt_hashes)
+    seen_ids, seen_prompts = set(), set()
+    output = {'train': [], 'validation': []}
+    hashes = {}
+    for split, path, expected in bindings:
+        digest = hashlib.sha256()
+        with path.open('rb') as source_file:
+            for line_number, raw_line in enumerate(source_file, 1):
+                digest.update(raw_line)
+                if not raw_line.strip():
+                    continue
+                if len(raw_line) > 2_000_000:
+                    raise ValueError(f'{split} source row exceeds the bounded loader capacity')
+                try:
+                    row = json.loads(raw_line)
+                except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    raise ValueError(f'Malformed {split} source JSON on line {line_number}') from exc
+                if not isinstance(row, dict):
+                    raise ValueError(f'{split} source row must be a JSON object on line {line_number}')
+                if (row.get('source') != expected_source
+                        or row.get('source_config') != expected_source_config
+                        or row.get('license') != expected_license):
+                    raise ValueError(f'{split} source/config/license identity does not match the reviewed binding')
+                source_problem_id, fingerprint = row.get('source_problem_id'), row.get('fingerprint')
+                identity = f'{source_problem_id}:{fingerprint}'
+                if (not isinstance(source_problem_id, str) or not source_problem_id
+                        or not isinstance(fingerprint, str) or not fingerprint
+                        or identity in seen_ids):
+                    raise ValueError(f'Missing or duplicate {split} source identity on line {line_number}')
+                if any(name in identity.casefold() for name in ('humaneval', 'livebench')):
+                    raise ValueError('Evaluation benchmark IDs cannot enter the training corpus')
+                messages = row.get('messages')
+                if (not isinstance(messages, list) or len(messages) < 2
+                        or any(not isinstance(message, dict)
+                               or message.get('role') not in ('system', 'user', 'assistant')
+                               or not isinstance(message.get('content'), str)
+                               or '\0' in message['content'] for message in messages)
+                        or messages[-1].get('role') != 'assistant'
+                        or messages[-2].get('role') != 'user'):
+                    raise ValueError(f'Malformed source conversation on line {line_number}')
+                prompt_messages = messages[:-1]
+                answer = messages[-1]['content']
+                if not answer:
+                    raise ValueError(f'Empty assistant target on line {line_number}')
+                prompt_hash = prompt_fingerprint(prompt_messages)
+                if prompt_hash in forbidden or prompt_hash in seen_prompts:
+                    raise ValueError('Benchmark prompt or duplicate prompt in source corpus')
+                seen_ids.add(identity)
+                seen_prompts.add(prompt_hash)
+                output[split].append({
+                    'id': identity,
+                    'split': split,
+                    'messages': prompt_messages,
+                    'answer': answer,
+                    'source': expected_source,
+                    'source_config': expected_source_config,
+                    'source_problem_id': source_problem_id,
+                    'source_fingerprint': fingerprint,
+                    'license': expected_license,
+                })
+        actual = digest.hexdigest()
+        if actual.casefold() != expected.casefold():
+            raise ValueError(f'{split} source SHA-256 mismatch')
+        hashes[split] = actual
+    if not output['train'] or not output['validation']:
+        raise ValueError('Source training and validation splits must both be nonempty')
+    combined = hashlib.sha256(json.dumps(
+        hashes, sort_keys=True, separators=(',', ':'),
+    ).encode('utf-8')).hexdigest()
+    return Corpus(output['train'], output['validation'], combined)
+
+
 @dataclass
 class TeacherReport:
     loss: torch.Tensor
@@ -188,3 +289,249 @@ def evaluate(native, bridge, examples, *, max_tokens):
         raise ValueError('Validation has no finite measured token losses')
     return {'loss': total / tokens, 'tokens': tokens, 'samples': len(samples),
             'complete_samples': complete, 'per_sample': samples}
+
+
+def teacher_forced_hf(model, qwen_tokenizer, k2_tokenizer, example, *, max_tokens: int):
+    """Compute one complete-answer loss for the frozen HF Qwen/K2 towers.
+
+    The trainable object is ``model``'s coupling bridge. Each tower reuses its
+    native KV cache; bridge feedback is detached between answer tokens so the
+    base checkpoints stay frozen and backpropagation remains bounded to the
+    bridge at each step.
+    """
+    if type(max_tokens) is not int or max_tokens < 1:
+        raise ValueError('Training token budget must be a positive integer')
+    messages, answer = example.get('messages'), example.get('answer')
+    if (not isinstance(messages, list) or not messages or not isinstance(answer, str) or not answer
+            or any(not isinstance(message, dict) or not isinstance(message.get('content'), str)
+                   for message in messages)):
+        raise ValueError('HF Fusion examples need text-only messages and a nonempty answer')
+
+    def prefix(tokenizer):
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True,
+        )
+        if not isinstance(text, str) or not text:
+            raise ValueError('Tokenizer chat template returned an empty prompt')
+        return text
+
+    def encode(tokenizer, text):
+        ids = tokenizer.encode(text, add_special_tokens=False)
+        if not ids:
+            raise ValueError('Tokenizer produced an empty Fusion sequence')
+        return [int(token) for token in ids]
+
+    def decode(tokenizer, ids, *, skip_special_tokens=False):
+        return tokenizer.decode(
+            ids, skip_special_tokens=skip_special_tokens,
+            clean_up_tokenization_spaces=False,
+        )
+
+    q_prefix = prefix(qwen_tokenizer)
+    k_prefix = prefix(k2_tokenizer)
+    q_prefix_ids = encode(qwen_tokenizer, q_prefix)
+    q_full_ids = encode(qwen_tokenizer, q_prefix + answer)
+    if q_full_ids[:len(q_prefix_ids)] != q_prefix_ids:
+        raise ValueError('Qwen tokenization changes across the prompt/answer boundary')
+    target_ids = q_full_ids[len(q_prefix_ids):]
+    if not target_ids or decode(qwen_tokenizer, target_ids) != answer:
+        raise ValueError('Complete Qwen answer target does not round-trip exactly')
+    eos = getattr(qwen_tokenizer, 'eos_token_id', None)
+    if eos is not None:
+        target_ids.append(int(eos))
+    if len(target_ids) > max_tokens:
+        raise ValueError(
+            f'Cannot fit complete target: needs {len(target_ids)} tokens; budget is {max_tokens}'
+        )
+
+    k_ids = encode(k2_tokenizer, k_prefix)
+    n_embedding = model.nanbeige.get_input_embeddings().weight
+    k_embedding = model.k2.get_input_embeddings().weight
+    if n_embedding.device.type == 'meta' or k_embedding.device.type == 'meta':
+        raise RuntimeError('Fusion input embeddings must not be left on meta memory')
+    n_device, k_device = n_embedding.device, k_embedding.device
+    output = model.step(
+        torch.tensor([q_prefix_ids], dtype=torch.long, device=n_device),
+        torch.tensor([k_ids], dtype=torch.long, device=k_device),
+        use_cache=True,
+    )
+    if output.first_cache is None or output.second_cache is None:
+        raise RuntimeError('Both HF Fusion towers must return incremental decode caches')
+
+    losses = []
+    for index, target_id in enumerate(target_ids):
+        label = torch.tensor([target_id], dtype=torch.long, device=output.logits.device)
+        loss = F.cross_entropy(output.logits.float(), label)
+        if not torch.isfinite(loss):
+            raise ValueError('HF Fusion training loss is nonfinite')
+        losses.append(loss)
+        if index + 1 == len(target_ids):
+            continue
+        if eos is not None and target_id == int(eos):
+            raise ValueError('Qwen EOS appeared before the complete answer ended')
+
+        decoded = decode(qwen_tokenizer, target_ids[:index + 1], skip_special_tokens=True)
+        if '\ufffd' not in decoded:
+            if not answer.startswith(decoded):
+                raise ValueError('Qwen target prefix does not reproduce the answer text')
+            next_k_ids = encode(k2_tokenizer, k_prefix + decoded)
+        else:
+            # A tokenizer may split a UTF-8 code point across Qwen tokens.
+            # Keep K2 on the last complete text prefix and replay its cache.
+            next_k_ids = k_ids
+
+        if len(next_k_ids) > len(k_ids) and next_k_ids[:len(k_ids)] == k_ids:
+            next_k_input = next_k_ids[len(k_ids):]
+            next_k_cache = output.second_cache
+        else:
+            next_k_input = next_k_ids
+            next_k_cache = None
+        if not next_k_input:
+            next_k_input = next_k_ids
+            next_k_cache = None
+
+        output = model.step(
+            torch.tensor([[target_id]], dtype=torch.long, device=n_device),
+            torch.tensor([next_k_input], dtype=torch.long, device=k_device),
+            feedback=type(output.feedback)(
+                output.feedback.nanbeige.detach(), output.feedback.k2.detach(),
+            ),
+            first_cache=output.first_cache,
+            second_cache=next_k_cache,
+            use_cache=True,
+        )
+        if output.first_cache is None or output.second_cache is None:
+            raise RuntimeError('Both HF Fusion towers must retain incremental decode caches')
+        k_ids = next_k_ids
+
+    return TeacherReport(torch.stack(losses).mean(), len(losses), len(losses) == len(target_ids))
+
+
+def evaluate_hf_bridge(model, qwen_tokenizer, k2_tokenizer, examples, *, max_tokens: int):
+    """Measure complete, held-out answer-token loss without updating weights."""
+    rows = list(examples)
+    if not rows:
+        raise ValueError('HF Fusion validation split must not be empty')
+    weighted_loss, token_count = 0.0, 0
+    with torch.no_grad():
+        for example in rows:
+            report = teacher_forced_hf(
+                model, qwen_tokenizer, k2_tokenizer, example, max_tokens=max_tokens,
+            )
+            if not report.complete:
+                raise ValueError(f"Incomplete held-out target: {example.get('id', '<unknown>')}")
+            value = float(report.loss)
+            if not math.isfinite(value):
+                raise ValueError('HF Fusion validation produced a nonfinite loss')
+            weighted_loss += value * report.tokens
+            token_count += report.tokens
+    if token_count == 0:
+        raise ValueError('HF Fusion validation produced no target tokens')
+    return {'loss': weighted_loss / token_count, 'tokens': token_count, 'examples': len(rows)}
+
+
+def train_hf_bridge(
+    model,
+    qwen_tokenizer,
+    k2_tokenizer,
+    train_examples,
+    validation_examples,
+    *,
+    epochs: int,
+    max_tokens: int,
+    learning_rate: float = 1e-4,
+    gradient_clip: float = 1.0,
+    seed: int = 0,
+):
+    """Train the coupling bridge while leaving both pretrained towers frozen.
+
+    Examples are shuffled deterministically each epoch. Optimization uses only
+    bridge parameters; validation is measured after each epoch and never enters
+    the gradient path. The caller owns checkpoint persistence and provenance.
+    """
+    if type(epochs) is not int or epochs < 1:
+        raise ValueError('HF Fusion training epochs must be a positive integer')
+    if type(max_tokens) is not int or max_tokens < 1:
+        raise ValueError('HF Fusion training token budget must be a positive integer')
+    if type(seed) is not int:
+        raise ValueError('HF Fusion shuffle seed must be an integer')
+    if not math.isfinite(learning_rate) or learning_rate <= 0:
+        raise ValueError('HF Fusion learning rate must be finite and positive')
+    if not math.isfinite(gradient_clip) or gradient_clip <= 0:
+        raise ValueError('HF Fusion gradient clip must be finite and positive')
+
+    train_rows, validation_rows = list(train_examples), list(validation_examples)
+    if not train_rows or not validation_rows:
+        raise ValueError('HF Fusion needs nonempty training and held-out validation splits')
+    train_ids = [row.get('id') for row in train_rows]
+    validation_ids = [row.get('id') for row in validation_rows]
+    if (any(not isinstance(identity, str) or not identity for identity in train_ids + validation_ids)
+            or len(set(train_ids + validation_ids)) != len(train_ids + validation_ids)):
+        raise ValueError('HF Fusion train/validation examples need unique nonempty IDs')
+    if any(name in identity.casefold() for identity in train_ids + validation_ids
+           for name in ('humaneval', 'livebench')):
+        raise ValueError('HF Fusion training cannot include evaluation benchmark IDs')
+    train_prompts = {prompt_fingerprint(row['messages']) for row in train_rows}
+    validation_prompts = {prompt_fingerprint(row['messages']) for row in validation_rows}
+    if train_prompts & validation_prompts:
+        raise ValueError('HF Fusion prompt leakage between train and validation splits')
+
+    bridge_parameters = list(model.bridge_parameters())
+    if not bridge_parameters or any(not parameter.requires_grad for parameter in bridge_parameters):
+        raise ValueError('HF Fusion bridge must expose trainable parameters')
+    for tower in (model.nanbeige, model.k2):
+        tower.requires_grad_(False)
+        tower.eval()
+    optimizer = torch.optim.AdamW(bridge_parameters, lr=learning_rate)
+    shuffle = torch.Generator(device='cpu').manual_seed(seed)
+    history = []
+
+    for epoch in range(epochs):
+        model.train()
+        permutation = torch.randperm(len(train_rows), generator=shuffle).tolist()
+        total_loss, total_tokens = 0.0, 0
+        for row_index in permutation:
+            optimizer.zero_grad(set_to_none=True)
+            report = teacher_forced_hf(
+                model, qwen_tokenizer, k2_tokenizer, train_rows[row_index],
+                max_tokens=max_tokens,
+            )
+            if not report.complete:
+                raise ValueError(f"Incomplete training target: {train_rows[row_index].get('id')}")
+            # Weight each example by its target length, making the reported
+            # epoch loss and optimizer objective token-weighted as well.
+            loss = report.loss * report.tokens
+            if not torch.isfinite(loss):
+                raise ValueError('HF Fusion training produced a nonfinite loss')
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(bridge_parameters, gradient_clip)
+            optimizer.step()
+            total_loss += float(report.loss.detach()) * report.tokens
+            total_tokens += report.tokens
+        if not total_tokens:
+            raise ValueError('HF Fusion epoch produced no target tokens')
+
+        validation = evaluate_hf_bridge(
+            model, qwen_tokenizer, k2_tokenizer, validation_rows,
+            max_tokens=max_tokens,
+        )
+        history.append({
+            'epoch': epoch + 1,
+            'train_loss': total_loss / total_tokens,
+            'train_tokens': total_tokens,
+            'train_examples': len(train_rows),
+            'validation_loss': validation['loss'],
+            'validation_tokens': validation['tokens'],
+            'validation_examples': validation['examples'],
+        })
+    return {
+        'epochs': epochs,
+        'learning_rate': learning_rate,
+        'gradient_clip': gradient_clip,
+        'shuffle_seed': seed,
+        'max_tokens': max_tokens,
+        'train_examples': len(train_rows),
+        'validation_examples': len(validation_rows),
+        'history': history,
+        'scope': 'Bridge-only optimization; no benchmark or general-quality claim.',
+    }

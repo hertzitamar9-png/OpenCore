@@ -12,8 +12,16 @@ import uuid
 
 COMMAND = re.compile(r"^\s*<echo>(.*?)</echo>\s*$", re.S)
 INSTRUCTIONS = """ECHO is your persistent context. Most history is idle on disk.
-You control which source pages are live. To act, output ONLY one JSON command
-inside <echo>...</echo>, then stop. The host executes it and calls you again.
+Use ECHO only when the answer needs specific facts from earlier conversation or
+project history that are not already present in the current prompt. For a
+self-contained question, classification, short answer, or ordinary coding task,
+answer the user directly without issuing an ECHO command. Never search memory
+just because ECHO is available.
+
+When historical evidence is needed, issue exactly one valid JSON command inside
+<echo>...</echo> and stop. The host executes it and calls you again. Never invent
+an operation or put an answer inside a command. After the required evidence is
+loaded, answer the user normally without ECHO tags.
 Commands:
 {"op":"search","query":"words or entities","limit":12}
 {"op":"browse","tier":"hot","after":0,"limit":12} (also tier cold; use next cursor)

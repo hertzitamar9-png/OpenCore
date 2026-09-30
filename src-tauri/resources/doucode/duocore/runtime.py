@@ -172,6 +172,29 @@ class LlamaBackbone:
                     return read_chat_stream(response, on_delta) if data.get("stream") else json.load(response)
             except urllib.error.HTTPError as error:
                 detail = error.read().decode("utf-8", errors="replace")
+                response_format = data.get("response_format")
+                if response_format and "does not match the expected peg-native format" in detail:
+                    # llama.cpp can fail to parse a completed constrained-format
+                    # response in its native chat parser. Keep the original
+                    # prompt and its JSON instructions, but let the caller's
+                    # normal validator decide whether the unconstrained retry
+                    # is usable.
+                    fallback = dict(data)
+                    fallback.pop("response_format", None)
+                    retry = urllib.request.Request(
+                        self.base_url + "/v1/chat/completions",
+                        data=json.dumps(fallback).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                    )
+                    try:
+                        with urllib.request.urlopen(retry, timeout=900) as response:
+                            return read_chat_stream(response, on_delta) if fallback.get("stream") else json.load(response)
+                    except urllib.error.HTTPError as retry_error:
+                        retry_detail = retry_error.read().decode("utf-8", errors="replace")
+                        raise RuntimeError(
+                            f"{self.spec.name} chat failed both constrained and unconstrained formats: "
+                            f"HTTP {retry_error.code}: {retry_detail[:1200]}"
+                        ) from retry_error
                 if tools and error.code >= 500:
                     fallback = dict(data)
                     fallback.pop("tools", None)

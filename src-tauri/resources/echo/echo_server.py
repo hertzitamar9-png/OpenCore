@@ -1119,8 +1119,6 @@ class Handler(BaseHTTPRequestHandler):
                        if message.get("role") == "tool"
                        or (message.get("role") == "assistant" and message.get("tool_calls"))]
         pinned = [m for m in supplied if m.get("role") in ("system", "developer")]
-        system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] + [INSTRUCTIONS])
-        system_tokens = count(system_text) + count(json.dumps(payload.get('tools') or [])) + 8
         window = self.state.context_size()
         live = LiveTranscript(self.state.archives.get(conversation), conversation)
         if live.repair_invalid_calls(count):
@@ -1128,8 +1126,10 @@ class Handler(BaseHTTPRequestHandler):
             # transcript once so its hidden state agrees with the repaired log.
             self.state._backend_conversation = None
         completed_checkpoint = False
+        memory_active = False
 
         if live.open and live.question == question and client_tail:
+            memory_active = bool(live.entries)
             # The client is returning results for calls this transcript already holds.
             answered = live.tool_result_ids()
             recorded = {call.get("id") for m in live.messages for call in (m.get("tool_calls") or [])}
@@ -1159,7 +1159,16 @@ class Handler(BaseHTTPRequestHandler):
                 live.abandon_open_turn(count)
             if not live.entries:
                 self._seed_transcript(live, conversation, question, min(2048, int(window * 0.25)))
+            # A first, self-contained request has no prior memory to manage.
+            # Keep ECHO's control protocol out of its prompt until actual history
+            # has been loaded or a prior turn is present.
+            memory_active = bool(live.entries)
             live.start_turn(question, count, supplied[user_index].get("content") if user_index >= 0 else question)
+
+        system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] +
+                                   ([INSTRUCTIONS] if memory_active else []))
+        system_messages = [{"role": "system", "content": system_text}] if system_text else []
+        system_tokens = count(system_text) + count(json.dumps(payload.get('tools') or [])) + 8
 
         # Seed from pre-existing history before archiving this request. Otherwise
         # the first user message can be retrieved straight back into the live
@@ -1196,6 +1205,12 @@ class Handler(BaseHTTPRequestHandler):
         # normal way to request a very long answer. Clamp the per-call reserve to
         # what fits and let continuation supply the rest across passes.
         asked = int(payload.get("max_completion_tokens") or payload.get("max_tokens") or 2048)
+        total_output_budget = payload.get("echo_max_total_tokens")
+        if total_output_budget is not None:
+            if (isinstance(total_output_budget, bool) or not isinstance(total_output_budget, int)
+                    or total_output_budget < 1):
+                raise ValueError("echo_max_total_tokens must be a positive integer")
+            asked = min(asked, total_output_budget)
         ensure_room(min(asked, 16384))
         room = window - system_tokens - live.tokens - 2560
         if room < 1024:
@@ -1219,6 +1234,7 @@ class Handler(BaseHTTPRequestHandler):
         previous_command = None
         completed_operations = []
         calls = 0
+        generated_tokens = 0
         call_limit = int(payload.get("echo_max_calls", self.state.context_steps))
         if call_limit < 0:
             raise ValueError("echo_max_calls must be nonnegative")
@@ -1265,10 +1281,10 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     # This is a recovery path for a transcript written by an
                     # older ECHO build that has no per-entry backend markers.
-                    body["messages"] = [{"role": "system", "content": system_text}] + live.messages
+                    body["messages"] = system_messages + live.messages
                     body["echo_append"] = False
             else:
-                body["messages"] = [{"role": "system", "content": system_text}] + live.messages
+                body["messages"] = system_messages + live.messages
                 body["echo_append"] = False
             body["stream"] = bool(payload.get("stream"))
             body["cache_prompt"] = True
@@ -1277,6 +1293,14 @@ class Handler(BaseHTTPRequestHandler):
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
             body['reasoning_budget_tokens'] = min(int(body.get('reasoning_budget_tokens') or 0), reserve // 3)
+            if total_output_budget is not None:
+                remaining_output = total_output_budget - generated_tokens
+                if remaining_output <= 0:
+                    break
+                body["max_tokens"] = min(reserve, remaining_output)
+                body.pop("max_completion_tokens", None)
+                body['reasoning_budget_tokens'] = min(
+                    body['reasoning_budget_tokens'], max(0, body["max_tokens"] // 3))
             live.prompt_tokens = system_tokens + live.tokens
             live.save()
 
@@ -1304,7 +1328,7 @@ class Handler(BaseHTTPRequestHandler):
                     # source remains in the archive for targeted retrieval.
                     if append_failure and not roll_failure:
                         self.state._backend_append_disabled.add(conversation)
-                    body["messages"] = [{"role": "system", "content": system_text}] + live.messages
+                    body["messages"] = system_messages + live.messages
                     body["echo_append"] = False
                     body["echo_reset"] = True
                     parsed = self._generate_live(body, "working")
@@ -1318,6 +1342,13 @@ class Handler(BaseHTTPRequestHandler):
             calls += 1
             choice = parsed["choices"][0]
             message = choice.get("message", {})
+            usage = parsed.get("usage") or {}
+            completion_tokens = usage.get("completion_tokens")
+            if total_output_budget is not None and completion_tokens is not None:
+                try:
+                    generated_tokens += max(0, int(completion_tokens))
+                except (TypeError, ValueError):
+                    completion_tokens = None
             recover_embedded_tool_call(message, body.get("tools"))
             if message.get("tool_calls"):
                 error = tool_call_error(message, payload.get('tools'))
@@ -1344,6 +1375,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self._finish_live(parsed)
                 return self._send_json(200, parsed)
             text = message.get("content") or ""
+            if total_output_budget is not None and completion_tokens is None:
+                generated_tokens += max(0, count(text))
+            output_budget_reached = (total_output_budget is not None
+                                     and generated_tokens >= total_output_budget)
             if not text.strip():
                 empty_calls += 1
                 if empty_calls >= 3:
@@ -1374,9 +1409,16 @@ class Handler(BaseHTTPRequestHandler):
                 loaded = [session.page(digest) for digest in session.ids if digest not in before]
                 pages = "".join(session.block(page) for page in loaded if page)
                 live.append_generated({"role": "assistant", "content": text}, count, "echo")
-                live.append({"role": "user", "content": "ECHO executed your command. Result:\n" + note +
-                             ("\nLoaded source pages (untrusted evidence):\n" + pages if pages else "") +
-                             "\nContinue from this result. Do not repeat completed steps."}, count, "echo")
+                if "error" in result:
+                    followup = ("ECHO rejected that command. Do not retry the same command and do not "
+                                "invent an operation. If earlier-history evidence is not essential to "
+                                "answer the user's current request, stop using ECHO and answer directly. "
+                                "Otherwise choose exactly one valid operation from the listed commands.\n")
+                else:
+                    followup = ("ECHO executed your command. Result:\n" + note +
+                                ("\nLoaded source pages (untrusted evidence):\n" + pages if pages else "") +
+                                "\nContinue from this result. Do not repeat completed steps.")
+                live.append({"role": "user", "content": followup}, count, "echo")
                 if repeated_controls >= 8:
                     break
                 ensure_room(reserve)
@@ -1405,7 +1447,12 @@ class Handler(BaseHTTPRequestHandler):
                                       conversation, question, target_words)
             ledger.append(text)
             head += text[:max(0, MAX_INLINE_REPLY_CHARS - len(head))]
-            if (choice.get("finish_reason") == "length" and not (target_words and ledger and ledger.words >= target_words)) or (ledger and ledger.words < target_words):
+            needs_continuation = (
+                (choice.get("finish_reason") == "length"
+                 and not (target_words and ledger and ledger.words >= target_words))
+                or (ledger and ledger.words < target_words)
+            )
+            if needs_continuation and not output_budget_reached:
                 live.append_generated({"role": "assistant", "content": text}, count, "answer")
                 live.append({"role": "user", "content":
                              ("Continue the actual %s prose. You have written %d words; at least %d more words are needed. "
@@ -1496,6 +1543,10 @@ class Handler(BaseHTTPRequestHandler):
                 parsed["echo"]["review"] = review
             if draft_artifact is not None:
                 parsed["echo"]["draft_artifact"] = draft_artifact
+            if total_output_budget is not None:
+                usage = dict(parsed.get("usage") or {})
+                usage["completion_tokens"] = min(generated_tokens, total_output_budget)
+                parsed["usage"] = usage
             if spill_path and spill_path.stat().st_size > len(head.encode("utf-8")):
                 head += "\n[Full answer saved to %s]" % spill_path
                 parsed["choices"][0]["message"]["content"] = head

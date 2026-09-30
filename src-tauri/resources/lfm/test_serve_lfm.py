@@ -31,6 +31,52 @@ class RequestCaptureHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
+class PegNativeFallbackHandler(BaseHTTPRequestHandler):
+    def log_message(self, *_):
+        pass
+
+    def do_POST(self):
+        self.server.request_bodies.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+        if len(self.server.request_bodies) == 1:
+            body = json.dumps({"error": {"code": 500,
+                "message": "The model produced output that does not match the expected peg-native format",
+                "type": "server_error"}}).encode()
+            self.send_response(500)
+        else:
+            body = json.dumps({"choices": [{"message": {"role": "assistant",
+                "content": '{"score_a":80,"score_b":70,"confidence":90,"reason":"More complete."}'},
+                "finish_reason": "stop"}]}).encode()
+            self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+class PegNativeRawCompletionHandler(BaseHTTPRequestHandler):
+    def log_message(self, *_):
+        pass
+
+    def do_POST(self):
+        self.server.requests.append((self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
+        if self.path == "/v1/chat/completions":
+            body = json.dumps({"error": {"code": 500,
+                "message": "The model produced output that does not match the expected peg-native format",
+                "type": "server_error"}}).encode()
+            self.send_response(500)
+        elif self.path == "/apply-template":
+            body = json.dumps({"prompt": "FORMATTED CHAT PROMPT"}).encode()
+            self.send_response(200)
+        else:
+            body = json.dumps({"choices": [{"text": "Generated plain text", "finish_reason": "length"}],
+                               "usage": {"prompt_tokens": 12, "completion_tokens": 6}}).encode()
+            self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
 class ProfileEngineTests(unittest.TestCase):
     def test_parse_review_preserves_ranking_for_thousand_point_scale(self):
         review = parse_review(
@@ -205,6 +251,52 @@ class ProfileEngineTests(unittest.TestCase):
             server.server_close()
             thread.join()
 
+    def test_lfm_backbone_retries_peg_native_schema_error_without_response_format(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), PegNativeFallbackHandler)
+        server.request_bodies = []
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            backbone = LfmBackbone(SimpleNamespace(name="fixture", port=server.server_port,
+                                                    reasoning_format="none"), Path("fixture.gguf"))
+            reply = backbone.chat(
+                [{"role": "system", "content": "Return only JSON."},
+                 {"role": "user", "content": "Score the candidates."}],
+                max_tokens=32,
+                json_schema={"type": "object", "properties": {"score_a": {"type": "number"}}},
+            )
+            self.assertIn('"score_a":80', reply.content)
+            self.assertEqual(len(server.request_bodies), 2)
+            self.assertEqual(server.request_bodies[0]["response_format"]["type"], "json_schema")
+            self.assertNotIn("response_format", server.request_bodies[1])
+            self.assertEqual(server.request_bodies[1]["messages"], server.request_bodies[0]["messages"])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
+    def test_lfm_backbone_recovers_peg_native_text_error_via_raw_completion(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), PegNativeRawCompletionHandler)
+        server.requests = []
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            backbone = LfmBackbone(SimpleNamespace(name="fixture", port=server.server_port,
+                                                    reasoning_format="none"), Path("fixture.gguf"))
+            reply = backbone.chat([{"role": "user", "content": "Return a table"}],
+                                  max_tokens=64, temperature=0.2)
+            self.assertEqual(reply.content, "Generated plain text")
+            self.assertEqual([path for path, _ in server.requests],
+                             ["/v1/chat/completions", "/apply-template", "/v1/completions"])
+            self.assertEqual(server.requests[1][1]["messages"], server.requests[0][1]["messages"])
+            self.assertEqual(server.requests[2][1]["prompt"], "FORMATTED CHAT PROMPT")
+            self.assertEqual(server.requests[2][1]["max_tokens"], 64)
+            self.assertEqual(server.requests[2][1]["temperature"], 0.2)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
     def test_lfm_backbone_passes_bounded_reasoning_budget(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), RequestCaptureHandler)
         server.request_body = None
@@ -243,6 +335,38 @@ class ProfileEngineTests(unittest.TestCase):
             engine.complete([{"role": "user", "content": "write code"}], None, 128,
                             thinking_budget_tokens=64)
             self.assertEqual([brain.budgets for brain in engine.brains], [[64], [64]])
+        finally:
+            engine.close()
+
+    def test_dualcore_uses_the_valid_candidate_when_the_other_brain_errors(self):
+        class Brain:
+            def __init__(self, content=None, error=None):
+                self.content = content
+                self.error = error
+
+            def chat(self, messages, **kwargs):
+                if self.error:
+                    raise RuntimeError(self.error)
+                message = {"role": "assistant", "content": self.content}
+                return BackboneReply(self.content, message,
+                                     {"choices": [{"message": message, "finish_reason": "stop"}],
+                                      "usage": {"prompt_tokens": 10, "completion_tokens": 5}})
+
+        engine = DualCoreEngine.__new__(DualCoreEngine)
+        engine.native = None
+        engine.parameters = None
+        engine.brains = [Brain(error="peg-native parser rejected brain 1"), Brain("valid answer")]
+        engine.pool = ThreadPoolExecutor(max_workers=2)
+        try:
+            message, usage, metadata = engine.complete(
+                [{"role": "user", "content": "answer"}], None, 128)
+
+            self.assertEqual(message["content"], "valid answer")
+            self.assertEqual(metadata["selected_brain"], 2)
+            self.assertEqual(metadata["candidate_errors"], [
+                {"brain": 1, "error": "RuntimeError: peg-native parser rejected brain 1"}
+            ])
+            self.assertEqual(usage["completion_tokens"], 5)
         finally:
             engine.close()
 
@@ -302,9 +426,9 @@ class ProfileEngineTests(unittest.TestCase):
         checkpoint = Path("checkpoint.gguf")
         runtime = Path("runtime")
         with patch.object(serve_lfm, "FusionCoreModel") as model:
-            engine = serve_lfm.create_engine("fusioncore-echo", checkpoint, runtime, 8192, 18610)
+            engine = serve_lfm.create_engine("fusioncore-echo", checkpoint, runtime, 131072, 18610)
         self.assertIs(engine, model.return_value)
-        model.assert_called_once_with(checkpoint, runtime, 8192, recompute=False)
+        model.assert_called_once_with(checkpoint, runtime, 131072, recompute=False)
 
     def test_echo_archive_does_not_select_a_different_dualcore_decoder(self):
         checkpoint = Path("checkpoint.gguf")
@@ -313,7 +437,7 @@ class ProfileEngineTests(unittest.TestCase):
         self.assertTrue(serve_lfm.PROFILES["dualcore-echo"][2])
         engines = [
             serve_lfm.create_engine("dualcore-kv", checkpoint, runtime, 131072, 18610),
-            serve_lfm.create_engine("dualcore-echo", checkpoint, runtime, 32768, 18610),
+            serve_lfm.create_engine("dualcore-echo", checkpoint, runtime, 131072, 18610),
         ]
         try:
             for engine in engines:

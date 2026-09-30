@@ -22,9 +22,9 @@ from protocol import OutputStream, extract_internal_code_output, with_tools
 
 PROFILES = {
     'dualcore-kv': ('DualCore KV', 'dual', False, False, 131072),
-    'dualcore-echo': ('DualCore ECHO', 'dual', True, False, 32768),
+    'dualcore-echo': ('DualCore ECHO', 'dual', True, False, 131072),
     'fusioncore-kv': ('FusionCore KV', 'fusion', False, False, 131072),
-    'fusioncore-echo': ('FusionCore ECHO', 'fusion', True, False, 8192),
+    'fusioncore-echo': ('FusionCore ECHO', 'fusion', True, False, 131072),
 }
 
 

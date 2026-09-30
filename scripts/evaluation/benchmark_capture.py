@@ -25,6 +25,46 @@ SPEED_PROBE_MIN_TOKENS_PER_SECOND = 20.0
 SPEED_PROBE_MAX_TOKENS = 256
 ECHO_PROFILES = frozenset({"echo", "native1m", "unsloth-echo", "doucode",
                            "dualcore-echo", "fusioncore-echo"})
+# These exact runtime-only transitions respectively retry one known llama.cpp
+# constrained-JSON parser failure without response_format, and preserve a valid
+# candidate when the other independent brain's request errors. A third pair
+# retries malformed UTF-8 after the model emits it in otherwise complete text.
+# Candidate validation still runs unchanged. Exact hashes preserve lineage.
+REVIEWED_RUNTIME_TRANSITIONS = {
+    ("runtime.py",
+     "a674f0368709687b1cdcafe88c182957c80bd35b9e60e8b0ab53444f992305a0",
+     "19ba307825d656aaecc4919b6f979151fb2cc2cde7c3febcea979f71401491e3"),
+    ("dual.py",
+     "fd5e190bcf6d8097020b4864791e5cf1775654c23c2758e2cd5aceae41091060",
+     "8ddeeb34da432c4269c47f7ff5e60d8b8fbee4661233ace50930fca510a726d2"),
+    ("dual.py",
+     "8ddeeb34da432c4269c47f7ff5e60d8b8fbee4661233ace50930fca510a726d2",
+     "b2eb4b3f64df494f31959d6516d35d00cbbd6f9e6577e0a0137531f6d5883907"),
+    ("runtime.py",
+     "19ba307825d656aaecc4919b6f979151fb2cc2cde7c3febcea979f71401491e3",
+     "0f6e8dae4faaba2f4fafc94616582aa6b797a354b04b69125b497bd01bacc252"),
+    ("dual.py",
+     "8ddeeb34da432c4269c47f7ff5e60d8b8fbee4661233ace50930fca510a726d2",
+     "b2eb4b3f64df494f31959d6516d35d00cbbd6f9e6577e0a0137531f6d5883907"),
+    ("llama-common.dll",
+     "7270f14eb41b55d5d596b214dd9cae66a202897b8e0bb60bf2e8e7bbf4434308",
+     "210fa3e2fc550eb87774b18102a2d9e1488983c54f5d864a5624291d366af5fb"),
+}
+# ECHO's prompt and control loop are part of the model behavior. Bind their
+# first inclusion in resumable capture identities to these exact contents.
+REVIEWED_HARNESS_ADDITIONS = {
+    ("echo_server.py", 114440,
+     "b621719f1b18fc3cb89f031feedef2571408a970301c66c3a5ff038b11010cf3"),
+    ("echo_server.py", 116359,
+     "1e09fcb6afb04b4ef2845694dd060e0edc76d3bc8a0cbdc95116d09e9d1688dd"),
+    ("echo_context.py", 22043,
+     "06fafc0e4eed4cff2a13b9a0c244b65f0b319e6fd83896e97ecb80cba61dbd51"),
+}
+REVIEWED_HARNESS_TRANSITIONS = {
+    ("echo_server.py",
+     "b621719f1b18fc3cb89f031feedef2571408a970301c66c3a5ff038b11010cf3",
+     "1e09fcb6afb04b4ef2845694dd060e0edc76d3bc8a0cbdc95116d09e9d1688dd"),
+}
 
 
 def json_bytes(value):
@@ -103,6 +143,17 @@ def validate_records(inputs, records, complete, request_binding=None, allowed_id
                     or payload.get('temperature') != 0 or payload.get('stream') is not False
                     or payload.get('max_tokens') != request_binding['max_tokens']):
                 raise ValueError(f'Isolated request differs from the official input or generation binding: {identity}')
+            if 'echo_max_total_tokens' in request_binding:
+                source_identity = row.get('runtime_identity_sha256')
+                budget = payload.get('echo_max_total_tokens')
+                current_identity = request_binding.get('identity_sha256')
+                # Resumed rows keep their exact old request and identity. They
+                # predate the explicit total-output cap; newly generated rows
+                # must carry the bound cap in both the request and its hash.
+                if source_identity == current_identity and budget != request_binding['echo_max_total_tokens']:
+                    raise ValueError(f'Isolated ECHO output budget differs from its generation binding: {identity}')
+                if budget is not None and budget != request_binding['echo_max_total_tokens']:
+                    raise ValueError(f'Isolated ECHO output budget differs from its generation binding: {identity}')
             if ('thinking_budget_tokens' in request_binding
                     and payload.get('thinking_budget_tokens') != request_binding['thinking_budget_tokens']):
                 raise ValueError(f'Isolated request reasoning budget differs from its generation binding: {identity}')
@@ -343,8 +394,29 @@ def _validate_runtime_transition(old, new):
     if old_runtime.keys() != new_runtime.keys():
         raise ValueError('Runtime identity lineage changes the runtime file set')
     changed = [name for name in old_runtime if old_runtime[name] != new_runtime[name]]
-    if changed != ['selection.py']:
+    reviewed_runtime_change = bool(changed) and all(
+        (name, old_runtime[name][1], new_runtime[name][1]) in REVIEWED_RUNTIME_TRANSITIONS
+        for name in changed
+    )
+    if changed and changed != ['selection.py'] and not reviewed_runtime_change:
         raise ValueError(f'Runtime identity lineage changes files outside the reviewed parser: {changed}')
+    old_harness = {Path(item['path']).name: (item['bytes'], item['sha256'])
+                   for item in old.get('harness_files', [])}
+    new_harness = {Path(item['path']).name: (item['bytes'], item['sha256'])
+                   for item in new.get('harness_files', [])}
+    added_harness = set(new_harness) - set(old_harness)
+    removed_harness = set(old_harness) - set(new_harness)
+    if removed_harness or any((name, *new_harness[name]) not in REVIEWED_HARNESS_ADDITIONS
+                              for name in added_harness):
+        raise ValueError('Runtime identity adds or removes unreviewed ECHO harness files')
+    changed_harness = [name for name in old_harness.keys() & new_harness.keys()
+                       if old_harness[name] != new_harness[name]]
+    reviewed_harness_change = bool(changed_harness) and all(
+        (name, old_harness[name][1], new_harness[name][1]) in REVIEWED_HARNESS_TRANSITIONS
+        for name in changed_harness
+    )
+    if changed_harness and not reviewed_harness_change:
+        raise ValueError(f'Runtime identity changes unreviewed ECHO harness files: {changed_harness}')
 
 
 def _validate_resume_compatibility(parent_manifest, parent_dir, inputs_hash, model, max_tokens,
@@ -383,7 +455,7 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
     artifacts = identity.get("artifacts") or []
     if not artifacts:
         raise ValueError("Model identity must include hash-bound artifacts")
-    for artifact in [*artifacts, *identity.get("runtime_files", [])]:
+    for artifact in [*artifacts, *identity.get("runtime_files", []), *identity.get("harness_files", [])]:
         path = Path(artifact["path"])
         if path.stat().st_size != artifact["bytes"] or file_hash(path) != artifact["sha256"]:
             raise ValueError(f"Artifact hash mismatch: {path.name}")
@@ -403,6 +475,8 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         if isolation != 'fresh_conversation_per_sample':
             raise ValueError('Unknown benchmark request isolation mode')
         bound['request_isolation'] = isolation
+    if identity.get('profile') in ECHO_PROFILES:
+        bound['echo_max_total_tokens'] = max_tokens
     resume_from = Path(resume_from) if resume_from else None
     if resume_from and resume_from.resolve() == output.resolve():
         raise ValueError('Resume source and destination must be separate to preserve the original capture')
@@ -492,6 +566,8 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         messages.append({"role": "user", "content": row["prompt"]})
         payload = {"model": model, "messages": messages, "temperature": 0,
                    "max_tokens": max_tokens, "stream": False}
+        if identity.get('profile') in ECHO_PROFILES:
+            payload['echo_max_total_tokens'] = max_tokens
         if thinking_budget_tokens is not None:
             payload['thinking_budget_tokens'] = thinking_budget_tokens
         if isolation:

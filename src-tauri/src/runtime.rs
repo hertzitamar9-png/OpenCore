@@ -39,8 +39,11 @@ pub fn echo_profile(profile: &str) -> bool {
 }
 fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
 fn nanbeige_profile(profile: &str) -> bool { matches!(profile, "nanbeige-bf16" | "nanbeige-bf16-echo") }
-fn lfm_context(profile: &str) -> u64 {
-    match profile { "dualcore-echo" => 32_768, "fusioncore-echo" => 8_192, _ => 131_072 }
+fn lfm_context(_profile: &str) -> u64 {
+    // LFM2.5's published native context is 131,072 tokens. ECHO manages
+    // archival continuity outside that rolling model window; it must not
+    // impose the old 32K/8K profile-specific limits on the model itself.
+    131_072
 }
 /// Context checkpoints let the hybrid recurrent model resume from the end of the previous
 /// prompt instead of re-reading everything when an assistant turn is re-rendered.
@@ -1330,8 +1333,8 @@ mod tests {
         for profile in ["dualcore-kv", "fusioncore-kv"] {
             assert_eq!(lfm_context(profile), 131_072);
         }
-        assert_eq!(lfm_context("dualcore-echo"), 32_768);
-        assert_eq!(lfm_context("fusioncore-echo"), 8_192);
+        assert_eq!(lfm_context("dualcore-echo"), 131_072);
+        assert_eq!(lfm_context("fusioncore-echo"), 131_072);
     }
 
     #[test]

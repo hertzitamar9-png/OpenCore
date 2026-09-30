@@ -148,6 +148,123 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(rows[1]["runtime_identity_sha256"], new_hash)
         benchmark_capture.load_grading_capture(self.inputs, new_output)
 
+    def test_resume_allows_only_the_reviewed_peg_native_schema_fallback(self):
+        old = {
+            "model": "DualCore ECHO",
+            "evidence_kind": "real_model",
+            "profile": "dualcore-echo",
+            "checkpoint": {"sha256": "fixed-checkpoint"},
+            "complete_towers": 2,
+            "candidate_budget": 2,
+            "sampling": {"temperature": 0},
+            "coupling_trained": False,
+            "request_isolation": "fresh_conversation_per_sample",
+            "artifacts": [{"path": "weights.gguf", "bytes": 4, "sha256": "fixed-weights"}],
+            "runtime_files": [{
+                "path": "runtime.py",
+                "bytes": 28368,
+                "sha256": "a674f0368709687b1cdcafe88c182957c80bd35b9e60e8b0ab53444f992305a0",
+            }],
+        }
+        new = json.loads(json.dumps(old))
+        new["runtime_files"] = [{
+            "path": "runtime.py",
+            "bytes": 29906,
+            "sha256": "19ba307825d656aaecc4919b6f979151fb2cc2cde7c3febcea979f71401491e3",
+        }]
+
+        benchmark_capture._validate_runtime_transition(old, new)
+
+        changed_again = json.loads(json.dumps(new))
+        changed_again["runtime_files"][0]["sha256"] = "unreviewed-change"
+        with self.assertRaisesRegex(ValueError, "outside the reviewed parser"):
+            benchmark_capture._validate_runtime_transition(old, changed_again)
+
+    def test_resume_allows_the_reviewed_single_brain_failure_fallback(self):
+        old = {
+            "model": "DualCore ECHO",
+            "evidence_kind": "real_model",
+            "profile": "dualcore-echo",
+            "checkpoint": {"sha256": "fixed-checkpoint"},
+            "complete_towers": 2,
+            "candidate_budget": 2,
+            "sampling": {"temperature": 0},
+            "coupling_trained": False,
+            "request_isolation": "fresh_conversation_per_sample",
+            "artifacts": [{"path": "weights.gguf", "bytes": 4, "sha256": "fixed-weights"}],
+            "runtime_files": [{
+                "path": "dual.py",
+                "bytes": 10616,
+                "sha256": "fd5e190bcf6d8097020b4864791e5cf1775654c23c2758e2cd5aceae41091060",
+            }],
+        }
+        new = json.loads(json.dumps(old))
+        new["runtime_files"] = [{
+            "path": "dual.py",
+            "bytes": 11522,
+            "sha256": "8ddeeb34da432c4269c47f7ff5e60d8b8fbee4661233ace50930fca510a726d2",
+        }]
+
+        benchmark_capture._validate_runtime_transition(old, new)
+
+        changed_again = json.loads(json.dumps(new))
+        changed_again["runtime_files"][0]["sha256"] = "unreviewed-change"
+        with self.assertRaisesRegex(ValueError, "outside the reviewed parser"):
+            benchmark_capture._validate_runtime_transition(old, changed_again)
+
+    def test_resume_allows_reviewed_dualcore_text_parser_fallback(self):
+        old = {
+            "model": "DualCore ECHO", "evidence_kind": "real_model", "profile": "dualcore-echo",
+            "checkpoint": {"sha256": "fixed-checkpoint"}, "complete_towers": 2,
+            "candidate_budget": 2, "sampling": {"temperature": 0},
+            "coupling_trained": False, "request_isolation": "fresh_conversation_per_sample",
+            "artifacts": [{"path": "weights.gguf", "bytes": 4, "sha256": "fixed-weights"}],
+            "runtime_files": [
+                {"path": "runtime.py", "bytes": 29906,
+                 "sha256": "19ba307825d656aaecc4919b6f979151fb2cc2cde7c3febcea979f71401491e3"},
+                {"path": "dual.py", "bytes": 11522,
+                 "sha256": "8ddeeb34da432c4269c47f7ff5e60d8b8fbee4661233ace50930fca510a726d2"},
+                {"path": "llama-common.dll", "bytes": 8198656,
+                 "sha256": "7270f14eb41b55d5d596b214dd9cae66a202897b8e0bb60bf2e8e7bbf4434308"},
+            ],
+        }
+        new = json.loads(json.dumps(old))
+        new["runtime_files"][0].update(bytes=29902,
+            sha256="0f6e8dae4faaba2f4fafc94616582aa6b797a354b04b69125b497bd01bacc252")
+        new["runtime_files"][1].update(bytes=14472,
+            sha256="b2eb4b3f64df494f31959d6516d35d00cbbd6f9e6577e0a0137531f6d5883907")
+        new["runtime_files"].append({"path": "llama-common.dll", "bytes": 8199680,
+            "sha256": "210fa3e2fc550eb87774b18102a2d9e1488983c54f5d864a5624291d366af5fb"})
+        benchmark_capture._validate_runtime_transition(old, new)
+
+        changed_again = json.loads(json.dumps(new))
+        changed_again["runtime_files"][0]["sha256"] = "unreviewed-change"
+        with self.assertRaisesRegex(ValueError, "outside the reviewed parser"):
+            benchmark_capture._validate_runtime_transition(old, changed_again)
+
+    def test_resume_binds_reviewed_echo_harness_additions(self):
+        old = {
+            "model": "DualCore ECHO", "evidence_kind": "real_model", "profile": "dualcore-echo",
+            "checkpoint": {"sha256": "fixed-checkpoint"}, "complete_towers": 2,
+            "candidate_budget": 2, "sampling": {"temperature": 0},
+            "coupling_trained": False, "request_isolation": "fresh_conversation_per_sample",
+            "artifacts": [{"path": "weights.gguf", "bytes": 4, "sha256": "fixed-weights"}],
+            "runtime_files": [{"path": "selection.py", "bytes": 4, "sha256": "same-runtime"}],
+        }
+        new = json.loads(json.dumps(old))
+        new["harness_files"] = [
+            {"path": "echo_server.py", "bytes": 116359,
+             "sha256": "1e09fcb6afb04b4ef2845694dd060e0edc76d3bc8a0cbdc95116d09e9d1688dd"},
+            {"path": "echo_context.py", "bytes": 22043,
+             "sha256": "06fafc0e4eed4cff2a13b9a0c244b65f0b319e6fd83896e97ecb80cba61dbd51"},
+        ]
+        benchmark_capture._validate_runtime_transition(old, new)
+
+        changed_again = json.loads(json.dumps(new))
+        changed_again["harness_files"][0]["sha256"] = "unreviewed-change"
+        with self.assertRaisesRegex(ValueError, "unreviewed ECHO harness"):
+            benchmark_capture._validate_runtime_transition(old, changed_again)
+
     def test_complete_capture_preserves_answers_and_resume_makes_no_new_requests(self):
         first = self.capture()
         self.assertEqual(first.returncode, 0, first.stderr)
@@ -251,12 +368,16 @@ class CaptureTests(unittest.TestCase):
         self.server.echo_proxy = True
         identity = json.loads(self.identity.read_text())
         identity["profile"] = "dualcore-echo"
+        identity["request_isolation"] = "fresh_conversation_per_sample"
         self.identity.write_text(json.dumps(identity))
         result = self.capture()
         self.assertEqual(result.returncode, 0, result.stderr)
         manifest = json.loads((self.output / "capture-manifest.json").read_text())
         self.assertEqual(manifest["echo_route_verification"]["status"], "passed")
         self.assertEqual(manifest["echo_route_verification"]["history_mode"], "persistent_echo")
+        self.assertEqual(manifest["binding"]["echo_max_total_tokens"], 8)
+        rows = [json.loads(line) for line in (self.output / "responses.jsonl").read_text().splitlines()]
+        self.assertTrue(all(row["request"]["echo_max_total_tokens"] == 8 for row in rows))
         self.assertEqual(self.server.echo_route_requests, 1)
         benchmark_capture.load_grading_capture(self.inputs, self.output)
 

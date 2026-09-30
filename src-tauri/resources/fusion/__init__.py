@@ -11,6 +11,8 @@ _EXPORTS = {
     'CoupledFusion': 'coupled', 'CoupledFeedback': 'bridge', 'CoupledStep': 'bridge',
     'ChunkedOutputHead': 'heads', 'offload_output_head': 'heads',
     'verify_checkpoint': 'manifest',
+    'read_hf_split_pair': 'training', 'teacher_forced_hf': 'training', 'evaluate_hf_bridge': 'training',
+    'train_hf_bridge': 'training',
     **{name: 'budget' for name in ('BF16_CHECKPOINT_BYTES', 'K2_BF16_CHECKPOINT_BYTES',
         'NANBEIGE_BF16_CHECKPOINT_BYTES', 'estimate_bf16_kv_bytes', 'require_device_budget')},
 }
@@ -36,5 +38,9 @@ __all__ = [
     "estimate_bf16_kv_bytes",
     "require_device_budget",
     "verify_checkpoint",
+    "teacher_forced_hf",
+    "evaluate_hf_bridge",
+    "train_hf_bridge",
+    "read_hf_split_pair",
     "offload_output_head",
 ]
