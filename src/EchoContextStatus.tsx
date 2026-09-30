@@ -48,6 +48,7 @@ export function EchoContextStatus({ conversationId, running, configuredContextTo
       <span className={`echo-context-chip ${state?.active ? "is-active" : ""}`}>{activity}</span>
       {state?.modelSessionTokens != null ? <span className="echo-context-chip">Model state is reused between turns; at its limit ECHO rebuilds from the retained transcript</span> : null}
       {persistentEcho ? <span className="echo-context-chip">Exact conversation history stays in the ECHO archive for source retrieval</span> : null}
+      {persistentEcho && state?.echoActivePages ? <span className="echo-context-chip" title={`${state.echoLastRetrievalReason || "Retrieved from exact archived source"}${state.echoActiveSourceHashes?.length ? ` · source hashes: ${state.echoActiveSourceHashes.join(", ")}` : ""}${state.echoRetrievalLatencyMs != null ? ` · retrieval ${state.echoRetrievalLatencyMs} ms` : ""}`}>ECHO active recall · {state.echoActivePages} pages · {state.echoRecalledTokens?.toLocaleString() ?? 0} tokens</span> : null}
       {state?.modelSessionActive != null ? <span className="echo-context-chip">Model slot · {state.modelSessionActive ? "processing" : "ready"}</span> : null}
       {state?.autoCompactEnabled === false ? <span className="echo-context-chip">SDK summary compaction disabled</span> : null}
       {state?.autoCompactEnabled === true && typeof state.autoCompactThreshold === "number" && state.autoCompactThreshold > 0 ? <span className="echo-context-chip">SDK auto compact · {state.autoCompactThreshold.toLocaleString()}</span> : null}

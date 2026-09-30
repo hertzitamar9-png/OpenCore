@@ -28,6 +28,23 @@ it('shows persistent ECHO history and the model request capacity separately', as
   } finally { read.mockRestore(); }
 });
 
+it('shows exact archived pages that ECHO promoted into active inference context', async () => {
+  const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({
+    available: true, liveTokens: 5400, windowTokens: 32768, contextMode: 'persistent_echo',
+    echoRecalledTokens: 734, echoActivePages: 2,
+    echoActiveSourceHashes: ['abc123', 'def456'], echoLastRetrievalReason: 'exact symbol match',
+    echoRetrievalLatencyMs: 14.2,
+  });
+  try {
+    render(<EchoContextStatus conversationId="game" running={false} />);
+    const recalled = await screen.findByText('ECHO active recall · 2 pages · 734 tokens');
+    expect(recalled).toBeVisible();
+    expect(recalled).toHaveAttribute('title', expect.stringContaining('exact symbol match'));
+    expect(recalled).toHaveAttribute('title', expect.stringContaining('abc123, def456'));
+    expect(recalled).toHaveAttribute('title', expect.stringContaining('retrieval 14.2 ms'));
+  } finally { read.mockRestore(); }
+});
+
 it('shows real persistent model-session tokens and rolling slot occupancy', async () => {
   const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({
     available: true,

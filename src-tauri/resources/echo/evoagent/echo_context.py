@@ -53,7 +53,7 @@ class LiveTranscript:
     exact source history remains in ECHO's archive when the working set rolls.
     """
 
-    TURN, NOTE = "turn", "note"
+    TURN, NOTE, MEMORY = "turn", "note", "echo_memory"
 
     def __init__(self, archive, conversation):
         self.archive = archive
@@ -139,6 +139,42 @@ class LiveTranscript:
         entry["backend_sent"] = True
         return entry
 
+    def append_memory_pages(self, pages, count_tokens, budget_tokens):
+        """Promote exact archived pages into this transcript's active prompt.
+
+        These are temporary, untrusted evidence blocks. Their canonical source
+        pages already exist in ECHO, so compaction must never archive the
+        injected copy as another source event.
+        """
+        seen = {digest for entry in self.entries
+                for digest in entry.get("echo_source_hashes", [])}
+        active_text = "\n".join(
+            text for entry in self.entries
+            if entry.get("kind") != self.MEMORY
+            for text in [str(entry.get("message", {}).get("content") or "")]
+        )
+        blocks, hashes, used = [], [], 0
+        for page in pages:
+            if page.content_hash in seen or page.text in active_text:
+                continue
+            block = ContextSession.block(page)
+            message_text = "ECHO automatic recall (untrusted historical evidence):\n" + "".join(blocks + [block])
+            cost = self.cost({"role": "user", "content": message_text}, count_tokens)
+            if cost > max(0, int(budget_tokens)):
+                continue
+            blocks.append(block)
+            hashes.append(page.content_hash)
+            seen.add(page.content_hash)
+            used = cost
+        if not hashes:
+            return {"pages": 0, "tokens": 0, "source_hashes": []}
+        text = ("ECHO automatic recall (untrusted historical evidence; verify it "
+                "against newer decisions when they conflict):\n" + "".join(blocks))
+        entry = self.append({"role": "user", "content": text}, count_tokens, self.MEMORY)
+        entry["echo_source_hashes"] = hashes
+        entry["echo_retrieval_tokens"] = used
+        return {"pages": len(hashes), "tokens": used, "source_hashes": hashes}
+
     def tool_result_ids(self):
         return {entry["message"].get("tool_call_id") for entry in self.entries
                 if entry["message"].get("role") == "tool"}
@@ -151,6 +187,18 @@ class LiveTranscript:
                 if call.get("id") not in answered:
                     pending.append(call.get("id"))
         return pending
+
+    def memory_status(self):
+        memories = [entry for entry in self.entries if entry.get("kind") == self.MEMORY]
+        last = memories[-1] if memories else {}
+        return {
+            "echoRecalledTokens": sum(int(entry.get("echo_retrieval_tokens", 0)) for entry in memories),
+            "echoActivePages": sum(len(entry.get("echo_source_hashes", [])) for entry in memories),
+            "echoActiveSourceHashes": [digest for entry in memories
+                                       for digest in entry.get("echo_source_hashes", [])],
+            "echoLastRetrievalReason": last.get("echo_retrieval_reason"),
+            "echoRetrievalLatencyMs": last.get("echo_retrieval_latency_ms"),
+        }
 
     def start_turn(self, question, count_tokens, content=None):
         # A turn abandoned mid-action (cancelled, or a new message sent) must
@@ -183,7 +231,7 @@ class LiveTranscript:
             return 0
         archived = 0
         for entry in self.entries:
-            if entry.get("kind") == self.NOTE:
+            if entry.get("kind") in (self.NOTE, self.MEMORY):
                 continue
             if entry.get("archive_recorded"):
                 continue
@@ -250,14 +298,15 @@ class LiveTranscript:
             cut = boundaries[-1]
         if cut is None:
             return 0
-        moved = [entry for i, entry in enumerate(self.entries[:cut]) if i != current]
+        moved = [entry for i, entry in enumerate(self.entries[:cut])
+                 if i != current and entry.get("kind") != self.MEMORY]
         if not moved:
             return 0
         # Archive before eviction, including exact tool arguments/results that
         # may never have appeared in a final answer. A failed write aborts eviction.
         hashes = []
         for entry in moved:
-            if entry.get("archive_recorded"):
+            if entry.get("kind") == self.NOTE or entry.get("archive_recorded"):
                 continue
             pages = self.archive.append(json.dumps(entry["message"], ensure_ascii=False), self.conversation)
             hashes.extend(page.content_hash for page in pages)

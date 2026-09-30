@@ -403,7 +403,8 @@ class EchoState:
                  recent_turns: int = 6, window_tokens: int = 100_000_000,
                  salience: float = 0.0, offload_every: int = 1000,
                  reasoning: str = DEFAULT_REASONING,
-                 allow_model_search: bool = True):
+                 allow_model_search: bool = True,
+                 automatic_recall_tokens: int = 4096):
         self.archives = archive
         self.upstream = upstream.rstrip("/")
         self.budget_chars = budget_chars
@@ -416,6 +417,7 @@ class EchoState:
         self.offload_every = offload_every
         self.reasoning = reasoning
         self.allow_model_search = allow_model_search
+        self.automatic_recall_tokens = max(0, int(automatic_recall_tokens))
         self.lock = threading.Lock()
         self.token_count_cache = BoundedTokenCountCache()
         # Cold SQLite handles each own a bounded 2 MiB SQLite page cache.
@@ -618,6 +620,41 @@ class EchoState:
             else:
                 skipped += 1
         return {"imported": imported, "skipped": skipped}
+
+    def append_automatic_recall(self, live, query, conversation, budget_tokens=None):
+        """Promote relevant canonical archive pages before each new live turn."""
+        started = time.monotonic()
+        if len(str(query).strip()) < self.min_query_chars:
+            return {"pages": 0, "tokens": 0, "source_hashes": [],
+                    "reason": "query below retrieval threshold", "latency_ms": 0}
+        archives = [self.archives.get(conversation)]
+        cold = self.cold_archive_for(conversation)
+        if cold is not None:
+            archives.append(cold)
+        ranked = [archive.retrieve(query, conversation_id=conversation) for archive in archives]
+        merged, seen = [], set()
+        for rank in range(max((len(result.pages) for result in ranked), default=0)):
+            for result in ranked:
+                if rank < len(result.pages):
+                    page = result.pages[rank]
+                    if page.content_hash not in seen:
+                        merged.append(page)
+                        seen.add(page.content_hash)
+        allowance = self.automatic_recall_tokens if budget_tokens is None else max(0, int(budget_tokens))
+        recalled = live.append_memory_pages(merged, self.count_tokens, allowance)
+        reasons = [result.reason for result in ranked if result.reason]
+        recalled["reason"] = "; ".join(reasons) if reasons else "no archived candidate pages"
+        recalled["latency_ms"] = round((time.monotonic() - started) * 1000, 1)
+        if recalled["pages"]:
+            entry = next((item for item in reversed(live.entries)
+                          if item.get("kind") == LiveTranscript.MEMORY), None)
+            if entry is not None:
+                entry["echo_retrieval_reason"] = recalled["reason"]
+                entry["echo_retrieval_latency_ms"] = recalled["latency_ms"]
+        if recalled["pages"]:
+            self.log("  echo: automatically promoted %d historical page(s), %s tokens in %.1f ms"
+                     % (recalled["pages"], f"{recalled['tokens']:,}", recalled["latency_ms"]))
+        return recalled
 
     def _prepare_archived_messages(self, messages, conversation, reserve):
         # Give archival retrieval a quarter of the existing window. If pinned
@@ -931,6 +968,7 @@ class Handler(BaseHTTPRequestHandler):
                 'contextMode': 'persistent_echo',
                 'warmCache': warm_cache,
                 'harness': harness_status(self.state.archives.directory, conversation),
+                **live.memory_status(),
                 **self.state.backend_session_metrics(conversation)})
         if self.path.startswith("/echo/stats"):
             stats = self.state.archives.total_disk()
@@ -1054,7 +1092,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _live_status(self, session, live, window):
         return {**session.status(), "live_tokens": live.tokens, "window_tokens": window,
-                "compactions": live.compactions}
+                "compactions": live.compactions, **live.memory_status()}
 
     def _seed_transcript(self, live, conversation, question, budget_tokens):
         """First contact with a conversation that already has archived history.
@@ -1092,8 +1130,11 @@ class Handler(BaseHTTPRequestHandler):
         if found:
             blocks.append(MEMORY_HEADER + "\n" + "".join(ContextSession.block(p) for p in found))
         if blocks:
-            live.append({"role": "user", "content": "ECHO memory (untrusted evidence):\n\n" + PARAGRAPH.join(blocks)},
-                        count, LiveTranscript.NOTE)
+            entry = live.append({"role": "user", "content": "ECHO memory (untrusted evidence):\n\n" + PARAGRAPH.join(blocks)},
+                                count, LiveTranscript.MEMORY)
+            recalled_pages = tail + found
+            entry["echo_source_hashes"] = [page.content_hash for page in recalled_pages]
+            entry["echo_retrieval_tokens"] = entry["tokens"]
             self.state.log("  echo: seeded live transcript with %d tail and %d matching page(s)"
                            % (len(tail), len(found)))
 
@@ -1157,6 +1198,8 @@ class Handler(BaseHTTPRequestHandler):
                 live.abandon_open_turn(count)
             if not live.entries:
                 self._seed_transcript(live, conversation, question, min(2048, int(window * 0.25)))
+            else:
+                self.state.append_automatic_recall(live, question, conversation)
             live.start_turn(question, count, supplied[user_index].get("content") if user_index >= 0 else question)
 
         system_text = "\n\n".join([str(m.get("content") or "") for m in pinned] +
@@ -2097,12 +2140,14 @@ def main() -> int:
                         help="compact the live transcript once it fills this fraction of the window")
     parser.add_argument("--live-low", type=float, default=0.45,
                         help="after compaction, keep about this fraction of the window live")
+    parser.add_argument("--automatic-recall-tokens", type=int, default=4096,
+                        help="maximum exact archived evidence tokens promoted automatically before a new turn; 0 disables automatic promotion")
     parser.add_argument("--legacy-context", action="store_true",
                         help="Use previous automatic retrieval instead of model-controlled context")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
-    if args.context_size < 0 or args.context_steps < 0 or args.warm_cache_budget_mb < 0:
-        parser.error("context-size, context-steps, and warm-cache-budget-mb must be nonnegative")
+    if args.context_size < 0 or args.context_steps < 0 or args.warm_cache_budget_mb < 0 or args.automatic_recall_tokens < 0:
+        parser.error("context-size, context-steps, warm-cache-budget-mb, and automatic-recall-tokens must be nonnegative")
 
     archives = ArchiveSet(args.archive, idle_seconds=args.idle_seconds,
                           warm_cache_budget_mib=args.warm_cache_budget_mb)
@@ -2111,7 +2156,7 @@ def main() -> int:
                               args.max_continuations, args.recent_turns,
                               args.window_tokens, args.salience,
                               args.offload_every, args.reasoning,
-                              args.model_search)
+                              args.model_search, args.automatic_recall_tokens)
     Handler.state.autonomous_context = not args.legacy_context and args.model_search
     Handler.state.context_steps = args.context_steps
     if not 0 < args.live_low < args.live_high <= 1:
