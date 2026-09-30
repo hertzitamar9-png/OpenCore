@@ -25,16 +25,20 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 const ECHO_MODEL_CONTEXT: u64 = 262_144;
 const DOUCODE_MODEL_CONTEXT: u64 = 65_536;
 const DOUCODE_DEFAULT_PORT: u16 = 8840;
+const NANBEIGE_DEFAULT_PORT: u16 = 8860;
+const NANBEIGE_BF16_FILE: &str = "Nanbeige_Nanbeige4.2-3B-bf16.gguf";
 const LFM_DEFAULT_PORT: u16 = 8850;
 const LFM_FILE: &str = "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf";
 pub fn supported_profile(profile: &str) -> bool {
     matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" |
+        "nanbeige-bf16" | "nanbeige-bf16-echo" |
         "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo")
 }
 pub fn echo_profile(profile: &str) -> bool {
-    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "dualcore-echo" | "fusioncore-echo")
+    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16-echo" | "dualcore-echo" | "fusioncore-echo")
 }
 fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
+fn nanbeige_profile(profile: &str) -> bool { matches!(profile, "nanbeige-bf16" | "nanbeige-bf16-echo") }
 fn lfm_context(profile: &str) -> u64 {
     match profile { "dualcore-echo" => 32_768, "fusioncore-echo" => 8_192, _ => 131_072 }
 }
@@ -184,6 +188,9 @@ impl RuntimeManager {
         let profile = if matches!(inner.status.as_str(), "running" | "starting") { &inner.profile } else { &inner.preferred_profile };
         if profile == "doucode" {
             return format!("http://127.0.0.1:{DOUCODE_DEFAULT_PORT}");
+        }
+        if nanbeige_profile(profile) {
+            return format!("http://127.0.0.1:{NANBEIGE_DEFAULT_PORT}");
         }
         if lfm_profile(profile) { return format!("http://127.0.0.1:{LFM_DEFAULT_PORT}"); }
         format!("http://127.0.0.1:{}", self.backend_port)
@@ -690,6 +697,10 @@ impl RuntimeManager {
             drop(inner);
             return self.start_lfm(profile, generation);
         }
+        if nanbeige_profile(profile) {
+            drop(inner);
+            return self.start_nanbeige(profile, generation);
+        }
 
         let model = self.install_root.join("OpenCore-Code-Single-File.gguf");
         let server = self.install_root.join("runtime").join("llama-server.exe");
@@ -881,6 +892,66 @@ impl RuntimeManager {
         Ok(self.snapshot_locked(&mut inner))
     }
 
+    fn start_nanbeige(&self, profile: &str, generation: u64) -> Result<RuntimeSnapshot, String> {
+        let checkpoint = self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE);
+        if !checkpoint.is_file() {
+            return self.fail_start(profile, "Install Nanbeige BF16 from the Models tab before starting it".into());
+        }
+        let server = self.doucode_llama_server();
+        if !server.is_file() {
+            return self.fail_start(profile, "The bundled Nanbeige-compatible llama-server is missing".into());
+        }
+        let mut ports = vec![NANBEIGE_DEFAULT_PORT];
+        if echo_profile(profile) { ports.push(self.echo_port); }
+        if let Some(port) = ports.iter().find(|port| Self::port_open(**port)) {
+            return self.fail_start(profile, format!("Nanbeige model port {port} is in use; stop that runtime first"));
+        }
+        if self.stop_generation.load(Ordering::SeqCst) != generation { return Err("Runtime loading stopped".into()); }
+        if let Ok(mut inner) = self.inner.lock() {
+            inner.loading_phase = "Loading Nanbeige BF16".into();
+            inner.loading_step = 1;
+        }
+        let checkpoint_arg = checkpoint.to_string_lossy().into_owned();
+        let port_arg = NANBEIGE_DEFAULT_PORT.to_string();
+        let mut command = self.command(&server);
+        command.current_dir(server.parent().unwrap_or(&self.install_root))
+            .args(["-m", checkpoint_arg.as_str(), "--host", "127.0.0.1", "--port", port_arg.as_str()])
+            .args(["-ngl", "99", "-c", "0", "-t", "4", "--no-kv-offload"])
+            .stdout(Stdio::piped()).stderr(Stdio::piped());
+        let mut child = match command.spawn() {
+            Ok(child) => child,
+            Err(error) => return self.fail_start(profile, format!("Could not start Nanbeige BF16: {error}")),
+        };
+        let job = match Self::own_child(&mut child) {
+            Ok(job) => job, Err(error) => return self.fail_start(profile, error),
+        };
+        Self::pipe_logs(self.store.clone(), "Nanbeige", &mut child);
+        {
+            let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
+            inner.model = Some(child);
+            inner.model_job = Some(job);
+            inner.attached_backend = Some(format!("http://127.0.0.1:{NANBEIGE_DEFAULT_PORT}"));
+        }
+        if let Err(error) = self.wait_ready(NANBEIGE_DEFAULT_PORT, "/health", "Nanbeige", RuntimeChild::Model, generation) {
+            return self.fail_start(profile, error);
+        }
+        if echo_profile(profile) {
+            if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = "Starting ECHO archive".into(); inner.loading_step = 2; }
+            if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{NANBEIGE_DEFAULT_PORT}"), None) {
+                return self.fail_start(profile, error);
+            }
+            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
+                return self.fail_start(profile, error);
+            }
+        }
+        let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
+        inner.status = "running".into();
+        inner.loading_phase = "Ready".into();
+        inner.loading_step = 3;
+        inner.load_duration_ms = inner.loading_started.take().map(|started| started.elapsed().as_millis() as u64);
+        Ok(self.snapshot_locked(&mut inner))
+    }
+
     pub fn stop(&self) -> Result<(), String> {
         self.request_stop();
         let _gate = self.start_gate.lock().map_err(|e| e.to_string())?;
@@ -932,6 +1003,7 @@ impl RuntimeManager {
         } else {
             match inner.profile.as_str() {
                 "echo" | "native1m" | "doucode" => ("system RAM".to_string(), "Q4_0".to_string()),
+                "nanbeige-bf16" | "nanbeige-bf16-echo" => ("system RAM".to_string(), "F16 KV".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
                 "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
                 "dualcore-echo" | "fusioncore-echo" => ("GPU".to_string(), "F16 KV; ECHO archive for long-term memory".to_string()),
@@ -948,11 +1020,13 @@ impl RuntimeManager {
             .and_then(|port| port.parse::<u16>().ok())
             .unwrap_or_else(|| match selected_profile {
                 "doucode" => DOUCODE_DEFAULT_PORT,
+                "nanbeige-bf16" | "nanbeige-bf16-echo" => NANBEIGE_DEFAULT_PORT,
                 "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => LFM_DEFAULT_PORT,
                 _ => self.backend_port,
             });
         let model_path = match selected_profile {
             "doucode" => self.doucode_release_dir().display().to_string(),
+            "nanbeige-bf16" | "nanbeige-bf16-echo" => self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE).display().to_string(),
             "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => self.install_root.join("models/lfm").join(LFM_FILE).display().to_string(),
             _ => self.install_root.join("OpenCore-Code-Single-File.gguf").display().to_string(),
         };
@@ -970,6 +1044,7 @@ impl RuntimeManager {
             context_size: match selected_profile {
                 "native1m" => 1_000_000,
                 "doucode" => DOUCODE_MODEL_CONTEXT,
+                "nanbeige-bf16" | "nanbeige-bf16-echo" => 262_144,
                 "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => lfm_context(selected_profile),
                 _ => ECHO_MODEL_CONTEXT,
             },
@@ -1221,6 +1296,31 @@ mod tests {
         assert!(manager.select_profile("fusioncore-kv").is_ok());
         assert!(!echo_profile("dualcore-kv"));
         assert!(!echo_profile("fusioncore-kv"));
+        drop(manager);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn standalone_nanbeige_profiles_are_supported_and_only_echo_variant_uses_archive() {
+        for profile in ["nanbeige-bf16", "nanbeige-bf16-echo"] {
+            assert!(supported_profile(profile), "{profile} must be a selectable runtime profile");
+        }
+        assert!(!echo_profile("nanbeige-bf16"));
+        assert!(echo_profile("nanbeige-bf16-echo"));
+    }
+
+    #[test]
+    fn selecting_standalone_nanbeige_keeps_one_model_profile_and_pinned_path() {
+        let path = std::env::temp_dir().join(format!("opencore-nanbeige-profile-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = Arc::new(EventStore::open(&path).unwrap());
+        let manager = RuntimeManager::new(store);
+        manager.select_profile("nanbeige-bf16-echo").unwrap();
+        let snapshot = manager.snapshot();
+        assert_eq!(snapshot.status, "stopped");
+        assert_eq!(snapshot.context_size, 262_144);
+        assert_eq!(snapshot.backend_port, NANBEIGE_DEFAULT_PORT);
+        assert!(snapshot.model_path.ends_with("Nanbeige_Nanbeige4.2-3B-bf16.gguf"));
+        assert_eq!(manager.direct_backend_url(), format!("http://127.0.0.1:{NANBEIGE_DEFAULT_PORT}"));
         drop(manager);
         let _ = std::fs::remove_file(path);
     }

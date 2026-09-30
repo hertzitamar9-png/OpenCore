@@ -28,6 +28,15 @@
       "bytes": 3595603104
     },
     {
+      "id": "nanbeige-bf16-gguf",
+      "path": "models/nanbeige/Nanbeige_Nanbeige4.2-3B-bf16.gguf",
+      "repo": "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF",
+      "revision": "17562eefe9752007209148d5f7a6e275fc8d8077",
+      "filename": "Nanbeige_Nanbeige4.2-3B-bf16.gguf",
+      "sha256": "f0802842ea97d02ed028ce93db7b10e7efc69c650c399046d942c28ed507df44",
+      "bytes": 8343845760
+    },
+    {
       "id": "opencore-apex",
       "path": "OpenCore-Code-Single-File.gguf",
       "repo": "Pita-Ai/OpenCore-code-10kexperts-3tcontext-apex-echo-max",
@@ -351,6 +360,30 @@
       "license": "Apache-2.0",
       "experimental": true,
       "note": "Self-reported review scores are not correctness probabilities.",
+      "selectable": true
+    },
+    {
+      "id": "nanbeige-bf16",
+      "label": "Nanbeige BF16",
+      "description": "Standalone Nanbeige4.2-3B · BF16 weights",
+      "precision": "BF16",
+      "contextTokens": 262144,
+      "artifacts": ["nanbeige-bf16-gguf"],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Single-model profile using the pinned BF16 GGUF. Native 262,144-token context; speed and long-context quality are not yet qualified.",
+      "selectable": true
+    },
+    {
+      "id": "nanbeige-bf16-echo",
+      "label": "Nanbeige BF16 ECHO",
+      "description": "Standalone Nanbeige4.2-3B · ECHO archive retrieval",
+      "precision": "BF16",
+      "contextTokens": 262144,
+      "artifacts": ["nanbeige-bf16-gguf"],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Uses the same single BF16 checkpoint with ECHO archive retrieval. Active model context is 262,144 tokens; this is not unbounded simultaneous attention.",
       "selectable": true
     },
     {

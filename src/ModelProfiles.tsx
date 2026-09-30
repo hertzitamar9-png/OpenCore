@@ -5,6 +5,8 @@ export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | 
   { id: "echo", label: "ECHO 3T", description: "Addressable history target · exact archive" },
   { id: "native1m", label: "1M extended", description: "1,000,000-token YaRN window · trained context 262,144" },
   { id: "doucode", label: "DuoCore", description: "K2 + Nanbeige · competing drafts, one selected answer" },
+  { id: "nanbeige-bf16", label: "Nanbeige BF16", description: "One Nanbeige model · BF16 weights" },
+  { id: "nanbeige-bf16-echo", label: "Nanbeige BF16 ECHO", description: "One Nanbeige model · ECHO archive retrieval" },
   { id: "dualcore-kv", label: "DualCore KV", description: "Two LFM Q8 brains · 131K native context" },
   { id: "dualcore-echo", label: "DualCore ECHO", description: "Two LFM Q8 brains · ECHO archive · incremental KV" },
   { id: "fusioncore-kv", label: "FusionCore KV", description: "Two coupled LFM towers · 131K native context" },

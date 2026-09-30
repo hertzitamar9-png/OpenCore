@@ -417,6 +417,22 @@ mod tests {
             assert!(!model.note.contains("ECHO archive"));
         }
     }
+    #[test] fn standalone_nanbeige_profiles_share_the_pinned_bf16_checkpoint() {
+        let catalog = manifest().unwrap();
+        let standard = catalog.models.iter().find(|model| model.id == "nanbeige-bf16").unwrap();
+        let echo = catalog.models.iter().find(|model| model.id == "nanbeige-bf16-echo").unwrap();
+        assert!(standard.selectable && echo.selectable);
+        assert_eq!(standard.precision, "BF16");
+        assert_eq!(echo.precision, "BF16");
+        assert_eq!(standard.context_tokens, 262_144);
+        assert_eq!(echo.context_tokens, 262_144);
+        assert_eq!(standard.artifacts, echo.artifacts);
+        let artifact = catalog.artifacts.iter().find(|artifact| artifact.id == "nanbeige-bf16-gguf").unwrap();
+        assert_eq!(artifact.repo, "bartowski/Nanbeige_Nanbeige4.2-3B-GGUF");
+        assert_eq!(artifact.filename, "Nanbeige_Nanbeige4.2-3B-bf16.gguf");
+        assert_eq!(artifact.bytes, 8_343_845_760);
+        assert_eq!(artifact.sha256, "f0802842ea97d02ed028ce93db7b10e7efc69c650c399046d942c28ed507df44");
+    }
     #[test] fn removing_one_variant_preserves_shared_weights_and_history() {
         let _test_guard = MODEL_CATALOG_TEST_LOCK.lock().unwrap();
         let root = std::env::temp_dir().join(format!("opencore-catalog-{}", uuid::Uuid::new_v4()));
