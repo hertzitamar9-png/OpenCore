@@ -223,6 +223,25 @@ pub fn page(root: &Path, archive_file: &str, page_id: &str) -> Result<String, St
     exact_text(&compressed, &hash)
 }
 
+pub fn page_scoped(root: &Path, archive_file: &str, page_id: &str, conversation_ids: &[String]) -> Result<String, String> {
+    if conversation_ids.is_empty() {
+        return Err("No ECHO conversations are available in the active scope".into());
+    }
+    if archive_file != Path::new(archive_file).file_name().unwrap_or_default().to_string_lossy()
+        || !archive_file.ends_with(".db") || page_id.len() != 64 || !page_id.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("Invalid archive page address".into());
+    }
+    let connection = open(&root.join(archive_file))?;
+    let (conversation_id, hash, compressed): (String, String, Vec<u8>) = connection.query_row(
+        "SELECT conversation_id,content_hash,compressed_bytes FROM pages WHERE page_id=?1", params![page_id],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+    ).map_err(|error| error.to_string())?;
+    if !conversation_ids.contains(&conversation_id) {
+        return Err("ECHO archive page is outside the active conversation/project scope".into());
+    }
+    exact_text(&compressed, &hash)
+}
+
 pub fn pages(root: &Path, conversation_id: &str, offset: usize, limit: usize) -> Result<Vec<ArchivePageRef>, String> {
     if conversation_id.trim().is_empty() || limit == 0 { return Ok(Vec::new()); }
     let mut result = Vec::new();
@@ -339,6 +358,8 @@ mod tests {
         let found = search(&root, "exact code", 10, &[]).unwrap();
         assert_eq!(found.len(), 1);
         assert_eq!(page(&root, &found[0].archive_file, &found[0].page_id).unwrap(), source);
+        assert_eq!(page_scoped(&root, &found[0].archive_file, &found[0].page_id, &["chat-1".into()]).unwrap(), source);
+        assert!(page_scoped(&root, &found[0].archive_file, &found[0].page_id, &["other-chat".into()]).is_err());
         assert!(search(&root, "exact code", 10, &["other".into()]).unwrap().is_empty());
         assert_eq!(overview(&root).unwrap().source_bytes, source.len() as u64);
         let listed = pages(&root, "chat-1", 0, 20).unwrap();

@@ -62,6 +62,26 @@ mod tests {
     }
 
     #[test]
+    fn echo_search_scope_includes_only_conversations_in_the_active_project() {
+        let root = std::env::temp_dir().join(format!("opencore-echo-scope-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = EventStore::open(&root.join("history.sqlite3")).unwrap();
+        let project = store.create_project("Project A", &root).unwrap();
+        for id in ["project-chat-a", "project-chat-b", "other-chat", "unassigned-chat"] {
+            store.ensure_conversation(id, "OpenCore", "history", id).unwrap();
+        }
+        store.set_project_by_id("project-chat-a", Some(&project.id), ProjectAssignment::Manual).unwrap();
+        store.set_project_by_id("project-chat-b", Some(&project.id), ProjectAssignment::Manual).unwrap();
+
+        assert_eq!(store.echo_conversation_scope("project-chat-a").unwrap(), vec!["project-chat-a", "project-chat-b"]);
+        assert_eq!(store.echo_conversation_scope("other-chat").unwrap(), vec!["other-chat"]);
+        assert_eq!(store.echo_conversation_scope("missing-chat").unwrap(), vec!["missing-chat"]);
+
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn folder_projects_distinguish_same_names_and_manual_moves_survive_import() {
         let root = std::env::temp_dir().join(format!("opencore-folder-store-{}", uuid::Uuid::new_v4()));
         let left = root.join("left").join("app");
@@ -1415,6 +1435,21 @@ impl EventStore {
             .map_err(|e| e.to_string())?;
         rows.collect::<Result<Vec<_>, _>>()
             .map_err(|e| e.to_string())
+    }
+
+    pub fn echo_conversation_scope(&self, conversation_id: &str) -> Result<Vec<String>, String> {
+        let connection = self.connection.lock().map_err(|e| e.to_string())?;
+        let project_id: Option<String> = connection.query_row(
+            "SELECT project_id FROM conversations WHERE id=?1", [conversation_id], |row| row.get(0),
+        ).optional().map_err(|error| error.to_string())?.flatten();
+        let Some(project_id) = project_id else { return Ok(vec![conversation_id.to_string()]); };
+        let mut statement = connection.prepare("SELECT id FROM conversations WHERE project_id=?1 ORDER BY id")
+            .map_err(|error| error.to_string())?;
+        let rows = statement.query_map([project_id], |row| row.get::<_, String>(0))
+            .map_err(|error| error.to_string())?;
+        let mut ids = rows.collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+        if !ids.iter().any(|id| id == conversation_id) { ids.push(conversation_id.to_string()); }
+        Ok(ids)
     }
 
     pub fn conversation(&self, id: &str) -> Result<Vec<TimelineEntry>, String> {
