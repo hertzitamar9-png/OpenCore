@@ -173,6 +173,13 @@ For ECHO profiles, set `request_isolation` to
 conversation ID and the exact request hash for each task. This avoids leaking
 earlier benchmark tasks into later requests.
 
+Identities naming an ECHO profile (`echo`, `native1m`, `unsloth-echo`,
+`doucode`, `dualcore-echo`, or `fusioncore-echo`) must point at the running ECHO
+proxy, not its upstream model port. Capture verifies `/echo/stats` reports
+`history_mode: persistent_echo` before speed qualification or benchmark requests;
+grading also requires the recorded route verification. Direct-backend captures
+cannot be presented as ECHO results.
+
 ## Grade saved answers
 
 First stop the runtime owned by the benchmark to release the GPU. Grading uses

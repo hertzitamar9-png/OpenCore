@@ -28,6 +28,13 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if self.path.startswith("/echo/stats"):
+            self.server.echo_route_requests += 1
+            if self.server.echo_proxy:
+                self.reply(200, {"history_mode": "persistent_echo", "archive_capacity": "limited by disk and SQLite"})
+            else:
+                self.reply(404, {"error": "not found"})
+            return
         self.reply(200, {"status": "ok", "model": "control-model"})
 
     def do_POST(self):
@@ -85,6 +92,8 @@ class CaptureTests(unittest.TestCase):
         self.server.requests, self.server.speed_requests, self.server.tokenize_requests = [], [], []
         self.server.fail_beta, self.server.malformed = False, False
         self.server.preflight_delay, self.server.preflight_token_count = 0, 80
+        self.server.echo_route_requests = 0
+        self.server.echo_proxy = False
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
@@ -196,6 +205,43 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(self.server.requests, [])
         self.assertEqual(len(self.server.speed_requests), 1)
         self.assertFalse((self.output / "capture-manifest.json").exists())
+
+    def test_echo_profile_rejects_raw_model_endpoint_before_generation(self):
+        identity = json.loads(self.identity.read_text())
+        identity["profile"] = "dualcore-echo"
+        self.identity.write_text(json.dumps(identity))
+        result = self.capture()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ECHO proxy", result.stderr)
+        self.assertEqual(self.server.echo_route_requests, 1)
+        self.assertEqual(self.server.speed_requests, [])
+        self.assertEqual(self.server.requests, [])
+
+    def test_echo_capture_records_verified_archive_route(self):
+        self.server.echo_proxy = True
+        identity = json.loads(self.identity.read_text())
+        identity["profile"] = "dualcore-echo"
+        self.identity.write_text(json.dumps(identity))
+        result = self.capture()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = json.loads((self.output / "capture-manifest.json").read_text())
+        self.assertEqual(manifest["echo_route_verification"]["status"], "passed")
+        self.assertEqual(manifest["echo_route_verification"]["history_mode"], "persistent_echo")
+        self.assertEqual(self.server.echo_route_requests, 1)
+        benchmark_capture.load_grading_capture(self.inputs, self.output)
+
+    def test_grading_rejects_echo_capture_without_verified_archive_route(self):
+        self.server.echo_proxy = True
+        identity = json.loads(self.identity.read_text())
+        identity["profile"] = "dualcore-echo"
+        self.identity.write_text(json.dumps(identity))
+        self.assertEqual(self.capture().returncode, 0)
+        path = self.output / "capture-manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest.pop("echo_route_verification")
+        path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "(?i)ECHO route"):
+            benchmark_capture.load_grading_capture(self.inputs, self.output)
 
     def test_failed_request_retains_server_error_body_without_retrying(self):
         self.server.fail_beta = True

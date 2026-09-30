@@ -23,6 +23,8 @@ SPEED_PROBE_PROMPT = (
 SPEED_PROBE_MIN_TOKENS = 50
 SPEED_PROBE_MIN_TOKENS_PER_SECOND = 20.0
 SPEED_PROBE_MAX_TOKENS = 256
+ECHO_PROFILES = frozenset({"echo", "native1m", "unsloth-echo", "doucode",
+                           "dualcore-echo", "fusioncore-echo"})
 
 
 def json_bytes(value):
@@ -181,8 +183,19 @@ def load_grading_capture(inputs_path, capture_dir, identity_path=None):
                 or qualification.get("visible_tokens_per_second", 0) < SPEED_PROBE_MIN_TOKENS_PER_SECOND):
             raise ValueError("Speed qualification does not satisfy the bound model throughput gate")
         manifest["speed_qualification_verified"] = True
+        profile = (manifest.get("identity") or {}).get("profile")
+        if profile in ECHO_PROFILES:
+            route = manifest.get("echo_route_verification")
+            if (not isinstance(route, dict) or route.get("status") != "passed"
+                    or route.get("profile") != profile
+                    or route.get("history_mode") != "persistent_echo"):
+                raise ValueError("ECHO route verification is missing or invalid")
+            manifest["echo_route_verified"] = True
+        else:
+            manifest["echo_route_verified"] = False
     else:
         manifest["speed_qualification_verified"] = False
+        manifest["echo_route_verified"] = False
     if file_hash(inputs_path) != manifest["binding"]["inputs_sha256"]:
         raise ValueError("Grading input file hash mismatch")
     manifest['identity_validation'] = validate_identity(manifest, capture_dir, identity_path)
@@ -223,6 +236,30 @@ def request(url, payload=None):
         raise urllib.error.HTTPError(error.url, error.code,
                                      f'{error.reason}; response: {detail}',
                                      error.headers, None) from error
+
+
+def verify_echo_route(base_url, identity):
+    profile = identity.get("profile")
+    if profile not in ECHO_PROFILES:
+        return None
+    try:
+        stats = request(base_url + "/echo/stats")
+    except Exception as error:
+        raise RuntimeError(
+            f"ECHO profile {profile} must use the live ECHO proxy; "
+            f"/echo/stats verification failed: {error}"
+        ) from error
+    if not isinstance(stats, dict) or stats.get("history_mode") != "persistent_echo":
+        raise RuntimeError(
+            f"ECHO profile {profile} must use the live ECHO proxy; "
+            "the endpoint did not report persistent_echo history"
+        )
+    return {
+        "status": "passed",
+        "profile": profile,
+        "history_mode": "persistent_echo",
+        "archive_capacity": stats.get("archive_capacity"),
+    }
 
 
 def qualify_speed(base_url, model, identity_hash, output):
@@ -338,6 +375,7 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
             raise ValueError(f"Artifact hash mismatch: {path.name}")
     health = request(base_url + "/health")
     props = request(base_url + "/props")
+    echo_route_verification = verify_echo_route(base_url, identity)
     output.mkdir(parents=True, exist_ok=True)
     manifest_path = output / "capture-manifest.json"
     responses_path = output / "responses.jsonl"
@@ -417,6 +455,7 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
                 "binding": bound, "identity": identity, "health": health, "properties": props,
                 "speed_qualification": speed_qualification,
                 "speed_qualification_sha256": file_hash(output / "speed-qualification.json"),
+                "echo_route_verification": echo_route_verification,
                 "model_quality_measured": False, "samples": len(inputs["rows"]),
                 "completed": len(records), "started": start_time}
     if lineage:
