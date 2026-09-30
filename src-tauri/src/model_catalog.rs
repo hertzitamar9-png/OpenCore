@@ -410,6 +410,8 @@ mod tests {
             let model = catalog.models.iter().find(|model| model.id == id).unwrap();
             assert!(model.selectable, "{id} must remain selectable as an interactive chat model");
             assert!(model.note.contains("incremental F16 KV"));
+            assert_eq!(model.context_tokens, 131_072, "{id} must show the runtime's actual rolling window");
+            assert!(model.note.contains("131,072-token rolling context"), "{id} must distinguish ECHO archive from active attention");
         }
         for id in ["dualcore-kv", "fusioncore-kv"] {
             let model = catalog.models.iter().find(|model| model.id == id).unwrap();

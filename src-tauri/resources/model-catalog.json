@@ -405,13 +405,13 @@
       "label": "DualCore ECHO",
       "description": "Two identical LFM brains with ECHO archive retrieval",
       "precision": "Q8_0 MAX",
-      "contextTokens": 32768,
+      "contextTokens": 131072,
       "artifacts": [
         "lfm-q8"
       ],
       "license": "LFM Open License v1.0",
       "experimental": true,
-      "note": "ECHO archive retrieval supplies relevant older history; incremental F16 KV handles active decoding. One shared checkpoint download; two full weight sets in memory.",
+      "note": "ECHO preserves the exact archive and retrieves relevant older history; active decoding uses a 131,072-token rolling context with incremental F16 KV. One shared checkpoint download; two full weight sets in memory.",
       "selectable": true
     },
     {
@@ -433,13 +433,13 @@
       "label": "FusionCore ECHO",
       "description": "One coupled token loop with ECHO retrieval and incremental KV",
       "precision": "Q8_0 MAX",
-      "contextTokens": 8192,
+      "contextTokens": 131072,
       "artifacts": [
         "lfm-q8"
       ],
       "license": "LFM Open License v1.0",
       "experimental": true,
-      "note": "ECHO archive retrieval supplies relevant older history; incremental F16 KV handles active decoding. One coupled output token stream; hidden feedback remains untuned.",
+      "note": "ECHO preserves the exact archive and retrieves relevant older history; active decoding uses a 131,072-token rolling context with incremental F16 KV. One coupled output token stream; hidden feedback remains untuned.",
       "selectable": true
     },
     {
