@@ -12,6 +12,7 @@ vi.mock("./api", async (importOriginal) => ({
   stageComposerAttachment: stageClipboardAttachment,
 }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
+vi.mock("@tauri-apps/api/app", () => ({ getVersion: vi.fn(async () => "0.2.58") }));
 const eventHandlers = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>());
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, callback: (event: { payload: unknown }) => void) => {
   eventHandlers.set(name, callback);
@@ -19,6 +20,13 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("shows the installed app version rather than a hard-coded release", async () => {
+    render(<App />);
+    await screen.findByLabelText("Message OpenCore");
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(await screen.findByText("OpenCore v0.2.58")).toBeInTheDocument();
+  });
+
   it("shows the bundled OpenCore logo while runtime state is still loading", () => {
     const snapshot = vi.spyOn(api, "snapshot").mockImplementation(() => new Promise(() => {}));
     try {

@@ -3,6 +3,7 @@ import { EchoMemorySettings } from "./EchoMemorySettings";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getVersion } from "@tauri-apps/api/app";
 import {
   Activity,
   Archive,
@@ -170,6 +171,12 @@ function StatusDot({ state }: { state: string }) {
 }
 
 function Navigation({ active, onChange, running, compact = false }: { active: View; onChange: (view: View) => void; running: boolean; compact?: boolean }) {
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    getVersion().then(version => { if (mounted) setAppVersion(version); }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
   return <aside className={`nav-rail ${compact ? "conversation-app-rail" : ""}`}>
     <button className="brand-mini" onClick={() => onChange("overview")} title="OpenCore overview"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><span>OpenCore</span></button>
     <nav>
@@ -181,7 +188,7 @@ function Navigation({ active, onChange, running, compact = false }: { active: Vi
     </nav>
     <div className="nav-footer">
       <div><StatusDot state={running ? "running" : "stopped"} />{running ? "Runtime active" : "Runtime stopped"}</div>
-      <small>OpenCore v0.1.0</small>
+      <small>{appVersion ? `OpenCore v${appVersion}` : "OpenCore"}</small>
     </div>
   </aside>;
 }
