@@ -103,7 +103,8 @@ class CaptureTests(unittest.TestCase):
         self.thread.join()
         self.temp.cleanup()
 
-    def capture(self, disk_free=300000000000, *, identity=None, output=None, resume_from=None):
+    def capture(self, disk_free=300000000000, *, identity=None, output=None, resume_from=None,
+                thinking_budget_tokens=None):
         # Test-only child interpreter: CI fixture storage is unrelated to the
         # user's reserve. The production CLI has no flag to bypass that guard.
         runner = ("import runpy,sys; from types import SimpleNamespace; from unittest.mock import patch; "
@@ -117,6 +118,8 @@ class CaptureTests(unittest.TestCase):
                 "--output", str(output), "--max-tokens", "8"]
         if resume_from:
             args.extend(["--resume-from", str(resume_from)])
+        if thinking_budget_tokens is not None:
+            args.extend(["--thinking-budget-tokens", str(thinking_budget_tokens)])
         return subprocess.run(args, capture_output=True, text=True, timeout=20)
 
     def test_resume_keeps_verified_rows_with_hash_bound_runtime_lineage(self):
@@ -183,6 +186,33 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(manifest["speed_qualification_sha256"],
                          benchmark_capture.file_hash(self.output / "speed-qualification.json"))
         benchmark_capture.load_grading_capture(self.inputs, self.output)
+
+    def test_reasoning_budget_is_bound_to_preflight_and_every_sample(self):
+        identity = json.loads(self.identity.read_text())
+        identity['request_isolation'] = 'fresh_conversation_per_sample'
+        self.identity.write_text(json.dumps(identity))
+        result = self.capture(thinking_budget_tokens=3072)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.server.speed_requests[0]['thinking_budget_tokens'], 3072)
+        self.assertTrue(all(row['thinking_budget_tokens'] == 3072 for row in self.server.requests))
+        manifest = json.loads((self.output / 'capture-manifest.json').read_text())
+        self.assertEqual(manifest['binding']['thinking_budget_tokens'], 3072)
+        qualification = json.loads((self.output / 'speed-qualification.json').read_text())
+        self.assertEqual(qualification['thinking_budget_tokens'], 3072)
+        records = [json.loads(line) for line in (self.output / 'responses.jsonl').read_text().splitlines()]
+        self.assertTrue(all(row['request']['thinking_budget_tokens'] == 3072 for row in records))
+        benchmark_capture.load_grading_capture(self.inputs, self.output)
+
+    def test_resume_rejects_a_different_reasoning_budget(self):
+        self.server.fail_beta = True
+        self.assertNotEqual(self.capture(thinking_budget_tokens=3072).returncode, 0)
+        first_response = (self.output / 'responses.jsonl').read_bytes()
+        resumed = self.root / 'different-budget-resume'
+        result = self.capture(output=resumed, resume_from=self.output)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('generation settings', result.stderr)
+        self.assertFalse(resumed.exists())
+        self.assertEqual((self.output / 'responses.jsonl').read_bytes(), first_response)
 
     def test_grading_rejects_tampered_speed_qualification(self):
         self.assertEqual(self.capture().returncode, 0)

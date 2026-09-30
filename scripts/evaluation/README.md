@@ -159,6 +159,11 @@ answers. New captures retain the exact `identity.json` bytes, and replay verifie
 that file hash against the binding and embedded model metadata. It accepts loopback HTTP endpoints only and enforces the user's 100 GB
 free-space reserve.
 
+Use optional `--thinking-budget-tokens N` to bind an explicit positive reasoning
+budget into speed preflight, every sample request, the manifest, and resume
+matching. Omitting it leaves the server's model-default reasoning behavior
+unchanged. Captures with different reasoning budgets cannot be resumed together.
+
 Before creating a new or resumed capture, the runner sends a separate fixed
 qualification prompt, tokenizes the selected visible answer through the loaded
 model's exact `/tokenize` endpoint, and requires at least 50 answer tokens at

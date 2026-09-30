@@ -103,6 +103,9 @@ def validate_records(inputs, records, complete, request_binding=None, allowed_id
                     or payload.get('temperature') != 0 or payload.get('stream') is not False
                     or payload.get('max_tokens') != request_binding['max_tokens']):
                 raise ValueError(f'Isolated request differs from the official input or generation binding: {identity}')
+            if ('thinking_budget_tokens' in request_binding
+                    and payload.get('thinking_budget_tokens') != request_binding['thinking_budget_tokens']):
+                raise ValueError(f'Isolated request reasoning budget differs from its generation binding: {identity}')
     if complete and seen != set(expected):
         raise ValueError("Capture is incomplete; every official task needs one answer")
 
@@ -262,7 +265,7 @@ def verify_echo_route(base_url, identity):
     }
 
 
-def qualify_speed(base_url, model, identity_hash, output):
+def qualify_speed(base_url, model, identity_hash, output, thinking_budget_tokens=None):
     """Require exact-tokenized selected-answer throughput before capture."""
     probe = {
         "model": model,
@@ -273,6 +276,8 @@ def qualify_speed(base_url, model, identity_hash, output):
         "stream": False,
         "conversation_id": "speed-qualification-" + uuid.uuid4().hex,
     }
+    if thinking_budget_tokens is not None:
+        probe['thinking_budget_tokens'] = thinking_budget_tokens
     started = time.perf_counter()
     result = {
         "schema": 1,
@@ -283,6 +288,8 @@ def qualify_speed(base_url, model, identity_hash, output):
         "minimum_visible_tokens_per_second": SPEED_PROBE_MIN_TOKENS_PER_SECOND,
         "started": datetime.now(timezone.utc).isoformat(),
     }
+    if thinking_budget_tokens is not None:
+        result['thinking_budget_tokens'] = thinking_budget_tokens
     try:
         response = request(base_url + "/v1/chat/completions", probe)
         elapsed = time.perf_counter() - started
@@ -340,13 +347,15 @@ def _validate_runtime_transition(old, new):
         raise ValueError(f'Runtime identity lineage changes files outside the reviewed parser: {changed}')
 
 
-def _validate_resume_compatibility(parent_manifest, parent_dir, inputs_hash, model, max_tokens, identity):
+def _validate_resume_compatibility(parent_manifest, parent_dir, inputs_hash, model, max_tokens,
+                                   identity, thinking_budget_tokens=None):
     if parent_manifest.get('status') not in ('partial', 'in_progress'):
         raise ValueError('Only a partial or interrupted capture can be resumed')
     old_binding = parent_manifest.get('binding', {})
     if (old_binding.get('inputs_sha256') != inputs_hash or old_binding.get('model') != model
             or old_binding.get('max_tokens') != max_tokens or old_binding.get('temperature') != 0
             or old_binding.get('stream') is not False
+            or old_binding.get('thinking_budget_tokens') != thinking_budget_tokens
             or old_binding.get('request_isolation') != identity.get('request_isolation')):
         raise ValueError('Resume source differs in benchmark inputs or generation settings')
     validate_identity(parent_manifest, parent_dir)
@@ -354,13 +363,18 @@ def _validate_resume_compatibility(parent_manifest, parent_dir, inputs_hash, mod
     _validate_runtime_transition(old, identity)
 
 
-def capture(base_url, model, inputs_path, identity_path, output, max_tokens, resume_from=None):
+def capture(base_url, model, inputs_path, identity_path, output, max_tokens, resume_from=None,
+            thinking_budget_tokens=None):
     parts = urllib.parse.urlsplit(base_url)
     if parts.scheme != "http" or parts.hostname not in ("127.0.0.1", "localhost", "::1") or parts.username:
         raise ValueError("Benchmark capture accepts only a local loopback HTTP endpoint")
     base_url = base_url.rstrip("/")
     if max_tokens < 1:
         raise ValueError("Evaluation token budget must be explicit and positive")
+    if (thinking_budget_tokens is not None
+            and (isinstance(thinking_budget_tokens, bool)
+                 or not isinstance(thinking_budget_tokens, int) or thinking_budget_tokens < 1)):
+        raise ValueError("Thinking budget must be a positive integer when specified")
     inputs = load_inputs(inputs_path)
     identity_bytes = identity_path.read_bytes()
     identity = json.loads(identity_bytes.decode('utf-8-sig'))
@@ -376,13 +390,14 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
     health = request(base_url + "/health")
     props = request(base_url + "/props")
     echo_route_verification = verify_echo_route(base_url, identity)
-    output.mkdir(parents=True, exist_ok=True)
     manifest_path = output / "capture-manifest.json"
     responses_path = output / "responses.jsonl"
     errors_path = output / "errors.jsonl"
     snapshot_path = output / 'identity.json'
     bound = {"inputs_sha256": file_hash(inputs_path), "identity_sha256": hashlib.sha256(identity_bytes).hexdigest(),
              "model": model, "max_tokens": max_tokens, "temperature": 0, "stream": False}
+    if thinking_budget_tokens is not None:
+        bound['thinking_budget_tokens'] = thinking_budget_tokens
     isolation = identity.get('request_isolation')
     if isolation is not None:
         if isolation != 'fresh_conversation_per_sample':
@@ -407,7 +422,8 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         parent_responses_path = resume_from / 'responses.jsonl'
         parent_manifest = json.loads(parent_manifest_path.read_text(encoding='utf-8-sig'))
         _validate_resume_compatibility(parent_manifest, resume_from, bound['inputs_sha256'], model,
-                                       max_tokens, identity)
+                                       max_tokens, identity, thinking_budget_tokens)
+        output.mkdir(parents=True, exist_ok=True)
         parent_binding = parent_manifest['binding']
         parent_records = [json.loads(line) for line in parent_responses_path.read_bytes().splitlines()]
         parent_validation = validate_identity(parent_manifest, resume_from)
@@ -439,10 +455,11 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         if file_hash(responses_path) != previous["responses_sha256"]:
             raise ValueError("Completed response file hash mismatch")
         return previous
+    output.mkdir(parents=True, exist_ok=True)
     if shutil.disk_usage(output).free < 100_000_000_000:
         raise RuntimeError("Storage reserve below 100 GB; benchmark not started")
     speed_qualification = qualify_speed(
-        base_url, model, bound["identity_sha256"], output)
+        base_url, model, bound["identity_sha256"], output, thinking_budget_tokens)
     responses_path.touch(exist_ok=True)
     if snapshot_path.exists() and snapshot_path.read_bytes() != identity_bytes:
         raise ValueError('Existing identity snapshot differs; refusing to replace evidence')
@@ -475,6 +492,8 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         messages.append({"role": "user", "content": row["prompt"]})
         payload = {"model": model, "messages": messages, "temperature": 0,
                    "max_tokens": max_tokens, "stream": False}
+        if thinking_budget_tokens is not None:
+            payload['thinking_budget_tokens'] = thinking_budget_tokens
         if isolation:
             payload['conversation_id'] = 'benchmark-' + uuid.uuid4().hex
         started = time.perf_counter()
@@ -518,12 +537,14 @@ def main():
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-tokens", type=int, default=4096)
+    parser.add_argument("--thinking-budget-tokens", type=int,
+                        help="Bind and apply an explicit positive reasoning-token budget to preflight and samples")
     parser.add_argument('--resume-from', type=Path,
                         help='Copy verified rows from a partial capture with only a reviewed parser source change')
     args = parser.parse_args()
     try:
         result = capture(args.url, args.model, args.inputs, args.identity, args.output,
-                         args.max_tokens, args.resume_from)
+                         args.max_tokens, args.resume_from, args.thinking_budget_tokens)
         print(json.dumps({"status": result["status"], "completed": result["completed"]}), flush=True)
         return 0
     except Exception as error:
