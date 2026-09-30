@@ -15,8 +15,8 @@ import urllib.request
 
 APP = Path(__file__).resolve().parents[1]
 ECHO_SERVER = APP / 'src-tauri/resources/echo/echo_server.py'
-PROFILES = {'fusioncore-kv': 131072, 'fusioncore-echo': 8192,
-            'dualcore-kv': 131072, 'dualcore-echo': 32768}
+PROFILES = {'fusioncore-kv': 131072, 'fusioncore-echo': 131072,
+            'dualcore-kv': 131072, 'dualcore-echo': 131072}
 TOOLS = [{'type': 'function', 'function': {'name': 'sum_numbers',
     'description': 'Add two integers.', 'parameters': {'type': 'object',
     'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}},

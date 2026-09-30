@@ -7,6 +7,10 @@ import lfm_http_smoke
 
 
 class SpeedQualificationTests(unittest.TestCase):
+    def test_echo_profiles_use_published_native_context_window(self):
+        self.assertEqual(131072, lfm_http_smoke.PROFILES["dualcore-echo"])
+        self.assertEqual(131072, lfm_http_smoke.PROFILES["fusioncore-echo"])
+
     def test_runtime_command_configures_server_side_reasoning_budget(self):
         command = lfm_http_smoke.build_runtime_command(
             "dualcore-kv", Path("model.gguf"), 8870, thinking_budget_tokens=512
