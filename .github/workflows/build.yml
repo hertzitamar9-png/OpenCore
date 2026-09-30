@@ -60,10 +60,12 @@ jobs:
       - name: Test Rust
         working-directory: src-tauri
         run: cargo test --lib
+      - name: Test release version ordering
+        run: node --test scripts/test-release-versioning.mjs
       - name: Version this push
         shell: powershell
         run: |
-          node -e "const fs=require('fs');const p='src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.version='0.1.'+process.env.GITHUB_RUN_NUMBER;fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n')"
+          node scripts/release-version.mjs $env:GITHUB_RUN_NUMBER
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
