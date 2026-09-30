@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 
 import benchmark_capture
@@ -31,8 +32,22 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        self.server.requests.append(body)
+        if self.path == "/tokenize":
+            self.server.tokenize_requests.append(body)
+            self.reply(200, {"tokens": body.get("content", "").split()})
+            return
         prompt = body["messages"][-1]["content"]
+        if prompt.startswith("SPEED_QUALIFICATION:"):
+            self.server.speed_requests.append(body)
+            time.sleep(self.server.preflight_delay)
+            content = " ".join(f"token{i}" for i in range(self.server.preflight_token_count))
+            self.reply(200, {"id": "speed-fixture", "object": "chat.completion", "model": "control-model",
+                             "choices": [{"index": 0, "message": {"role": "assistant", "content": content},
+                                          "finish_reason": "stop"}],
+                             "usage": {"prompt_tokens": 1, "completion_tokens": self.server.preflight_token_count,
+                                       "total_tokens": self.server.preflight_token_count + 1}})
+            return
+        self.server.requests.append(body)
         if prompt == "beta" and self.server.fail_beta:
             self.server.fail_beta = False
             self.reply(502, {"error": {"message": "controlled interruption"}})
@@ -67,7 +82,9 @@ class CaptureTests(unittest.TestCase):
                                                                 "sha256": hashlib.sha256(runtime.read_bytes()).hexdigest()}]}))
         self.output = self.root / "captures"
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        self.server.requests, self.server.fail_beta, self.server.malformed = [], False, False
+        self.server.requests, self.server.speed_requests, self.server.tokenize_requests = [], [], []
+        self.server.fail_beta, self.server.malformed = False, False
+        self.server.preflight_delay, self.server.preflight_token_count = 0, 80
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
@@ -143,6 +160,43 @@ class CaptureTests(unittest.TestCase):
         self.assertTrue(final.startswith(first))
         self.assertEqual([json.loads(line)["id"] for line in final.splitlines()], ["0", "1"])
 
+    def test_capture_records_exact_visible_answer_speed_qualification(self):
+        result = self.capture()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        qualification = json.loads((self.output / "speed-qualification.json").read_text())
+        self.assertEqual(qualification["status"], "passed")
+        self.assertGreaterEqual(qualification["visible_answer_tokens"], 50)
+        self.assertGreaterEqual(qualification["visible_tokens_per_second"], 20)
+        self.assertEqual(qualification["model"], "control-model")
+        manifest = json.loads((self.output / "capture-manifest.json").read_text())
+        self.assertEqual(manifest["schema"], 2)
+        self.assertEqual(manifest["speed_gate_schema"], 1)
+        self.assertEqual(manifest["speed_qualification_sha256"],
+                         benchmark_capture.file_hash(self.output / "speed-qualification.json"))
+        benchmark_capture.load_grading_capture(self.inputs, self.output)
+
+    def test_grading_rejects_tampered_speed_qualification(self):
+        self.assertEqual(self.capture().returncode, 0)
+        path = self.output / "speed-qualification.json"
+        qualification = json.loads(path.read_text())
+        qualification["visible_tokens_per_second"] = 9999
+        path.write_text(json.dumps(qualification))
+        with self.assertRaisesRegex(ValueError, "(?i)speed qualification hash mismatch"):
+            benchmark_capture.load_grading_capture(self.inputs, self.output)
+
+    def test_slow_profile_is_rejected_before_any_benchmark_sample(self):
+        self.server.preflight_delay = 3.1
+        self.server.preflight_token_count = 55
+        result = self.capture()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("20 tokens/s", result.stderr)
+        qualification = json.loads((self.output / "speed-qualification.json").read_text())
+        self.assertEqual(qualification["status"], "rejected")
+        self.assertLess(qualification["visible_tokens_per_second"], 20)
+        self.assertEqual(self.server.requests, [])
+        self.assertEqual(len(self.server.speed_requests), 1)
+        self.assertFalse((self.output / "capture-manifest.json").exists())
+
     def test_failed_request_retains_server_error_body_without_retrying(self):
         self.server.fail_beta = True
         result = self.capture()
@@ -183,7 +237,8 @@ class CaptureTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Storage reserve below 100 GB', result.stderr)
         self.assertEqual(self.server.requests, [])
-        self.assertEqual((self.output / 'responses.jsonl').read_bytes(), b'')
+        self.assertEqual(self.server.speed_requests, [])
+        self.assertFalse((self.output / 'responses.jsonl').exists())
 
     def test_malformed_api_response_remains_partial(self):
         self.server.malformed = True

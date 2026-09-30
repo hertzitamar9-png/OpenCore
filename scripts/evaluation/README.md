@@ -159,6 +159,15 @@ answers. New captures retain the exact `identity.json` bytes, and replay verifie
 that file hash against the binding and embedded model metadata. It accepts loopback HTTP endpoints only and enforces the user's 100 GB
 free-space reserve.
 
+Before creating a new or resumed capture, the runner sends a separate fixed
+qualification prompt, tokenizes the selected visible answer through the loaded
+model's exact `/tokenize` endpoint, and requires at least 50 answer tokens at
+20 visible tokens per second. It stores the request/result hashes and timing in
+`speed-qualification.json`; the capture manifest binds that file, and grading
+rejects changed or failed qualification evidence. A profile that cannot expose
+its exact tokenizer fails closed. Historical schema-2 captures remain gradeable
+but are marked as not speed-qualified by this gate.
+
 For ECHO profiles, set `request_isolation` to
 `fresh_conversation_per_sample` in the identity. The tool records a distinct
 conversation ID and the exact request hash for each task. This avoids leaking

@@ -15,6 +15,15 @@ import urllib.error
 import urllib.request
 import uuid
 
+SPEED_PROBE_PROMPT = (
+    "SPEED_QUALIFICATION: Explain how to debug a slow local language-model response. "
+    "Write one useful, detailed answer of roughly 100 to 140 words so the visible answer "
+    "is long enough for a stable throughput measurement."
+)
+SPEED_PROBE_MIN_TOKENS = 50
+SPEED_PROBE_MIN_TOKENS_PER_SECOND = 20.0
+SPEED_PROBE_MAX_TOKENS = 256
+
 
 def json_bytes(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -156,6 +165,24 @@ def load_grading_capture(inputs_path, capture_dir, identity_path=None):
     manifest = json.loads((capture_dir / "capture-manifest.json").read_text(encoding="utf-8-sig"))
     if manifest.get("status") != "complete":
         raise ValueError("Only a complete capture can be graded")
+    if manifest.get("speed_gate_schema", 0) >= 1:
+        qualification_path = capture_dir / "speed-qualification.json"
+        if (not qualification_path.is_file()
+                or file_hash(qualification_path) != manifest.get("speed_qualification_sha256")):
+            raise ValueError("Speed qualification hash mismatch")
+        qualification = json.loads(qualification_path.read_text(encoding="utf-8-sig"))
+        binding = manifest.get("binding", {})
+        if (qualification.get("status") != "passed"
+                or qualification.get("model") != binding.get("model")
+                or qualification.get("runtime_identity_sha256") != binding.get("identity_sha256")
+                or qualification.get("minimum_visible_answer_tokens", 0) < SPEED_PROBE_MIN_TOKENS
+                or qualification.get("minimum_visible_tokens_per_second", 0) < SPEED_PROBE_MIN_TOKENS_PER_SECOND
+                or qualification.get("visible_answer_tokens", 0) < SPEED_PROBE_MIN_TOKENS
+                or qualification.get("visible_tokens_per_second", 0) < SPEED_PROBE_MIN_TOKENS_PER_SECOND):
+            raise ValueError("Speed qualification does not satisfy the bound model throughput gate")
+        manifest["speed_qualification_verified"] = True
+    else:
+        manifest["speed_qualification_verified"] = False
     if file_hash(inputs_path) != manifest["binding"]["inputs_sha256"]:
         raise ValueError("Grading input file hash mismatch")
     manifest['identity_validation'] = validate_identity(manifest, capture_dir, identity_path)
@@ -196,6 +223,61 @@ def request(url, payload=None):
         raise urllib.error.HTTPError(error.url, error.code,
                                      f'{error.reason}; response: {detail}',
                                      error.headers, None) from error
+
+
+def qualify_speed(base_url, model, identity_hash, output):
+    """Require exact-tokenized selected-answer throughput before capture."""
+    probe = {
+        "model": model,
+        "messages": [{"role": "system", "content": "You are a helpful assistant."},
+                     {"role": "user", "content": SPEED_PROBE_PROMPT}],
+        "temperature": 0,
+        "max_tokens": SPEED_PROBE_MAX_TOKENS,
+        "stream": False,
+        "conversation_id": "speed-qualification-" + uuid.uuid4().hex,
+    }
+    started = time.perf_counter()
+    result = {
+        "schema": 1,
+        "model": model,
+        "runtime_identity_sha256": identity_hash,
+        "request_sha256": hashlib.sha256(json_bytes(probe)).hexdigest(),
+        "minimum_visible_answer_tokens": SPEED_PROBE_MIN_TOKENS,
+        "minimum_visible_tokens_per_second": SPEED_PROBE_MIN_TOKENS_PER_SECOND,
+        "started": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        response = request(base_url + "/v1/chat/completions", probe)
+        elapsed = time.perf_counter() - started
+        if response.get("model") != model:
+            raise ValueError("Speed qualification response model differs from the requested model")
+        answer = completion(response)
+        token_result = request(base_url + "/tokenize", {"content": answer})
+        tokens = token_result.get("tokens")
+        if not isinstance(tokens, list):
+            raise ValueError("Exact tokenizer endpoint did not return a token list")
+        count = len(tokens)
+        rate = count / elapsed if elapsed > 0 else 0.0
+        result.update(
+            status=("passed" if count >= SPEED_PROBE_MIN_TOKENS
+                    and rate >= SPEED_PROBE_MIN_TOKENS_PER_SECOND else "rejected"),
+            visible_answer_tokens=count,
+            wall_seconds=round(elapsed, 6),
+            visible_tokens_per_second=round(rate, 3),
+            finish_reason=response["choices"][0]["finish_reason"],
+            response_sha256=hashlib.sha256(json_bytes(response)).hexdigest(),
+        )
+    except Exception as error:
+        result.update(status="rejected", error=f"{type(error).__name__}: {error}")
+    result["finished"] = datetime.now(timezone.utc).isoformat()
+    write_manifest(output / "speed-qualification.json", result)
+    if result["status"] != "passed":
+        speed = result.get("visible_tokens_per_second", 0)
+        raise RuntimeError(
+            f"Model failed the 20 tokens/s speed preflight "
+            f"({speed} visible tokens/s; see speed-qualification.json)"
+        )
+    return result
 
 
 def _artifact_fingerprint(identity, key):
@@ -319,6 +401,10 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         if file_hash(responses_path) != previous["responses_sha256"]:
             raise ValueError("Completed response file hash mismatch")
         return previous
+    if shutil.disk_usage(output).free < 100_000_000_000:
+        raise RuntimeError("Storage reserve below 100 GB; benchmark not started")
+    speed_qualification = qualify_speed(
+        base_url, model, bound["identity_sha256"], output)
     responses_path.touch(exist_ok=True)
     if snapshot_path.exists() and snapshot_path.read_bytes() != identity_bytes:
         raise ValueError('Existing identity snapshot differs; refusing to replace evidence')
@@ -326,8 +412,11 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens, res
         snapshot_path.write_bytes(identity_bytes)
     start_time = previous['started'] if previous else (
         parent_manifest['started'] if resume_from else datetime.now(timezone.utc).isoformat())
-    manifest = {"schema": 2, 'identity_snapshot': 'identity.json', "status": "in_progress", "benchmark": inputs["benchmark"],
+    manifest = {"schema": 2, "speed_gate_schema": 1, 'identity_snapshot': 'identity.json',
+                "status": "in_progress", "benchmark": inputs["benchmark"],
                 "binding": bound, "identity": identity, "health": health, "properties": props,
+                "speed_qualification": speed_qualification,
+                "speed_qualification_sha256": file_hash(output / "speed-qualification.json"),
                 "model_quality_measured": False, "samples": len(inputs["rows"]),
                 "completed": len(records), "started": start_time}
     if lineage:

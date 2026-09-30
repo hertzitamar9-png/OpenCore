@@ -16,11 +16,11 @@ inference state: the ECHO profiles use incremental F16 KV while generating, then
 clear request state between turns. A previous implementation incorrectly
 recomputed each brain's complete prefix for every token. Its archived HumanEval
 capture is bound to that slower source snapshot and must not be used to describe
-the current ECHO decoding path. The GPU preflight requires at least 50 streamed
-draft tokens and 50 selected-answer tokens, with both the draft decode rate and
-end-to-end selected-answer wall rate at or above 20 tokens per second. The
-HumanEval runner will not start a profile capture unless that exact profile
-passes this preflight. Passing speed alone is not a quality claim; the complete
+the current ECHO decoding path. Every new benchmark capture now requires an
+exact-tokenized selected answer of at least 50 tokens and end-to-end answer speed
+of at least 20 tokens per second. This includes candidate generation and review
+latency for DualCore. The qualification is hash-bound into the capture and checked
+again before grading. Passing speed alone is not a quality claim; the complete
 benchmark must still show no measured regression.
 
 DualCore ECHO now uses the same two `llama-server` backbones and candidate/review
