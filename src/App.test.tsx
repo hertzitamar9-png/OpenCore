@@ -696,7 +696,7 @@ describe("OpenCore", () => {
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const extendedStatusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
       expect(await within(extendedStatusbar).findByText(/3T archive goal/)).toBeVisible();
-      expect(within(extendedStatusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072");
+      await waitFor(() => expect(within(extendedStatusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072"));
 
       unmount();
       values.set("opencore.model-profile", "echo");
@@ -747,7 +747,7 @@ describe("OpenCore", () => {
       await screen.findByText("Conversations", { selector: "h2" });
       const footer = document.querySelector(".conversation-statusbar") as HTMLElement;
       expect(await within(footer).findByLabelText("ECHO context and archive")).toBeVisible();
-      expect(within(footer).getByText(/4 archived/)).toBeVisible();
+      expect(await within(footer).findByText(/4 archived/)).toBeVisible();
       expect(within(footer).getByRole("button", { name: /Nanbeige BF16 ECHO/ })).toBeVisible();
     } finally {
       vi.restoreAllMocks();
