@@ -795,7 +795,7 @@ describe("OpenCore", () => {
       available: true,
       liveTokens: 131072,
       promptTokens: 8192,
-      modelContextTokens: 32768,
+      modelContextTokens: 262144,
       windowTokens: 32768,
       active: false,
       offloadedMessages: 7,

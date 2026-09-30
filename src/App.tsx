@@ -1022,7 +1022,9 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
 
   if (["echo", "native1m", "unsloth-echo", "doucode", "nanbeige-bf16-echo", "dualcore-echo", "fusioncore-echo"].includes(profile)) {
     const archived = workingSet?.offloadedMessages;
-    const reportedLimit = workingSet?.available ? workingSet.modelContextTokens ?? workingSet.windowTokens : undefined;
+    const reportedLimit = workingSet?.contextMode === "persistent_echo" && workingSet.windowTokens
+      ? Math.min(workingSet.windowTokens, workingSet.modelContextTokens ?? workingSet.windowTokens)
+      : workingSet?.available ? workingSet.modelContextTokens ?? workingSet.windowTokens : undefined;
     const fallbackLimit = runtime.contextSize || (profile === "native1m" ? 1_000_000 : profile === "doucode" ? 65_536 : 32768);
     const maximum = Math.max(1, reportedLimit ?? fallbackLimit);
     const liveValue = workingSet?.modelActiveTokens ?? (workingSet?.available ? workingSet.promptTokens ?? workingSet.liveTokens : undefined);

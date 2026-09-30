@@ -627,7 +627,7 @@ class EchoState:
             raise ValueError("Reply reservation leaves no room for the prompt")
         keep_always = [i for i, m in enumerate(messages) if m.get("role") == "system"]
         last_user = next((i for i in range(len(messages) - 1, -1, -1)
-                          if messages[i].get("role") == "user"), None)
+                          if _is_user_request(messages[i])), None)
         if last_user is not None:
             keep_always.append(last_user)
         pinned = set(keep_always)
@@ -983,9 +983,16 @@ def _conversation_id(payload: dict, headers) -> str:
     return "default"
 
 
+def _is_user_request(message: dict) -> bool:
+    # SDK environment/budget updates use a user-shaped compatibility envelope
+    # because some native templates reject mid-history system roles. Their
+    # explicit provenance must survive that conversion: they are not new tasks.
+    return message.get("role") == "user" and message.get("opencore_harness_context") is not True
+
+
 def _last_user_message(messages: list) -> str:
     for message in reversed(messages):
-        if message.get("role") == "user":
+        if _is_user_request(message):
             content = message.get("content")
             if isinstance(content, str):
                 return content
@@ -1005,7 +1012,7 @@ def _inject(messages: list, context: str) -> list:
     """
     out = list(messages)
     for index in range(len(out) - 1, -1, -1):
-        if out[index].get("role") == "user":
+        if _is_user_request(out[index]):
             out.insert(index, {"role": "system", "content": context})
             return out
     out.insert(0, {"role": "system", "content": context})
@@ -1273,7 +1280,7 @@ class Handler(BaseHTTPRequestHandler):
         count = self.state.count_tokens
         question = _last_user_message(supplied)
         user_index = max((index for index, message in enumerate(supplied)
-                          if message.get("role") == "user"), default=-1)
+                          if _is_user_request(message)), default=-1)
         client_tail = [message for message in supplied[user_index + 1:]
                        if message.get("role") == "tool"
                        or (message.get("role") == "assistant" and message.get("tool_calls"))]

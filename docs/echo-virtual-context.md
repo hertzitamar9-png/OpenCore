@@ -81,6 +81,15 @@ Desktop integration also reproduced an empty-telemetry crash when opening legacy
 conversations before their first virtual-memory refresh. Uninitialized telemetry
 is now null, and the viewer accepts legacy empty/partial objects without crashing.
 
+The installed-app chat check also caught SDK budget/environment updates replacing
+the real user request: those updates had a user-shaped envelope for native-template
+compatibility. They now retain explicit harness provenance. ECHO excludes them
+when selecting/pinning the current request and finding returned tool results.
+Literal user text resembling the envelope remains a user request. Regression
+tests verify the original question and tool-result continuation survive both.
+The footer now uses the configured ECHO working window even when the native
+backend exposes a larger capacity, matching the dedicated Live Context viewer.
+
 ## Verified real inference — 2026-09-30
 
 `scripts/echo_virtual_inference_smoke.py` used the existing original ECHO

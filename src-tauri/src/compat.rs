@@ -225,7 +225,8 @@ fn anthropic_messages(payload: &Value) -> Vec<Value> {
         // system messages. Qwen's template permits system only at position zero.
         // Preserve their chronological position (and the reusable prompt prefix).
         if matches!(role, "system" | "developer") {
-            out.push(json!({"role":"user","content":format!("<harness_context>\n{}\n</harness_context>", flatten_text(content))}));
+            out.push(json!({"role":"user","opencore_harness_context":true,
+                "content":format!("<harness_context>\n{}\n</harness_context>", flatten_text(content))}));
             continue;
         }
         if let Some(text) = content.as_str() {
@@ -920,6 +921,9 @@ mod tests {
         assert!(messages.iter().skip(1).all(|m| m["role"] != "system"));
         assert!(messages[2]["content"].as_str().unwrap().contains("environment"));
         assert!(messages[4]["content"].as_str().unwrap().contains("budget update"));
+        assert_eq!(messages[2]["opencore_harness_context"], true);
+        assert_eq!(messages[4]["opencore_harness_context"], true);
+        assert!(messages[1].get("opencore_harness_context").is_none());
     }
 
     #[test]

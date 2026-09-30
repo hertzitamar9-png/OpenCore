@@ -30,6 +30,54 @@ from echo_import import import_stream
 
 
 class EchoLiveTests(unittest.TestCase):
+    def test_sdk_budget_update_does_not_replace_user_request_or_tool_results(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archives = ArchiveSet(Path(folder), idle_seconds=0)
+            state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+            state._ctx_size = 8192
+            state.count_tokens = lambda text: len(text) // 4
+            handler = object.__new__(Handler)
+            handler.state = state
+            handler._send_json = lambda code, value: value
+            seen = []
+            call = {'id': 'inspect-one', 'type': 'function',
+                    'function': {'name': 'inspect', 'arguments': '{}'}}
+            def generate(body, phase):
+                seen.append(body)
+                message = {'role': 'assistant', 'content': '' if len(seen) == 1 else 'Done.'}
+                if len(seen) == 1:
+                    message['tool_calls'] = [call]
+                return {'choices': [{'finish_reason': 'tool_calls' if len(seen) == 1 else 'stop',
+                                     'message': message}], 'usage': {'completion_tokens': 4}}
+            handler._generate_live = generate
+            question = 'Inspect the current PhysicsController.'
+            note = {'role': 'user', 'opencore_harness_context': True,
+                    'content': '<harness_context>\n<total_tokens>14978886 tokens left</total_tokens>\n</harness_context>'}
+            payload = {'messages': [{'role': 'user', 'content': question}, note],
+                       'max_tokens': 256,
+                       'tools': [{'type': 'function', 'function': {'name': 'inspect',
+                                  'parameters': {'type': 'object', 'properties': {}}}}]}
+            try:
+                handler._controlled_context(payload, 'sdk-budget')
+                live = LiveTranscript(archives.get('sdk-budget'), 'sdk-budget')
+                self.assertEqual(live.question, question)
+                self.assertIn(question, json.dumps(seen[0]['messages']))
+                payload['messages'] = [{'role': 'user', 'content': question},
+                    {'role': 'assistant', 'content': '', 'tool_calls': [call]},
+                    {'role': 'tool', 'tool_call_id': 'inspect-one', 'content': 'PhysicsController exists.'}, note]
+                handler._controlled_context(payload, 'sdk-budget')
+                self.assertIn('PhysicsController exists.', json.dumps(seen[1]['messages']))
+                live = LiveTranscript(archives.get('sdk-budget'), 'sdk-budget')
+                self.assertEqual(live.question, question)
+                # Literal user text remains a user request, even if it resembles a wrapper.
+                literal = {'messages': [{'role': 'user', 'content': note['content']}], 'max_tokens': 256}
+                handler._controlled_context(literal, 'literal-wrapper')
+                self.assertEqual(LiveTranscript(archives.get('literal-wrapper'), 'literal-wrapper').question,
+                                 note['content'])
+            finally:
+                state.memory_controller.close()
+                archives.close()
+
     def test_latest_idle_window_setting_supersedes_an_older_deferred_setting(self):
         with tempfile.TemporaryDirectory() as folder:
             archives = ArchiveSet(Path(folder), idle_seconds=0)
