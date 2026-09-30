@@ -78,14 +78,18 @@ class CandidateReview:
     score_b: float
     confidence: float
     reason: str
+    scale_normalized: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        value = {
             "score_a": round(self.score_a, 2),
             "score_b": round(self.score_b, 2),
             "confidence": round(self.confidence, 4),
             "reason": self.reason,
         }
+        if self.scale_normalized:
+            value["score_scale_normalized"] = True
+        return value
 
 
 def review_messages(
@@ -124,7 +128,7 @@ def review_messages(
 
 
 def parse_review(text: str) -> CandidateReview | None:
-    """Parse bounded structured scores without accepting NaN or out-of-range values."""
+    """Parse scores and repair a common 0-1000 rubric without changing ranking."""
     start, end = text.find("{"), text.rfind("}")
     if start < 0 or end <= start:
         return None
@@ -137,8 +141,17 @@ def parse_review(text: str) -> CandidateReview | None:
         return None
     if not all(math.isfinite(value) for value in (score_a, score_b, confidence)):
         return None
-    if not (0 <= score_a <= 100 and 0 <= score_b <= 100 and 0 <= confidence <= 100):
+    if not (0 <= score_a <= 1000 and 0 <= score_b <= 1000 and 0 <= confidence <= 100):
         return None
+    scale_normalized = max(score_a, score_b) > 100
+    if scale_normalized:
+        # Some local checkpoints follow a 0-1000 rubric despite the schema.
+        # Normalize the pair together so the preference and score ratio survive.
+        scale = max(score_a, score_b)
+        if scale == 0:
+            return None
+        score_a = 100 * score_a / scale
+        score_b = 100 * score_b / scale
     # Some local models express confidence as a fraction while others return
     # the requested 0-100 percentage. Normalize both to the internal 0-1 scale.
     if confidence > 1:
@@ -146,7 +159,7 @@ def parse_review(text: str) -> CandidateReview | None:
     reason = payload.get("reason")
     if not isinstance(reason, str):
         return None
-    return CandidateReview(score_a, score_b, confidence, reason.strip()[:360])
+    return CandidateReview(score_a, score_b, confidence, reason.strip()[:360], scale_normalized)
 
 
 def average_candidate_scores(

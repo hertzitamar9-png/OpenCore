@@ -57,10 +57,14 @@ class CaptureTests(unittest.TestCase):
         self.inputs.write_text(json.dumps({"schema": 1, "benchmark": "control", "rows": self.rows}))
         artifact = self.root / "fixture-weights.bin"
         artifact.write_bytes(b"fixture-not-model")
+        runtime = self.root / "selection.py"
+        runtime.write_bytes(b"old runtime")
         self.identity = self.root / "identity.json"
         self.identity.write_text(json.dumps({"model": "control-model", "evidence_kind": "fixture",
                                              "artifacts": [{"path": str(artifact), "bytes": 17,
-                                                            "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest()}]}))
+                                                            "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest()}],
+                                             "runtime_files": [{"path": str(runtime), "bytes": runtime.stat().st_size,
+                                                                "sha256": hashlib.sha256(runtime.read_bytes()).hexdigest()}]}))
         self.output = self.root / "captures"
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.server.requests, self.server.fail_beta, self.server.malformed = [], False, False
@@ -73,17 +77,47 @@ class CaptureTests(unittest.TestCase):
         self.thread.join()
         self.temp.cleanup()
 
-    def capture(self, disk_free=300000000000):
+    def capture(self, disk_free=300000000000, *, identity=None, output=None, resume_from=None):
         # Test-only child interpreter: CI fixture storage is unrelated to the
         # user's reserve. The production CLI has no flag to bypass that guard.
         runner = ("import runpy,sys; from types import SimpleNamespace; from unittest.mock import patch; "
                   "script=sys.argv.pop(1); free=int(sys.argv.pop(1)); sys.argv[0]=script; "
                   "mock=patch('shutil.disk_usage', return_value=SimpleNamespace(free=free)); "
                   "mock.start(); runpy.run_path(script,run_name='__main__')")
-        return subprocess.run([sys.executable, '-c', runner, str(SCRIPT), str(disk_free), "--url", f"http://127.0.0.1:{self.server.server_port}",
-                               "--model", "control-model", "--inputs", str(self.inputs),
-                               "--identity", str(self.identity), "--output", str(self.output), "--max-tokens", "8"],
-                              capture_output=True, text=True, timeout=20)
+        identity = identity or self.identity
+        output = output or self.output
+        args = [sys.executable, '-c', runner, str(SCRIPT), str(disk_free), "--url", f"http://127.0.0.1:{self.server.server_port}",
+                "--model", "control-model", "--inputs", str(self.inputs), "--identity", str(identity),
+                "--output", str(output), "--max-tokens", "8"]
+        if resume_from:
+            args.extend(["--resume-from", str(resume_from)])
+        return subprocess.run(args, capture_output=True, text=True, timeout=20)
+
+    def test_resume_keeps_verified_rows_with_hash_bound_runtime_lineage(self):
+        self.server.fail_beta = True
+        self.assertNotEqual(self.capture().returncode, 0)
+        original_rows = [json.loads(line) for line in (self.output / "responses.jsonl").read_bytes().splitlines()]
+        self.assertEqual(len(original_rows), 1)
+
+        changed_runtime = self.root / "selection.py"
+        changed_runtime.write_bytes(b"fixed runtime")
+        new_identity = json.loads(self.identity.read_text())
+        new_identity["runtime_files"] = [{"path": str(changed_runtime), "bytes": changed_runtime.stat().st_size,
+                                           "sha256": hashlib.sha256(changed_runtime.read_bytes()).hexdigest()}]
+        new_identity_path = self.root / "identity-new.json"
+        new_identity_path.write_text(json.dumps(new_identity))
+        new_output = self.root / "resumed-capture"
+        result = self.capture(identity=new_identity_path, output=new_output, resume_from=self.output)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+        rows = [json.loads(line) for line in (new_output / "responses.jsonl").read_bytes().splitlines()]
+        self.assertEqual([row["id"] for row in rows], ["0", "1"])
+        self.assertEqual(rows[0]["response"], original_rows[0]["response"])
+        old_hash = hashlib.sha256((self.output / "identity.json").read_bytes()).hexdigest()
+        new_hash = hashlib.sha256(new_identity_path.read_bytes()).hexdigest()
+        self.assertEqual(rows[0]["runtime_identity_sha256"], old_hash)
+        self.assertEqual(rows[1]["runtime_identity_sha256"], new_hash)
+        benchmark_capture.load_grading_capture(self.inputs, new_output)
 
     def test_complete_capture_preserves_answers_and_resume_makes_no_new_requests(self):
         first = self.capture()

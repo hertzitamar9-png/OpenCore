@@ -12,6 +12,7 @@ import serve_lfm
 import duocore.runtime as runtime
 from dual import DualCoreEngine, LfmBackbone
 from duocore.runtime import BackboneReply
+from duocore.selection import parse_review
 from protocol import OutputStream, extract_internal_code_output
 
 
@@ -31,6 +32,17 @@ class RequestCaptureHandler(BaseHTTPRequestHandler):
 
 
 class ProfileEngineTests(unittest.TestCase):
+    def test_parse_review_preserves_ranking_for_thousand_point_scale(self):
+        review = parse_review(
+            '{"score_a":294,"score_b":882,"confidence":95,"reason":"More complete."}'
+        )
+
+        self.assertIsNotNone(review)
+        self.assertAlmostEqual(review.score_a, 100 * 294 / 882)
+        self.assertEqual(review.score_b, 100)
+        self.assertEqual(review.confidence, 0.95)
+        self.assertTrue(review.scale_normalized)
+
     def test_unregistered_tool_syntax_remains_plain_model_output(self):
         decoder = OutputStream()
         text = '<|tool_call_start|>[not valid python<|tool_call_end|>'
