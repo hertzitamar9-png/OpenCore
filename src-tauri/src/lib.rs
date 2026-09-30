@@ -58,6 +58,7 @@ pub struct AppCore {
     browser: Arc<browser_bridge::BrowserBridge>,
     reflex: Arc<reflex::ReflexManager>,
     vision: Arc<vision::VisionManager>,
+    history_sync_cancellations: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
 }
 
 struct LiveGenerationGuard {
@@ -669,13 +670,25 @@ fn start_history_sync(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Resul
     let operation_id = operation.id.clone();
     let store = core.store.clone();
     let runtime = core.runtime.clone();
-    tauri::async_runtime::spawn_blocking(move || run_history_sync(store, runtime, id, operation_id));
+    let cancellation = Arc::new(AtomicBool::new(false));
+    core.history_sync_cancellations.lock().map_err(|error| error.to_string())?
+        .insert(operation_id.clone(), cancellation.clone());
+    let cancellations = core.history_sync_cancellations.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        run_history_sync(store, runtime, id, operation_id.clone(), cancellation);
+        if let Ok(mut active) = cancellations.lock() { active.remove(&operation_id); }
+    });
     Ok(operation)
 }
 
 fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
-                                  operation_id: Option<&str>) -> Result<(u64, u64, u64), String> {
-    let ids = store.archive_conversation_ids()?;
+                                  operation_id: Option<&str>, source_id: Option<&str>,
+                                  cancelled: Option<&AtomicBool>) -> Result<(u64, u64, u64), String> {
+    let is_cancelled = || cancelled.is_some_and(|flag| flag.load(Ordering::SeqCst));
+    let ids = match source_id {
+        Some(source) => store.imported_conversation_ids_for_client(source)?,
+        None => store.archive_conversation_ids()?,
+    };
     if ids.is_empty() { return Ok((0, 0, 0)); }
     let python = runtime.python_path().ok_or("Python runtime not found for ECHO import")?;
     let script = runtime.echo_import_script_path();
@@ -685,33 +698,61 @@ fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
     #[cfg(windows)] { use std::os::windows::process::CommandExt; command.creation_flags(0x0800_0000); }
     let mut child = command.arg(script).arg(archive_root).stdin(Stdio::piped())
         .stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().map_err(|error| error.to_string())?;
-    let write_result = (|| -> Result<(), String> {
-        let mut stdin = child.stdin.take().ok_or("ECHO importer stdin unavailable")?;
-        for (index, conversation_id) in ids.iter().enumerate() {
-            let mut after_id = 0;
-            loop {
-                let batch = store.archive_events_batch(conversation_id, after_id, 8)?;
-                if batch.is_empty() { break; }
-                after_id = batch.last().map(|entry| entry.id).unwrap_or(after_id);
-                let payload = echo_import_payload_unbounded(conversation_id, &batch);
-                serde_json::to_writer(&mut stdin, &payload)
-                    .map_err(|error| error.to_string())?;
-                stdin.write_all(b"\n").map_err(|error| error.to_string())?;
+    let stdin = child.stdin.take().ok_or("ECHO importer stdin unavailable")?;
+    let output_result = std::thread::scope(|scope| -> Result<std::process::Output, String> {
+        let writer = scope.spawn(move || -> Result<(), String> {
+            let mut stdin = stdin;
+            for (index, conversation_id) in ids.iter().enumerate() {
+                if is_cancelled() { return Err(history::SYNC_CANCELLED.into()); }
+                let mut after_id = 0;
+                loop {
+                    if is_cancelled() { return Err(history::SYNC_CANCELLED.into()); }
+                    let batch = store.archive_events_batch(conversation_id, after_id, 8)?;
+                    if batch.is_empty() { break; }
+                    after_id = batch.last().map(|entry| entry.id).unwrap_or(after_id);
+                    let payload = echo_import_payload_unbounded(conversation_id, &batch);
+                    serde_json::to_writer(&mut stdin, &payload).map_err(|error| error.to_string())?;
+                    stdin.write_all(b"\n").map_err(|error| error.to_string())?;
+                }
+                if let Some(operation_id) = operation_id {
+                    store.update_operation(operation_id, "Indexing exact history in ECHO",
+                        (index + 1) as u64, ids.len() as u64, 0, 0, 0)?;
+                }
             }
-            if let Some(operation_id) = operation_id {
-                store.update_operation(operation_id, "Indexing exact history in ECHO",
-                    (index + 1) as u64, ids.len() as u64, 0, 0, 0)?;
+            Ok(())
+        });
+        loop {
+            if is_cancelled() {
+                let _ = child.kill();
+                break;
+            }
+            match child.try_wait() {
+                Ok(Some(_)) => break,
+                Ok(None) => std::thread::sleep(std::time::Duration::from_millis(75)),
+                Err(error) => {
+                    let _ = child.kill();
+                    let _ = writer.join();
+                    let _ = child.wait();
+                    return Err(error.to_string());
+                }
             }
         }
-        Ok(())
-    })();
-    if let Err(error) = write_result {
-        let output = child.wait_with_output().map_err(|wait_error| wait_error.to_string())?;
-        let detail = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("ECHO import stopped while receiving history: {error}. {}",
-            detail.chars().take(600).collect::<String>()));
-    }
-    let output = child.wait_with_output().map_err(|error| error.to_string())?;
+        let writer_result = match writer.join() {
+            Ok(result) => result,
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err("ECHO import writer panicked".into());
+            }
+        };
+        if is_cancelled() {
+            let _ = child.wait();
+            return Err(history::SYNC_CANCELLED.into());
+        }
+        if let Err(error) = writer_result { return Err(format!("ECHO import stopped while receiving history: {error}")); }
+        child.wait_with_output().map_err(|error| error.to_string())
+    });
+    let output = output_result?;
     if !output.status.success() {
         return Err(format!("ECHO import failed: {}", String::from_utf8_lossy(&output.stderr).chars().take(600).collect::<String>()));
     }
@@ -724,20 +765,25 @@ fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
     Ok((result["imported"].as_u64().unwrap_or(0), result["skipped"].as_u64().unwrap_or(0), result["failed"].as_u64().unwrap_or(0)))
 }
 
-fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: String, operation_id: String) {
+fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: String, operation_id: String, cancelled: Arc<AtomicBool>) {
     let _ = store.update_operation(&operation_id, "Scanning transcript folders", 0, 0, 0, 0, 0);
     let mut latest = history::SyncReport::default();
-    let result = history::sync_with_progress(&store, &id, |progress| {
+    let result = history::sync_with_cancellation(&store, &id, |progress| {
         latest = progress.clone();
         if progress.total <= 100 || progress.current == 0 || progress.current == progress.total || progress.current % 10 == 0 {
             let _ = store.update_operation(&operation_id, "Importing transcripts",
                 progress.current as u64, progress.total as u64,
                 progress.imported as u64, progress.updated as u64, progress.skipped as u64);
         }
-    });
+    }, &|| cancelled.load(Ordering::SeqCst));
     match result {
         Ok(report) => {
-            let echo_result = index_imported_history_offline(&store, &runtime, Some(&operation_id));
+            let echo_result = index_imported_history_offline(&store, &runtime, Some(&operation_id), Some(&id), Some(&cancelled));
+            if echo_result.as_ref().err().is_some_and(|error| error == history::SYNC_CANCELLED) || cancelled.load(Ordering::SeqCst) {
+                let _ = store.finish_cancelled_operation(&operation_id, report.current as u64, report.total as u64,
+                    report.imported as u64, report.updated as u64, report.skipped as u64);
+                return;
+            }
             let echo_note = match &echo_result {
                 Ok((imported, skipped, failed)) => format!(" · ECHO indexed {imported}, already present {skipped}, invalid records {failed}"),
                 Err(error) => format!(" · ECHO indexing failed: {error}"),
@@ -752,6 +798,10 @@ fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: St
             }
             store.log("info", "connector", &format!("{id} history sync: {summary}"));
         }
+        Err(error) if error == history::SYNC_CANCELLED => {
+            let _ = store.finish_cancelled_operation(&operation_id, latest.current as u64, latest.total as u64,
+                latest.imported as u64, latest.updated as u64, latest.skipped as u64);
+        }
         Err(error) => {
             let _ = store.finish_operation(&operation_id, "History sync failed", Some(&error),
                 latest.current as u64, latest.total as u64,
@@ -762,11 +812,65 @@ fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: St
 }
 
 #[tauri::command]
+fn cancel_history_sync(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<(), String> {
+    let cancellation = core.history_sync_cancellations.lock().map_err(|error| error.to_string())?
+        .get(&id).cloned().ok_or("Import is no longer active")?;
+    cancellation.store(true, Ordering::SeqCst);
+    core.store.request_operation_cancel(&id)
+}
+
+fn purge_imported_history_from_echo(runtime: &RuntimeManager, ids: &[String]) -> Result<(), String> {
+    if ids.is_empty() { return Ok(()); }
+    let python = runtime.python_path().ok_or("Python runtime not found for ECHO cleanup")?;
+    let script = runtime.echo_import_script_path();
+    if !script.is_file() { return Err(format!("ECHO import helper is missing: {}", script.display())); }
+    let mut command = Command::new(python);
+    #[cfg(windows)] { use std::os::windows::process::CommandExt; command.creation_flags(0x0800_0000); }
+    let mut child = command.arg(script).arg(runtime.snapshot().archive_path).arg("--delete")
+        .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped())
+        .spawn().map_err(|error| error.to_string())?;
+    let write_result = (|| -> Result<(), String> {
+        let mut stdin = child.stdin.take().ok_or("ECHO cleanup stdin unavailable")?;
+        for id in ids {
+            serde_json::to_writer(&mut stdin, &json!({"conversation_id": id})).map_err(|error| error.to_string())?;
+            stdin.write_all(b"\n").map_err(|error| error.to_string())?;
+        }
+        Ok(())
+    })();
+    let output = child.wait_with_output().map_err(|error| error.to_string())?;
+    write_result?;
+    if !output.status.success() {
+        return Err(format!("ECHO cleanup failed: {}", String::from_utf8_lossy(&output.stderr).chars().take(600).collect::<String>()));
+    }
+    let result: serde_json::Value = serde_json::from_slice(&output.stdout).map_err(|error| error.to_string())?;
+    if result["failed"].as_u64().unwrap_or(0) > 0 {
+        let errors = result["errors"].as_array().map(|items| items.iter().filter_map(serde_json::Value::as_str).collect::<Vec<_>>().join("; ")).unwrap_or_default();
+        return Err(format!("ECHO cleanup failed for some conversations: {errors}"));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn clear_imported_history(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<String, String> {
+    if !matches!(id.as_str(), "claude-code" | "codex") { return Err(format!("History cleanup is not supported for {id}")); }
+    if core.store.has_active_operation("history_sync", &id)? { return Err("Cancel or wait for this import before clearing its history".into()); }
+    let store = core.store.clone();
+    let runtime = core.runtime.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let ids = store.imported_conversation_ids_for_client(&id)?;
+        if ids.is_empty() { return Ok(format!("No imported {id} conversations to clear")); }
+        purge_imported_history_from_echo(&runtime, &ids)?;
+        let removed = store.clear_imported_history(&id)?;
+        Ok(format!("Cleared {} imported {id} conversations from OpenCore and ECHO", removed.len()))
+    }).await.map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
 async fn index_echo_history(core: tauri::State<'_, Arc<AppCore>>) -> Result<String, String> {
     let store = core.store.clone();
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let (imported, skipped, failed) = index_imported_history_offline(&store, &runtime, None)?;
+        let (imported, skipped, failed) = index_imported_history_offline(&store, &runtime, None, None, None)?;
         Ok(format!("ECHO indexed {imported} source events · {skipped} already present · {failed} invalid records"))
     }).await.map_err(|error| error.to_string())?
 }
@@ -794,16 +898,24 @@ async fn configure_agent_connector(
 }
 
 #[tauri::command]
-async fn test_connector(endpoint: String) -> Result<String, String> {
+fn connector_probe_url(id: &str, endpoint: &str) -> Result<String, String> {
     let endpoint = endpoint.trim().trim_end_matches('/').to_string();
     if !(endpoint.starts_with("http://") || endpoint.starts_with("https://")) {
         return Err("Endpoint must begin with http:// or https://".into());
     }
-    let url = if endpoint.ends_with("/v1") {
+    if id == "ollama" {
+        return Ok(format!("{}/api/tags", endpoint.trim_end_matches("/v1")));
+    }
+    Ok(if endpoint.ends_with("/v1") {
         format!("{endpoint}/models")
     } else {
         format!("{endpoint}/v1/models")
-    };
+    })
+}
+
+#[tauri::command]
+async fn test_connector(id: String, endpoint: String) -> Result<String, String> {
+    let url = connector_probe_url(&id, &endpoint)?;
     let response = reqwest::Client::builder()
         .no_proxy()
         .timeout(std::time::Duration::from_secs(10))
@@ -816,7 +928,10 @@ async fn test_connector(endpoint: String) -> Result<String, String> {
     if !response.status().is_success() {
         return Err(format!("Provider returned HTTP {}", response.status()));
     }
-    Ok("Connected successfully".into())
+    let payload = response.json::<serde_json::Value>().await.ok();
+    let count = payload.as_ref().and_then(|value| value.get("data").or_else(|| value.get("models")))
+        .and_then(serde_json::Value::as_array).map(Vec::len);
+    Ok(count.map_or_else(|| "Connected successfully".into(), |count| format!("Connected · {count} models available")))
 }
 
 #[tauri::command]
@@ -1450,7 +1565,7 @@ async fn send_chat_message(
         "OpenCore",
         "You",
         &visible_text,
-        &json!({"files":attachment_meta}),
+        &json!({"files":attachment_meta,"submissionId":request.submission_id}),
     )?;
     if is_new {
         // A useful title appears as soon as the first message is saved. The small
@@ -1677,6 +1792,7 @@ pub fn run() {
                 active_chats: Mutex::new(HashMap::new()),
                 live_generation_runs: Arc::new(Mutex::new(HashMap::new())),
                 pending_approvals: Mutex::new(HashMap::new()),
+                history_sync_cancellations: Arc::new(Mutex::new(HashMap::new())),
                 browser: Arc::new(browser_bridge::BrowserBridge::from_store(&store)?),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
                 vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
@@ -1686,6 +1802,13 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 if let Err(error) = browser_bridge::serve(browser_state).await {
                     browser_log.log("error", "browser", &format!("Chrome bridge failed: {error}"));
+                }
+            });
+            let speech_restore = core.speech.clone();
+            let speech_log = store.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(error) = speech_restore.restore_saved_mode().await {
+                    speech_log.log("warn", "speech", &format!("Could not restore Whisper's saved idle mode: {error}"));
                 }
             });
             #[cfg(windows)] {
@@ -1717,6 +1840,7 @@ pub fn run() {
             // earlier name-only releases. Each client reports progress through Operations.
             let history_store = store.clone();
             let history_runtime = runtime.clone();
+            let history_cancellations = app.state::<Arc<AppCore>>().history_sync_cancellations.clone();
             tauri::async_runtime::spawn_blocking(move || {
                 for id in ["claude-code", "codex"] {
                     match history_store.has_setting(&format!("folder_project_backfill_v1_{id}")) {
@@ -1725,7 +1849,15 @@ pub fn run() {
                         Err(error) => { history_store.log("warn", "history", &format!("Could not check {id} backfill: {error}")); continue; }
                     }
                     match history_store.start_operation("history_sync", id) {
-                        Ok(operation) => run_history_sync(history_store.clone(), history_runtime.clone(), id.to_string(), operation.id),
+                        Ok(operation) => {
+                            let operation_id = operation.id.clone();
+                            let cancellation = Arc::new(AtomicBool::new(false));
+                            if let Ok(mut active) = history_cancellations.lock() {
+                                active.insert(operation_id.clone(), cancellation.clone());
+                            }
+                            run_history_sync(history_store.clone(), history_runtime.clone(), id.to_string(), operation_id.clone(), cancellation);
+                            if let Ok(mut active) = history_cancellations.lock() { active.remove(&operation_id); }
+                        }
                         Err(error) => history_store.log("warn", "history", &format!("Automatic {id} folder backfill skipped: {error}")),
                     }
                 }
@@ -1785,6 +1917,8 @@ pub fn run() {
             ,sync_local_history
             ,list_operations
             ,start_history_sync
+            ,cancel_history_sync
+            ,clear_imported_history
             ,configure_agent_connector
             ,search_archive
             ,archive_overview
@@ -1836,5 +1970,21 @@ mod image_attachment_tests {
         let stored = artifacts::preview(&root.join("stored"), meta[0]["artifactId"].as_str().unwrap()).unwrap();
         assert_eq!(parts[0]["image_url"]["url"], stored.data_url);
         std::fs::remove_dir_all(root).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod connector_probe_tests {
+    use super::connector_probe_url;
+
+    #[test]
+    fn probes_ollama_native_tags_and_openai_compatible_model_lists() {
+        assert_eq!(connector_probe_url("ollama", "http://127.0.0.1:11434").unwrap(),
+            "http://127.0.0.1:11434/api/tags");
+        assert_eq!(connector_probe_url("lmstudio", "http://127.0.0.1:1234/").unwrap(),
+            "http://127.0.0.1:1234/v1/models");
+        assert_eq!(connector_probe_url("localai", "http://127.0.0.1:8080/v1").unwrap(),
+            "http://127.0.0.1:8080/v1/models");
+        assert!(connector_probe_url("ollama", "127.0.0.1:11434").is_err());
     }
 }

@@ -43,7 +43,7 @@ files change, use **Reload** on its Chrome Extensions card to load the new worke
 
 Open **Models** to install, uninstall, or select a model. Nothing downloads on startup.
 Downloads use immutable Hugging Face revisions, check file sizes and SHA-256 hashes,
-and stop before free disk space falls below 200 GB. Shared weights are removed only
+and stop before free disk space falls below 100 GB. Shared weights are removed only
 after the last installed variant is uninstalled. Chats and ECHO archives are preserved.
 Private model repositories require an existing Hugging Face token (`HF_TOKEN` or
 the token saved by `hf auth login`). Python is required for the local runtime scripts;
@@ -54,9 +54,9 @@ The four new profiles use two complete copies of the same pinned DavidAU LFM mod
 | Profile | Inference | Active context |
 | --- | --- | --- |
 | DualCore KV | Independent drafts and blind cross-reviews | 131,072 |
-| DualCore ECHO | Independent brains with prefix recomputation and archive retrieval | 32,768 |
+| DualCore ECHO | Independent drafts and reviews with archive retrieval; incremental F16 KV while decoding | 32,768 |
 | FusionCore KV | One coupled token loop through two full towers | 131,072 |
-| FusionCore ECHO | Coupled loop with prefix recomputation and archive retrieval | 8,192 |
+| FusionCore ECHO | Coupled loop with archive retrieval; incremental F16 KV while decoding | 8,192 |
 
 The supplied upstream repository has no BF16 release, so these profiles use the
 authorized Q8_0 fallback. All four share one 3.12 GB weight file on disk; two weight
@@ -68,8 +68,9 @@ near-capacity prompts or prove general coding quality. Full receipts are in
 FusionCore's hidden-feedback gate is untuned. It is an experimental coupled runtime,
 not a newly trained dense checkpoint. ECHO makes an exact archive searchable beyond
 the active window; it does not provide infinite simultaneous attention. The LFM ECHO
-profiles recompute prefixes rather than retain a cache between token steps, but still
-allocate transient attention/state buffers. Details and weight-license notices are
+profiles retain incremental F16 KV state while generating and clear request state
+between turns; they do not recompute the full prefix at every token. Details and
+weight-license notices are
 in `src-tauri/resources/lfm/README.md`.
 
 DuoCore remains the K2 + Nanbeige candidate selector. The separate older TwinCore

@@ -7,9 +7,27 @@ not Q4 or a dequantized file labelled as original BF16.
 | Profile | Execution | Active inference | Memory |
 | --- | --- | --- | --- |
 | DualCore KV | Independent drafts and blind cross-reviews; one selected response | 131,072 tokens | Two native F16 KV/state buffers |
-| DualCore ECHO | Independent drafts and reviews, exact ECHO archive and retrieval | 32,768 tokens | Recompute each brain's prefix for every token; no retained cross-token cache, transient attention/state buffers remain |
+| DualCore ECHO | Independent drafts and reviews with exact ECHO archive retrieval | 32,768 tokens | Incremental F16 KV for decoding; the archive manages older conversation history |
 | FusionCore KV | One token loop, both full towers, fused scores and bidirectional hidden feedback | 131,072 tokens | Two native F16 KV/state buffers |
-| FusionCore ECHO | Same coupled loop, recompute both prefixes for every new token; ECHO archive retrieval | 8,192 tokens | No retained cross-token cache, but transient F16 attention/state buffers remain allocated |
+| FusionCore ECHO | Same coupled loop with ECHO archive retrieval | 8,192 tokens | Incremental F16 KV for decoding; the archive manages older conversation history |
+
+ECHO is the persistent memory and retrieval layer. It does not replace the active
+inference state: the ECHO profiles use incremental F16 KV while generating, then
+clear request state between turns. A previous implementation incorrectly
+recomputed each brain's complete prefix for every token. Its archived HumanEval
+capture is bound to that slower source snapshot and must not be used to describe
+the current ECHO decoding path. The GPU preflight requires at least 50 streamed
+draft tokens and 50 selected-answer tokens, with both the draft decode rate and
+end-to-end selected-answer wall rate at or above 20 tokens per second. The
+HumanEval runner will not start a profile capture unless that exact profile
+passes this preflight. Passing speed alone is not a quality claim; the complete
+benchmark must still show no measured regression.
+
+DualCore ECHO now uses the same two `llama-server` backbones and candidate/review
+path as DualCore KV. The ECHO proxy adds archive retrieval around that backend;
+it does not switch the model to the experimental native token bridge. The active
+context cap remains profile-specific (32,768 for DualCore ECHO), while older
+conversation history stays in ECHO's archive.
 
 The model contains 5,394,397,184 parameters across two towers. One 3,120,573,088-byte
 GGUF is stored on disk; two weight sets are loaded for inference. Variant installations

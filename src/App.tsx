@@ -507,6 +507,10 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   const [operations, setOperations] = useState<OperationRecord[]>([]);
   const operationsRef = useRef<OperationRecord[]>([]);
   const [syncStarting, setSyncStarting] = useState<Record<string, boolean>>({});
+  const [syncCancelBusy, setSyncCancelBusy] = useState<Record<string, boolean>>({});
+  const [historyClearBusy, setHistoryClearBusy] = useState<Record<string, boolean>>({});
+  const [connectorActionBusy, setConnectorActionBusy] = useState<Record<string, boolean>>({});
+  const [connectorFeedback, setConnectorFeedback] = useState<Record<string, { message: string; error: boolean }>>({});
   const [profileBusy, setProfileBusy] = useState<Record<string, boolean>>({});
   const [browserStatus, setBrowserStatus] = useState<api.BrowserStatus | null>(null);
 
@@ -529,7 +533,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         const previous = new Map(operationsRef.current.map((item) => [item.id, item.status]));
         operationsRef.current = next;
         setOperations(next);
-        if (next.some((item) => item.kind === "history_sync" && previous.has(item.id) && previous.get(item.id) !== item.status && (item.status === "completed" || item.status === "failed"))) await onRefresh();
+        if (next.some((item) => item.kind === "history_sync" && previous.has(item.id) && previous.get(item.id) !== item.status && (item.status === "completed" || item.status === "failed" || item.status === "cancelled"))) await onRefresh();
       } catch (error) { if (active) setConnectorNotice(String(error)); }
     };
     void tick();
@@ -561,14 +565,19 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     if (operation.status === "queued") return "Queued…";
     if (operation.status === "running") return operation.total ? `Scanning files… ${operation.current}/${operation.total}` : "Scanning folders…";
     if (operation.status === "failed") return "Retry sync";
+    if (operation.status === "cancelled") return "Retry sync";
     return operation.summary || "Sync complete";
   };
 
   const configure = async (id: string, endpoint: string) => {
+    setConnectorActionBusy((current) => ({ ...current, [id]: true }));
+    setConnectorFeedback((current) => { const next = { ...current }; delete next[id]; return next; });
     try {
-      const message = id === "unsloth" ? await api.configureUnsloth() : await api.testConnector(endpoint);
-      setConnectorNotice(message);
-    } catch (error) { setConnectorNotice(String(error)); }
+      const message = id === "unsloth" ? await api.configureUnsloth() : await api.testConnector(id, endpoint);
+      setConnectorFeedback((current) => ({ ...current, [id]: { message, error: false } }));
+    } catch (error) {
+      setConnectorFeedback((current) => ({ ...current, [id]: { message: String(error), error: true } }));
+    } finally { setConnectorActionBusy((current) => ({ ...current, [id]: false })); }
   };
   const connectAgent = async (id: "claude-code" | "codex") => {
     setProfileBusy((current) => ({ ...current, [id]: true }));
@@ -586,6 +595,29 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       setOperations(operationsRef.current);
     } catch (error) { setConnectorNotice(String(error)); onNotice(String(error)); }
     finally { setSyncStarting((current) => ({ ...current, [id]: false })); }
+  };
+
+  const cancelHistory = async (operationId: string, target: string) => {
+    setSyncCancelBusy((current) => ({ ...current, [target]: true }));
+    try {
+      await api.cancelHistorySync(operationId);
+      setConnectorFeedback((current) => ({ ...current, [target]: { message: "Cancellation requested…", error: false } }));
+    } catch (error) {
+      setConnectorFeedback((current) => ({ ...current, [target]: { message: String(error), error: true } }));
+    } finally { setSyncCancelBusy((current) => ({ ...current, [target]: false })); }
+  };
+
+  const clearHistory = async (id: "claude-code" | "codex") => {
+    if (!window.confirm(`Clear imported ${id === "codex" ? "Codex" : "Claude Code"} conversations from OpenCore and ECHO? Original transcript files will not be changed.`)) return;
+    setHistoryClearBusy((current) => ({ ...current, [id]: true }));
+    setConnectorFeedback((current) => { const next = { ...current }; delete next[id]; return next; });
+    try {
+      const message = await api.clearImportedHistory(id);
+      setConnectorFeedback((current) => ({ ...current, [id]: { message, error: false } }));
+      await onRefresh();
+    } catch (error) {
+      setConnectorFeedback((current) => ({ ...current, [id]: { message: String(error), error: true } }));
+    } finally { setHistoryClearBusy((current) => ({ ...current, [id]: false })); }
   };
 
   const addConnector = async (event: React.FormEvent) => {
@@ -755,9 +787,13 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         {history ? <div className="connector-actions">
           <button className="primary" disabled={profileBusy[connector.id]} onClick={() => connectAgent(connector.id as "claude-code" | "codex")}>{profileBusy[connector.id] ? "Writing profile…" : connector.status === "configured" ? "Refresh profile" : "Add profile"}</button>
           <button className="sync-history-button" disabled={syncActive || syncStarting[connector.id]} onClick={() => syncHistory(connector.id as "claude-code" | "codex")}>{syncLabel(connector.id)}</button>
+          {syncActive && syncOperation ? <button className="cancel-history-button" aria-label={`Cancel ${connector.name} import`} disabled={syncCancelBusy[connector.id]} onClick={() => void cancelHistory(syncOperation.id, connector.id)}>{syncCancelBusy[connector.id] ? "Canceling…" : "Cancel import"}</button> : null}
+          <button className="clear-history-button" disabled={syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]} title="Removes the imported copy from OpenCore and ECHO. Source transcript files stay in place." onClick={() => void clearHistory(connector.id as "claude-code" | "codex")}>{historyClearBusy[connector.id] ? "Clearing…" : "Clear imported history"}</button>
+          {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
           {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? syncOperation.error : syncOperation.status === "running" ? `${syncOperation.phase}${syncOperation.total ? ` · ${syncOperation.current}/${syncOperation.total} files` : ""}` : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.startedAt)}</time>{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
         </div> : <div className="connector-actions single">
-          <button onClick={() => configure(connector.id, connector.endpoint)}>{connector.id === "unsloth" ? "Install" : "Test"}</button>
+          <button disabled={connectorActionBusy[connector.id]} onClick={() => void configure(connector.id, connector.endpoint)}>{connectorActionBusy[connector.id] ? (connector.id === "unsloth" ? "Installing…" : "Testing…") : connector.id === "unsloth" ? "Install" : "Test"}</button>
+          {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
         </div>}
       </article>;
     })}</div>
@@ -891,7 +927,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       <InspectorSection title="Model & context">
         <KeyValue label="ECHO 3T model" value="Qwen3.5-derived 5B class + BF16 vision projector" />
         <KeyValue label="ECHO model native window" value="262,144 tokens per inference" />
-        <KeyValue label="DuoCore package context" value="65,536 live tokens · ECHO keeps the exact archive" />
+        <KeyValue label="DuoCore package context" value="Up to 65,536 live tokens · auto-fits free RAM; ECHO keeps the exact archive" />
         <KeyValue label="1M extended profile" value="1,000,000-token YaRN window; original trained context 262,144" />
         <label className="appearance-label" htmlFor="context-compact-tokens">Auto compact after <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
         <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
@@ -1273,7 +1309,7 @@ export default function App() {
     }
   };
 
-  if (!snapshot) return <div className="app-window-frame"><WindowTitleBar /><div className="splash"><span className="brand-mark splash-logo"><img src="/opencore-logo.png" alt="OpenCore" /></span><strong>OpenCore</strong><p>Loading runtime state…</p></div></div>;
+  if (!snapshot) return <div className="app-window-frame"><WindowTitleBar /><div className="splash"><span className="brand-mark splash-logo"><img src={opencoreLogo} alt="OpenCore" /></span><strong>OpenCore</strong><p>Loading runtime state…</p></div></div>;
   const running = snapshot.runtime.status === "running";
   const appearanceStyle = { "--chat-font-size": `${appearance.chatFontSize}px`, "--terminal-font-size": `${appearance.terminalFontSize}px` } as CSSProperties;
   const defaultSkills = [

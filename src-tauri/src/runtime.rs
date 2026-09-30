@@ -501,8 +501,6 @@ impl RuntimeManager {
             Ok(port) => port,
             Err(error) => return self.fail_start("doucode", error),
         };
-        let context_size = config.get("live_window_tokens").and_then(serde_json::Value::as_u64)
-            .filter(|tokens| *tokens > 0).unwrap_or(DOUCODE_MODEL_CONTEXT);
         let model_path = |name: &str| -> Option<PathBuf> {
             if name.is_empty() || name.contains("..") || Path::new(name).is_absolute() { return None; }
             Some(release.join(name))
@@ -584,7 +582,9 @@ impl RuntimeManager {
             inner.loading_phase = "Starting ECHO archive".into();
             inner.loading_step = 3;
         }
-        if let Err(error) = self.start_echo(&upstream, Some(context_size)) {
+        // DuoCore may safely reduce its live window to fit current host RAM. Let ECHO
+        // read the effective value from DuoCore's /props instead of the package maximum.
+        if let Err(error) = self.start_echo(&upstream, None) {
             return self.fail_start("doucode", error);
         }
         if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
@@ -934,7 +934,7 @@ impl RuntimeManager {
                 "echo" | "native1m" | "doucode" => ("system RAM".to_string(), "Q4_0".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
                 "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
-                "dualcore-echo" | "fusioncore-echo" => ("GPU transient buffers".to_string(), "F16; prefix recomputed per token".to_string()),
+                "dualcore-echo" | "fusioncore-echo" => ("GPU".to_string(), "F16 KV; ECHO archive for long-term memory".to_string()),
                 _ => ("not loaded".to_string(), "none".to_string()),
             }
         };
@@ -1206,6 +1206,32 @@ mod tests {
         assert!(manager.select_profile("not-a-profile").is_err());
         drop(manager);
         let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn echo_profiles_are_selectable_and_only_echo_variants_start_archive_service() {
+        let path = std::env::temp_dir().join(format!("opencore-slow-profile-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = Arc::new(EventStore::open(&path).unwrap());
+        let manager = RuntimeManager::new(store);
+        for profile in ["dualcore-echo", "fusioncore-echo"] {
+            manager.select_profile(profile).unwrap();
+            assert!(echo_profile(profile));
+        }
+        assert!(manager.select_profile("dualcore-kv").is_ok());
+        assert!(manager.select_profile("fusioncore-kv").is_ok());
+        assert!(!echo_profile("dualcore-kv"));
+        assert!(!echo_profile("fusioncore-kv"));
+        drop(manager);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn all_lfm_profiles_keep_the_native_kv_window() {
+        for profile in ["dualcore-kv", "fusioncore-kv"] {
+            assert_eq!(lfm_context(profile), 131_072);
+        }
+        assert_eq!(lfm_context("dualcore-echo"), 32_768);
+        assert_eq!(lfm_context("fusioncore-echo"), 8_192);
     }
 
     #[test]

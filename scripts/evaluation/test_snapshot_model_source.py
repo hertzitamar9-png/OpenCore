@@ -51,8 +51,8 @@ class SourceSnapshotTests(unittest.TestCase):
         self.assertFalse(self.output.exists())
 
     def test_storage_reserve_refuses_snapshot_before_writing(self):
-        with self.assertRaisesRegex(ValueError, '200 GB'):
-            self.run_snapshot(free=199_999_999_999)
+        with self.assertRaisesRegex(ValueError, '100 GB'):
+            self.run_snapshot(free=99_999_999_999)
         self.assertFalse(self.output.exists())
 
 

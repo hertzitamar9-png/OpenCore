@@ -7,18 +7,40 @@ import os
 from pathlib import Path
 
 
+def native_library_path():
+    return Path(__file__).parent / 'native' / 'fusioncore-v2.dll'
+
+
+def disable_native_reasoning(prompt: bytes) -> bytes:
+    """Close Qwen's default open thinking section before generating the answer."""
+    if prompt.endswith(b'<think>\n'):
+        return prompt + b'\n</think>\n\n'
+    return prompt + b'<think>\n\n</think>\n\n'
+
+
+def prepare_native_prompt(prompt: bytes, thinking_budget_tokens: int | None) -> bytes:
+    if thinking_budget_tokens is None:
+        return disable_native_reasoning(prompt)
+    if (isinstance(thinking_budget_tokens, bool) or not isinstance(thinking_budget_tokens, int)
+            or thinking_budget_tokens < 0):
+        raise ValueError('thinking_budget_tokens must be a non-negative integer')
+    if prompt.endswith(b'<think>\n'):
+        return prompt
+    return prompt + b'<think>\n'
+
+
 class FusionCoreModel:
     def __init__(self, checkpoint: Path, runtime: Path, context: int, recompute: bool):
         self.directories = [os.add_dll_directory(str(runtime.resolve())),
                             os.add_dll_directory(str((Path(__file__).parent / 'native').resolve()))]
-        self.lib = C.CDLL(str(Path(__file__).parent / 'native' / 'fusioncore.dll'))
+        self.lib = C.CDLL(str(native_library_path()))
         self.lib.fc_error.restype = C.c_char_p
         self.lib.fc_create.argtypes = [C.c_char_p, C.c_int, C.c_int, C.c_int]
         self.lib.fc_create.restype = C.c_void_p
         self.lib.fc_destroy.argtypes = [C.c_void_p]
         self.lib.fc_clear_brain.argtypes = [C.c_void_p, C.c_int]
         self.lib.fc_format.argtypes = [C.c_void_p, C.POINTER(C.c_char_p), C.POINTER(C.c_char_p), C.c_int, C.c_void_p, C.c_int]
-        self.lib.fc_start.argtypes = [C.c_void_p, C.c_char_p, C.c_char_p]
+        self.lib.fc_start.argtypes = [C.c_void_p, C.c_char_p, C.c_char_p, C.c_int]
         self.lib.fc_next.argtypes = [C.c_void_p, C.c_void_p, C.c_int, C.POINTER(C.c_int)]
         self.lib.fc_brain_start.argtypes = [C.c_void_p, C.c_int, C.c_char_p, C.c_int]
         self.lib.fc_brain_next.argtypes = [C.c_void_p, C.c_int, C.c_void_p, C.c_int, C.POINTER(C.c_int)]
@@ -65,14 +87,17 @@ class FusionCoreModel:
             raise RuntimeError(self.error())
         return bytes(buffer.raw[:result])
 
-    def start(self, messages):
+    def start(self, messages, thinking_budget_tokens=None):
         prompts = []
         for instruction in (
             'Construct the requested answer directly, preserving every user constraint.',
             'Verify the requested answer carefully for correctness and missing constraints.',
         ):
-            prompts.append(self.format([{'role': 'system', 'content': instruction}, *messages]))
-        prompt_tokens = self.lib.fc_start(self.handle, prompts[0], prompts[1])
+            prompts.append(prepare_native_prompt(
+                self.format([{'role': 'system', 'content': instruction}, *messages]),
+                thinking_budget_tokens))
+        budget = -1 if thinking_budget_tokens is None else thinking_budget_tokens
+        prompt_tokens = self.lib.fc_start(self.handle, prompts[0], prompts[1], budget)
         if prompt_tokens < 0:
             raise RuntimeError(self.error())
         self.completion_tokens = 0
@@ -110,20 +135,21 @@ class FusionCoreModel:
         buffer = C.create_string_buffer(32768)
         token = C.c_int()
         self.finish_reason = 'length'
-        for _ in range(maximum):
-            length = self.lib.fc_next(self.handle, buffer, len(buffer), C.byref(token))
-            if length < 0:
-                raise RuntimeError(self.error())
-            if length == 0:
-                self.finish_reason = 'stop'
-                break
-            self.completion_tokens += 1
-            text = decoder.decode(buffer.raw[:length - 1])
-            if text:
-                yield text
-        tail = decoder.decode(b'', final=True)
-        if tail:
-            yield tail
-        if self.recompute:
+        try:
+            for _ in range(maximum):
+                length = self.lib.fc_next(self.handle, buffer, len(buffer), C.byref(token))
+                if length < 0:
+                    raise RuntimeError(self.error())
+                if length == 0:
+                    self.finish_reason = 'stop'
+                    break
+                self.completion_tokens += 1
+                text = decoder.decode(buffer.raw[:length - 1])
+                if text:
+                    yield text
+            tail = decoder.decode(b'', final=True)
+            if tail:
+                yield tail
+        finally:
             for brain in range(2):
                 self.lib.fc_clear_brain(self.handle, brain)

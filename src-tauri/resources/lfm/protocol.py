@@ -1,6 +1,7 @@
 """Stream reasoning separately and accept only registered structured tool calls."""
 import ast
 import json
+import re
 import uuid
 
 
@@ -25,6 +26,94 @@ def with_tools(messages, tools):
     return normalized
 
 
+def extract_internal_code_output(content):
+    """Unwrap known model-internal code actions without executing their code."""
+    text = (content or '').strip()
+    if text.startswith('<|startoftext|>'):
+        text = text[len('<|startoftext|>'):].strip()
+
+    minimax = re.fullmatch(
+        r'<minimax:tool_call>\s*<function=(?:state_python|python_code)>\s*<args>\s*(\{.*\})\s*</(?:arguments|args)>\s*</function>\s*</(?:tool_call|minimax:tool_call)>',
+        text, re.DOTALL)
+    if minimax:
+        # Some checkpoints emit literal newlines inside a JSON-quoted code
+        # value instead of escaping them. Repair only those newlines first.
+        args = json.loads(minimax.group(1).replace('\r\n', '\n').replace('\n', '\\n'))
+        code = args.get('code')
+        if set(args) == {'code'} and isinstance(code, str) and code.strip():
+            return code, 'minimax_python_code'
+
+    # The same protocol is occasionally missing the closing JSON brace.
+    # Accept only this exact single-field code envelope, then parse the value
+    # as JSON; never evaluate the embedded program.
+    malformed_minimax = re.fullmatch(
+        r'<minimax:tool_call>\s*<function=state_python>\s*<args>\s*\{"code"\s*:\s*"(.*)"\s*</arguments>\s*</function>\s*</tool_call>',
+        text, re.DOTALL)
+    if malformed_minimax:
+        try:
+            value = json.loads('{"code":"' + malformed_minimax.group(1).replace('\r\n', '\n').replace('\n', '\\n') + '"}')
+        except json.JSONDecodeError:
+            return None
+        code = value['code']
+        if code.strip():
+            return code, 'minimax_python_code_malformed_json'
+
+    invoke = re.fullmatch(
+        r'<minimax:tool_call>\s*<invoke name="python_code(?:_interpreter)?">\s*<parameter name="code">(.*?)</parameter>\s*</invoke>\s*</minimax:tool_call>',
+        text, re.DOTALL)
+    if invoke and invoke.group(1).strip():
+        return invoke.group(1), 'minimax_python_code'
+
+    native = re.fullmatch(r'<\|tool_call_start\|>\s*\[(.*)\]\s*<\|tool_call_end\|>', text, re.DOTALL)
+    if native:
+        raw_call = native.group(1)
+        edit = re.fullmatch(r"edit\(path='([^']+)', old_text='.*', new_text='(.*)'\)", raw_call, re.DOTALL)
+        if edit and edit.group(1).endswith('.py'):
+            escapes = {'n': '\n', 'r': '\r', 't': '\t', "'": "'", '\\': '\\'}
+            code = re.sub(r"\\([nrt'\\])", lambda match: escapes[match.group(1)], edit.group(2))
+            if isinstance(code, str) and code.strip():
+                return code, 'lfm_python_edit_action'
+        try:
+            expression = ast.parse('[' + raw_call + ']', mode='eval').body
+        except SyntaxError:
+            code_call = re.fullmatch(
+                r"(?:stateful_python_code_exec|stateful_python_exec|python_code)\(code='(.*)'\)",
+                raw_call, re.DOTALL)
+            if not code_call:
+                return None
+            literal = "'" + code_call.group(1).replace('\r\n', '\n').replace('\n', '\\n') + "'"
+            try:
+                code = ast.literal_eval(literal)
+            except (ValueError, SyntaxError):
+                # Some checkpoints emit raw multiline Python inside a nominal
+                # single-quoted tool argument. That is not a valid Python
+                # literal, but the wrapper boundary still identifies the code
+                # payload. Preserve it verbatim and never execute it.
+                code = code_call.group(1).replace('\r\n', '\n')
+            if isinstance(code, str) and code.strip():
+                return code, 'lfm_python_code_action'
+            return None
+        if len(expression.elts) != 1 or not isinstance(expression.elts[0], ast.Call):
+            return None
+        call = expression.elts[0]
+        if not isinstance(call.func, ast.Name):
+            return None
+        try:
+            values = {item.arg: ast.literal_eval(item.value) for item in call.keywords}
+        except (ValueError, TypeError, SyntaxError):
+            return None
+        if call.func.id in {'stateful_python_code_exec', 'python_code'} and not call.args:
+            code = values.get('code')
+            if set(values) == {'code'} and isinstance(code, str) and code.strip():
+                return code, 'lfm_python_code_action'
+        if call.func.id == 'edit' and not call.args:
+            path, code = values.get('path'), values.get('new_text')
+            if (isinstance(path, str) and path.endswith('.py') and isinstance(code, str)
+                    and code.strip() and {'path', 'old_text', 'new_text'} == set(values)):
+                return code, 'lfm_python_edit_action'
+    return None
+
+
 class OutputStream:
     markers = {'<think>': 'reasoning_content', '</think>': 'content',
                '<tool_call>': 'tool_json', '</tool_call>': 'content',
@@ -37,11 +126,15 @@ class OutputStream:
         self.calls = []
         self.call = ''
 
-    def feed(self, text, final=False):
+    def feed(self, text, final=False, tools=None):
         self.buffer += text
         output = []
+        markers = self.markers if tools else {
+            marker: mode for marker, mode in self.markers.items()
+            if marker not in ('<tool_call>', '</tool_call>', '<|tool_call_start|>', '<|tool_call_end|>')
+        }
         while self.buffer:
-            found = [(self.buffer.find(marker), marker, mode) for marker, mode in self.markers.items()
+            found = [(self.buffer.find(marker), marker, mode) for marker, mode in markers.items()
                      if marker in self.buffer]
             if found:
                 index, marker, mode = min(found)
@@ -58,7 +151,7 @@ class OutputStream:
                 self.buffer = self.buffer[index + len(marker):]
             else:
                 # Keep just a possible marker prefix, so individual characters stream live.
-                retained = max((n for marker in self.markers for n in range(1, len(marker))
+                retained = max((n for marker in markers for n in range(1, len(marker))
                                 if self.buffer.endswith(marker[:n])), default=0) if not final else 0
                 segment = self.buffer[:-retained] if retained else self.buffer
                 if self.mode.startswith('tool_'):

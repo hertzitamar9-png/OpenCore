@@ -197,8 +197,8 @@ def main():
                  platform=platform.platform(),
                  runtime_source_note='Actual files and active endpoint identities are bound; Git HEAD alone is not model identity.')
     data = json.dumps(value, indent=2, ensure_ascii=False).encode('utf-8') + b'\n'
-    if shutil.disk_usage(args.output.parent).free < 200_000_000_000 + len(data):
-        raise ValueError('Model identity would violate the 200 GB free-space reserve')
+    if shutil.disk_usage(args.output.parent).free < 100_000_000_000 + len(data):
+        raise ValueError('Model identity would violate the 100 GB free-space reserve')
     with args.output.open('xb') as output:
         output.write(data)
     print(json.dumps({'model': value['model'], 'runtime_files': len(value['runtime_files']), 'identity': str(args.output)}))

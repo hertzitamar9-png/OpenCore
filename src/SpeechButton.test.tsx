@@ -24,7 +24,7 @@ beforeEach(() => {
   } });
   vi.mocked(api.speechStart).mockResolvedValue('session');
   vi.mocked(api.speechCancel).mockResolvedValue();
-  vi.mocked(api.speechTranscribe).mockResolvedValue({ text: 'Add walking.', language: 'en' });
+  vi.mocked(api.speechTranscribe).mockResolvedValue({ text: 'Una español, I am Itamar, אני אוהב שניצל.', language: 'auto' });
 });
 it('keeps the input track alive until the recorder flushes its final chunk', async () => {
   deferStop = true;
@@ -43,7 +43,7 @@ it('does not send a header-only recording to Whisper', async () => {
   fireEvent.click(screen.getByRole('button'));
   await screen.findByRole('button', { name: 'Recording — click to stop' });
   fireEvent.click(screen.getByRole('button'));
-  await screen.findByRole('button', { name: 'Whisper large-v3: click to dictate' });
+  await screen.findByRole('button', { name: 'Whisper Large V3 Turbo: click to dictate' });
   expect(api.speechTranscribe).not.toHaveBeenCalled();
   expect(error).toHaveBeenCalledWith(expect.stringContaining('Click the microphone'));
 });
@@ -57,10 +57,10 @@ it('records between clicks, inserts the transcript, and unloads the GPU session'
   expect(api.speechTranscribe).not.toHaveBeenCalled();
   expect(stopTrack).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button'));
-  await waitFor(() => expect(transcript).toHaveBeenCalledWith('Add walking.'));
+  await waitFor(() => expect(transcript).toHaveBeenCalledWith('Una español, I am Itamar, אני אוהב שניצל.'));
   expect(stopTrack).toHaveBeenCalled();
   expect(api.speechCancel).toHaveBeenCalledWith('session');
-  await screen.findByRole('button', { name: 'Whisper large-v3: click to dictate' });
+  await screen.findByRole('button', { name: 'Whisper Large V3 Turbo: click to dictate' });
 });
 it('stopping before permission resolves never opens a GPU session', async () => {
   let allow!: (stream: MediaStream) => void;
@@ -95,7 +95,7 @@ it('reports a transcription failure and returns the GPU session to sleep', async
   await screen.findByRole('button', { name: 'Recording — click to stop' });
   fireEvent.click(screen.getByRole('button'));
   await waitFor(() => expect(error).toHaveBeenCalledWith('Error: GPU is full'));
-  await screen.findByRole('button', { name: 'Whisper large-v3: click to dictate' });
+  await screen.findByRole('button', { name: 'Whisper Large V3 Turbo: click to dictate' });
   expect(api.speechCancel).toHaveBeenCalledWith('session');
   expect(stopTrack).toHaveBeenCalled();
 });

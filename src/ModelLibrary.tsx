@@ -46,7 +46,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     <div className="model-library-heading"><div><h2>Your model library</h2><p>Choose what to install. Weights download from pinned Hugging Face revisions and are verified before use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
     </div>
-    <p className="model-library-note">No model weights come with the app. Downloads preserve at least 200 GB of free space. Variants share their weight files.</p>
+    <p className="model-library-note">No model weights come with the app. Downloads preserve at least 100 GB of free space. Variants share their weight files.</p>
     {runtimeActive ? <p className="model-library-note">Stop the runtime to install, uninstall, or select a different model.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
@@ -55,12 +55,12 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {progress.error ? <p>{progress.error}</p> : null}
     </div> : null}
     <div className="model-library-grid">{library?.models.map((model) => <article key={model.id} className={`model-library-card ${model.id === selectedProfile ? "selected" : ""}`}>
-      <header><div><h3>{model.label}</h3><span>{model.precision}</span></div><span className={`model-install-state ${model.installed ? "installed" : ""}`}>{model.installed ? "Installed" : "Not installed"}</span></header>
+      <header><div><h3>{model.label}</h3><span>{model.precision}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? "Installed" : model.externalManaged ? "Local weights found" : "Not installed"}</span></header>
       <p>{model.description}</p>
       <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.downloadBytes ? gb(model.downloadBytes) : "Already downloaded"}</dd></div></dl>
       <small>{model.note}</small>
       {model.id === "whisper-large-v3" ? <div className="whisper-controls" aria-label="Whisper speech settings">
-        <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>Turn Whisper on or off. Off releases its RAM and GPU allocations.</small></div>
+        <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>Turn Whisper on or off. GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>
           <button type="button" role="switch" aria-checked={speech.enabled} aria-label="Whisper speech to text" className={`whisper-toggle ${speech.enabled ? "on" : ""}`}
             disabled={!model.installed || Boolean(pending)} onClick={() => void updateSpeech(() => api.setSpeechEnabled(!speech.enabled))}><span />{speech.enabled ? "On" : "Off"}</button>
         </div>
@@ -72,10 +72,10 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
             <span><strong>Keep sleeping in RAM</strong><small>Faster wake · about {speech.warmWakeMs == null ? "measured when enabled" : `${(speech.warmWakeMs / 1000).toFixed(2)} s on this PC`}; weights leave the GPU while asleep.</small></span>
           </label>
         </fieldset>
-        <p className="whisper-runtime-status" role="status">{!model.installed ? "Install Whisper to enable the microphone." : speech.phase === "warming" ? "Loading Whisper to measure its RAM wake time…" : speech.enabled ? speech.idleMode === "ram" ? "Whisper is on and sleeping in RAM." : "Whisper is on and will load from disk when you click the microphone." : "Whisper is off. Its model stays installed on disk."}</p>
+        <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Whisper weights are already on this PC. Prepare the speech runtime to enable the microphone." : "Install Whisper to enable the microphone." : speech.phase === "warming" ? "Loading Whisper into system RAM for standby…" : speech.phase === "error" ? "Whisper could not restore its saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? "Whisper is on and sleeping in system RAM; it moves to GPU only while transcribing." : "Whisper is on; RAM standby will load before its next recording." : "Whisper is on and will load from disk when you click the microphone." : "Whisper is off. Its model stays installed on disk."}</p>
       </div> : null}
-      <footer><button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
-        {model.installed ? <Trash2 size={15} /> : <Download size={15} />}{pending === model.id ? "Working…" : model.installed ? "Uninstall" : "Install"}
+      <footer><button disabled={runtimeActive || installing || Boolean(pending) || (model.externalManaged && model.installed)} onClick={() => void change(model)}>
+        {model.installed && !model.externalManaged ? <Trash2 size={15} /> : model.installed ? <Check size={15} /> : <Download size={15} />}{pending === model.id ? "Working…" : model.installed && model.externalManaged ? "Using local weights" : model.externalManaged ? "Prepare speech runtime" : model.installed ? "Uninstall" : "Install"}
       </button>{model.selectable ? <button className={selectedProfile === model.id ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
         {selectedProfile === model.id ? <Check size={15} /> : null}{selectedProfile === model.id ? "Selected" : "Use model"}
       </button> : null}</footer>

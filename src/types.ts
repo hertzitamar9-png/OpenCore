@@ -69,7 +69,7 @@ export interface OperationRecord {
   kind: string;
   target: string;
   phase: string;
-  status: "queued" | "running" | "completed" | "failed";
+    status: "queued" | "running" | "completed" | "failed" | "cancelled";
   current: number;
   total: number;
   imported: number;

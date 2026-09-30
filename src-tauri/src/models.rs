@@ -169,6 +169,8 @@ pub struct ChatSendRequest {
     pub conversation_id: String,
     pub text: String,
     #[serde(default)]
+    pub submission_id: Option<String>,
+    #[serde(default)]
     pub files: Vec<String>,
     #[serde(default)]
     pub reasoning_effort: ReasoningEffort,

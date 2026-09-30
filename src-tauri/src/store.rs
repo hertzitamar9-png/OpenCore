@@ -278,6 +278,31 @@ mod tests {
     }
 
     #[test]
+    fn imported_history_can_be_filtered_and_cleared_by_source_and_sync_cancelled() {
+        let path = std::env::temp_dir().join(format!("opencore-import-cleanup-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = EventStore::open(&path).unwrap();
+        let row = |text: &str| vec![("2026-09-22T00:00:00Z".into(), "message".into(), "user".into(), "User".into(), text.into(), json!({}))];
+        store.replace_imported_history("codex:one", "Codex", "Codex session", &row("codex transcript")).unwrap();
+        store.replace_imported_history("claude:one", "Claude Code", "Claude session", &row("claude transcript")).unwrap();
+        store.add_timeline("codex:one", "message", "user", "OpenCore", "User", "local continuation", &json!({})).unwrap();
+        assert_eq!(store.imported_conversation_ids_for_client("codex").unwrap(), vec!["codex:one"]);
+        assert_eq!(store.imported_conversation_ids_for_client("claude-code").unwrap(), vec!["claude:one"]);
+        assert_eq!(store.clear_imported_history("codex").unwrap(), vec!["codex:one"]);
+        assert!(store.imported_conversation_ids_for_client("codex").unwrap().is_empty());
+        assert!(store.conversation("codex:one").unwrap().is_empty());
+        assert_eq!(store.conversation("claude:one").unwrap().len(), 1);
+
+        let operation = store.start_operation("history_sync", "codex").unwrap();
+        store.request_operation_cancel(&operation.id).unwrap();
+        store.finish_cancelled_operation(&operation.id, 1, 4, 1, 0, 0).unwrap();
+        let finished = store.list_operations().unwrap().into_iter().find(|item| item.id == operation.id).unwrap();
+        assert_eq!(finished.status, "cancelled");
+        assert_eq!((finished.current, finished.total), (1, 4));
+        drop(store);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
     fn projects_and_pins_are_persistent_and_ordered() {
         let path = std::env::temp_dir().join(format!(
             "opencore-projects-{}.sqlite3",
@@ -1046,6 +1071,33 @@ impl EventStore {
         Ok(())
     }
 
+    pub fn request_operation_cancel(&self, id: &str) -> Result<(), String> {
+        let changed = self.connection.lock().map_err(|e| e.to_string())?.execute(
+            "UPDATE operations SET phase='Cancellation requested' WHERE id=?1 AND status IN ('queued','running')",
+            [id],
+        ).map_err(|e| e.to_string())?;
+        if changed == 0 { return Err("Import is no longer active".into()); }
+        Ok(())
+    }
+
+    pub fn finish_cancelled_operation(&self, id: &str, current: u64, total: u64,
+        imported: u64, updated: u64, skipped: u64) -> Result<(), String> {
+        self.connection.lock().map_err(|e| e.to_string())?.execute(
+            "UPDATE operations SET phase='Cancelled',status='cancelled',current=?2,total=?3,
+             imported=?4,updated=?5,skipped=?6,summary='Import cancelled. Imported sessions remain until cleared.',
+             error=NULL,finished_at=?7 WHERE id=?1 AND status IN ('queued','running')",
+            params![id, current, total, imported, updated, skipped, Utc::now().to_rfc3339()],
+        ).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub fn has_active_operation(&self, kind: &str, target: &str) -> Result<bool, String> {
+        self.connection.lock().map_err(|e| e.to_string())?.query_row(
+            "SELECT EXISTS(SELECT 1 FROM operations WHERE kind=?1 AND target=?2 AND status IN ('queued','running'))",
+            params![kind, target], |row| row.get(0),
+        ).map_err(|e| e.to_string())
+    }
+
     pub fn list_operations(&self) -> Result<Vec<OperationRecord>, String> {
         let connection = self.connection.lock().map_err(|e| e.to_string())?;
         let mut statement = connection.prepare(
@@ -1223,6 +1275,53 @@ impl EventStore {
         let ids = statement.query_map([], |row| row.get::<_, String>(0))
             .map_err(|error| error.to_string())?
             .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+        Ok(ids)
+    }
+
+    pub fn imported_conversation_ids_for_client(&self, client: &str) -> Result<Vec<String>, String> {
+        let (client_name, prefix) = match client {
+            "codex" => ("Codex", "codex:%"),
+            "claude-code" => ("Claude Code", "claude:%"),
+            _ => return Err(format!("Unsupported imported history source: {client}")),
+        };
+        let connection = self.connection.lock().map_err(|error| error.to_string())?;
+        let mut statement = connection.prepare(
+            "SELECT DISTINCT c.id FROM conversations c WHERE c.client=?1 AND c.id LIKE ?2
+             AND EXISTS(SELECT 1 FROM timeline t WHERE t.conversation_id=c.id AND t.kind<>'echo_import' AND t.source=?1)
+             ORDER BY c.id",
+        ).map_err(|error| error.to_string())?;
+        let ids = statement.query_map(params![client_name, prefix], |row| row.get::<_, String>(0))
+            .map_err(|error| error.to_string())?
+            .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+        Ok(ids)
+    }
+
+    pub fn clear_imported_history(&self, client: &str) -> Result<Vec<String>, String> {
+        let (client_name, prefix) = match client {
+            "codex" => ("Codex", "codex:%"),
+            "claude-code" => ("Claude Code", "claude:%"),
+            _ => return Err(format!("Unsupported imported history source: {client}")),
+        };
+        let mut connection = self.connection.lock().map_err(|error| error.to_string())?;
+        let transaction = connection.transaction().map_err(|error| error.to_string())?;
+        let ids = {
+            let mut statement = transaction.prepare(
+                "SELECT DISTINCT c.id FROM conversations c WHERE c.client=?1 AND c.id LIKE ?2
+                 AND EXISTS(SELECT 1 FROM timeline t WHERE t.conversation_id=c.id AND t.kind<>'echo_import' AND t.source=?1)
+                 ORDER BY c.id",
+            ).map_err(|error| error.to_string())?;
+            let ids = statement.query_map(params![client_name, prefix], |row| row.get::<_, String>(0))
+                .map_err(|error| error.to_string())?
+                .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+            ids
+        };
+        for id in &ids {
+            transaction.execute("DELETE FROM timeline WHERE conversation_id=?1", [id])
+                .map_err(|error| error.to_string())?;
+            transaction.execute("DELETE FROM conversations WHERE id=?1", [id])
+                .map_err(|error| error.to_string())?;
+        }
+        transaction.commit().map_err(|error| error.to_string())?;
         Ok(ids)
     }
 

@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -53,8 +54,9 @@ def test_complete_source_can_reconstruct_a_continuation_chain_but_rejects_a_cuto
     assert corpus.python_fingerprint('```python\ndef unfinished(x):\n') is None
 
 
-def test_split_has_unique_prompts_and_answer_code_and_exact_source_provenance(tmp_path):
+def test_split_has_unique_prompts_and_answer_code_and_exact_source_provenance(tmp_path, monkeypatch):
     corpus = module()
+    monkeypatch.setattr(corpus.shutil, 'disk_usage', lambda _path: SimpleNamespace(free=300_000_000_000))
     source = tmp_path / 'full.jsonl'
     rows = [{'messages': [{'role': 'user', 'content': f'Implement independent scoring function {i}.'},
                            {'role': 'assistant', 'content': f'```python\ndef score_{i}(x):\n    return x * {i + 2}\n```'}]}
@@ -72,3 +74,9 @@ def test_split_has_unique_prompts_and_answer_code_and_exact_source_provenance(tm
     assert all(row['provenance']['source_sha256'] == hashlib.sha256(source.read_bytes()).hexdigest() for row in records)
     assert result['corpus_sha256'] == hashlib.sha256((destination / 'corpus.jsonl').read_bytes()).hexdigest()
     assert result['semantic_verification'] is False and result['models_loaded'] is False
+
+    monkeypatch.setattr(corpus.shutil, 'disk_usage', lambda _path: SimpleNamespace(free=100_000_000_000))
+    rejected = tmp_path / 'rejected'
+    with pytest.raises(ValueError, match='100 GB free disk reserve'):
+        corpus.prepare(source, rejected, [benchmark_file(tmp_path)], train_count=8, validation_count=3)
+    assert not rejected.exists()

@@ -59,14 +59,25 @@ class ToyCausalLM(nn.Module):
     def get_output_embeddings(self):
         return self.head
 
-    def forward(self, *, inputs_embeds, output_hidden_states, use_cache, logits_to_keep):
-        assert output_hidden_states is True and use_cache is False and logits_to_keep == 1
+    def forward(
+        self, *, inputs_embeds, output_hidden_states, use_cache, logits_to_keep,
+        past_key_values=None,
+    ):
+        assert output_hidden_states is True and logits_to_keep == 1
         self.calls += 1
         self.last_inputs = inputs_embeds
         self.input_lengths.append(inputs_embeds.shape[1])
         # Prefix sum makes the output depend on all supplied token embeddings.
-        hidden = inputs_embeds.cumsum(dim=1)
-        return SimpleNamespace(hidden_states=(hidden,), logits=self.head(hidden[:, -1:]))
+        previous = (
+            torch.zeros_like(inputs_embeds[:, 0, :])
+            if past_key_values is None else past_key_values[0]
+        )
+        hidden = (inputs_embeds + previous[:, None, :]).cumsum(dim=1)
+        next_cache = (hidden[:, -1, :],) if use_cache else None
+        return SimpleNamespace(
+            hidden_states=(hidden,), logits=self.head(hidden[:, -1:]),
+            past_key_values=next_cache,
+        )
 
 
 def make_model():
@@ -234,7 +245,7 @@ def test_one_stream_retokenizes_k2_after_each_nanbeige_token():
     emitted = list(fusion.stream_text("a", qtok, ktok, max_new_tokens=2))
     assert emitted == ["b", "b"]
     assert nanbeige.calls == k2.calls == 2
-    assert nanbeige.input_lengths == [1, 2]
+    assert nanbeige.input_lengths == [1, 1]
     assert k2.input_lengths == [1, 1]  # "ab" becomes one K2 token.
     assert fusion.last_text == "a" + "".join(emitted)
     assert fusion.last_k2_ids == ktok.encode(fusion.last_text)
@@ -248,9 +259,15 @@ def test_native_chat_prefixes_share_only_the_generated_suffix():
     assert pieces == ["b", "b"]
     assert fusion.last_generated_text == "bb"
     assert fusion.last_text == "abb"
-    assert nanbeige.input_lengths == [1, 2]
-    assert k2.input_lengths == [1, 2]
+    assert nanbeige.input_lengths == [1, 1]
+    assert k2.input_lengths == [1, 1]
     assert fusion.last_k2_ids == ktok.encode("abbb")
+
+
+def test_zero_output_budget_does_not_prefill_either_tower():
+    fusion, nanbeige, k2, qtok, ktok = make_model()
+    assert list(fusion.stream_text("a", qtok, ktok, max_new_tokens=0)) == []
+    assert nanbeige.calls == k2.calls == 0
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")

@@ -20,6 +20,8 @@ class CoupledStep:
     feedback: CoupledFeedback
     nanbeige_native_logits: torch.Tensor
     k2_native_logits: torch.Tensor
+    first_cache: object | None = None
+    second_cache: object | None = None
 
 
 class CouplingBridge(nn.Module):

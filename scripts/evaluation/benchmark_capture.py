@@ -227,8 +227,8 @@ def capture(base_url, model, inputs_path, identity_path, output, max_tokens):
     for row in inputs["rows"]:
         if str(row["id"]) in done:
             continue
-        if shutil.disk_usage(output).free < 200000000000:
-            raise RuntimeError("Storage reserve below 200 GB; capture stopped")
+        if shutil.disk_usage(output).free < 100_000_000_000:
+            raise RuntimeError("Storage reserve below 100 GB; capture stopped")
         messages = []
         if inputs.get("system_prompt") is not None:
             messages.append({"role": "system", "content": inputs["system_prompt"]})

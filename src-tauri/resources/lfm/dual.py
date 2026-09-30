@@ -22,16 +22,24 @@ REVIEW_SCHEMA = {'type': 'object', 'properties': {
 
 class LfmBackbone(LlamaBackbone):
     def chat(self, messages, *, tools=None, on_delta=None, **kwargs):
+        template_kwargs = dict(kwargs.pop('chat_template_kwargs', {}) or {})
+        template_kwargs['skip_think'] = bool(kwargs.get('json_mode') or kwargs.get('json_schema'))
+        template_kwargs['preserve_thinking'] = (
+            isinstance(kwargs.get('thinking_budget_tokens'), int)
+            and kwargs['thinking_budget_tokens'] > 0
+            and not template_kwargs['skip_think']
+        )
+        kwargs['chat_template_kwargs'] = template_kwargs
         decoder = OutputStream()
         def preview(delta):
-            for parsed in decoder.feed(delta.get('content') or ''):
+            for parsed in decoder.feed(delta.get('content') or '', tools=tools):
                 on_delta(parsed)
         reply = super().chat(with_tools(messages, tools), on_delta=preview if on_delta else None, **kwargs)
         if on_delta:
-            for delta in decoder.feed('', final=True):
+            for delta in decoder.feed('', final=True, tools=tools):
                 on_delta(delta)
         else:
-            decoder.feed(reply.content, final=True)
+            decoder.feed(reply.content, final=True, tools=tools)
         message = decoder.message(tools)
         raw = dict(reply.raw)
         raw['choices'] = [{**reply.raw['choices'][0], 'message': message}]
@@ -63,10 +71,10 @@ class NativeEchoBrain:
             if length == 0:
                 finish = 'stop'; break
             count += 1
-            for delta in decoder.feed(utf8.decode(buffer.raw[:length - 1])):
+            for delta in decoder.feed(utf8.decode(buffer.raw[:length - 1]), tools=tools):
                 if on_delta:
                     on_delta(delta)
-        for delta in decoder.feed(utf8.decode(b'', final=True), final=True):
+        for delta in decoder.feed(utf8.decode(b'', final=True), final=True, tools=tools):
             if on_delta:
                 on_delta(delta)
         message = decoder.message(tools)
@@ -90,11 +98,13 @@ class DualCoreEngine:
         if self.native:
             self.native.close()
 
-    def complete(self, messages, tools, max_tokens, preview=None, *, temperature=0.35):
+    def complete(self, messages, tools, max_tokens, preview=None, *, temperature=0.35,
+                 thinking_budget_tokens=None):
         instructions = ('Construct a complete answer while preserving all user requirements.',
                         'Independently solve the task and check errors and missing requirements.')
         futures = [self.pool.submit(brain.chat, [{'role': 'system', 'content': instructions[i]}, *messages],
                                    tools=tools, max_tokens=max_tokens, temperature=temperature,
+                                   thinking_budget_tokens=thinking_budget_tokens,
                                    on_delta=preview if i == 0 else None)
                    for i, brain in enumerate(self.brains)]
         replies = [future.result() for future in futures]
@@ -132,13 +142,34 @@ class DualCoreEngine:
                         max_tokens=384, temperature=0.0, json_schema=REVIEW_SCHEMA)
                        for brain, swapped in zip(self.brains, orders)]
             scores = [0.0, 0.0]
-            for future, swapped in zip(futures, orders):
+            for reviewer_index, (future, swapped) in enumerate(zip(futures, orders)):
                 reply = future.result()
                 review = parse_review(reply.content)
+                retried = False
                 if review is None:
-                    raise RuntimeError('LFM joint candidate review returned invalid scores; no tool action selected')
+                    DuoCoreEngine._add_usage(usage, DuoCoreEngine._usage_for_reply(reply))
+                    retried = True
+                    retry_messages = [
+                        *review_messages(messages, candidates[int(swapped)], candidates[int(not swapped)], tools),
+                        {'role': 'assistant', 'content': reply.content},
+                        {'role': 'user', 'content': (
+                            'Your previous response was not valid score JSON. Return exactly one JSON object '
+                            'with numeric score_a, score_b, and confidence from 0 to 100, plus a short string reason. '
+                            'Do not include markdown or any text outside the JSON object.'
+                        )},
+                    ]
+                    reply = self.brains[reviewer_index].chat(
+                        retry_messages, max_tokens=192, temperature=0.0, json_schema=REVIEW_SCHEMA)
+                    review = parse_review(reply.content)
+                if review is None:
+                    preview = reply.content[:400].replace('\r', ' ').replace('\n', ' ')
+                    finish = reply.raw.get('choices', [{}])[0].get('finish_reason', 'unknown')
+                    raise RuntimeError(
+                        'LFM joint candidate review remained invalid after one correction retry '
+                        f'(finish_reason={finish!r}, content={preview!r}); no tool action selected'
+                    )
                 record = review.to_dict()
-                reviews.append({'swapped': swapped, **record})
+                reviews.append({'swapped': swapped, 'retried': retried, **record})
                 # A/B are displayed in opposite orders to the two reviewers.
                 scores[int(swapped)] += record['score_a']
                 scores[int(not swapped)] += record['score_b']

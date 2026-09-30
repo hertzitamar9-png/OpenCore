@@ -156,7 +156,7 @@ answer; the capture tool never substitutes reasoning, a canonical answer, or a
 retry-generated answer. Server errors stop capture with a bounded error body.
 Rerunning the command resumes only a matching capture and preserves existing
 answers. New captures retain the exact `identity.json` bytes, and replay verifies
-that file hash against the binding and embedded model metadata. It accepts loopback HTTP endpoints only and enforces the user's 200 GB
+that file hash against the binding and embedded model metadata. It accepts loopback HTTP endpoints only and enforces the user's 100 GB
 free-space reserve.
 
 For ECHO profiles, set `request_isolation` to
@@ -171,8 +171,14 @@ CPU replay; `mockllm/recorded-api-answers` is a transport for saved actual model
 answers and performs no inference.
 
 ```sh
-.venv-evaluation/bin/python scripts/evaluation/grade_captured_benchmark.py --benchmark humaneval --inputs scripts/evaluation/runs/humaneval/humaneval-inputs.json --captures scripts/evaluation/runs/fusioncore-kv/captures --output scripts/evaluation/runs/fusioncore-kv/graded
+source .venv-evaluation/bin/activate
+python scripts/evaluation/grade_captured_benchmark.py --benchmark humaneval --inputs scripts/evaluation/runs/humaneval/humaneval-inputs.json --captures scripts/evaluation/runs/fusioncore-kv/captures --output scripts/evaluation/runs/fusioncore-kv/graded
 ```
+
+Activate the environment before grading. Inspect's local code sandbox launches
+the `python` executable by name for HumanEval; calling the venv's Python by an
+absolute path without adding the venv to `PATH` can grade only the first sample
+and then fail with `FileNotFoundError: python`.
 
 For LiveBench, select `--benchmark livebench` and its original prepared inputs.
 The release date must match the recorded provenance. Grading checks all task
@@ -191,7 +197,7 @@ timings, and executed-code logs remain separate evidence files.
 The controls check known passing and failing answers across all six categories.
 They are explicitly marked as non-model evidence. `snapshot_model_source.py`
 can retain the exact small Python/C++/header/JSON/build sources and native
-wrappers listed in a runtime identity. It verifies source hashes and the 200 GB
+wrappers listed in a runtime identity. It verifies source hashes and the 100 GB
 reserve before creating a snapshot, and never copies model weights.
 
 ## Result scope

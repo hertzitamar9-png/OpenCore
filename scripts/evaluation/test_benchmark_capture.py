@@ -145,9 +145,9 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(len(self.server.requests), 0)
 
     def test_low_storage_stops_before_any_generation_request(self):
-        result = self.capture(disk_free=199999999999)
+        result = self.capture(disk_free=99999999999)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Storage reserve below 200 GB', result.stderr)
+        self.assertIn('Storage reserve below 100 GB', result.stderr)
         self.assertEqual(self.server.requests, [])
         self.assertEqual((self.output / 'responses.jsonl').read_bytes(), b'')
 

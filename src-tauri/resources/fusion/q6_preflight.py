@@ -19,8 +19,8 @@ def require_q6_resources(*, context, free_gpu_bytes, free_disk_bytes, environmen
         raise ValueError('CUDA is disabled; refusing full native Q6 CPU fallback')
     if context < 32 or context > 8192:
         raise ValueError('TwinCore context must remain within the experimental 32–8192 token bounds')
-    if free_disk_bytes < 200_000_000_000:
-        raise ValueError('The 200 GB free disk reserve must be retained')
+    if free_disk_bytes < 100_000_000_000:
+        raise ValueError('The 100 GB free disk reserve must be retained')
     weights = sum(entry['bytes'] for entry in CHECKPOINTS.values())
     kv = estimate_bf16_kv_bytes(context)
     margin = require_device_budget(free_gpu_bytes, weights, kv, SCRATCH_RESERVE)

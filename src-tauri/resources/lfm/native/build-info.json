@@ -6,13 +6,19 @@
   "files": [
     {
       "path": "fusioncore.cpp",
-      "bytes": 15606,
-      "sha256": "01cababc181e49a3d07a5d9cb87d16b868e99e9635193ad57dac76b8a54bf85c"
+      "bytes": 17434,
+      "sha256": "51c3263e7167b8b2042efd895bca1985bf1d7584e88ccbec41def449294b1556"
     },
     {
       "path": "fusioncore.dll",
       "bytes": 37376,
-      "sha256": "2e450f3732d83a82ae8fe8c1766ba6d8309058ef601cc214507019b5b5bb1fe1"
+      "sha256": "626c4d6822e41fd84e34a05f82b5aae209043c2feaac2235d22c34b138ac4bf6"
+    },
+    {
+      "path": "fusioncore-v2.dll",
+      "bytes": 38912,
+      "sha256": "1e274d9ac49f40ae63c0057493cd67d5a287ada7377c74cf04a7c67aa5e7f194"
     }
-  ]
+  ],
+  "reasoning_budget_support": "Native FusionCore emits the tokenizer-encoded closing sequence </think> after the configured sampled reasoning-token budget."
 }

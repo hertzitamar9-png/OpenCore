@@ -22,7 +22,7 @@ const desktop = () => "__TAURI_INTERNALS__" in window;
 export interface InstalledModel {
   id: string; label: string; description: string; selectable: boolean;
   precision: string; contextTokens: number; license: string; experimental: boolean; note: string;
-  installed: boolean; downloadBytes: number; totalBytes: number;
+  installed: boolean; externalManaged: boolean; downloadBytes: number; totalBytes: number;
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
@@ -30,7 +30,7 @@ export interface ModelLibrary {
 }
 export async function modelLibrary(): Promise<ModelLibrary> {
   if (desktop()) return invoke<ModelLibrary>("list_model_library");
-  return { models: modelCatalog.models.map((model) => ({ ...model, installed: false,
+  return { models: modelCatalog.models.map((model) => ({ ...model, installed: false, externalManaged: false,
     downloadBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0),
     totalBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0) })),
     diskFreeBytes: 240e9, minimumFreeBytes: 200e9, progress: null };
@@ -214,9 +214,9 @@ export async function deleteConnector(id: string): Promise<void> {
   await invoke("delete_connector", { id });
 }
 
-export async function testConnector(endpoint: string): Promise<string> {
+export async function testConnector(id: string, endpoint: string): Promise<string> {
   if (!desktop()) return "Desktop backend required for a live connection test.";
-  return invoke<string>("test_connector", { endpoint });
+  return invoke<string>("test_connector", { id, endpoint });
 }
 
 export async function configureUnsloth(): Promise<string> {
@@ -236,6 +236,16 @@ export async function listOperations(): Promise<OperationRecord[]> {
 export async function startHistorySync(id: "claude-code" | "codex"): Promise<OperationRecord> {
   if (!desktop()) throw new Error("History sync requires the desktop application.");
   return invoke<OperationRecord>("start_history_sync", { id });
+}
+
+export async function cancelHistorySync(id: string): Promise<void> {
+  if (!desktop()) throw new Error("History import cancellation requires the desktop application.");
+  await invoke("cancel_history_sync", { id });
+}
+
+export async function clearImportedHistory(id: "claude-code" | "codex"): Promise<string> {
+  if (!desktop()) throw new Error("Imported history cleanup requires the desktop application.");
+  return invoke<string>("clear_imported_history", { id });
 }
 
 export async function searchArchive(query: string, limit = 50, conversationIds?: string[]): Promise<ArchiveSearchHit[]> {
@@ -318,10 +328,10 @@ export async function configureAgentConnector(id: "claude-code" | "codex"): Prom
   return invoke<string>("configure_agent_connector", { id });
 }
 
-export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = [], subagentsEnabled = false, maxSubagents = 3, projectSkillsEnabled = true, compactAtTokens = 200000): Promise<ChatSendResult> {
+export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = [], subagentsEnabled = false, maxSubagents = 3, projectSkillsEnabled = true, compactAtTokens = 200000, submissionId = crypto.randomUUID()): Promise<ChatSendResult> {
   if (!desktop()) throw new Error("Interactive chat requires the desktop application.");
   return invoke<ChatSendResult>("send_chat_message", {
-    request: { conversationId, text, files, reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens },
+    request: { conversationId, text, files, reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, submissionId },
   });
 }
 

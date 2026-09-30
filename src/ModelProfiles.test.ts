@@ -22,4 +22,16 @@ describe("model profile context claims", () => {
     });
   });
 
+  it("keeps ECHO retrieval separate from active KV decoding in the model picker", () => {
+    expect(selectableModelProfiles.find(({ id }) => id === "dualcore-echo")?.description).toContain("ECHO archive");
+    expect(selectableModelProfiles.find(({ id }) => id === "dualcore-echo")?.description).toContain("incremental KV");
+    expect(selectableModelProfiles.find(({ id }) => id === "fusioncore-echo")?.description).toContain("ECHO archive");
+    expect(selectableModelProfiles.find(({ id }) => id === "fusioncore-echo")?.description).toContain("incremental KV");
+  });
+
+  it("offers native context profiles separately from ECHO-backed profiles", () => {
+    expect(selectableModelProfiles.find(({ id }) => id === "dualcore-kv")?.description).toContain("native context");
+    expect(selectableModelProfiles.find(({ id }) => id === "fusioncore-kv")?.description).toContain("native context");
+  });
+
 });

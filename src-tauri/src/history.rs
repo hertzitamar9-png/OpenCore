@@ -4,6 +4,8 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
+pub const SYNC_CANCELLED: &str = "__HISTORY_SYNC_CANCELLED__";
+
 #[derive(Debug, Clone, Default)]
 pub struct SyncReport {
     pub current: usize,
@@ -26,24 +28,32 @@ fn record_source_folder(store: &EventStore, id: &str, cwd: Option<&str>, report:
     }
 }
 
-fn jsonl_files(root: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(root) else { return };
+fn jsonl_files(root: &Path, out: &mut Vec<PathBuf>, cancelled: &dyn Fn() -> bool) -> Result<(), String> {
+    if cancelled() { return Err(SYNC_CANCELLED.into()); }
+    let Ok(entries) = fs::read_dir(root) else { return Ok(()) };
     for entry in entries.flatten() {
+        if cancelled() { return Err(SYNC_CANCELLED.into()); }
         let path = entry.path();
         if path.is_dir() {
-            jsonl_files(&path, out);
+            jsonl_files(&path, out, cancelled)?;
         } else if path.extension().and_then(|v| v.to_str()) == Some("jsonl") {
             out.push(path);
         }
     }
+    Ok(())
 }
 
-fn newest_jsonl(root: &Path) -> Vec<PathBuf> {
+fn newest_jsonl(root: &Path, cancelled: &dyn Fn() -> bool) -> Result<Vec<PathBuf>, String> {
     let mut files = Vec::new();
-    jsonl_files(root, &mut files);
-    files.sort_by_key(|path| fs::metadata(path).and_then(|m| m.modified()).ok());
-    files.reverse();
-    files
+    jsonl_files(root, &mut files, cancelled)?;
+    let mut modified = Vec::with_capacity(files.len());
+    for path in files {
+        if cancelled() { return Err(SYNC_CANCELLED.into()); }
+        modified.push((fs::metadata(&path).and_then(|metadata| metadata.modified()).ok(), path));
+    }
+    modified.sort_by_key(|(stamp, _)| *stamp);
+    modified.reverse();
+    Ok(modified.into_iter().map(|(_, path)| path).collect())
 }
 
 fn is_internal_context(text: &str) -> bool {
@@ -137,12 +147,18 @@ pub fn sync_claude(store: &EventStore, profile: &Path) -> Result<usize, String> 
 
 fn sync_claude_with_progress(store: &EventStore, profile: &Path,
     progress: &mut impl FnMut(&SyncReport)) -> Result<SyncReport, String> {
+    sync_claude_with_cancellation(store, profile, progress, &|| false)
+}
+
+fn sync_claude_with_cancellation(store: &EventStore, profile: &Path,
+    progress: &mut impl FnMut(&SyncReport), cancelled: &dyn Fn() -> bool) -> Result<SyncReport, String> {
     let root = profile.join(".claude").join("projects");
     if !root.is_dir() { return Err(format!("Claude Code history not found: {}", root.display())); }
-    let paths = newest_jsonl(&root);
+    let paths = newest_jsonl(&root, cancelled)?;
     let mut report = SyncReport { total: paths.len(), ..Default::default() };
     progress(&report);
     for (index, path) in paths.into_iter().enumerate() {
+        if cancelled() { return Err(SYNC_CANCELLED.into()); }
         report.current = index;
         report.skipped = report.current.saturating_sub(report.imported + report.updated);
         progress(&report);
@@ -153,6 +169,7 @@ fn sync_claude_with_progress(store: &EventStore, profile: &Path,
         let mut project_cwd: Option<String> = None;
         let mut rows: Vec<(String,String,String,String,String,Value)> = Vec::new();
         for line in BufReader::new(file).lines().map_while(Result::ok) {
+            if cancelled() { return Err(SYNC_CANCELLED.into()); }
             let Ok(value) = serde_json::from_str::<Value>(&line) else { continue };
             let typ = value.get("type").and_then(Value::as_str).unwrap_or("");
             if project_cwd.is_none() {
@@ -183,6 +200,7 @@ fn sync_claude_with_progress(store: &EventStore, profile: &Path,
                 rows.push((timestamp.clone(), kind, role.into(), label.into(), content, value.clone()));
             }
         }
+        if cancelled() { return Err(SYNC_CANCELLED.into()); }
         if rows.is_empty() { continue; }
         let created = store.replace_imported_history(&id, "Claude Code", if title.is_empty() { "Claude Code session" } else { &title }, &rows)?;
         record_source_folder(store, &id, project_cwd.as_deref(), &mut report);
@@ -201,12 +219,18 @@ pub fn sync_codex(store: &EventStore, profile: &Path) -> Result<usize, String> {
 
 fn sync_codex_with_progress(store: &EventStore, profile: &Path,
     progress: &mut impl FnMut(&SyncReport)) -> Result<SyncReport, String> {
+    sync_codex_with_cancellation(store, profile, progress, &|| false)
+}
+
+fn sync_codex_with_cancellation(store: &EventStore, profile: &Path,
+    progress: &mut impl FnMut(&SyncReport), cancelled: &dyn Fn() -> bool) -> Result<SyncReport, String> {
     let root = profile.join(".codex").join("sessions");
     if !root.is_dir() { return Err(format!("Codex history not found: {}", root.display())); }
-    let paths = newest_jsonl(&root);
+    let paths = newest_jsonl(&root, cancelled)?;
     let mut report = SyncReport { total: paths.len(), ..Default::default() };
     progress(&report);
     for (index, path) in paths.into_iter().enumerate() {
+        if cancelled() { return Err(SYNC_CANCELLED.into()); }
         report.current = index;
         report.skipped = report.current.saturating_sub(report.imported + report.updated);
         progress(&report);
@@ -217,6 +241,7 @@ fn sync_codex_with_progress(store: &EventStore, profile: &Path,
         let mut project_cwd: Option<String> = None;
         let mut rows: Vec<(String,String,String,String,String,Value)> = Vec::new();
         for line in BufReader::new(file).lines().map_while(Result::ok) {
+            if cancelled() { return Err(SYNC_CANCELLED.into()); }
             let Ok(value) = serde_json::from_str::<Value>(&line) else { continue };
             if value.get("type").and_then(Value::as_str) == Some("session_meta") {
                 if project_cwd.is_none() {
@@ -261,6 +286,7 @@ fn sync_codex_with_progress(store: &EventStore, profile: &Path,
                 _ => {}
             }
         }
+        if cancelled() { return Err(SYNC_CANCELLED.into()); }
         if rows.is_empty() { continue; }
         let created = store.replace_imported_history(&id, "Codex", if title.is_empty() { "Codex session" } else { &title }, &rows)?;
         record_source_folder(store, &id, project_cwd.as_deref(), &mut report);
@@ -275,10 +301,16 @@ fn sync_codex_with_progress(store: &EventStore, profile: &Path,
 
 pub fn sync_with_progress(store: &EventStore, id: &str,
     mut progress: impl FnMut(&SyncReport)) -> Result<SyncReport, String> {
+    sync_with_cancellation(store, id, &mut progress, &|| false)
+}
+
+pub fn sync_with_cancellation(store: &EventStore, id: &str,
+    mut progress: impl FnMut(&SyncReport), cancelled: &dyn Fn() -> bool) -> Result<SyncReport, String> {
+    if cancelled() { return Err(SYNC_CANCELLED.into()); }
     let profile = history_profile_root()?;
     match id {
-        "claude-code" => sync_claude_with_progress(store, &profile, &mut progress),
-        "codex" => sync_codex_with_progress(store, &profile, &mut progress),
+        "claude-code" => sync_claude_with_cancellation(store, &profile, &mut progress, cancelled),
+        "codex" => sync_codex_with_cancellation(store, &profile, &mut progress, cancelled),
         _ => Err(format!("History sync is not supported for {id}")),
     }
 }
@@ -407,6 +439,27 @@ mod tests {
         assert_eq!(entries[2].content, "Continue in the app");
         assert_eq!(entries[2].source, "OpenCore");
 
+        drop(store);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn cancellation_during_transcript_read_does_not_save_a_partial_session() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let root = std::env::temp_dir().join(format!("opencore-history-cancel-{}", uuid::Uuid::new_v4()));
+        let sessions = root.join(".codex").join("sessions");
+        std::fs::create_dir_all(&sessions).unwrap();
+        std::fs::write(sessions.join("session.jsonl"), concat!(
+            r#"{"type":"response_item","payload":{"type":"message","role":"user","content":"first"}}"#, "\n",
+            r#"{"type":"response_item","payload":{"type":"message","role":"assistant","content":"second"}}"#, "\n"
+        )).unwrap();
+        let store = EventStore::open(&root.join("history.sqlite3")).unwrap();
+        let checks = AtomicUsize::new(0);
+        let result = sync_codex_with_cancellation(&store, &root, &mut |_| {}, &|| {
+            checks.fetch_add(1, Ordering::SeqCst) >= 5
+        });
+        assert_eq!(result.unwrap_err(), SYNC_CANCELLED);
+        assert!(store.conversation("codex:session").unwrap().is_empty());
         drop(store);
         let _ = std::fs::remove_dir_all(root);
     }

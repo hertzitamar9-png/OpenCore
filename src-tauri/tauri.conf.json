@@ -72,11 +72,13 @@
       "resources/lfm/checkpoint.json": "lfm/checkpoint.json",
       "resources/lfm/LICENSE.weights.txt": "lfm/LICENSE.weights.txt",
       "resources/lfm/README.md": "lfm/README.md",
+      "resources/lfm/chat_template_no_think.jinja": "lfm/chat_template_no_think.jinja",
       "resources/lfm/fusion.py": "lfm/fusion.py",
       "resources/lfm/dual.py": "lfm/dual.py",
       "resources/lfm/protocol.py": "lfm/protocol.py",
       "resources/lfm/serve_lfm.py": "lfm/serve_lfm.py",
       "resources/lfm/native/fusioncore.dll": "lfm/native/fusioncore.dll",
+        "resources/lfm/native/fusioncore-v2.dll": "lfm/native/fusioncore-v2.dll",
       "resources/lfm/native/build-info.json": "lfm/native/build-info.json"
     },
     "windows": {

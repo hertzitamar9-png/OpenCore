@@ -8,7 +8,7 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, atomic::{AtomicBool, Ordering}};
 use sysinfo::Disks;
 
-const MIN_FREE_BYTES: u64 = 200_000_000_000;
+const MIN_FREE_BYTES: u64 = 100_000_000_000;
 static CANCEL: AtomicBool = AtomicBool::new(false);
 static PROGRESS: Mutex<Option<InstallProgress>> = Mutex::new(None);
 
@@ -30,7 +30,7 @@ pub struct Model {
 struct Manifest { artifacts: Vec<Artifact>, models: Vec<Model> }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, download_bytes: u64, total_bytes: u64 }
+pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallProgress {
@@ -83,6 +83,30 @@ fn modified(path: &Path) -> Result<u128, String> {
 }
 fn file_receipt(root: &Path, file: &Artifact) -> PathBuf { root.join("models/receipts").join(format!("file-{}.json", file.id)) }
 fn model_receipt(root: &Path, model: &Model) -> PathBuf { root.join("models/receipts").join(format!("model-{}.json", model.id)) }
+fn complete_whisper_checkpoint(path: &Path) -> bool {
+    let metadata = ["config.json", "generation_config.json", "preprocessor_config.json",
+        "tokenizer_config.json", "normalizer.json", "special_tokens_map.json", "added_tokens.json"];
+    metadata.iter().all(|name| path.join(name).is_file()) &&
+        (path.join("model.safetensors").is_file() ||
+            (path.join("model.safetensors.index.json").is_file() &&
+                path.join("model-00001-of-00002.safetensors").is_file() &&
+                path.join("model-00002-of-00002.safetensors").is_file())) &&
+        (path.join("tokenizer.json").is_file() ||
+            (path.join("vocab.json").is_file() && path.join("merges.txt").is_file()))
+}
+pub fn external_whisper_model() -> Option<PathBuf> {
+    let configured = std::env::var_os("OPENCORE_WHISPER_MODEL").map(PathBuf::from);
+    let profile = std::env::var_os("USERPROFILE").map(PathBuf::from)
+        .map(|home| home.join("OpenCore-Model-Test/asr/whisper-large-v3-turbo"));
+    configured.into_iter().chain(profile).find(|path| path.is_absolute() && complete_whisper_checkpoint(path))
+}
+pub fn whisper_model_path(root: &Path) -> PathBuf {
+    external_whisper_model().unwrap_or_else(|| root.join("speech/large-v3-turbo"))
+}
+pub fn whisper_model_available(root: &Path) -> bool { complete_whisper_checkpoint(&whisper_model_path(root)) }
+fn speech_runtime_ready(root: &Path) -> bool {
+    root.join("speech/runtime.json").is_file() && root.join("speech/venv/Scripts/python.exe").is_file()
+}
 fn verified_file(root: &Path, file: &Artifact) -> bool {
     let Ok(path) = safe_path(root, &file.path) else { return false; };
     let receipt = std::fs::read(file_receipt(root, file)).ok().and_then(|b| serde_json::from_slice::<FileReceipt>(&b).ok());
@@ -92,6 +116,11 @@ fn verified_file(root: &Path, file: &Artifact) -> bool {
         modified(&path).ok() == Some(receipt.modified_nanos)
 }
 fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
+    if model.id == "whisper-large-v3" {
+        return speech_runtime_ready(root) && (external_whisper_model().is_some() ||
+            (model_receipt(root, model).is_file() && model.artifacts.iter().all(|id|
+                data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))));
+    }
     model_receipt(root, model).is_file() && model.artifacts.iter().all(|id|
         data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))
 }
@@ -108,7 +137,7 @@ pub fn free_bytes(root: &Path) -> u64 {
 fn reserve_space(root: &Path, additional: u64) -> Result<(), String> {
     let free = free_bytes(root);
     if free < MIN_FREE_BYTES.saturating_add(additional).saturating_add(64 * 1024 * 1024) {
-        return Err(format!("Installation would leave less than 200 GB free. Available: {:.1} GB; remaining download: {:.1} GB.", free as f64/1e9, additional as f64/1e9));
+        return Err(format!("Installation would leave less than 100 GB free. Available: {:.1} GB; remaining download: {:.1} GB.", free as f64/1e9, additional as f64/1e9));
     }
     Ok(())
 }
@@ -116,8 +145,9 @@ pub fn list(root: &Path) -> Result<Library, String> {
     let data = manifest()?;
     let models = data.models.iter().map(|m| {
         let files: Vec<_> = data.artifacts.iter().filter(|f| m.artifacts.contains(&f.id)).collect();
-        ModelInfo { model: m.clone(), installed: installed(root, m, &data),
-            download_bytes: files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum(),
+        let external_managed = m.id == "whisper-large-v3" && external_whisper_model().is_some();
+        ModelInfo { model: m.clone(), installed: installed(root, m, &data), external_managed,
+            download_bytes: if external_managed { 0 } else { files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum() },
             total_bytes: files.iter().map(|f| f.bytes).sum() }
     }).collect();
     Ok(Library { models, progress: PROGRESS.lock().map_err(|e| e.to_string())?.clone(),
@@ -146,8 +176,9 @@ pub fn begin(id: &str) -> Result<(), String> {
         return Err("Another model operation is in progress".into());
     }
     CANCEL.store(false, Ordering::SeqCst);
+    let external_whisper = id == "whisper-large-v3" && external_whisper_model().is_some();
     *state = Some(InstallProgress { model_id: id.into(), phase: "preparing".into(), downloaded_bytes: 0,
-        total_bytes: data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).map(|f| f.bytes).sum(),
+        total_bytes: if external_whisper { 0 } else { data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).map(|f| f.bytes).sum() },
         current_file: String::new(), error: None });
     Ok(())
 }
@@ -174,9 +205,10 @@ fn hub_token() -> Option<String> {
 async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Result<(), String> {
     let data = manifest()?;
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
-    let files: Vec<_> = data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).collect();
     let whisper = id == "whisper-large-v3";
-    let runtime_reserve = if whisper && !root.join("speech/runtime.json").is_file() { 2_000_000_000 } else { 0 };
+    let external = whisper && external_whisper_model().is_some();
+    let files: Vec<_> = if external { Vec::new() } else { data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).collect() };
+    let runtime_reserve = if whisper && !speech_runtime_ready(root) { 6_000_000_000 } else { 0 };
     reserve_space(root, files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum::<u64>().saturating_add(runtime_reserve))?;
     if whisper {
         update("preparing", 0, "Preparing speech runtime", None);
@@ -184,6 +216,10 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
         let setup_script = resources.map(|p|p.join("speech/prepare_runtime.py"));
         let preparation = tauri::async_runtime::spawn_blocking(move || prepare_speech_runtime(&root, setup_script.as_deref()));
         preparation.await.map_err(|e| e.to_string())??;
+    }
+    if external {
+        update("complete", 0, "Using the existing Whisper Large V3 Turbo checkpoint", None);
+        return Ok(());
     }
     let client = reqwest::Client::builder().connect_timeout(std::time::Duration::from_secs(30))
         .timeout(std::time::Duration::from_secs(7200)).build().map_err(|e| e.to_string())?;
@@ -306,6 +342,9 @@ pub fn uninstall(root: &Path, id: &str) -> Result<(), String> {
 }
 fn uninstall_inner(root: &Path, id: &str, data: &Manifest) -> Result<(), String> {
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
+    if id == "whisper-large-v3" && external_whisper_model().is_some() {
+        return Err("Whisper weights are in the user-managed OpenCore-Model-Test folder and were not removed.".into());
+    }
     begin(id)?;
     update("uninstalling", 0, "", None);
     let result: Result<(), String> = (|| {
@@ -358,6 +397,22 @@ mod tests {
         assert_eq!(catalog.models.iter().filter(|m| m.id.starts_with("dualcore") || m.id.starts_with("fusioncore")).count(), 4);
         for path in ["../model.gguf", "C:/model.gguf", "/model.gguf", "models\\model.gguf"] { assert!(safe_relative(path).is_err()); }
         for model in &catalog.models { for id in &model.artifacts { assert!(catalog.artifacts.iter().any(|f| &f.id == id)); } }
+    }
+    #[test] fn model_installation_preserves_100_gb_free_space() {
+        assert_eq!(MIN_FREE_BYTES, 100_000_000_000);
+    }
+    #[test] fn echo_profiles_are_selectable_with_incremental_kv() {
+        let catalog = manifest().unwrap();
+        for id in ["dualcore-echo", "fusioncore-echo"] {
+            let model = catalog.models.iter().find(|model| model.id == id).unwrap();
+            assert!(model.selectable, "{id} must remain selectable as an interactive chat model");
+            assert!(model.note.contains("incremental F16 KV"));
+        }
+        for id in ["dualcore-kv", "fusioncore-kv"] {
+            let model = catalog.models.iter().find(|model| model.id == id).unwrap();
+            assert!(model.selectable);
+            assert!(!model.note.contains("ECHO archive"));
+        }
     }
     #[test] fn removing_one_variant_preserves_shared_weights_and_history() {
         let root = std::env::temp_dir().join(format!("opencore-catalog-{}", uuid::Uuid::new_v4()));

@@ -76,8 +76,9 @@ def test_reference_fusion_uses_the_same_bridge_parameter_names_and_math():
     bridge.load_state_dict({k: v for k, v in fusion.state_dict().items()
                             if not k.startswith(('nanbeige.', 'k2.'))})
     n_ids, k_ids = torch.tensor([[0, 1]]), torch.tensor([[6]])
-    n_hidden, n_logits = fusion._tower(nanbeige, n_ids, None)
-    k_hidden, k_logits = fusion._tower(k2, k_ids, None)
+    n_hidden, n_logits, n_cache = fusion._tower(nanbeige, n_ids, None)
+    k_hidden, k_logits, k_cache = fusion._tower(k2, k_ids, None)
+    assert n_cache is None and k_cache is None
     expected = fusion.step(n_ids, k_ids)
     actual = bridge(n_hidden, k_hidden, n_logits, k_logits,
                     nanbeige.get_output_embeddings(), k2.get_output_embeddings())

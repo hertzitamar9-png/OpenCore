@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
@@ -12,7 +13,7 @@ import uuid
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from duocore.gpu_budget import gpu_startup_budget, host_ram_startup_budget  # noqa: E402
+from duocore.gpu_budget import gpu_startup_budget, host_ram_startup_budget, largest_context_that_fits  # noqa: E402
 from duocore.runtime import DuoCoreEngine, launch_llama_server, request_temperature, stop_llama_server, wait_healthy  # noqa: E402
 from duocore.spec import DuoCoreConfig, default_duocore_config  # noqa: E402
 
@@ -44,7 +45,6 @@ def main() -> int:
 
     config_path = args.config or (args.release / "twincore-config.json")
     config = default_duocore_config() if not config_path.is_file() else DuoCoreConfig.load(config_path)
-    engine = DuoCoreEngine(config, args.release)
     children = []
     if args.start_backbones and not all(endpoints_healthy((config.k2.port, config.nanbeige.port))):
         required_mib, free_mib, k2_layers, nb_layers = gpu_startup_budget(
@@ -60,14 +60,29 @@ def main() -> int:
                 "Close the other GPU model or use fewer GPU layers."
             )
         args.k2_gpu_layers, args.nanbeige_gpu_layers = k2_layers, nb_layers
+        requested_context = config.live_window_tokens
         required_ram_mib, free_ram_mib = host_ram_startup_budget(
             config, args.release, k2_layers, nb_layers
         )
         if free_ram_mib < required_ram_mib:
-            raise RuntimeError(
-                f"Not enough free system RAM to start DuoCore with a {config.live_window_tokens:,}-token context: "
-                f"estimated need {required_ram_mib:,} MiB after GPU layer placement, including a 5 GiB desktop reserve; "
-                f"{free_ram_mib:,} MiB is currently free. Lower the context or close other applications."
+            k2_bytes = (args.release / "backbones" / "k2" / config.k2.gguf_file).stat().st_size
+            nanbeige_bytes = (args.release / "backbones" / "nanbeige" / config.nanbeige.gguf_file).stat().st_size
+            effective_context = largest_context_that_fits(
+                config, k2_bytes, nanbeige_bytes, k2_layers, nb_layers, free_ram_mib
+            )
+            config = replace(config, live_window_tokens=effective_context)
+            required_ram_mib, free_ram_mib = host_ram_startup_budget(
+                config, args.release, k2_layers, nb_layers
+            )
+            if free_ram_mib < required_ram_mib:
+                raise RuntimeError(
+                    f"System memory changed during DuoCore preflight: need {required_ram_mib:,} MiB "
+                    f"for a {effective_context:,}-token context; {free_ram_mib:,} MiB is now free. Retry when memory is available."
+                )
+            print(
+                f"[duocore] Context reduced from {requested_context:,} to {effective_context:,} tokens "
+                f"to fit available system RAM; it will use the configured {requested_context:,} again when memory allows",
+                flush=True,
             )
         print(
             f"[duocore] Host RAM preflight: estimated {required_ram_mib} MiB needed; "
@@ -80,6 +95,7 @@ def main() -> int:
             f"({required_mib} MiB budget; {free_mib} MiB free)",
             flush=True,
         )
+    engine = DuoCoreEngine(config, args.release)
     try:
         if args.start_backbones:
             for backbone, layers in ((engine.k2, args.k2_gpu_layers), (engine.nanbeige, args.nanbeige_gpu_layers)):

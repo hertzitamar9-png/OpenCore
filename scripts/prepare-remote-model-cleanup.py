@@ -46,7 +46,7 @@ def main():
         'protectedPaths': pending + [
             r'C:\Users\hertz\AppData\Roaming\ai.opencore.control-center',
             r'C:\Users\hertz\Documents\MinecraftCreator\minecraft_creator_training_kit\runs\mageflow\specialization-v16\full-backbone-streaming-v1\final-fp32-master.safetensors'],
-        'minimumFreeGiB': 200_000_000_000 / 2**30, 'targets': targets}
+        'minimumFreeGiB': 100_000_000_000 / 2**30, 'targets': targets}
     args.plan.write_text(json.dumps(plan, indent=2), encoding='utf-8')
     print(json.dumps({'verified_targets': len(targets), 'pending': pending,
         'bytes_in_named_files': sum(file['expectedBytes'] for file in targets)}))

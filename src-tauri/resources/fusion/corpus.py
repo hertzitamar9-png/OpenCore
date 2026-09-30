@@ -153,8 +153,8 @@ def prepare(source, destination, benchmark_inputs, *, train_count=512, validatio
     for row in selected:
         row['provenance']['source_sha256'] = source_sha
     content = b''.join(canonical(row) + b'\n' for row in selected)
-    if shutil.disk_usage(destination.parent).free < 200_000_000_000 + len(content) + 1_048_576:
-        raise ValueError('Corpus output would violate the 200 GB free disk reserve')
+    if shutil.disk_usage(destination.parent).free < 100_000_000_000 + len(content) + 1_048_576:
+        raise ValueError('Corpus output would violate the 100 GB free disk reserve')
     report = {'schema': 1, 'source_file': str(source), 'source_sha256': source_sha,
         'source_bytes': source.stat().st_size, 'corpus_sha256': hashlib.sha256(content).hexdigest(),
         'corpus_bytes': len(content), 'statistics': dict(statistics), 'benchmark_inputs': screen.inputs,

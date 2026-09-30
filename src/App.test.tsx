@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App, { recentPromptProgress } from "./App";
 import * as api from "./api";
+import opencoreLogo from "./assets/opencore-logo.png";
+import type { OperationRecord } from "./types";
 import * as dialog from "@tauri-apps/plugin-dialog";
 
 const stageClipboardAttachment = vi.hoisted(() => vi.fn());
@@ -17,6 +19,15 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("shows the bundled OpenCore logo while runtime state is still loading", () => {
+    const snapshot = vi.spyOn(api, "snapshot").mockImplementation(() => new Promise(() => {}));
+    try {
+      render(<App />);
+      expect(screen.getByText("Loading runtime state…")).toBeInTheDocument();
+      expect(screen.getByRole("img", { name: "OpenCore" })).toHaveAttribute("src", opencoreLogo);
+    } finally { snapshot.mockRestore(); }
+  });
+
   it("opens model installation from a failed send and preserves the unsent draft", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockRejectedValue(new Error("DuoCore is not installed. Open Models and choose Install."));
     try {
@@ -212,7 +223,7 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      expect(screen.queryByRole("button", { name: "Maximize OpenCore" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Maximize OpenCore" })).toBeVisible();
       expect(screen.queryByRole("button", { name: /Move conversations|Dock conversations/ })).not.toBeInTheDocument();
       expect(screen.queryByRole("slider", { name: "Reasoning effort" })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: /Effort/ }));
@@ -222,7 +233,7 @@ describe("OpenCore", () => {
       expect(selector).toHaveAttribute("aria-valuetext", "Extra high");
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Explain this change" } });
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Explain this change", [], "extra-high", "ask-every-time", [], true, 3, true, 200000));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Explain this change", [], "extra-high", "ask-every-time", [], true, 3, true, 200000, expect.any(String)));
     } finally { send.mockRestore(); }
   });
 
@@ -388,7 +399,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("button", { name: "Approve for me" }));
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Find the helper" } });
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Find the helper", [], expect.any(String), "approve-for-me", [], true, 3, true, 200000));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Find the helper", [], expect.any(String), "approve-for-me", [], true, 3, true, 200000, expect.any(String)));
     } finally { send.mockRestore(); }
   });
 
@@ -402,7 +413,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("option", { name: /computer-use/ }));
       expect(screen.getByLabelText("Message OpenCore")).toHaveValue("open Calculator");
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "open Calculator", [], expect.any(String), "ask-every-time", ["computer-use"], true, 3, true, 200000));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "open Calculator", [], expect.any(String), "ask-every-time", ["computer-use"], true, 3, true, 200000, expect.any(String)));
     } finally { send.mockRestore(); }
   });
 
@@ -421,7 +432,7 @@ describe("OpenCore", () => {
       expect(screen.queryByRole("button", { name: /Prompt tools/ })).not.toBeInTheDocument();
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Check my local dev page" } });
       fireEvent.click(screen.getByTitle("Send"));
-      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Check my local dev page", [], expect.any(String), "ask-every-time", ["chrome-control"], true, 3, false, 200000));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Check my local dev page", [], expect.any(String), "ask-every-time", ["chrome-control"], true, 3, false, 200000, expect.any(String)));
     } finally { send.mockRestore(); }
   });
 
@@ -873,5 +884,53 @@ describe("OpenCore", () => {
       expect(await screen.findByRole("button", { name: "Imported 2 · Updated 3 · Skipped 5" })).toBeEnabled();
       expect(screen.getByText((text, element) => element?.tagName === "TIME" && text.includes("2026"))).toBeInTheDocument();
     } finally { operations.mockRestore(); }
+  });
+
+  it("shows a provider probe in place and keeps the button busy until the probe returns", async () => {
+    let finish!: (message: string) => void;
+    const probe = vi.spyOn(api, "testConnector").mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
+      const card = screen.getByRole("heading", { name: "LM Studio" }).closest("article");
+      fireEvent.click(within(card as HTMLElement).getByRole("button", { name: "Test" }));
+      expect(within(card as HTMLElement).getByRole("button", { name: "Testing…" })).toBeDisabled();
+      expect(probe).toHaveBeenCalledWith("lmstudio", "http://127.0.0.1:1234");
+      finish("Connected · 2 models available");
+      expect(await within(card as HTMLElement).findByRole("status")).toHaveTextContent("Connected · 2 models available");
+    } finally { probe.mockRestore(); }
+  });
+
+  it("can cancel a running transcript import and clear imported source history", async () => {
+    const running = {
+      id: "sync-codex", kind: "history_sync", target: "codex", phase: "Importing transcripts", status: "running",
+      current: 3, total: 10, imported: 1, updated: 1, skipped: 1, summary: "", error: null,
+      startedAt: "2026-09-22T12:00:00Z", finishedAt: null,
+    } as const;
+    const cancelled = { ...running, phase: "Cancelled", status: "cancelled" } as const;
+    let reportedOperation: OperationRecord = running;
+    const operations = vi.spyOn(api, "listOperations").mockImplementation(async () => [reportedOperation]);
+    const cancel = vi.spyOn(api, "cancelHistorySync").mockImplementation(async () => { reportedOperation = cancelled; });
+    const clear = vi.spyOn(api, "clearImportedHistory").mockResolvedValue("Cleared 2 imported codex conversations from OpenCore and ECHO");
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
+      const codex = screen.getByRole("heading", { name: "Codex" }).closest("article") as HTMLElement;
+      await within(codex).findByRole("button", { name: "Scanning files… 3/10" });
+      fireEvent.click(within(codex).getByRole("button", { name: "Cancel Codex import" }));
+      await waitFor(() => expect(cancel).toHaveBeenCalledWith("sync-codex"));
+      expect(within(codex).getByText("Cancellation requested…")).toBeInTheDocument();
+      const clearButton = within(codex).getByRole("button", { name: "Clear imported history" });
+      await waitFor(() => expect(clearButton).toBeEnabled(), { timeout: 3000 });
+      fireEvent.click(clearButton);
+      await waitFor(() => expect(clear).toHaveBeenCalledWith("codex"));
+      expect(confirm).toHaveBeenCalled();
+      expect(await within(codex).findByText("Cleared 2 imported codex conversations from OpenCore and ECHO")).toBeInTheDocument();
+    } finally {
+      operations.mockRestore(); cancel.mockRestore(); clear.mockRestore(); confirm.mockRestore();
+    }
   });
 });

@@ -19,7 +19,7 @@ from fusion.q6_identity import CHECKPOINTS, file_digest
 from fusion.q6_preflight import preflight
 from fusion.qualification import execution_configuration, validate_qualification
 
-DISK_RESERVE = 200_000_000_000
+DISK_RESERVE = 100_000_000_000
 REPORT_MARGIN = 1_048_576
 
 
@@ -54,7 +54,7 @@ def run_child(command, log_path):
         try:
             for line in child.stdout:
                 if shutil.disk_usage(log_path.parent).free < DISK_RESERVE + REPORT_MARGIN + len(line.encode('utf-8')):
-                    raise ValueError('Training log would violate the 200 GB reserve')
+                    raise ValueError('Training log would violate the 100 GB reserve')
                 log.write(line)
                 log.flush()
                 print(line, end='', flush=True)
@@ -115,7 +115,7 @@ def execute(args, *, run_stage=run_child, check_resources=preflight,
             or file_digest(args.corpus) != args.corpus_sha256):
         raise ValueError('Training corpus content identity changed')
     if shutil.disk_usage(args.output.parent).free < DISK_RESERVE + REPORT_MARGIN:
-        raise ValueError('Sequence metadata would violate the 200 GB reserve')
+        raise ValueError('Sequence metadata would violate the 100 GB reserve')
     drivers = {str(path): file_digest(path) for path in
         (Path(__file__), APP / 'scripts/fusion/qualify_native.py',
          APP / 'scripts/fusion/train_native.py')}
@@ -133,7 +133,7 @@ def execute(args, *, run_stage=run_child, check_resources=preflight,
 
     def save(stage, **changes):
         if shutil.disk_usage(args.output).free < DISK_RESERVE + REPORT_MARGIN:
-            raise ValueError('Sequence report would violate the 200 GB reserve')
+            raise ValueError('Sequence report would violate the 100 GB reserve')
         report.update(stage=stage, **changes)
         temporary = args.output / 'sequence.json.tmp'
         temporary.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n', encoding='utf-8')

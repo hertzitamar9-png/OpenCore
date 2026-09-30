@@ -146,6 +146,12 @@ struct FusionCore {
     float coupling = 0.02f;
     int vocab_size = 0;
     bool done = false;
+    bool reasoning_active = false;
+    int reasoning_budget = -1;
+    int reasoning_tokens = 0;
+    int reasoning_end_position = -1;
+    std::vector<llama_token> reasoning_end_tokens;
+    std::vector<llama_token> generated_tokens;
 };
 
 FC_API const char * fc_error() { return last_error.c_str(); }
@@ -180,9 +186,20 @@ FC_API int fc_format(void * handle, const char ** roles, const char ** contents,
         return result;
     } catch (const std::exception & error) { last_error=error.what(); return -1; }
 }
-FC_API int fc_start(void * handle, const char * left, const char * right) {
+FC_API int fc_start(void * handle, const char * left, const char * right, int reasoning_budget) {
     try {
         auto & model = *static_cast<FusionCore *>(handle);
+        if (reasoning_budget < -1) throw std::runtime_error("Reasoning budget must be -1 or non-negative");
+        model.reasoning_budget = reasoning_budget;
+        model.reasoning_tokens = 0;
+        model.reasoning_active = reasoning_budget >= 0;
+        model.reasoning_end_position = -1;
+        model.reasoning_end_tokens.clear();
+        model.generated_tokens.clear();
+        if (model.reasoning_active) {
+            model.reasoning_end_tokens = model.left.tokenize("</think>", true);
+            if (model.reasoning_end_tokens.empty()) throw std::runtime_error("The tokenizer produced no closing think tokens");
+        }
         model.done=false; model.left.start(left); model.right.start(right);
         return std::max(model.left.position, model.right.position);
     } catch (const std::exception & error) { last_error=error.what(); return -1; }
@@ -216,11 +233,29 @@ FC_API int fc_next(void * handle, char * piece, int capacity, int * selected_tok
         if (!left || !right || model.left.hidden.empty() || model.right.hidden.empty())
             throw std::runtime_error("A complete tower did not return logits and hidden state");
         int token=0; float best=-INFINITY;
-        for (int i=0; i<model.vocab_size; ++i) {
-            const float score=0.5f*left[i]+0.5f*right[i];
-            if (score>best) { best=score; token=i; }
+        if (model.reasoning_active && model.reasoning_tokens >= model.reasoning_budget) {
+            model.reasoning_active = false;
+            model.reasoning_end_position = 0;
         }
-        if (!std::isfinite(best)) throw std::runtime_error("Non-finite fused scores");
+        if (model.reasoning_end_position >= 0) {
+            token = model.reasoning_end_tokens[model.reasoning_end_position++];
+            if (model.reasoning_end_position >= (int)model.reasoning_end_tokens.size())
+                model.reasoning_end_position = -1;
+        } else {
+            for (int i=0; i<model.vocab_size; ++i) {
+                const float score=0.5f*left[i]+0.5f*right[i];
+                if (score>best) { best=score; token=i; }
+            }
+            if (!std::isfinite(best)) throw std::runtime_error("Non-finite fused scores");
+        }
+        if (model.reasoning_active) {
+            ++model.reasoning_tokens;
+            model.generated_tokens.push_back(token);
+            if (model.generated_tokens.size() >= model.reasoning_end_tokens.size() &&
+                std::equal(model.reasoning_end_tokens.rbegin(), model.reasoning_end_tokens.rend(),
+                           model.generated_tokens.rbegin()))
+                model.reasoning_active = false;
+        }
         *selected_token = token;
         const auto * vocab = llama_model_get_vocab(model.left.model);
         if (llama_vocab_is_eog(vocab, token)) { model.done=true; return 0; }
@@ -235,8 +270,8 @@ FC_API int fc_next(void * handle, char * piece, int capacity, int * selected_tok
     } catch (const std::exception & error) { last_error=error.what(); return -1; }
 }
 
-// DualCore ECHO shares the two loaded towers, but each brain generates its own
-// independent draft/review, recomputing its complete prefix for every new token.
+// DualCore gives each loaded tower its own draft/review stream. Incremental KV
+// is the normal path; explicit full-prefix recomputation remains opt-in.
 FC_API int fc_brain_start(void * handle, int brain, const char * prompt, int review) {
     try {
         auto & model = *static_cast<FusionCore *>(handle);
@@ -249,7 +284,7 @@ root ::= "{" ws "\"score_a\"" ws ":" ws number ws "," ws "\"score_b\"" ws ":" ws
 number ::= ("100" | [1-9] [0-9]? | "0") ("." [0-9]{1,4})?
 string ::= "\"" char{0,180} "\""
 char ::= [^"\\\x00-\x1F] | "\\" (["\\/bfnrt] | "u" [0-9a-fA-F]{4})
-ws ::= [ \t\n\r]*
+ws ::= [ \t\n\r]?
 )";
             tower.grammar = llama_sampler_init_grammar(llama_model_get_vocab(tower.model), schema, "root");
             if (!tower.grammar) throw std::runtime_error("Could not initialize native review grammar");
@@ -278,7 +313,7 @@ FC_API int fc_brain_next(void * handle, int brain, char * piece, int capacity, i
         if (llama_vocab_is_eog(vocab, token)) { tower.done=true; return 0; }
         const int length=llama_token_to_piece(vocab, token, piece, capacity, 0, true);
         if (length<0) throw std::runtime_error("Independent token buffer too small");
-        tower.advance(tower.token_embedding(token), true);
+        tower.advance(tower.token_embedding(token), model.recompute);
         return length + 1;
     } catch (const std::exception & error) { last_error=error.what(); return -1; }
 }

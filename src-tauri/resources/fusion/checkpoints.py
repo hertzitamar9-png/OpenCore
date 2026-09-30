@@ -96,8 +96,8 @@ class CheckpointStore:
     def save(self, bridge, binding, training, optimizer):
         from .adapter import save_adapter
         if not self.root.exists():
-            if shutil.disk_usage(self.root.parent).free < 200_000_000_000 + 1_048_576:
-                raise ValueError('Checkpoint metadata would violate the 200 GB reserve')
+            if shutil.disk_usage(self.root.parent).free < 100_000_000_000 + 1_048_576:
+                raise ValueError('Checkpoint metadata would violate the 100 GB reserve')
             self.root.mkdir(exist_ok=False)
         path = self.root / f"step-{training['steps']:012d}"
         receipt = save_adapter(path, bridge, binding, training, optimizer=optimizer, checkpoint=True)

@@ -36,23 +36,39 @@ fn destination(input: &str) -> Result<tauri::Url, String> {
     Ok(url)
 }
 
+fn webview_label(args: &Value) -> Result<String, String> {
+    let Some(tab_id) = args.get("tabId").and_then(Value::as_str) else {
+        return Ok(LABEL.to_string());
+    };
+    if tab_id.is_empty() || tab_id.len() > 64
+        || !tab_id.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+    {
+        return Err("Invalid in-app browser tab id".into());
+    }
+    if tab_id == "default" {
+        return Ok(LABEL.to_string());
+    }
+    Ok(format!("{LABEL}-{tab_id}"))
+}
+
 pub(crate) fn command(app: &tauri::AppHandle, action: &str, args: &Value) -> Result<Value, String> {
-    if action == "navigate" && app.get_webview(LABEL).is_none() {
+    let label = webview_label(args)?;
+    if action == "navigate" && app.get_webview(&label).is_none() {
         return command(app, "open", args);
     }
     if action == "open" {
-        if app.get_webview(LABEL).is_none() {
+        if app.get_webview(&label).is_none() {
             let window = app.get_window("main").ok_or("The OpenCore window is unavailable")?;
             let url = destination(args.get("url").and_then(Value::as_str).unwrap_or("https://www.google.com"))?;
-            let builder = tauri::webview::WebviewBuilder::new(LABEL, WebviewUrl::External(url)).devtools(false);
+            let builder = tauri::webview::WebviewBuilder::new(label.clone(), WebviewUrl::External(url)).devtools(false);
             window.add_child(builder, LogicalPosition::new(0.0, 0.0), LogicalSize::new(1.0, 1.0)).map_err(|e| e.to_string())?;
         } else if let Some(address) = args.get("url").and_then(Value::as_str) {
-            app.get_webview(LABEL).ok_or("The browser closed while opening")?
+            app.get_webview(&label).ok_or("The browser closed while opening")?
                 .navigate(destination(address)?).map_err(|e| e.to_string())?;
         }
         let _ = app.emit("opencore-open-native-browser", ());
     }
-    let Some(view) = app.get_webview(LABEL) else {
+    let Some(view) = app.get_webview(&label) else {
         if action == "status" || action == "close" { return Ok(json!({"open":false})); }
         return Err("Open the in-app browser first".into());
     };
@@ -170,7 +186,8 @@ fn coordinates(args: &Value) -> Result<(i32, i32), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{browser_key, destination};
+    use super::{browser_key, destination, webview_label, LABEL};
+    use serde_json::json;
     #[test]
     fn browser_address_accepts_sites_and_search_terms() {
         assert_eq!(destination("example.com").unwrap().as_str(), "https://example.com/");
@@ -186,5 +203,14 @@ mod tests {
         assert_eq!(browser_key("up").unwrap(), "ArrowUp");
         assert_eq!(browser_key("space").unwrap(), " ");
         assert!(browser_key("Control+L").is_err());
+    }
+
+    #[test]
+    fn browser_tabs_get_distinct_safe_webview_labels() {
+        assert_eq!(webview_label(&json!({})).unwrap(), LABEL);
+        assert_eq!(webview_label(&json!({"tabId":"default"})).unwrap(), LABEL);
+        assert_eq!(webview_label(&json!({"tabId":"91e8b7b2-9088-47f3-99ab-a362ae4e1791"})).unwrap(),
+            format!("{LABEL}-91e8b7b2-9088-47f3-99ab-a362ae4e1791"));
+        assert!(webview_label(&json!({"tabId":"../../main"})).is_err());
     }
 }

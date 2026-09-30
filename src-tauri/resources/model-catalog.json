@@ -190,49 +190,103 @@
       "sha256": "f2ff584a8f78ac9f3b6fd0afcf9ab310e41c2d445ef628f9ab4b0d594e992b7a"
     },
     {
-      "id": "whisper-large-v3-model.bin",
-      "path": "speech/large-v3/model.bin",
-      "repo": "Systran/faster-whisper-large-v3",
-      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
-      "filename": "model.bin",
-      "bytes": 3087284237,
-      "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1"
+      "id": "whisper-large-v3-turbo-added-tokens",
+      "path": "speech/large-v3-turbo/added_tokens.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "added_tokens.json",
+      "bytes": 34648,
+      "sha256": "3c51f66c4c21f9e126970078f11ae77a78c74aee8df606ee9daba86e467108e0"
     },
     {
-      "id": "whisper-large-v3-config.json",
-      "path": "speech/large-v3/config.json",
-      "repo": "Systran/faster-whisper-large-v3",
-      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "id": "whisper-large-v3-turbo-config",
+      "path": "speech/large-v3-turbo/config.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
       "filename": "config.json",
-      "bytes": 2394,
-      "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9"
+      "bytes": 1256,
+      "sha256": "c5b526b3e3cd64cd8940dabb45e8ba726629e22d8ed389c29b552f9140daf04a"
     },
     {
-      "id": "whisper-large-v3-preprocessor_config.json",
-      "path": "speech/large-v3/preprocessor_config.json",
-      "repo": "Systran/faster-whisper-large-v3",
-      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "id": "whisper-large-v3-turbo-generation-config",
+      "path": "speech/large-v3-turbo/generation_config.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "generation_config.json",
+      "bytes": 3772,
+      "sha256": "cce11bfe3aaa6ae9e072ea2637caaec8795e68d9b67e655a5af16ee509681a4c"
+    },
+    {
+      "id": "whisper-large-v3-turbo-merges",
+      "path": "speech/large-v3-turbo/merges.txt",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "merges.txt",
+      "bytes": 493869,
+      "sha256": "2df2990a395e35e8dfbc7511e08c12d56018d8d04691e0133e5d63b21e154dc6"
+    },
+    {
+      "id": "whisper-large-v3-turbo-weights",
+      "path": "speech/large-v3-turbo/model.safetensors",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "model.safetensors",
+      "bytes": 1617824864,
+      "sha256": "542566a422ae4f3fd23f1ba11add198fca01bbf82e66e6a2857b3f608b1eb9d1"
+    },
+    {
+      "id": "whisper-large-v3-turbo-normalizer",
+      "path": "speech/large-v3-turbo/normalizer.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "normalizer.json",
+      "bytes": 52666,
+      "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd"
+    },
+    {
+      "id": "whisper-large-v3-turbo-preprocessor",
+      "path": "speech/large-v3-turbo/preprocessor_config.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
       "filename": "preprocessor_config.json",
       "bytes": 340,
       "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
     },
     {
-      "id": "whisper-large-v3-tokenizer.json",
-      "path": "speech/large-v3/tokenizer.json",
-      "repo": "Systran/faster-whisper-large-v3",
-      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
-      "filename": "tokenizer.json",
-      "bytes": 2480617,
-      "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"
+      "id": "whisper-large-v3-turbo-special-tokens",
+      "path": "speech/large-v3-turbo/special_tokens_map.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "special_tokens_map.json",
+      "bytes": 2186,
+      "sha256": "baea4ea09372eb4fca86b4e4346139fd73cb807d5087e9de0948e971739c3e74"
     },
     {
-      "id": "whisper-large-v3-vocabulary.json",
-      "path": "speech/large-v3/vocabulary.json",
-      "repo": "Systran/faster-whisper-large-v3",
-      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
-      "filename": "vocabulary.json",
-      "bytes": 1068114,
-      "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+      "id": "whisper-large-v3-turbo-tokenizer",
+      "path": "speech/large-v3-turbo/tokenizer.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "tokenizer.json",
+      "bytes": 2710337,
+      "sha256": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd"
+    },
+    {
+      "id": "whisper-large-v3-turbo-tokenizer-config",
+      "path": "speech/large-v3-turbo/tokenizer_config.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "tokenizer_config.json",
+      "bytes": 282843,
+      "sha256": "844b642c73a91359722f47b35705f7174686df33d252695d8572cf9ac03a6389"
+    },
+    {
+      "id": "whisper-large-v3-turbo-vocab",
+      "path": "speech/large-v3-turbo/vocab.json",
+      "repo": "openai/whisper-large-v3-turbo",
+      "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+      "filename": "vocab.json",
+      "bytes": 1036558,
+      "sha256": "e2aa043ef015641d363d8288e7c241c85e36a5c761fb303598e0710233344387"
     }
   ],
   "models": [
@@ -310,7 +364,7 @@
       ],
       "license": "LFM Open License v1.0",
       "experimental": true,
-      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Native F16 KV/state; one selected answer.",
+      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Native F16 KV/state for the 131K active context; older conversation history is not retrieved.",
       "selectable": true
     },
     {
@@ -324,7 +378,7 @@
       ],
       "license": "LFM Open License v1.0",
       "experimental": true,
-      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Recompute each brain prefix per token; transient attention buffers remain. Exact archived history is separate.",
+      "note": "ECHO archive retrieval supplies relevant older history; incremental F16 KV handles active decoding. One shared checkpoint download; two full weight sets in memory.",
       "selectable": true
     },
     {
@@ -338,13 +392,13 @@
       ],
       "license": "LFM Open License v1.0",
       "experimental": true,
-      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Untuned hidden feedback; native F16 KV/state. No quality gain claimed.",
+      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. Untuned hidden feedback; native F16 KV/state for the 131K active context. No quality gain claimed.",
       "selectable": true
     },
     {
       "id": "fusioncore-echo",
       "label": "FusionCore ECHO",
-      "description": "One coupled token loop with ECHO retrieval and prefix recomputation",
+      "description": "One coupled token loop with ECHO retrieval and incremental KV",
       "precision": "Q8_0 MAX",
       "contextTokens": 8192,
       "artifacts": [
@@ -352,7 +406,7 @@
       ],
       "license": "LFM Open License v1.0",
       "experimental": true,
-      "note": "No BF16 checkpoint is published. One shared 3.12 GB download; two complete weight sets in memory. No retained cross-token cache; transient attention buffers remain. Slower prefix recomputation.",
+      "note": "ECHO archive retrieval supplies relevant older history; incremental F16 KV handles active decoding. One coupled output token stream; hidden feedback remains untuned.",
       "selectable": true
     },
     {
@@ -399,20 +453,26 @@
     },
     {
       "id": "whisper-large-v3",
-      "label": "Whisper large-v3",
-      "description": "Whisper large-v3 optional component",
+      "label": "Whisper Large V3 Turbo",
+      "description": "OpenAI's multilingual Whisper Turbo checkpoint for speech transcription in the spoken language",
       "precision": "F16",
       "contextTokens": 0,
       "artifacts": [
-        "whisper-large-v3-model.bin",
-        "whisper-large-v3-config.json",
-        "whisper-large-v3-preprocessor_config.json",
-        "whisper-large-v3-tokenizer.json",
-        "whisper-large-v3-vocabulary.json"
+        "whisper-large-v3-turbo-added-tokens",
+        "whisper-large-v3-turbo-config",
+        "whisper-large-v3-turbo-generation-config",
+        "whisper-large-v3-turbo-merges",
+        "whisper-large-v3-turbo-weights",
+        "whisper-large-v3-turbo-normalizer",
+        "whisper-large-v3-turbo-preprocessor",
+        "whisper-large-v3-turbo-special-tokens",
+        "whisper-large-v3-turbo-tokenizer",
+        "whisper-large-v3-turbo-tokenizer-config",
+        "whisper-large-v3-turbo-vocab"
       ],
-      "license": "MIT",
+      "license": "Apache-2.0",
       "experimental": false,
-      "note": "On-demand speech-to-text. Requires the local faster-whisper Python environment; unloaded after transcription.",
+      "note": "Offline multilingual transcription with task=transcribe (no translation). This is the general Turbo checkpoint, not a Hebrew fine-tune. RAM sleep keeps weights in system RAM and clears GPU use after dictation; cold start unloads the process after each use.",
       "selectable": false
     }
   ]

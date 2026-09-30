@@ -20,6 +20,7 @@ sys.path.insert(0, str(RESOURCE_ROOT))
 
 import serve_duocore as duocore_server  # noqa: E402
 from duocore.runtime import BackboneReply, LlamaBackbone, DuoCoreEngine  # noqa: E402
+from duocore import gpu_budget  # noqa: E402
 from duocore.selection import parse_review  # noqa: E402
 from duocore.gpu_budget import required_host_ram_mib  # noqa: E402
 from duocore.spec import BackboneSpec, default_duocore_config  # noqa: E402
@@ -257,6 +258,35 @@ class DuoCoreRuntimeSelectionTests(unittest.TestCase):
 
         self.assertGreater(cpu_only, half_on_gpu)
         self.assertGreaterEqual(half_on_gpu, 5 * 1024)
+
+    def test_context_auto_fits_available_ram_at_the_largest_safe_1k_boundary(self):
+        config = default_duocore_config()
+        k2_bytes = 4_161_403_264
+        nanbeige_bytes = 3_595_603_104
+        available_mib = 16_734
+        fit = getattr(gpu_budget, "largest_context_that_fits", None)
+        self.assertTrue(callable(fit), "DuoCore needs an adaptive context preflight")
+
+        context = fit(config, k2_bytes, nanbeige_bytes, 0, 0, available_mib)
+
+        self.assertLess(context, config.live_window_tokens)
+        self.assertGreaterEqual(context, 8_192)
+        self.assertEqual(context % 1_024, 0)
+        self.assertLessEqual(required_host_ram_mib(config, k2_bytes, nanbeige_bytes, 0, 0, context), available_mib)
+        self.assertGreater(required_host_ram_mib(config, k2_bytes, nanbeige_bytes, 0, 0, context + 1_024), available_mib)
+
+    def test_context_stays_configured_when_full_window_fits(self):
+        config = default_duocore_config()
+        fit = getattr(gpu_budget, "largest_context_that_fits", None)
+        self.assertTrue(callable(fit), "DuoCore needs an adaptive context preflight")
+        self.assertEqual(fit(config, 3_000_000_000, 2_000_000_000, 0, 0, 32_000), config.live_window_tokens)
+
+    def test_context_preflight_refuses_to_fall_below_minimum_safe_window(self):
+        config = default_duocore_config()
+        fit = getattr(gpu_budget, "largest_context_that_fits", None)
+        self.assertTrue(callable(fit), "DuoCore needs an adaptive context preflight")
+        with self.assertRaisesRegex(RuntimeError, "8,192"):
+            fit(config, 4_161_403_264, 3_595_603_104, 0, 0, 10_000)
 
     def test_identical_candidates_skip_review_work(self):
         calls = []

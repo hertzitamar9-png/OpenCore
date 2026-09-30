@@ -185,6 +185,12 @@ class BoundedPageCache:
             self._resident_bytes += size
             return True
 
+    def discard(self, key: str) -> None:
+        with self._lock:
+            previous = self._pages.pop(key, None)
+            if previous is not None:
+                self._resident_bytes -= previous[1]
+
     def snapshot(self) -> dict:
         with self._lock:
             accesses = self._hits + self._misses
@@ -826,6 +832,36 @@ class EchoArchive:
                     self.db.execute("INSERT INTO imported_messages VALUES (?)", (fingerprint,))
             self.db.commit()
         return True
+
+    def delete_conversation(self, conversation_id: str) -> int:
+        """Remove every exact and derived record for one conversation."""
+        with self._lock:
+            page_ids = [row[0] for row in self.db.execute(
+                "SELECT page_id FROM pages WHERE conversation_id=?", (conversation_id,))]
+            event_ids = [row[0] for row in self.db.execute(
+                "SELECT event_id FROM source_events WHERE conversation_id=?", (conversation_id,))]
+            self.db.execute("CREATE TABLE IF NOT EXISTS imported_messages (fingerprint TEXT PRIMARY KEY)")
+            self.db.execute("BEGIN IMMEDIATE")
+            try:
+                self.db.execute("DELETE FROM pages_fts WHERE page_id IN (SELECT page_id FROM pages WHERE conversation_id=?)", (conversation_id,))
+                self.db.execute("DELETE FROM entities WHERE page_id IN (SELECT page_id FROM pages WHERE conversation_id=?)", (conversation_id,))
+                self.db.execute("DELETE FROM pages WHERE conversation_id=?", (conversation_id,))
+                self.db.execute("DELETE FROM derived_summaries WHERE conversation_id=?", (conversation_id,))
+                self.db.execute("DELETE FROM source_event_assets WHERE event_id IN (SELECT event_id FROM source_events WHERE conversation_id=?)", (conversation_id,))
+                self.db.execute("DELETE FROM source_events WHERE conversation_id=?", (conversation_id,))
+                self.db.execute("DELETE FROM source_assets WHERE asset_id NOT IN (SELECT asset_id FROM source_event_assets)")
+                # Each archive shard belongs to one conversation, so its text-import
+                # fingerprints can also be cleared without affecting another chat.
+                self.db.execute("DELETE FROM imported_messages")
+                self.db.commit()
+            except Exception:
+                self.db.rollback()
+                raise
+            if self.page_cache is not None:
+                prefix = str(self.path.resolve()) + "\0"
+                for page_id in page_ids:
+                    self.page_cache.discard(prefix + page_id)
+            return len(page_ids) + len(event_ids)
 
     # ---------------------------------------------------------------- writing
 

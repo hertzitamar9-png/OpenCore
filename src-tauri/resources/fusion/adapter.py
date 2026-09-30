@@ -114,8 +114,8 @@ def save_adapter(destination: Path, bridge, binding, training, *, optimizer=None
         raise ValueError('Adapter output parent must already exist')
     needed = (sum(value.numel() * value.element_size() for value in [*tensors.values(), *optimizer_tensors.values()])
               + len(metadata_bytes) + 1_048_576)  # bounded tensor headers and receipt overhead
-    if shutil.disk_usage(parent).free < 200_000_000_000 + needed:
-        raise ValueError('Saving this adapter would violate the 200 GB free-space reserve')
+    if shutil.disk_usage(parent).free < 100_000_000_000 + needed:
+        raise ValueError('Saving this adapter would violate the 100 GB free-space reserve')
     destination.mkdir(exist_ok=False)
     save_file(tensors, str(destination / 'bridge.safetensors'))
     receipt = {'schema': 1, 'binding': binding, 'training': training, 'tensor_fingerprint': fingerprint,

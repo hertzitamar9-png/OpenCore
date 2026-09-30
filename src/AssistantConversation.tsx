@@ -23,6 +23,7 @@ import { messageUrlTransform, parseArtifactLink } from "./artifact-links";
 import { sanitizeMessageMarkdown } from "./message-markdown";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
+import { removePersistedOptimisticDuplicates } from "./visible-entries";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
 import { buildResponseSegments, visibleEchoReceiptGroups, type ResponseSegment, type ToolStep } from "./response-segments";
 import { ProjectPicker } from "./ProjectPicker";
@@ -632,10 +633,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   const visibleEntries = useMemo(() => {
     const streaming = entries.filter((entry) => entry.metadata.live === true);
     const persisted = liveEntries.length ? liveEntries : entries.filter((entry) => entry.metadata.live !== true);
-    return [...persisted, ...optimistic.filter((pending) => !persisted.some((entry) =>
-      entry.role === pending.role && entry.content === pending.content &&
-      Math.abs(new Date(entry.timestamp).valueOf() - new Date(pending.timestamp).valueOf()) < 30000
-    )), ...streaming];
+    return [...persisted, ...removePersistedOptimisticDuplicates(persisted, optimistic), ...streaming];
   }, [entries, liveEntries, optimistic]);
   const messages = useMemo(() => {
     const turns = groupConversationTurns(visibleEntries);
@@ -671,6 +669,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     setSending(true);
     setLiveEntries([]);
     setActive(item);
+    const submissionId = crypto.randomUUID();
     const optimisticEntry: TimelineEntry = {
       id: -Date.now(),
       conversationId: id,
@@ -680,14 +679,14 @@ export const AssistantConversation = memo(function AssistantConversation({
       source: "OpenCore",
       title: "You",
       content: item.text || `Attached ${item.files.length} file(s)`,
-      metadata: { files: item.files },
+      metadata: { files: item.files, submissionId },
     };
     setOptimistic([optimisticEntry]);
     let failed = false;
     let interrupted = false;
 
     try {
-      await api.sendChatMessage(id, item.text, item.files, item.reasoningEffort, item.approvalMode, item.skills, item.subagentsEnabled, item.maxSubagents, item.projectSkillsEnabled, item.compactAtTokens);
+      await api.sendChatMessage(id, item.text, item.files, item.reasoningEffort, item.approvalMode, item.skills, item.subagentsEnabled, item.maxSubagents, item.projectSkillsEnabled, item.compactAtTokens, submissionId);
       await onRefresh();
       setLiveEntries([]);
     } catch (error) {

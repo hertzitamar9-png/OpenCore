@@ -34,6 +34,8 @@ jobs:
         run: node scripts/test-claude-protocol.mjs
       - name: Benchmark exact ECHO archive scaling
         run: python scripts/echo_archive_scale.py
+      - name: Test ECHO cross-turn archive continuity
+        run: python src-tauri/resources/echo/test_echo_memory_continuity.py
       - name: Test ECHO conversation and archive runtime
         run: python scripts/test_echo_live.py
       - name: Verify bundled DuoCore runtime

@@ -23,8 +23,8 @@ def snapshot(identity_path, output):
     while not existing_parent.exists():
         existing_parent = existing_parent.parent
     required = sum(item['bytes'] for item in files) + 1_048_576
-    if shutil.disk_usage(existing_parent).free < 200_000_000_000 + required:
-        raise ValueError('Source snapshot would violate the 200 GB free-space reserve')
+    if shutil.disk_usage(existing_parent).free < 100_000_000_000 + required:
+        raise ValueError('Source snapshot would violate the 100 GB free-space reserve')
     output.mkdir(parents=True)
     records = []
     for index, item in enumerate(files):

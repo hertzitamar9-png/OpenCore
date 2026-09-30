@@ -111,7 +111,7 @@ Training saves a resume-only state every eight completed examples by default
 AdamW moments, exact sample order and shuffle RNG cursor. The store keeps the
 last two successfully saved states; a failed write leaves the previous pointer
 usable. Deletion is limited to verified directories created by that store, and
-the 200 GB free-space reserve applies to each save.
+the 100 GB free-space reserve applies to each save.
 
 To recover, pass either a saved step directory or its parent checkpoint store
 to `--resume`, and use a fresh `--output` name. The corpus, epoch count, seed and
@@ -148,6 +148,27 @@ it does not establish a trained model or a benchmark score.
 The Transformers checkpoint manifest/reference remains for architecture tests.
 It is not used by the Q6 server and does not make its optional dependency tests
 evidence of actual full-model GPU qualification.
+
+## OpenCore Fusion Qwen 9B + K2-Horizon 3.7B reference
+
+`opencore_fusion_sources.json` pins a separate BF16 source pair. The tiny
+Transformers contract test loads both model architectures from reduced configs
+and exercises one coupled output step plus cached/full-prefix equivalence. The
+shared `CoupledFusion` reference has bidirectional low-rank final-hidden
+projections and a sparse exact-decoded-surface logit alignment; it emits one
+stream from the first model's tokenizer. This bridge is initialized, not
+trained. The pinned tokenizers have 128,094 exact single-token surface pairs:
+51.59% of Qwen's output-logit rows and 51.11% of K2's. Those percentages measure
+vocabulary-ID coverage, not how often aligned tokens occur in text. K2 currently
+provides no projected logit evidence for unmatched Qwen token IDs, so this is
+not full-vocabulary fusion. The source manifest binds the measurement to both
+tokenizer hashes and records the method.
+
+The full BF16 pair is about 29.4 GB before runtime memory, so it cannot fit in a
+12 GB GPU. No production loader, trained adapter, app model entry, native 1M
+profile, ECHO profile, HumanEval score, or LiveBench score exists for this pair.
+Do not treat the tiny architecture/cache test as full-weight runtime, quality,
+speed, or hardware-fit evidence.
 
 ## Source packaging
 

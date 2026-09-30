@@ -72,9 +72,11 @@ impl SpeechManager {
         *self.settings.lock().map_err(|e|e.to_string())? = next;
         Ok(())
     }
+    fn model_dir(&self) -> PathBuf {
+        crate::model_catalog::whisper_model_path(self.root.parent().unwrap_or(&self.root))
+    }
     fn installed(&self) -> bool {
-        ["model.bin","config.json","preprocessor_config.json","tokenizer.json","vocabulary.json"]
-            .iter().all(|f|self.root.join("large-v3").join(f).is_file()) &&
+        crate::model_catalog::whisper_model_available(self.root.parent().unwrap_or(&self.root)) &&
             self.root.join("runtime.json").is_file() && self.root.join("venv/Scripts/python.exe").is_file()
     }
     fn set_phase(&self, phase: &str) { if let Ok(mut p)=self.phase.lock() { *p=phase.into(); } }
@@ -85,9 +87,25 @@ impl SpeechManager {
             cold_start_ms:cfg.cold_start_ms, warm_wake_ms:cfg.warm_wake_ms,
             phase:self.phase.lock().map(|p|p.clone()).unwrap_or_else(|_|"off".into()) }
     }
+    pub async fn restore_saved_mode(&self) -> Result<(),String> {
+        let cfg=self.settings();
+        if !cfg.enabled { self.set_phase("off"); return Ok(()); }
+        if !self.installed() {
+            self.set_phase("error");
+            return Err("Whisper is enabled in settings, but its checkpoint or speech runtime is missing.".into());
+        }
+        if cfg.idle_mode=="ram" {
+            if self.worker.lock().await.is_some() { self.set_phase("sleeping"); return Ok(()); }
+            self.set_phase("warming");
+            match self.spawn_worker("ram",false,&CancellationToken::new()).await {
+                Ok(worker)=>{*self.worker.lock().await=Some(worker);self.set_phase("sleeping");Ok(())}
+                Err(error)=>{self.set_phase("error");Err(error)}
+            }
+        } else { self.set_phase("ready"); Ok(()) }
+    }
     async fn spawn_worker(&self, mode:&str, awake:bool, cancel:&CancellationToken) -> Result<Worker,String> {
         let python=self.root.join("venv/Scripts/python.exe");
-        let model=self.root.join("large-v3");
+        let model=self.model_dir();
         let mut command=tokio::process::Command::new(python);
         command.arg(&self.script).arg("--model").arg(&model).arg("--idle-mode").arg(mode);
         if awake { command.arg("--awake"); }
@@ -112,7 +130,7 @@ impl SpeechManager {
         Ok(worker)
     }
     async fn prepare_sleeping_worker(&self) -> Result<(),String> {
-        if !self.installed(){return Err("Install Whisper large-v3 from Models before enabling RAM sleep.".into());}
+        if !self.installed(){return Err("Install Whisper Large V3 Turbo from Models before enabling RAM sleep.".into());}
         let cancel=CancellationToken::new();
         self.set_phase("warming");
         let worker=self.spawn_worker("ram",false,&cancel).await?;
@@ -122,31 +140,44 @@ impl SpeechManager {
         self.save_settings(Settings{enabled:cfg.enabled,idle_mode:"ram".into(),cold_start_ms:cfg.cold_start_ms,warm_wake_ms:cfg.warm_wake_ms})
     }
     pub async fn set_enabled(&self, enabled: bool) -> Result<SpeechStatus,String> {
-        if enabled && !self.installed(){return Err("Install Whisper large-v3 and its speech runtime from the Models tab first.".into());}
         let cfg=self.settings();
-        self.save_settings(Settings{enabled,idle_mode:cfg.idle_mode.clone(),cold_start_ms:cfg.cold_start_ms,warm_wake_ms:cfg.warm_wake_ms})?;
-        if !enabled {
+        if cfg.enabled == enabled { return Ok(self.status()); }
+        if enabled {
+        if !self.installed(){return Err("Install Whisper Large V3 Turbo and its speech runtime from the Models tab first.".into());}
+            if cfg.idle_mode=="ram" {
+                self.set_phase("warming");
+                let worker=self.spawn_worker("ram",false,&CancellationToken::new()).await?;
+                self.save_settings(Settings{enabled:true,..cfg})?;
+                *self.worker.lock().await=Some(worker);
+                self.set_phase("sleeping");
+            } else {
+                self.save_settings(Settings{enabled:true,..cfg})?;
+                self.set_phase("ready");
+            }
+        } else {
             self.cancel_active().await;
             if let Some(mut w)=self.worker.lock().await.take(){w.stop().await;}
+            self.save_settings(Settings{enabled:false,..cfg})?;
             self.set_phase("off");
-        } else if cfg.idle_mode=="ram" {
-            let w=self.spawn_worker("ram",false,&CancellationToken::new()).await?;
-            *self.worker.lock().await=Some(w);
-            self.set_phase("sleeping");
-        } else { self.set_phase("ready"); }
+        }
         Ok(self.status())
     }
     pub async fn set_idle_mode(&self, mode:&str) -> Result<SpeechStatus,String> {
         if !["cold","ram"].contains(&mode){return Err("Choose cold or ram idle mode".into());}
         if self.is_active().await{return Err("Finish the current dictation before changing its sleep mode.".into());}
         let cfg=self.settings();
-        self.save_settings(Settings{enabled:cfg.enabled,idle_mode:mode.into(),cold_start_ms:cfg.cold_start_ms,warm_wake_ms:cfg.warm_wake_ms})?;
-        if let Some(mut w)=self.worker.lock().await.take(){w.stop().await;}
+        if cfg.idle_mode == mode { return Ok(self.status()); }
         if cfg.enabled && mode=="ram" {
+            self.set_phase("warming");
             let w=self.spawn_worker("ram",false,&CancellationToken::new()).await?;
+            self.save_settings(Settings{idle_mode:mode.into(),..cfg})?;
             *self.worker.lock().await=Some(w);
             self.set_phase("sleeping");
-        } else {self.set_phase(if cfg.enabled {"ready"}else{"off"});}
+        } else {
+            if let Some(mut w)=self.worker.lock().await.take(){w.stop().await;}
+            self.save_settings(Settings{idle_mode:mode.into(),..cfg.clone()})?;
+            self.set_phase(if cfg.enabled {"ready"}else{"off"});
+        }
         Ok(self.status())
     }
     async fn cancel_active(&self) {
@@ -159,7 +190,7 @@ impl SpeechManager {
         crate::model_catalog::require_idle()?;
         let cfg=self.settings();
         if !cfg.enabled{return Err("Turn on Whisper in the Models tab before using the microphone.".into());}
-        if !self.installed(){return Err("Install Whisper large-v3 and its speech runtime in the Models tab.".into());}
+        if !self.installed(){return Err("Install Whisper Large V3 Turbo and its speech runtime in the Models tab.".into());}
         let mut session_guard=self.session.lock().await;
         if session_guard.is_some(){return Err("A microphone session is already active".into());}
         let id=uuid::Uuid::new_v4().to_string();
@@ -186,6 +217,8 @@ impl SpeechManager {
                     manager.set_phase("loading");
                     worker.send(json!({"action":"wake"})).await?;
                     let result=tokio::select!{_ = cancel.cancelled()=>return Err("Recording cancelled".into()),v=worker.read()=>v?};
+                    if let Some(error)=result["error"].as_str(){return Err(format!("Whisper could not move to the GPU or CPU: {error}"));}
+                    if result["awake"] != true {return Err("Whisper did not enter the recording state.".into());}
                     result["wakeMs"].as_u64()
                 }else{None};
                 if let Some(ms)=awake {
@@ -212,8 +245,8 @@ impl SpeechManager {
                 }
                 Ok(output)
             }.await;
-            if outcome.is_err(){
-                let _=ready_tx.send(Some(Err("Whisper could not start; check the model and free GPU memory.".into())));
+            if let Err(error)=&outcome{
+                let _=ready_tx.send(Some(Err(error.clone())));
                 if let Some(mut w)=manager.worker.lock().await.take(){w.stop().await;}
                 manager.set_phase(if manager.settings().enabled{"ready"}else{"off"});
             }
@@ -287,6 +320,9 @@ mod tests {
         for disable in [false,true] {
             let root=std::env::temp_dir().join(format!("opencore-speech-cancel-{}",uuid::Uuid::new_v4()));
             let manager=SpeechManager::new(root.clone(),root.clone());
+            if disable {
+                manager.save_settings(Settings{enabled:true,..Settings::default()}).unwrap();
+            }
             let cancel=CancellationToken::new();
             let (input,audio)=oneshot::channel();
             let (_ready_tx,ready)=watch::channel(None);

@@ -29,9 +29,9 @@ def test_disabling_cuda_cannot_silently_turn_full_q6_training_into_cpu_inference
 
 
 def test_disk_reserve_is_kept_even_when_the_gpu_has_room():
-    with pytest.raises(ValueError, match='200 GB'):
+    with pytest.raises(ValueError, match='100 GB'):
         module().require_q6_resources(context=1024, free_gpu_bytes=13_000_000_000,
-                                      free_disk_bytes=199_999_999_999, environment={})
+                                      free_disk_bytes=99_999_999_999, environment={})
 
 
 def test_twelve_gb_budget_still_accounts_for_both_full_weights_and_both_caches():

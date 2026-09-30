@@ -83,7 +83,41 @@ def import_stream(root: Path, lines) -> dict:
     return {"imported": imported, "skipped": skipped, "failed": failed, "errors": errors}
 
 
+def delete_stream(root: Path, lines) -> dict:
+    root = root.resolve()
+    conversations = records = failed = 0
+    errors = []
+    for line_number, line in enumerate(lines, start=1):
+        try:
+            payload = json.loads(line)
+            conversation_id = payload.get("conversation_id") if isinstance(payload, dict) else None
+            if not isinstance(conversation_id, str) or not conversation_id:
+                raise ValueError("conversation_id is required")
+            path = path_for(root, conversation_id)
+            # Only touch the exact archive shard computed from a source ID and
+            # only when it is an ordinary file beneath the archive directory.
+            if path.parent.resolve() != root or path.is_symlink():
+                raise ValueError("archive path is not a safe local file")
+            if not path.is_file():
+                continue
+            archive = EchoArchive(path)
+            try:
+                records += archive.delete_conversation(conversation_id)
+            finally:
+                archive.close()
+            conversations += 1
+        except Exception as error:
+            failed += 1
+            if len(errors) < 20:
+                errors.append(f"conversation {line_number}: {type(error).__name__}: {str(error)[:160]}")
+    return {"conversations": conversations, "records": records, "failed": failed, "errors": errors}
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("usage: echo_import.py ARCHIVE_DIRECTORY")
-    print(json.dumps(import_stream(Path(sys.argv[1]), sys.stdin)))
+    if len(sys.argv) == 2:
+        result = import_stream(Path(sys.argv[1]), sys.stdin)
+    elif len(sys.argv) == 3 and sys.argv[2] == "--delete":
+        result = delete_stream(Path(sys.argv[1]), sys.stdin)
+    else:
+        raise SystemExit("usage: echo_import.py ARCHIVE_DIRECTORY [--delete]")
+    print(json.dumps(result))

@@ -191,9 +191,9 @@ class FusionHandler(BaseHTTPRequestHandler):
                     if event.completion_tokens < count or event.completion_tokens > max_tokens:
                         raise RuntimeError('Invalid native completion token count')
                     count, piece, finish = event.completion_tokens, event.text, event.finish_reason
-                for delta in decoder.feed(piece):
+                for delta in decoder.feed(piece, tools=tools):
                     yield chunk(delta)
-            for delta in decoder.feed('', final=True):
+            for delta in decoder.feed('', final=True, tools=tools):
                 yield chunk(delta)
             message = selected_message(decoder, tools)
             if message.get('tool_calls'):

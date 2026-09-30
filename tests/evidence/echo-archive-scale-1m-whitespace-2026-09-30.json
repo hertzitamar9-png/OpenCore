@@ -1,0 +1,22 @@
+{
+  "benchmark": "echo-exact-archive-scaling",
+  "generated_at_utc": "2026-09-29T22:36:58.400704+00:00",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.15",
+  "token_counting": "whitespace-delimited synthetic tokens",
+  "scope": "Measures SQLite exact-page storage, indexed lookup, and archive integrity. Does not measure model attention, KV memory, prompt reconstruction, or answer quality.",
+  "runs": [
+    {
+      "synthetic_whitespace_tokens": 1000000,
+      "indexed_pages": 1167,
+      "archive_bytes": 17882312,
+      "append_seconds": 0.2574,
+      "oldest_fact_search_seconds": 0.0269,
+      "full_integrity_check_seconds": 0.1518,
+      "oldest_fact_exact": true,
+      "oldest_fact_searchable": true,
+      "corrupt_pages": 0,
+      "scope": "temporary exact ECHO SQLite archive; no model inference"
+    }
+  ]
+}

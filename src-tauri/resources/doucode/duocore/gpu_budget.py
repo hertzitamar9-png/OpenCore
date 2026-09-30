@@ -41,19 +41,62 @@ def required_host_ram_mib(
     nanbeige_bytes: int,
     k2_gpu_layers: int = 0,
     nanbeige_gpu_layers: int = 0,
+    context_tokens: int | None = None,
 ) -> int:
     """Estimate host-resident weights plus Q4 KV/runtime memory and a 5 GiB reserve."""
     k2_gpu_fraction = min(max(k2_gpu_layers, 0), config.k2.num_hidden_layers) / config.k2.num_hidden_layers
     nb_gpu_fraction = min(max(nanbeige_gpu_layers, 0), config.nanbeige.num_hidden_layers) / config.nanbeige.num_hidden_layers
     host_model_bytes = k2_bytes * (1 - k2_gpu_fraction) + nanbeige_bytes * (1 - nb_gpu_fraction)
-    q4_kv_bytes = config.k2.q4_kv_bytes(config.live_window_tokens) + config.nanbeige.q4_kv_bytes(
-        config.live_window_tokens
-    )
+    context_tokens = config.live_window_tokens if context_tokens is None else context_tokens
+    q4_kv_bytes = config.k2.q4_kv_bytes(context_tokens) + config.nanbeige.q4_kv_bytes(context_tokens)
     # GPU-resident layers do not consume host RAM after upload. Keep slack for
     # CPU GGUF mappings, Q4 block scales, graph buffers, and worker overhead.
     estimated_working_bytes = math.ceil(host_model_bytes * 1.25 + q4_kv_bytes * 1.5 + 1024**3)
     desktop_reserve_bytes = 5 * 1024**3
     return math.ceil((estimated_working_bytes + desktop_reserve_bytes) / (1024**2))
+
+
+def largest_context_that_fits(
+    config: DuoCoreConfig,
+    k2_bytes: int,
+    nanbeige_bytes: int,
+    k2_gpu_layers: int,
+    nanbeige_gpu_layers: int,
+    available_mib: int,
+    minimum_tokens: int = 8_192,
+) -> int:
+    """Keep the configured window when possible, otherwise find the largest safe 1K step."""
+    configured = config.live_window_tokens
+
+    def required(context_tokens: int) -> int:
+        return required_host_ram_mib(
+            config, k2_bytes, nanbeige_bytes, k2_gpu_layers, nanbeige_gpu_layers, context_tokens
+        )
+
+    if required(configured) <= available_mib:
+        return configured
+
+    minimum = min(configured, max(1_024, math.ceil(minimum_tokens / 1_024) * 1_024))
+    minimum_required = required(minimum)
+    if minimum_required > available_mib:
+        raise RuntimeError(
+            f"Not enough free system RAM to start DuoCore even at its minimum {minimum:,}-token context: "
+            f"estimated need {minimum_required:,} MiB; {available_mib:,} MiB is available. "
+            "Close other applications or free system memory, then retry."
+        )
+
+    low = math.ceil(minimum / 1_024)
+    high = configured // 1_024
+    best = minimum
+    while low <= high:
+        middle = (low + high) // 2
+        candidate = middle * 1_024
+        if required(candidate) <= available_mib:
+            best = candidate
+            low = middle + 1
+        else:
+            high = middle - 1
+    return best
 
 
 def host_ram_startup_budget(

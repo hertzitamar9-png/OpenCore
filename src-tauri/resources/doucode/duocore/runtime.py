@@ -123,6 +123,8 @@ class LlamaBackbone:
         json_schema: dict[str, Any] | None = None,
         feedback_embedding: list[float] | None = None,
         on_delta: Callable[[dict[str, Any]], None] | None = None,
+        chat_template_kwargs: dict[str, Any] | None = None,
+        thinking_budget_tokens: int | None = None,
     ) -> BackboneReply:
         body: dict[str, Any] = {
             "model": self.spec.name,
@@ -134,7 +136,16 @@ class LlamaBackbone:
         }
         if getattr(self.spec, "reasoning_format", None):
             body["reasoning_format"] = self.spec.reasoning_format
-            body["chat_template_kwargs"] = {"enable_thinking": False}
+            template_kwargs = {"enable_thinking": False}
+            template_kwargs.update(chat_template_kwargs or {})
+            body["chat_template_kwargs"] = template_kwargs
+        elif chat_template_kwargs:
+            body["chat_template_kwargs"] = chat_template_kwargs
+        if thinking_budget_tokens is not None:
+            if not isinstance(thinking_budget_tokens, int) or thinking_budget_tokens < 1:
+                raise ValueError("thinking_budget_tokens must be a positive integer")
+            body["thinking_budget_tokens"] = thinking_budget_tokens
+            body["reasoning_format"] = "deepseek"
         if on_delta is not None:
             body["stream"] = True
             body["stream_options"] = {"include_usage": True}
@@ -520,19 +531,30 @@ def launch_llama_server(
     gpu_kv: bool = False,
     jinja: bool = False,
     chat_template: str | None = None,
+    chat_template_file: Path | None = None,
+    reasoning: str = "off",
+    reasoning_budget: int | None = None,
 ) -> subprocess.Popen:
     # Both model servers share the host CPU for any layers that do not fit in VRAM.
     # Keep each backend to one quarter of the logical processors, capped at four.
     logical_cpus = os.cpu_count() or 8
     cpu_threads = max(1, min(4, logical_cpus // 4))
+    if reasoning not in {"off", "on", "auto"}:
+        raise ValueError("reasoning must be off, on, or auto")
+    if reasoning_budget is not None and (
+        isinstance(reasoning_budget, bool) or not isinstance(reasoning_budget, int) or reasoning_budget < 0
+    ):
+        raise ValueError("reasoning_budget must be a non-negative integer")
     args = [
         str(executable), "-m", str(backbone.model_path),
         "--host", "127.0.0.1", "--port", str(backbone.spec.port),
         "--threads", str(cpu_threads), "--threads-batch", str(cpu_threads),
         "-c", str(context), "-ngl", str(gpu_layers), "-np", "1", "-b", "512", "-ub", "512",
         "--flash-attn", "on", "--cache-type-k", "f16" if gpu_kv else "q4_0",
-        "--cache-type-v", "f16" if gpu_kv else "q4_0", "--reasoning", "off", "--no-webui",
+        "--cache-type-v", "f16" if gpu_kv else "q4_0", "--reasoning", reasoning, "--no-webui",
     ]
+    if reasoning_budget is not None:
+        args.extend(["--reasoning-budget", str(reasoning_budget)])
     if not gpu_kv:
         args.append("--no-kv-offload")
     if embeddings:
@@ -541,6 +563,10 @@ def launch_llama_server(
         args.append("--jinja")
     if chat_template:
         args.extend(["--chat-template", chat_template])
+    if chat_template_file is not None:
+        if not chat_template_file.is_file():
+            raise FileNotFoundError(f"Chat template does not exist: {chat_template_file}")
+        args.extend(["--chat-template-file", str(chat_template_file)])
     # Keep a bounded-lifetime file instead of an unread PIPE: llama.cpp can fill a
     # PIPE during multi-GB startup. On early exit, wait_healthy includes its tail.
     fd, raw_log_path = tempfile.mkstemp(prefix=f"opencore-{backbone.spec.port}-", suffix=".log")

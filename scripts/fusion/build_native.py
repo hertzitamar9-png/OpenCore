@@ -27,8 +27,8 @@ def main():
     args = parser.parse_args()
     source = args.llama_source.resolve()
     vendor_build = (args.llama_build or source / 'build-ninja').resolve()
-    if shutil.disk_usage(app).free < 200_000_000_000:
-        raise RuntimeError('The 200 GB free-space reserve must be retained')
+    if shutil.disk_usage(app).free < 100_000_000_000:
+        raise RuntimeError('The 100 GB free-space reserve must be retained')
     revision = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
     if revision != PIN:
         raise RuntimeError('llama.cpp source does not match the shipped ABI')
