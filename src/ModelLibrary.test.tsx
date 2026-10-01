@@ -27,6 +27,51 @@ it('chooses the speech backend separately from the chat model and labels its lan
 });
 
 describe("optional model installation", () => {
+  it("stops an active runtime only after confirmation and passes the reviewed token to deletion", async () => {
+    const model: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Chat",
+      precision: "BF16", contextTokens: 32768, license: "Apache", experimental: false, note: "Local",
+      selectable: true, installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 100 };
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [model], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 100e9 });
+    const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: true, enabled: true,
+      idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "ready" });
+    const review = vi.spyOn(api, "modelRemovalPlan").mockResolvedValue({ modelId: model.id, label: model.label,
+      files: [{ path: "C:\\OpenCore\\model.gguf", bytes: 100, external: false, sharedWith: [] }], retainedFiles: [], totalBytes: 100, confirmationToken: "reviewed" });
+    const calls: string[] = [];
+    const stop = vi.spyOn(api, "stopRuntime").mockImplementation(async () => { calls.push("stop"); });
+    const remove = vi.spyOn(api, "uninstallModel").mockImplementation(async () => { calls.push("delete"); });
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={true} onNotice={vi.fn()} />);
+      fireEvent.click(await screen.findByRole("button", { name: "Delete ECHO 3T" }));
+      const confirm = await screen.findByRole("button", { name: "Stop runtime and delete" });
+      expect(stop).not.toHaveBeenCalled();
+      expect(remove).not.toHaveBeenCalled();
+      fireEvent.click(confirm);
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(calls).toEqual(["stop", "delete"]);
+      expect(remove).toHaveBeenCalledWith("echo", "reviewed");
+    } finally { library.mockRestore(); speech.mockRestore(); review.mockRestore(); stop.mockRestore(); remove.mockRestore(); }
+  });
+  it("provides Delete on every model and never removes files before confirmation", async () => {
+    const model: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Chat",
+      precision: "BF16", contextTokens: 32768, license: "Apache", experimental: false, note: "Local",
+      selectable: true, installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 100 };
+    const models = [model, { ...model, id: "whisper-large-v3-turbo", label: "Whisper", externalManaged: true, selectable: false },
+      { ...model, id: "native1m", label: "Native", installed: false }];
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models, progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 100e9 });
+    const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: true, enabled: true,
+      idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "ready" });
+    const remove = vi.spyOn(api, "uninstallModel").mockResolvedValue();
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+      for (const item of models) expect(await screen.findByRole("button", { name: `Delete ${item.label}` })).toBeEnabled();
+      fireEvent.click(screen.getByRole("button", { name: "Delete ECHO 3T" }));
+      expect(await screen.findByRole("dialog", { name: "Delete ECHO 3T?" })).toBeVisible();
+      expect(remove).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(remove).not.toHaveBeenCalled();
+    } finally { library.mockRestore(); speech.mockRestore(); remove.mockRestore(); }
+  });
   it("never downloads on render and requires installation before selection", async () => {
     const model: api.InstalledModel = { id: "fusioncore-kv", label: "FusionCore KV", description: "Two towers",
       precision: "Q8", contextTokens: 131072, license: "LFM", experimental: true, note: "ECHO archive with native KV",

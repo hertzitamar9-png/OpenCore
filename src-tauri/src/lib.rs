@@ -427,16 +427,33 @@ fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id
 #[tauri::command]
 fn cancel_model_install() { model_catalog::cancel(); }
 #[tauri::command]
-async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<(), String> {
+async fn model_removal_plan(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<model_catalog::RemovalPlan, String> {
+    let root = core.runtime.install_root().to_path_buf();
+    tauri::async_runtime::spawn_blocking(move || model_catalog::removal_plan(&root, &id)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String, confirmation_token: String) -> Result<(), String> {
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before uninstalling a model".into()); }
     if model_catalog::is_speech_model(&id) && core.speech.is_active().await {
         return Err("Finish the microphone session before uninstalling a speech model".into());
     }
+    // A stale or missing confirmation must not disable speech or stop model workers.
+    let root = core.runtime.install_root().to_path_buf();
+    let review_root = root.clone();
+    let review_id = id.clone();
+    let review_token = confirmation_token.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let plan = model_catalog::removal_plan(&review_root, &review_id)?;
+        if review_token.is_empty() || review_token != plan.confirmation_token {
+            return Err("Model files changed. Open Delete again and review the updated confirmation.".to_string());
+        }
+        if plan.files.is_empty() { return Err("No local files to delete for this model".to_string()); }
+        Ok(())
+    }).await.map_err(|e| e.to_string())??;
     if model_catalog::is_speech_model(&id) && core.speech.selected_model()==id { core.speech.set_enabled(false).await?; }
     if id == "reflex-vision" { core.vision.stop(); }
     if id == "reflex-policy" { core.reflex.stop(); }
-    let root = core.runtime.install_root().to_path_buf();
-    tauri::async_runtime::spawn_blocking(move || model_catalog::uninstall(&root, &id)).await.map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || model_catalog::uninstall(&root, &id, &confirmation_token)).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -1986,6 +2003,7 @@ pub fn run() {
             list_model_library,
             install_model,
             uninstall_model,
+            model_removal_plan,
             cancel_model_install,
             stop_runtime,
             restart_runtime,

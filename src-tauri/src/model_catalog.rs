@@ -2,13 +2,15 @@
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashSet;
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, atomic::{AtomicBool, Ordering}};
 use sysinfo::Disks;
 
 const MIN_FREE_BYTES: u64 = 100_000_000_000;
+#[path = "model_removal.rs"]
+mod removal;
+pub use removal::RemovalPlan;
 static CANCEL: AtomicBool = AtomicBool::new(false);
 static PROGRESS: Mutex<Option<InstallProgress>> = Mutex::new(None);
 #[cfg(test)]
@@ -406,37 +408,13 @@ fn prepare_speech_runtime(root: &Path, bundled_script: Option<&Path>, script_nam
 pub async fn install(root: PathBuf, id: String, resources: Option<PathBuf>) {
     if let Err(error) = install_inner(&root, &id, resources.as_deref()).await { update("failed", 0, "", Some(error)); }
 }
-pub fn uninstall(root: &Path, id: &str) -> Result<(), String> {
+pub fn removal_plan(root: &Path, id: &str) -> Result<RemovalPlan, String> {
+    require_idle()?;
     let data = manifest()?;
-    uninstall_inner(root, id, &data)
+    removal::plan(root, id, &data)
 }
-fn uninstall_inner(root: &Path, id: &str, data: &Manifest) -> Result<(), String> {
-    let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
-    if externally_managed_speech(root, id) {
-        return Err("These speech weights are user-managed and were not removed.".into());
-    }
-    begin(id)?;
-    update("uninstalling", 0, "", None);
-    let result: Result<(), String> = (|| {
-        let used: HashSet<_> = data.models.iter().filter(|m| m.id != id && installed(root, m, &data))
-            .flat_map(|m| m.artifacts.iter().cloned()).collect();
-        // Exact allowlisted files only. Conversations, archives, and unrelated models are untouched.
-        if id == "phonon-2" {
-            let derived = safe_path(root, "speech/phonon-2/model.fermion")?;
-            if derived.is_file() { std::fs::remove_file(derived).map_err(|e|e.to_string())?; }
-        }
-        for file in data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id) && !used.contains(&f.id)) {
-            for relative in [&file.path, &format!("{}.partial", file.path), &format!("models/receipts/file-{}.json", file.id)] {
-                let path = safe_path(root, relative)?;
-                if path.is_file() { std::fs::remove_file(path).map_err(|e| e.to_string())?; }
-            }
-        }
-        let receipt = safe_path(root, &format!("models/receipts/model-{}.json", id))?;
-        if receipt.is_file() { std::fs::remove_file(receipt).map_err(|e| e.to_string())?; }
-        Ok(())
-    })();
-    match &result { Ok(()) => update("complete", 0, "", None), Err(error) => update("failed", 0, "", Some(error.clone())) }
-    result
+pub fn uninstall(root: &Path, id: &str, confirmation_token: &str) -> Result<(), String> {
+    removal::remove(root, id, &manifest()?, confirmation_token)
 }
 
 #[cfg(test)]
@@ -567,10 +545,13 @@ mod tests {
             let model = data.models.iter().find(|m| m.id == id).unwrap();
             std::fs::write(model_receipt(&root, model), serde_json::to_vec(&model.artifacts).unwrap()).unwrap();
         }
-        uninstall_inner(&root, "dualcore-kv", &data).unwrap();
+        let plan = removal::plan(&root, "dualcore-kv", &data).unwrap();
+        assert!(plan.retained_files.iter().any(|file| Path::new(&file.path) == path));
+        removal::remove(&root, "dualcore-kv", &data, &plan.confirmation_token).unwrap();
         assert!(path.exists());
         assert!(installed(&root, data.models.iter().find(|m| m.id == "fusioncore-kv").unwrap(), &data));
-        uninstall_inner(&root, "fusioncore-kv", &data).unwrap();
+        let plan = removal::plan(&root, "fusioncore-kv", &data).unwrap();
+        removal::remove(&root, "fusioncore-kv", &data, &plan.confirmation_token).unwrap();
         assert!(!path.exists()); assert_eq!(std::fs::read(history).unwrap(), b"keep");
         std::fs::remove_dir_all(root).unwrap();
     }

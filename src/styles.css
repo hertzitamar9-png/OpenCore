@@ -1288,8 +1288,31 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .model-library-card dt { font-size:11px; color:#a9c6da; margin-bottom:5px; }
 .model-library-card dd { margin:0; font-size:13px; }
 .model-library-card>small { line-height:1.6; color:#a9c6da; flex:1; }
-.model-library-card footer { display:flex; gap:10px; }
+.model-library-card footer { display:flex; flex-wrap:wrap; gap:10px; }
 .model-library-card footer button { display:flex; align-items:center; justify-content:center; gap:7px; flex:1; padding:10px; border-radius:8px; }
+.model-library-card footer .model-delete-button { color:#f3a4ad; border-color:#75404b; flex:0 0 auto; min-width:86px; }
+.model-library-card footer .model-delete-button:hover:not(:disabled) { background:#43232c; border-color:#bb6474; }
+.model-delete-dialog .floating-window-body { display:flex; flex-direction:column; gap:16px; }
+.model-delete-heading { display:flex; align-items:flex-start; gap:13px; }
+.model-delete-heading>span { display:grid; place-items:center; padding:12px; border:1px solid #7c404b; border-radius:12px; background:#3b2029; color:#ffb0b9; }
+.model-delete-dialog .model-delete-heading h2 { margin:0 0 6px; font-size:21px; overflow-wrap:anywhere; }
+.model-delete-size { display:flex; align-items:center; flex-wrap:wrap; gap:9px; padding:12px 14px; border:1px solid #3c4b58; border-radius:10px; background:#0c1720; }
+.model-delete-size>span { color:#a9c6da; font-size:12px; }
+.model-delete-files { border:1px solid #354652; border-radius:9px; padding:10px 12px; }
+.model-delete-files summary { cursor:pointer; color:#c7d9e8; font-size:13px; }
+.model-delete-files ul { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:10px; max-height:180px; overflow:auto; }
+.model-delete-files li { display:grid; gap:4px; }
+.model-delete-files code { font-size:11px; overflow-wrap:anywhere; color:#d3e2ef; }
+.model-delete-files li>span { color:#9ab6c9; font-size:11px; }
+.model-delete-warning { padding:12px; border:1px solid #85642e; border-radius:9px; background:#2b2417; color:#f2d6a6; line-height:1.5; font-size:12px; }
+.model-delete-dialog p.model-delete-warning { color:#f2d6a6; }
+.model-delete-external { display:flex; align-items:flex-start; gap:9px; }
+.model-delete-external>svg { flex-shrink:0; }
+.model-delete-external>span>span { display:flex; align-items:flex-start; gap:8px; margin-top:10px; }
+.model-delete-dialog .model-delete-external input { width:16px; height:16px; margin:2px 0 0; padding:0; flex-shrink:0; }
+.model-delete-dialog .modal-actions { flex-shrink:0; }
+.model-delete-dialog .modal-actions button { display:flex; align-items:center; justify-content:center; gap:7px; }
+.model-delete-dialog .modal-actions .danger { background:#712c37; border-color:#aa4c5e; color:#fff; }
 .whisper-controls { display:grid; gap:13px; padding:14px; border:1px solid #304858; border-radius:11px; background:#0b1821; }
 .whisper-enable-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
 .whisper-enable-row>div,.whisper-controls fieldset label span { display:grid; gap:5px; }

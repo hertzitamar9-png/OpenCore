@@ -60,9 +60,15 @@ export async function installModel(id: string): Promise<void> {
   if (!desktop()) throw new Error("Model installation requires the desktop application.");
   await invoke("install_model", { id });
 }
-export async function uninstallModel(id: string): Promise<void> {
+export interface ModelRemovalFile { path: string; bytes: number; external: boolean; sharedWith: string[] }
+export interface ModelRemovalPlan { modelId: string; label: string; files: ModelRemovalFile[]; retainedFiles: ModelRemovalFile[]; totalBytes: number; confirmationToken: string }
+export async function modelRemovalPlan(id: string): Promise<ModelRemovalPlan> {
+  if (!desktop()) throw new Error("Model deletion requires the desktop application.");
+  return invoke<ModelRemovalPlan>("model_removal_plan", { id });
+}
+export async function uninstallModel(id: string, confirmationToken: string): Promise<void> {
   if (!desktop()) throw new Error("Model installation requires the desktop application.");
-  await invoke("uninstall_model", { id });
+  await invoke("uninstall_model", { id, confirmationToken });
 }
 export const cancelModelInstall = () => invoke<void>("cancel_model_install");
 
