@@ -446,9 +446,9 @@ async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String, confi
     tauri::async_runtime::spawn_blocking(move || {
         let plan = model_catalog::removal_plan(&review_root, &review_id)?;
         if review_token.is_empty() || review_token != plan.confirmation_token {
-            return Err("Model files changed. Open Delete again and review the updated confirmation.".to_string());
+            return Err("Model files changed. Open Uninstall again and review the updated confirmation.".to_string());
         }
-        if plan.files.is_empty() { return Err("No local files to delete for this model".to_string()); }
+        if plan.files.is_empty() { return Err("No installed files to remove for this model".to_string()); }
         Ok(())
     }).await.map_err(|e| e.to_string())??;
     if model_catalog::is_speech_model(&id) && core.speech.selected_model()==id { core.speech.set_enabled(false).await?; }

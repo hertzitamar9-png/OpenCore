@@ -24,7 +24,7 @@ pub struct RemovalPlan {
 }
 
 fn checked_file(path: &Path, external: bool, shared_with: Vec<String>) -> Result<Option<RemovalFile>, String> {
-    if !path.is_absolute() { return Err("Model deletion requires an absolute file path".into()); }
+    if !path.is_absolute() { return Err("Model uninstallation requires an absolute file path".into()); }
     let parent = path.parent().ok_or("Model file has no parent")?;
     let name = path.file_name().and_then(|s| s.to_str()).ok_or("Invalid model filename")?;
     let path = safe_path(parent, name)?;
@@ -97,9 +97,9 @@ pub(super) fn remove(root: &Path, id: &str, data: &Manifest, confirmation_token:
     require_idle()?;
     let reviewed = plan(root, id, data)?;
     if confirmation_token.is_empty() || reviewed.confirmation_token != confirmation_token {
-        return Err("Model files changed. Open Delete again and review the updated confirmation.".into());
+        return Err("Model files changed. Open Uninstall again and review the updated confirmation.".into());
     }
-    if reviewed.files.is_empty() { return Err("No local files to delete for this model".into()); }
+    if reviewed.files.is_empty() { return Err("No installed files to remove for this model".into()); }
     begin(id)?;
     update("uninstalling", 0, "", None);
     let result: Result<(), String> = (|| {
@@ -107,16 +107,16 @@ pub(super) fn remove(root: &Path, id: &str, data: &Manifest, confirmation_token:
         for file in &reviewed.files {
             let current = checked_file(Path::new(&file.path), file.external, Vec::new())?.ok_or("Model file disappeared")?;
             if current.bytes != file.bytes || current.modified_nanos != file.modified_nanos {
-                return Err("Model files changed. Review the deletion again.".into());
+                return Err("Model files changed. Review the uninstallation again.".into());
             }
         }
         for file in &reviewed.files {
             let path = Path::new(&file.path);
             let current = checked_file(path, file.external, Vec::new())?.ok_or("Model file disappeared")?;
             if current.bytes != file.bytes || current.modified_nanos != file.modified_nanos {
-                return Err("Model files changed during deletion. Review the remaining files again.".into());
+                return Err("Model files changed during uninstallation. Review the remaining files again.".into());
             }
-            std::fs::remove_file(path).map_err(|e| format!("Could not delete {}: {e}", path.display()))?;
+            std::fs::remove_file(path).map_err(|e| format!("Could not remove {}: {e}", path.display()))?;
         }
         Ok(())
     })();
