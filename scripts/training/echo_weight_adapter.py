@@ -25,6 +25,22 @@ def stage_block(position, layers=32, active=5, window=2048):
         first+=length;offset+=count
     raise AssertionError('Unreachable stage')
 
+def stage_segments(position_start, length, decode_start=None):
+    """Mirror native prompt batching, followed by tokenwise workflow routing.
+
+    Legacy supervised prefill keeps one stage for its entire batch. RL scoring
+    sets decode_start to the original prompt length so teacher forcing uses the
+    same routes as cached autoregressive generation, including stage changes.
+    """
+    segments=[]
+    for local in range(length):
+        position=position_start+local
+        stage=stage_block(position_start if decode_start is None or position<decode_start else position)
+        if segments and segments[-1][2:]==stage:
+            start,_,offset,count=segments[-1];segments[-1]=(start,local+1,offset,count)
+        else: segments.append((local,local+1,*stage))
+    return segments
+
 def route_ids(positions, layer, offset, count, active=5, layers=32):
     steps=positions*layers+layer
     return torch.stack([offset+slot+active*(steps% (1+(count-1-slot)//active)) for slot in range(active)],dim=-1)
@@ -62,6 +78,7 @@ class ResidentPool(nn.Module):
         for prefix in ('gate','up','down'):
             setattr(self,prefix,Projection({key.split('.',1)[1]:value for key,value in values.items() if key.startswith(prefix+'.')}))
         self.position_start=0
+        self.decode_start=None
 
 class ResidentMLP(nn.Module):
     def __init__(self,seed,pool,layer):
@@ -72,8 +89,12 @@ class ResidentMLP(nn.Module):
     def forward(self,hidden):
         if hidden.shape[0]!=1: raise ValueError('Pilot uses independent batch-size-one examples')
         x=hidden[0];pool=self.pool
-        positions=torch.arange(x.shape[0],device=x.device)+pool.position_start
-        offset,count=stage_block(pool.position_start)
+        return torch.cat([self.segment(x[start:end],pool.position_start+start,offset,count)
+            for start,end,offset,count in stage_segments(pool.position_start,x.shape[0],pool.decode_start)],dim=0).unsqueeze(0)
+
+    def segment(self,x,position_start,offset,count):
+        pool=self.pool
+        positions=torch.arange(x.shape[0],device=x.device)+position_start
         for prefix in ('gate','up','down'): getattr(pool,prefix).prepare(offset,count,x.device)
         ids=route_ids(positions,self.layer,offset,count)
         seed_up=self.seed.up_proj(x);seed_gate=self.seed.gate_proj(x)
@@ -86,7 +107,7 @@ class ResidentMLP(nn.Module):
             gate=pool.gate(x,seed_gate,expert)*mask
             activated=up*F.silu(gate)
             result=result+pool.down(activated,self.seed.down_proj(activated),expert)
-        return result.unsqueeze(0)
+        return result
 
 def gguf_reader(path,gguf_python):
     sys.path.insert(0,str(gguf_python))
