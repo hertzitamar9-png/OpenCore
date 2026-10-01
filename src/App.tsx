@@ -899,7 +899,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   </div>;
 
   if (view === "models") return <div className="support-page">
-    <div className="page-heading"><div><h1>Models</h1><p>Install and remove local models, then choose which one to use.</p></div><button onClick={() => void revealLocalPath(modelDir, onNotice)}><FolderOpen size={14} /> Open model folder</button></div>
+    <div className="page-heading"><div><h1>Models</h1><p>Install or uninstall local models, then choose which one to use.</p></div><button onClick={() => void revealLocalPath(modelDir, onNotice)}><FolderOpen size={14} /> Open model folder</button></div>
     <ModelLibrary selectedProfile={selectedProfile} onSelect={onSelectProfile} runtimeActive={["running", "starting"].includes(snapshot.runtime.status) || Boolean(snapshot.activeConversationIds?.length)} onNotice={onNotice} />
     <div className="settings-grid">
       <section className="model-activity" aria-label="Model activity">

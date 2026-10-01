@@ -934,7 +934,7 @@ describe("OpenCore", () => {
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Models" }));
       fireEvent.click(screen.getByRole("button", { name: "Open model folder" }));
-      await waitFor(() => expect(opener).toHaveBeenCalledWith("C:\\Users\\hertz\\OpenCore"));
+      await waitFor(() => expect(opener).toHaveBeenCalledWith("C:\\OpenCore"));
       expect(await screen.findByText(/Could not open folder: Error: Explorer unavailable/)).toBeInTheDocument();
     } finally { opener.mockRestore(); }
   });

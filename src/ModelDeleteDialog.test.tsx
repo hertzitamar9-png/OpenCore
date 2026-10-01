@@ -20,7 +20,7 @@ it("shows the reviewed files and shared files, then sends the exact plan only af
   expect(screen.getByText("1 shared files will be kept")).toBeInTheDocument();
   expect(screen.getByText("Used by Native 1M")).toBeInTheDocument();
   expect(remove).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Delete model" }));
+  fireEvent.click(screen.getByRole("button", { name: "Uninstall model" }));
   await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
   expect(remove).toHaveBeenCalledWith(plan);
 });
@@ -30,36 +30,36 @@ it("requires explicit acceptance for external checkpoint files", async () => {
   const remove = vi.fn().mockResolvedValue(undefined);
   render(<ModelDeleteDialog model={model} runtimeActive={false} onCancel={vi.fn()} onDelete={remove} />);
   const acceptance = await screen.findByRole("checkbox");
-  expect(screen.getByRole("button", { name: "Delete model" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Uninstall model" })).toBeDisabled();
   fireEvent.click(acceptance);
-  expect(screen.getByRole("button", { name: "Delete model" })).toBeEnabled();
-  fireEvent.click(screen.getByRole("button", { name: "Delete model" }));
+  expect(screen.getByRole("button", { name: "Uninstall model" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Uninstall model" }));
   await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
 });
 
-it("disables deletion when no local files exist and allows Escape to cancel", async () => {
+it("disables uninstallation when no local files exist and allows Escape to cancel", async () => {
   vi.spyOn(api, "modelRemovalPlan").mockResolvedValue({ ...plan, files: [], totalBytes: 0 });
   const cancel = vi.fn();
   const remove = vi.fn();
   render(<ModelDeleteDialog model={model} runtimeActive={false} onCancel={cancel} onDelete={remove} />);
-  expect(await screen.findByText("This model has no local files to delete.")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Delete model" })).toBeDisabled();
+  expect(await screen.findByText("This model has no installed files to remove.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Uninstall model" })).toBeDisabled();
   fireEvent.keyDown(document, { key: "Escape" });
   expect(cancel).toHaveBeenCalledTimes(1);
   expect(remove).not.toHaveBeenCalled();
 });
 
-it("requires a new review after a deletion failure", async () => {
+it("requires a new review after an uninstallation failure", async () => {
   const review = vi.spyOn(api, "modelRemovalPlan").mockResolvedValue(plan);
   const remove = vi.fn().mockRejectedValueOnce(new Error("Model files changed"));
   render(<ModelDeleteDialog model={model} runtimeActive={true} onCancel={vi.fn()} onDelete={remove} />);
-  const confirm = await screen.findByRole("button", { name: "Stop runtime and delete" });
+  const confirm = await screen.findByRole("button", { name: "Stop runtime and uninstall" });
   expect(screen.getByText(/cancel any active generation/)).toBeInTheDocument();
   fireEvent.click(confirm);
   expect(await screen.findByRole("alert")).toHaveTextContent("Model files changed");
-  expect(screen.getByRole("button", { name: "Delete model" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Uninstall model" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Check files again" }));
-  expect(await screen.findByRole("button", { name: "Stop runtime and delete" })).toBeEnabled();
+  expect(await screen.findByRole("button", { name: "Stop runtime and uninstall" })).toBeEnabled();
   expect(review).toHaveBeenCalledTimes(2);
   expect(remove).toHaveBeenCalledTimes(1);
 });

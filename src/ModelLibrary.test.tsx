@@ -27,7 +27,7 @@ it('chooses the speech backend separately from the chat model and labels its lan
 });
 
 describe("optional model installation", () => {
-  it("stops an active runtime only after confirmation and passes the reviewed token to deletion", async () => {
+  it("stops an active runtime only after confirmation and passes the reviewed token to uninstallation", async () => {
     const model: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Chat",
       precision: "BF16", contextTokens: 32768, license: "Apache", experimental: false, note: "Local",
       selectable: true, installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 100 };
@@ -41,8 +41,8 @@ describe("optional model installation", () => {
     const remove = vi.spyOn(api, "uninstallModel").mockImplementation(async () => { calls.push("delete"); });
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={true} onNotice={vi.fn()} />);
-      fireEvent.click(await screen.findByRole("button", { name: "Delete ECHO 3T" }));
-      const confirm = await screen.findByRole("button", { name: "Stop runtime and delete" });
+      fireEvent.click(await screen.findByRole("button", { name: "Uninstall ECHO 3T" }));
+      const confirm = await screen.findByRole("button", { name: "Stop runtime and uninstall" });
       expect(stop).not.toHaveBeenCalled();
       expect(remove).not.toHaveBeenCalled();
       fireEvent.click(confirm);
@@ -51,7 +51,7 @@ describe("optional model installation", () => {
       expect(remove).toHaveBeenCalledWith("echo", "reviewed");
     } finally { library.mockRestore(); speech.mockRestore(); review.mockRestore(); stop.mockRestore(); remove.mockRestore(); }
   });
-  it("provides Delete on every model and never removes files before confirmation", async () => {
+  it("provides Uninstall on every model and never removes files before confirmation", async () => {
     const model: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Chat",
       precision: "BF16", contextTokens: 32768, license: "Apache", experimental: false, note: "Local",
       selectable: true, installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 100 };
@@ -63,9 +63,9 @@ describe("optional model installation", () => {
     const remove = vi.spyOn(api, "uninstallModel").mockResolvedValue();
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
-      for (const item of models) expect(await screen.findByRole("button", { name: `Delete ${item.label}` })).toBeEnabled();
-      fireEvent.click(screen.getByRole("button", { name: "Delete ECHO 3T" }));
-      expect(await screen.findByRole("dialog", { name: "Delete ECHO 3T?" })).toBeVisible();
+      for (const item of models) expect(await screen.findByRole("button", { name: `Uninstall ${item.label}` })).toBeEnabled();
+      fireEvent.click(screen.getByRole("button", { name: "Uninstall ECHO 3T" }));
+      expect(await screen.findByRole("dialog", { name: "Uninstall ECHO 3T?" })).toBeVisible();
       expect(remove).not.toHaveBeenCalled();
       fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -82,7 +82,6 @@ describe("optional model installation", () => {
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={select} runtimeActive={false} onNotice={vi.fn()} />);
       await screen.findByText("Not installed");
-      expect(screen.getByText(/Downloads preserve at least 100 GB of free space/)).toBeInTheDocument();
       expect(install).not.toHaveBeenCalled();
       expect(screen.getByRole("button", { name: "Use model" })).toBeDisabled();
       library.mockResolvedValue({ models: [{ ...model, installed: true, downloadBytes: 0 }], progress: null, diskFreeBytes: 137e9, minimumFreeBytes: 100e9 });
