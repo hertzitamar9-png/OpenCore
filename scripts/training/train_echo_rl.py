@@ -132,6 +132,9 @@ def main(argv=None):
             if args.resume and (folder/'verifier-fix-stop.json').exists():
                 receipt=json.loads((folder/'verifier-fix-stop.json').read_text(encoding='utf-8-sig'))
                 elapsed=max(elapsed,float(receipt.get('active_seconds') or 0))
+            if args.resume and (folder/'interruption-receipt.json').exists():
+                receipt=json.loads((folder/'interruption-receipt.json').read_text(encoding='utf-8-sig'))
+                elapsed=max(elapsed,float(receipt['progress'].get('active_seconds') or 0))
             save(folder,'heldout-before.json',{'loss':before,'examples':len(validation),'native_coding_passed':baseline['passed']})
             started=time.monotonic();deadline=started+protocol['active_training_seconds']-elapsed
             for task_index,task in enumerate(TRAIN_TASKS[completed:],start=completed):
