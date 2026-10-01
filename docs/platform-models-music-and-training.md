@@ -44,6 +44,11 @@ through HTTP ranges, producing 24 train and 8 held-out examples. MiMo is a task
 environment dataset, not completed supervised answers. A model-generated repair
 may enter training only after passing its immutable verifier in a fresh isolated
 container with no network or host mounts. Failed rollouts are retained as failures.
+The container transport uses WSL `--exec` so command arguments do not pass through
+the host login shell. A foreground WSL session stays open while the Windows model
+decodes; otherwise WSL can stop Docker between actions. The session is released
+after owned containers stop. Docker infrastructure errors abort the rollout rather
+than consuming more model actions against a stopped sandbox.
 
 `after_gsm8k.py` queues one training run behind the existing complete evaluation.
 It never interrupts or restarts the evaluation. `train_echo_pilot.py` then:
