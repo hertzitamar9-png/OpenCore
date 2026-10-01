@@ -35,7 +35,10 @@ def example_tokens(tokenizer,record,device):
     # Preserve a bounded tail of the request and the first 64 answer tokens.
     # The prefix truncation is explicit in the pilot protocol, not a claim
     # to have trained on every token of each long coding solution.
-    prompt=tokenizer.apply_chat_template(record['messages'][:1],tokenize=True,add_generation_prompt=True,enable_thinking=False)[-192:]
+    # Transformers 5 defaults to BatchEncoding. Request IDs explicitly; slicing
+    # a BatchEncoding returns tokenizers.Encoding objects rather than token IDs.
+    prompt=tokenizer.apply_chat_template(record['messages'][:1],tokenize=True,add_generation_prompt=True,
+        enable_thinking=False,return_dict=False)[-192:]
     answer=tokenizer.encode(record['messages'][1]['content'],add_special_tokens=False)[:64]
     if not prompt or not answer: raise ValueError('Empty training example')
     tokens=prompt+answer
@@ -126,7 +129,7 @@ def main():
         'frozen':'All backbone, private/shared factors, router, MTP and stage tensors',
         'trainable':'Only gate/up/down seed_scale and shared_coeff arrays',
         'validation_tolerance_nats':.02,'native_parity_top1_minimum':4,'native_parity_top64_logprob_error_maximum':.3,
-        'mimo_max_steps':16,'minimum_native_decode_tokens_per_second':20,'automatic_promotion':False,
+        'mimo_max_steps':16,'mimo_action_format':'native_json_schema','minimum_native_decode_tokens_per_second':20,'automatic_promotion':False,
         'scope':'Small local pilot; not full-corpus RL or a general improvement claim','data':data}
     save(folder,'training-protocol.json',protocol)
     torch.set_num_threads(4);torch.manual_seed(42)

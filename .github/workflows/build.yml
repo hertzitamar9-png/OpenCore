@@ -64,6 +64,7 @@ jobs:
         run: |
           python -m unittest discover -s scripts/evaluation -p "test_gsm8k_echo.py"
           python -m unittest discover -s scripts/training -p "test_mimo_verifier.py"
+          python -m unittest discover -s scripts/training -p "test_native_echo_backend.py"
       - name: Test speech language routing and safe checkpoint preparation
         run: python -m unittest discover -s src-tauri/resources/speech -p "test*.py"
       - name: Test Rust

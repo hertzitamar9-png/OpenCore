@@ -37,5 +37,18 @@ class PilotIntegrity(unittest.TestCase):
         self.assertEqual(targets[0].item(),500)
         torch.testing.assert_close(tokens[0,positions+1],targets)
 
+    def test_fast_tokenizer_chat_template_returns_integer_ids_for_training(self):
+        from tokenizers import Tokenizer, models, pre_tokenizers
+        from transformers import PreTrainedTokenizerFast
+        backend=Tokenizer(models.WordLevel({'[UNK]':0,'fix':1,'done':2},unk_token='[UNK]'))
+        backend.pre_tokenizer=pre_tokenizers.Whitespace()
+        tokenizer=PreTrainedTokenizerFast(tokenizer_object=backend,unk_token='[UNK]',
+            chat_template="{{ messages[0]['content'] }}")
+        record={'messages':[{'role':'user','content':'fix'},{'role':'assistant','content':'done'}]}
+        tokens,positions,targets=example_tokens(tokenizer,record,'cpu')
+        self.assertEqual(tokens.tolist(),[[1,2]])
+        self.assertEqual(positions.tolist(),[0])
+        self.assertEqual(targets.tolist(),[2])
+
 
 if __name__=='__main__': unittest.main()

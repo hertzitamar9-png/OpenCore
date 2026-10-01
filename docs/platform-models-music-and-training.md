@@ -55,7 +55,9 @@ It never interrupts or restarts the evaluation. `train_echo_pilot.py` then:
 
 1. Binds the source model and prepared data to their SHA-256 hashes.
 2. Captures native next-token probabilities on five short prompts.
-3. Runs one MiMo task with at most 16 model actions.
+3. Runs one MiMo task with at most 16 model actions, using native JSON-schema
+   decoding for the command/done response. This constrains serialization, not the
+   proposed repair or its immutable verifier.
 4. Rematerializes the original frozen quantized backbone for autograd in RAM.
 5. Pages only the current frozen expert stage onto the GPU.
 6. Requires at least four matching top-1 tokens and mean top-64 log-probability

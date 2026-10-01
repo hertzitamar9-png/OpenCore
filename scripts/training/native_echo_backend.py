@@ -54,8 +54,10 @@ class NativeBackend:
             except subprocess.TimeoutExpired: self.child.kill();self.child.wait(timeout=10)
         self.log.close()
 
-    def chat(self,messages,max_tokens=512):
-        return request(self.base,'/v1/chat/completions',{'messages':messages,'temperature':0,'seed':42,'max_tokens':max_tokens,'cache_prompt':False})
+    def chat(self,messages,max_tokens=512,response_format=None):
+        payload={'messages':messages,'temperature':0,'seed':42,'max_tokens':max_tokens,'cache_prompt':False}
+        if response_format is not None: payload['response_format']=response_format
+        return request(self.base,'/v1/chat/completions',payload)
 
     def probabilities(self,tokens):
         result=request(self.base,'/completion',{'prompt':tokens,'n_predict':1,'n_probs':64,'temperature':-1,

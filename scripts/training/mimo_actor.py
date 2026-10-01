@@ -3,6 +3,13 @@ import json
 from pathlib import Path
 from mimo_verifier import TaskContainer
 
+# Command length is checked by TaskContainer. A 12K grammar repetition exceeds
+# llama.cpp's parser bound; don't expand that bound into the sampling grammar.
+ACTION_FORMAT={'type':'json_schema','json_schema':{'name':'mimo_action','strict':True,'schema':{'oneOf':[
+    {'type':'object','properties':{'command':{'type':'string','minLength':1}},
+     'required':['command'],'additionalProperties':False},
+    {'type':'object','properties':{'done':{'const':True}},'required':['done'],'additionalProperties':False}
+]}}}
 
 def rollout(backend,folder,max_steps=16):
     folder=Path(folder)
@@ -16,7 +23,7 @@ def rollout(backend,folder,max_steps=16):
     transcript=[]
     with TaskContainer(folder) as container:
         for step in range(max_steps):
-            response=backend.chat(messages)
+            response=backend.chat(messages,response_format=ACTION_FORMAT)
             text=response['choices'][0]['message'].get('content') or ''
             messages.append({'role':'assistant','content':text})
             transcript.append({'step':step,'response':response})
