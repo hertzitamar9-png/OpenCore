@@ -6,10 +6,11 @@ export function parseArtifactLink(value: string | undefined): ArtifactLink | nul
 }
 
 export function messageUrlTransform(url: string): string {
-  if (parseArtifactLink(url)) return url;
+  if (parseArtifactLink(url) || localFilePath(url)) return url;
   try {
     const parsed = new URL(url);
     if (["https:", "http:", "mailto:"].includes(parsed.protocol)) return url;
   } catch { /* Relative links are not actionable from a message. */ }
   return "";
 }
+import { localFilePath } from "./local-file-links";

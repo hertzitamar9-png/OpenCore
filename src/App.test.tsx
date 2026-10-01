@@ -5,6 +5,7 @@ import * as api from "./api";
 import opencoreLogo from "./assets/opencore-logo.png";
 import type { OperationRecord } from "./types";
 import * as dialog from "@tauri-apps/plugin-dialog";
+import { installExternalLinkGuard } from "./external-links";
 
 const stageClipboardAttachment = vi.hoisted(() => vi.fn());
 vi.mock("./api", async (importOriginal) => ({
@@ -20,6 +21,31 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("opens the linked local file from an older chat without switching to the newest chat", async () => {
+    const initial = await api.snapshot();
+    const older = { ...initial.conversations[0], id: "older", title: "Earlier research" };
+    const snapshot = vi.spyOn(api, "snapshot").mockResolvedValue({ ...initial, conversations: [initial.conversations[0], older] });
+    const path = "C:/project/frozen research.md";
+    const conversation = vi.spyOn(api, "conversation").mockResolvedValue([{
+      id: 111, conversationId: older.id, timestamp: "2026-09-28T10:00:00Z", kind: "message", role: "assistant",
+      source: "OpenCore", title: "Research", content: `[Frozen research record](</${path}:12>) and [Unavailable](relative.md)`, metadata: {},
+    }]);
+    const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "frozen research.md", mime: "text/plain", size: 20, dataUrl: "", text: "Original research source" });
+    const disposeLinks = installExternalLinkGuard(vi.fn().mockResolvedValue(undefined));
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getAllByText(older.title, { selector: "strong" })[0]);
+      await screen.findByRole("heading", { name: older.title, level: 2 });
+      const link = await screen.findByRole("link", { name: "Frozen research record" });
+      fireEvent.click(link);
+      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      expect(await within(browser).findByText("Original research source")).toBeVisible();
+      expect(preview).toHaveBeenCalledWith(path);
+      expect(screen.getByRole("heading", { name: older.title, level: 2 })).toBeVisible();
+      expect(screen.queryByRole("link", { name: "Unavailable" })).not.toBeInTheDocument();
+    } finally { disposeLinks(); snapshot.mockRestore(); conversation.mockRestore(); preview.mockRestore(); }
+  });
   it("shows the installed app version rather than a hard-coded release", async () => {
     render(<App />);
     await screen.findByLabelText("Message OpenCore");

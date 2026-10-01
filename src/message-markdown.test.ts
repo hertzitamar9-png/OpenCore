@@ -2,13 +2,11 @@ import { describe, expect, it } from "vitest";
 import { sanitizeMessageMarkdown } from "./message-markdown";
 
 describe("message Markdown", () => {
-  it("renders an imported local-file target as text instead of a dead hyperlink", () => {
+  it("preserves an imported local-file target for the file viewer", () => {
     const message =
       'The [brainstorming skill](</C:/Users/hertz/.codex/plugins/cache/superpowers/6.3.0/skills/brainstorming/SKILL.md>) requires approval.';
 
-    expect(sanitizeMessageMarkdown(message)).toBe(
-      "The brainstorming skill requires approval.",
-    );
+    expect(sanitizeMessageMarkdown(message)).toBe(message);
   });
 
   it("preserves real web hyperlinks", () => {

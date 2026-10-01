@@ -21,6 +21,7 @@ import {
 import * as api from "./api";
 import { messageUrlTransform, parseArtifactLink } from "./artifact-links";
 import { sanitizeMessageMarkdown } from "./message-markdown";
+import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
 import { removePersistedOptimisticDuplicates } from "./visible-entries";
@@ -209,13 +210,26 @@ function GeneratedArtifact({ id, name, mime, size }: { id: string; name: string;
   </div>;
 }
 
-function MarkdownText() {
+function MessageLink({ href, children }: { href?: string; children?: React.ReactNode }) {
   const actions = useContext(ArtifactActionsContext);
+  const artifact = parseArtifactLink(href);
+  const path = localFilePath(href);
+  if (artifact || path) {
+    const open = (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (path) actions?.previewAttachment(path);
+      else if (artifact) artifact.action === "download" ? actions?.download(artifact.id) : actions?.preview(artifact.id);
+    };
+    return <a href={href} data-opencore-file-link={path ? "" : undefined} onClick={open} onAuxClick={open}>{children}</a>;
+  }
+  // A filtered URL must not become href="": that reloads the app and loses chat selection.
+  return href ? <a href={href}>{children}</a> : <span>{children}</span>;
+}
+
+function MarkdownText() {
   return <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} className="aui-md" urlTransform={messageUrlTransform} components={{
-    a: ({ href, children }) => {
-      const artifact = parseArtifactLink(href);
-      return artifact ? <a href={href} onClick={(event) => { event.preventDefault(); artifact.action === "download" ? actions?.download(artifact.id) : actions?.preview(artifact.id); }}>{children}</a> : <a href={href}>{children}</a>;
-    },
+    a: MessageLink,
     img: ({ src, alt }) => <MessageImage src={src} alt={alt} />,
   }} />;
 }
@@ -295,12 +309,8 @@ export function EchoReceipt({ entries }: { entries: TimelineEntry[] }) {
 }
 
 function ResponseMarkdown({ content }: { content: string }) {
-  const actions = useContext(ArtifactActionsContext);
   return <div className="aui-md"><ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={messageUrlTransform} components={{
-    a: ({ href, children }) => {
-      const artifact = parseArtifactLink(href);
-      return artifact ? <a href={href} onClick={(event) => { event.preventDefault(); artifact.action === "download" ? actions?.download(artifact.id) : actions?.preview(artifact.id); }}>{children}</a> : <a href={href}>{children}</a>;
-    },
+    a: MessageLink,
     img: ({ src, alt }) => <MessageImage src={src} alt={alt} />,
   }}>{displayText(content)}</ReactMarkdown></div>;
 }

@@ -58,7 +58,7 @@ export async function modelLibrary(): Promise<ModelLibrary> {
   return { models: modelCatalog.models.map((model) => ({ ...model, installed: false, externalManaged: false,
     downloadBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0),
     totalBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0) })),
-    diskFreeBytes: 240e9, minimumFreeBytes: 200e9, progress: null };
+    diskFreeBytes: 240e9, minimumFreeBytes: 64 * 1024 * 1024, progress: null };
 }
 export async function installModel(id: string): Promise<void> {
   if (!desktop()) throw new Error("Model installation requires the desktop application.");

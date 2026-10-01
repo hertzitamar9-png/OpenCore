@@ -37,8 +37,8 @@ def prepare(root, name, packages):
         own = next(Path(p) for p in sites if p.endswith('site-packages'))
         (own/'opencore_torch_shared.pth').write_text('\n'.join(shared['sites'])+'\n',encoding='utf-8')
     elif not probe(target):
-        if shutil.disk_usage(root).free < 106_000_000_000:
-            raise RuntimeError('A CUDA speech runtime needs more disk space while preserving 100 GB free. No existing model was deleted.')
+        if shutil.disk_usage(root).free < 6_000_000_000 + 64 * 1024 * 1024:
+            raise RuntimeError('Not enough disk space: CUDA speech runtime installation needs about 6 GB of temporary and installed package space.')
         subprocess.run([str(target),'-m','pip','install','--disable-pip-version-check','--no-cache-dir',
             '--index-url','https://download.pytorch.org/whl/cu124','torch==2.5.1'],check=True)
     subprocess.run([str(target),'-m','pip','install','--disable-pip-version-check','--no-cache-dir',

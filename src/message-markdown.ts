@@ -1,6 +1,3 @@
-const localFileMarkdownLink =
-  /\[([^\]]+)]\(\s*<(?:(?:file:\/\/\/)?\/?[A-Za-z]:[\\/])[^>]*>\s*\)/g;
-
 export function sanitizeMessageMarkdown(value: string): string {
   const clarification = value.trim().match(/^<send_user_message_question_reply>\s*([\s\S]*?)\s*<\/send_user_message_question_reply>$/i);
   if (clarification) {
@@ -10,5 +7,5 @@ export function sanitizeMessageMarkdown(value: string): string {
       return answers.join("\n") || "Answered a clarification";
     } catch { return "Answered a clarification"; }
   }
-  return value.replace(localFileMarkdownLink, "$1");
+  return value;
 }

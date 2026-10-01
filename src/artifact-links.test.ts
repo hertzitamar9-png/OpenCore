@@ -12,6 +12,8 @@ describe("artifact links", () => {
     expect(messageUrlTransform(`artifact://${id}`)).toBe(`artifact://${id}`);
     expect(messageUrlTransform("https://example.com/image.png")).toContain("https://");
     expect(messageUrlTransform("javascript:alert(1)")).toBe("");
-    expect(messageUrlTransform("file:///C:/secret.txt")).toBe("");
+    expect(messageUrlTransform("file:///C:/notes.txt")).toBe("file:///C:/notes.txt");
+    expect(messageUrlTransform("/C:/project/research.md:12")).toBe("/C:/project/research.md:12");
+    expect(messageUrlTransform("./research.md")).toBe("");
   });
 });

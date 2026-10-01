@@ -7,7 +7,8 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, atomic::{AtomicBool, Ordering}};
 use sysinfo::Disks;
 
-const MIN_FREE_BYTES: u64 = 100_000_000_000;
+// Small allowance for receipts and filesystem overhead, independent of model size.
+const MIN_FREE_BYTES: u64 = 64 * 1024 * 1024;
 #[path = "model_removal.rs"]
 mod removal;
 pub use removal::RemovalPlan;
@@ -199,20 +200,28 @@ pub fn free_bytes(root: &Path) -> u64 {
 }
 fn reserve_space(root: &Path, additional: u64) -> Result<(), String> {
     let free = free_bytes(root);
-    if free < MIN_FREE_BYTES.saturating_add(additional).saturating_add(64 * 1024 * 1024) {
-        return Err(format!("Installation would leave less than 100 GB free. Available: {:.1} GB; remaining download: {:.1} GB.", free as f64/1e9, additional as f64/1e9));
+    if free < MIN_FREE_BYTES.saturating_add(additional) {
+        return Err(format!("Not enough disk space for this installation. Available: {:.2} GB; additional space needed: {:.2} GB, plus 64 MiB for installation metadata.", free as f64/1e9, additional as f64/1e9));
     }
     Ok(())
 }
+fn remaining_download_bytes(root: &Path, files: &[&Artifact]) -> Result<u64, String> {
+    files.iter().filter(|file| !verified_file(root, file)).try_fold(0u64, |total, file| {
+        let partial = safe_path(root, &format!("{}.partial", file.path))?;
+        let offset = partial.metadata().ok().filter(|m| m.is_file() && m.len() <= file.bytes)
+            .map(|m| m.len()).unwrap_or(0);
+        Ok(total.saturating_add(file.bytes - offset))
+    })
+}
 pub fn list(root: &Path) -> Result<Library, String> {
     let data = manifest()?;
-    let models = data.models.iter().map(|m| {
+    let models = data.models.iter().map(|m| -> Result<ModelInfo, String> {
         let files: Vec<_> = data.artifacts.iter().filter(|f| m.artifacts.contains(&f.id)).collect();
         let external_managed = externally_managed_speech(root, &m.id);
-        ModelInfo { model: m.clone(), installed: installed(root, m, &data), external_managed,
-            download_bytes: if external_managed { 0 } else { files.iter().filter(|f| !verified_file(root, f)).map(|f| f.bytes).sum() },
-            total_bytes: files.iter().map(|f| f.bytes).sum() }
-    }).collect();
+        Ok(ModelInfo { model: m.clone(), installed: installed(root, m, &data), external_managed,
+            download_bytes: if external_managed { 0 } else { remaining_download_bytes(root, &files)? },
+            total_bytes: files.iter().map(|f| f.bytes).sum() })
+    }).collect::<Result<Vec<_>, _>>()?;
     Ok(Library { models, progress: PROGRESS.lock().map_err(|e| e.to_string())?.clone(),
         disk_free_bytes: free_bytes(root), minimum_free_bytes: MIN_FREE_BYTES })
 }
@@ -288,7 +297,7 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
     let shared_torch = std::env::var_os("LOCALAPPDATA").map(PathBuf::from).is_some_and(|p|p.join("OpenCore/training-envs/lfm-bf16-py311/Scripts/python.exe").is_file());
     let runtime_reserve = if speech && !speech_runtime_ready(root, id) { if shared_torch {1_000_000_000} else {6_000_000_000} }
         else if id == "phonon-2" && !root.join("speech/phonon-2/model.fermion").is_file() { 177_438_361 } else { 0 };
-    let additional=files.iter().filter(|f| !verified_file(root,f)).map(|f|f.bytes).sum::<u64>().saturating_add(runtime_reserve);
+    let additional=remaining_download_bytes(root, &files)?.saturating_add(runtime_reserve);
     if additional>0 { reserve_space(root,additional)?; }
     if speech && !speech_runtime_ready(root, id) {
         update("preparing", 0, "Preparing speech runtime", None);
@@ -344,6 +353,8 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
             if offset > 0 && status != reqwest::StatusCode::PARTIAL_CONTENT { offset = 0; }
             let mut output = std::fs::OpenOptions::new().write(true).create(true).append(offset > 0).truncate(offset == 0)
                 .open(&partial).map_err(|e| e.to_string())?;
+            // Recheck after a server ignores Range and the partial file is truncated.
+            reserve_space(root, file.bytes - offset)?;
             let mut stream = response.bytes_stream();
             loop {
                 let next = tokio::select! {
@@ -532,8 +543,29 @@ mod tests {
         for path in ["../model.gguf", "C:/model.gguf", "/model.gguf", "models\\model.gguf"] { assert!(safe_relative(path).is_err()); }
         for model in &catalog.models { for id in &model.artifacts { assert!(catalog.artifacts.iter().any(|f| &f.id == id)); } }
     }
-    #[test] fn model_installation_preserves_100_gb_free_space() {
-        assert_eq!(MIN_FREE_BYTES, 100_000_000_000);
+    #[test] fn model_installation_allows_a_download_that_fits_on_disk() {
+        let root = std::env::temp_dir();
+        let free = free_bytes(&root);
+        assert!(free > 4_000_000_000, "This test needs 4 GB free; it writes no data");
+        assert!(reserve_space(&root, free - 4_000_000_000).is_ok(),
+            "A download leaving 4 GB free must not require an unrelated 100 GB reserve");
+        assert!(reserve_space(&root, free).is_err(), "Still reject downloads that would fill the disk");
+    }
+    #[test] fn resumed_download_space_excludes_partial_and_verified_shared_files() {
+        let root = std::env::temp_dir().join(format!("opencore-download-space-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(root.join("models")).unwrap();
+        let file = Artifact { id: "space-test".into(), path: "models/weights.gguf".into(), repo: "test/model".into(),
+            revision: "a".repeat(40), filename: "weights.gguf".into(), sha256: format!("{:x}", Sha256::digest(b"hello")), bytes: 5 };
+        let partial = root.join("models/weights.gguf.partial");
+        std::fs::write(&partial, b"hel").unwrap();
+        assert_eq!(remaining_download_bytes(&root, &[&file]).unwrap(), 2);
+        std::fs::write(&partial, b"oversized").unwrap();
+        assert_eq!(remaining_download_bytes(&root, &[&file]).unwrap(), 5);
+        let path = root.join(&file.path);
+        std::fs::write(&path, b"hello").unwrap();
+        record_file(&root, &file, &path).unwrap();
+        assert_eq!(remaining_download_bytes(&root, &[&file]).unwrap(), 0);
+        std::fs::remove_dir_all(root).unwrap();
     }
     #[test] fn echo_profiles_are_selectable_with_incremental_kv() {
         let catalog = manifest().unwrap();
