@@ -1,4 +1,6 @@
 import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { modelLibrary } from "./api";
 import type { RuntimeProfile } from "./types";
 
 export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">; label: string; description: string }[] = [
@@ -28,8 +30,21 @@ export function ModelProfileOptions({ selectedProfile, onSelect, disabled = fals
   id?: string;
   className?: string;
 }) {
+  const [installedIds, setInstalledIds] = useState<Set<string> | null>(null);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void modelLibrary().then(library => {
+      if (active) setInstalledIds(new Set(library.models.filter(model => model.installed && model.selectable).map(model => model.id)));
+    }).catch(() => { if (active) setError(true); });
+    return () => { active = false; };
+  }, []);
+  const profiles = selectableModelProfiles.filter(profile => installedIds?.has(profile.id));
   return <div className={`model-picker-options ${className}`} id={id} role="group" aria-label="Choose model profile">
-    {selectableModelProfiles.map(({ id: profile, label, description }) => <button
+    {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
+      : installedIds === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
+      : profiles.length === 0 ? <p className="model-picker-empty" role="status">No downloaded text models. Install one in Models.</p> : null}
+    {profiles.map(({ id: profile, label, description }) => <button
       key={profile}
       className={`model-picker-option ${selectedProfile === profile ? "selected" : ""}`}
       type="button"

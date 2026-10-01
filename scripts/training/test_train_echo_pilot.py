@@ -4,10 +4,17 @@ from types import SimpleNamespace
 import unittest
 import torch
 import numpy as np
-from train_echo_pilot import export_candidate, example_tokens
+from train_echo_pilot import export_candidate, example_tokens, parse_args
 
 
 class PilotIntegrity(unittest.TestCase):
+    def test_retry_budget_is_explicit_and_rejects_unapproved_limits(self):
+        common=['--folder','attempt','--research-root','research']
+        self.assertEqual(parse_args(common).mimo_max_steps,16)
+        self.assertEqual(parse_args(common+['--mimo-max-steps','32']).mimo_max_steps,32)
+        with self.assertRaises(SystemExit):
+            parse_args(common+['--mimo-max-steps','100'])
+
     def test_export_only_changes_allowed_bf16_composition_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source.gguf';target=root/'candidate.gguf'

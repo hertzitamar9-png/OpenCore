@@ -55,6 +55,7 @@ code, pre, .log-canvas { font-family: "Cascadia Code", Consolas, monospace; }
 .model-picker-option strong { color: #eaf4ff; font-size: 13px; }
 .model-picker-option small { color: #b3c8d9; font-size: 11px; }
 .model-picker-option > svg { flex: 0 0 auto; color: #69d5a2; }
+.model-picker-empty { margin: 0; padding: 10px; color: #b3c8d9; font-size: 12px; line-height: 1.5; }
 .model-picker-option:hover:not(:disabled),.model-picker-option.selected { border-color: #315879; background: #142a3c; }
 .topbar-right { display: flex; justify-content: flex-end; align-items: center; gap: 20px; }
 .connection-state { min-width: 140px; padding-left: 18px; border-left: 1px solid var(--line); display: flex; align-items: center; gap: 9px; }

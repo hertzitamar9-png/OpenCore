@@ -113,12 +113,18 @@ def export_candidate(source,target,reader,updates):
         'precision':'Original Q6_K/F32 backbone and BF16 expert tensors; six BF16 composition arrays eligible for updates'}
 
 
-def main():
+def parse_args(argv=None):
     parser=argparse.ArgumentParser()
     parser.add_argument('--home',type=Path,default=Path.home()/'OpenCore')
     parser.add_argument('--folder',type=Path,required=True)
     parser.add_argument('--research-root',type=Path,required=True)
-    args=parser.parse_args();folder=args.folder;folder.mkdir(parents=True,exist_ok=True)
+    parser.add_argument('--mimo-max-steps',type=int,choices=(16,32),default=16,
+        help='Explicit MiMo action budget; use 32 only for the approved retry')
+    return parser.parse_args(argv)
+
+
+def main():
+    args=parse_args();folder=args.folder;folder.mkdir(parents=True,exist_ok=True)
     if (folder/'training-result.json').exists(): raise FileExistsError('Completed pilot exists; do not retrain silently')
     source=args.home/'OpenCore-Code-Single-File.gguf'
     if digest(source)!=MODEL_SHA: raise ValueError('Main ECHO identity changed')
@@ -129,7 +135,7 @@ def main():
         'frozen':'All backbone, private/shared factors, router, MTP and stage tensors',
         'trainable':'Only gate/up/down seed_scale and shared_coeff arrays',
         'validation_tolerance_nats':.02,'native_parity_top1_minimum':4,'native_parity_top64_logprob_error_maximum':.3,
-        'mimo_max_steps':16,'mimo_action_format':'native_json_schema','minimum_native_decode_tokens_per_second':20,'automatic_promotion':False,
+        'mimo_max_steps':args.mimo_max_steps,'mimo_action_format':'native_json_schema','mimo_action_output_tokens':512,'minimum_native_decode_tokens_per_second':20,'automatic_promotion':False,
         'scope':'Small local pilot; not full-corpus RL or a general improvement claim','data':data}
     save(folder,'training-protocol.json',protocol)
     torch.set_num_threads(4);torch.manual_seed(42)
@@ -146,7 +152,10 @@ def main():
                 tokens=tokenizer.encode(prompt,add_special_tokens=False)
                 probes.append({'prompt':prompt,'tokens':tokens,'native':backend.probabilities(tokens)})
             save(folder,'native-parity-probes.json',probes)
-            reward=rollout(backend,folder,max_steps=16)
+            reward=rollout(backend,folder,max_steps=args.mimo_max_steps)
+        if args.mimo_max_steps==32 and reward['reward']!=1:
+            save(folder,'training-progress.json',{'phase':'mimo-retry-failed','mimo_verified_examples':0})
+            raise RuntimeError('Approved MiMo retry failed immutable verification; existing UltraData candidate preserved, no duplicate training')
         gc.collect()
         if not torch.cuda.is_available(): raise RuntimeError('CUDA is unavailable; never silently use CPU for this training run')
         free,total=torch.cuda.mem_get_info()
@@ -200,7 +209,7 @@ def main():
             'original_sha256_after':digest(source),'promoted':False,'export':exported,
             'limitation':'One short-prefix pilot. Does not establish coding superiority, full MiMo RL or general benchmark improvement.'}
         if result['original_sha256_after']!=MODEL_SHA: raise ValueError('Original checkpoint changed')
-        save(folder,'training-result.json',result);save(folder,'training-progress.json',{'phase':'complete'})
+        save(folder,'training-result.json',result);save(folder,'training-progress.json',{'phase':result['status']})
         print(json.dumps(result,indent=2),flush=True)
     except BaseException as error:
         save(folder,'training-failure.json',{'error':str(error),'type':type(error).__name__,'traceback':traceback.format_exc(),'time':time.time()})

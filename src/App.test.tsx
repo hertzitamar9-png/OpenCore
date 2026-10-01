@@ -641,6 +641,8 @@ describe("OpenCore", () => {
   });
 
   it("opens the styled model picker with DuoCore selectable and keeps Unsloth out of runtime profiles", async () => {
+    const inventory = await api.modelLibrary();
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ ...inventory, models: inventory.models.map(model => ({ ...model, installed: ["echo", "native1m", "doucode"].includes(model.id) })) });
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
@@ -648,20 +650,23 @@ describe("OpenCore", () => {
     const picker = topbar.getByRole("button", { name: /Choose model profile, currently DuoCore/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    expect(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
+    expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /DuoCore K2 \+ Nanbeige · competing drafts, one selected answer/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
-    fireEvent.click(screen.getByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended/ }));
-    expect(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
+    expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Unsloth", { selector: "h2" })).toBeInTheDocument();
+    library.mockRestore();
   });
 
   it("opens upload and model choices from the composer and switches models from the footer", async () => {
+    const inventory = await api.modelLibrary();
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ ...inventory, models: inventory.models.map(model => ({ ...model, installed: ["echo", "native1m", "doucode"].includes(model.id) })) });
     render(<App />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
 
@@ -670,14 +675,15 @@ describe("OpenCore", () => {
     expect(screen.getByRole("menuitem", { name: "Upload files or images" })).toBeVisible();
     fireEvent.click(screen.getByRole("menuitem", { name: /Model DuoCore/ }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
 
     const footer = document.querySelector(".conversation-statusbar");
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently 1M extended" }));
     fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
+    library.mockRestore();
   });
 
   it("shows ECHO's 3T archive goal for the extended profile in the footer", async () => {
