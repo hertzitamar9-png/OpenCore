@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, Download, HardDrive, Trash2 } from "lucide-react";
+import { Check, Download, ExternalLink, HardDrive, Trash2 } from "lucide-react";
 import * as api from "./api";
 import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
@@ -11,6 +11,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
 }) {
   const [library, setLibrary] = useState<api.ModelLibrary | null>(null);
   const [error, setError] = useState("");
+  const [category, setCategory] = useState('all');
   const [pending, setPending] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<api.InstalledModel | null>(null);
   const [speech, setSpeech] = useState<api.SpeechStatus>({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
@@ -53,6 +54,9 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     finally { setPending(null); }
   }
   const progress = library?.progress;
+  const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
+  const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation']];
+  const visibleModels = library?.models.filter(model => category === 'all' || categoryOf(model) === category);
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Your model library</h2><p>Choose what to install. Weights download from pinned Hugging Face revisions and are verified before use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
@@ -65,10 +69,11 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {installing && progress.phase !== "uninstalling" ? <><progress aria-label="Model download" value={progress.phase === "preparing" ? undefined : progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{progress.currentFile === "Preparing speech runtime" ? "Setting up speech recognition for the microphone." : `${gb(progress.downloadedBytes)} / ${gb(progress.totalBytes)} · ${progress.currentFile || "Preparing download"}`}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
       {progress.error ? <p>{progress.error}</p> : null}
     </div> : null}
-    <div className="model-library-grid">{library?.models.map((model) => <article key={model.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : model.id === selectedProfile) ? "selected" : ""}`}>
-      <header><div><h3>{model.label}</h3><span>{model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? "Installed" : model.externalManaged ? "Local weights found" : "Not installed"}</span></header>
+    <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{library?.models.filter(model => id === 'all' || categoryOf(model) === id).length || 0}</span></button>)}</div>
+    <div className="model-library-grid">{visibleModels?.map((model) => <article key={model.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : model.id === selectedProfile) ? "selected" : ""}`}>
+      <header><div><h3>{model.label}</h3><span>{model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
-      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.downloadBytes ? gb(model.downloadBytes) : "Already downloaded"}</dd></div></dl>
+      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.downloadBytes ? gb(model.downloadBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div></dl>
       <small>{model.note}</small>
       {model.speechLanguage && model.id === speech.modelId ? <div className="whisper-controls" aria-label="Speech settings">
         <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>
@@ -85,13 +90,14 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
         </fieldset>
         <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : speech.phase === "warming" ? "Loading speech weights into system RAM for standby…" : speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk."}</p>
       </div> : null}
-      <footer>{!model.installed ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
+      {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}
+      <footer>{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
         <Download size={15} />{pending === model.id ? "Working…" : model.externalManaged ? "Prepare speech runtime" : "Install"}
       </button> : null}{model.selectable ? <button className={selectedProfile === model.id ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
         {selectedProfile === model.id ? <Check size={15} /> : null}{selectedProfile === model.id ? "Selected" : "Use model"}
       </button> : model.speechLanguage ? <button disabled={!model.installed || installing || Boolean(pending)} aria-label={model.id === speech.modelId ? `${model.label} selected for dictation` : `Use ${model.label} for dictation`} onClick={() => void updateSpeech(() => api.setSpeechModel(model.id))}>
         {model.id === speech.modelId ? <Check size={15} /> : null}{model.id === speech.modelId ? "Dictation selected" : "Use for dictation"}
-      </button> : null}<button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Delete ${model.label}`} onClick={() => setDeleting(model)}><Trash2 size={15} />Delete</button></footer>
+      </button> : null}{model.setupUrl && <a href={model.setupUrl} target="_blank" rel="noreferrer" className="model-setup-link"><ExternalLink size={15} />Setup</a>}<button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Delete ${model.label}`} onClick={() => setDeleting(model)}><Trash2 size={15} />Delete</button></footer>
       <span className="model-license">{model.experimental ? "Experimental · " : ""}{model.license}</span>
     </article>)}</div>
     {deleting ? <ModelDeleteDialog model={deleting} runtimeActive={runtimeActive} onCancel={() => setDeleting(null)} onDelete={deleteModel} /> : null}

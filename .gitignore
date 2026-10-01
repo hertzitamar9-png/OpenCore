@@ -21,6 +21,7 @@
 /docs/*
 !/docs/echo-virtual-context.md
 !/docs/echo-virtual-execution.md
+!/docs/platform-models-music-and-training.md
 !/.github/
 
 **/node_modules/
@@ -45,3 +46,4 @@
 /src-tauri/resources/claude/node
 
 /scripts/evaluation/runs/
+/scripts/research/

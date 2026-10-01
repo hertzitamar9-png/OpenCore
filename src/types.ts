@@ -1,4 +1,4 @@
-export type RuntimeProfile = "stopped" | "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16" | "nanbeige-bf16-echo" | "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo";
+export type RuntimeProfile = "stopped" | "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16" | "nanbeige-bf16-echo" | "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" | "swift-27b" | "dirk-27b" | "davidau-27b";
 
 export interface RuntimeSnapshot {
   profile: RuntimeProfile;

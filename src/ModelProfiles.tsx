@@ -11,6 +11,9 @@ export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | 
   { id: "dualcore-echo", label: "DualCore ECHO", description: "Two LFM Q8 brains · ECHO archive · incremental KV" },
   { id: "fusioncore-kv", label: "FusionCore KV", description: "Two coupled LFM towers · 131K native context" },
   { id: "fusioncore-echo", label: "FusionCore ECHO", description: "Coupled LFM towers · ECHO archive · incremental KV" },
+  { id: "swift-27b", label: "Swift 1.5", description: "Optional 27B IQ2_S · ECHO recall · 16K attention" },
+  { id: "dirk-27b", label: "Dirk Vision", description: "Optional 27B IQ2_S + vision · ECHO recall · 8K attention" },
+  { id: "davidau-27b", label: "DavidAU Turbo", description: "Optional 27B IQ2_M · CPU offload · ECHO recall" },
 ];
 
 export const profileLabel = (profile: string) => selectableModelProfiles.find((item) => item.id === profile)?.label ?? (profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped");

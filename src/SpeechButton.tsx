@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LoaderCircle, Mic } from "lucide-react";
 import * as api from "./api";
+import { openSpeechSession } from './speechSession';
 
 export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: string) => void; onError: (message: string) => void }) {
   const [phase, setPhase] = useState<"idle" | "starting" | "recording" | "transcribing">("idle");
@@ -9,7 +10,7 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
   const busy = useRef(false);
   const recorder = useRef<MediaRecorder | undefined>(undefined);
   const stream = useRef<MediaStream | undefined>(undefined);
-  const session = useRef<Promise<string> | undefined>(undefined);
+  const session = useRef<ReturnType<typeof openSpeechSession> | undefined>(undefined);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const cancelled = useRef(false);
   const [level, setLevel] = useState(0);
@@ -23,7 +24,10 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
     cancelAnimationFrame(frame.current); void meter.current?.close().catch(() => {}); meter.current = undefined;
     if (alive.current) setLevel(0);
   };
-  const sleep = async () => { if (session.current) { try { await api.speechCancel(await session.current); } catch { /* Start failure is reported separately. */ } } session.current = undefined; };
+  const sleep = async () => {
+    const previous = session.current; session.current = undefined;
+    try { await previous?.close(); } catch (error) { if (alive.current) onError(`Could not release the microphone: ${String(error)}`); }
+  };
   const finish = (cancel = false) => {
     recordingRequested.current = false;
     cancelled.current ||= cancel;
@@ -45,10 +49,10 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
       const audio = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.current = audio;
       if (!recordingRequested.current || !alive.current) { releaseTracks(); busy.current = false; if (alive.current) setPhase("idle"); return; }
-      session.current = api.speechStart();
-      const sessionId = await session.current;
+      const current = openSpeechSession(); session.current = current;
+      await current.ready;
       if (!recordingRequested.current || !alive.current || cancelled.current) {
-        await api.speechCancel(sessionId);
+        await current.close();
         releaseTracks(); busy.current = false; if (alive.current) setPhase("idle"); return;
       }
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(type => MediaRecorder.isTypeSupported?.(type));
@@ -64,7 +68,7 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
           const blob = new Blob(chunks, { type: capture.mimeType });
           if (blob.size < 1024) throw new Error('Click the microphone to start, speak, then click again to stop. No usable audio was recorded.');
           setPhase("transcribing");
-          const id = await session.current;
+          const id = await current.ready;
           if (cancelled.current || !alive.current) return;
           const encoded = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -114,7 +118,7 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
   return <span className="speech-control"><button ref={button} type="button" className={`speech-button ${phase}`} title={label} aria-label={label} aria-pressed={phase === 'recording'}
     disabled={phase === "transcribing"}
     onPointerDown={(event) => { if (event.button === 0) event.preventDefault(); }}
-    onClick={() => { if (recordingRequested.current) finish(); else void start(); }}
+    onClick={() => { if (recordingRequested.current) finish(phase === 'starting'); else void start(); }}
     onKeyDown={(event) => { if (event.key === "Escape") finish(true); }}>
     <span className="speech-icon" aria-hidden="true"><Mic size={22} />
       {phase === 'recording' && <span className="speech-level" style={{ clipPath: `inset(${(1 - level) * 100}% 0 0 0)` }}><Mic size={22} /></span>}

@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   MemoryStick,
   MessageSquare,
+  Music2,
   MoreHorizontal,
   Network,
   Play,
@@ -50,9 +51,10 @@ import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
 import { ModelProfileOptions, profileDescription, profileLabel, selectableModelProfiles } from "./ModelProfiles";
 import { ModelLibrary } from "./ModelLibrary";
+import { MusicStudio } from './MusicStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
-type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "connectors" | "settings" | "troubleshooting";
+type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "connectors" | "settings" | "troubleshooting";
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
 type Appearance = {
@@ -108,6 +110,7 @@ const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }
   { id: "memory", label: "Memory", icon: Database },
   { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
   { id: "models", label: "Models", icon: Box },
+  { id: "music", label: "Music Studio", icon: Music2 },
   { id: "connectors", label: "Connectors", icon: Network },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "troubleshooting", label: "Troubleshooting", icon: CircleAlert, group: true },
@@ -1405,6 +1408,7 @@ export default function App() {
     <Navigation active={view} onChange={setView} running={running} />
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
+      : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}

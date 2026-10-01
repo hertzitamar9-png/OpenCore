@@ -211,6 +211,10 @@ impl SpeechManager {
         let _=tokio::fs::remove_file(session.audio).await;
     }
     pub async fn start(&self) -> Result<String,String> {
+        self.start_with_id(uuid::Uuid::new_v4().to_string()).await
+    }
+    pub async fn start_with_id(&self, id: String) -> Result<String,String> {
+        uuid::Uuid::parse_str(&id).map_err(|_|"Invalid microphone session ID".to_string())?;
         let control=self.control.lock().await;
         crate::model_catalog::require_idle()?;
         let cfg=self.settings();
@@ -218,7 +222,6 @@ impl SpeechManager {
         if !self.installed(){return Err("Install the selected speech model and its runtime in Models.".into());}
         let mut session_guard=self.session.lock().await;
         if session_guard.is_some(){return Err("A microphone session is already active".into());}
-        let id=uuid::Uuid::new_v4().to_string();
         let audio=std::env::temp_dir().join(format!("opencore-speech-{id}.audio"));
         let cancel=CancellationToken::new();
         let (input,ready)=oneshot::channel();
@@ -228,19 +231,22 @@ impl SpeechManager {
         drop(session_guard); drop(control);
         let manager=self.clone();
         tokio::spawn(async move{
+            let mut active_worker: Option<Worker> = None;
             let outcome:Result<Value,String>=async{
+                if cancel.is_cancelled() { return Err("Recording cancelled".into()); }
                 let mut existing=manager.worker.lock().await.take();
                 if existing.as_ref().is_some_and(|worker|worker.model_id!=cfg.model_id) {
                     if let Some(mut worker)=existing.take() { worker.stop().await; }
                 }
-                let mut worker=match existing {
+                active_worker=Some(match existing {
                     Some(worker)=>worker,
                     None=>{
                         manager.set_phase("loading");
                         let mode=manager.settings().idle_mode;
                         manager.spawn_worker(&cfg.model_id,&mode,mode=="cold",&cancel).await?
                     }
-                };
+                });
+                let worker=active_worker.as_mut().unwrap();
                 let awake=if worker.child.id().is_some() && manager.settings().idle_mode=="ram" {
                     manager.set_phase("loading");
                     worker.send(json!({"action":"wake"})).await?;
@@ -257,14 +263,11 @@ impl SpeechManager {
                 manager.set_phase("recording");
                 wait_recording(ready, &cancel).await?;
                 manager.set_phase("transcribing");
-                let id=manager.session.lock().await.as_ref().map(|s|s.id.clone()).ok_or("Microphone session expired")?;
-                let file=manager.session.lock().await.as_ref().map(|s|s.audio.clone()).ok_or("Microphone session expired")?;
-                let _=id;
-                worker.send(json!({"action":"transcribe","audio":file})).await?;
+                worker.send(json!({"action":"transcribe","audio":audio})).await?;
                 let output=tokio::select!{_ = cancel.cancelled()=>return Err("Recording cancelled".into()),v=worker.read()=>v?};
                 if let Some(error)=output["error"].as_str(){return Err(format!("Speech: {error}"));}
                 if manager.settings().idle_mode=="ram" && manager.settings().enabled{
-                    *manager.worker.lock().await=Some(worker);
+                    *manager.worker.lock().await=active_worker.take();
                     manager.set_phase("sleeping");
                 }else{
                     manager.set_phase("unloading");
@@ -273,6 +276,9 @@ impl SpeechManager {
                 }
                 Ok(output)
             }.await;
+            // Signal completion only after the process has exited and released
+            // CUDA allocations; the next composer waits on this result.
+            if let Some(mut worker)=active_worker.take(){worker.stop().await;}
             if let Err(error)=&outcome{
                 let _=ready_tx.send(Some(Err(error.clone())));
                 if let Some(mut w)=manager.worker.lock().await.take(){w.stop().await;}
@@ -281,7 +287,7 @@ impl SpeechManager {
             let _=tokio::fs::remove_file(audio).await;
             let _=result_tx.send(Some(outcome));
         });
-        let mut ready_rx=self.session.lock().await.as_ref().unwrap().ready.clone();
+        let mut ready_rx=ready_rx;
         let ready_result=match tokio::time::timeout(Duration::from_secs(180),wait_ready(&mut ready_rx)).await {
             Ok(result)=>result,
             Err(_)=>{self.cancel(&id).await;return Err("The speech model took too long to load. Try RAM standby in Models.".into());}
@@ -305,6 +311,7 @@ impl SpeechManager {
         result
     }
     pub async fn cancel(&self,id:&str){
+        let _control=self.control.lock().await;
         let mut guard=self.session.lock().await;
         if guard.as_ref().is_some_and(|s|s.id==id){
             let mut session=guard.take().unwrap();session.cancel.cancel();drop(guard);
@@ -338,7 +345,9 @@ pub async fn speech_set_idle_mode(core:tauri::State<'_,Arc<crate::AppCore>>,mode
 #[tauri::command]
 pub async fn speech_set_model(core:tauri::State<'_,Arc<crate::AppCore>>,model_id:String)->Result<SpeechStatus,String>{core.speech.set_model(&model_id).await}
 #[tauri::command]
-pub async fn speech_start(core:tauri::State<'_,Arc<crate::AppCore>>)->Result<String,String>{core.speech.start().await}
+pub async fn speech_start(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:Option<String>)->Result<String,String>{
+    core.speech.start_with_id(session_id.unwrap_or_else(||uuid::Uuid::new_v4().to_string())).await
+}
 #[tauri::command]
 pub async fn speech_transcribe(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:String,audio:String)->Result<Value,String>{core.speech.transcribe(&session_id,&audio).await}
 #[tauri::command]
@@ -380,6 +389,21 @@ mod tests {
         let cfg=Settings::default();
         assert!(!cfg.enabled);
         assert_eq!(cfg.idle_mode,"cold");
+    }
+    #[tokio::test]
+    async fn microphone_handoff_waits_for_worker_exit_and_old_cancel_cannot_stop_new_session(){
+        let manager=SpeechManager::new(PathBuf::from("unused"),PathBuf::from("unused"));
+        let (input,_audio)=oneshot::channel();let (tx,result)=watch::channel(None);let (_rtx,ready)=watch::channel(None);
+        *manager.session.lock().await=Some(Session{id:"old".into(),audio:PathBuf::from("unused.audio"),input:Some(input),result,ready,cancel:CancellationToken::new()});
+        let cancelling=manager.clone();
+        let release=tokio::spawn(async move {cancelling.cancel("old").await;});
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        assert!(manager.control.try_lock().is_err(),"A new start must wait for the old worker to exit");
+        tx.send(Some(Err("Recording cancelled".into()))).unwrap();release.await.unwrap();
+        let (input,_audio)=oneshot::channel();let (_tx,result)=watch::channel(None);let (_rtx,ready)=watch::channel(None);
+        *manager.session.lock().await=Some(Session{id:"new".into(),audio:PathBuf::from("unused.audio"),input:Some(input),result,ready,cancel:CancellationToken::new()});
+        manager.cancel("old").await;
+        assert_eq!(manager.session.lock().await.as_ref().unwrap().id,"new");
     }
     #[test]
     fn legacy_speech_settings_keep_the_actual_turbo_checkpoint(){

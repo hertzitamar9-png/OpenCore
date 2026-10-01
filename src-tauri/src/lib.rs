@@ -18,6 +18,7 @@ mod gateway;
 mod history;
 mod models;
 mod model_catalog;
+mod music_studio;
 mod native_browser;
 mod project_paths;
 mod project_memory;
@@ -1992,6 +1993,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            music_studio::music_studio_status, music_studio::start_music_studio,
             app_update::auto_update,
             speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode, speech::speech_set_model,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
@@ -2059,8 +2061,32 @@ pub fn run() {
             ,desktop_command
             ,set_computer_focus_mode
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running OpenCore");
+        .build(tauri::generate_context!())
+        .expect("error while building OpenCore")
+        .run(|app,event|{
+            // The hidden computer-use overlay is also a window. Closing the
+            // main window therefore must explicitly request application exit.
+            if matches!(&event,tauri::RunEvent::WindowEvent {label,event:tauri::WindowEvent::Destroyed,..} if label=="main") {
+                app.exit(0);
+            }
+            // Keep the event loop responsive while network/WSL teardown runs.
+            // Preserve an updater restart's requested exit code.
+            static EXIT_STARTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+            static EXIT_READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+            if let tauri::RunEvent::ExitRequested {api,code,..}=event {
+                if !EXIT_READY.load(std::sync::atomic::Ordering::Acquire) {
+                    api.prevent_exit();
+                    if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
+                        let app=app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            music_studio::shutdown_owned().await;
+                            EXIT_READY.store(true,std::sync::atomic::Ordering::Release);
+                            app.exit(code.unwrap_or(0));
+                        });
+                    }
+                }
+            }
+        });
 }
 
 #[cfg(test)]

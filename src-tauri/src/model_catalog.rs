@@ -29,11 +29,23 @@ pub struct Model {
     pub context_tokens: u64, pub artifacts: Vec<String>, pub license: String,
     pub experimental: bool, pub note: String,
     pub selectable: bool,
+    #[serde(default)] pub category: String,
+    #[serde(default)] pub backend: String,
+    #[serde(default="default_true")] pub runtime_ready: bool,
+    #[serde(default="default_true")] pub installable: bool,
+    #[serde(default,skip_serializing_if="Option::is_none")] pub source_url: Option<String>,
+    #[serde(default,skip_serializing_if="Option::is_none")] pub setup_url: Option<String>,
+    #[serde(default,skip_serializing_if="Option::is_none")] pub runtime_model_path: Option<String>,
+    #[serde(default,skip_serializing_if="Option::is_none")] pub vision_projector_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub speech_language: Option<String>,
 }
 #[derive(Deserialize)]
 struct Manifest { artifacts: Vec<Artifact>, models: Vec<Model> }
+fn default_true()->bool {true}
+pub fn gguf_model(id:&str)->Option<Model> {
+    manifest().ok()?.models.into_iter().find(|model|model.id==id && model.selectable && model.backend=="gguf")
+}
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64 }
@@ -60,6 +72,12 @@ fn manifest() -> Result<Manifest, String> {
         safe_relative(&file.path)?; safe_relative(&file.filename)?;
         if file.repo.split('/').count() != 2 { return Err("Invalid Hub repository".into()); }
     }
+    for model in &data.models {
+        for path in model.runtime_model_path.iter().chain(model.vision_projector_path.iter()) {
+            safe_relative(path)?;
+            if !data.artifacts.iter().any(|file|file.path==*path && model.artifacts.contains(&file.id)){return Err(format!("Unpinned runtime path for {}",model.id));}
+        }
+    }
     Ok(data)
 }
 fn safe_relative(value: &str) -> Result<(), String> {
@@ -69,7 +87,7 @@ fn safe_relative(value: &str) -> Result<(), String> {
     }
     Ok(())
 }
-fn safe_path(root: &Path, relative: &str) -> Result<PathBuf, String> {
+pub(crate) fn safe_path(root: &Path, relative: &str) -> Result<PathBuf, String> {
     safe_relative(relative)?;
     let path = root.join(relative);
     for ancestor in path.ancestors() {
@@ -156,6 +174,7 @@ fn verified_file(root: &Path, file: &Artifact) -> bool {
         modified(&path).ok() == Some(receipt.modified_nanos)
 }
 fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
+    if !model.installable || model.artifacts.is_empty(){return false;}
     if is_speech_model(&model.id) {
         let complete = if model.id == "phonon-2" {
             root.join("speech/phonon-2/model.fermion").metadata().is_ok_and(|m|m.len() == 177438361)
@@ -215,6 +234,7 @@ pub fn require_idle() -> Result<(), String> {
 pub fn begin(id: &str) -> Result<(), String> {
     let data = manifest()?;
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
+    if !model.installable || model.artifacts.is_empty(){return Err("This model needs upstream access or runtime setup. Open its Setup instructions in Models.".into());}
     let mut state = PROGRESS.lock().map_err(|e| e.to_string())?;
     if state.as_ref().is_some_and(|p| matches!(p.phase.as_str(), "downloading" | "verifying" | "preparing" | "uninstalling")) {
         return Err("Another model operation is in progress".into());
@@ -420,6 +440,27 @@ pub fn uninstall(root: &Path, id: &str, confirmation_token: &str) -> Result<(), 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn platform_categories_have_real_pins_and_setup_only_entries_cannot_run() {
+        let catalog=manifest().unwrap();
+        for category in ["speech","text","computer-use","3d"] {
+            assert!(catalog.models.iter().filter(|model|model.category==category).count()>=3,"{category}");
+        }
+        for model in &catalog.models {
+            assert!(model.artifacts.iter().all(|id|catalog.artifacts.iter().any(|file|file.id==*id)),"{}",model.id);
+            if !model.installable {assert!(!model.runtime_ready && !model.selectable,"{}",model.id);}
+        }
+        for id in ["swift-27b","dirk-27b","davidau-27b"] {
+            let model=gguf_model(id).unwrap();
+            assert!(model.runtime_model_path.is_some());
+            assert!(model.context_tokens<=16_384);
+        }
+        for id in ["thinkingcap-27b","hy-motion-1","pixal3d"] {assert!(gguf_model(id).is_none());}
+        let hy=catalog.models.iter().find(|model|model.id=="hy-motion-1").unwrap();
+        assert_eq!(hy.category,"3d-animation");
+        assert!(!hy.runtime_ready);
+        assert!(catalog.artifacts.iter().filter(|file|hy.artifacts.contains(&file.id)).all(|file|file.repo=="tencent/HY-Motion-1.0"));
+    }
     #[tokio::test]
     #[ignore = "Explicit opt-in only; registers and verifies already-present speech checkpoints"]
     async fn register_existing_speech_models() {

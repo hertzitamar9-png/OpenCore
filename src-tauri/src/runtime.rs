@@ -32,10 +32,10 @@ const LFM_FILE: &str = "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf";
 pub fn supported_profile(profile: &str) -> bool {
     matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" |
         "nanbeige-bf16" | "nanbeige-bf16-echo" |
-        "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo")
+        "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo") || crate::model_catalog::gguf_model(profile).is_some()
 }
 pub fn echo_profile(profile: &str) -> bool {
-    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16-echo" | "dualcore-echo" | "fusioncore-echo")
+    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16-echo" | "dualcore-echo" | "fusioncore-echo") || crate::model_catalog::gguf_model(profile).is_some()
 }
 fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
 fn nanbeige_profile(profile: &str) -> bool { matches!(profile, "nanbeige-bf16" | "nanbeige-bf16-echo") }
@@ -704,6 +704,10 @@ impl RuntimeManager {
             drop(inner);
             return self.start_nanbeige(profile, generation);
         }
+        if let Some(model)=crate::model_catalog::gguf_model(profile) {
+            drop(inner);
+            return self.start_catalog_gguf(&model,generation);
+        }
 
         let model = self.install_root.join("OpenCore-Code-Single-File.gguf");
         let server = self.install_root.join("runtime").join("llama-server.exe");
@@ -895,6 +899,32 @@ impl RuntimeManager {
         Ok(self.snapshot_locked(&mut inner))
     }
 
+    fn start_catalog_gguf(&self, model:&crate::model_catalog::Model, generation:u64)->Result<RuntimeSnapshot,String> {
+        let profile=model.id.as_str();
+        let checkpoint=crate::model_catalog::safe_path(&self.install_root,model.runtime_model_path.as_deref().ok_or("Missing GGUF runtime path")?)?;
+        let server=self.doucode_llama_server();
+        if !server.is_file(){return self.fail_start(profile,"The bundled GGUF inference runtime is missing".into());}
+        if Self::port_open(self.backend_port) && !self.reclaim_stale_opencore_port(self.backend_port,false){return self.fail_start(profile,"Chat backend port is occupied by another application".into());}
+        let mut command=self.command(&server);
+        // Large optional models use bounded attention and CPU KV. CPU layer
+        // offload for DavidAU is deliberate and visible in its library card.
+        let layers=if profile=="davidau-27b" {"32"} else if profile=="dirk-27b" {"48"} else {"99"};
+        command.current_dir(server.parent().unwrap_or(&self.install_root)).arg("-m").arg(&checkpoint)
+            .args(["--host","127.0.0.1","--port",&self.backend_port.to_string(),"-ngl",layers,"-c",&model.context_tokens.to_string(),"-t","4","--no-kv-offload","--flash-attn","on"])
+            .stdout(Stdio::piped()).stderr(Stdio::piped());
+        if let Some(projector)=model.vision_projector_path.as_deref(){command.arg("--mmproj").arg(crate::model_catalog::safe_path(&self.install_root,projector)?).args(["--image-max-tokens","512"]);}
+        let mut child=command.spawn().map_err(|error|format!("Could not start {}: {error}",model.label))?;
+        let job=match Self::own_child(&mut child){Ok(job)=>job,Err(error)=>{let _=child.kill();let _=child.wait();return self.fail_start(profile,error);}};
+        Self::pipe_logs(self.store.clone(),"optional-model",&mut child);
+        {let mut inner=self.inner.lock().map_err(|e|e.to_string())?;inner.model=Some(child);inner.model_job=Some(job);inner.loading_phase=format!("Loading {}",model.label);inner.loading_step=1;}
+        if let Err(error)=self.wait_ready(self.backend_port,"/health",&model.label,RuntimeChild::Model,generation){return self.fail_start(profile,error);}
+        if let Err(error)=self.start_echo(&format!("http://127.0.0.1:{}",self.backend_port),Some(model.context_tokens)){return self.fail_start(profile,error);}
+        if let Err(error)=self.wait_ready(self.echo_port,"/v1/models","ECHO",RuntimeChild::Echo,generation){return self.fail_start(profile,error);}
+        let mut inner=self.inner.lock().map_err(|e|e.to_string())?;inner.status="running".into();inner.loading_phase="Ready".into();inner.loading_step=3;
+        inner.load_duration_ms=inner.loading_started.take().map(|start|start.elapsed().as_millis() as u64);
+        Ok(self.snapshot_locked(&mut inner))
+    }
+
     fn start_nanbeige(&self, profile: &str, generation: u64) -> Result<RuntimeSnapshot, String> {
         let checkpoint = self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE);
         if !checkpoint.is_file() {
@@ -1007,6 +1037,7 @@ impl RuntimeManager {
             match inner.profile.as_str() {
                 "echo" | "native1m" | "doucode" => ("system RAM".to_string(), "Q4_0".to_string()),
                 "nanbeige-bf16" | "nanbeige-bf16-echo" => ("system RAM".to_string(), "F16 KV".to_string()),
+                "swift-27b" | "dirk-27b" | "davidau-27b" => ("system RAM".to_string(), "F16 KV".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
                 "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
                 "dualcore-echo" | "fusioncore-echo" => ("GPU".to_string(), "F16 KV; ECHO archive for long-term memory".to_string()),
@@ -1031,7 +1062,9 @@ impl RuntimeManager {
             "doucode" => self.doucode_release_dir().display().to_string(),
             "nanbeige-bf16" | "nanbeige-bf16-echo" => self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE).display().to_string(),
             "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => self.install_root.join("models/lfm").join(LFM_FILE).display().to_string(),
-            _ => self.install_root.join("OpenCore-Code-Single-File.gguf").display().to_string(),
+            _ => crate::model_catalog::gguf_model(selected_profile).and_then(|model|model.runtime_model_path)
+                .map(|path|self.install_root.join(path).display().to_string())
+                .unwrap_or_else(||self.install_root.join("OpenCore-Code-Single-File.gguf").display().to_string()),
         };
         RuntimeSnapshot {
             profile: inner.profile.clone(),
@@ -1049,7 +1082,7 @@ impl RuntimeManager {
                 "doucode" => DOUCODE_MODEL_CONTEXT,
                 "nanbeige-bf16" | "nanbeige-bf16-echo" => 262_144,
                 "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => lfm_context(selected_profile),
-                _ => ECHO_MODEL_CONTEXT,
+                _ => crate::model_catalog::gguf_model(selected_profile).map(|model|model.context_tokens).unwrap_or(ECHO_MODEL_CONTEXT),
             },
             attention_kv_location,
             attention_kv_type,

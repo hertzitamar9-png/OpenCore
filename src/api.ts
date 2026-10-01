@@ -1,5 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
-export const speechStart = () => invoke<string>("speech_start");
+export const speechStart = (sessionId?: string) => invoke<string>("speech_start", { sessionId });
+export interface MusicStudioStatus { installed: boolean; running: boolean; owned: boolean; url: string | null; folder: string; modelLoaded: boolean; error: string | null }
+export const musicStudioStatus = () => desktop() ? invoke<MusicStudioStatus>('music_studio_status') : Promise.resolve({ installed: false, running: false, owned: false, url: null, folder: '', modelLoaded: false, error: null });
+export const startMusicStudio = () => invoke<MusicStudioStatus>('start_music_studio');
 export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; }
 const defaultSpeechStatus: SpeechStatus = { modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" };
 export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
@@ -44,6 +47,7 @@ export interface InstalledModel {
   precision: string; contextTokens: number; license: string; experimental: boolean; note: string;
   installed: boolean; externalManaged: boolean; downloadBytes: number; totalBytes: number;
   speechLanguage?: string;
+  category?: string; backend?: string; runtimeReady?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;

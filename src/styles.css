@@ -1335,3 +1335,17 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .model-install-progress small { display:block; margin:10px 0; color:#a9c6da; overflow-wrap:anywhere; }
 .chat-composer.file-drop-active { border-color:#4add9d; box-shadow:0 0 0 2px #4add9d55,0 8px 28px #020a1099; }
 .composer-drop-overlay { position:absolute; z-index:30; inset:4px; display:grid; place-items:center; border:2px dashed #4add9d; border-radius:11px; background:#09211deF; color:#d7ffeb; font-size:13px; font-weight:700; letter-spacing:.02em; pointer-events:none; }
+.music-studio { grid-column:2; grid-row:2; min-height:0; min-width:0; display:flex; flex-direction:column; padding:24px; gap:16px; overflow:hidden; }
+.music-studio>header,.music-studio>header>div:last-child,.music-studio h1 { display:flex; align-items:center; gap:12px; }
+.music-studio>header { justify-content:space-between; flex-wrap:wrap; }
+.music-studio h1 { margin:0 0 8px; }
+.music-studio p { margin:0; color:#a9c6da; }
+.music-studio iframe { flex:1; min-height:400px; width:100%; border:1px solid #2e4354; border-radius:12px; background:#08131d; }
+.music-studio-start { flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; text-align:center; }
+.music-studio-start p { max-width:540px; line-height:1.7; }
+.model-category-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:18px 0; }
+.model-category-tabs button { display:flex; align-items:center; gap:8px; border-radius:20px; padding:8px 13px; }
+.model-category-tabs button[aria-pressed=true] { border-color:#4594c4; color:#d2efff; background:#16384a; }
+.model-category-tabs span { color:#91b0c4; font-size:11px; }
+.model-setup-note { color:#f2c788; }
+.model-setup-link { display:inline-flex; align-items:center; gap:6px; color:#a6d8fa; padding:8px; }
