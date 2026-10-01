@@ -9,6 +9,17 @@ import torch
 import torch.nn.functional as F
 
 
+def qualification_status(baseline, candidate, minimum_speed=20.):
+    """Completed optimization is separate from approval of the exported model."""
+    speed = candidate.get('native_tokens_per_second')
+    if speed is None or not math.isfinite(speed) or speed < minimum_speed:
+        return 'rejected-native-speed'
+    if (candidate['passed'] < baseline['passed'] or
+            candidate['mean_case_reward'] < baseline['mean_case_reward']):
+        return 'rejected-native-heldout-regression'
+    return 'complete'
+
+
 def group_advantages(rewards):
     if len(rewards)<2 or any(not math.isfinite(r) or not 0<=r<=1 for r in rewards):
         raise ValueError('Need a finite group of correctness rewards in [0,1]')

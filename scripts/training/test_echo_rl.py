@@ -1,6 +1,6 @@
 import unittest
 import torch
-from echo_rl import group_advantages, policy_loss, response_logprobs, prompt_ids
+from echo_rl import group_advantages, policy_loss, response_logprobs, prompt_ids, qualification_status
 from echo_weight_adapter import stage_segments, stage_block
 
 
@@ -53,6 +53,26 @@ class RewardLearning(unittest.TestCase):
         for p in range(180):
             self.assertEqual(observed[p], stage_block(0 if p < 80 else p))
         self.assertEqual(stage_segments(80, 1, None), [(0, 1, *stage_block(80))])
+
+    def test_completed_training_keeps_a_failed_native_speed_gate(self):
+        baseline = {'passed': 1, 'mean_case_reward': .5}
+        candidate = {'passed': 2, 'mean_case_reward': .75, 'native_tokens_per_second': 19.9}
+        self.assertEqual(qualification_status(baseline, candidate), 'rejected-native-speed')
+        candidate['native_tokens_per_second'] = 20.
+        self.assertEqual(qualification_status(baseline, candidate), 'complete')
+
+    def test_speed_cannot_hide_native_quality_regression(self):
+        baseline = {'passed': 2, 'mean_case_reward': .5}
+        candidate = {'passed': 1, 'mean_case_reward': .75, 'native_tokens_per_second': 26.}
+        self.assertEqual(qualification_status(baseline, candidate), 'rejected-native-heldout-regression')
+        candidate.update(passed=2, mean_case_reward=.4)
+        self.assertEqual(qualification_status(baseline, candidate), 'rejected-native-heldout-regression')
+
+    def test_missing_or_invalid_speed_is_never_qualified(self):
+        baseline = {'passed': 1, 'mean_case_reward': .5}
+        for speed in (None, float('nan'), float('inf'), -1.):
+            candidate = dict(baseline, native_tokens_per_second=speed)
+            self.assertEqual(qualification_status(baseline, candidate), 'rejected-native-speed')
 
 
 if __name__ == '__main__': unittest.main()

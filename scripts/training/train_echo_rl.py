@@ -14,7 +14,7 @@ import traceback
 import torch
 from transformers import AutoTokenizer
 from echo_weight_adapter import MODEL_SHA,load_training_view
-from echo_rl import group_advantages,policy_loss,prompt_ids,prompt_text,response_logprobs,sample
+from echo_rl import group_advantages,policy_loss,prompt_ids,prompt_text,response_logprobs,sample,qualification_status
 from native_echo_backend import NativeBackend
 from rl_tasks import TRAIN_TASKS,HELDOUT_TASKS
 from rl_verifier import CodingVerifier
@@ -26,7 +26,7 @@ PROBE_TEXT=['The capital of France is','def add(a, b):\n    return',
     'function double(value) {\n  return']
 
 
-def native_checks(home,folder,source,tokenizer,verifier,label):
+def native_checks(home,folder,source,tokenizer,verifier,label,require_speed=True):
     rows=[];probes=[]
     with NativeBackend(home,folder/label,source,port=8892) as backend:
         for text in PROBE_TEXT:
@@ -40,12 +40,14 @@ def native_checks(home,folder,source,tokenizer,verifier,label):
             row['reward']=reward;rows.append(row)
         speed_response=backend.chat([{'role':'user','content':'Write twenty short arithmetic facts.'}],max_tokens=128)
         speed=(speed_response.get('timings') or {}).get('predicted_per_second')
-        if speed is None or speed<20: raise RuntimeError(f'{label} native speed gate failed: {speed}')
     result={'examples':len(rows),'passed':sum(x['reward']['all_passed'] for x in rows),
             'mean_case_reward':sum(x['reward']['reward'] for x in rows)/len(rows),
             'native_tokens_per_second':speed,'rows':rows,'speed_response':speed_response}
     save(folder,label+'-checks.json',result)
     save(folder,label+'-probes.json',probes)
+    # Preserve measured quality and raw responses even if speed is rejected.
+    if require_speed and qualification_status({'passed':0,'mean_case_reward':0.},result)=='rejected-native-speed':
+        raise RuntimeError(f'{label} native speed gate failed: {speed}')
     return result,probes
 
 
@@ -205,6 +207,7 @@ def main(argv=None):
             torch.save({name:p.detach().cpu().to(torch.bfloat16) for name,p in updates.items()},folder/'rl-composition-bf16.pt')
             candidate=folder/'OpenCore-ECHO-RL-Pilot.gguf'
             export=export_candidate(args.source,candidate,reader,updates)
+            save(folder,'export-receipt.json',export)
             peak=torch.cuda.max_memory_allocated()
             del model,reader,parameters,optimizer,updates
             # A resumed run can have completed all its policy updates already.
@@ -213,12 +216,13 @@ def main(argv=None):
             if 'loss' in locals(): del loss
             gc.collect();torch.cuda.empty_cache()
             save(folder,'training-progress.json',{'phase':'candidate-native-qualification','optimizer_steps':steps})
-            candidate_checks,_=native_checks(args.home,folder,candidate,tokenizer,verifier,'candidate')
+            candidate_checks,_=native_checks(args.home,folder,candidate,tokenizer,verifier,'candidate',require_speed=False)
             if digest(args.source)!=SOURCE_SHA or digest(args.home/'OpenCore-Code-Single-File.gguf')!=MODEL_SHA:
                 raise ValueError('Preserved source checkpoint changed')
-            status='complete' if candidate_checks['passed']>=baseline['passed'] and candidate_checks['mean_case_reward']>=baseline['mean_case_reward'] else 'rejected-native-heldout-regression'
+            status=qualification_status(baseline,candidate_checks,protocol['minimum_native_tokens_per_second'])
             result={'status':status,'optimizer_steps':steps,'groups':groups,'heldout_loss_before':before,'heldout_loss_after':after,
                 'native_heldout_before':baseline['passed'],'native_heldout_after':candidate_checks['passed'],'native_heldout_tasks':4,
+                'native_case_reward_before':baseline['mean_case_reward'],'native_case_reward_after':candidate_checks['mean_case_reward'],
                 'native_tokens_per_second':candidate_checks['native_tokens_per_second'],'peak_vram_bytes':peak,
                 'candidate':str(candidate),'export':export,'source_sha256_preserved':SOURCE_SHA,'original_sha256_preserved':MODEL_SHA,
                 'promoted':False,'limitation':protocol['scope']}
