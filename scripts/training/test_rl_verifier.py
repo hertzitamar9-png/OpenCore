@@ -20,6 +20,14 @@ class IndependentRewards(unittest.TestCase):
         with self.assertRaises(ValueError): extract_function('def '+task['name']+'(x):\n return x.__class__',task['name'])
         with self.assertRaises(ValueError): extract_function('@print("reward:1")\ndef '+task['name']+'(x):\n return x',task['name'])
 
+    def test_ordinary_private_locals_are_valid_python(self):
+        source = 'def keep_latest(records):\n _seen = set()\n return [name for name, _ in records if name not in _seen]'
+        self.assertEqual(extract_function(source, 'keep_latest'), source)
+
+    def test_dunder_namespace_access_is_still_rejected(self):
+        with self.assertRaises(ValueError):
+            extract_function('def identity(value):\n return __builtins__', 'identity')
+
     def test_reward_is_computed_by_verifier_from_case_outcomes(self):
         task=TRAIN_TASKS[0]
         report={'outcomes':[True,False]+[False]*(len(task['cases'])-2),'reward':1.}

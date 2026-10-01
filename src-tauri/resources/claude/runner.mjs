@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { createInterface } from 'node:readline';
 import { mkdirSync } from 'node:fs';
 import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.mjs';
+import { CodingVerification, toolFailed } from './coding-verification.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
 const input = createInterface({ input: process.stdin });
 const pending = new Map();
@@ -25,6 +26,11 @@ input.on('line', line => {
 
 async function run(config) {
   mkdirSync(config.cwd, { recursive: true });
+  const devAvailable = (config.tools ?? []).some(spec => spec.function?.name === 'dev');
+  const verification = new CodingVerification(config.cwd, { devAvailable });
+  const verificationGuidance = devAvailable
+    ? 'For final coding verification, use dev action run with verifyPaths naming the changed files, so the check records their exact source hashes.'
+    : 'For final coding verification, run the relevant checks using the available Bash tool and inspect their explicit exit status.';
   const contextBudget = deriveContextBudget(config);
   const maxSubagents = config.subagentsEnabled ? Math.max(1, Math.min(1000, Number(config.maxSubagents) || 3)) : 0;
   let spawnedSubagents = 0;
@@ -34,13 +40,14 @@ async function run(config) {
     const shape = z.fromJSONSchema(f.parameters).shape;
     return tool(f.name, f.description, shape, async args => {
       const value = await rpc('tool', { name: f.name, args });
+      verification.recordMcp(f.name, args, value);
       const { dataUrl, ...record } = value;
       const content = [{ type: 'text', text: JSON.stringify(record) }];
       if (dataUrl?.startsWith('data:image/')) {
         const match = /^data:([^;]+);base64,(.*)$/s.exec(dataUrl);
         if (match) content.push({ type: 'image', mimeType: match[1], data: match[2] });
       }
-      return { content, isError: Boolean(value.error) };
+      return { content, isError: toolFailed(value) };
     });
   });
   // Isolate credentials/config from the user's independent Claude installation.
@@ -70,7 +77,7 @@ async function run(config) {
     // exact timeline in ECHO and makes it searchable after each compact boundary.
     // Disabling SDK compaction would let long sessions overrun the model window.
     settingSources: config.projectSkillsEnabled ? ['project'] : [], settings: { autoCompactEnabled: true },
-    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
+    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
     // Keep the official Claude Code tool surface as the default. OpenCore MCP
     // tools are added below; subagent policy and approval still pass through
     // OpenCore's existing limit and permission bridge.
@@ -107,7 +114,14 @@ async function run(config) {
         spawnedSubagents += 1;
       }
       return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'allow', permissionDecisionReason: 'Approved by OpenCore permission policy' } };
-    }] }] },
+    }] }],
+      PostToolUse: [{ hooks: [async data => { verification.recordSdkTool(data); return {}; }] }],
+      Stop: [{ hooks: [async data => {
+        const result = verification.beforeStop(data);
+        if (result.decision === 'block') write({ kind: 'diagnostic', text: 'Coding verification: requesting one execution-backed check/repair pass.' });
+        return result;
+      }] }],
+    },
     canUseTool: async (name, args) => (await rpc('permission', { name, args }))
       ? { behavior: 'allow', updatedInput: args } : { behavior: 'deny', message: 'Denied by OpenCore' },
     stderr: text => write({ kind: 'diagnostic', text }),

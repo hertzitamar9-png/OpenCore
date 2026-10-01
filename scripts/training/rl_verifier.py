@@ -21,7 +21,11 @@ def extract_function(source,name):
     for node in ast.walk(tree):
         if isinstance(node,(ast.Import,ast.ImportFrom,ast.Global,ast.Nonlocal,ast.ClassDef)):
             raise ValueError('Only a self-contained function is allowed')
-        if isinstance(node,(ast.Name,ast.Attribute)) and (getattr(node,'id',getattr(node,'attr','')).startswith('_')):
+        # Ordinary locals such as `_`, `_count` and `_seen` are legal Python.
+        # Restrict interpreter namespaces and private attribute introspection,
+        # rather than misgrading those variables as sandbox escapes.
+        if ((isinstance(node,ast.Name) and node.id.startswith('__')) or
+                (isinstance(node,ast.Attribute) and node.attr.startswith('_'))):
             raise ValueError('Interpreter internals are not allowed')
     return source
 
@@ -43,6 +47,7 @@ class CodingVerifier:
         self.folder=Path(folder);self.lease=None
         self.worker=Path(__file__).with_name('rl_verify_worker.py').read_text(encoding='utf-8')
         self.worker_sha=hashlib.sha256(self.worker.encode()).hexdigest()
+        self.verifier_sha=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
     def __enter__(self):
         self.lease=subprocess.Popen(WSL+['/bin/cat'],stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
@@ -53,7 +58,7 @@ class CodingVerifier:
 
     def verify(self,task,source,label,truncated=False):
         base={'label':label,'task_id':task['id'],'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
-              'worker_sha256':self.worker_sha,'image':IMAGE,'truncated':truncated}
+              'worker_sha256':self.worker_sha,'verifier_sha256':self.verifier_sha,'image':IMAGE,'truncated':truncated}
         try: payload=verifier_payload(task,source)
         except (SyntaxError,ValueError) as error:
             base.update(reward=0.,all_passed=False,outcomes=[False]*len(task['cases']),reason=str(error))
