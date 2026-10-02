@@ -1483,6 +1483,10 @@ impl EventStore {
             .map_err(|e| e.to_string())
     }
 
+    pub fn latest_user_entry(&self,id:&str)->Result<Option<i64>,String> {
+        self.connection.lock().map_err(|e|e.to_string())?.query_row("SELECT max(id) FROM timeline WHERE conversation_id=?1 AND role='user' AND kind='message'",[id],|row|row.get(0)).map_err(|e|e.to_string())
+    }
+
     pub fn code_artifacts(&self, id: &str) -> Result<Vec<Value>, String> {
         let connection = self.connection.lock().map_err(|e| e.to_string())?;
         let mut statement = connection.prepare(

@@ -1116,6 +1116,12 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, conve
 export default function App() {
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>("conversations");
+  const [assetCategory,setAssetCategory]=useState('image');
+  useEffect(()=>{
+    const open=(event:Event)=>{const category=(event as CustomEvent).detail;if(!['music','image','3d','3d-animation','2d-animation','speech','background'].includes(category))return;if(category==='music')setView('music');else{setAssetCategory(category);setView('assets');}};
+    window.addEventListener('opencore-open-studio',open);
+    return()=>window.removeEventListener('opencore-open-studio',open);
+  },[]);
   const [selectedProfile, setSelectedProfileState] = useState<RuntimeProfile>(readProfilePreference);
   const [selectedConversation, setSelectedConversation] = useState<string>();
   const [conversationEpoch, setConversationEpoch] = useState(0);
@@ -1426,7 +1432,7 @@ export default function App() {
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
-      : view === 'assets' ? <AssetsStudio onNotice={setNotice} />
+      : view === 'assets' ? <AssetsStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}

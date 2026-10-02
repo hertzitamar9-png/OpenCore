@@ -9,6 +9,10 @@ describe("artifact links", () => {
     expect(parseArtifactLink("artifact://../secret")).toBeNull();
   });
   it("allows only safe message destinations", () => {
+    expect(messageUrlTransform("opencore-studio://music")).toBe("opencore-studio://music");
+    expect(messageUrlTransform("opencore-studio://3d")).toBe("opencore-studio://3d");
+    expect(messageUrlTransform("opencore-studio://../secret")).toBe("");
+    expect(messageUrlTransform("opencore-studio://music?url=https://other.example")).toBe("");
     expect(messageUrlTransform(`artifact://${id}`)).toBe(`artifact://${id}`);
     expect(messageUrlTransform("https://example.com/image.png")).toContain("https://");
     expect(messageUrlTransform("javascript:alert(1)")).toBe("");

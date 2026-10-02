@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CircleStop, FolderOpen, Play, RefreshCw } from 'lucide-react';
 import * as api from './api';
 
-export const ASSET_CATEGORIES = [['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation'],['speech','Speech']] as const;
+export const ASSET_CATEGORIES = [['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation'],['speech','Speech'],['background','Background jobs']] as const;
 const active = (job: api.StudioJob) => ['queued','starting','running'].includes(job.status);
 export function StudioJobs({ category, onNotice }: {category:string; onNotice:(message:string)=>void}) {
   const [jobs,setJobs]=useState<api.StudioJob[]>([]);

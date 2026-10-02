@@ -113,6 +113,13 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
             let Some(line) = line else { break; };
             let event: Value = serde_json::from_str(&line).map_err(|e| format!("Invalid SDK event: {e}"))?;
             let kind = event["kind"].as_str().unwrap_or("");
+            if kind == "handoff" {
+                let category=event["category"].as_str().unwrap_or("background");
+                let (studio,destination)=if category=="music" {("Music Studio","music")} else if category=="background" {("Background jobs","background")} else {("Assets Studio",category)};
+                let text=format!("Request submitted. [Open {studio}](opencore-studio://{destination}) to view progress. ECHO will unload while the job runs and resume when it finishes.");
+                core.store.add_timeline(id,"message","assistant","OpenCore","Background job",&text,&json!({"studioJobId":event["jobId"],"category":category,"handoff":true}))?;
+                continue;
+            }
             if kind == "fatal" { return Err(event["error"].as_str().unwrap_or("SDK failed").into()); }
             if kind == "diagnostic" { core.store.log("info", "claude-sdk", event["text"].as_str().unwrap_or("")); continue; }
             if kind == "context" {
@@ -149,6 +156,7 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
                         "dev" => dev_tool::execute(&workspace, &artifact_root(&app)?, &receipts, &artifact_history, &args).await,
                         "studio_use" => crate::studio_jobs::execute(core.clone(),app.clone(),id,&request.skills,&args).await,
                         "music_generate" => crate::studio_jobs::generate_music(core.clone(),app.clone(),id,&request.skills,&args).await,
+                        "background_wait" => crate::studio_jobs::submit_wait(core.clone(),app.clone(),id,&args),
                         "desktop_use" => desktop_action(&app, action.into(), args.clone()).await,
                         "browser_use" => native_browser::agent_command(&app, action, &args).await,
                         "chrome_use" => core.browser.command(action, args.clone()).await,
@@ -173,6 +181,9 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
                         _ => tooling::execute_read_only(&workspace, name, &args),
                     }};
                     let value = result.unwrap_or_else(|error| json!({"error":error}));
+                    if let Some(job_id)=value["id"].as_str().filter(|_|value["status"]=="queued" && matches!(name,"music_generate"|"studio_use"|"background_wait")) {
+                        core.studios.arm_continuation(&core,job_id,request)?;
+                    }
                     if (name == "dev" && action == "publish" || name == "create_artifact") && value["id"].is_string() {
                         core.store.add_timeline(id,"file","assistant","OpenCore",value["name"].as_str().unwrap_or("File"),value["preview_link"].as_str().unwrap_or(""),&value)?;
                         artifact_history.insert(0, value.clone());

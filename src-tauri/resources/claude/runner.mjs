@@ -33,13 +33,18 @@ async function run(config) {
     : 'For final coding verification, run the relevant checks using the available Bash tool and inspect their explicit exit status.';
   const contextBudget = deriveContextBudget(config);
   const maxSubagents = config.subagentsEnabled ? Math.max(1, Math.min(1000, Number(config.maxSubagents) || 3)) : 0;
-  let spawnedSubagents = 0;
+  let spawnedSubagents = 0, backgroundHandoff;
   mkdirSync(config.configDir, { recursive: true });
   const mcpTools = (config.tools ?? []).map(spec => {
     const f = spec.function;
     const shape = z.fromJSONSchema(f.parameters).shape;
     return tool(f.name, f.description, shape, async args => {
+      if (backgroundHandoff) return {content:[{type:'text',text:'A background job is already queued. Open its studio.'}],isError:true};
       const value = await rpc('tool', { name: f.name, args });
+      if ((f.name === 'music_generate' || f.name === 'background_wait' || (f.name === 'studio_use' && args.action === 'generate'))
+        && value.id && value.status === 'queued' && !value.error) {
+        backgroundHandoff = {jobId:value.id,category:value.category};
+      }
       verification.recordMcp(f.name, args, value);
       const { dataUrl, ...record } = value;
       const content = [{ type: 'text', text: JSON.stringify(record) }];
@@ -115,7 +120,14 @@ async function run(config) {
       }
       return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'allow', permissionDecisionReason: 'Approved by OpenCore permission policy' } };
     }] }],
-      PostToolUse: [{ hooks: [async data => { verification.recordSdkTool(data); return {}; }] }],
+      PostToolUse: [{ hooks: [async data => {
+        verification.recordSdkTool(data);
+        if (backgroundHandoff) {
+          write({kind:'handoff',...backgroundHandoff});
+          return {continue:false,stopReason:'OpenCore is handing the GPU to the queued background job.'};
+        }
+        return {};
+      }] }],
       Stop: [{ hooks: [async data => {
         const result = verification.beforeStop(data);
         if (result.decision === 'block') write({ kind: 'diagnostic', text: 'Coding verification: requesting one execution-backed check/repair pass.' });

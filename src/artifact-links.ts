@@ -6,11 +6,15 @@ export function parseArtifactLink(value: string | undefined): ArtifactLink | nul
 }
 
 export function messageUrlTransform(url: string): string {
-  if (parseArtifactLink(url) || localFilePath(url)) return url;
+  if (parseArtifactLink(url) || localFilePath(url) || studioLinkCategory(url)) return url;
   try {
     const parsed = new URL(url);
     if (["https:", "http:", "mailto:"].includes(parsed.protocol)) return url;
   } catch { /* Relative links are not actionable from a message. */ }
   return "";
+}
+export function studioLinkCategory(url: string | undefined): string | null {
+  const match=url?.match(/^opencore-studio:\/\/(music|image|3d|3d-animation|2d-animation|speech|background)$/);
+  return match?.[1] || null;
 }
 import { localFilePath } from "./local-file-links";

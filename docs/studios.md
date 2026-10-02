@@ -15,10 +15,26 @@ to list installed models, submit exact generation
 settings, inspect jobs, or cancel jobs from the same conversation. It cannot
 configure or run an arbitrary program through that tool. Forms and chat submit to
 the same durable SQLite queue. Queued work starts after the chat response finishes,
-so the text and generation models do not compete for GPU memory. Completion is
+so the text and generation models do not compete for GPU memory. A successful
+submission ends the SDK turn immediately; the app supplies a link to the exact
+studio category. ECHO, vision and idle speech weights unload before generation.
+An app worker monitors the job without inference, then unloads the generation
+model and resumes the original conversation with its saved approval settings.
+Completion is
 reported in chat, and original prompts/settings, progress, errors and output files
 remain visible in the corresponding studio. The queue retains requests across a
 restart; interrupted work is never falsely marked complete or restarted silently.
+The continuation is claimed once. A newer user message supersedes an old wake-up;
+cancellation and application shutdown do not restart the model. `background_wait`
+can wait for an existing Windows process, including a local training process,
+using a read-only handle bound to its creation time. It never terminates that
+process and reports its actual exit code. Background jobs are visible in Assets
+Studio. This observes an existing job; it does not add a training engine.
+
+The Windows app retains the same OpenCore install identity and signed updater.
+Every successful main release is checked on startup and once a minute while open.
+Updates wait for chats, studio jobs, continuations and dictation to finish; an idle
+owned text model is unloaded before the same installation is updated.
 
 ## Backend availability
 

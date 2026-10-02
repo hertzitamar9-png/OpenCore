@@ -148,12 +148,21 @@ fn github_cli_token() -> Result<Option<String>, String> {
 }
 
 fn is_idle(core: &AppCore) -> bool {
-    core.runtime.snapshot().status == "stopped"
-        && core
-            .active_chats
+    let runtime = core.runtime.snapshot();
+    update_allowed(
+        &runtime.status,
+        runtime.model_pid.is_some() || runtime.echo_pid.is_some(),
+        core.active_chats
             .lock()
             .map(|chats| chats.is_empty())
-            .unwrap_or(false)
+            .unwrap_or(false),
+        core.studios.busy()
+            || core.studios.continuation_pending()
+            || crate::studio_jobs::gpu_reserved(),
+    )
+}
+fn update_allowed(status: &str, owned: bool, chats_idle: bool, jobs_busy: bool) -> bool {
+    chats_idle && !jobs_busy && (status == "stopped" || status == "running" && owned)
 }
 
 /// Check the private GitHub Releases feed and install a signed update when the
@@ -174,7 +183,7 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
 
     // Never close OpenCore while a model or a chat turn is active. The periodic
     // check will retry once the runtime is stopped, or on the next app launch.
-    if !is_idle(&core) {
+    if !is_idle(&core) || core.speech.is_active().await {
         return Ok(());
     }
 
@@ -271,7 +280,25 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
 
     // A chat or model may have started while the signed package downloaded.
     // Defer installation until an idle check to avoid restarting mid-session.
-    if !is_idle(&core) {
+    if !is_idle(&core) || core.speech.is_active().await || music_has_model().await {
+        emit_notice(&app, "waiting", Some(version), None, None);
+        return Ok(());
+    }
+
+    let _gpu = match crate::studio_jobs::reserve_gpu() {
+        Ok(guard) => guard,
+        Err(_) => {
+            emit_notice(&app, "waiting", Some(version), None, None);
+            return Ok(());
+        }
+    };
+    core.speech.release_idle_model().await?;
+    let runtime = core.runtime.clone();
+    tauri::async_runtime::spawn_blocking(move || runtime.stop())
+        .await
+        .map_err(|e| e.to_string())??;
+    // Do not restart if a studio form queued a new request during model teardown.
+    if core.studios.busy() || core.studios.continuation_pending() {
         emit_notice(&app, "waiting", Some(version), None, None);
         return Ok(());
     }
@@ -287,9 +314,26 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
     }
     Ok(())
 }
+async fn music_has_model() -> bool {
+    let status = crate::music_studio::music_studio_status().await;
+    status.model_loaded
+        || (status.running
+            && crate::music_studio::request("GET", "/api/status", None)
+                .await
+                .is_ok_and(|s| s["status"] == "running"))
+}
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn update_defers_background_jobs_and_unowned_or_loading_models() {
+        assert!(super::update_allowed("stopped", false, true, false));
+        assert!(super::update_allowed("running", true, true, false));
+        assert!(!super::update_allowed("running", false, true, false));
+        assert!(!super::update_allowed("starting", true, true, false));
+        assert!(!super::update_allowed("stopped", false, true, true));
+        assert!(!super::update_allowed("running", true, false, false));
+    }
     #[test]
     fn github_cli_token_output_is_trimmed_without_logging() {
         assert_eq!(

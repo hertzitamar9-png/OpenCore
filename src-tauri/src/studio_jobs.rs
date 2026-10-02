@@ -16,7 +16,13 @@ static GPU_RESERVED: AtomicBool = AtomicBool::new(false);
 pub fn gpu_reserved() -> bool {
     GPU_RESERVED.load(Ordering::SeqCst)
 }
-struct GpuReservation;
+pub(crate) struct GpuReservation;
+pub(crate) fn reserve_gpu() -> Result<GpuReservation, String> {
+    GPU_RESERVED
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .map(|_| GpuReservation)
+        .map_err(|_| "The GPU is reserved by another job or app update".into())
+}
 impl Drop for GpuReservation {
     fn drop(&mut self) {
         GPU_RESERVED.store(false, Ordering::SeqCst);
@@ -70,19 +76,23 @@ pub struct StudioManager {
     root: PathBuf,
     running: Mutex<HashMap<String, CancellationToken>>,
     gate: tokio::sync::Mutex<()>,
+    closing: AtomicBool,
+    watches: Mutex<HashMap<String, crate::process_watch::ProcessWatch>>,
 }
 impl StudioManager {
     pub fn new(root: PathBuf) -> Result<Arc<Self>, String> {
         std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
         let db =
             rusqlite::Connection::open(root.join("jobs.sqlite3")).map_err(|e| e.to_string())?;
-        db.execute_batch("PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS runtimes(model_id TEXT PRIMARY KEY,payload TEXT NOT NULL);").map_err(|e|e.to_string())?;
+        db.execute_batch("PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS runtimes(model_id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS continuations(id TEXT PRIMARY KEY,payload TEXT NOT NULL,user_entry INTEGER NOT NULL,status TEXT NOT NULL);").map_err(|e|e.to_string())?;
         let this = Arc::new(Self {
             notify: Mutex::new(None),
             db: Mutex::new(db),
             root,
             running: Mutex::new(HashMap::new()),
             gate: tokio::sync::Mutex::new(()),
+            closing: AtomicBool::new(false),
+            watches: Mutex::new(HashMap::new()),
         });
         for mut job in this.list()? {
             if active(&job.status) {
@@ -91,6 +101,7 @@ impl StudioManager {
                 this.save(&job)?;
             }
         }
+        this.db.lock().map_err(|e|e.to_string())?.execute("UPDATE continuations SET status='interrupted' WHERE status IN ('pending','resuming')",[]).map_err(|e|e.to_string())?;
         Ok(this)
     }
     fn save(&self, job: &StudioJob) -> Result<(), String> {
@@ -138,7 +149,133 @@ impl StudioManager {
     pub fn busy(&self) -> bool {
         self.running.lock().is_ok_and(|jobs| !jobs.is_empty())
     }
+    pub fn continuation_pending(&self) -> bool {
+        self.db
+            .lock()
+            .ok()
+            .and_then(|db| {
+                db.query_row(
+                    "SELECT count(*) FROM continuations WHERE status IN ('pending','resuming')",
+                    [],
+                    |row| row.get::<_, i64>(0),
+                )
+                .ok()
+            })
+            .is_none_or(|n| n > 0)
+    }
+    pub fn arm_continuation(
+        &self,
+        core: &AppCore,
+        id: &str,
+        request: &crate::models::ChatSendRequest,
+    ) -> Result<(), String> {
+        let job = self.get(id)?;
+        if job.request.conversation_id.as_deref() != Some(request.conversation_id.as_str()) {
+            return Err("Background job conversation mismatch".into());
+        }
+        let user_entry = core
+            .store
+            .latest_user_entry(&request.conversation_id)?
+            .ok_or("No originating user turn")?;
+        let payload = json!({"request":request,"profile":core.runtime.profile()});
+        self.db.lock().map_err(|e|e.to_string())?.execute("INSERT OR IGNORE INTO continuations(id,payload,user_entry,status) VALUES(?1,?2,?3,'pending')",rusqlite::params![id,payload.to_string(),user_entry]).map_err(|e|e.to_string())?;
+        Ok(())
+    }
+    fn claim_continuation(&self, id: &str, latest_user: i64) -> Result<Option<Value>, String> {
+        let db = self.db.lock().map_err(|e| e.to_string())?;
+        let candidate = db.query_row(
+            "SELECT payload,user_entry FROM continuations WHERE id=?1 AND status='pending'",
+            [id],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)),
+        );
+        let Ok((payload, origin)) = candidate else {
+            return Ok(None);
+        };
+        let state = if latest_user == origin {
+            "resuming"
+        } else {
+            "superseded"
+        };
+        if db
+            .execute(
+                "UPDATE continuations SET status=?2 WHERE id=?1 AND status='pending'",
+                rusqlite::params![id, state],
+            )
+            .map_err(|e| e.to_string())?
+            != 1
+            || state == "superseded"
+        {
+            return Ok(None);
+        };
+        Ok(Some(
+            serde_json::from_str(&payload).map_err(|e| e.to_string())?,
+        ))
+    }
+    async fn resume_continuation(&self, core: Arc<AppCore>, app: tauri::AppHandle, job: StudioJob) {
+        let Some(conversation) = job.request.conversation_id.as_deref() else {
+            return;
+        };
+        if !matches!(job.status.as_str(), "completed" | "failed") {
+            if let Ok(db) = self.db.lock() {
+                let _ = db.execute(
+                    "UPDATE continuations SET status='cancelled' WHERE id=?1 AND status='pending'",
+                    [&job.id],
+                );
+            }
+            return;
+        }
+        // Only OS/app code runs while waiting. The text model stays unloaded.
+        loop {
+            if self.closing.load(Ordering::SeqCst) {
+                return;
+            }
+            let chats = core.active_chats.lock().is_ok_and(|chats| chats.is_empty());
+            if !self.busy() && chats && !gpu_reserved() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(200)).await;
+        }
+        let latest_user = core
+            .store
+            .latest_user_entry(conversation)
+            .ok()
+            .flatten()
+            .unwrap_or(-1);
+        let payload = match self.claim_continuation(&job.id, latest_user) {
+            Ok(Some(value)) => value,
+            _ => return,
+        };
+        let result = async {
+            let request =
+                serde_json::from_value(payload["request"].clone()).map_err(|e| e.to_string())?;
+            core.runtime.select_profile(
+                payload["profile"]
+                    .as_str()
+                    .ok_or("Missing original text model")?,
+            )?;
+            crate::resume_background_job(core.clone(), app, request, job.clone()).await
+        }
+        .await;
+        if let Ok(db) = self.db.lock() {
+            let _ = db.execute(
+                "UPDATE continuations SET status=?2 WHERE id=?1",
+                rusqlite::params![job.id, if result.is_ok() { "done" } else { "failed" }],
+            );
+        }
+        if let Err(error) = result {
+            let _ = core.store.add_timeline(
+                conversation,
+                "error",
+                "system",
+                "OpenCore",
+                "Background continuation",
+                &format!("The job finished, but ECHO could not resume: {error}"),
+                &json!({"studioJobId":job.id}),
+            );
+        }
+    }
     pub async fn shutdown(&self) {
+        self.closing.store(true, Ordering::SeqCst);
         if let Ok(jobs) = self.running.lock() {
             for token in jobs.values() {
                 token.cancel();
@@ -222,16 +359,36 @@ impl StudioManager {
         app: tauri::AppHandle,
         mut request: StudioRequest,
     ) -> Result<StudioJob, String> {
-        let model = model_catalog::model(&request.model_id).ok_or("Unknown model")?;
-        model_catalog::require_installed(core.runtime.install_root(), &model.id)?;
-        validate_request(&model.category, &request)?;
+        let mut process_watch = None;
+        let category = if request.model_id == "background-wait" {
+            if request.settings["pid"]
+                .as_u64()
+                .is_none_or(|v| v == 0 || v > u32::MAX as u64)
+                || request.settings["created"].as_u64().is_none()
+            {
+                return Err("Invalid process wait".into());
+            }
+            let watch = crate::process_watch::ProcessWatch::open(
+                request.settings["pid"].as_u64().unwrap() as u32,
+            )?;
+            if Some(watch.created) != request.settings["created"].as_u64() {
+                return Err("Process identity changed before the wait was queued".into());
+            }
+            process_watch = Some(watch);
+            "background".into()
+        } else {
+            let model = model_catalog::model(&request.model_id).ok_or("Unknown model")?;
+            model_catalog::require_installed(core.runtime.install_root(), &model.id)?;
+            validate_request(&model.category, &request)?;
+            model.category
+        };
         if request.settings.is_null() {
             request.settings = json!({});
         }
         let now = chrono::Utc::now().to_rfc3339();
         let job = StudioJob {
             id: uuid::Uuid::new_v4().to_string(),
-            category: model.category,
+            category,
             request,
             status: "queued".into(),
             stage: "Waiting for chat and GPU".into(),
@@ -243,6 +400,12 @@ impl StudioManager {
             error: None,
         };
         self.save(&job)?;
+        if let Some(watch) = process_watch {
+            self.watches
+                .lock()
+                .map_err(|e| e.to_string())?
+                .insert(job.id.clone(), watch);
+        }
         let token = CancellationToken::new();
         self.running
             .lock()
@@ -277,10 +440,15 @@ impl StudioManager {
             if let Ok(mut running) = this.running.lock() {
                 running.remove(&id);
             }
+            if let Ok(mut watches) = this.watches.lock() {
+                watches.remove(&id);
+            }
             if let Ok(job) = this.get(&id) {
                 if let Some(conversation) = &job.request.conversation_id {
                     let studio = if job.category == "music" {
                         "Music Studio"
+                    } else if job.category == "background" {
+                        "Background jobs"
                     } else {
                         "Assets Studio"
                     };
@@ -307,6 +475,8 @@ impl StudioManager {
                     );
                     this.notify(&job);
                 }
+                this.resume_continuation(core.clone(), app.clone(), job)
+                    .await;
             }
         });
         Ok(job)
@@ -330,15 +500,17 @@ impl StudioManager {
                     .lock()
                     .map_err(|e| e.to_string())?
                     .is_empty();
-            if !chats_active {
+            if !chats_active && !core.speech.is_active().await {
                 break;
             }
             tokio::select! {_=token.cancelled()=>return Err("Cancelled before generation".into()),_=tokio::time::sleep(Duration::from_millis(200))=>{}}
         }
         let job = self.get(id)?;
-        model_catalog::require_installed(core.runtime.install_root(), &job.request.model_id)?;
+        if job.category != "background" {
+            model_catalog::require_installed(core.runtime.install_root(), &job.request.model_id)?;
+        }
         // Preflight before releasing text weights. Never stop an unrelated backend.
-        let runtime = if job.category == "music" || job.category == "speech" {
+        let runtime = if matches!(job.category.as_str(), "music" | "speech" | "background") {
             None
         } else {
             Some(
@@ -370,8 +542,7 @@ impl StudioManager {
             vec![],
             None,
         )?;
-        GPU_RESERVED.store(true, Ordering::SeqCst);
-        let _reservation = GpuReservation;
+        let _reservation = reserve_gpu()?;
         let text_runtime = core.runtime.clone();
         tauri::async_runtime::spawn_blocking(move || text_runtime.stop())
             .await
@@ -379,7 +550,47 @@ impl StudioManager {
         if token.is_cancelled() {
             return Err("Cancelled".into());
         }
-        if job.category == "music" {
+        core.vision.stop();
+        core.reflex.stop();
+        core.speech.release_idle_model().await?;
+        if job.category == "background" {
+            let watch = self
+                .watches
+                .lock()
+                .map_err(|e| e.to_string())?
+                .remove(id)
+                .ok_or("Original process handle is unavailable")?;
+            if Some(watch.created) != job.request.settings["created"].as_u64() {
+                return Err(
+                    "The original process exited; that PID now belongs to another process".into(),
+                );
+            }
+            self.update(
+                id,
+                "running",
+                "Waiting without a loaded text model",
+                json!({"pid":job.request.settings["pid"]}),
+                vec![],
+                None,
+            )?;
+            loop {
+                if token.is_cancelled() {
+                    return Err("Wait cancelled; the observed process was left running".into());
+                }
+                if let Some(code) = watch.exit_code()? {
+                    self.update(
+                        id,
+                        if code == 0 { "completed" } else { "failed" },
+                        "Observed process exited",
+                        json!({"pid":job.request.settings["pid"],"exitCode":code}),
+                        vec![],
+                        (code != 0).then(|| format!("Observed process exited with code {code}")),
+                    )?;
+                    return Ok(());
+                }
+                tokio::select! {_=token.cancelled()=>{},_=tokio::time::sleep(Duration::from_millis(500))=>{}}
+            }
+        } else if job.category == "music" {
             let result = self.run_music(&job, token).await;
             if result.is_err() {
                 // Only cancel the run created by this request. Wait for cooperative cancellation before releasing the GPU lease.
@@ -406,7 +617,9 @@ impl StudioManager {
             }
             result
         } else if job.category == "speech" {
-            self.run_speech(core, &job, token).await
+            let result = self.run_speech(core, &job, token).await;
+            core.speech.release_idle_model().await?;
+            result
         } else {
             self.run_asset(core, app, &job, runtime.unwrap(), token)
                 .await
@@ -716,6 +929,36 @@ pub fn music_tool_spec() -> Value {
         "prompt":{"type":"string","description":"The user's music request"},"title":{"type":"string"},"style":{"type":"string","description":"Actual genre, instruments, mood and vocals"},"lyrics":{"type":"string","description":"Actual original song lyrics with verse/chorus markers"},"cot":{"type":"string","enum":["full","melody","off"]},"mode":{"type":"string","enum":["song","plan"]},"takes":{"type":"integer","minimum":1,"maximum":8},"seed":{"type":"integer"},"ode_steps":{"type":"integer","minimum":1,"maximum":256},"semantic_sampling":{"type":"object","properties":{"max_tokens":{"type":"integer","minimum":1},"min_tokens":{"type":"integer","minimum":1}}},"abc_sampling":{"type":"object","properties":{"max_tokens":{"type":"integer","minimum":1},"min_tokens":{"type":"integer","minimum":1}}}
     },"required":["prompt","title","style","lyrics"]}}})
 }
+pub fn wait_tool_spec() -> Value {
+    json!({"type":"function","function":{"name":"background_wait","description":"Wait for an existing local training or other process without leaving ECHO loaded. Provide its real Windows PID and the user's task. This stops this inference turn, releases the text model, and uses a read-only OS process watcher. The app resumes this conversation after the same process exits. It never stops or modifies the observed process; a nonzero exit is reported as failure.","parameters":{"type":"object","properties":{"pid":{"type":"integer","minimum":1},"prompt":{"type":"string","description":"The requested task to continue after this process exits"}},"required":["pid","prompt"]}}})
+}
+pub fn submit_wait(
+    core: Arc<AppCore>,
+    app: tauri::AppHandle,
+    conversation: &str,
+    args: &Value,
+) -> Result<Value, String> {
+    let pid = args["pid"]
+        .as_u64()
+        .filter(|v| *v > 0 && *v <= u32::MAX as u64)
+        .ok_or("Supply a real process ID")? as u32;
+    let watcher = crate::process_watch::ProcessWatch::open(pid)?;
+    let prompt = args["prompt"]
+        .as_str()
+        .filter(|v| !v.trim().is_empty() && v.len() < 32768)
+        .ok_or("Describe the authorized task to continue")?;
+    let job = core.studios.submit(
+        core.clone(),
+        app,
+        StudioRequest {
+            model_id: "background-wait".into(),
+            prompt: prompt.into(),
+            settings: json!({"pid":pid,"created":watcher.created}),
+            conversation_id: Some(conversation.into()),
+        },
+    )?;
+    Ok(json!(job))
+}
 pub async fn generate_music(
     core: Arc<AppCore>,
     app: tauri::AppHandle,
@@ -903,6 +1146,38 @@ pub async fn studio_output_preview(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn continuation_is_claimed_once_and_new_user_turn_supersedes_it() {
+        let root =
+            std::env::temp_dir().join(format!("studio-continuation-{}", uuid::Uuid::new_v4()));
+        let manager = StudioManager::new(root.clone()).unwrap();
+        for id in ["ready", "stale"] {
+            manager
+                .db
+                .lock()
+                .unwrap()
+                .execute(
+                    "INSERT INTO continuations VALUES(?1,?2,42,'pending')",
+                    rusqlite::params![
+                        id,
+                        r#"{"profile":"echo","request":{"text":"original task"}}"#
+                    ],
+                )
+                .unwrap();
+        }
+        assert!(manager.continuation_pending());
+        assert_eq!(
+            manager.claim_continuation("ready", 42).unwrap().unwrap()["request"]["text"],
+            "original task"
+        );
+        assert!(manager.claim_continuation("ready", 42).unwrap().is_none());
+        assert!(manager.claim_continuation("stale", 43).unwrap().is_none());
+        drop(manager);
+        let reopened = StudioManager::new(root.clone()).unwrap();
+        assert!(!reopened.continuation_pending());
+        drop(reopened);
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn music_requires_real_lyrics_and_preserves_precision() {
         let mut r = StudioRequest {

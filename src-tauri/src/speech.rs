@@ -325,6 +325,13 @@ impl SpeechManager {
         }
     }
     pub async fn is_active(&self)->bool{self.session.lock().await.is_some()}
+    pub async fn release_idle_model(&self) -> Result<(),String> {
+        let _control=self.control.lock().await;
+        if self.is_active().await {return Err("Finish dictation before switching models".into());}
+        if let Some(mut worker)=self.worker.lock().await.take(){worker.stop().await;}
+        self.set_phase(if self.settings().enabled {"ready"} else {"off"});
+        Ok(())
+    }
 }
 async fn wait_ready(receiver:&mut watch::Receiver<Option<Result<(),String>>>)->Result<(),String>{
     loop{if let Some(result)=receiver.borrow().clone(){return result;}receiver.changed().await.map_err(|_|"Speech loading worker disconnected")?;}

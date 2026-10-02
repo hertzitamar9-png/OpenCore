@@ -19,7 +19,7 @@ import {
   CheckCircle2, CircleAlert, Code2, CornerUpLeft, Crosshair, Eye, FilePenLine, FileSearch, FileText, FolderOpen, Gamepad2, MousePointerClick, Terminal, Wrench, Zap
 } from "lucide-react";
 import * as api from "./api";
-import { messageUrlTransform, parseArtifactLink } from "./artifact-links";
+import { messageUrlTransform, parseArtifactLink, studioLinkCategory } from "./artifact-links";
 import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
@@ -214,6 +214,8 @@ function MessageLink({ href, children }: { href?: string; children?: React.React
   const actions = useContext(ArtifactActionsContext);
   const artifact = parseArtifactLink(href);
   const path = localFilePath(href);
+  const studio=studioLinkCategory(href);
+  if(studio) return <a href={href} onClick={event=>{event.preventDefault();event.stopPropagation();window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:studio}));}}>{children}</a>;
   if (artifact || path) {
     const open = (event: React.MouseEvent) => {
       event.preventDefault();

@@ -23,7 +23,7 @@ async function verify() { try {
   writeFileSync(join(root,'chat-timeline.json'),JSON.stringify(conversation,null,2));
   console.log('Text response finished; checking the durable generation');
   const deadline=Date.now()+10*60*1000;
-  let last='';
+  let last='',observedUnloaded=false;
   while(Date.now()<deadline){
     const jobs=(await invoke('list_studio_jobs')).filter(j=>j.request.conversationId===conversationId);
     writeFileSync(join(root,'jobs.json'),JSON.stringify(jobs,null,2));
@@ -31,12 +31,32 @@ async function verify() { try {
     const job=jobs[0];
     const state=`${job.status}: ${job.stage}`;
     if(state!==last){console.log(state);last=state;}
+    if(job.status==='running') {
+      const snapshot=await invoke('get_snapshot');
+      if(snapshot.runtime.status!=='stopped'||snapshot.runtime.modelPid||snapshot.runtime.echoPid)throw new Error('ECHO stayed resident during the worker job');
+      observedUnloaded=true;
+    }
     if(job.status==='completed'){
       if(!job.outputs.some(p=>/\.(flac|wav|mp3)$/i.test(p)))throw new Error('No generated audio output');
       const music=await invoke('music_studio_status');
       if(music.modelLoaded)throw new Error('Music model was not unloaded');
-      writeFileSync(join(root,'verified.json'),JSON.stringify({conversationId,job,music},null,2));
-      console.log('Verified actual audio and released GPU',job.outputs);return;
+      if(!observedUnloaded)throw new Error('The unloaded waiting phase was not observed');
+      console.log('Audio complete and music unloaded; waiting for automatic ECHO continuation');
+      while(Date.now()<deadline){
+        const timeline=await invoke('get_conversation',{id:conversationId});
+        const snapshot=await invoke('get_snapshot');
+        const event=timeline.find(e=>e.metadata?.backgroundJobId===job.id);
+        const answer=event&&timeline.some(e=>e.id>event.id&&e.role==='assistant'&&e.kind==='message'&&!e.metadata?.studioReceipt);
+        if(answer&&!snapshot.activeConversationIds.includes(conversationId)){
+          if((await invoke('list_studio_jobs')).filter(j=>j.request.conversationId===conversationId).length!==1)throw new Error('Continuation repeated the generation');
+          writeFileSync(join(root,'completed-timeline.json'),JSON.stringify(timeline,null,2));
+          writeFileSync(join(root,'verified.json'),JSON.stringify({conversationId,job,music,observedUnloaded,resumed:true,runtimeAfter:snapshot.runtime},null,2));
+          await invoke('stop_runtime');
+          console.log('Verified unload → real audio → automatic ECHO wake-up and response',job.outputs);return;
+        }
+        await new Promise(resolve=>setTimeout(resolve,1500));
+      }
+      throw new Error('ECHO did not automatically continue');
     }
     if(['failed','cancelled','interrupted'].includes(job.status))throw new Error(job.error ?? job.stage);
     await new Promise(resolve=>setTimeout(resolve,1500));

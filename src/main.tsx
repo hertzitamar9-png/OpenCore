@@ -39,7 +39,7 @@ function AutoUpdaterBootstrap() {
       unlisten = stop;
       const check = () => { void invoke("auto_update").catch(() => undefined); };
       firstCheck = window.setTimeout(check, 12_000);
-      interval = window.setInterval(check, 5 * 60 * 1000);
+      interval = window.setInterval(check, 60 * 1000);
     }).catch(() => undefined);
 
     return () => {

@@ -21,6 +21,19 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("opens the requested 3D category from a chat handoff link", async () => {
+    const initial=await api.snapshot();
+    const chat=initial.conversations[0];
+    const conversation=vi.spyOn(api,"conversation").mockResolvedValue([{id:998,conversationId:chat.id,timestamp:"2026-10-02T12:00:00Z",kind:"message",role:"assistant",source:"OpenCore",title:"Background job",content:"[Open 3D generation](opencore-studio://3d)",metadata:{}}]);
+    try {
+      render(<App/>);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getAllByText(chat.title,{selector:"strong"})[0]);
+      fireEvent.click(await screen.findByRole("link",{name:"Open 3D generation"}));
+      expect(await screen.findByRole("heading",{name:"Assets Studio"})).toBeVisible();
+      expect(screen.getByRole("button",{name:"3D assets"})).toHaveAttribute("aria-pressed","true");
+    } finally {conversation.mockRestore();}
+  });
   it("announces a finished studio job while chat remains open", async () => {
     render(<App />);
     await screen.findByLabelText("Message OpenCore");
