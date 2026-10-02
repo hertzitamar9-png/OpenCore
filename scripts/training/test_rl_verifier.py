@@ -2,9 +2,45 @@ import unittest
 from rl_verifier import extract_function, verifier_payload, validate_report
 from rl_tasks import TRAIN_TASKS, HELDOUT_TASKS
 from rl_verify_worker import equal
+import rl_verify_worker as worker
 
 
 class IndependentRewards(unittest.TestCase):
+    def test_wrong_answer_diagnostic_shows_actual_and_expected_values(self):
+        formatter=worker.mismatch_diagnostic
+        message=formatter([3,1],[1,3])
+        self.assertIn('received list [3,1]',message)
+        self.assertIn('expected list [1,3]',message)
+
+    def test_wrong_answer_diagnostic_distinguishes_boolean_from_integer(self):
+        formatter=worker.mismatch_diagnostic
+        message=formatter(True,1)
+        self.assertIn('received bool true',message)
+        self.assertIn('expected int 1',message)
+
+    def test_wrong_answer_diagnostic_is_bounded(self):
+        formatter=worker.mismatch_diagnostic
+        message=formatter('x'*20000,'y'*20000)
+        self.assertLessEqual(len(message),600)
+        self.assertIn('truncated',message)
+
+    def test_oversized_result_cannot_pass_a_none_contract(self):
+        judge=worker.grade_result
+        passed,reason=judge(0,'"'+'x'*40000+'"','',None)
+        self.assertFalse(passed)
+        self.assertIn('oversized',reason)
+
+    def test_failed_process_does_not_look_like_a_valid_none(self):
+        judge=worker.grade_result
+        passed,reason=judge(-9,'','',None)
+        self.assertFalse(passed)
+        self.assertIn('exit code -9',reason)
+
+    def test_actual_null_passes_but_empty_or_malformed_output_does_not(self):
+        self.assertEqual(worker.grade_result(0,'null','',None),(True,None))
+        for source in ('','{','reward:1'):
+            self.assertEqual(worker.grade_result(0,source,'',None),(False,'malformed result'))
+
     def test_boolean_does_not_pass_an_integer_contract(self):
         self.assertFalse(equal(True,1))
         self.assertFalse(equal([True], [1]))

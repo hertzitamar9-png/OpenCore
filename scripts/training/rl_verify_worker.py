@@ -35,6 +35,25 @@ def equal(actual,expected):
         return actual.keys()==expected.keys() and all(equal(actual[k],v) for k,v in expected.items())
     return actual==expected
 
+
+def mismatch_diagnostic(actual,expected):
+    def describe(value):
+        encoded=json.dumps(value,ensure_ascii=False,separators=(',',':'),allow_nan=False)
+        if len(encoded)>230: encoded=encoded[:210]+'... [truncated]'
+        return type(value).__name__+' '+encoded
+    return 'wrong answer: expected '+describe(expected)+', received '+describe(actual)
+
+
+def grade_result(returncode,stdout,stderr,expected):
+    if returncode!=0:
+        return False,stderr[-600:] or 'child failed with exit code '+str(returncode)
+    if len(stdout)>32768:
+        return False,'oversized result'
+    try: answer=json.loads(stdout)
+    except ValueError: return False,'malformed result'
+    passed=equal(answer,expected)
+    return passed,None if passed else mismatch_diagnostic(answer,expected)
+
 if __name__=='__main__':
     payload=json.load(sys.stdin);outcomes=[];failures=[]
     for case in payload['cases']:
@@ -43,9 +62,8 @@ if __name__=='__main__':
         try:
             result=subprocess.run([sys.executable,'-I','-c',CHILD],input=json.dumps(child_input),
                                   text=True,capture_output=True,timeout=2)
-            answer=json.loads(result.stdout) if result.returncode==0 and len(result.stdout)<=32768 else None
-            passed=result.returncode==0 and equal(answer,case['expected'])
-            failures.append(None if passed else (result.stderr[-600:] or 'wrong answer'))
+            passed,reason=grade_result(result.returncode,result.stdout,result.stderr,case['expected'])
+            failures.append(reason)
         except (subprocess.TimeoutExpired,ValueError):
             passed=False;failures.append('timeout or malformed result')
         outcomes.append(passed)

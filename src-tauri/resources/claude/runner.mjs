@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { createInterface } from 'node:readline';
 import { mkdirSync } from 'node:fs';
 import { contextBudgetEnvironment, deriveContextBudget } from './context-budget.mjs';
-import { CodingVerification, toolFailed } from './coding-verification.mjs';
+import { CodingVerification, codingBoundaryGuidance, toolFailed } from './coding-verification.mjs';
 const write = value => process.stdout.write(JSON.stringify(value) + '\n');
 const input = createInterface({ input: process.stdin });
 const pending = new Map();
@@ -77,7 +77,7 @@ async function run(config) {
     // exact timeline in ECHO and makes it searchable after each compact boundary.
     // Disabling SDK compaction would let long sessions overrun the model window.
     settingSources: config.projectSkillsEnabled ? ['project'] : [], settings: { autoCompactEnabled: true },
-    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
+    systemPrompt: { type: 'preset', preset: 'claude_code', append: `${config.instructions}\n${verificationGuidance} Use the project's existing tests or compiler. Read real failures, repair their cause, and rerun the relevant check; retain test assertions and existing behavior.\n${codingBoundaryGuidance}\nFor large files or outputs, use offsets and chunks sized to the available context. Continue reading further chunks when needed; do not skip project content just to stay within one tool result.` },
     // Keep the official Claude Code tool surface as the default. OpenCore MCP
     // tools are added below; subagent policy and approval still pass through
     // OpenCore's existing limit and permission bridge.

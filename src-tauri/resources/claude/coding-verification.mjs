@@ -9,6 +9,12 @@ const CODE_EXTENSIONS = new Set(['.py', '.pyi', '.js', '.jsx', '.mjs', '.cjs', '
   '.rb', '.php', '.lua', '.sh', '.ps1', '.html', '.css', '.scss', '.sql', '.vue', '.svelte']);
 const MUTATIONS = new Set(['write', 'edit', 'patch', 'apply_patch']);
 
+export const codingBoundaryGuidance =
+  'For coding verification, choose checks from the actual contract. Reuse existing tests; add a small regression check when they miss the observed bug. ' +
+  'Vary independent lengths or dimensions independently: square-only examples can miss rectangular or ragged-input failures. ' +
+  'Use valid arguments matching the function signature, and calculate expected values from the contract, not from the implementation. ' +
+  'A malformed test is a test-authoring error; inspect it before changing working code. Keep additional checks focused.';
+
 export function toolFailed(value) {
   return Boolean(value?.error) || (typeof value?.exitCode === 'number' && value.exitCode !== 0);
 }
@@ -85,6 +91,7 @@ export class CodingVerification {
     return { decision: 'block', reason:
       `The latest code has no passing execution check: ${targets.slice(0, 16).join(', ')}. ` +
       command +
+      codingBoundaryGuidance + ' ' +
       'Inspect the actual exit code and output. If a check fails, repair the implementation and rerun it. ' +
       'Preserve existing behavior and test assertions. If verification is blocked or still fails, state that clearly; do not claim a verified fix. ' +
       'This is one bounded verification pass, not a request for unrelated refactoring.' };
