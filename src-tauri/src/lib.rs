@@ -403,6 +403,7 @@ async fn start_profile(
 ) -> Result<models::RuntimeSnapshot, String> {
     if core.studios.busy() {return Err("A studio job is queued or generating. Wait for it or cancel it in the studio before loading a text model.".into());}
     music_studio::require_idle_gpu().await?;
+    core.speech.release_idle_model().await?;
     if model_catalog::list(core.runtime.install_root())?.progress.is_some_and(|p|
         matches!(p.phase.as_str(), "preparing" | "downloading" | "verifying" | "uninstalling")) {
         return Err("Finish the model installation before starting a runtime".into());
@@ -497,6 +498,7 @@ async fn restart_runtime(
 ) -> Result<models::RuntimeSnapshot, String> {
     if core.studios.busy() {return Err("Wait for studio jobs before restarting the text model".into());}
     music_studio::require_idle_gpu().await?;
+    core.speech.release_idle_model().await?;
     let runtime = core.runtime.clone();
     let profile = runtime.profile();
     if profile == "stopped" {
@@ -1661,6 +1663,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
     let skill_instructions = composer_skill_instructions(&request.skills)?;
     if core.studios.busy() {return Err("A studio job is using or waiting for the GPU. View its status in Music Studio or Assets Studio, or cancel it before sending another chat prompt.".into());}
     music_studio::require_idle_gpu().await?;
+    core.speech.release_idle_model().await?;
     let installed_categories: std::collections::HashSet<_> = model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|m|m.category).collect();
     for skill in &request.skills {
         if !matches!(skill.as_str(),"browser-use"|"chrome-control") && !installed_categories.contains(skill) {return Err(format!("/{} requires an installed model in that category. Open Models to install one.",skill));}

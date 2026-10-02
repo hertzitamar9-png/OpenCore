@@ -9,6 +9,7 @@ type Outcome = Option<Result<Value, String>>;
 struct Session {
     id: String, audio: PathBuf, input: Option<oneshot::Sender<()>>,
     result: watch::Receiver<Outcome>, ready: watch::Receiver<Option<Result<(), String>>>, cancel: CancellationToken,
+    _gpu: Option<crate::studio_jobs::GpuReservation>,
 }
 struct Worker { child: Child, input: ChildStdin, output: BufReader<tokio::process::ChildStdout>, model_id: String, cold_start_ms: Option<u64>, wake_ms: Option<u64> }
 impl Worker {
@@ -214,12 +215,15 @@ impl SpeechManager {
         self.start_with_id(uuid::Uuid::new_v4().to_string()).await
     }
     pub async fn start_with_id(&self, id: String) -> Result<String,String> {
-        self.start_session(id, false).await
+        self.start_reserved(id, crate::studio_jobs::reserve_gpu()?).await
+    }
+    pub async fn start_reserved(&self, id: String, gpu: crate::studio_jobs::GpuReservation) -> Result<String,String> {
+        self.start_session(id, false, Some(gpu)).await
     }
     pub async fn start_file(&self) -> Result<String,String> {
-        self.start_session(uuid::Uuid::new_v4().to_string(), true).await
+        self.start_session(uuid::Uuid::new_v4().to_string(), true, None).await
     }
-    async fn start_session(&self, id: String, explicit_file: bool) -> Result<String,String> {
+    async fn start_session(&self, id: String, explicit_file: bool, gpu: Option<crate::studio_jobs::GpuReservation>) -> Result<String,String> {
         uuid::Uuid::parse_str(&id).map_err(|_|"Invalid microphone session ID".to_string())?;
         let control=self.control.lock().await;
         crate::model_catalog::require_idle()?;
@@ -233,7 +237,7 @@ impl SpeechManager {
         let (input,ready)=oneshot::channel();
         let (ready_tx,ready_rx)=watch::channel(None);
         let (result_tx,result)=watch::channel(None);
-        *session_guard=Some(Session{id:id.clone(),audio:audio.clone(),input:Some(input),result,ready:ready_rx.clone(),cancel:cancel.clone()});
+        *session_guard=Some(Session{id:id.clone(),audio:audio.clone(),input:Some(input),result,ready:ready_rx.clone(),cancel:cancel.clone(),_gpu:gpu});
         drop(session_guard); drop(control);
         let manager=self.clone();
         tokio::spawn(async move{
@@ -352,14 +356,33 @@ async fn wait_recording(input:oneshot::Receiver<()>, cancel:&CancellationToken)-
 #[tauri::command]
 pub async fn speech_status(core:tauri::State<'_,Arc<crate::AppCore>>)->Result<SpeechStatus,String>{Ok(core.speech.status())}
 #[tauri::command]
-pub async fn speech_set_enabled(core:tauri::State<'_,Arc<crate::AppCore>>,enabled:bool)->Result<SpeechStatus,String>{core.speech.set_enabled(enabled).await}
+pub async fn speech_set_enabled(core:tauri::State<'_,Arc<crate::AppCore>>,enabled:bool)->Result<SpeechStatus,String>{
+    let _gpu=if enabled {Some(speech_setting_reservation(&core)?)} else {None};
+    core.speech.set_enabled(enabled).await
+}
 #[tauri::command]
-pub async fn speech_set_idle_mode(core:tauri::State<'_,Arc<crate::AppCore>>,mode:String)->Result<SpeechStatus,String>{core.speech.set_idle_mode(&mode).await}
+pub async fn speech_set_idle_mode(core:tauri::State<'_,Arc<crate::AppCore>>,mode:String)->Result<SpeechStatus,String>{
+    let _gpu=if mode=="ram" {Some(speech_setting_reservation(&core)?)} else {None};
+    core.speech.set_idle_mode(&mode).await
+}
 #[tauri::command]
-pub async fn speech_set_model(core:tauri::State<'_,Arc<crate::AppCore>>,model_id:String)->Result<SpeechStatus,String>{core.speech.set_model(&model_id).await}
+pub async fn speech_set_model(core:tauri::State<'_,Arc<crate::AppCore>>,model_id:String)->Result<SpeechStatus,String>{
+    let _gpu=speech_setting_reservation(&core)?;
+    core.speech.set_model(&model_id).await
+}
+fn speech_setting_reservation(core:&crate::AppCore)->Result<crate::studio_jobs::GpuReservation,String>{
+    if core.studios.busy() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before loading speech.".into());}
+    crate::studio_jobs::reserve_gpu()
+}
 #[tauri::command]
 pub async fn speech_start(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:Option<String>)->Result<String,String>{
-    core.speech.start_with_id(session_id.unwrap_or_else(||uuid::Uuid::new_v4().to_string())).await
+    if core.studios.busy() || core.studios.continuation_pending() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before using the microphone.".into());}
+    crate::music_studio::require_idle_gpu().await?;
+    let gpu=crate::studio_jobs::reserve_gpu()?;
+    let runtime=core.runtime.clone();
+    tauri::async_runtime::spawn_blocking(move||runtime.stop()).await.map_err(|e|e.to_string())??;
+    core.vision.stop();core.reflex.stop();
+    core.speech.start_reserved(session_id.unwrap_or_else(||uuid::Uuid::new_v4().to_string()),gpu).await
 }
 #[tauri::command]
 pub async fn speech_transcribe(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:String,audio:String)->Result<Value,String>{core.speech.transcribe(&session_id,&audio).await}
@@ -369,6 +392,15 @@ pub async fn speech_cancel(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn microphone_cannot_start_while_a_background_job_owns_gpu(){
+        let root=std::env::temp_dir().join(format!("speech-gpu-{}",uuid::Uuid::new_v4()));
+        let manager=SpeechManager::new(root.clone(),root);
+        let _job=crate::studio_jobs::reserve_gpu().unwrap();
+        let error=manager.start_with_id(uuid::Uuid::new_v4().to_string()).await.unwrap_err();
+        assert!(error.contains("GPU is reserved"),"Reject before any speech worker starts: {error}");
+        assert!(!manager.is_active().await);
+    }
     #[tokio::test]
     async fn cancelling_recording_does_not_wait_for_the_unsent_audio(){
         for disable in [false,true] {
@@ -382,7 +414,7 @@ mod tests {
             let (_ready_tx,ready)=watch::channel(None);
             let (result_tx,result)=watch::channel(None);
             *manager.session.lock().await=Some(Session{id:"recording".into(),audio:root.join("pending.audio"),
-                input:Some(input),result,ready,cancel:cancel.clone()});
+                input:Some(input),result,ready,cancel:cancel.clone(),_gpu:None});
             let task=tokio::spawn(async move{
                 let result=wait_recording(audio,&cancel).await.map(|_|json!({"text":"unexpected"}));
                 let _=result_tx.send(Some(result));
@@ -407,14 +439,14 @@ mod tests {
     async fn microphone_handoff_waits_for_worker_exit_and_old_cancel_cannot_stop_new_session(){
         let manager=SpeechManager::new(PathBuf::from("unused"),PathBuf::from("unused"));
         let (input,_audio)=oneshot::channel();let (tx,result)=watch::channel(None);let (_rtx,ready)=watch::channel(None);
-        *manager.session.lock().await=Some(Session{id:"old".into(),audio:PathBuf::from("unused.audio"),input:Some(input),result,ready,cancel:CancellationToken::new()});
+        *manager.session.lock().await=Some(Session{id:"old".into(),audio:PathBuf::from("unused.audio"),input:Some(input),result,ready,cancel:CancellationToken::new(),_gpu:None});
         let cancelling=manager.clone();
         let release=tokio::spawn(async move {cancelling.cancel("old").await;});
         tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(manager.control.try_lock().is_err(),"A new start must wait for the old worker to exit");
         tx.send(Some(Err("Recording cancelled".into()))).unwrap();release.await.unwrap();
         let (input,_audio)=oneshot::channel();let (_tx,result)=watch::channel(None);let (_rtx,ready)=watch::channel(None);
-        *manager.session.lock().await=Some(Session{id:"new".into(),audio:PathBuf::from("unused.audio"),input:Some(input),result,ready,cancel:CancellationToken::new()});
+        *manager.session.lock().await=Some(Session{id:"new".into(),audio:PathBuf::from("unused.audio"),input:Some(input),result,ready,cancel:CancellationToken::new(),_gpu:None});
         manager.cancel("old").await;
         assert_eq!(manager.session.lock().await.as_ref().unwrap().id,"new");
     }
@@ -438,7 +470,7 @@ mod tests {
         let root=std::env::temp_dir().join(format!("opencore-speech-active-{}",uuid::Uuid::new_v4()));
         let manager=SpeechManager::new(root.clone(),root.clone());
         let (input,_audio)=oneshot::channel();let (_tx,result)=watch::channel(None);let (_ready_tx,ready)=watch::channel(None);
-        *manager.session.lock().await=Some(Session{id:"recording".into(),audio:root.join("audio"),input:Some(input),result,ready,cancel:CancellationToken::new()});
+        *manager.session.lock().await=Some(Session{id:"recording".into(),audio:root.join("audio"),input:Some(input),result,ready,cancel:CancellationToken::new(),_gpu:None});
         assert!(manager.set_model("phonon-2").await.unwrap_err().contains("Finish the current dictation"));
         assert_eq!(manager.selected_model(),"whisper-large-v3-turbo");
     }
