@@ -15,9 +15,18 @@ def request(base,path,value=None,timeout=180):
 
 
 class NativeBackend:
-    def __init__(self,home,folder,model=None,port=8888):
+    def __init__(self,home,folder,model=None,port=8888,kv_offload=False,threads=1):
+        if type(threads) is not int or not 1<=threads<=16: raise ValueError('Invalid CPU thread count')
         self.home=Path(home);self.folder=Path(folder);self.model=Path(model or self.home/'OpenCore-Code-Single-File.gguf')
         self.base=f'http://127.0.0.1:{port}';self.port=port;self.child=None
+        self.kv_offload=kv_offload;self.threads=threads
+
+    def server_args(self):
+        args=[str(self.home/'runtime/llama-server.exe'),'-m',str(self.model),'--host','127.0.0.1','--port',str(self.port),'-ngl','99','-c','16384',
+            '-b','512','-ub','512','-np','1','-t',str(self.threads),'--flash-attn','on','--cache-type-k','q4_0','--cache-type-v','q4_0',
+            '-sm','none','-mg','0','--reasoning','off']
+        if not self.kv_offload: args.append('--no-kv-offload')
+        return args
 
     def __enter__(self):
         with socket.socket() as probe:
@@ -31,12 +40,11 @@ class NativeBackend:
             OPENCORE_BACKEND_DIR=str(server.parent),OPENCORE_ACTIVE_EXPERTS='5',OPENCORE_WORKFLOW_STAGES='18',
             OPENCORE_Q8_STAGE_EXPERTS='10000',OPENCORE_STAGE_FILE=str(self.home/'opencore-stage.txt'),
             OPENCORE_FUSED_PRIVATE_SHARED='1',OPENCORE_CARRIER_GRAPH_INPUTS='1')
-        args=[str(server),'-m',str(self.model),'--host','127.0.0.1','--port',str(self.port),'-ngl','99','-c','16384',
-            '-b','512','-ub','512','-np','1','-t','1','--flash-attn','on','--cache-type-k','q4_0','--cache-type-v','q4_0',
-            '--no-kv-offload','-sm','none','-mg','0','--reasoning','off']
+        args=self.server_args()
         self.child=subprocess.Popen(args,cwd=self.home,env=env,stdout=self.log,stderr=self.log,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-        (self.folder/'native-process.json').write_text(json.dumps({'pid':self.child.pid,'model':str(self.model),'started':time.time()},indent=2))
+        (self.folder/'native-process.json').write_text(json.dumps({'pid':self.child.pid,'model':str(self.model),
+            'started':time.time(),'args':args,'kv_offload':self.kv_offload,'threads':self.threads},indent=2))
         try:
             end=time.monotonic()+180
             while time.monotonic()<end:

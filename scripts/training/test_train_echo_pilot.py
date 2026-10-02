@@ -4,10 +4,50 @@ from types import SimpleNamespace
 import unittest
 import torch
 import numpy as np
-from train_echo_pilot import export_candidate, example_tokens, parse_args
+from unittest.mock import patch
+from train_echo_pilot import export_candidate, example_tokens, parse_args,save
 
 
 class PilotIntegrity(unittest.TestCase):
+    def test_atomic_progress_write_survives_a_transient_windows_reader(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);target=root/'progress.json';target.write_text('{"old":true}',encoding='utf-8')
+            original=Path.replace;failures=[True,True,False]
+            def busy_then_replace(path,destination):
+                if failures.pop(0):
+                    self.assertEqual(target.read_text(encoding='utf-8'),'{"old":true}')
+                    raise PermissionError('Windows sharing violation')
+                return original(path,destination)
+            with patch.object(Path,'replace',busy_then_replace),patch('train_echo_pilot.time.sleep'):
+                save(root,'progress.json',{'new':'שלום'})
+            import json
+            self.assertEqual(json.loads(target.read_text(encoding='utf-8')),{'new':'שלום'})
+
+    def test_shared_export_is_explicit_and_preserves_frozen_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);source=root/'source.gguf';target=root/'shared.gguf'
+            keys=[f'opencore.{p}.{s}' for p in ('gate','up','down')
+                  for s in ('seed_scale','shared_coeff','shared_a','shared_b')]
+            header=b'header';frozen=b'unchanged-backbone';raw=header+b'\x00\x3f'*len(keys)+frozen
+            source.write_bytes(raw);tensors=[];updates={}
+            for index,name in enumerate(keys):
+                offset=len(header)+2*index
+                tensors.append(SimpleNamespace(name=name,data_offset=offset,n_bytes=2,n_elements=1,
+                    shape=np.array([1]),tensor_type=SimpleNamespace(name='BF16'),
+                    data=np.frombuffer(raw[offset:offset+2],dtype=np.uint8)))
+                updates[name]=torch.tensor([2.])
+            tensors.append(SimpleNamespace(name='backbone',data_offset=len(raw)-len(frozen),n_bytes=len(frozen),
+                data=np.frombuffer(frozen,dtype=np.uint8)))
+            with self.assertRaises(ValueError): export_candidate(source,target,SimpleNamespace(tensors=tensors),updates)
+            report=export_candidate(source,target,SimpleNamespace(tensors=tensors),updates,train_shared=True)
+            self.assertEqual(len(report['changed_tensors']),12)
+            self.assertEqual(source.read_bytes(),raw)
+            self.assertEqual(target.read_bytes()[:len(header)],header)
+            self.assertTrue(target.read_bytes().endswith(frozen))
+            target=root/'bad.gguf';updates[keys[0]]=torch.tensor([float('nan')])
+            with self.assertRaises(ValueError): export_candidate(source,target,SimpleNamespace(tensors=tensors),updates,train_shared=True)
+            self.assertFalse(target.exists())
+
     def test_retry_budget_is_explicit_and_rejects_unapproved_limits(self):
         common=['--folder','attempt','--research-root','research']
         self.assertEqual(parse_args(common).mimo_max_steps,16)

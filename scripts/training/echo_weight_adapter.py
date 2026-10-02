@@ -1,8 +1,9 @@
 """Trainable view of the SHIPPED ECHO GGUF, not a substitute dense model.
 
-Frozen Q6 backbone values are rematerialized in RAM only for autograd. Six small
-expert composition arrays have FP32 optimizer masters; exported values remain
-BF16. Private/shared expert factors, architecture, MTP and backbone stay intact.
+Frozen Q6 backbone values are rematerialized in RAM only for autograd. The default
+trains six composition arrays; the explicit shared-training option also trains
+six existing low-rank shared factors. Optimizer masters are FP32 and exported
+values remain BF16. Private factors, architecture, MTP and backbone stay intact.
 The resident five-lane FFN mirrors the pinned native qwen35.cpp implementation.
 Forward parity against that native backend is a mandatory training gate.
 """
@@ -52,13 +53,27 @@ class Projection(nn.Module):
             if key in ('seed_scale','shared_coeff'): self.register_parameter(key,nn.Parameter(value.float()))
             else: self.register_buffer(key,value)
 
+    def enable_shared_training(self,device):
+        """Train existing BF16-exportable factors, without changing inference.
+
+        Private expert pages remain frozen and paged. Shared optimizer masters
+        live on the training device; their compute views are created afresh on
+        each forward, never cached across optimizer steps or checkpoint replay.
+        """
+        for key in ('shared_a','shared_b'):
+            value=getattr(self,key).detach().to(device=device,dtype=torch.float32)
+            if key in self._buffers: del self._buffers[key]
+            setattr(self,key,nn.Parameter(value))
+        self._signature=None
+
     def prepare(self,offset,count,device):
         signature=(offset,count,str(device))
         if getattr(self,'_signature',None)==signature: return
         # Frozen factors remain in RAM; only the stage needed by this batch
         # goes to the GPU. Do not allocate a second complete expert pool there.
         self._factors={key:getattr(self,key)[offset:offset+count].to(device) for key in ('expert_a','expert_b')}
-        self._factors.update({key:getattr(self,key).to(device) for key in ('shared_a','shared_b')})
+        self._factors.update({key:getattr(self,key).to(device) for key in ('shared_a','shared_b')
+                             if not isinstance(getattr(self,key),nn.Parameter)})
         self._offset=offset;self._signature=signature
 
     def forward(self,x,seed,ids):
@@ -67,8 +82,10 @@ class Projection(nn.Module):
         private=torch.einsum('toi,ti->to',self._factors['expert_a'][local],x)
         private=torch.einsum('toi,ti->to',self._factors['expert_b'][local],private)
         shared=torch.zeros_like(seed)
+        shared_factors={key:(getattr(self,key).to(dtype=x.dtype) if isinstance(getattr(self,key),nn.Parameter)
+                            else self._factors[key]) for key in ('shared_a','shared_b')}
         for basis in range(self.shared_a.shape[0]):
-            value=F.linear(F.linear(x,self._factors['shared_a'][basis]),self._factors['shared_b'][basis])
+            value=F.linear(F.linear(x,shared_factors['shared_a'][basis]),shared_factors['shared_b'][basis])
             shared=shared+value*self.shared_coeff[ids,basis,None].to(x.dtype)
         return seed*self.seed_scale[ids,None].to(x.dtype)+(private+shared)*.001
 
@@ -147,7 +164,7 @@ def inverse(name,value,cfg):
         elif name.endswith('out_proj.weight'): value=untile(value,1,k,r,h)
     return value
 
-def load_training_view(path,seed_dir,gguf_python,device='cpu'):
+def load_training_view(path,seed_dir,gguf_python,device='cpu',train_shared=False):
     from transformers import Qwen3_5TextConfig,Qwen3_5ForCausalLM
     reader=gguf_reader(path,gguf_python)
     from gguf.quants import dequantize
@@ -186,6 +203,7 @@ def load_training_view(path,seed_dir,gguf_python,device='cpu'):
         projection=getattr(pool,prefix)
         for key in ('seed_scale','shared_coeff'):
             setattr(projection,key,nn.Parameter(getattr(projection,key).to(device)))
+        if train_shared: projection.enable_shared_training(device)
     model.add_module('opencore_expert_pool',pool)
     for layer,block in enumerate(model.model.layers): block.mlp=ResidentMLP(block.mlp,pool,layer)
     return model,reader

@@ -28,7 +28,15 @@ def digest(path):
 
 def save(folder,name,value):
     target=folder/name;temporary=target.with_suffix(target.suffix+'.tmp')
-    temporary.write_text(json.dumps(value,indent=2,ensure_ascii=False),encoding='utf-8');temporary.replace(target)
+    temporary.write_text(json.dumps(value,indent=2,ensure_ascii=False),encoding='utf-8')
+    # Windows readers/antivirus can briefly deny replacement even though the
+    # directory is writable. Preserve the old complete receipt while retrying;
+    # a persistent denial is still an error, never a dropped progress update.
+    for attempt in range(6):
+        try: temporary.replace(target);return
+        except PermissionError:
+            if attempt==5: raise
+            time.sleep(.05*2**attempt)
 
 
 def example_tokens(tokenizer,record,device):
@@ -75,9 +83,10 @@ def parity(model,probes,device):
         'note':'Short-prefill next-token gate only; not whole-model or long-context equivalence'}
 
 
-def export_candidate(source,target,reader,updates):
+def export_candidate(source,target,reader,updates,train_shared=False):
     if target.exists(): raise FileExistsError('Candidate already exists; preserve it')
-    allowed={f'opencore.{p}.{s}' for p in ('gate','up','down') for s in ('seed_scale','shared_coeff')}
+    suffixes=('seed_scale','shared_coeff','shared_a','shared_b') if train_shared else ('seed_scale','shared_coeff')
+    allowed={f'opencore.{p}.{s}' for p in ('gate','up','down') for s in suffixes}
     if set(updates)!=allowed: raise ValueError('Unexpected trainable tensor inventory')
     tensors={tensor.name:tensor for tensor in reader.tensors}
     encoded={}
@@ -85,7 +94,11 @@ def export_candidate(source,target,reader,updates):
         tensor=tensors[name]
         if tensor.tensor_type.name!='BF16' or value.numel()!=tensor.n_elements:
             raise ValueError('Training export changed tensor shape or precision')
-        encoded[name]=value.detach().cpu().to(torch.bfloat16).contiguous().view(torch.uint16).numpy().tobytes()
+        if hasattr(tensor,'shape') and tuple(value.shape)!=tuple(reversed(tensor.shape.tolist())):
+            raise ValueError('Training export changed tensor layout')
+        converted=value.detach().cpu().to(torch.bfloat16)
+        if not torch.isfinite(converted).all(): raise ValueError('Nonfinite exported BF16 weight')
+        encoded[name]=converted.contiguous().view(torch.uint16).numpy().tobytes()
         if len(encoded[name])!=tensor.n_bytes: raise ValueError('Training tensor byte-size mismatch')
     shutil.copyfile(source,target)
     with target.open('r+b') as file:
@@ -110,7 +123,8 @@ def export_candidate(source,target,reader,updates):
                 changed.append(tensor.name)
     if not changed: raise ValueError('No BF16 weights changed after training; candidate is not trained')
     return {'candidate_sha256':digest(target),'changed_tensors':changed,'unchanged_tensors':len(reader.tensors)-len(changed),
-        'precision':'Original Q6_K/F32 backbone and BF16 expert tensors; six BF16 composition arrays eligible for updates'}
+        'precision':'Original Q6_K/F32 backbone and BF16 expert tensors; '+
+            ('twelve BF16 shared-factor/composition arrays eligible for updates' if train_shared else 'six BF16 composition arrays eligible for updates')}
 
 
 def parse_args(argv=None):

@@ -4,6 +4,20 @@ from native_echo_backend import NativeBackend
 
 
 class NativeChatFormat(unittest.TestCase):
+    def test_runtime_profile_explicitly_controls_kv_residency_and_cpu_threads(self):
+        backend=NativeBackend('home','folder')
+        build=getattr(backend,'server_args',None)
+        self.assertTrue(callable(build),'runtime profile cannot yet be qualified explicitly')
+        original=build()
+        self.assertIn('--no-kv-offload',original)
+        self.assertEqual(original[original.index('-t')+1],'1')
+        optimized=NativeBackend('home','folder',kv_offload=True,threads=4).server_args()
+        self.assertNotIn('--no-kv-offload',optimized)
+        self.assertEqual(optimized[optimized.index('-t')+1],'4')
+        for flag in ('-m','-c','-ngl','--cache-type-k','--cache-type-v'):
+            self.assertEqual(original[original.index(flag)+1],optimized[optimized.index(flag)+1])
+        with self.assertRaises(ValueError): NativeBackend('home','folder',threads=0)
+
     def test_requested_schema_reaches_native_decoder(self):
         backend=NativeBackend('unused','unused')
         format={'type':'json_schema','json_schema':{'name':'action','schema':{

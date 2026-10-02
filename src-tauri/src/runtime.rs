@@ -753,7 +753,7 @@ impl RuntimeManager {
             command.args(["--mmproj", projector.to_string_lossy().as_ref(), "--image-max-tokens", "2048"]);
         }
         if profile == "echo" {
-            command.args(["-c", "0", "-t", "1", "--no-kv-offload"]);
+            command.args(["-c", "0", "-t", "4", "--no-kv-offload"]);
         } else {
             command.args(["-c", "1000000", "-t", "4"]);
             command.args([
