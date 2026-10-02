@@ -139,7 +139,7 @@ mod tests {
             data.models[0].artifacts = vec!["test-weight".into()];
             data.artifacts = vec![Artifact { id: "test-weight".into(), path: artifact_path.into(),
                 repo: "test/model".into(), revision: "a".repeat(40), filename: "model.gguf".into(),
-                sha256: format!("{:x}", Sha256::digest(b"fixture")), bytes: 7 }];
+                sha256: format!("{:x}", Sha256::digest(b"fixture")), bytes: 7, compatible_local_sha256: Vec::new() }];
             Self { root, data }
         }
         fn write(&self, path: &str, bytes: &[u8]) -> PathBuf {

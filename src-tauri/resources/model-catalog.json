@@ -43,6 +43,9 @@
       "revision": "69cf90d90cf450df2a0a373d69d4146bbacaa84b",
       "filename": "OpenCore-Code-Single-File.gguf",
       "sha256": "261ef6c572bf9916f9ea5097bc156da0ee0ef6d631d52cf59dbcf293f416b7ae",
+      "compatibleLocalSha256": [
+        "4551c5333bb6287f0222e15a4d1e3a969df04cb7a69833125f5b3aa80239b91a"
+      ],
       "bytes": 5476762688
     },
     {

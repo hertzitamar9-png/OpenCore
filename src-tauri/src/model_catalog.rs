@@ -22,6 +22,9 @@ pub(crate) static MODEL_CATALOG_TEST_LOCK: Mutex<()> = Mutex::new(());
 pub struct Artifact {
     pub id: String, pub path: String, pub repo: String, pub revision: String,
     pub filename: String, pub sha256: String, pub bytes: u64,
+    // Hash-bound local training exports; Hub downloads still use the original pin.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub compatible_local_sha256: Vec<String>,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -67,7 +70,7 @@ fn manifest() -> Result<Manifest, String> {
     let data: Manifest = serde_json::from_str(include_str!("../resources/model-catalog.json")).map_err(|e| e.to_string())?;
     for file in &data.artifacts {
         if file.revision.len() != 40 || !file.revision.bytes().all(|c| c.is_ascii_hexdigit()) ||
-           file.sha256.len() != 64 || !file.sha256.bytes().all(|c| c.is_ascii_hexdigit()) || file.bytes == 0 {
+           !valid_sha256(&file.sha256) || file.compatible_local_sha256.iter().any(|hash| !valid_sha256(hash)) || file.bytes == 0 {
             return Err(format!("Invalid pinned artifact {}", file.id));
         }
         safe_relative(&file.path)?; safe_relative(&file.filename)?;
@@ -166,11 +169,17 @@ fn valid_model_receipt(root: &Path, model: &Model) -> bool {
     read(model_receipt(root, model)) || (model.id == "whisper-large-v3-turbo" &&
         read(root.join("models/receipts/model-whisper-large-v3.json")))
 }
+fn valid_sha256(hash: &str) -> bool {
+    hash.len() == 64 && hash.bytes().all(|c| c.is_ascii_hexdigit())
+}
+fn accepted_local_hash(file: &Artifact, hash: &str) -> bool {
+    hash == file.sha256 || file.compatible_local_sha256.iter().any(|approved| approved == hash)
+}
 fn verified_file(root: &Path, file: &Artifact) -> bool {
     let Ok(path) = safe_path(root, &file.path) else { return false; };
     let receipt = std::fs::read(file_receipt(root, file)).ok().and_then(|b| serde_json::from_slice::<FileReceipt>(&b).ok());
     let Some(receipt) = receipt else { return false; };
-    receipt.sha256 == file.sha256 && receipt.bytes == file.bytes &&
+    accepted_local_hash(file, &receipt.sha256) && receipt.bytes == file.bytes &&
         std::fs::metadata(&path).map(|m| m.is_file() && m.len() == file.bytes).unwrap_or(false) &&
         modified(&path).ok() == Some(receipt.modified_nanos)
 }
@@ -262,7 +271,11 @@ fn digest(path: &Path) -> Result<String, String> {
     Ok(format!("{:x}", hash.finalize()))
 }
 fn record_file(root: &Path, file: &Artifact, path: &Path) -> Result<(), String> {
-    let receipt = FileReceipt { sha256: file.sha256.clone(), bytes: file.bytes, modified_nanos: modified(path)? };
+    record_file_hash(root, file, path, &file.sha256)
+}
+fn record_file_hash(root: &Path, file: &Artifact, path: &Path, hash: &str) -> Result<(), String> {
+    if !accepted_local_hash(file, hash) { return Err("Unapproved model checkpoint checksum".into()); }
+    let receipt = FileReceipt { sha256: hash.into(), bytes: file.bytes, modified_nanos: modified(path)? };
     let target = safe_path(root, &format!("models/receipts/file-{}.json", file.id))?;
     std::fs::create_dir_all(target.parent().unwrap()).map_err(|e| e.to_string())?;
     std::fs::write(target, serde_json::to_vec(&receipt).map_err(|e| e.to_string())?).map_err(|e| e.to_string())
@@ -289,8 +302,9 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
         if path.metadata().is_ok_and(|m|m.is_file() && m.len()==file.bytes) {
             update("verifying",0,&file.path,None);
             let check=path.clone();
-            if tauri::async_runtime::spawn_blocking(move ||digest(&check)).await.map_err(|e|e.to_string())??==file.sha256 {
-                record_file(root,file,&path)?;
+            let hash = tauri::async_runtime::spawn_blocking(move ||digest(&check)).await.map_err(|e|e.to_string())??;
+            if accepted_local_hash(file, &hash) {
+                record_file_hash(root,file,&path,&hash)?;
             }
         }
     }
@@ -321,8 +335,9 @@ async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Resul
         if path.is_file() && path.metadata().map_err(|e| e.to_string())?.len() == file.bytes {
             update("verifying", completed, &file.path, None);
             let check = path.clone();
-            if tauri::async_runtime::spawn_blocking(move || digest(&check)).await.map_err(|e| e.to_string())?? == file.sha256 {
-                record_file(root, file, &path)?; completed += file.bytes; continue;
+            let hash = tauri::async_runtime::spawn_blocking(move || digest(&check)).await.map_err(|e| e.to_string())??;
+            if accepted_local_hash(file, &hash) {
+                record_file_hash(root, file, &path, &hash)?; completed += file.bytes; continue;
             }
         }
         // Download to a sibling temporary file; no live weight is overwritten before verification.
@@ -452,6 +467,66 @@ pub fn uninstall(root: &Path, id: &str, confirmation_token: &str) -> Result<(), 
 mod tests {
     use super::*;
     #[test]
+    fn approved_local_checkpoint_remains_installed_without_redownload() {
+        let root = std::env::temp_dir().join(format!("opencore-local-checkpoint-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(root.join("models/receipts")).unwrap();
+        let original = format!("{:x}", Sha256::digest(b"hello"));
+        let trained = format!("{:x}", Sha256::digest(b"world"));
+        let file: Artifact = serde_json::from_value(serde_json::json!({
+            "id":"opencore-apex", "path":"OpenCore-Code-Single-File.gguf", "repo":"test/model",
+            "revision":"a".repeat(40), "filename":"model.gguf", "sha256":original, "bytes":5,
+            "compatibleLocalSha256":[trained]
+        })).unwrap();
+        let path = root.join(&file.path);
+        std::fs::write(&path, b"world").unwrap();
+        record_file_hash(&root, &file, &path, &trained).unwrap();
+        let receipt: FileReceipt = serde_json::from_slice(&std::fs::read(file_receipt(&root, &file)).unwrap()).unwrap();
+        assert_eq!(receipt.sha256, trained, "Record the actual trained hash, never the original hash");
+        let mut data = manifest().unwrap();
+        data.models.retain(|model| model.id == "echo");
+        data.models[0].artifacts = vec![file.id.clone()];
+        data.artifacts = vec![file.clone()];
+        std::fs::write(model_receipt(&root, &data.models[0]), b"[\"opencore-apex\"]").unwrap();
+        assert!(installed(&root, &data.models[0], &data), "Approved trained weights must remain selectable");
+        assert_eq!(remaining_download_bytes(&root, &[&file]).unwrap(), 0, "Do not replace a selected trained checkpoint");
+        std::fs::write(&path, b"changed").unwrap();
+        assert!(!verified_file(&root, &file), "Changed checkpoint bytes must invalidate the receipt");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn local_checkpoint_receipt_still_requires_exact_hash_and_fresh_metadata() {
+        let root = std::env::temp_dir().join(format!("opencore-local-checkpoint-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(root.join("models/receipts")).unwrap();
+        let file: Artifact = serde_json::from_value(serde_json::json!({
+            "id":"opencore-apex", "path":"OpenCore-Code-Single-File.gguf", "repo":"test/model",
+            "revision":"a".repeat(40), "filename":"model.gguf", "sha256":format!("{:x}", Sha256::digest(b"hello")), "bytes":5,
+            "compatibleLocalSha256":[format!("{:x}", Sha256::digest(b"world"))]
+        })).unwrap();
+        let path = root.join(&file.path);
+        std::fs::write(&path, b"world").unwrap();
+        let mut receipt = FileReceipt { sha256: "c".repeat(64), bytes: 5, modified_nanos: modified(&path).unwrap() };
+        std::fs::write(file_receipt(&root, &file), serde_json::to_vec(&receipt).unwrap()).unwrap();
+        assert!(!verified_file(&root, &file), "A receipt alone must not authorize an unlisted checksum");
+        assert!(record_file_hash(&root, &file, &path, &receipt.sha256).is_err(), "Registration must reject unknown hashes too");
+        receipt.sha256 = format!("{:x}", Sha256::digest(b"world"));
+        receipt.modified_nanos -= 1;
+        std::fs::write(file_receipt(&root, &file), serde_json::to_vec(&receipt).unwrap()).unwrap();
+        assert!(!verified_file(&root, &file), "Stale metadata must not authorize a local checkpoint");
+        std::fs::write(&path, b"hello").unwrap();
+        record_file(&root, &file, &path).unwrap();
+        assert!(verified_file(&root, &file), "Existing pinned checkpoint receipts remain supported");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn local_ultradata_checkpoint_does_not_change_the_hub_download_pin() {
+        let catalog = manifest().unwrap();
+        let echo = catalog.artifacts.iter().find(|file| file.id == "opencore-apex").unwrap();
+        assert_eq!(echo.sha256, "261ef6c572bf9916f9ea5097bc156da0ee0ef6d631d52cf59dbcf293f416b7ae");
+        assert_eq!(echo.compatible_local_sha256, ["4551c5333bb6287f0222e15a4d1e3a969df04cb7a69833125f5b3aa80239b91a"]);
+        assert!(catalog.artifacts.iter().filter(|file| file.id != echo.id).all(|file| file.compatible_local_sha256.is_empty()));
+    }
+    #[test]
     fn platform_categories_have_real_pins_and_setup_only_entries_cannot_run() {
         let catalog=manifest().unwrap();
         for category in ["speech","text","computer-use","3d"] {
@@ -555,7 +630,8 @@ mod tests {
         let root = std::env::temp_dir().join(format!("opencore-download-space-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(root.join("models")).unwrap();
         let file = Artifact { id: "space-test".into(), path: "models/weights.gguf".into(), repo: "test/model".into(),
-            revision: "a".repeat(40), filename: "weights.gguf".into(), sha256: format!("{:x}", Sha256::digest(b"hello")), bytes: 5 };
+            revision: "a".repeat(40), filename: "weights.gguf".into(), sha256: format!("{:x}", Sha256::digest(b"hello")), bytes: 5,
+            compatible_local_sha256: Vec::new() };
         let partial = root.join("models/weights.gguf.partial");
         std::fs::write(&partial, b"hel").unwrap();
         assert_eq!(remaining_download_bytes(&root, &[&file]).unwrap(), 2);
