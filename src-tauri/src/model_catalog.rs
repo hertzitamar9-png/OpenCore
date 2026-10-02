@@ -185,6 +185,7 @@ fn verified_file(root: &Path, file: &Artifact) -> bool {
 }
 fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
     if !model.installable || model.artifacts.is_empty(){return false;}
+    if model.id == "yue2" && crate::music_weights::registered(root) { return true; }
     if is_speech_model(&model.id) {
         let complete = if model.id == "phonon-2" {
             root.join("speech/phonon-2/model.fermion").metadata().is_ok_and(|m|m.len() == 177438361)
@@ -203,6 +204,10 @@ pub fn require_installed(root: &Path, id: &str) -> Result<(), String> {
     if installed(root, model, &data) { Ok(()) }
     else { Err(format!("{} is not installed. Open Models and choose Install.", model.label)) }
 }
+pub fn installed_models(root: &Path) -> Result<Vec<Model>, String> {
+    let data=manifest()?; Ok(data.models.iter().filter(|model|installed(root,model,&data)).cloned().collect())
+}
+pub fn model(id: &str) -> Option<Model> { manifest().ok()?.models.into_iter().find(|model|model.id==id) }
 pub fn free_bytes(root: &Path) -> u64 {
     Disks::new_with_refreshed_list().list().iter().filter(|d| root.starts_with(d.mount_point()))
         .max_by_key(|d| d.mount_point().components().count()).map(|d| d.available_space()).unwrap_or(0)
@@ -226,8 +231,10 @@ pub fn list(root: &Path) -> Result<Library, String> {
     let data = manifest()?;
     let models = data.models.iter().map(|m| -> Result<ModelInfo, String> {
         let files: Vec<_> = data.artifacts.iter().filter(|f| m.artifacts.contains(&f.id)).collect();
-        let external_managed = externally_managed_speech(root, &m.id);
-        Ok(ModelInfo { model: m.clone(), installed: installed(root, m, &data), external_managed,
+        let external_managed = externally_managed_speech(root, &m.id) || (m.id == "yue2" && crate::music_weights::external_dir().is_some());
+        let mut model=m.clone();
+        if model.id=="yue2" {model.runtime_ready=crate::music_studio::runtime_available();}
+        Ok(ModelInfo { model, installed: installed(root, m, &data), external_managed,
             download_bytes: if external_managed { 0 } else { remaining_download_bytes(root, &files)? },
             total_bytes: files.iter().map(|f| f.bytes).sum() })
     }).collect::<Result<Vec<_>, _>>()?;
@@ -242,6 +249,7 @@ fn update(phase: &str, bytes: u64, current_file: &str, error: Option<String>) {
     }
 }
 pub fn cancel() { CANCEL.store(true, Ordering::SeqCst); }
+pub(crate) fn install_cancelled() -> bool { CANCEL.load(Ordering::SeqCst) }
 pub fn require_idle() -> Result<(), String> {
     if PROGRESS.lock().map_err(|e| e.to_string())?.as_ref().is_some_and(|p|
         matches!(p.phase.as_str(), "preparing" | "downloading" | "verifying" | "uninstalling")) {
@@ -289,6 +297,14 @@ fn hub_token() -> Option<String> {
     })
 }
 async fn install_inner(root: &Path, id: &str, resources: Option<&Path>) -> Result<(), String> {
+    if id == "yue2" {
+        if let Some(dir) = crate::music_weights::external_dir() {
+            update("verifying", 0, "Verifying existing YuE2 checkpoints", None);
+            let root=root.to_path_buf();
+            tauri::async_runtime::spawn_blocking(move ||crate::music_weights::register(&root,&dir)).await.map_err(|e|e.to_string())??;
+            update("complete",0,"Existing music model registered",None);return Ok(());
+        }
+    }
     let data = manifest()?;
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
     let speech = is_speech_model(id);

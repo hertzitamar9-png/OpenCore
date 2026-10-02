@@ -55,7 +55,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   }
   const progress = library?.progress;
   const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
-  const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation']];
+  const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation']];
   const visibleModels = library?.models.filter(model => category === 'all' || categoryOf(model) === category);
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
@@ -92,7 +92,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       </div> : null}
       {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}
       <footer>{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
-        <Download size={15} />{pending === model.id ? "Working…" : model.externalManaged ? "Prepare speech runtime" : "Install"}
+        <Download size={15} />{pending === model.id ? "Working…" : model.externalManaged ? model.category === 'music' ? 'Use existing weights' : "Prepare speech runtime" : "Install"}
       </button> : null}{model.selectable ? <button className={selectedProfile === model.id ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
         {selectedProfile === model.id ? <Check size={15} /> : null}{selectedProfile === model.id ? "Selected" : "Use model"}
       </button> : model.speechLanguage ? <button disabled={!model.installed || installing || Boolean(pending)} aria-label={model.id === speech.modelId ? `${model.label} selected for dictation` : `Use ${model.label} for dictation`} onClick={() => void updateSpeech(() => api.setSpeechModel(model.id))}>

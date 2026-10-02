@@ -19,6 +19,8 @@ mod history;
 mod models;
 mod model_catalog;
 mod music_studio;
+mod music_weights;
+mod studio_jobs;
 mod native_browser;
 mod project_paths;
 mod project_memory;
@@ -50,6 +52,7 @@ use tokio_util::sync::CancellationToken;
 use tauri::{Emitter, Manager};
 
 pub struct AppCore {
+    studios: Arc<studio_jobs::StudioManager>,
     speech: speech::SpeechManager,
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
@@ -397,6 +400,8 @@ async fn start_profile(
     core: tauri::State<'_, Arc<AppCore>>,
     request: StartProfileRequest,
 ) -> Result<models::RuntimeSnapshot, String> {
+    if core.studios.busy() {return Err("A studio job is queued or generating. Wait for it or cancel it in the studio before loading a text model.".into());}
+    music_studio::require_idle_gpu().await?;
     if model_catalog::list(core.runtime.install_root())?.progress.is_some_and(|p|
         matches!(p.phase.as_str(), "preparing" | "downloading" | "verifying" | "uninstalling")) {
         return Err("Finish the model installation before starting a runtime".into());
@@ -417,7 +422,12 @@ fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<model_cata
     model_catalog::list(core.runtime.install_root())
 }
 #[tauri::command]
+fn installed_skill_models(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<Value>,String> {
+    Ok(model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|model|json!({"id":model.id,"category":model.category,"installed":true})).collect())
+}
+#[tauri::command]
 fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id: String) -> Result<(), String> {
+    if core.studios.busy() {return Err("Wait for studio jobs before changing model files".into());}
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before installing a model".into()); }
     model_catalog::begin(&id)?;
     let root = core.runtime.install_root().to_path_buf();
@@ -434,6 +444,7 @@ async fn model_removal_plan(core: tauri::State<'_, Arc<AppCore>>, id: String) ->
 }
 #[tauri::command]
 async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String, confirmation_token: String) -> Result<(), String> {
+    if core.studios.busy() {return Err("Wait for studio jobs before uninstalling a model".into());}
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before uninstalling a model".into()); }
     if model_catalog::is_speech_model(&id) && core.speech.is_active().await {
         return Err("Finish the microphone session before uninstalling a speech model".into());
@@ -483,6 +494,8 @@ impl Drop for ActiveChatGuard {
 async fn restart_runtime(
     core: tauri::State<'_, Arc<AppCore>>,
 ) -> Result<models::RuntimeSnapshot, String> {
+    if core.studios.busy() {return Err("Wait for studio jobs before restarting the text model".into());}
+    music_studio::require_idle_gpu().await?;
     let runtime = core.runtime.clone();
     let profile = runtime.profile();
     if profile == "stopped" {
@@ -1404,10 +1417,14 @@ fn read_chat_attachments(paths: &[String], image_store: &Path) -> Result<(String
 }
 
 fn composer_skill_instructions(skills: &[String]) -> Result<String, String> {
-    if skills.len() > 3 { return Err("Choose at most three skills".into()); }
+    if skills.len() > 10 { return Err("Choose at most ten skills".into()); }
     let mut instructions = Vec::new();
     for skill in skills {
         match skill.as_str() {
+            "text" => instructions.push("Text skill: write, code, and plan with the selected model. Use available workspace tools to verify changes."),
+            "speech" => instructions.push("Speech skill: use studio_use list_models to select an installed speech model, then generate with an attached audio inputPath. Read the resulting transcript through studio_use status. The microphone is also available for dictation."),
+            "music" => instructions.push("Music skill: compose actual title, style and original lyrics from the user's request. Call music_generate with those plain text fields and the user's original prompt. Default cot='full' and takes=1 unless the user requests otherwise. This submits directly to YuE2 Music Studio using original precision. Explain that the job starts after this chat finishes and can be watched in Music Studio. Do not wait in a status loop during this response and never claim a queued job has generated audio."),
+            "image" | "3d" | "3d-animation" | "2d-animation" => instructions.push("Assets skill: use studio_use list_models to discover installed models and connected runtimes for the enabled category. Submit the user's original prompt and appropriate settings (seed, steps, width/height, duration, inputPath if required) with studio_use generate. Image-to-3D and asset-animation models need an attached image/asset or an earlier generated output. Never invent an input path. Generation starts after this chat finishes; prompts, settings, progress and files appear in Assets Studio. If runtime setup is missing, explain the actual setup requirement. Do not fabricate an output or claim queued jobs completed."),
             "computer-use" => instructions.push("Computer use skill: carry out the user's Windows/terminal task with desktop_use, system_use and reflex_use. Reflex Vision is an on-demand 0.8B model and may only be used because this prompt explicitly enabled /computer-use. Inspect before acting, verify results, and avoid unnecessary vision calls."),
             "browser-use" => instructions.push("OpenCore Browser skill: use browser_use for the isolated in-app browser. Inspect before interacting and verify navigation or page changes."),
             "chrome-control" => instructions.push("Chrome control skill: use chrome_use for the user's paired Chrome tabs. List and inspect tabs before acting, then verify the page result. For an explicit development/debugging request, evaluate may run JavaScript in the selected tab's DevTools Runtime. If Chrome is not paired, explain that connection is needed and do not claim the action happened."),
@@ -1628,6 +1645,12 @@ async fn send_chat_message(
         return Err("Message or attachment is required".into());
     }
     let skill_instructions = composer_skill_instructions(&request.skills)?;
+    if core.studios.busy() {return Err("A studio job is using or waiting for the GPU. View its status in Music Studio or Assets Studio, or cancel it before sending another chat prompt.".into());}
+    music_studio::require_idle_gpu().await?;
+    let installed_categories: std::collections::HashSet<_> = model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|m|m.category).collect();
+    for skill in &request.skills {
+        if !matches!(skill.as_str(),"browser-use"|"chrome-control") && !installed_categories.contains(skill) {return Err(format!("/{} requires an installed model in that category. Open Models to install one.",skill));}
+    }
     // Clipboard and temporary image files can disappear while the model starts.
     let (attachment_prompt, attachment_meta, attachment_images) = read_chat_attachments(&request.files, &artifact_root(&app)?)?;
     if !attachment_images.is_empty() && !core.runtime.install_root().join("vision/mmproj-BF16.gguf").is_file() {
@@ -1755,6 +1778,8 @@ async fn send_chat_message(
         }
     });
     if project_root.is_some() { available_tools.extend(tooling::read_only_tool_specs()); }
+    if request.skills.iter().any(|s|matches!(s.as_str(),"music"|"image"|"3d"|"3d-animation"|"2d-animation"|"speech")) {available_tools.push(studio_jobs::tool_spec());}
+    if request.skills.iter().any(|s|s=="music") {available_tools.push(studio_jobs::music_tool_spec());}
     for spec in &mut available_tools {
         spec["function"]["parameters"]["properties"]["explanation"] = json!({"type":"string", "description":"Explain to the user what you learned and why this exact action is needed, in clear complete sentences. Name the relevant file, behavior or error. Do not use generic filler."});
         if let Some(required) = spec["function"]["parameters"]["required"].as_array_mut() {
@@ -1863,6 +1888,12 @@ fn download_artifact(app: tauri::AppHandle, id: String) -> Result<String, String
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize(); let _ = window.show(); let _ = window.set_focus();
+            }
+            if let Err(error)=studio_jobs::submit_cli(app,&args) {if let Some(core)=app.try_state::<Arc<AppCore>>(){core.store.log("error","studio",&error);}}
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -1893,6 +1924,7 @@ pub fn run() {
             }
             let runtime = Arc::new(RuntimeManager::new_with_resources(store.clone(), app.path().resource_dir().ok()));
             let core = Arc::new(AppCore {
+                studios: studio_jobs::StudioManager::new(app.path().app_data_dir()?.join("studio"))?,
                 speech: speech::SpeechManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir()?),
                 store: store.clone(),
                 runtime: runtime.clone(),
@@ -1904,6 +1936,7 @@ pub fn run() {
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
                 vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
             });
+            core.studios.attach_app(app.handle().clone());
             let browser_state = core.browser.clone();
             let browser_log = store.clone();
             tauri::async_runtime::spawn(async move {
@@ -1979,6 +2012,7 @@ pub fn run() {
                 }
             });
             let arguments: Vec<String> = std::env::args().collect();
+            if let Err(error)=studio_jobs::submit_cli(app.handle(),&arguments) {store.log("error","studio",&error);}
             if let Some(index) = arguments.iter().position(|value| value == "--start-profile") {
                 if let Some(profile) = arguments.get(index + 1).cloned() {
                     let startup_runtime = app.state::<Arc<AppCore>>().runtime.clone();
@@ -1993,6 +2027,10 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            installed_skill_models,
+            studio_jobs::list_studio_jobs, studio_jobs::submit_studio_job, studio_jobs::cancel_studio_job,
+            studio_jobs::configure_studio_runtime, studio_jobs::studio_runtime, studio_jobs::open_studio_output,
+            studio_jobs::studio_output_preview,
             music_studio::music_studio_status, music_studio::start_music_studio,
             app_update::auto_update,
             speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode, speech::speech_set_model,
@@ -2079,6 +2117,7 @@ pub fn run() {
                     if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
                         let app=app.clone();
                         tauri::async_runtime::spawn(async move {
+                            if let Some(core)=app.try_state::<Arc<AppCore>>() {core.studios.shutdown().await;}
                             music_studio::shutdown_owned().await;
                             EXIT_READY.store(true,std::sync::atomic::Ordering::Release);
                             app.exit(code.unwrap_or(0));

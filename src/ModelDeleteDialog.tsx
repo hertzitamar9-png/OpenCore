@@ -43,7 +43,7 @@ export function ModelDeleteDialog({ model, runtimeActive, onCancel, onDelete }: 
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [busy, onCancel]);
-  const external = Boolean(plan?.files.some((file) => file.external) || model.externalManaged);
+  const external = Boolean(plan?.files.some((file) => file.external));
   const canDelete = Boolean(plan?.files.length && plan.confirmationToken && (!external || externalAccepted) && !busy);
   async function confirm() {
     if (!plan || !canDelete) return;

@@ -30,6 +30,32 @@ from echo_import import import_stream
 
 
 class EchoLiveTests(unittest.TestCase):
+    def test_tool_round_keeps_user_query_for_native_chat_template_parser(self):
+        folder = self.enterContext(tempfile.TemporaryDirectory())
+        archives = ArchiveSet(Path(folder), 0)
+        self.addCleanup(archives.close)
+        state = EchoState(archives, 'http://127.0.0.1:1', 0, 4, False)
+        state._ctx_size = 32768
+        state.count_tokens = lambda text: max(1, len(text)//4)
+        state.backend_session_metrics = lambda conversation: {'modelSessionTokens':100}
+        handler = object.__new__(Handler); handler.state = state
+        handler._send_json = lambda code, value: value
+        call={'id':'music-one','type':'function','function':{'name':'studio_use','arguments':'{"action":"list_models"}'}}
+        seen=[]
+        def generate(body, phase):
+            seen.append(body)
+            if len(seen)==2:
+                self.assertFalse(body['echo_append'])
+                self.assertTrue(any(m['role']=='user' and m['content']=='Make an AI song' for m in body['messages']))
+                self.assertTrue(any(m['role']=='tool' and m['tool_call_id']=='music-one' for m in body['messages']))
+            return {'choices':[{'finish_reason':'tool_calls' if len(seen)==1 else 'stop','message':{'role':'assistant','content':'' if len(seen)==1 else 'Queued',**({'tool_calls':[call]} if len(seen)==1 else {})}}]}
+        handler._generate_live=generate
+        tools=[{'type':'function','function':{'name':'studio_use','parameters':{'type':'object','required':['action']}}}]
+        messages=[{'role':'user','content':'Make an AI song'}]
+        handler._controlled_context({'messages':messages,'tools':tools,'max_tokens':1024},'music-parser')
+        handler._controlled_context({'messages':messages+[{'role':'assistant','content':'','tool_calls':[call]},{'role':'tool','tool_call_id':'music-one','content':'Installed YuE2'}],'tools':tools,'max_tokens':1024},'music-parser')
+        self.assertEqual(len(seen),2)
+
     def test_sdk_budget_update_does_not_replace_user_request_or_tool_results(self):
         with tempfile.TemporaryDirectory() as folder:
             archives = ArchiveSet(Path(folder), idle_seconds=0)

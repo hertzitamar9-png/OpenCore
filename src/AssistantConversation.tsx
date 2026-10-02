@@ -22,7 +22,7 @@ import * as api from "./api";
 import { messageUrlTransform, parseArtifactLink } from "./artifact-links";
 import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
-import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, type ComposerSkillId } from "./composer-skills";
+import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
 import { removePersistedOptimisticDuplicates } from "./visible-entries";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
@@ -468,6 +468,13 @@ export const AssistantConversation = memo(function AssistantConversation({
   }, []);
 
   const [selectedSkills, setSelectedSkills] = useState<ComposerSkillId[]>(() => [...defaultSkills]);
+  const [skillModels, setSkillModels] = useState<{id:string;category:string;installed:boolean}[]>([]);
+  useEffect(() => {
+    let alive = true;
+    const refresh = () => { void api.installedSkillModels().then(models => { if (alive) setSkillModels(models); }).catch(() => {}); };
+    refresh(); const timer = setInterval(refresh, 4000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
   const defaultSkillsKey = defaultSkills.join("\u0000");
   useEffect(() => { setSelectedSkills([...defaultSkills]); }, [defaultSkillsKey]);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
@@ -744,9 +751,14 @@ export const AssistantConversation = memo(function AssistantConversation({
 
   const submit = () => {
     if (backendActive && !sendingRef.current) return;
-    const text = draft.trim();
+    let text = draft.trim();
+    const available=availableComposerSkills(skillModels).map(skill=>skill.id);
+    const slash=exactSlashSkill(text);
+    if(slash&&!available.includes(slash.id)){onNotice(`Install a ${slash.category} model in Models to unlock /${slash.id}.`);return;}
+    const skills=selectedSkills.filter(id=>available.includes(id));
+    if(slash){text=resolveSlashSkill(text,slash.id);if(!skills.includes(slash.id))skills.push(slash.id);}
     if (!text && files.length === 0) return;
-    const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort, approvalMode, skills: [...selectedSkills], subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens };
+    const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens };
     setDraft("");
     setFiles([]);
     setSelectedSkills([...defaultSkills]);
@@ -828,7 +840,7 @@ export const AssistantConversation = memo(function AssistantConversation({
       await onRefresh();
     }
   };
-  const matchingSkills = skillPickerOpen ? filterComposerSkills(draft) : [];
+  const matchingSkills = skillPickerOpen ? filterComposerSkills(draft, skillModels) : [];
   const selectSkill = (id: ComposerSkillId) => {
     setSelectedSkills((current) => current.includes(id) ? current : [...current, id]);
     setDraft((current) => resolveSlashSkill(current, id));

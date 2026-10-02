@@ -470,6 +470,7 @@ impl RuntimeManager {
     }
 
     pub fn start(&self, profile: &str, attach_url: Option<String>) -> Result<RuntimeSnapshot, String> {
+        if crate::studio_jobs::gpu_reserved() {return Err("A studio generation is using the GPU. Wait for it or cancel it in the studio.".into());}
         let generation = self.stop_generation.load(Ordering::SeqCst);
         let _gate = self.start_gate.lock().map_err(|e| e.to_string())?;
         self.start_inner(profile, attach_url, generation)
@@ -609,6 +610,7 @@ impl RuntimeManager {
     }
 
     pub fn ensure_running(&self) -> Result<RuntimeSnapshot, String> {
+        if crate::studio_jobs::gpu_reserved() {return Err("A studio generation is using the GPU. Wait for it or cancel it in the studio.".into());}
         let generation = self.stop_generation.load(Ordering::SeqCst);
         let _gate = self.start_gate.lock().map_err(|e| e.to_string())?;
         if self.stop_generation.load(Ordering::SeqCst) != generation { return Err("Runtime loading stopped".into()); }

@@ -21,6 +21,13 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("announces a finished studio job while chat remains open", async () => {
+    render(<App />);
+    await screen.findByLabelText("Message OpenCore");
+    await waitFor(() => expect(eventHandlers.has("opencore-studio-job")).toBe(true));
+    act(() => eventHandlers.get("opencore-studio-job")?.({payload:{id:"music-finished",category:"music",status:"completed"}}));
+    expect(await screen.findByText("Generation complete. Open Music Studio to view the output.")).toBeVisible();
+  });
   it("opens the linked local file from an older chat without switching to the newest chat", async () => {
     const initial = await api.snapshot();
     const older = { ...initial.conversations[0], id: "older", title: "Earlier research" };
@@ -438,17 +445,19 @@ describe("OpenCore", () => {
   });
 
   it("selects a slash skill and sends it with the task", async () => {
+    const library = await api.modelLibrary();
+    const models=vi.spyOn(api,'installedSkillModels').mockResolvedValue(library.models.filter(model=>model.category==='computer-use').map(model=>({id:model.id,category:'computer-use',installed:true})));
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "/computer-use open Calculator" } });
-      expect(screen.getByRole("listbox", { name: "Skills" })).toBeInTheDocument();
+      expect(await screen.findByRole("listbox", { name: "Skills" })).toBeInTheDocument();
       fireEvent.click(screen.getByRole("option", { name: /computer-use/ }));
       expect(screen.getByLabelText("Message OpenCore")).toHaveValue("open Calculator");
       fireEvent.click(screen.getByTitle("Send"));
       await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "open Calculator", [], expect.any(String), "ask-every-time", ["computer-use"], true, 3, true, 200000, expect.any(String)));
-    } finally { send.mockRestore(); }
+    } finally { send.mockRestore(); models.mockRestore(); }
   });
 
   it("sends tool choices configured in Settings and the exact context threshold", async () => {

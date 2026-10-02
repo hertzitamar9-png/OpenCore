@@ -1452,12 +1452,16 @@ class Handler(BaseHTTPRequestHandler):
             if append_live:
                 pending = [entry["message"] for entry in live.entries
                            if not entry.get("backend_sent", False)]
-                if pending:
+                tool_suffix = (any(m.get("role") == "tool" or m.get("tool_calls") for m in pending)
+                               and not any(_is_user_request(m) for m in pending))
+                if pending and not tool_suffix:
                     body["messages"] = pending
                     body["echo_append"] = True
                 else:
-                    # This is a recovery path for a transcript written by an
-                    # older ECHO build that has no per-entry backend markers.
+                    # Native tool-template parser generation requires the user
+                    # query, even when KV belongs to this session. Re-prefill the
+                    # bounded working set for tool-only suffixes. Plain new user
+                    # turns keep the incremental path.
                     body["messages"] = system_messages + live.messages
                     body["echo_append"] = False
             else:
@@ -1465,7 +1469,7 @@ class Handler(BaseHTTPRequestHandler):
                 body["echo_append"] = False
             body["stream"] = bool(payload.get("stream"))
             body["cache_prompt"] = True
-            if (same_backend_session and not append_live) or self.state._backend_needs_reset:
+            if (same_backend_session and not body.get("echo_append")) or self.state._backend_needs_reset:
                 body["echo_reset"] = True
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
@@ -1497,7 +1501,8 @@ class Handler(BaseHTTPRequestHandler):
                 error_detail = error_detail.lower()
                 roll_failure = ("cannot roll forward" in error_detail
                                 or "not enough rolling context" in error_detail)
-                append_failure = "echo append" in error_detail or "echo_append" in error_detail
+                append_failure = ("echo append" in error_detail or "echo_append" in error_detail
+                                  or "no user query found" in error_detail)
                 if body.get("echo_append") and (append_failure or roll_failure):
                     # Some model architectures cannot shift cached attention
                     # positions safely. Reset that bounded slot and rehydrate

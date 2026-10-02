@@ -185,7 +185,7 @@ export interface ChatQueueItem {
   files: string[];
   reasoningEffort: ReasoningEffort;
   approvalMode: ApprovalMode;
-  skills: ("computer-use" | "browser-use" | "chrome-control")[];
+  skills: import('./composer-skills').ComposerSkillId[];
   subagentsEnabled: boolean;
   maxSubagents: number;
   projectSkillsEnabled: boolean;

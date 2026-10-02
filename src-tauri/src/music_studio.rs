@@ -7,12 +7,13 @@ const URL: &str = "http://127.0.0.1:7860";
 static OWNED: Mutex<Option<Child>> = Mutex::const_new(None);
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MusicStatus { installed: bool, running: bool, owned: bool, url: Option<String>, folder: String, model_loaded: bool, error: Option<String> }
-fn root() -> PathBuf {
+pub struct MusicStatus { installed: bool, pub running: bool, owned: bool, url: Option<String>, folder: String, pub model_loaded: bool, error: Option<String> }
+pub(crate) fn root() -> PathBuf {
     std::env::var_os("OPENCORE_MUSIC_HOME").map(PathBuf::from)
         .unwrap_or_else(||PathBuf::from(std::env::var_os("USERPROFILE").unwrap_or_default()).join("YuE"))
 }
 fn installed(root:&Path)->bool { root.join("studio/server.py").is_file() && root.join(".venv/Scripts/python.exe").is_file() }
+pub(crate) fn runtime_available()->bool {installed(&root())}
 fn wsl_path(path:&Path)->Result<String,String> {
     let text=path.to_string_lossy().replace('\\',"/");
     if text.as_bytes().get(1)!=Some(&b':'){return Err("YuE WSL integration requires an absolute Windows drive path".into());}
@@ -33,6 +34,25 @@ async fn inspect(root:&Path)->Result<Option<Value>,String> {
             Ok(Some(info))
         }
     }
+}
+pub async fn request(method: &str, endpoint: &str, body: Option<&Value>) -> Result<Value,String> {
+    if !matches!(endpoint,"/api/info"|"/api/status"|"/api/history"|"/api/generate"|"/api/cancel"|"/api/model/unload") {return Err("Unknown Music Studio operation".into());}
+    inspect(&root()).await?.ok_or("Music Studio is stopped")?;
+    let client=reqwest::Client::builder().no_proxy().timeout(Duration::from_secs(30)).build().map_err(|e|e.to_string())?;
+    let mut req=client.request(if method=="POST" {reqwest::Method::POST}else{reqwest::Method::GET},format!("{URL}{endpoint}"));
+    if let Some(body)=body {req=req.json(body);}
+    let response=req.send().await.map_err(|e|e.to_string())?;let status=response.status();
+    let value:Value=response.json().await.map_err(|e|e.to_string())?;
+    if !status.is_success(){return Err(value["error"].as_str().unwrap_or("Music Studio request failed").into());}Ok(value)
+}
+pub async fn require_idle_gpu() -> Result<(),String> {
+    if let Some(info) = inspect(&root()).await? {
+        let status = request("GET", "/api/status", None).await?;
+        if info["model_loaded"] == true || status["status"] == "running" {
+            return Err("Music Studio is generating or has a model loaded. Finish or cancel the generation and unload its model before loading a text model.".into());
+        }
+    }
+    Ok(())
 }
 #[tauri::command]
 pub async fn music_studio_status()->MusicStatus {
@@ -63,13 +83,18 @@ pub async fn start_music_studio()->Result<MusicStatus,String> {
             !probe.status().is_ok_and(|status|status.success())
         }).await.map_err(|error|error.to_string())?
     };
+    let model_root=std::env::var_os("OPENCORE_HOME").map(PathBuf::from).unwrap_or_else(||PathBuf::from(std::env::var_os("USERPROFILE").unwrap_or_default()).join("OpenCore"));
+    let models=crate::music_weights::models_path(&model_root);
     let mut command=if use_wsl {
         let mut command=Command::new("wsl.exe");
-        command.args(["-d","Ubuntu-24.04","-u","root","--","env","PYTHONIOENCODING=utf-8","YUE2_MODELS=/root/yue2/models","YUE2_BACKEND=vllm"])
+        let linux_models=if models.to_string_lossy().starts_with(r"\\wsl.localhost\Ubuntu-24.04\") {models.to_string_lossy().trim_start_matches(r"\\wsl.localhost\Ubuntu-24.04").replace('\\',"/")}else{wsl_path(&models)?};
+        command.args(["-d","Ubuntu-24.04","-u","root","--","env","PYTHONIOENCODING=utf-8","YUE2_BACKEND=vllm"])
+            .arg(format!("YUE2_MODELS={linux_models}"))
             .arg(format!("YUE2_DOWNLOADS={}",wsl_path(&PathBuf::from(std::env::var_os("USERPROFILE").unwrap_or_default()).join("Downloads"))?))
             .args(["/root/yue2/venv/bin/python","-u"]).arg(wsl_path(&root.join("studio/server.py"))?).arg("--no-browser"); command
     }else{
         let mut command=Command::new(root.join(".venv/Scripts/python.exe"));
+        command.env("YUE2_MODELS",&models);
         command.arg("-u").arg(root.join("studio/server.py")).arg("--no-browser");command
     };
     std::fs::create_dir_all(root.join("studio-output")).map_err(|e|e.to_string())?;

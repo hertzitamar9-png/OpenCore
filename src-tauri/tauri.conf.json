@@ -25,7 +25,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:*; img-src 'self' data: https: http:; frame-src 'self' data: blob: http://127.0.0.1:7860"
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:*; img-src 'self' data: https: http:; media-src 'self' data: blob:; frame-src 'self' data: blob: http://127.0.0.1:7860"
     }
   },
   "bundle": {
@@ -43,6 +43,7 @@
       "icons/icon.ico"
     ],
     "resources": {
+      "resources/studio/asset_worker.py": "studio/asset_worker.py",
       "resources/speech/whisper_worker.py": "speech/whisper_worker.py",
       "resources/speech/prepare_runtime.py": "speech/prepare_runtime.py",
       "resources/speech/phonon_worker.py": "speech/phonon_worker.py",

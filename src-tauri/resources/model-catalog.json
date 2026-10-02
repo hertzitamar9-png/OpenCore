@@ -1595,6 +1595,105 @@
       "filename": "LICENSE.txt",
       "sha256": "03e846e8bcaae503dbb878cb5b125b9810d8cac8bfc38b0275c4886759afd81b",
       "bytes": 16087
+    },
+    {
+      "id": "music-yue2-3b-c693279643b8",
+      "path": "models/music/YuE2-3B/LICENSE",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "LICENSE",
+      "sha256": "060985741d20e70613b4c189c7de106cabd3fb2109fbbfb6d705c9d619417dd0",
+      "bytes": 20309
+    },
+    {
+      "id": "music-yue2-3b-587cb980af76",
+      "path": "models/music/YuE2-3B/config.json",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "config.json",
+      "sha256": "ad3477bbef890bf98ae196c1e4b44779494a6231c4ab66f32708eabadf265329",
+      "bytes": 959
+    },
+    {
+      "id": "music-yue2-3b-97dd3d578b41",
+      "path": "models/music/YuE2-3B/generation_config.json",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "generation_config.json",
+      "sha256": "ccc842772f029049fadf9b288393bcdd9f79271b361c0f1875ec1218e4ba5170",
+      "bytes": 204
+    },
+    {
+      "id": "music-yue2-3b-9d75c1098fc5",
+      "path": "models/music/YuE2-3B/model.safetensors",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "model.safetensors",
+      "sha256": "1d55c42c1a9875c34f5d736e15078449992b044e807ce2a138e6cf289a1e59e9",
+      "bytes": 7261441640
+    },
+    {
+      "id": "music-yue2-3b-5e84a64ee574",
+      "path": "models/music/YuE2-3B/qwen.tiktoken",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "qwen.tiktoken",
+      "sha256": "b2b1b8dfb5cc5f024bafc373121c6aba3f66f9a5a0269e243470a1de16a33186",
+      "bytes": 2561218
+    },
+    {
+      "id": "music-yue2-3b-afcf6a771b11",
+      "path": "models/music/YuE2-3B/weights_manifest.json",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "weights_manifest.json",
+      "sha256": "2296f82c29dcb11aeefde07e216403a32fc86c8f6da2ec15a70102abfd936a93",
+      "bytes": 179
+    },
+    {
+      "id": "music-yue2-3b-195844b0ae56",
+      "path": "models/music/YuE2-3B/yue2_generation_config.json",
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "c044757a011169583f363168348ae380946efff8",
+      "filename": "yue2_generation_config.json",
+      "sha256": "203830cebde6e3644eb291925362990d198e66c3b6006cd11f1aaa21904bcc61",
+      "bytes": 466
+    },
+    {
+      "id": "music-yue2-vae-c693279643b8",
+      "path": "models/music/YuE2-Vae/LICENSE",
+      "repo": "m-a-p/YuE2-Vae",
+      "revision": "152733a19ad43aa67e367f9b5503ef8075bb5126",
+      "filename": "LICENSE",
+      "sha256": "060985741d20e70613b4c189c7de106cabd3fb2109fbbfb6d705c9d619417dd0",
+      "bytes": 20309
+    },
+    {
+      "id": "music-yue2-vae-587cb980af76",
+      "path": "models/music/YuE2-Vae/config.json",
+      "repo": "m-a-p/YuE2-Vae",
+      "revision": "152733a19ad43aa67e367f9b5503ef8075bb5126",
+      "filename": "config.json",
+      "sha256": "f0191bb9694009956de44e0c361a6f1334760be4c8f848e599bde242a54a0970",
+      "bytes": 1378
+    },
+    {
+      "id": "music-yue2-vae-9d75c1098fc5",
+      "path": "models/music/YuE2-Vae/model.safetensors",
+      "repo": "m-a-p/YuE2-Vae",
+      "revision": "152733a19ad43aa67e367f9b5503ef8075bb5126",
+      "filename": "model.safetensors",
+      "sha256": "807ce9d5149fa27c5ad3e6582058469852e908f6c5acc8c8aa338e7ab7751346",
+      "bytes": 530512720
+    },
+    {
+      "id": "music-yue2-vae-afcf6a771b11",
+      "path": "models/music/YuE2-Vae/weights_manifest.json",
+      "repo": "m-a-p/YuE2-Vae",
+      "revision": "152733a19ad43aa67e367f9b5503ef8075bb5126",
+      "filename": "weights_manifest.json",
+      "sha256": "017d64a4d288217a43fcac3866a0e1d55f796fa891d4dfb6de0bd170ab750026",
+      "bytes": 178
     }
   ],
   "models": [
@@ -1887,7 +1986,7 @@
     {
       "id": "swift-27b",
       "label": "Swift 1.5 27B",
-      "description": "Swift 1.5 27B · text",
+      "description": "Swift 1.5 27B \u00c2\u00b7 text",
       "precision": "IQ2_S",
       "contextTokens": 16384,
       "artifacts": [
@@ -1908,7 +2007,7 @@
     {
       "id": "dirk-27b",
       "label": "Dirk 27B Vision",
-      "description": "Dirk 27B Vision · text",
+      "description": "Dirk 27B Vision \u00c2\u00b7 text",
       "precision": "IQ2_S + F16 vision",
       "contextTokens": 8192,
       "artifacts": [
@@ -1931,7 +2030,7 @@
     {
       "id": "davidau-27b",
       "label": "DavidAU Turbo Cold Fusion 27B",
-      "description": "DavidAU Turbo Cold Fusion 27B · text",
+      "description": "DavidAU Turbo Cold Fusion 27B \u00c2\u00b7 text",
       "precision": "IQ2_M",
       "contextTokens": 8192,
       "artifacts": [
@@ -1954,7 +2053,7 @@
     {
       "id": "mirai-s-27b",
       "label": "Mirai S experimental 27B",
-      "description": "Mirai S experimental 27B · text",
+      "description": "Mirai S experimental 27B \u00c2\u00b7 text",
       "precision": "GSQ custom format",
       "contextTokens": 0,
       "artifacts": [
@@ -1968,7 +2067,7 @@
       ],
       "license": "apache-2.0",
       "experimental": true,
-      "note": "Requires the publisher’s experimental vLLM plugin. Downloaded checkpoints alone do not enable inference. Text only; setup and hardware testing required.",
+      "note": "Requires the publisher\u00e2\u20ac\u2122s experimental vLLM plugin. Downloaded checkpoints alone do not enable inference. Text only; setup and hardware testing required.",
       "selectable": false,
       "category": "text",
       "backend": "external",
@@ -1980,7 +2079,7 @@
     {
       "id": "thinkingcap-27b",
       "label": "ThinkingCap 27B",
-      "description": "ThinkingCap 27B · text",
+      "description": "ThinkingCap 27B \u00c2\u00b7 text",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [],
@@ -1998,7 +2097,7 @@
     {
       "id": "qwen-image-21",
       "label": "Qwen Image 2.1",
-      "description": "Qwen Image 2.1 · image",
+      "description": "Qwen Image 2.1 \u00c2\u00b7 image",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [
@@ -2041,7 +2140,7 @@
     {
       "id": "qwen-image-21-gguf",
       "label": "Qwen Image 2.1 GGUF",
-      "description": "Qwen Image 2.1 GGUF · image",
+      "description": "Qwen Image 2.1 GGUF \u00c2\u00b7 image",
       "precision": "Q6_K",
       "contextTokens": 0,
       "artifacts": [
@@ -2049,7 +2148,7 @@
       ],
       "license": "qwen-research",
       "experimental": true,
-      "note": "6.27 GB visual component only. Also needs Qwen Image’s text encoder and VAE plus a GGUF-compatible image backend. Do not use as a chat GGUF.",
+      "note": "6.27 GB visual component only. Also needs Qwen Image\u00e2\u20ac\u2122s text encoder and VAE plus a GGUF-compatible image backend. Do not use as a chat GGUF.",
       "selectable": false,
       "category": "image",
       "backend": "external",
@@ -2060,8 +2159,8 @@
     },
     {
       "id": "animation-diffusion-2d",
-      "label": "Animation Diffusion · 2D",
-      "description": "Animation Diffusion · 2D · image",
+      "label": "Animation Diffusion \u00c2\u00b7 2D",
+      "description": "Animation Diffusion \u00c2\u00b7 2D \u00c2\u00b7 image",
       "precision": "Original SD weights",
       "contextTokens": 0,
       "artifacts": [
@@ -2095,7 +2194,7 @@
     {
       "id": "holo4-27b",
       "label": "Holo4 27B",
-      "description": "Holo4 27B · computer use",
+      "description": "Holo4 27B \u00c2\u00b7 computer use",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [
@@ -2142,7 +2241,7 @@
     {
       "id": "holo15-3b",
       "label": "Holo1.5 3B",
-      "description": "Holo1.5 3B · computer use",
+      "description": "Holo1.5 3B \u00c2\u00b7 computer use",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [
@@ -2176,7 +2275,7 @@
     {
       "id": "spar3d",
       "label": "SPAR3D",
-      "description": "SPAR3D · 3d",
+      "description": "SPAR3D \u00c2\u00b7 3d",
       "precision": "Original weights",
       "contextTokens": 0,
       "artifacts": [],
@@ -2194,7 +2293,7 @@
     {
       "id": "pixal3d",
       "label": "Pixal3D",
-      "description": "Pixal3D · 3d",
+      "description": "Pixal3D \u00c2\u00b7 3d",
       "precision": "Original BF16/FP16",
       "contextTokens": 0,
       "artifacts": [
@@ -2237,7 +2336,7 @@
     {
       "id": "triposr",
       "label": "TripoSR",
-      "description": "TripoSR · 3d",
+      "description": "TripoSR \u00c2\u00b7 3d",
       "precision": "Original weights",
       "contextTokens": 0,
       "artifacts": [
@@ -2259,7 +2358,7 @@
     {
       "id": "hy-motion-1",
       "label": "HY-Motion 1.0",
-      "description": "HY-Motion 1.0 · 3d animation",
+      "description": "HY-Motion 1.0 \u00c2\u00b7 3d animation",
       "precision": "Original 1.0B checkpoint",
       "contextTokens": 0,
       "artifacts": [
@@ -2281,7 +2380,7 @@
     {
       "id": "hy-motion-1-lite",
       "label": "HY-Motion 1.0 Lite",
-      "description": "HY-Motion 1.0 Lite · 3d animation",
+      "description": "HY-Motion 1.0 Lite \u00c2\u00b7 3d animation",
       "precision": "Original 0.46B checkpoint",
       "contextTokens": 0,
       "artifacts": [
@@ -2353,6 +2452,36 @@
       "installable": false,
       "sourceUrl": "https://github.com/Doubiiu/ToonCrafter",
       "setupUrl": "https://github.com/Doubiiu/ToonCrafter"
+    },
+    {
+      "id": "yue2",
+      "label": "YuE2",
+      "description": "Song generation, vocals, and editable music scores.",
+      "precision": "Original BF16 model \u00b7 FP32 audio decoder",
+      "contextTokens": 0,
+      "artifacts": [
+        "music-yue2-3b-c693279643b8",
+        "music-yue2-3b-587cb980af76",
+        "music-yue2-3b-97dd3d578b41",
+        "music-yue2-3b-9d75c1098fc5",
+        "music-yue2-3b-5e84a64ee574",
+        "music-yue2-3b-afcf6a771b11",
+        "music-yue2-3b-195844b0ae56",
+        "music-yue2-vae-c693279643b8",
+        "music-yue2-vae-587cb980af76",
+        "music-yue2-vae-9d75c1098fc5",
+        "music-yue2-vae-afcf6a771b11"
+      ],
+      "license": "CC-BY-NC-4.0",
+      "experimental": true,
+      "note": "Requires the local YuE2 Studio runtime. Models load on demand; existing YuE2 weights can be registered without another download.",
+      "selectable": false,
+      "category": "music",
+      "backend": "yue2",
+      "runtimeReady": false,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/m-a-p/YuE2-3B",
+      "setupUrl": "https://github.com/multimodal-art-projection/YuE"
     }
   ]
 }

@@ -81,6 +81,12 @@ pub(super) fn plan(root: &Path, id: &str, data: &Manifest) -> Result<RemovalPlan
     }
     let mut files = Vec::new();
     let mut retained_files = Vec::new();
+    if id == "yue2" {
+        candidates.insert(safe_path(root,"models/receipts/music-external.json")?,false);
+        for path in crate::music_weights::external_files(root) {
+            if let Some(file)=checked_file(&path,true,vec!["YuE2 Studio".into()])? {retained_files.push(file);}
+        }
+    }
     for (path, external) in candidates {
         let users = shared.get(&path).cloned().unwrap_or_default();
         if let Some(file) = checked_file(&path, external, users)? {

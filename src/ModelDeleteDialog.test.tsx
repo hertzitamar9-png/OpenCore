@@ -36,6 +36,13 @@ it("requires explicit acceptance for external checkpoint files", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Uninstall model" }));
   await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
 });
+it("keeps separately managed music weights without warning that they will be removed", async () => {
+  vi.spyOn(api, "modelRemovalPlan").mockResolvedValue({...plan,files:[{...file,path:'C:\\OpenCore\\models\\receipts\\music-external.json'}],retainedFiles:[{...file,external:true,sharedWith:['YuE2 Studio']}]});
+  render(<ModelDeleteDialog model={{...model,externalManaged:true}} runtimeActive={false} onCancel={vi.fn()} onDelete={vi.fn()} />);
+  expect(await screen.findByText('Used by YuE2 Studio')).toBeInTheDocument();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Uninstall model'})).toBeEnabled();
+});
 
 it("disables uninstallation when no local files exist and allows Escape to cancel", async () => {
   vi.spyOn(api, "modelRemovalPlan").mockResolvedValue({ ...plan, files: [], totalBytes: 0 });

@@ -214,11 +214,17 @@ impl SpeechManager {
         self.start_with_id(uuid::Uuid::new_v4().to_string()).await
     }
     pub async fn start_with_id(&self, id: String) -> Result<String,String> {
+        self.start_session(id, false).await
+    }
+    pub async fn start_file(&self) -> Result<String,String> {
+        self.start_session(uuid::Uuid::new_v4().to_string(), true).await
+    }
+    async fn start_session(&self, id: String, explicit_file: bool) -> Result<String,String> {
         uuid::Uuid::parse_str(&id).map_err(|_|"Invalid microphone session ID".to_string())?;
         let control=self.control.lock().await;
         crate::model_catalog::require_idle()?;
         let cfg=self.settings();
-        if !cfg.enabled{return Err("Turn on speech to text in Models before using the microphone.".into());}
+        if !cfg.enabled && !explicit_file{return Err("Turn on speech to text in Models before using the microphone.".into());}
         if !self.installed(){return Err("Install the selected speech model and its runtime in Models.".into());}
         let mut session_guard=self.session.lock().await;
         if session_guard.is_some(){return Err("A microphone session is already active".into());}

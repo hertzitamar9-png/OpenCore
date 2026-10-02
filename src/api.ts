@@ -3,6 +3,24 @@ export const speechStart = (sessionId?: string) => invoke<string>("speech_start"
 export interface MusicStudioStatus { installed: boolean; running: boolean; owned: boolean; url: string | null; folder: string; modelLoaded: boolean; error: string | null }
 export const musicStudioStatus = () => desktop() ? invoke<MusicStudioStatus>('music_studio_status') : Promise.resolve({ installed: false, running: false, owned: false, url: null, folder: '', modelLoaded: false, error: null });
 export const startMusicStudio = () => invoke<MusicStudioStatus>('start_music_studio');
+export interface StudioRequest { modelId: string; prompt: string; settings: Record<string, unknown>; conversationId?: string | null }
+export interface StudioJob { id: string; category: string; request: StudioRequest; status: string; stage: string; createdAt: string; updatedAt: string; backendRun: string | null; progress: Record<string, unknown>; outputs: string[]; error: string | null }
+export interface StudioRuntime { modelId: string; python: string; sourceDir: string | null; runner: string | null }
+export const listStudioJobs = (): Promise<StudioJob[]> => desktop() ? invoke('list_studio_jobs') : Promise.resolve([]);
+export const submitStudioJob = (request: StudioRequest) => invoke<StudioJob>('submit_studio_job', { request });
+export const cancelStudioJob = (id: string) => invoke<void>('cancel_studio_job', { id });
+export const configureStudioRuntime = (runtime: StudioRuntime) => invoke<void>('configure_studio_runtime', { runtime });
+export const studioRuntime = (id: string): Promise<StudioRuntime | null> => desktop() ? invoke('studio_runtime', { id }) : Promise.resolve(null);
+export const openStudioOutput = (id: string, path: string) => invoke<void>('open_studio_output', { id, path });
+export const studioOutputPreview = (id: string, path: string) => invoke<{dataUrl: string; mime: string}>('studio_output_preview', { id, path });
+export async function pickStudioFile(kind: 'python' | 'worker' | 'input'): Promise<string | null> {
+  if (!desktop()) throw new Error('File selection requires the desktop application.');
+  const value = await open({ multiple: false, directory: false, filters: kind === 'python' ? [{name:'Python interpreter',extensions:['exe']}] : kind === 'worker' ? [{name:'Runtime worker',extensions:['py']}] : undefined });
+  return typeof value === 'string' ? value : null;
+}
+export async function pickStudioSourceDirectory(): Promise<string | null> {
+  const value=await open({multiple:false,directory:true});return typeof value==='string'?value:null;
+}
 export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; }
 const defaultSpeechStatus: SpeechStatus = { modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" };
 export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
@@ -60,6 +78,7 @@ export async function modelLibrary(): Promise<ModelLibrary> {
     totalBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0) })),
     diskFreeBytes: 240e9, minimumFreeBytes: 64 * 1024 * 1024, progress: null };
 }
+export const installedSkillModels = (): Promise<{id:string;category:string;installed:boolean}[]> => desktop() ? invoke('installed_skill_models') : Promise.resolve([]);
 export async function installModel(id: string): Promise<void> {
   if (!desktop()) throw new Error("Model installation requires the desktop application.");
   await invoke("install_model", { id });

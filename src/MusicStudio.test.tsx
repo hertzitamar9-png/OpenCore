@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { MusicStudio } from './MusicStudio';
 import * as api from './api';
-vi.mock('./api', () => ({ musicStudioStatus: vi.fn(), startMusicStudio: vi.fn(), openLocalPath: vi.fn() }));
+vi.mock('./api', async (original) => ({ ...await original<typeof api>(), musicStudioStatus: vi.fn(), startMusicStudio: vi.fn(), openLocalPath: vi.fn(), modelLibrary: vi.fn().mockResolvedValue({models:[]}), listStudioJobs: vi.fn().mockResolvedValue([]), studioRuntime:vi.fn().mockResolvedValue(null) }));
 const status = { installed: true, running: false, owned: false, url: null, folder: 'C:\\Users\\hertz\\YuE', modelLoaded: false, error: null };
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(api.musicStudioStatus).mockResolvedValue(status); });
 it('connects the existing music interface only after the user opens it', async () => {
@@ -19,7 +19,7 @@ it('does not embed an unrelated URL returned by the backend', async () => {
   render(<MusicStudio runtimeActive={true} onNotice={vi.fn()} />);
   await screen.findByRole('button', { name: 'Open Music Studio' });
   expect(screen.queryByTitle('YuE2 Music Studio')).not.toBeInTheDocument();
-  expect(screen.getByText(/chat model is using the GPU/)).toBeInTheDocument();
+  expect(screen.getByText(/Studio jobs switch models automatically after chat finishes/)).toBeInTheDocument();
 });
 it('keeps a startup failure visible after a healthy status refresh', async () => {
   vi.mocked(api.startMusicStudio).mockRejectedValue(new Error('Python failed to start'));

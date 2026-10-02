@@ -136,7 +136,7 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
                 let args = normalize_computer_args(name, event["args"].clone());
                 let value = if kind == "permission" {
                     let read_only = matches!(name, "Read" | "Glob" | "Grep" | "echo_search" | "echo_read") ||
-                        (matches!(name,"dev" | "desktop_use" | "browser_use" | "chrome_use" | "reflex_use" | "system_use") && matches!(args["action"].as_str(), Some("status" | "list" | "inspect" | "read" | "search" | "recall" | "read_screen" | "see" | "ground" | "find_apps")));
+                        (matches!(name,"dev" | "desktop_use" | "browser_use" | "chrome_use" | "reflex_use" | "system_use" | "studio_use") && matches!(args["action"].as_str(), Some("status" | "list" | "list_models" | "inspect" | "read" | "search" | "recall" | "read_screen" | "see" | "ground" | "find_apps")));
                     let approved = match request.approval_mode {
                         ApprovalMode::AllowAll | ApprovalMode::AllowChat => true,
                         ApprovalMode::ApproveForMe if read_only => true,
@@ -147,6 +147,8 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
                     let action = clean_computer_action(args["action"].as_str().unwrap_or(""));
                     let result = if let Some(error) = browser_surface_error(&request.text, name) { Err(error.into()) } else { match name {
                         "dev" => dev_tool::execute(&workspace, &artifact_root(&app)?, &receipts, &artifact_history, &args).await,
+                        "studio_use" => crate::studio_jobs::execute(core.clone(),app.clone(),id,&request.skills,&args).await,
+                        "music_generate" => crate::studio_jobs::generate_music(core.clone(),app.clone(),id,&request.skills,&args).await,
                         "desktop_use" => desktop_action(&app, action.into(), args.clone()).await,
                         "browser_use" => native_browser::agent_command(&app, action, &args).await,
                         "chrome_use" => core.browser.command(action, args.clone()).await,

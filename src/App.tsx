@@ -52,9 +52,10 @@ import { FloatingWindow } from "./FloatingWindow";
 import { ModelProfileOptions, profileDescription, profileLabel, selectableModelProfiles } from "./ModelProfiles";
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
+import { AssetsStudio } from './AssetsStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
-type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "connectors" | "settings" | "troubleshooting";
+type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "connectors" | "settings" | "troubleshooting";
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
 type Appearance = {
@@ -111,6 +112,7 @@ const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }
   { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
   { id: "models", label: "Models", icon: Box },
   { id: "music", label: "Music Studio", icon: Music2 },
+  { id: "assets", label: "Assets Studio", icon: Box },
   { id: "connectors", label: "Connectors", icon: Network },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "troubleshooting", label: "Troubleshooting", icon: CircleAlert, group: true },
@@ -1127,6 +1129,21 @@ export default function App() {
   const [liveGeneration, setLiveGeneration] = useState<{ conversationId: string; runId: string; content?: string; reasoning?: string; segments?: { kind: "thinking" | "text"; content: string }[]; phase?: string }>();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
+  useEffect(() => {
+    let disposed = false;
+    let stop: (() => void) | undefined;
+    const announced = new Set<string>();
+    void listen<api.StudioJob>("opencore-studio-job", ({payload}) => {
+      if (disposed || !['completed','failed','cancelled'].includes(payload.status)) return;
+      const conversation = payload.request?.conversationId;
+      if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
+      if (announced.has(payload.id)) return;
+      announced.add(payload.id);
+      const studio = payload.category === 'music' ? 'Music Studio' : 'Assets Studio';
+      setNotice(payload.status === 'completed' ? `Generation complete. Open ${studio} to view the output.` : `Generation ${payload.status}. Open ${studio} for details.`);
+    }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
+    return () => { disposed = true; stop?.(); };
+  }, []);
   const [runtimeAction, setRuntimeAction] = useState<"starting" | "stopping" | null>(null);
   const [conversationDialog, setConversationDialog] = useState<ConversationDialog>(null);
   const [projectDialog, setProjectDialog] = useState<ProjectDialog>(null);
@@ -1409,6 +1426,7 @@ export default function App() {
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
+      : view === 'assets' ? <AssetsStudio onNotice={setNotice} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
