@@ -11,6 +11,21 @@ use tauri_plugin_updater::UpdaterExt;
 
 static UPDATE_CHECK_ACTIVE: AtomicBool = AtomicBool::new(false);
 
+enum UpdateSource {
+    Public,
+    AuthenticatedPrivate { manifest_url: Url, token: String },
+}
+
+fn select_update_source(token: Option<String>, manifest_url: Option<Url>) -> UpdateSource {
+    match (token, manifest_url) {
+        (Some(token), Some(manifest_url)) => UpdateSource::AuthenticatedPrivate {
+            manifest_url,
+            token,
+        },
+        _ => UpdateSource::Public,
+    }
+}
+
 struct UpdateCheckGuard;
 impl Drop for UpdateCheckGuard {
     fn drop(&mut self) {
@@ -104,9 +119,8 @@ fn parse_manifest_asset_url(release_json: &[u8]) -> Option<Url> {
 }
 
 /// Resolve the latest private-release manifest through GitHub's authenticated
-/// API. GitHub's browser-style `/releases/latest/download/...` route returns
-/// 404 for this private repo even when the app supplies a token; the API asset
-/// URL is stable for the lifetime of a release and is regenerated each release.
+/// API. Public installs use the standard updater endpoint from `tauri.conf.json`
+/// and do not need GitHub CLI or an account.
 fn github_cli_latest_manifest_url() -> Option<Url> {
     for executable in github_cli_candidates() {
         let mut command = Command::new(executable);
@@ -165,8 +179,9 @@ fn update_allowed(status: &str, owned: bool, chats_idle: bool, jobs_busy: bool) 
     chats_idle && !jobs_busy && (status == "stopped" || status == "running" && owned)
 }
 
-/// Check the private GitHub Releases feed and install a signed update when the
-/// app is idle. The credential stays in Rust memory and is never sent to JS or logs.
+/// Check the public GitHub Releases feed, or the authenticated private feed when
+/// this installation has access, and install a signed update when the app is idle.
+/// Credentials stay in Rust memory and are never sent to JS or logs.
 #[tauri::command]
 pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Result<(), String> {
     if cfg!(debug_assertions) {
@@ -187,32 +202,32 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
         return Ok(());
     }
 
-    let token = match tauri::async_runtime::spawn_blocking(github_cli_token).await {
-        Ok(Ok(token)) => token,
-        _ => {
-            emit_notice(&app, "failed", None, None, None);
-            return Ok(());
-        }
+    let token = tauri::async_runtime::spawn_blocking(github_cli_token)
+        .await
+        .ok()
+        .and_then(Result::ok)
+        .flatten();
+    let private_manifest_url = if token.is_some() {
+        tauri::async_runtime::spawn_blocking(github_cli_latest_manifest_url)
+            .await
+            .ok()
+            .flatten()
+    } else {
+        None
     };
-    let Some(token) = token else {
-        emit_notice(&app, "auth-required", None, None, None);
-        return Ok(());
+    let source = select_update_source(token, private_manifest_url);
+    let builder = match source {
+        UpdateSource::Public => Ok(app.updater_builder()),
+        UpdateSource::AuthenticatedPrivate {
+            manifest_url,
+            token,
+        } => app
+            .updater_builder()
+            .endpoints(vec![manifest_url])
+            .and_then(|builder| builder.header("Authorization", format!("Bearer {token}")))
+            .and_then(|builder| builder.header("Accept", "application/octet-stream")),
     };
-    let manifest_url =
-        match tauri::async_runtime::spawn_blocking(github_cli_latest_manifest_url).await {
-            Ok(Some(url)) => url,
-            _ => {
-                emit_notice(&app, "failed", None, None, None);
-                return Ok(());
-            }
-        };
-
-    let builder = match app
-        .updater_builder()
-        .endpoints(vec![manifest_url])
-        .and_then(|builder| builder.header("Authorization", format!("Bearer {token}")))
-        .and_then(|builder| builder.header("Accept", "application/octet-stream"))
-    {
+    let builder = match builder {
         Ok(builder) => builder,
         Err(_) => {
             emit_notice(&app, "failed", None, None, None);
@@ -325,6 +340,26 @@ async fn music_has_model() -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn unauthenticated_updates_use_the_public_tauri_release_endpoint() {
+        assert!(matches!(
+            super::select_update_source(None, None),
+            super::UpdateSource::Public
+        ));
+    }
+
+    #[test]
+    fn authenticated_private_updates_keep_the_private_manifest_route() {
+        let url = reqwest::Url::parse(
+            "https://api.github.com/repos/hertzitamar9-png/OpenCore/releases/assets/42",
+        )
+        .unwrap();
+        assert!(matches!(
+            super::select_update_source(Some("token".into()), Some(url)),
+            super::UpdateSource::AuthenticatedPrivate { .. }
+        ));
+    }
+
     #[test]
     fn update_defers_background_jobs_and_unowned_or_loading_models() {
         assert!(super::update_allowed("stopped", false, true, false));
