@@ -123,7 +123,21 @@
   "hardware": {
     "target": "12GB RTX 4070 class",
     "full_bf16_gpu_fit": false,
-    "note": "The two pinned BF16 checkpoints total about 29.4 GB before runtime memory. No Q6/Q8 substitution or fit claim is made."
+    "note": "The two pinned BF16 checkpoints total about 29.4 GB before runtime memory and are not qualified for this 12 GB GPU. Separate candidate Q6 files are pinned below, with no device-fit or throughput claim."
+  },
+  "candidate_inference_profile": {
+    "status": "artifact_pins_only_unqualified",
+    "precision": "Q6_K",
+    "manifest": "qwen_k2_q6_manifest.json",
+    "manifest_sha256": "4c701eecf29b0aa461caffed952909ad2fde6c4ae4819e052e14f572a297e753",
+    "combined_weight_bytes": 12120222112,
+    "attention_kv_bytes_lower_bound": {
+      "native_shared_context_262144_tokens": 47244640256,
+      "extended_context_1000000_tokens": 180224000000
+    },
+    "scope": "The KV calculation includes only BF16 K/V for full-attention layers and excludes Qwen linear-attention recurrent state, activations, runtime workspaces, and allocator overhead. This is not a VRAM-fit or speed qualification.",
+    "throughput_qualified": false,
+    "device_fit_qualified": false
   },
   "profiles": {
     "native_1m": {

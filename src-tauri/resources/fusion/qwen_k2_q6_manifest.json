@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "profile": "qwen35-9b-plus-k2-horizon-37b-q6_k",
+  "precision": "Q6_K",
+  "artifacts": {
+    "qwen": {
+      "repo_id": "bartowski/Qwen_Qwen3.5-9B-GGUF",
+      "revision": "182be2fd6c7bc44887d88a91cb03ff009cc9f549",
+      "filename": "Qwen_Qwen3.5-9B-Q6_K.gguf",
+      "bytes": 7958818848,
+      "sha256": "073a9275e65d9c8cd2819cf5f77b99fbaa6e87ba591da6bbaa86ec073a64bfef"
+    },
+    "k2": {
+      "repo_id": "IFM/K2-Horizon-3.7B-GGUF",
+      "revision": "1751cb49e31823f4401fc1d195db8a2c61a79783",
+      "filename": "K2-Horizon-4B-Q6_K.gguf",
+      "bytes": 4161403264,
+      "sha256": "2180f3ca4eb4906a109b364a98740778fd8dcd9969e270b0d34036d18ee33232"
+    }
+  },
+  "attention_layout": {
+    "qwen": {
+      "architecture": "Qwen3.5-9B",
+      "source_repo_id": "Qwen/Qwen3.5-9B",
+      "source_revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+      "source_config_sha256": "d0883072e01861ed0b2d47be3c16c36a8e81c224c7ffaa310c6558fb3f932b05",
+      "full_attention_layers": 8,
+      "kv_heads": 4,
+      "head_dim": 256,
+      "native_context_tokens": 262144,
+      "linear_attention_layers": 24
+    },
+    "k2": {
+      "architecture": "K2-Horizon-3.7B",
+      "source_repo_id": "IFM/K2-Horizon-3.7B",
+      "source_revision": "85f683bc15947495341baa91ae1246dcecc47407",
+      "source_config_sha256": "a98a4dc771aadcbe03a390d825723a42eaee2682758b29b7d44341d4f33d8ab4",
+      "full_attention_layers": 36,
+      "kv_heads": 8,
+      "head_dim": 128,
+      "native_context_tokens": 524288
+    },
+    "kv_dtype_bytes": 2,
+    "memory_note": "KV lower bound counts K and V for the listed full-attention layers. It excludes Qwen linear-attention recurrent state, activations, graph/workspace, allocator fragmentation, and runtime overhead; it is not a fit or throughput qualification."
+  }
+}
