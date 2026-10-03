@@ -866,6 +866,57 @@ class EchoLiveTests(unittest.TestCase):
                 for archive in archives._open.values():
                     archive.close()
 
+    def test_streaming_reply_continues_after_length_without_ending_client_stream(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        archives = ArchiveSet(Path(folder.name), idle_seconds=0)
+        self.addCleanup(archives.close)
+        state = EchoState(archives, 'http://127.0.0.1:1', 10000, 4, False)
+        state._ctx_size = 8192
+        state.count_tokens = lambda text: max(1, len(text) // 4)
+
+        def event(delta=None, finish=None, event_id='upstream-1'):
+            return b'data: ' + json.dumps({'id': event_id, 'object': 'chat.completion.chunk',
+                'choices': [{'index': 0, 'delta': delta or {}, 'finish_reason': finish}]}).encode() + b'\n\n'
+
+        first = io.BytesIO(event({'role': 'assistant', 'content': 'Part one.'}, finish='length')
+            + b'data: [DONE]\n\n')
+        second = io.BytesIO(event({'role': 'assistant', 'content': ' Part two.'}, event_id='upstream-2')
+            + event(finish='stop', event_id='upstream-2') + b'data: [DONE]\n\n')
+        responses = [first, second]
+        requests = []
+        handler = object.__new__(Handler)
+        handler.state = state
+        handler.wfile = io.BytesIO()
+        handler.close_connection = False
+        handler.send_response = lambda status: setattr(handler, 'response_status', status)
+        handler.send_header = lambda key, value: None
+        handler.end_headers = lambda: None
+
+        def upstream(path, body, stream=False):
+            requests.append((path, body, stream))
+            return responses.pop(0)
+
+        handler._upstream = upstream
+        handler._stream({'messages': [{'role': 'user', 'content': 'Write the complete answer.'}],
+                         'stream': True, 'max_tokens': 8}, 'Write the complete answer.', 'live-test')
+
+        output = handler.wfile.getvalue()
+        self.assertEqual(handler.response_status, 200)
+        self.assertEqual(len(requests), 2)
+        self.assertTrue(all(request[2] for request in requests))
+        self.assertIn('Part one.', output.decode())
+        self.assertIn(' Part two.', output.decode())
+        self.assertEqual(output.count(b'data: [DONE]'), 1)
+        self.assertNotIn(b'"finish_reason": "length"', output)
+        events = [json.loads(line[6:]) for line in output.decode().splitlines() if line.startswith('data: {')]
+        self.assertTrue(events)
+        self.assertTrue(all(event['id'] == 'upstream-1' for event in events))
+        self.assertEqual(requests[1][1]['messages'][-1],
+                         {'role': 'assistant', 'content': 'Part one.'})
+        pages = archives.get('live-test').recent_pages('live-test', 5)
+        self.assertIn('Part one. Part two.', '\n'.join(page.text for page in pages))
+
     def test_single_long_task_evicts_completed_tools_but_preserves_exact_code(self):
         with tempfile.TemporaryDirectory() as folder:
             archive = EchoArchive(Path(folder) / 'memory.db')

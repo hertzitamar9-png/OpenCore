@@ -2211,39 +2211,122 @@ class Handler(BaseHTTPRequestHandler):
 
         collected: list[str] = []
         collected_chars = 0
-        pending = b""
-        with self._upstream("/v1/chat/completions", payload, stream=True) as response:
+        produced_chars = 0
+        stream_id = None
+        payload = dict(payload)
+        unlimited = self.state.max_continuations <= 0
+        attempt = -1
+        try:
             while True:
-                chunk = response.read1(65536) if hasattr(response, "read1") \
-                    else response.read(65536)
-                if not chunk:
+                attempt += 1
+                if not unlimited and attempt > self.state.max_continuations:
+                    self.state.log("  echo: continuation cap reached")
                     break
-                self.wfile.write(chunk)
-                self.wfile.flush()
-                pending += chunk
-                # Accumulate deltas so the turn can still be archived.
-                while b"\n" in pending:
-                    line, pending = pending.split(b"\n", 1)
-                    line = line.strip()
-                    if not line.startswith(b"data:"):
-                        continue
-                    data = line[5:].strip()
-                    if data in (b"[DONE]", b""):
-                        continue
-                    try:
-                        delta = json.loads(data)["choices"][0].get("delta", {})
-                    except Exception:
-                        continue
-                    piece = delta.get("content")
-                    if piece:
-                        collected.append(piece)
-                        collected_chars += len(piece)
-                        if collected_chars >= 3000:
-                            self.state.archive_turn("", "".join(collected), conversation)
-                            collected.clear()
-                            collected_chars = 0
-        if collected:
-            self.state.archive_turn("", "".join(collected), conversation)
+
+                pending = b""
+                current_piece: list[str] = []
+                saw_tool_calls = False
+                finish = None
+                continue_after_length = False
+                retry_with_larger_budget = False
+                with self._upstream("/v1/chat/completions", payload, stream=True) as response:
+                    while True:
+                        chunk = response.read1(65536) if hasattr(response, "read1") \
+                            else response.read(65536)
+                        if not chunk:
+                            if not pending:
+                                break
+                            chunk = b"\n"
+                        pending += chunk
+                        while b"\n" in pending:
+                            line, pending = pending.split(b"\n", 1)
+                            line = line.rstrip(b"\r")
+                            if not line:
+                                self.wfile.write(b"\n")
+                                self.wfile.flush()
+                                continue
+                            if not line.startswith(b"data:"):
+                                self.wfile.write(line + b"\n")
+                                self.wfile.flush()
+                                continue
+                            data = line[5:].strip()
+                            if data == b"[DONE]":
+                                if not continue_after_length and not retry_with_larger_budget:
+                                    self.wfile.write(b"data: [DONE]\n\n")
+                                    self.wfile.flush()
+                                continue
+                            if not data:
+                                continue
+                            try:
+                                event = json.loads(data)
+                            except (TypeError, ValueError):
+                                self.wfile.write(line + b"\n\n")
+                                self.wfile.flush()
+                                continue
+                            if isinstance(event, dict) and event.get("id"):
+                                if stream_id is None:
+                                    stream_id = event["id"]
+                                else:
+                                    event["id"] = stream_id
+
+                            choices = event.get("choices") or []
+                            if not choices:
+                                self.wfile.write(b"data: " + json.dumps(event, ensure_ascii=False).encode("utf-8") + b"\n\n")
+                                self.wfile.flush()
+                                continue
+                            choice = choices[0]
+                            delta = choice.get("delta") or {}
+                            if delta.get("tool_calls"):
+                                saw_tool_calls = True
+                            piece = delta.get("content")
+                            if isinstance(piece, str) and piece:
+                                current_piece.append(piece)
+                                collected.append(piece)
+                                collected_chars += len(piece)
+                                produced_chars += len(piece)
+                                if collected_chars >= 3000:
+                                    self.state.archive_turn("", "".join(collected), conversation)
+                                    collected.clear()
+                                    collected_chars = 0
+
+                            finish = choice.get("finish_reason") or finish
+                            if finish == "length" and not saw_tool_calls:
+                                can_continue = unlimited or attempt < self.state.max_continuations
+                                if can_continue and current_piece:
+                                    continue_after_length = True
+                                elif can_continue:
+                                    current = int(payload.get("max_tokens") or 2048)
+                                    budget = int(payload.get("reasoning_budget_tokens") or 0)
+                                    room = max(current * 2, budget + 1024)
+                                    if room <= max(1024, self.state.context_size() - 1024) and attempt < 6:
+                                        payload["max_tokens"] = room
+                                        retry_with_larger_budget = True
+                                if continue_after_length or retry_with_larger_budget:
+                                    # A provider may combine the last text delta
+                                    # with its length finish marker. Preserve that
+                                    # delta, but keep the client stream open.
+                                    choice["finish_reason"] = None
+                                    self.wfile.write(b"data: " + json.dumps(event, ensure_ascii=False).encode("utf-8") + b"\n\n")
+                                    self.wfile.flush()
+                                    continue
+
+                            self.wfile.write(b"data: " + json.dumps(event, ensure_ascii=False).encode("utf-8") + b"\n\n")
+                            self.wfile.flush()
+
+                if continue_after_length and current_piece:
+                    messages = list(payload.get("messages") or [])
+                    messages.append({"role": "assistant", "content": "".join(current_piece)})
+                    payload["messages"], _ = self.state.fit_window(
+                        messages, int(payload.get("max_tokens") or 2048))
+                    self.state.log("  echo: streamed answer hit the window; continuing (%d, %s tokens so far)"
+                                   % (attempt + 1, f"{int(produced_chars / 3.10):,}"))
+                    continue
+                if retry_with_larger_budget:
+                    continue
+                break
+        finally:
+            if collected:
+                self.state.archive_turn("", "".join(collected), conversation)
 
 
 def main() -> int:
