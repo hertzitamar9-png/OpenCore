@@ -1,5 +1,6 @@
 mod claude_harness;
 mod claude_bridge;
+mod claude_bridge_install;
 mod artifacts;
 mod app_update;
 mod chat_stream;
@@ -1958,6 +1959,7 @@ pub fn run() {
                 vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
             });
             core.studios.attach_app(app.handle().clone());
+            claude_bridge_install::start(store.clone(), app.handle());
             let browser_state = core.browser.clone();
             let browser_log = store.clone();
             tauri::async_runtime::spawn(async move {

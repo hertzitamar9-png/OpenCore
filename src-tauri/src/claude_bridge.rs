@@ -21,7 +21,7 @@ use std::{
 use tauri::{Emitter, Manager};
 use tokio::io::AsyncWriteExt;
 
-const TOKEN_KEY: &str = "claude_bridge_token_v1";
+pub(crate) const TOKEN_KEY: &str = "claude_bridge_token_v1";
 const LAST_SEEN_KEY: &str = "claude_bridge_last_seen_v1";
 const CATEGORIES: &[&str] = &[
     "music",
@@ -580,6 +580,8 @@ pub struct BridgeStatus {
     launch_command: String,
     last_seen: Option<String>,
     minimum_version: &'static str,
+    enabled: bool,
+    setup_error: Option<String>,
 }
 
 fn status(core: &AppCore, app: &tauri::AppHandle) -> Result<BridgeStatus, String> {
@@ -589,19 +591,36 @@ fn status(core: &AppCore, app: &tauri::AppHandle) -> Result<BridgeStatus, String
         .map_err(|e| e.to_string())?
         .join("claude-bridge");
     let last_seen = core.store.get_setting(LAST_SEEN_KEY)?;
+    let current_version = std::fs::read(path.join(".claude-plugin/plugin.json"))
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+        .and_then(|manifest| manifest["version"].as_str().map(str::to_string));
+    let registered_version = core
+        .store
+        .get_setting(crate::claude_bridge_install::READY_KEY)?;
     let connected = last_seen
         .as_deref()
         .and_then(|v| chrono::DateTime::parse_from_rfc3339(v).ok())
         .is_some_and(|v| chrono::Utc::now().signed_duration_since(v).num_seconds() < 90);
     Ok(BridgeStatus {
         installed: path.join("hooks/register.js").is_file()
-            && core.store.get_setting(TOKEN_KEY)?.is_some(),
+            && current_version.is_some()
+            && current_version == registered_version,
         connected,
         active: core.claude_bridge.busy(),
         plugin_path: path.to_string_lossy().into(),
-        launch_command: format!("claude --plugin-dir \"{}\"", path.display()),
+        launch_command: "claude".into(),
         last_seen,
         minimum_version: "2.1.287",
+        enabled: core
+            .store
+            .get_setting(crate::claude_bridge_install::ENABLED_KEY)?
+            .as_deref()
+            == Some("true"),
+        setup_error: core
+            .store
+            .get_setting(crate::claude_bridge_install::ERROR_KEY)?
+            .filter(|s| !s.is_empty()),
     })
 }
 
@@ -618,23 +637,25 @@ pub fn install_claude_bridge(
     core: tauri::State<'_, Arc<AppCore>>,
     app: tauri::AppHandle,
 ) -> Result<BridgeStatus, String> {
-    let root = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("claude-bridge");
-    let token = core
-        .store
-        .get_setting(TOKEN_KEY)?
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| format!("{}{}", uuid::Uuid::new_v4(), uuid::Uuid::new_v4()));
-    install_files(&root, &token)?;
-    core.store.set_setting(TOKEN_KEY, &token)?;
+    crate::claude_bridge_install::start(core.store.clone(), &app);
     status(&core, &app)
 }
 
-fn install_files(root: &Path, token: &str) -> Result<(), String> {
-    for (name, content) in [
+fn write_if_changed(path: &Path, content: &[u8]) -> Result<(), String> {
+    if std::fs::read(path).ok().as_deref() == Some(content) {
+        return Ok(());
+    }
+    let temporary = path.with_extension(format!("{}.tmp", uuid::Uuid::new_v4()));
+    std::fs::write(&temporary, content).map_err(|e| e.to_string())?;
+    if let Err(error) = std::fs::rename(&temporary, path) {
+        let _ = std::fs::remove_file(temporary);
+        return Err(error.to_string());
+    }
+    Ok(())
+}
+
+pub(crate) fn install_files(root: &Path, token: &str) -> Result<(), String> {
+    let files = [
         (
             ".claude-plugin/plugin.json",
             include_str!("../resources/claude-bridge/.claude-plugin/plugin.json"),
@@ -663,19 +684,32 @@ fn install_files(root: &Path, token: &str) -> Result<(), String> {
             "README.md",
             include_str!("../resources/claude-bridge/README.md"),
         ),
-    ] {
+    ];
+    // Version the installed cache by actual bundled content and pairing. An app update
+    // or token rotation must never leave Claude using an earlier cached copy.
+    let fingerprint = dev_tool::sha256(format!("{files:?}\0{token}").as_bytes());
+    for (name, content) in files {
         let path = root.join(name);
         std::fs::create_dir_all(path.parent().unwrap()).map_err(|e| e.to_string())?;
-        std::fs::write(path, content).map_err(|e| e.to_string())?;
+        if name == ".claude-plugin/plugin.json" {
+            let mut manifest: Value = serde_json::from_str(content).map_err(|e| e.to_string())?;
+            manifest["version"] = json!(format!("1.0.1-{}", &fingerprint[..16]));
+            write_if_changed(
+                &path,
+                &serde_json::to_vec_pretty(&manifest).map_err(|e| e.to_string())?,
+            )?;
+        } else {
+            write_if_changed(&path, content.as_bytes())?;
+        }
     }
-    std::fs::write(
-        root.join("hooks/local-config.mjs"),
+    write_if_changed(
+        &root.join("hooks/local-config.mjs"),
         format!(
             "export default {};\n",
             json!({"baseUrl":"http://127.0.0.1:8812","token":token})
-        ),
-    )
-    .map_err(|e| e.to_string())?;
+        )
+        .as_bytes(),
+    )?;
     Ok(())
 }
 

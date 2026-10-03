@@ -4,19 +4,23 @@ This Mods plugin connects an external Claude Code session to the running
 OpenCore app. It uses Anthropic's extension API; it does not modify the Claude
 Code binary or change the inference provider.
 
-## Setup
+## Automatic setup
 
-In a desktop build containing this change, open **Connectors → Install Claude
-bridge**. The app writes a paired plugin into its own application data folder
-and shows the exact `claude --plugin-dir "..."` command. Launch that command
-from the project to connect. Keep OpenCore and that Claude session open.
+OpenCore installs and pairs the bundled bridge automatically on startup. Its
+bundled Claude executable registers a local marketplace and installs the plugin
+at user scope using the supported plugin management commands. No download,
+installation button or special launch command is needed. Open Claude Code
+normally from your project while OpenCore is open. Existing Claude sessions
+load a newly installed or updated plugin the next time they start.
 
 Requires Claude Code 2.1.287 or newer with Mods enabled. The API is early access:
 availability and policy restrictions can vary. Use a supported Claude release;
-do not override managed policy. Installing the bridge does not change global
-Claude settings, authentication or the existing opt-in local provider profile.
-To use that existing provider profile too, add its `--settings` argument to the
-displayed plugin command. Local-model compatibility remains a separate check.
+do not override managed policy. Only OpenCore's marketplace and plugin entries
+are configured; existing settings, authentication and provider profiles are
+preserved. App updates refresh the paired plugin cache automatically. A later
+explicit disable in Claude is preserved. Errors are shown in Connectors and
+configuration retries automatically. Local-model compatibility remains a
+separate check.
 
 ## Implemented behavior
 

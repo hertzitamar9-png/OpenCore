@@ -77,6 +77,9 @@ jobs:
       - name: Test Rust
         working-directory: src-tauri
         run: cargo test --lib
+      - name: Test automatic Claude bridge installation with isolated settings
+        working-directory: src-tauri
+        run: cargo test --lib claude_bridge_install -- --include-ignored
       - name: Test release version ordering
         run: node --test scripts/test-release-versioning.mjs
       - name: Version this push
