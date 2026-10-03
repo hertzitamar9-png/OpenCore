@@ -1,5 +1,6 @@
 import { EchoContextStatus } from "./EchoContextStatus";
 import { EchoMemorySettings } from "./EchoMemorySettings";
+import { ClaudeBridgePanel } from "./ClaudeBridgePanel";
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { listen } from "@tauri-apps/api/event";
@@ -802,6 +803,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   </div>;
   if (view === "connectors") return <div className="support-page">
     <div className="page-heading"><div><h1>Connectors</h1><p>Connect coding clients directly to the loaded OpenCore model. Transcript sync is optional and separate.</p></div></div>
+    <ClaudeBridgePanel onNotice={onNotice} />
     <div className="connector-list">{snapshot.connectors.map((connector) => {
       const history = connector.kind === "history";
       const syncOperation = history ? operationFor(connector.id) : undefined;
@@ -832,7 +834,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       <button className="primary" type="submit">Add connector</button>
     </form>
     {connectorNotice && <div className="connector-notice">{connectorNotice}</div>}
-    <div className="route-instruction"><ShieldCheck /><div><strong>Universal observable endpoint</strong><code>http://127.0.0.1:{snapshot.runtime.gatewayPort}/v1</code><p>Use this base URL in OpenAI-compatible clients. Claude Code/Codex use local transcript sync because their native protocols differ.</p></div></div>
+    <div className="route-instruction"><ShieldCheck /><div><strong>Universal observable endpoint</strong><code>http://127.0.0.1:{snapshot.runtime.gatewayPort}/v1</code><p>Use this base URL in OpenAI-compatible clients. Claude Code and Codex can use their OpenCore profiles; the Claude bridge also connects ECHO memory and studios. Transcript sync imports older sessions.</p></div></div>
   </div>;
   if (view === "memory") return <div className="support-page memory-page">
     {archiveError ? <p role="alert">Could not read ECHO archives: {archiveError}. Retrying automatically.</p> : !archiveOverview ? <p role="status">Loading saved ECHO archives…</p> : null}
@@ -1217,6 +1219,19 @@ export default function App() {
     return () => { stopped = true; window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibility); };
   }, [refresh, view, snapshot?.runtime.status]);
   useEffect(() => { if (selectedConversation) api.conversation(selectedConversation).then(setTimeline).catch((error) => setNotice(String(error))); }, [selectedConversation]);
+  useEffect(() => {
+    let disposed = false;
+    let stop: (() => void) | undefined;
+    void listen<{ conversationId: string }>("opencore-bridge-activity", ({ payload }) => {
+      void refresh();
+      if (selectedConversationRef.current === payload.conversationId) {
+        void api.conversation(payload.conversationId).then(entries => {
+          if (!disposed && selectedConversationRef.current === payload.conversationId) setTimeline(entries);
+        }).catch(() => {});
+      }
+    }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
+    return () => { disposed = true; stop?.(); };
+  }, [refresh]);
   useEffect(() => {
     let disposed = false;
     let stop: (() => void) | undefined;

@@ -1268,6 +1268,26 @@ impl EventStore {
         Ok(connection.last_insert_rowid())
     }
 
+    pub fn add_bridge_timeline(&self, conversation: &str, event: &str, kind: &str,
+        role: &str, title: &str, content: &str, metadata: &Value) -> Result<i64, String> {
+        let mut connection=self.connection.lock().map_err(|e|e.to_string())?;
+        connection.execute_batch("CREATE TABLE IF NOT EXISTS claude_bridge_events (
+            conversation_id TEXT NOT NULL, event_id TEXT NOT NULL, entry_id INTEGER NOT NULL,
+            PRIMARY KEY(conversation_id,event_id),
+            FOREIGN KEY(entry_id) REFERENCES timeline(id) ON DELETE CASCADE)").map_err(|e|e.to_string())?;
+        let tx=connection.transaction().map_err(|e|e.to_string())?;
+        if let Some(id)=tx.query_row("SELECT entry_id FROM claude_bridge_events WHERE conversation_id=?1 AND event_id=?2",
+            params![conversation,event],|row|row.get::<_,i64>(0)).optional().map_err(|e|e.to_string())? {return Ok(id);}
+        let now=Utc::now().to_rfc3339();
+        tx.execute("INSERT INTO timeline(conversation_id,timestamp,kind,role,source,title,content,metadata)
+            VALUES(?1,?2,?3,?4,'Claude Code Mods',?5,?6,?7)",params![conversation,now,kind,role,
+            redact_text(title),redact_text(content),redact_json(metadata).to_string()]).map_err(|e|e.to_string())?;
+        let id=tx.last_insert_rowid();
+        tx.execute("INSERT INTO claude_bridge_events VALUES(?1,?2,?3)",params![conversation,event,id]).map_err(|e|e.to_string())?;
+        tx.execute("UPDATE conversations SET updated_at=?2 WHERE id=?1",params![conversation,now]).map_err(|e|e.to_string())?;
+        tx.commit().map_err(|e|e.to_string())?;Ok(id)
+    }
+
     pub fn update_timeline(&self, entry_id: i64, content: &str, metadata: &Value) -> Result<(), String> {
         let connection = self.connection.lock().map_err(|error| error.to_string())?;
         let changed = connection.execute(

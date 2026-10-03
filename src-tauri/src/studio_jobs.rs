@@ -230,7 +230,7 @@ impl StudioManager {
                 return;
             }
             let chats = core.active_chats.lock().is_ok_and(|chats| chats.is_empty());
-            if !self.busy() && chats && !gpu_reserved() && !core.speech.is_active().await {
+            if !self.busy() && !core.claude_bridge.busy() && chats && !gpu_reserved() && !core.speech.is_active().await {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(200)).await;
@@ -500,7 +500,7 @@ impl StudioManager {
                     .lock()
                     .map_err(|e| e.to_string())?
                     .is_empty();
-            if !chats_active && !gpu_reserved() && !core.speech.is_active().await {
+            if !chats_active && !core.claude_bridge.busy() && !gpu_reserved() && !core.speech.is_active().await {
                 break;
             }
             tokio::select! {_=token.cancelled()=>return Err("Cancelled before generation".into()),_=tokio::time::sleep(Duration::from_millis(200))=>{}}

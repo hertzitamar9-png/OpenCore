@@ -224,7 +224,8 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
             .unwrap();
     }
     let headers = request.headers().clone();
-    let body = match axum::body::to_bytes(request.into_body(), 64 * 1024 * 1024).await {
+    let bridge = path == "/opencore/claude-bridge";
+    let body = match axum::body::to_bytes(request.into_body(), if bridge { 1024 * 1024 } else { 64 * 1024 * 1024 }).await {
         Ok(body) => body,
         Err(error) => {
             return Response::builder()
@@ -234,6 +235,12 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
         }
     };
     let payload = serde_json::from_slice::<Value>(&body).unwrap_or_else(|_| json!({}));
+    if bridge {
+        if method != axum::http::Method::POST {
+            return Response::builder().status(StatusCode::METHOD_NOT_ALLOWED).body(Body::empty()).unwrap();
+        }
+        return crate::claude_bridge::handle(&state, &headers, &payload).await;
+    }
     if path.starts_with("/v1/messages") {
         return crate::compat::anthropic(&state, &path, &headers, &payload).await;
     }
@@ -254,7 +261,7 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
     let upstream = format!("{}{}", state.runtime.upstream_url(), path);
     let mut builder = state.client.request(method, &upstream).body(body);
     for (name, value) in &headers {
-        if matches!(name.as_str(), "host" | "connection" | "content-length" | "authorization" | "cookie" | "x-echo-project-scopes") {
+        if matches!(name.as_str(), "host" | "connection" | "content-length" | "authorization" | "cookie" | "x-echo-project-scopes" | "x-opencore-bridge-token") {
             continue;
         }
         builder = builder.header(name, value);

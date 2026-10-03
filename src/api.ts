@@ -1,5 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 export const speechStart = (sessionId?: string) => invoke<string>("speech_start", { sessionId });
+export interface ClaudeBridgeStatus { installed: boolean; connected: boolean; active: boolean; pluginPath: string; launchCommand: string; lastSeen: string | null; minimumVersion: string }
+const emptyClaudeBridge: ClaudeBridgeStatus = { installed: false, connected: false, active: false, pluginPath: '', launchCommand: '', lastSeen: null, minimumVersion: '2.1.287' };
+export const claudeBridgeStatus = (): Promise<ClaudeBridgeStatus> => desktop() ? invoke('claude_bridge_status') : Promise.resolve(emptyClaudeBridge);
+export const installClaudeBridge = () => invoke<ClaudeBridgeStatus>('install_claude_bridge');
 export interface MusicStudioStatus { installed: boolean; running: boolean; owned: boolean; url: string | null; folder: string; modelLoaded: boolean; error: string | null }
 export const musicStudioStatus = () => desktop() ? invoke<MusicStudioStatus>('music_studio_status') : Promise.resolve({ installed: false, running: false, owned: false, url: null, folder: '', modelLoaded: false, error: null });
 export const startMusicStudio = () => invoke<MusicStudioStatus>('start_music_studio');

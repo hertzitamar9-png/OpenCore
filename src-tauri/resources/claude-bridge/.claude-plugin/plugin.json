@@ -1,0 +1,5 @@
+{
+  "name": "opencore-bridge",
+  "version": "1.0.0",
+  "description": "Connect Claude Code to scoped ECHO memory, OpenCore's activity timeline and generation studios."
+}

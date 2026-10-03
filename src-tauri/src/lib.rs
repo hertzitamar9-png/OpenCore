@@ -1,4 +1,5 @@
 mod claude_harness;
+mod claude_bridge;
 mod artifacts;
 mod app_update;
 mod chat_stream;
@@ -53,6 +54,7 @@ use tokio_util::sync::CancellationToken;
 use tauri::{Emitter, Manager};
 
 pub struct AppCore {
+    claude_bridge: claude_bridge::BridgeState,
     studios: Arc<studio_jobs::StudioManager>,
     speech: speech::SpeechManager,
     store: Arc<EventStore>,
@@ -1942,6 +1944,7 @@ pub fn run() {
             }
             let runtime = Arc::new(RuntimeManager::new_with_resources(store.clone(), app.path().resource_dir().ok()));
             let core = Arc::new(AppCore {
+                claude_bridge: claude_bridge::BridgeState::default(),
                 studios: studio_jobs::StudioManager::new(app.path().app_data_dir()?.join("studio"))?,
                 speech: speech::SpeechManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir()?),
                 store: store.clone(),
@@ -2045,6 +2048,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            claude_bridge::claude_bridge_status, claude_bridge::install_claude_bridge,
             installed_skill_models,
             studio_jobs::list_studio_jobs, studio_jobs::submit_studio_job, studio_jobs::cancel_studio_job,
             studio_jobs::configure_studio_runtime, studio_jobs::studio_runtime, studio_jobs::open_studio_output,
