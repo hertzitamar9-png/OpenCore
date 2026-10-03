@@ -100,7 +100,7 @@ class OpenCoreFusionSourceTests(unittest.TestCase):
             k2["checkpoint_manifest"],
             {
                 "path": "checkpoints.sha256.json",
-                "sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+                "sha256": hashlib.sha256(manifest_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest(),
             },
         )
         existing = json.loads(manifest_path.read_text(encoding="utf-8"))

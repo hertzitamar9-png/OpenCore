@@ -45,7 +45,8 @@ def test_fusion_source_record_pins_unqualified_q6_estimate():
     assert model.MANIFEST['attention_layout']['k2']['source_revision'] == source_models['k2']['revision']
     candidate = source['candidate_inference_profile']
     manifest = resources / candidate['manifest']
-    assert hashlib.sha256(manifest.read_bytes()).hexdigest() == candidate['manifest_sha256']
+    canonical_manifest = manifest.read_bytes().replace(b'\r\n', b'\n')
+    assert hashlib.sha256(canonical_manifest).hexdigest() == candidate['manifest_sha256']
     assert candidate['combined_weight_bytes'] == model.Q6_WEIGHT_BYTES
     assert candidate['throughput_qualified'] is False
     assert candidate['device_fit_qualified'] is False

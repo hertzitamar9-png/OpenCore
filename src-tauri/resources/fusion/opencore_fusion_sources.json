@@ -108,7 +108,7 @@
       },
       "checkpoint_manifest": {
         "path": "checkpoints.sha256.json",
-        "sha256": "10549fdc13e3c657631f6e1bee01b6b6dccc29cb4364298e565b6bccb89ff4e3"
+        "sha256": "3af3014cb846f61e2476d611076c64d558bc1b861216bb5c710f90ecced9fa74"
       }
     }
   },
