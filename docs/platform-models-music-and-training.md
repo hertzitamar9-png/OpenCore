@@ -11,7 +11,8 @@
 - HY-Motion and HY-Motion Lite use the official `tencent/HY-Motion-1.0`
   repository. Neither is misrepresented as a working text-chat model.
 - ModelsLab/3D-Animation-Diffusion is categorized as 2D image generation.
-- Delete retains the existing per-model confirmation and shared-file checks.
+- Uninstall uses the per-model confirmation and shared-file checks; the UI
+  explains that the model can be installed again from the library.
 - Downloads preserve the existing 100 GB free-space guard. Adding library
   entries does not download their weight files.
 
