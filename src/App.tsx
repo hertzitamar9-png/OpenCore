@@ -50,7 +50,7 @@ import { AssistantConversation, type ComposerDraft } from "./AssistantConversati
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
-import { ModelProfileOptions, profileDescription, profileLabel, isSelectableModelProfile, selectableModelProfiles } from "./ModelProfiles";
+import { ModelProfileOptions, profileDescription, profileLabel, isSelectableModelProfile, profilesForInstalledModels, selectableModelProfiles, useInstalledModelProfiles } from "./ModelProfiles";
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
 import { AssetsStudio } from './AssetsStudio';
@@ -420,6 +420,8 @@ function RuntimeLogs({ logs }: { logs: LogEntry[] }) {
 
 function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAction, actions }: { snapshot: AppSnapshot; selectedProfile: RuntimeProfile; setSelectedProfile: (p: RuntimeProfile) => void; runtimeAction: "starting" | "stopping" | null; actions: { start: () => void; stop: () => void; restart: () => void; navigate: (view: View) => void; notice: (message: string) => void } }) {
   const runtime = snapshot.runtime;
+  const { installedProfiles, error: profileLoadError } = useInstalledModelProfiles();
+  const availableProfiles = profilesForInstalledModels(installedProfiles || []);
   const active = runtime.status === "running" || runtime.status === "starting" || runtimeAction !== null;
   const modelDir = selectedProfile === "doucode"
     ? runtime.modelPath
@@ -430,7 +432,7 @@ function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAct
   };
   return <div className="workspace runtime-workspace">
     <section className="runtime-main">
-      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Model profile · one runtime at a time</span>{selectableModelProfiles.map((model) => <button key={model.id} className={selectedProfile === model.id ? "active" : ""} onClick={() => setSelectedProfile(model.id)} disabled={active}><b>{model.label}</b><small>{model.description}</small></button>)}</div></div>
+      <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Downloaded model profiles · one runtime at a time</span>{profileLoadError ? <small role="alert">Could not check downloaded models.</small> : installedProfiles === null ? <small role="status">Checking downloaded models…</small> : availableProfiles.length === 0 ? <small role="status">No downloaded text models. Install one in Models.</small> : availableProfiles.map((model) => <button key={model.id} className={selectedProfile === model.id ? "active" : ""} onClick={() => setSelectedProfile(model.id)} disabled={active}><b>{model.label}</b><small>{model.description}</small></button>)}</div></div>
       <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
       <RuntimeLogs logs={snapshot.logs} />
     </section>

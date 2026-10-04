@@ -7,6 +7,30 @@ import modelCatalog from "../src-tauri/resources/model-catalog.json";
 const catalogProfiles = new Map((modelCatalog.models as { id: string; label: string; description: string; selectable: boolean }[])
   .filter(model => model.selectable).map(model => [model.id, model]));
 
+type InstalledModelProfile = { id: string; label: string; description: string };
+
+export function useInstalledModelProfiles() {
+  const [installedProfiles, setInstalledProfiles] = useState<InstalledModelProfile[] | null>(null);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void modelLibrary().then(library => {
+      if (active) setInstalledProfiles(library.models.filter(model => model.installed && model.selectable)
+        .map(model => ({ id: model.id, label: catalogProfiles.get(model.id)?.label || model.label, description: model.description })));
+    }).catch(() => { if (active) setError(true); });
+    return () => { active = false; };
+  }, []);
+  return { installedProfiles, error };
+}
+
+export function profilesForInstalledModels(installedProfiles: InstalledModelProfile[]) {
+  const installedIds = new Set(installedProfiles.map(profile => profile.id));
+  return [
+    ...selectableModelProfiles.filter(profile => installedIds.has(profile.id)),
+    ...installedProfiles.filter(profile => !selectableModelProfiles.some(known => known.id === profile.id)),
+  ];
+}
+
 export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">; label: string; description: string }[] = [
   { id: "echo", label: "ECHO 3T", description: "Addressable history target · exact archive" },
   { id: "native1m", label: "1M extended", description: "1,000,000-token YaRN window · trained context 262,144" },
@@ -51,21 +75,8 @@ export function ModelProfileOptions({ selectedProfile, onSelect, disabled = fals
   id?: string;
   className?: string;
 }) {
-  const [installedProfiles, setInstalledProfiles] = useState<{id:string;label:string;description:string}[] | null>(null);
-  const [error, setError] = useState(false);
-  useEffect(() => {
-    let active = true;
-    void modelLibrary().then(library => {
-      if (active) setInstalledProfiles(library.models.filter(model => model.installed && model.selectable)
-        .map(model => ({ id: model.id, label: catalogProfiles.get(model.id)?.label || model.label, description: model.description })));
-    }).catch(() => { if (active) setError(true); });
-    return () => { active = false; };
-  }, []);
-  const installedIds = new Set(installedProfiles?.map(profile => profile.id) || []);
-  const profiles = [
-    ...selectableModelProfiles.filter(profile => installedIds.has(profile.id)),
-    ...(installedProfiles || []).filter(profile => !selectableModelProfiles.some(known => known.id === profile.id)),
-  ];
+  const { installedProfiles, error } = useInstalledModelProfiles();
+  const profiles = profilesForInstalledModels(installedProfiles || []);
   return <div className={`model-picker-options ${className}`} id={id} role="group" aria-label="Choose model profile">
     {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
       : installedProfiles === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>

@@ -694,6 +694,23 @@ describe("OpenCore", () => {
     expect(screen.getByText("Process Supervision")).toBeInTheDocument();
   });
 
+  it("shows only downloaded models in the Runtime profile switcher", async () => {
+    const inventory = await api.modelLibrary();
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({
+      ...inventory,
+      models: inventory.models.map(model => ({ ...model, installed: ["echo", "doucode"].includes(model.id) })),
+    });
+    try {
+      render(<App />);
+      await screen.findByText("Conversations", { selector: "h2" });
+      fireEvent.click(screen.getByRole("button", { name: "Runtime & Logs" }));
+      const profileSwitch = document.querySelector(".profile-switch") as HTMLElement;
+      expect(await within(profileSwitch).findByRole("button", { name: /ECHO 3T/ })).toBeVisible();
+      expect(within(profileSwitch).getByRole("button", { name: /DuoCore/ })).toBeVisible();
+      expect(within(profileSwitch).queryByRole("button", { name: /Swift 1.5/ })).not.toBeInTheDocument();
+    } finally { library.mockRestore(); }
+  });
+
   it("exposes Claude Code and Codex connectors without extra conversation tabs", async () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
