@@ -563,6 +563,35 @@ mod tests {
         assert!(!hy.runtime_ready);
         assert!(catalog.artifacts.iter().filter(|file|hy.artifacts.contains(&file.id)).all(|file|file.repo=="tencent/HY-Motion-1.0"));
     }
+    #[test]
+    fn humaneval_gguf_models_are_downloadable_and_unimate_uses_its_hub_checkpoint() {
+        let catalog = manifest().unwrap();
+        for id in ["oxcoder-9b", "nim-2-coder-7b", "ternary-bonsai-2-27b", "mimo-distill-qwen-9b",
+                   "frognano-4b", "qwen38-distill-9b", "triumvirate-9b-coder", "orion-agentic-9b",
+                   "zenith-9b-codecore", "neohorse-1-9b", "boomslang-3b", "tiel-inspired-coder-9b",
+                   "gmcoder", "ornith-1-5-9b-mtp"] {
+            let model = gguf_model(id).unwrap_or_else(|| panic!("{id} must be a selectable GGUF model"));
+            assert!(model.installable, "{id} must be downloadable from the model library");
+            assert_eq!(model.category, "text", "{id}");
+            assert_eq!(model.context_tokens, 16_384, "{id}");
+            assert!(model.runtime_model_path.is_some(), "{id}");
+            assert!(!model.artifacts.is_empty(), "{id}");
+        }
+        let unimate = catalog.models.iter().find(|model| model.id == "unimate").unwrap();
+        assert_eq!(unimate.category, "3d-animation");
+        assert!(unimate.installable, "UniMate weights should be available in the model library");
+        assert!(!unimate.runtime_ready && !unimate.selectable, "Keep the missing inference runtime explicit");
+        assert!(unimate.source_url.as_deref().unwrap_or_default().contains("Linzhan/UniMate"));
+        assert!(catalog.artifacts.iter().any(|file| unimate.artifacts.contains(&file.id)
+            && file.repo == "Linzhan/UniMate"
+            && file.filename.ends_with("checkpoint_step_100000.pt")));
+        for id in ["minicpm5-2b", "moondream3-9b"] {
+            let model = catalog.models.iter().find(|model| model.id == id).unwrap();
+            assert_eq!(model.category, "text");
+            assert!(model.installable && !model.runtime_ready && !model.selectable, "{id}");
+            assert!(!model.artifacts.is_empty(), "{id} must be downloadable from the model library");
+        }
+    }
     #[tokio::test]
     #[ignore = "Explicit opt-in only; registers and verifies already-present speech checkpoints"]
     async fn register_existing_speech_models() {

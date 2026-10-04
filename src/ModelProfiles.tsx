@@ -16,6 +16,20 @@ export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | 
   { id: "swift-27b", label: "Swift 1.5", description: "Optional 27B IQ2_S · ECHO recall · 16K attention" },
   { id: "dirk-27b", label: "Dirk Vision", description: "Optional 27B IQ2_S + vision · ECHO recall · 8K attention" },
   { id: "davidau-27b", label: "DavidAU Turbo", description: "Optional 27B IQ2_M · CPU offload · ECHO recall" },
+  { id: "oxcoder-9b", label: "OxCoder 9B", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "nim-2-coder-7b", label: "NIM-2 Coder 7B", description: "Optional Q4_K_M coding model · ECHO archive · 16K attention" },
+  { id: "ternary-bonsai-2-27b", label: "Ternary Bonsai 2 27B", description: "Optional PTQ1_0 coding model · ECHO archive · 16K attention" },
+  { id: "mimo-distill-qwen-9b", label: "MiMo Distill Qwen 9B", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "frognano-4b", label: "FrogNano 4B", description: "Optional Q8_0 multimodal coding model · ECHO archive · 16K attention" },
+  { id: "qwen38-distill-9b", label: "Qwen 3.8 Distill 9B", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "triumvirate-9b-coder", label: "Triumvirate 9B Coder", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "orion-agentic-9b", label: "Orion Agentic 9B", description: "Optional Q6_K coding model · ECHO archive · 16K attention" },
+  { id: "zenith-9b-codecore", label: "Zenith CodeCore 9B", description: "Optional Q5_K_M coding model · ECHO archive · 16K attention" },
+  { id: "neohorse-1-9b", label: "NeoHorse 1 9B", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "boomslang-3b", label: "Boomslang 3B", description: "Optional GGUF coding model · ECHO archive · 16K attention" },
+  { id: "tiel-inspired-coder-9b", label: "Tiel-Inspired Coder 9B", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "gmcoder", label: "Gmcoder", description: "Optional Q8_0 coding model · ECHO archive · 16K attention" },
+  { id: "ornith-1-5-9b-mtp", label: "Ornith 1.5 9B MTP", description: "Optional Q4_K_M with MTP draft head · ECHO archive · 16K attention" },
 ];
 
 export const profileLabel = (profile: string) => selectableModelProfiles.find((item) => item.id === profile)?.label ?? (profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped");

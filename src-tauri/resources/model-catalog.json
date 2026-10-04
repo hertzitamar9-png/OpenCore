@@ -1694,6 +1694,240 @@
       "filename": "weights_manifest.json",
       "sha256": "017d64a4d288217a43fcac3866a0e1d55f796fa891d4dfb6de0bd170ab750026",
       "bytes": 178
+    },
+    {
+      "id": "oxcoder-9b-868dd91b2969",
+      "path": "models/library/oxcoder-9b/OxCoder-9B-Q8_0.gguf",
+      "repo": "sizzlebop/OxCoder-9B-GGUF",
+      "revision": "468132cf1e1fde2b98da5c87fda2ca5f14f55a30",
+      "filename": "OxCoder-9B-Q8_0.gguf",
+      "sha256": "e769112c81e1ad18834fe8f25b6080ff98dd99cb473e27b26e76a899c7a5a4bd",
+      "bytes": 9527510016
+    },
+    {
+      "id": "nim-2-coder-7b-eccfa2146bed",
+      "path": "models/library/nim-2-coder-7b/NIM-2-Coder-7B-Q4_K_M.gguf",
+      "repo": "NIM-AI/NIM-2-Coder-7B",
+      "revision": "bbf5b9cdb82ada526b981f57865c20bc41f4b6f9",
+      "filename": "NIM-2-Coder-7B-Q4_K_M.gguf",
+      "sha256": "fc1bab8d8956b41e17650894bf83467822afd2ec9fa467b121e86a7d6de1b59a",
+      "bytes": 4683071552
+    },
+    {
+      "id": "ternary-bonsai-2-27b-199e323cf880",
+      "path": "models/library/ternary-bonsai-2-27b/Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+      "repo": "prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "revision": "b072e1d3b35a0a630cece372c2127528e0994386",
+      "filename": "Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+      "sha256": "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+      "bytes": 5946648928
+    },
+    {
+      "id": "mimo-distill-qwen-9b-0965535a6293",
+      "path": "models/library/mimo-distill-qwen-9b/MiMo-V2.6-Distill-Qwen-9B-Q8_0.gguf",
+      "repo": "bartowski/MiMo-V2.6-Distill-Qwen-9B-GGUF",
+      "revision": "4371da10c84fb26da3592d4cf312d24aa82b7b65",
+      "filename": "MiMo-V2.6-Distill-Qwen-9B-Q8_0.gguf",
+      "sha256": "2fad0aa11bb9e7aa491ff12f768954f9dd0a6e7d4ce4a897ca73ec420f3b90ae",
+      "bytes": 9545979424
+    },
+    {
+      "id": "frognano-4b-f9a0cdfea0db",
+      "path": "models/library/frognano-4b/FrogNano-4B-2609-Q8_0.gguf",
+      "repo": "bartowski/FrogNano-4B-2609-GGUF",
+      "revision": "dfbb801e04ddf045ffd245b9f1a546ed0c7d960f",
+      "filename": "FrogNano-4B-2609-Q8_0.gguf",
+      "sha256": "ea42d264c21d88b9bf6ce583bb3fd4dfddb22eb5b30efba9e305c56f75974c86",
+      "bytes": 4622130976
+    },
+    {
+      "id": "qwen38-distill-9b-2de2e088370a",
+      "path": "models/library/qwen38-distill-9b/Qwen3.8-9B-Q8_0.gguf",
+      "repo": "empero-ai/Qwen3.8-9B-Distill-GGUF",
+      "revision": "760121cd70bb4c36b2b5ec58eb765e0df5987efe",
+      "filename": "Qwen3.8-9B-Q8_0.gguf",
+      "sha256": "79ca5d342a07922f2bbf38c8d892a79a3c8620c65feaf4b1c66b7830ae724db8",
+      "bytes": 9786060096
+    },
+    {
+      "id": "triumvirate-9b-coder-345582b7337c",
+      "path": "models/library/triumvirate-9b-coder/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-Q8_0.gguf",
+      "repo": "pragmaticcs/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-GGUF",
+      "revision": "80ed267365591b4c0f14321015149564d1130aab",
+      "filename": "Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-Q8_0.gguf",
+      "sha256": "cddb532365f0b827f0f7791ddc9a386b435d5cfd99080d4af3f5ec1bba886ae2",
+      "bytes": 9527528000
+    },
+    {
+      "id": "orion-agentic-9b-859c976e62ec",
+      "path": "models/library/orion-agentic-9b/Orion-9B-Agentic-CodeCore-Merge.Q6_K.gguf",
+      "repo": "prithivMLmods/Orion-9B-Agentic-CodeCore-Merge-GGUF",
+      "revision": "dfd564edb55cf34613b41f1dd1d72577fe36aee4",
+      "filename": "Orion-9B-Agentic-CodeCore-Merge.Q6_K.gguf",
+      "sha256": "ec91b6bf17f353ce1c059337d69b4a1e748f15e60a821520f57b82165f459507",
+      "bytes": 7359260512
+    },
+    {
+      "id": "zenith-9b-codecore-1c85d92b2287",
+      "path": "models/library/zenith-9b-codecore/Zenith-9B-CodeCore-Merge.Q5_K_M.gguf",
+      "repo": "prithivMLmods/Zenith-9B-CodeCore-Merge-GGUF",
+      "revision": "db3b47ae7d8f52ad09db92084388542b06faff30",
+      "filename": "Zenith-9B-CodeCore-Merge.Q5_K_M.gguf",
+      "sha256": "d48bcacc7d244a4566dacdad14ef52670442d123ed2c646e38bf496b03f2e246",
+      "bytes": 6467970784
+    },
+    {
+      "id": "neohorse-1-9b-62c526faf2b9",
+      "path": "models/library/neohorse-1-9b/NeoHorse-1-9B-Q8_0.gguf",
+      "repo": "TokenRhythm/NeoHorse-1-9B-GGUF",
+      "revision": "ddcb4c939b5392c86a9d2733c7c0ed30db2554fd",
+      "filename": "NeoHorse-1-9B-Q8_0.gguf",
+      "sha256": "519869730bda973ec50bb3ac42cd874569e5f3a57c3e0d5d23a2b5040e93310f",
+      "bytes": 9527501632
+    },
+    {
+      "id": "boomslang-3b-319d6eb5a530",
+      "path": "models/library/boomslang-3b/boomslang-3b-qwen.gguf",
+      "repo": "Monster-Code/Boomslang",
+      "revision": "258bc929a75d464ebd5d70991cccf5e2af3b737e",
+      "filename": "boomslang-3b-qwen.gguf",
+      "sha256": "4bad7132f1d72f2d1f672a2e2f943277d5dfbba38ea87ebf15abe6ec3f316eaa",
+      "bytes": 6178316672
+    },
+    {
+      "id": "tiel-inspired-coder-9b-44641fdcd7ca",
+      "path": "models/library/tiel-inspired-coder-9b/Tiel-Inspired-Coder-9B-UD-Q8_0.gguf",
+      "repo": "VitreousCut/Tiel-Inspired-Coder-9B-GGUF",
+      "revision": "19d7bb395469bd9c8d56499c1c16b155c4c7e5ea",
+      "filename": "Tiel-Inspired-Coder-9B-UD-Q8_0.gguf",
+      "sha256": "cf4d1a2142e3e2b2b94bb3c92064888f9cdf3971b07a270c4c07086c938db7eb",
+      "bytes": 9786082496
+    },
+    {
+      "id": "gmcoder-c917f87bc0e6",
+      "path": "models/library/gmcoder/gmcoder.Q8_0.gguf",
+      "repo": "emperorofrome/Gmcoder",
+      "revision": "952bd98b90b50a648ad2041e14269036fee5338d",
+      "filename": "gmcoder.Q8_0.gguf",
+      "sha256": "a99f45fd1349a0830b48f9fbf28552f524340e3f25b8e3a3e40c14526a053a1d",
+      "bytes": 9786060352
+    },
+    {
+      "id": "ornith-1-5-9b-mtp-3b9a5b03fddb",
+      "path": "models/library/ornith-1-5-9b-mtp/Ornith-1.5-9B-MTP-Q4_K_M.gguf",
+      "repo": "protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+      "revision": "5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+      "filename": "Ornith-1.5-9B-MTP-Q4_K_M.gguf",
+      "sha256": "f92b36b167d67867c6304cad7d16405ba873aebe877d86e811757d713fd8a997",
+      "bytes": 5780090432
+    },
+    {
+      "id": "unimate-v2-step100000",
+      "path": "models/library/unimate/unimate_uniml3d_f60_v2/checkpoints/checkpoint_step_100000.pt",
+      "repo": "Linzhan/UniMate",
+      "revision": "902b8465567159a974de2d10f129e29787b9e4e4",
+      "filename": "unimate_uniml3d_f60_v2/checkpoints/checkpoint_step_100000.pt",
+      "sha256": "cbcfb7a057e45f967d5964fecf6b3f83358096f1306f25831e1644a18a50eb34",
+      "bytes": 1185827848
+    },
+    {
+      "id": "moondream3-9b-9d75c1098fc5",
+      "path": "models/library/moondream3-9b/model.safetensors",
+      "repo": "moondream/moondream3.1-9B-A2B",
+      "revision": "1da27e6c2d2f9118de14560df456881dc62d91f3",
+      "filename": "model.safetensors",
+      "sha256": "26dde16af961d3a486c7b86b9a34fc8487be7917f7e62324b751400ef4d391b4",
+      "bytes": 10505269576
+    },
+    {
+      "id": "minicpm5-model",
+      "path": "models/library/minicpm5-2b/model-00000-of-00001.safetensors",
+      "repo": "openbmb/MiniCPM5-2B",
+      "revision": "f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "filename": "model-00000-of-00001.safetensors",
+      "sha256": "14fb8e7f0a18d53d1f239773758bf581cee7e456a4523a54622c3a245b64402c",
+      "bytes": 5033557096
+    },
+    {
+      "id": "minicpm5-config",
+      "path": "models/library/minicpm5-2b/config.json",
+      "repo": "openbmb/MiniCPM5-2B",
+      "revision": "f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "filename": "config.json",
+      "sha256": "59613157e5357d62bcb121e04cb90f2170b43d789b142380c12c3d4277d95180",
+      "bytes": 704
+    },
+    {
+      "id": "minicpm5-generation",
+      "path": "models/library/minicpm5-2b/generation_config.json",
+      "repo": "openbmb/MiniCPM5-2B",
+      "revision": "f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "filename": "generation_config.json",
+      "sha256": "9ac4f32e5f32358697a9f438a3ea89ef80e6ba786c72c49e932f9f21c122fdb1",
+      "bytes": 213
+    },
+    {
+      "id": "minicpm5-tokens",
+      "path": "models/library/minicpm5-2b/special_tokens_map.json",
+      "repo": "openbmb/MiniCPM5-2B",
+      "revision": "f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "filename": "special_tokens_map.json",
+      "sha256": "82d96d7a9e6ced037f12394b7ea6a5b02e6ca87e0d11edaa8d60d9be857ce7db",
+      "bytes": 551
+    },
+    {
+      "id": "minicpm5-tokenizer",
+      "path": "models/library/minicpm5-2b/tokenizer.json",
+      "repo": "openbmb/MiniCPM5-2B",
+      "revision": "f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "filename": "tokenizer.json",
+      "sha256": "3e065a558a034185fe299917b398685c1facd0169a9eea1e629eb30c171fed81",
+      "bytes": 9894271
+    },
+    {
+      "id": "minicpm5-tokencfg",
+      "path": "models/library/minicpm5-2b/tokenizer_config.json",
+      "repo": "openbmb/MiniCPM5-2B",
+      "revision": "f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "filename": "tokenizer_config.json",
+      "sha256": "e9b1064649e771d7a8e15637c68b2d2749724877ba3648bd74a4ece31c26303b",
+      "bytes": 94391
+    },
+    {
+      "id": "frognano-4b-mmproj-f16",
+      "path": "models/library/frognano-4b/mmproj-FrogNano-4B-2609-f16.gguf",
+      "repo": "bartowski/FrogNano-4B-2609-GGUF",
+      "revision": "dfbb801e04ddf045ffd245b9f1a546ed0c7d960f",
+      "filename": "mmproj-FrogNano-4B-2609-f16.gguf",
+      "sha256": "e6fba76cf8cd2e2e8793807ee54147c1f5a5209bc4780e53e79878e7c9887020",
+      "bytes": 672423104
+    },
+    {
+      "id": "moondream3-config",
+      "path": "models/library/moondream3-9b/config.json",
+      "repo": "moondream/moondream3.1-9B-A2B",
+      "revision": "1da27e6c2d2f9118de14560df456881dc62d91f3",
+      "filename": "config.json",
+      "sha256": "97489404e11c1d56ded7d4e982ffea311c2a7bed41687cdadb41d938d85763aa",
+      "bytes": 38
+    },
+    {
+      "id": "unimate-v2-config",
+      "path": "models/library/unimate/unimate_uniml3d_f60_v2/config.json",
+      "repo": "Linzhan/UniMate",
+      "revision": "902b8465567159a974de2d10f129e29787b9e4e4",
+      "filename": "unimate_uniml3d_f60_v2/config.json",
+      "sha256": "83d28a41f1a80ba71811318f1fc803dc54d9f923c1cb9ccdca9e6c34deac232c",
+      "bytes": 3223
+    },
+    {
+      "id": "unimate-v2-stats",
+      "path": "models/library/unimate/unimate_uniml3d_f60_v2/dataset_stats.npy",
+      "repo": "Linzhan/UniMate",
+      "revision": "902b8465567159a974de2d10f129e29787b9e4e4",
+      "filename": "unimate_uniml3d_f60_v2/dataset_stats.npy",
+      "sha256": "c13ecfe8317c5e7b4a04089b71817d0787494d8f3f1df66b0ac8f496842d2c89",
+      "bytes": 1934
     }
   ],
   "models": [
@@ -1986,7 +2220,7 @@
     {
       "id": "swift-27b",
       "label": "Swift 1.5 27B",
-      "description": "Swift 1.5 27B \u00c2\u00b7 text",
+      "description": "Swift 1.5 27B Â· text",
       "precision": "IQ2_S",
       "contextTokens": 16384,
       "artifacts": [
@@ -2007,7 +2241,7 @@
     {
       "id": "dirk-27b",
       "label": "Dirk 27B Vision",
-      "description": "Dirk 27B Vision \u00c2\u00b7 text",
+      "description": "Dirk 27B Vision Â· text",
       "precision": "IQ2_S + F16 vision",
       "contextTokens": 8192,
       "artifacts": [
@@ -2030,7 +2264,7 @@
     {
       "id": "davidau-27b",
       "label": "DavidAU Turbo Cold Fusion 27B",
-      "description": "DavidAU Turbo Cold Fusion 27B \u00c2\u00b7 text",
+      "description": "DavidAU Turbo Cold Fusion 27B Â· text",
       "precision": "IQ2_M",
       "contextTokens": 8192,
       "artifacts": [
@@ -2053,7 +2287,7 @@
     {
       "id": "mirai-s-27b",
       "label": "Mirai S experimental 27B",
-      "description": "Mirai S experimental 27B \u00c2\u00b7 text",
+      "description": "Mirai S experimental 27B Â· text",
       "precision": "GSQ custom format",
       "contextTokens": 0,
       "artifacts": [
@@ -2067,7 +2301,7 @@
       ],
       "license": "apache-2.0",
       "experimental": true,
-      "note": "Requires the publisher\u00e2\u20ac\u2122s experimental vLLM plugin. Downloaded checkpoints alone do not enable inference. Text only; setup and hardware testing required.",
+      "note": "Requires the publisherâ€™s experimental vLLM plugin. Downloaded checkpoints alone do not enable inference. Text only; setup and hardware testing required.",
       "selectable": false,
       "category": "text",
       "backend": "external",
@@ -2079,7 +2313,7 @@
     {
       "id": "thinkingcap-27b",
       "label": "ThinkingCap 27B",
-      "description": "ThinkingCap 27B \u00c2\u00b7 text",
+      "description": "ThinkingCap 27B Â· text",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [],
@@ -2097,7 +2331,7 @@
     {
       "id": "qwen-image-21",
       "label": "Qwen Image 2.1",
-      "description": "Qwen Image 2.1 \u00c2\u00b7 image",
+      "description": "Qwen Image 2.1 Â· image",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [
@@ -2140,7 +2374,7 @@
     {
       "id": "qwen-image-21-gguf",
       "label": "Qwen Image 2.1 GGUF",
-      "description": "Qwen Image 2.1 GGUF \u00c2\u00b7 image",
+      "description": "Qwen Image 2.1 GGUF Â· image",
       "precision": "Q6_K",
       "contextTokens": 0,
       "artifacts": [
@@ -2148,7 +2382,7 @@
       ],
       "license": "qwen-research",
       "experimental": true,
-      "note": "6.27 GB visual component only. Also needs Qwen Image\u00e2\u20ac\u2122s text encoder and VAE plus a GGUF-compatible image backend. Do not use as a chat GGUF.",
+      "note": "6.27 GB visual component only. Also needs Qwen Imageâ€™s text encoder and VAE plus a GGUF-compatible image backend. Do not use as a chat GGUF.",
       "selectable": false,
       "category": "image",
       "backend": "external",
@@ -2159,8 +2393,8 @@
     },
     {
       "id": "animation-diffusion-2d",
-      "label": "Animation Diffusion \u00c2\u00b7 2D",
-      "description": "Animation Diffusion \u00c2\u00b7 2D \u00c2\u00b7 image",
+      "label": "Animation Diffusion Â· 2D",
+      "description": "Animation Diffusion Â· 2D Â· image",
       "precision": "Original SD weights",
       "contextTokens": 0,
       "artifacts": [
@@ -2194,7 +2428,7 @@
     {
       "id": "holo4-27b",
       "label": "Holo4 27B",
-      "description": "Holo4 27B \u00c2\u00b7 computer use",
+      "description": "Holo4 27B Â· computer use",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [
@@ -2241,7 +2475,7 @@
     {
       "id": "holo15-3b",
       "label": "Holo1.5 3B",
-      "description": "Holo1.5 3B \u00c2\u00b7 computer use",
+      "description": "Holo1.5 3B Â· computer use",
       "precision": "BF16",
       "contextTokens": 0,
       "artifacts": [
@@ -2275,7 +2509,7 @@
     {
       "id": "spar3d",
       "label": "SPAR3D",
-      "description": "SPAR3D \u00c2\u00b7 3d",
+      "description": "SPAR3D Â· 3d",
       "precision": "Original weights",
       "contextTokens": 0,
       "artifacts": [],
@@ -2293,7 +2527,7 @@
     {
       "id": "pixal3d",
       "label": "Pixal3D",
-      "description": "Pixal3D \u00c2\u00b7 3d",
+      "description": "Pixal3D Â· 3d",
       "precision": "Original BF16/FP16",
       "contextTokens": 0,
       "artifacts": [
@@ -2336,7 +2570,7 @@
     {
       "id": "triposr",
       "label": "TripoSR",
-      "description": "TripoSR \u00c2\u00b7 3d",
+      "description": "TripoSR Â· 3d",
       "precision": "Original weights",
       "contextTokens": 0,
       "artifacts": [
@@ -2358,7 +2592,7 @@
     {
       "id": "hy-motion-1",
       "label": "HY-Motion 1.0",
-      "description": "HY-Motion 1.0 \u00c2\u00b7 3d animation",
+      "description": "HY-Motion 1.0 Â· 3d animation",
       "precision": "Original 1.0B checkpoint",
       "contextTokens": 0,
       "artifacts": [
@@ -2380,7 +2614,7 @@
     {
       "id": "hy-motion-1-lite",
       "label": "HY-Motion 1.0 Lite",
-      "description": "HY-Motion 1.0 Lite \u00c2\u00b7 3d animation",
+      "description": "HY-Motion 1.0 Lite Â· 3d animation",
       "precision": "Original 0.46B checkpoint",
       "contextTokens": 0,
       "artifacts": [
@@ -2403,19 +2637,23 @@
       "id": "unimate",
       "label": "UniMate",
       "category": "3d-animation",
-      "description": "Rigged skeleton animation. Upstream setup and checkpoint selection required; no verified 12 GB runtime yet.",
-      "precision": "Upstream checkpoint",
+      "description": "Text-to-motion generation (60-frame motion). Weights downloadable; model-specific inference setup is required.",
+      "precision": "Original checkpoint",
       "contextTokens": 0,
-      "artifacts": [],
+      "artifacts": [
+        "unimate-v2-step100000",
+        "unimate-v2-config",
+        "unimate-v2-stats"
+      ],
       "license": "See upstream license",
       "experimental": true,
-      "note": "Rigged skeleton animation. Upstream setup and checkpoint selection required; no verified 12 GB runtime yet.",
+      "note": "Text-to-motion model. Downloads its pinned v2 checkpoint; model-specific inference/runtime is not integrated, so this entry does not make generation available yet.",
       "selectable": false,
       "backend": "external",
       "runtimeReady": false,
-      "installable": false,
-      "sourceUrl": "https://github.com/JH9384/unimate",
-      "setupUrl": "https://github.com/JH9384/unimate"
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/Linzhan/UniMate/tree/902b8465567159a974de2d10f129e29787b9e4e4",
+      "setupUrl": "https://github.com/Friedrich-M/UniMate"
     },
     {
       "id": "animate-any-mesh",
@@ -2457,7 +2695,7 @@
       "id": "yue2",
       "label": "YuE2",
       "description": "Song generation, vocals, and editable music scores.",
-      "precision": "Original BF16 model \u00b7 FP32 audio decoder",
+      "precision": "Original BF16 model · FP32 audio decoder",
       "contextTokens": 0,
       "artifacts": [
         "music-yue2-3b-c693279643b8",
@@ -2482,6 +2720,348 @@
       "installable": true,
       "sourceUrl": "https://huggingface.co/m-a-p/YuE2-3B",
       "setupUrl": "https://github.com/multimodal-art-projection/YuE"
+    },
+    {
+      "id": "oxcoder-9b",
+      "label": "OxCoder 9B",
+      "description": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "oxcoder-9b-868dd91b2969"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/sizzlebop/OxCoder-9B-GGUF/tree/468132cf1e1fde2b98da5c87fda2ca5f14f55a30",
+      "setupUrl": "https://huggingface.co/sizzlebop/OxCoder-9B-GGUF",
+      "runtimeModelPath": "models/library/oxcoder-9b/OxCoder-9B-Q8_0.gguf"
+    },
+    {
+      "id": "nim-2-coder-7b",
+      "label": "NIM-2 Coder 7B",
+      "description": "Q4_K_M coding GGUF; 16K context with ECHO.",
+      "precision": "Q4_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "nim-2-coder-7b-eccfa2146bed"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Q4_K_M coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/NIM-AI/NIM-2-Coder-7B/tree/bbf5b9cdb82ada526b981f57865c20bc41f4b6f9",
+      "setupUrl": "https://huggingface.co/NIM-AI/NIM-2-Coder-7B",
+      "runtimeModelPath": "models/library/nim-2-coder-7b/NIM-2-Coder-7B-Q4_K_M.gguf"
+    },
+    {
+      "id": "ternary-bonsai-2-27b",
+      "label": "Ternary Bonsai 2 27B",
+      "description": "PTQ1_0 coding GGUF; 16K context with ECHO.",
+      "precision": "PTQ1_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "ternary-bonsai-2-27b-199e323cf880"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "PTQ1_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/tree/b072e1d3b35a0a630cece372c2127528e0994386",
+      "setupUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "runtimeModelPath": "models/library/ternary-bonsai-2-27b/Ternary-Bonsai-2-27B-PTQ1_0.gguf"
+    },
+    {
+      "id": "mimo-distill-qwen-9b",
+      "label": "MiMo Distill Qwen 9B",
+      "description": "Q8_0 community GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "mimo-distill-qwen-9b-0965535a6293"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Q8_0 community GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/bartowski/MiMo-V2.6-Distill-Qwen-9B-GGUF/tree/4371da10c84fb26da3592d4cf312d24aa82b7b65",
+      "setupUrl": "https://huggingface.co/bartowski/MiMo-V2.6-Distill-Qwen-9B-GGUF",
+      "runtimeModelPath": "models/library/mimo-distill-qwen-9b/MiMo-V2.6-Distill-Qwen-9B-Q8_0.gguf"
+    },
+    {
+      "id": "frognano-4b",
+      "label": "FrogNano 4B",
+      "description": "Q8_0 multimodal GGUF; ECHO and vision projector downloaded together.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "frognano-4b-f9a0cdfea0db",
+        "frognano-4b-mmproj-f16"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Q8_0 multimodal GGUF; ECHO and vision projector downloaded together.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/bartowski/FrogNano-4B-2609-GGUF/tree/dfbb801e04ddf045ffd245b9f1a546ed0c7d960f",
+      "setupUrl": "https://huggingface.co/bartowski/FrogNano-4B-2609-GGUF",
+      "runtimeModelPath": "models/library/frognano-4b/FrogNano-4B-2609-Q8_0.gguf",
+      "visionProjectorPath": "models/library/frognano-4b/mmproj-FrogNano-4B-2609-f16.gguf"
+    },
+    {
+      "id": "qwen38-distill-9b",
+      "label": "Qwen 3.8 Distill 9B",
+      "description": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "qwen38-distill-9b-2de2e088370a"
+      ],
+      "license": "See upstream license",
+      "experimental": true,
+      "note": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/empero-ai/Qwen3.8-9B-Distill-GGUF/tree/760121cd70bb4c36b2b5ec58eb765e0df5987efe",
+      "setupUrl": "https://huggingface.co/empero-ai/Qwen3.8-9B-Distill-GGUF",
+      "runtimeModelPath": "models/library/qwen38-distill-9b/Qwen3.8-9B-Q8_0.gguf"
+    },
+    {
+      "id": "triumvirate-9b-coder",
+      "label": "Triumvirate 9B Coder",
+      "description": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "triumvirate-9b-coder-345582b7337c"
+      ],
+      "license": "See upstream license",
+      "experimental": true,
+      "note": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/pragmaticcs/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-GGUF/tree/80ed267365591b4c0f14321015149564d1130aab",
+      "setupUrl": "https://huggingface.co/pragmaticcs/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-GGUF",
+      "runtimeModelPath": "models/library/triumvirate-9b-coder/Triumvirate-Qwopus-MiMo-Ornith-9B-Coder-Q8_0.gguf"
+    },
+    {
+      "id": "orion-agentic-9b",
+      "label": "Orion Agentic 9B",
+      "description": "Q6_K coding GGUF; 16K context with ECHO.",
+      "precision": "Q6_K",
+      "contextTokens": 16384,
+      "artifacts": [
+        "orion-agentic-9b-859c976e62ec"
+      ],
+      "license": "See upstream license",
+      "experimental": true,
+      "note": "Q6_K coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Orion-9B-Agentic-CodeCore-Merge-GGUF/tree/dfd564edb55cf34613b41f1dd1d72577fe36aee4",
+      "setupUrl": "https://huggingface.co/prithivMLmods/Orion-9B-Agentic-CodeCore-Merge-GGUF",
+      "runtimeModelPath": "models/library/orion-agentic-9b/Orion-9B-Agentic-CodeCore-Merge.Q6_K.gguf"
+    },
+    {
+      "id": "zenith-9b-codecore",
+      "label": "Zenith CodeCore 9B",
+      "description": "Q5_K_M coding GGUF; 16K context with ECHO.",
+      "precision": "Q5_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "zenith-9b-codecore-1c85d92b2287"
+      ],
+      "license": "See upstream license",
+      "experimental": true,
+      "note": "Q5_K_M coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/prithivMLmods/Zenith-9B-CodeCore-Merge-GGUF/tree/db3b47ae7d8f52ad09db92084388542b06faff30",
+      "setupUrl": "https://huggingface.co/prithivMLmods/Zenith-9B-CodeCore-Merge-GGUF",
+      "runtimeModelPath": "models/library/zenith-9b-codecore/Zenith-9B-CodeCore-Merge.Q5_K_M.gguf"
+    },
+    {
+      "id": "neohorse-1-9b",
+      "label": "NeoHorse 1 9B",
+      "description": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "neohorse-1-9b-62c526faf2b9"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/TokenRhythm/NeoHorse-1-9B-GGUF/tree/ddcb4c939b5392c86a9d2733c7c0ed30db2554fd",
+      "setupUrl": "https://huggingface.co/TokenRhythm/NeoHorse-1-9B-GGUF",
+      "runtimeModelPath": "models/library/neohorse-1-9b/NeoHorse-1-9B-Q8_0.gguf"
+    },
+    {
+      "id": "boomslang-3b",
+      "label": "Boomslang 3B",
+      "description": "GGUF coding model; 16K context with ECHO.",
+      "precision": "GGUF",
+      "contextTokens": 16384,
+      "artifacts": [
+        "boomslang-3b-319d6eb5a530"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "GGUF coding model; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/Monster-Code/Boomslang/tree/258bc929a75d464ebd5d70991cccf5e2af3b737e",
+      "setupUrl": "https://huggingface.co/Monster-Code/Boomslang",
+      "runtimeModelPath": "models/library/boomslang-3b/boomslang-3b-qwen.gguf"
+    },
+    {
+      "id": "tiel-inspired-coder-9b",
+      "label": "Tiel-Inspired Coder 9B",
+      "description": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "tiel-inspired-coder-9b-44641fdcd7ca"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/VitreousCut/Tiel-Inspired-Coder-9B-GGUF/tree/19d7bb395469bd9c8d56499c1c16b155c4c7e5ea",
+      "setupUrl": "https://huggingface.co/VitreousCut/Tiel-Inspired-Coder-9B-GGUF",
+      "runtimeModelPath": "models/library/tiel-inspired-coder-9b/Tiel-Inspired-Coder-9B-UD-Q8_0.gguf"
+    },
+    {
+      "id": "gmcoder",
+      "label": "Gmcoder",
+      "description": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "gmcoder-c917f87bc0e6"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Q8_0 coding GGUF; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/emperorofrome/Gmcoder/tree/952bd98b90b50a648ad2041e14269036fee5338d",
+      "setupUrl": "https://huggingface.co/emperorofrome/Gmcoder",
+      "runtimeModelPath": "models/library/gmcoder/gmcoder.Q8_0.gguf"
+    },
+    {
+      "id": "ornith-1-5-9b-mtp",
+      "label": "Ornith 1.5 9B MTP",
+      "description": "Q4_K_M GGUF with MTP draft head; 16K context with ECHO.",
+      "precision": "Q4_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "ornith-1-5-9b-mtp-3b9a5b03fddb"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Q4_K_M GGUF with MTP draft head; 16K context with ECHO.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/protoLabsAI/Ornith-1.5-9B-MTP-GGUF/tree/5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+      "setupUrl": "https://huggingface.co/protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+      "runtimeModelPath": "models/library/ornith-1-5-9b-mtp/Ornith-1.5-9B-MTP-Q4_K_M.gguf"
+    },
+    {
+      "id": "moondream3-9b",
+      "label": "Moondream 3.1 9B A2B",
+      "description": "Custom multimodal checkpoint; weights downloadable, but no verified OpenCore inference backend is integrated.",
+      "precision": "Original",
+      "contextTokens": 16384,
+      "artifacts": [
+        "moondream3-9b-9d75c1098fc5",
+        "moondream3-config"
+      ],
+      "license": "See upstream license",
+      "experimental": true,
+      "note": "Custom multimodal checkpoint; weights downloadable, but no verified OpenCore inference backend is integrated.",
+      "selectable": false,
+      "category": "text",
+      "backend": "external",
+      "runtimeReady": false,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/moondream/moondream3.1-9B-A2B/tree/1da27e6c2d2f9118de14560df456881dc62d91f3",
+      "setupUrl": "https://huggingface.co/moondream/moondream3.1-9B-A2B"
+    },
+    {
+      "id": "minicpm5-2b",
+      "label": "MiniCPM5 2B",
+      "description": "BF16 multilingual text model. Downloadable checkpoint; a model-specific native runner is not integrated.",
+      "precision": "BF16",
+      "contextTokens": 16384,
+      "artifacts": [
+        "minicpm5-model",
+        "minicpm5-config",
+        "minicpm5-generation",
+        "minicpm5-tokens",
+        "minicpm5-tokenizer",
+        "minicpm5-tokencfg"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "BF16 weights and tokenizer are available to download. OpenCore does not yet include the Transformers inference backend for this model.",
+      "selectable": false,
+      "category": "text",
+      "backend": "external",
+      "runtimeReady": false,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/openbmb/MiniCPM5-2B/tree/f97400052a43d642bbc6e9975e2397e3ae6a6b52",
+      "setupUrl": "https://huggingface.co/openbmb/MiniCPM5-2B"
     }
   ]
 }

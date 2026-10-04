@@ -2,6 +2,18 @@ import { describe, expect, it } from "vitest";
 import { profileLabel, selectableModelProfiles } from "./ModelProfiles";
 
 describe("model profile context claims", () => {
+  it("exposes the HumanEval GGUF models as selectable installed profiles", () => {
+    const expected = [
+      "oxcoder-9b", "nim-2-coder-7b", "ternary-bonsai-2-27b", "mimo-distill-qwen-9b",
+      "frognano-4b", "qwen38-distill-9b", "triumvirate-9b-coder", "orion-agentic-9b",
+      "zenith-9b-codecore", "neohorse-1-9b", "boomslang-3b", "tiel-inspired-coder-9b",
+      "gmcoder", "ornith-1-5-9b-mtp",
+    ];
+    const actual = new Set<string>(selectableModelProfiles.map(({ id }) => id));
+
+    expect(expected.filter((id) => !actual.has(id))).toEqual([]);
+  });
+
   it("labels the existing K2 and Nanbeige candidate selector DuoCore", () => {
     const profile = selectableModelProfiles.find(({ id }) => id === "doucode");
 
