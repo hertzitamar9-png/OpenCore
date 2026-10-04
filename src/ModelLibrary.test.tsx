@@ -40,11 +40,35 @@ describe("optional model installation", () => {
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
       const picker = await screen.findByRole("combobox", { name: "Quantization for Qwen 3.8 Distill 9B" });
-      expect(screen.getByRole("option", { name: /Q4_K_M · 5.78 GB download · .* VRAM est\./ })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /ECHO · Q4_K_M · 5\.780 GB · 5,780,090,176 bytes download/ })).toBeInTheDocument();
       fireEvent.change(picker, { target: { value: q4.id } });
       fireEvent.click(screen.getByRole("button", { name: "Install" }));
       await waitFor(() => expect(install).toHaveBeenCalledWith(q4.id));
     } finally { library.mockRestore(); speech.mockRestore(); install.mockRestore(); }
+  });
+
+  it("offers Native and ECHO subcategories for one model family and reports exact file bytes", async () => {
+    const base: api.InstalledModel = { id: "qwen38-distill-9b", label: "Qwen 3.8 Distill 9B", description: "Coding GGUF",
+      precision: "Q8_0", contextTokens: 16384, license: "Apache", experimental: false, note: "Pinned",
+      selectable: true, installed: false, externalManaged: false, downloadBytes: 9786060096, totalBytes: 9786060096, category: "text", backend: "gguf", memoryMode: "echo" };
+    const q4: api.InstalledModel = { ...base, id: "qwen38-distill-9b-q4-k-m", label: "Qwen 3.8 Distill 9B · Q4_K_M",
+      precision: "Q4_K_M", variantOf: base.id, downloadBytes: 5780090176, totalBytes: 5780090176 };
+    const native = { ...base, id: "qwen38-distill-9b-native", label: "Qwen 3.8 Distill 9B · Native", variantOf: base.id, memoryMode: "native" as const };
+    const nativeQ4 = { ...q4, id: `${q4.id}-native`, label: `${q4.label} · Native`, memoryMode: "native" as const };
+    const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false,
+      idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, q4, native, nativeQ4], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+      fireEvent.click(await screen.findByRole("button", { name: /^Text/ }));
+      fireEvent.click(screen.getByRole("button", { name: /^Native models/ }));
+      expect(await screen.findByRole("combobox", { name: /Quantization for Qwen/ })).toBeVisible();
+      expect(screen.getByRole("option", { name: /5\.780 GB · 5,780,090,176 bytes/ })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: /ECHO · Q8_0/ })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /^ECHO models/ }));
+      expect(await screen.findByRole("option", { name: /ECHO · Q8_0/ })).toBeInTheDocument();
+      expect(screen.getByText(/Estimated VRAM \(full GPU offload\)/)).toBeVisible();
+    } finally { library.mockRestore(); speech.mockRestore(); }
   });
 
   it("stops an active runtime only after confirmation and passes the reviewed token to uninstallation", async () => {

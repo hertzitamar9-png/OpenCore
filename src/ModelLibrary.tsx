@@ -3,9 +3,10 @@ import { Check, Download, ExternalLink, HardDrive, PackageMinus } from "lucide-r
 import * as api from "./api";
 import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
-import { estimateGgufVramRange, groupModelVariants } from "./model-variants";
+import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, modelMemoryMode } from "./model-variants";
 
-const gb = (bytes: number) => `${(bytes / 1e9).toFixed(2)} GB`;
+const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
+const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
 export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotice }: {
   selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void;
   runtimeActive: boolean; onNotice: (notice: string) => void;
@@ -13,6 +14,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [library, setLibrary] = useState<api.ModelLibrary | null>(null);
   const [error, setError] = useState("");
   const [category, setCategory] = useState('all');
+  const [memoryMode, setMemoryMode] = useState<"all" | "native" | "echo">("all");
   const [pending, setPending] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<api.InstalledModel | null>(null);
   const [quantization, setQuantization] = useState<Record<string, string>>({});
@@ -58,13 +60,14 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const progress = library?.progress;
   const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
   const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation']];
-  const modelGroups = groupModelVariants(library?.models || []);
+  const allModelGroups = groupModelVariants(library?.models || []);
+  const modelGroups = filterGroupsByMemoryMode(allModelGroups, memoryMode);
   const visibleModels = modelGroups.filter(group => category === 'all' || categoryOf(group.model) === category);
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
     </div>
-    <p className="model-library-note">Text GGUF models offer pinned quantizations when their source provides them; other model types keep their supported upstream format. VRAM is an estimate including runtime and KV allowance, and varies with context length and GPU offload.</p>
+    <p className="model-library-note">Each listed download shows the pinned file size in GB and bytes. VRAM is an estimate for full GPU weight offload; actual use varies by backend and layer offload. KV/state for these profiles is kept in system RAM, so longer context does not multiply the weight VRAM estimate. ECHO is available for text models; media generators use their task-specific runtime.</p>
     {runtimeActive ? <p className="model-library-note">Stop the runtime to install or select another model. Uninstalling an active model requires confirmation to stop it first.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
@@ -73,19 +76,26 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {progress.error ? <p>{progress.error}</p> : null}
     </div> : null}
     <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => id === 'all' || categoryOf(group.model) === id).length}</span></button>)}</div>
+    <div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => category === 'all' || categoryOf(group.model) === category).length}</span></button>)}</div>
     <div className="model-library-grid">{visibleModels.map((group) => {
-      const chosenId = quantization[group.id] || (group.variants.some(item => item.id === selectedProfile) ? selectedProfile : group.id);
+      const allVariants = allModelGroups.find(item => item.id === group.id)?.variants || group.variants;
+      const remembered = allVariants.find(item => item.id === quantization[group.id]);
+      const matchingRemembered = remembered && group.variants.find(item => item.precision === remembered.precision);
+      const selected = allVariants.find(item => item.id === selectedProfile);
+      const matchingSelection = selected && group.variants.find(item => item.precision === selected.precision);
+      const chosenId = matchingRemembered?.id || matchingSelection?.id || group.variants[0]?.id || group.id;
       const model = group.variants.find(item => item.id === chosenId) || group.model;
-      const vram = model.backend === "gguf" ? estimateGgufVramRange(model.totalBytes, model.contextTokens) : null;
+      const vram = model.weightBytes || model.totalBytes ? estimateGgufVramRange(model.weightBytes || model.totalBytes, model.contextTokens, model.vramWeightMultiplier || 1) : null;
+      const modeVariants = group.variants;
       return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : model.id === selectedProfile) ? "selected" : ""}`}>
-      <header><div><h3>{group.model.label}</h3><span>{model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
+      <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
-      {group.variants.length > 1 ? <label className="model-quantization-picker">Quantization
+      {modeVariants.length > 1 ? <label className="model-quantization-picker">Mode and quantization
         <select aria-label={`Quantization for ${group.model.label}`} value={model.id} disabled={Boolean(pending)} onChange={event => setQuantization(current => ({ ...current, [group.id]: event.target.value }))}>
-          {group.variants.map(variant => { const estimate = estimateGgufVramRange(variant.totalBytes, variant.contextTokens); return <option key={variant.id} value={variant.id}>{variant.precision} · {gb(variant.totalBytes)} download · {gb(estimate.minBytes)}–{gb(estimate.maxBytes)} VRAM est.</option>; })}
+          {modeVariants.map(variant => { const estimate = variant.weightBytes || variant.totalBytes ? estimateGgufVramRange(variant.weightBytes || variant.totalBytes, variant.contextTokens, variant.vramWeightMultiplier || 1) : null; return <option key={variant.id} value={variant.id}>{modelMemoryMode(variant) === "echo" ? "ECHO" : "Native"} · {variant.precision} · {exactFileSize(variant.totalBytes)} download{estimate ? ` · ${gb(estimate.minBytes)}–${gb(estimate.maxBytes)} VRAM est.` : " · VRAM estimate unavailable"}</option>; })}
         </select>
       </label> : null}
-      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.totalBytes ? gb(model.totalBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div>{vram ? <div><dt>Estimated VRAM</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : null}</dl>
+      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.totalBytes ? exactFileSize(model.totalBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Unavailable until a supported weight file is selected</dd></div> : null}</dl>
       <small>{model.note}</small>
       {model.speechLanguage && model.id === speech.modelId ? <div className="whisper-controls" aria-label="Speech settings">
         <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>

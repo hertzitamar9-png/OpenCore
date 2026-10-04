@@ -742,17 +742,17 @@ describe("OpenCore", () => {
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
     const topbar = within(document.querySelector(".topbar") as HTMLElement);
-    const picker = topbar.getByRole("button", { name: /Choose model profile, currently DuoCore/ });
+    const picker = topbar.getByRole("button", { name: /Choose model profile, currently DuoCore · ECHO/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
-    expect(screen.getByRole("button", { name: /DuoCore K2 \+ Nanbeige · competing drafts, one selected answer/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /DuoCore · ECHO K2 \+ Nanbeige · competing drafts, one selected answer · ECHO archive/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
-    fireEvent.click(await screen.findByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
-    expect(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended/ })).toBeVisible();
-    fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /1M extended · ECHO.*1,000,000-token YaRN window.*ECHO archive.*trained context 262,144/ }));
+    expect(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ })).toBeVisible();
+    fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ }));
     expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
     expect(await screen.findByText("Unsloth", { selector: "h2" })).toBeInTheDocument();
@@ -770,11 +770,11 @@ describe("OpenCore", () => {
     expect(screen.getByRole("menuitem", { name: "Upload files or images" })).toBeVisible();
     fireEvent.click(screen.getByRole("menuitem", { name: /Model DuoCore/ }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
-    fireEvent.click(await screen.findByRole("button", { name: /1M extended 1,000,000-token YaRN window · trained context 262,144/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /1M extended · ECHO.*1,000,000-token YaRN window.*ECHO archive.*trained context 262,144/ }));
 
     const footer = document.querySelector(".conversation-statusbar");
-    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently 1M extended" }));
-    fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended" }));
+    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ }));
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
@@ -832,7 +832,7 @@ describe("OpenCore", () => {
     const statusbar = target.closest("footer");
     expect(statusbar).toHaveClass("statusbar");
     expect(target).toHaveTextContent("3T archive goal");
-    expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently DuoCore" }));
+    expect(statusbar).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently DuoCore · ECHO" }));
     expect(statusbar?.textContent).toContain("VRAM");
     expect(statusbar?.textContent).toContain("tokens/s");
     expect(document.querySelector(".chat-composer .echo-context-status")).toBeNull();

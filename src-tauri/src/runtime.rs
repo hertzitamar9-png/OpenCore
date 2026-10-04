@@ -30,19 +30,12 @@ const NANBEIGE_BF16_FILE: &str = "Nanbeige_Nanbeige4.2-3B-bf16.gguf";
 const LFM_DEFAULT_PORT: u16 = 8850;
 const LFM_FILE: &str = "LFM2.5-2.6B-Q3.8-TBrilliance-NEO-MAX-Q8_0.gguf";
 pub fn supported_profile(profile: &str) -> bool {
-    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" |
+    matches!(profile, "echo" | "echo-native" | "native1m" | "native1m-native" | "unsloth-echo" | "doucode" | "doucode-native" |
         "nanbeige-bf16" | "nanbeige-bf16-echo" |
         "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo") || crate::model_catalog::gguf_model(profile).is_some()
 }
 pub fn echo_profile(profile: &str) -> bool {
-    if profile == "nanbeige-bf16" { return false; }
-    if profile == "nanbeige-bf16-echo" { return true; }
-    if let Some(model) = crate::model_catalog::gguf_model(profile) {
-        if let Some(parent) = model.variant_of.as_deref().filter(|parent| parent.starts_with("nanbeige-bf16")) {
-            return parent == "nanbeige-bf16-echo";
-        }
-    }
-    matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16-echo" | "dualcore-echo" | "fusioncore-echo") || crate::model_catalog::gguf_model(profile).is_some()
+    profile == "unsloth-echo" || crate::model_catalog::model(profile).is_some_and(|model| model.memory_mode == "echo")
 }
 fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
 fn nanbeige_profile(profile: &str) -> bool {
@@ -496,7 +489,7 @@ impl RuntimeManager {
         self.start_inner(profile, attach_url, generation)
     }
 
-    fn start_doucode(&self, generation: u64) -> Result<RuntimeSnapshot, String> {
+    fn start_doucode(&self, profile: &str, generation: u64) -> Result<RuntimeSnapshot, String> {
         let release = self.doucode_release_dir();
         let config_path = self.doucode_config_path(&release);
         let config_bytes = match std::fs::read(&config_path) {
@@ -563,7 +556,9 @@ impl RuntimeManager {
                 llama_server.display()
             ));
         }
-        for (port, name) in [(service_port, "DuoCore"), (k2_port, "K2"), (nanbeige_port, "Nanbeige"), (self.echo_port, "ECHO")] {
+        let mut ports = vec![(service_port, "DuoCore"), (k2_port, "K2"), (nanbeige_port, "Nanbeige")];
+        if echo_profile(profile) { ports.push((self.echo_port, "ECHO")); }
+        for (port, name) in ports {
             if Self::port_open(port) {
                 return self.fail_start("doucode", format!(
                     "Cannot start DuoCore: {name} port {port} is already in use. The existing process was left untouched."
@@ -609,22 +604,24 @@ impl RuntimeManager {
         if let Err(error) = self.wait_ready(service_port, "/health", "DuoCore", RuntimeChild::Model, generation) {
             return self.fail_start("doucode", error);
         }
-        if let Ok(mut inner) = self.inner.lock() {
-            inner.loading_phase = "Starting ECHO archive".into();
-            inner.loading_step = 3;
-        }
-        // DuoCore may safely reduce its live window to fit current host RAM. Let ECHO
-        // read the effective value from DuoCore's /props instead of the package maximum.
-        if let Err(error) = self.start_echo(&upstream, None) {
-            return self.fail_start("doucode", error);
-        }
-        if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
-            return self.fail_start("doucode", error);
+        if echo_profile(profile) {
+            if let Ok(mut inner) = self.inner.lock() {
+                inner.loading_phase = "Starting ECHO archive".into();
+                inner.loading_step = 3;
+            }
+            // DuoCore may safely reduce its live window to fit current host RAM. Let ECHO
+            // read the effective value from DuoCore's /props instead of the package maximum.
+            if let Err(error) = self.start_echo(&upstream, None) {
+                return self.fail_start(profile, error);
+            }
+            if let Err(error) = self.wait_ready(self.echo_port, "/v1/models", "ECHO", RuntimeChild::Echo, generation) {
+                return self.fail_start(profile, error);
+            }
         }
         let mut inner = self.inner.lock().map_err(|error| error.to_string())?;
         inner.status = "running".into();
         inner.loading_phase = "Ready".into();
-        inner.loading_step = 4;
+        inner.loading_step = if echo_profile(profile) { 4 } else { 3 };
         inner.load_duration_ms = inner.loading_started.take().map(|started| started.elapsed().as_millis() as u64);
         Ok(self.snapshot_locked(&mut inner))
     }
@@ -714,9 +711,9 @@ impl RuntimeManager {
             return Ok(self.snapshot_locked(&mut inner));
         }
 
-        if profile == "doucode" {
+        if matches!(profile, "doucode" | "doucode-native") {
             drop(inner);
-            return self.start_doucode(generation);
+            return self.start_doucode(profile, generation);
         }
         if lfm_profile(profile) {
             drop(inner);
@@ -774,7 +771,7 @@ impl RuntimeManager {
         if projector.is_file() {
             command.args(["--mmproj", projector.to_string_lossy().as_ref(), "--image-max-tokens", "2048"]);
         }
-        if profile == "echo" {
+        if matches!(profile, "echo" | "echo-native") {
             command.args(["-c", "0", "-t", "4", "--no-kv-offload"]);
         } else {
             command.args(["-c", "1000000", "-t", "4"]);
@@ -808,13 +805,13 @@ impl RuntimeManager {
             return self.fail_start(profile, error);
         }
 
-        let echo_enabled = matches!(profile, "echo" | "native1m");
+        let echo_enabled = echo_profile(profile);
         if let Ok(mut inner) = self.inner.lock() { inner.loading_phase = if echo_enabled { "Starting ECHO" } else { "Finishing startup" }.into(); inner.loading_step = 2; }
 
         if echo_enabled {
             // ECHO asks /props for the model's real metadata-derived n_ctx, except
             // the YaRN profile whose configured 1M window must match the proxy.
-            let context_size = (profile == "native1m").then_some(1_000_000);
+            let context_size = matches!(profile, "native1m" | "native1m-native").then_some(1_000_000);
             if let Err(error) = self.start_echo(&format!("http://127.0.0.1:{}", self.backend_port), context_size) {
                 return self.fail_start(profile, error);
             }
@@ -930,7 +927,8 @@ impl RuntimeManager {
         let mut command=self.command(&server);
         // Large optional models use bounded attention and CPU KV. CPU layer
         // offload for DavidAU is deliberate and visible in its library card.
-        let layers=if profile=="davidau-27b" {"32"} else if profile=="dirk-27b" {"48"} else {"99"};
+        let family_id=model.variant_of.as_deref().unwrap_or(profile);
+        let layers=if family_id=="davidau-27b" {"32"} else if family_id=="dirk-27b" {"48"} else {"99"};
         command.current_dir(server.parent().unwrap_or(&self.install_root)).arg("-m").arg(&checkpoint)
             .args(["--host","127.0.0.1","--port",&self.backend_port.to_string(),"-ngl",layers,"-c",&model.context_tokens.to_string(),"-t","4","--no-kv-offload","--flash-attn","on"])
             .stdout(Stdio::piped()).stderr(Stdio::piped());
@@ -940,8 +938,10 @@ impl RuntimeManager {
         Self::pipe_logs(self.store.clone(),"optional-model",&mut child);
         {let mut inner=self.inner.lock().map_err(|e|e.to_string())?;inner.model=Some(child);inner.model_job=Some(job);inner.loading_phase=format!("Loading {}",model.label);inner.loading_step=1;}
         if let Err(error)=self.wait_ready(self.backend_port,"/health",&model.label,RuntimeChild::Model,generation){return self.fail_start(profile,error);}
-        if let Err(error)=self.start_echo(&format!("http://127.0.0.1:{}",self.backend_port),Some(model.context_tokens)){return self.fail_start(profile,error);}
-        if let Err(error)=self.wait_ready(self.echo_port,"/v1/models","ECHO",RuntimeChild::Echo,generation){return self.fail_start(profile,error);}
+        if echo_profile(profile) {
+            if let Err(error)=self.start_echo(&format!("http://127.0.0.1:{}",self.backend_port),Some(model.context_tokens)){return self.fail_start(profile,error);}
+            if let Err(error)=self.wait_ready(self.echo_port,"/v1/models","ECHO",RuntimeChild::Echo,generation){return self.fail_start(profile,error);}
+        }
         let mut inner=self.inner.lock().map_err(|e|e.to_string())?;inner.status="running".into();inner.loading_phase="Ready".into();inner.loading_step=3;
         inner.load_duration_ms=inner.loading_started.take().map(|start|start.elapsed().as_millis() as u64);
         Ok(self.snapshot_locked(&mut inner))
@@ -1045,7 +1045,7 @@ impl RuntimeManager {
             if let Ok(Some(status)) = child.try_wait() {
                 inner.status = "error".into();
                 inner.error = Some(match inner.profile.as_str() {
-                    "doucode" => format!("DuoCore service exited with {status}"),
+                    "doucode" | "doucode-native" => format!("DuoCore service exited with {status}"),
                     _ => format!("llama-server exited with {status}"),
                 });
             }
@@ -1060,9 +1060,9 @@ impl RuntimeManager {
             ("not loaded".to_string(), "none".to_string())
         } else {
             match inner.profile.as_str() {
-                "echo" | "native1m" | "doucode" => ("system RAM".to_string(), "Q4_0".to_string()),
+                "echo" | "echo-native" | "native1m" | "native1m-native" | "doucode" | "doucode-native" => ("system RAM".to_string(), "Q4_0".to_string()),
                 profile if nanbeige_profile(profile) => ("system RAM".to_string(), "F16 KV".to_string()),
-                "swift-27b" | "dirk-27b" | "davidau-27b" => ("system RAM".to_string(), "F16 KV".to_string()),
+                profile if crate::model_catalog::gguf_model(profile).is_some() => ("system RAM".to_string(), "F16 KV".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
                 "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
                 "dualcore-echo" | "fusioncore-echo" => ("GPU".to_string(), "F16 KV; ECHO archive for long-term memory".to_string()),
@@ -1078,13 +1078,13 @@ impl RuntimeManager {
             .and_then(|url| url.rsplit(':').next())
             .and_then(|port| port.parse::<u16>().ok())
             .unwrap_or_else(|| match selected_profile {
-                "doucode" => DOUCODE_DEFAULT_PORT,
+                "doucode" | "doucode-native" => DOUCODE_DEFAULT_PORT,
                 profile if nanbeige_profile(profile) => NANBEIGE_DEFAULT_PORT,
                 "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => LFM_DEFAULT_PORT,
                 _ => self.backend_port,
             });
         let model_path = match selected_profile {
-            "doucode" => self.doucode_release_dir().display().to_string(),
+            "doucode" | "doucode-native" => self.doucode_release_dir().display().to_string(),
             profile if nanbeige_profile(profile) => nanbeige_checkpoint(&self.install_root, selected_profile)
                 .map(|path| path.display().to_string())
                 .unwrap_or_else(|_| self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE).display().to_string()),
@@ -1105,8 +1105,8 @@ impl RuntimeManager {
             model_path,
             archive_path: self.install_root.join("echo").join("archives").display().to_string(),
             context_size: match selected_profile {
-                "native1m" => 1_000_000,
-                "doucode" => DOUCODE_MODEL_CONTEXT,
+                "native1m" | "native1m-native" => 1_000_000,
+                "doucode" | "doucode-native" => DOUCODE_MODEL_CONTEXT,
                 "nanbeige-bf16" | "nanbeige-bf16-echo" => 262_144,
                 "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => lfm_context(selected_profile),
                 _ => crate::model_catalog::gguf_model(selected_profile).map(|model|model.context_tokens).unwrap_or(ECHO_MODEL_CONTEXT),
@@ -1116,7 +1116,7 @@ impl RuntimeManager {
             error: inner.error.clone(),
             loading_phase: inner.loading_phase.clone(),
             loading_step: inner.loading_step,
-            loading_steps: if selected_profile == "doucode" { 4 } else { 3 },
+            loading_steps: if matches!(selected_profile, "doucode" | "doucode-native") && echo_profile(selected_profile) { 4 } else { 3 },
             loading_elapsed_ms: inner.loading_started.map(|started| started.elapsed().as_millis() as u64).or(inner.load_duration_ms),
         }
     }
@@ -1359,6 +1359,13 @@ mod tests {
         assert!(manager.select_profile("fusioncore-kv").is_ok());
         assert!(!echo_profile("dualcore-kv"));
         assert!(!echo_profile("fusioncore-kv"));
+        assert!(supported_profile("qwen38-distill-9b-native"));
+        assert!(echo_profile("qwen38-distill-9b"));
+        assert!(!echo_profile("qwen38-distill-9b-native"));
+        assert!(supported_profile("echo-native"));
+        assert!(!echo_profile("echo-native"));
+        assert!(supported_profile("doucode-native"));
+        assert!(!echo_profile("doucode-native"));
         drop(manager);
         let _ = std::fs::remove_file(path);
     }

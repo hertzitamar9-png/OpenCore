@@ -70,7 +70,8 @@ export interface InstalledModel {
   installed: boolean; externalManaged: boolean; downloadBytes: number; totalBytes: number;
   speechLanguage?: string;
   category?: string; backend?: string; runtimeReady?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
-  variantOf?: string;
+  variantOf?: string; memoryMode?: "native" | "echo"; runtimeModelPath?: string; visionProjectorPath?: string;
+  vramWeightMultiplier?: number; weightBytes?: number;
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
@@ -78,9 +79,16 @@ export interface ModelLibrary {
 }
 export async function modelLibrary(): Promise<ModelLibrary> {
   if (desktop()) return invoke<ModelLibrary>("list_model_library");
-  return { models: modelCatalog.models.map((model) => ({ ...model, installed: false, externalManaged: false,
-    downloadBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0),
-    totalBytes: modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id)).reduce((sum, file) => sum + file.bytes, 0) })),
+  return { models: modelCatalog.models.map((model) => {
+    const files = modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id));
+    const exactBytes = files.reduce((sum, file) => sum + file.bytes, 0);
+    const weightFiles = model.runtimeModelPath
+      ? files.filter(file => file.path === model.runtimeModelPath || file.path === model.visionProjectorPath)
+      : files.filter(file => /\.(gguf|safetensors|bin|pt|pth|ckpt|onnx|model|tflite)$/i.test(file.filename));
+    return { ...model, memoryMode: model.memoryMode === "echo" ? "echo" as const : "native" as const,
+      installed: false, externalManaged: false, downloadBytes: exactBytes, totalBytes: exactBytes,
+      weightBytes: weightFiles.length ? weightFiles.reduce((sum, file) => sum + file.bytes, 0) : exactBytes };
+  }),
     diskFreeBytes: 240e9, minimumFreeBytes: 64 * 1024 * 1024, progress: null };
 }
 export const installedSkillModels = (): Promise<{id:string;category:string;installed:boolean}[]> => desktop() ? invoke('installed_skill_models') : Promise.resolve([]);

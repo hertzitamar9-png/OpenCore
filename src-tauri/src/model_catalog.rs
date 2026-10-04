@@ -35,6 +35,8 @@ pub struct Model {
     pub selectable: bool,
     #[serde(default)] pub category: String,
     #[serde(default)] pub backend: String,
+    #[serde(default="default_native_mode")] pub memory_mode: String,
+    #[serde(default="default_one_multiplier")] pub vram_weight_multiplier: u32,
     #[serde(default="default_true")] pub runtime_ready: bool,
     #[serde(default="default_true")] pub installable: bool,
     #[serde(default,skip_serializing_if="Option::is_none")] pub source_url: Option<String>,
@@ -48,12 +50,14 @@ pub struct Model {
 #[derive(Deserialize)]
 struct Manifest { artifacts: Vec<Artifact>, models: Vec<Model> }
 fn default_true()->bool {true}
+fn default_native_mode()->String {"native".into()}
+fn default_one_multiplier()->u32 {1}
 pub fn gguf_model(id:&str)->Option<Model> {
     manifest().ok()?.models.into_iter().find(|model|model.id==id && model.selectable && model.backend=="gguf")
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64 }
+pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64, weight_bytes: u64 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallProgress {
@@ -78,6 +82,9 @@ fn manifest() -> Result<Manifest, String> {
         if file.repo.split('/').count() != 2 { return Err("Invalid Hub repository".into()); }
     }
     for model in &data.models {
+        if !matches!(model.memory_mode.as_str(), "native" | "echo") || model.vram_weight_multiplier == 0 {
+            return Err(format!("Invalid runtime mode or VRAM multiplier for {}", model.id));
+        }
         for path in model.runtime_model_path.iter().chain(model.vision_projector_path.iter()) {
             safe_relative(path)?;
             if !data.artifacts.iter().any(|file|file.path==*path && model.artifacts.contains(&file.id)){return Err(format!("Unpinned runtime path for {}",model.id));}
@@ -235,9 +242,17 @@ pub fn list(root: &Path) -> Result<Library, String> {
         let external_managed = externally_managed_speech(root, &m.id) || (m.id == "yue2" && crate::music_weights::external_dir().is_some());
         let mut model=m.clone();
         if model.id=="yue2" {model.runtime_ready=crate::music_studio::runtime_available();}
+        let weight_bytes = if model.runtime_model_path.is_some() || model.vision_projector_path.is_some() {
+            files.iter().filter(|file| model.runtime_model_path.as_deref() == Some(file.path.as_str()) ||
+                model.vision_projector_path.as_deref() == Some(file.path.as_str())).map(|file| file.bytes).sum()
+        } else {
+            let weights: u64 = files.iter().filter(|file| [".gguf", ".safetensors", ".bin", ".pt", ".pth", ".ckpt", ".onnx", ".model", ".tflite"]
+                .iter().any(|extension| file.filename.to_ascii_lowercase().ends_with(extension))).map(|file| file.bytes).sum();
+            if weights > 0 { weights } else { files.iter().map(|file| file.bytes).sum() }
+        };
         Ok(ModelInfo { model, installed: installed(root, m, &data), external_managed,
             download_bytes: if external_managed { 0 } else { remaining_download_bytes(root, &files)? },
-            total_bytes: files.iter().map(|f| f.bytes).sum() })
+            total_bytes: files.iter().map(|f| f.bytes).sum(), weight_bytes })
     }).collect::<Result<Vec<_>, _>>()?;
     Ok(Library { models, progress: PROGRESS.lock().map_err(|e| e.to_string())?.clone(),
         disk_free_bytes: free_bytes(root), minimum_free_bytes: MIN_FREE_BYTES })
@@ -658,6 +673,62 @@ mod tests {
                 file.id == *id && file.path == runtime_path && file.bytes > 0 && valid_sha256(&file.sha256)
                     && file.revision.len() == 40)), "{} must have its own pinned runtime file", variant.id);
         }
+    }
+    #[test]
+    fn every_echofied_gguf_quant_has_a_native_choice_reusing_the_same_pinned_files() {
+        let catalog = manifest().unwrap();
+        let echo_profiles: Vec<_> = catalog.models.iter().filter(|model|
+            model.selectable && model.category == "text" && model.backend == "gguf" && model.memory_mode == "echo"
+                && !model.id.starts_with("nanbeige-bf16-echo")).collect();
+        assert!(!echo_profiles.is_empty());
+        for echo in echo_profiles {
+            let native_id = format!("{}-native", echo.id);
+            let native = catalog.models.iter().find(|model| model.id == native_id)
+                .unwrap_or_else(|| panic!("missing native counterpart for {}", echo.id));
+            assert_eq!(native.memory_mode, "native", "{native_id}");
+            assert_eq!(native.artifacts, echo.artifacts, "mode must not duplicate weights: {native_id}");
+            assert_eq!(native.precision, echo.precision, "{native_id}");
+            assert_eq!(native.runtime_model_path, echo.runtime_model_path, "{native_id}");
+            assert!(native.selectable && native.installable && native.runtime_ready, "{native_id}");
+        }
+    }
+    #[test]
+    fn every_selectable_text_family_has_native_and_echo_profiles() {
+        let catalog = manifest().unwrap();
+        let mut modes = std::collections::BTreeMap::<String, std::collections::BTreeSet<String>>::new();
+        for model in catalog.models.iter().filter(|model| model.selectable && model.category == "text") {
+            let mut family = model.variant_of.as_deref().unwrap_or(&model.id).to_string();
+            if family == "dualcore-echo" { family = "dualcore-kv".into(); }
+            if family == "fusioncore-echo" { family = "fusioncore-kv".into(); }
+            if family.starts_with("nanbeige-bf16-echo") { family = family.replacen("nanbeige-bf16-echo", "nanbeige-bf16", 1); }
+            if family == "echo-native" { family = "echo".into(); }
+            if family == "native1m-native" { family = "native1m".into(); }
+            if family == "doucode-native" { family = "doucode".into(); }
+            modes.entry(family).or_default().insert(model.memory_mode.clone());
+        }
+        assert!(modes.len() >= 20, "expected text families to remain distinct");
+        for (family, available) in modes {
+            assert!(available.contains("native") && available.contains("echo"), "{family} must have both modes: {available:?}");
+        }
+    }
+    #[test]
+    fn model_library_reports_exact_bundle_and_weight_bytes_separately() {
+        let root = std::env::temp_dir().join(format!("opencore-model-size-{}", uuid::Uuid::new_v4()));
+        let library = list(&root).unwrap();
+        let catalog = manifest().unwrap();
+        let find = |id: &str| library.models.iter().find(|model| model.model.id == id).unwrap();
+        let echo = find("echo");
+        let artifact_bytes = |id: &str| catalog.artifacts.iter().find(|artifact| artifact.id == id).unwrap().bytes;
+        let apex = artifact_bytes("opencore-apex");
+        let vision = artifact_bytes("opencore-vision");
+        assert_eq!(echo.weight_bytes, apex + vision);
+        assert!(echo.total_bytes > echo.weight_bytes, "runtime downloads must not inflate the VRAM estimate");
+        assert_eq!(echo.total_bytes, echo.download_bytes, "uninstalled bundle bytes are exact");
+        let native_echo = find("echo-native");
+        assert_eq!(native_echo.total_bytes, echo.total_bytes);
+        assert_eq!(native_echo.weight_bytes, echo.weight_bytes);
+        assert_eq!(find("qwen38-distill-9b").weight_bytes, find("qwen38-distill-9b-native").weight_bytes);
+        assert_eq!(find("fusioncore-kv").model.vram_weight_multiplier, 2);
     }
     #[tokio::test]
     #[ignore = "Explicit opt-in only; registers and verifies already-present speech checkpoints"]

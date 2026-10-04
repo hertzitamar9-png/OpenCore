@@ -17,20 +17,20 @@ describe("model profile context claims", () => {
   it("labels the existing K2 and Nanbeige candidate selector DuoCore", () => {
     const profile = selectableModelProfiles.find(({ id }) => id === "doucode");
 
-    expect(profileLabel("doucode")).toBe("DuoCore");
+    expect(profileLabel("doucode")).toBe("DuoCore · ECHO");
     expect(profile).toMatchObject({
-      label: "DuoCore",
-      description: "K2 + Nanbeige · competing drafts, one selected answer",
+      label: "DuoCore · ECHO",
+      description: "K2 + Nanbeige · competing drafts, one selected answer · ECHO archive",
     });
   });
 
   it("labels the 1M YaRN window as extended and shows its trained context", () => {
     const profile = selectableModelProfiles.find(({ id }) => id === "native1m");
 
-    expect(profileLabel("native1m")).toBe("1M extended");
+    expect(profileLabel("native1m")).toBe("1M extended · ECHO");
     expect(profile).toMatchObject({
-      label: "1M extended",
-      description: "1,000,000-token YaRN window · trained context 262,144",
+      label: "1M extended · ECHO",
+      description: "1,000,000-token YaRN window · ECHO archive · trained context 262,144",
     });
   });
 
