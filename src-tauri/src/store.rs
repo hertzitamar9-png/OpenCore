@@ -32,6 +32,7 @@ fn operation_from_row(row: &Row<'_>) -> rusqlite::Result<OperationRecord> {
         imported: row.get::<_, i64>(7)? as u64, updated: row.get::<_, i64>(8)? as u64,
         skipped: row.get::<_, i64>(9)? as u64, summary: row.get(10)?,
         error: row.get(11)?, started_at: row.get(12)?, finished_at: row.get(13)?,
+        last_progress_at: row.get(14)?,
     })
 }
 
@@ -405,11 +406,33 @@ mod tests {
         assert_eq!(completed.status, "completed");
         assert_eq!((completed.current, completed.total, completed.skipped), (10, 10, 8));
         assert!(completed.finished_at.is_some());
+        assert_eq!(completed.last_progress_at, completed.finished_at.clone().unwrap());
+        assert!(completed.last_progress_at >= completed.started_at);
         let interrupted = records.iter().find(|record| record.id == claude.id).unwrap();
         assert_eq!(interrupted.status, "failed");
         assert!(interrupted.error.as_deref().unwrap().contains("app closed"));
         assert!(reopened.start_operation("history_sync", "claude-code").is_ok());
         drop(reopened);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn older_operations_schema_migrates_progress_timestamp_from_start_time() {
+        let path = std::env::temp_dir().join(format!("opencore-operation-progress-{}.sqlite3", uuid::Uuid::new_v4()));
+        {
+            let connection = Connection::open(&path).unwrap();
+            connection.execute_batch("CREATE TABLE operations (
+                id TEXT PRIMARY KEY,kind TEXT NOT NULL,target TEXT NOT NULL,phase TEXT NOT NULL,status TEXT NOT NULL,
+                current INTEGER NOT NULL DEFAULT 0,total INTEGER NOT NULL DEFAULT 0,imported INTEGER NOT NULL DEFAULT 0,
+                updated INTEGER NOT NULL DEFAULT 0,skipped INTEGER NOT NULL DEFAULT 0,summary TEXT NOT NULL DEFAULT '',
+                error TEXT,started_at TEXT NOT NULL,finished_at TEXT,owner_pid INTEGER NOT NULL DEFAULT 0);
+                INSERT INTO operations(id,kind,target,phase,status,started_at,owner_pid)
+                VALUES('legacy','history_sync','codex','Indexing exact history in ECHO','completed','2026-10-01T00:00:00Z',0);").unwrap();
+        }
+        let store = EventStore::open(&path).unwrap();
+        let legacy = store.list_operations().unwrap().into_iter().find(|item| item.id == "legacy").unwrap();
+        assert_eq!(legacy.last_progress_at, "2026-10-01T00:00:00Z");
+        drop(store);
         let _ = std::fs::remove_file(path);
     }
 
@@ -549,6 +572,7 @@ impl EventStore {
                    error TEXT,
                    started_at TEXT NOT NULL,
                    finished_at TEXT,
+                   last_progress_at TEXT NOT NULL DEFAULT '',
                    owner_pid INTEGER NOT NULL DEFAULT 0
                  );
                  CREATE INDEX IF NOT EXISTS operations_target_started
@@ -640,6 +664,12 @@ impl EventStore {
         };
         if !operation_columns.iter().any(|name| name == "owner_pid") {
             connection.execute("ALTER TABLE operations ADD COLUMN owner_pid INTEGER NOT NULL DEFAULT 0", [])
+                .map_err(|e| e.to_string())?;
+        }
+        if !operation_columns.iter().any(|name| name == "last_progress_at") {
+            connection.execute("ALTER TABLE operations ADD COLUMN last_progress_at TEXT NOT NULL DEFAULT ''", [])
+                .map_err(|e| e.to_string())?;
+            connection.execute("UPDATE operations SET last_progress_at=started_at WHERE last_progress_at=''", [])
                 .map_err(|e| e.to_string())?;
         }
         let now = Utc::now().to_rfc3339();
@@ -1057,22 +1087,22 @@ impl EventStore {
         ).map_err(|e| e.to_string())?;
         if active { return Err(format!("{target} already has an operation in progress")); }
         connection.execute(
-            "INSERT INTO operations(id,kind,target,phase,status,started_at,owner_pid) VALUES(?1,?2,?3,'Queued','queued',?4,?5)",
+            "INSERT INTO operations(id,kind,target,phase,status,started_at,last_progress_at,owner_pid) VALUES(?1,?2,?3,'Queued','queued',?4,?4,?5)",
             params![id, kind, target, now, std::process::id()],
         ).map_err(|e| e.to_string())?;
         Ok(OperationRecord {
             id, kind: kind.into(), target: target.into(), phase: "Queued".into(),
             status: "queued".into(), current: 0, total: 0, imported: 0, updated: 0,
-            skipped: 0, summary: String::new(), error: None, started_at: now, finished_at: None,
+            skipped: 0, summary: String::new(), error: None, started_at: now.clone(), last_progress_at: now, finished_at: None,
         })
     }
 
     pub fn update_operation(&self, id: &str, phase: &str, current: u64, total: u64,
         imported: u64, updated: u64, skipped: u64) -> Result<(), String> {
         let changed = self.connection.lock().map_err(|e| e.to_string())?.execute(
-            "UPDATE operations SET phase=?2,status='running',current=?3,total=?4,
+            "UPDATE operations SET phase=?2,status='running',current=?3,total=?4,last_progress_at=?8,
              imported=?5,updated=?6,skipped=?7 WHERE id=?1 AND status IN ('queued','running')",
-            params![id, phase, current, total, imported, updated, skipped],
+            params![id, phase, current, total, imported, updated, skipped, Utc::now().to_rfc3339()],
         ).map_err(|e| e.to_string())?;
         if changed == 0 { return Err("Operation is no longer active".into()); }
         Ok(())
@@ -1084,7 +1114,7 @@ impl EventStore {
         let phase = if error.is_some() { "Failed" } else { "Completed" };
         self.connection.lock().map_err(|e| e.to_string())?.execute(
             "UPDATE operations SET phase=?2,status=?3,current=?4,total=?5,
-             imported=?6,updated=?7,skipped=?8,summary=?9,error=?10,finished_at=?11 WHERE id=?1",
+             imported=?6,updated=?7,skipped=?8,summary=?9,error=?10,finished_at=?11,last_progress_at=?11 WHERE id=?1",
             params![id, phase, status, current, total, imported, updated, skipped,
                 redact_text(summary), error.map(redact_text), Utc::now().to_rfc3339()],
         ).map_err(|e| e.to_string())?;
@@ -1093,8 +1123,8 @@ impl EventStore {
 
     pub fn request_operation_cancel(&self, id: &str) -> Result<(), String> {
         let changed = self.connection.lock().map_err(|e| e.to_string())?.execute(
-            "UPDATE operations SET phase='Cancellation requested' WHERE id=?1 AND status IN ('queued','running')",
-            [id],
+            "UPDATE operations SET phase='Cancellation requested',last_progress_at=?2 WHERE id=?1 AND status IN ('queued','running')",
+            params![id, Utc::now().to_rfc3339()],
         ).map_err(|e| e.to_string())?;
         if changed == 0 { return Err("Import is no longer active".into()); }
         Ok(())
@@ -1105,7 +1135,7 @@ impl EventStore {
         self.connection.lock().map_err(|e| e.to_string())?.execute(
             "UPDATE operations SET phase='Cancelled',status='cancelled',current=?2,total=?3,
              imported=?4,updated=?5,skipped=?6,summary='Import cancelled. Imported sessions remain until cleared.',
-             error=NULL,finished_at=?7 WHERE id=?1 AND status IN ('queued','running')",
+             error=NULL,finished_at=?7,last_progress_at=?7 WHERE id=?1 AND status IN ('queued','running')",
             params![id, current, total, imported, updated, skipped, Utc::now().to_rfc3339()],
         ).map_err(|e| e.to_string())?;
         Ok(())
@@ -1122,7 +1152,7 @@ impl EventStore {
         let connection = self.connection.lock().map_err(|e| e.to_string())?;
         let mut statement = connection.prepare(
             "SELECT id,kind,target,phase,status,current,total,imported,updated,skipped,
-             summary,error,started_at,finished_at FROM operations ORDER BY started_at DESC,id DESC LIMIT 50",
+             summary,error,started_at,finished_at,last_progress_at FROM operations ORDER BY started_at DESC,id DESC LIMIT 50",
         ).map_err(|e| e.to_string())?;
         let rows = statement.query_map([], operation_from_row).map_err(|e| e.to_string())?;
         rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())

@@ -3113,6 +3113,267 @@
       "filename": "Nanbeige_Nanbeige4.2-3B-Q8_0.gguf",
       "sha256": "837ba713ef3a3b5c9aee82e5dcba07600ea7db36ae392419f982b3bfaec04ef2",
       "bytes": 4434787488
+    },
+    {
+      "id": "swift-27b-variant-ec4285b3-6ce61b53",
+      "path": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "repo": "ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "filename": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "sha256": "6ce61b532e45d7113e2b48b8dff9c104ff521230fa119eb0c3e75a44fb9f1cbf",
+      "bytes": 9607981056
+    },
+    {
+      "id": "swift-27b-variant-edab8b4a-4414bc39",
+      "path": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "repo": "ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "filename": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "sha256": "4414bc39d93272af91ff311e837941434aec983d5633958c08acfe48b61cab85",
+      "bytes": 8771311616
+    },
+    {
+      "id": "swift-27b-variant-b9aad075-9aecf1cd",
+      "path": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "repo": "ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "filename": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "sha256": "9aecf1cd41b2cb2f32a74e0d889e33855ebef43b26f43b43feb5720239e677e5",
+      "bytes": 12120016896
+    },
+    {
+      "id": "swift-27b-variant-3dded203-e23eb251",
+      "path": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "repo": "ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "filename": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "sha256": "e23eb251493b8a89f7d0217590b593e696ac9bacaeac8605541e477533dc5838",
+      "bytes": 10442827776
+    },
+    {
+      "id": "dirk-27b-variant-c7fe2715-79bf1148",
+      "path": "models/library/dirk-27b/variants/Dirk-Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "repo": "peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF",
+      "revision": "52cb3e759635ab4605e08790b6c47df8adcf0744",
+      "filename": "Dirk-Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "sha256": "79bf1148f37b3fd0ceb89a22b7d7bd8898aae9e6e6ed38fbcb4e814e0ccac079",
+      "bytes": 9608001856
+    },
+    {
+      "id": "ternary-bonsai-2-27b-variant-3009f253-3907dc16",
+      "path": "models/library/ternary-bonsai-2-27b/variants/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "repo": "prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "revision": "b072e1d3b35a0a630cece372c2127528e0994386",
+      "filename": "Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "sha256": "3907dc1658db1f78a9826bf8d5bcb8dc65db0d466388937af57f2294fae62ec1",
+      "bytes": 7206168928
+    },
+    {
+      "id": "ornith-1-5-9b-mtp-variant-8e0e5054-446555f1",
+      "path": "models/library/ornith-1-5-9b-mtp/variants/Ornith-1.5-9B-MTP-NVFP4.gguf",
+      "repo": "protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+      "revision": "5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+      "filename": "Ornith-1.5-9B-MTP-NVFP4.gguf",
+      "sha256": "446555f10864256f00e54af9b6b7b0d74bdab3187bf7a43926dd9466b1d6c36a",
+      "bytes": 6531280448
+    },
+    {
+      "id": "davidau-27b-variant-532ea39d-ee4fc495",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ2_M.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ2_M.gguf",
+      "sha256": "ee4fc4950338cc95e804bff5d5c51f0a55ef7b196f9dd6fbaddf62183d189dda",
+      "bytes": 12124624416
+    },
+    {
+      "id": "davidau-27b-variant-3b9913ad-19ee0a94",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ3_M.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ3_M.gguf",
+      "sha256": "19ee0a94937a3b028f7f2565f9b210c2a15f32738b237ea466b0a96cb61717b0",
+      "bytes": 14532048416
+    },
+    {
+      "id": "davidau-27b-variant-f6105272-fa921836",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-IQ4_XS.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-IQ4_XS.gguf",
+      "sha256": "fa92183638b045b01447fd657afd6220f0995ca3a31b528078cefdf26a96c820",
+      "bytes": 15309039136
+    },
+    {
+      "id": "davidau-27b-variant-85227e97-318d14f8",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ4_XS.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ4_XS.gguf",
+      "sha256": "318d14f81f301bfa3b0853cce3e68fa14a2571fdecb9fde455b591ff2754b0de",
+      "bytes": 17033680416
+    },
+    {
+      "id": "davidau-27b-variant-9b973346-bc7a6cf2",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_M.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_M.gguf",
+      "sha256": "bc7a6cf2bcc78d1190aaf04d1ab1c5cb845b6ff23aa0e7d24fe0d2ea6d3a7c7c",
+      "bytes": 18498573856
+    },
+    {
+      "id": "davidau-27b-variant-4159f0b9-889caf99",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_S.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_S.gguf",
+      "sha256": "889caf9975ef423464dd319f8bc97318d5bab7d034060efee8711cdb15708766",
+      "bytes": 17537488416
+    },
+    {
+      "id": "davidau-27b-variant-025d0df6-7408f594",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_M.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_M.gguf",
+      "sha256": "7408f59414a436b1ac5dcf33cdc663596fc66a84786f59f835641374b658b87d",
+      "bytes": 21182273056
+    },
+    {
+      "id": "davidau-27b-variant-a2a610fe-89d30692",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_S.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_S.gguf",
+      "sha256": "89d306925a885fd2e685aabd3f0fa77c804a35f20b6d851f6ff348d162705aab",
+      "bytes": 20630787616
+    },
+    {
+      "id": "davidau-27b-variant-c46544d1-2e15fdaa",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-Q6_K.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-Q6_K.gguf",
+      "sha256": "2e15fdaad88730c5ec12cec0123ac4cae34057e13770fd6677156595c1a445fc",
+      "bytes": 22431000096
+    },
+    {
+      "id": "davidau-27b-variant-d100f09a-ac011aab",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q6_K.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q6_K.gguf",
+      "sha256": "ac011aabe685edbdf542e49351eb6c76c0e5531408f2507f2235ab10931e23a5",
+      "bytes": 24033703456
+    },
+    {
+      "id": "davidau-27b-variant-4be2e08e-54f27515",
+      "path": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf",
+      "repo": "DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "revision": "ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "filename": "Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf",
+      "sha256": "54f27515edb20675f289f99b9c6d40d114fb634db21bae3fd4c901661aba85b9",
+      "bytes": 30239020576
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-0ade2347-8aa239e5",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-F16.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-F16.gguf",
+      "sha256": "8aa239e5ddb28d4641942231396d7171da41ad305ea401dd92a7d6410bde798d",
+      "bytes": 14230275808
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-6f825d73-053e2cf1",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q2_K.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q2_K.gguf",
+      "sha256": "053e2cf11059e9f5091c03853025b18bc64d18fff4426b1a17da09ed29cc09c9",
+      "bytes": 2466137824
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-4f6ca405-f688e47c",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q3_K_M.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q3_K_M.gguf",
+      "sha256": "f688e47c32c033aa8d059c6b7e27d668b2cef0f1dd3d667f97f544954d541238",
+      "bytes": 3168290528
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-bd6e2c1c-e71af472",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q3_K_S.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q3_K_S.gguf",
+      "sha256": "e71af4723442d004b469425ddbdbbf5e4f5f6068c2544cd82d9bb49791b54be3",
+      "bytes": 2724742880
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-7c264ae2-ef42f3a1",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q3_K_XL.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q3_K_XL.gguf",
+      "sha256": "ef42f3a1b0ccf30be0a068341d383beeea86173e6aa1aa1a33749b337e55e0a9",
+      "bytes": 3612493536
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-1450fa3b-631d532e",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q4_K_M.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q4_K_M.gguf",
+      "sha256": "631d532e7ca71e8d90a87c71d3699761a812039d22e3370e87498d87754660fe",
+      "bytes": 4199565024
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-b6aa04bf-328a2b22",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q4_K_S.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q4_K_S.gguf",
+      "sha256": "328a2b2203ceb45a7f14515fb902c5ec28e9df901d43f49020b4fd251234587f",
+      "bytes": 3906356960
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-1abd7dd5-4b533216",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q5_K_M.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q5_K_M.gguf",
+      "sha256": "4b53321654dd3bf0aa8dd6bb821fdcb1c9053ca735070e359a23cbb9f97268ce",
+      "bytes": 5390223072
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-a52ee35b-ba9399e0",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q5_K_S.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q5_K_S.gguf",
+      "sha256": "ba9399e07005c929d2cba313d73f0658e7893219825f29dc609130b75803ea75",
+      "bytes": 4501948128
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-896ebc6b-9410ad28",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q6_K_XL.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q6_K_XL.gguf",
+      "sha256": "9410ad28f20018e7f2f300a06eed7e48db144286d02f0a6d4208d4dbd266691b",
+      "bytes": 6718506720
+    },
+    {
+      "id": "qwen-image-21-gguf-variant-9a996bdb-c0ed4b2f",
+      "path": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q8_0.gguf",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "filename": "qwen-image-2.1-Q8_0.gguf",
+      "sha256": "c0ed4b2ffd56cbe9c3df1e4a4098045256484ebe94ba5a7e4338d35ec046baa5",
+      "bytes": 7640860384
     }
   ],
   "models": [
@@ -3415,7 +3676,7 @@
       ],
       "license": "CC-BY-4.0 weights; Apache-2.0 reference code",
       "experimental": false,
-      "note": "English only. About 164 MB compressed download. Windows uses the reference runtime: expanded FP32 weights use about 2.5 GB, with additional audio buffers. Optional RAM standby; GPU memory is released after dictation.",
+      "note": "English only. Single published five-value checkpoint; no separate FP16, FP32, or GGUF quantization downloads are available. The Windows reference runtime expands this compact checkpoint to about 2.5 GB of FP32 runtime memory plus audio buffers; this is runtime expansion, not a selectable or downloadable FP32 variant. Optional RAM standby; GPU memory is released after dictation.",
       "selectable": false,
       "speechLanguage": "English only",
       "category": "speech",
@@ -3598,7 +3859,8 @@
       "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
       "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
       "runtimeReady": false,
-      "installable": true
+      "installable": true,
+      "refreshQuantizations": true
     },
     {
       "id": "animation-diffusion-2d",
@@ -11046,6 +11308,1336 @@
       "runtimeModelPath": "models/library/zenith-9b-codecore/variants/Zenith-9B-CodeCore-Merge.Q5_K_S.gguf",
       "variantOf": "zenith-9b-codecore",
       "memoryMode": "native"
+    },
+    {
+      "id": "swift-27b-iq2-s-mtp-6ce61b",
+      "label": "Swift 1.5 27B · IQ2_S MTP",
+      "description": "Published IQ2_S MTP GGUF variant of Swift 1.5 27B.",
+      "precision": "IQ2_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-ec4285b3-6ce61b53"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "swift-27b",
+      "weightBytes": 9607981056,
+      "weightArtifacts": [
+        "swift-27b-variant-ec4285b3-6ce61b53"
+      ]
+    },
+    {
+      "id": "swift-27b-iq2-s-mtp-6ce61b-native",
+      "label": "Swift 1.5 27B · IQ2_S MTP · Native",
+      "description": "Swift 1.5 27B IQ2_S MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-ec4285b3-6ce61b53"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "swift-27b",
+      "weightBytes": 9607981056,
+      "weightArtifacts": [
+        "swift-27b-variant-ec4285b3-6ce61b53"
+      ]
+    },
+    {
+      "id": "swift-27b-iq2-xs-mtp-4414bc",
+      "label": "Swift 1.5 27B · IQ2_XS MTP",
+      "description": "Published IQ2_XS MTP GGUF variant of Swift 1.5 27B.",
+      "precision": "IQ2_XS MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-edab8b4a-4414bc39"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "swift-27b",
+      "weightBytes": 8771311616,
+      "weightArtifacts": [
+        "swift-27b-variant-edab8b4a-4414bc39"
+      ]
+    },
+    {
+      "id": "swift-27b-iq2-xs-mtp-4414bc-native",
+      "label": "Swift 1.5 27B · IQ2_XS MTP · Native",
+      "description": "Swift 1.5 27B IQ2_XS MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_XS MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-edab8b4a-4414bc39"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "swift-27b",
+      "weightBytes": 8771311616,
+      "weightArtifacts": [
+        "swift-27b-variant-edab8b4a-4414bc39"
+      ]
+    },
+    {
+      "id": "swift-27b-iq3-s-mtp-9aecf1",
+      "label": "Swift 1.5 27B · IQ3_S MTP",
+      "description": "Published IQ3_S MTP GGUF variant of Swift 1.5 27B.",
+      "precision": "IQ3_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-b9aad075-9aecf1cd"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "swift-27b",
+      "weightBytes": 12120016896,
+      "weightArtifacts": [
+        "swift-27b-variant-b9aad075-9aecf1cd"
+      ]
+    },
+    {
+      "id": "swift-27b-iq3-s-mtp-9aecf1-native",
+      "label": "Swift 1.5 27B · IQ3_S MTP · Native",
+      "description": "Swift 1.5 27B IQ3_S MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ3_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-b9aad075-9aecf1cd"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "swift-27b",
+      "weightBytes": 12120016896,
+      "weightArtifacts": [
+        "swift-27b-variant-b9aad075-9aecf1cd"
+      ]
+    },
+    {
+      "id": "swift-27b-iq3-xxs-mtp-e23eb2",
+      "label": "Swift 1.5 27B · IQ3_XXS MTP",
+      "description": "Published IQ3_XXS MTP GGUF variant of Swift 1.5 27B.",
+      "precision": "IQ3_XXS MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-3dded203-e23eb251"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "swift-27b",
+      "weightBytes": 10442827776,
+      "weightArtifacts": [
+        "swift-27b-variant-3dded203-e23eb251"
+      ]
+    },
+    {
+      "id": "swift-27b-iq3-xxs-mtp-e23eb2-native",
+      "label": "Swift 1.5 27B · IQ3_XXS MTP · Native",
+      "description": "Swift 1.5 27B IQ3_XXS MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ3_XXS MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "swift-27b-variant-3dded203-e23eb251"
+      ],
+      "license": "swift-open-license-1.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d74895bbe5db4bec1e0024e7cc87d59c02d7631a. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/tree/d74895bbe5db4bec1e0024e7cc87d59c02d7631a",
+      "setupUrl": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/swift-27b/variants/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "swift-27b",
+      "weightBytes": 10442827776,
+      "weightArtifacts": [
+        "swift-27b-variant-3dded203-e23eb251"
+      ]
+    },
+    {
+      "id": "dirk-27b-iq2-s-79bf11",
+      "label": "Dirk 27B Vision · IQ2_S",
+      "description": "Published IQ2_S GGUF variant of Dirk 27B Vision.",
+      "precision": "IQ2_S",
+      "contextTokens": 8192,
+      "artifacts": [
+        "dirk-27b-variant-c7fe2715-79bf1148",
+        "dirk-27b-d8219ba08717"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 52cb3e759635ab4605e08790b6c47df8adcf0744. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF/tree/52cb3e759635ab4605e08790b6c47df8adcf0744",
+      "setupUrl": "https://huggingface.co/peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/dirk-27b/variants/Dirk-Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "visionProjectorPath": "models/library/dirk-27b/mmproj-F16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "dirk-27b",
+      "weightBytes": 9608001856,
+      "weightArtifacts": [
+        "dirk-27b-variant-c7fe2715-79bf1148",
+        "dirk-27b-d8219ba08717"
+      ]
+    },
+    {
+      "id": "dirk-27b-iq2-s-79bf11-native",
+      "label": "Dirk 27B Vision · IQ2_S · Native",
+      "description": "Dirk 27B Vision IQ2_S variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_S",
+      "contextTokens": 8192,
+      "artifacts": [
+        "dirk-27b-variant-c7fe2715-79bf1148",
+        "dirk-27b-d8219ba08717"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 52cb3e759635ab4605e08790b6c47df8adcf0744. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF/tree/52cb3e759635ab4605e08790b6c47df8adcf0744",
+      "setupUrl": "https://huggingface.co/peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/dirk-27b/variants/Dirk-Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "visionProjectorPath": "models/library/dirk-27b/mmproj-F16.gguf",
+      "memoryMode": "native",
+      "variantOf": "dirk-27b",
+      "weightBytes": 9608001856,
+      "weightArtifacts": [
+        "dirk-27b-variant-c7fe2715-79bf1148",
+        "dirk-27b-d8219ba08717"
+      ]
+    },
+    {
+      "id": "ternary-bonsai-2-27b-pq2-0-3907dc",
+      "label": "Ternary Bonsai 2 27B · PQ2_0",
+      "description": "Published PQ2_0 GGUF variant of Ternary Bonsai 2 27B.",
+      "precision": "PQ2_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "ternary-bonsai-2-27b-variant-3009f253-3907dc16"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to b072e1d3b35a0a630cece372c2127528e0994386. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/tree/b072e1d3b35a0a630cece372c2127528e0994386",
+      "setupUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "runtimeModelPath": "models/library/ternary-bonsai-2-27b/variants/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ternary-bonsai-2-27b",
+      "weightBytes": 7206168928,
+      "weightArtifacts": [
+        "ternary-bonsai-2-27b-variant-3009f253-3907dc16"
+      ]
+    },
+    {
+      "id": "ternary-bonsai-2-27b-pq2-0-3907dc-native",
+      "label": "Ternary Bonsai 2 27B · PQ2_0 · Native",
+      "description": "Ternary Bonsai 2 27B PQ2_0 variant with native context; ECHO retrieval is disabled.",
+      "precision": "PQ2_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "ternary-bonsai-2-27b-variant-3009f253-3907dc16"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to b072e1d3b35a0a630cece372c2127528e0994386. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/tree/b072e1d3b35a0a630cece372c2127528e0994386",
+      "setupUrl": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "runtimeModelPath": "models/library/ternary-bonsai-2-27b/variants/Ternary-Bonsai-2-27B-PQ2_0.gguf",
+      "memoryMode": "native",
+      "variantOf": "ternary-bonsai-2-27b",
+      "weightBytes": 7206168928,
+      "weightArtifacts": [
+        "ternary-bonsai-2-27b-variant-3009f253-3907dc16"
+      ]
+    },
+    {
+      "id": "ornith-1-5-9b-mtp-nvfp4-446555",
+      "label": "Ornith 1.5 9B MTP · NVFP4",
+      "description": "Published NVFP4 GGUF variant of Ornith 1.5 9B MTP.",
+      "precision": "NVFP4",
+      "contextTokens": 16384,
+      "artifacts": [
+        "ornith-1-5-9b-mtp-variant-8e0e5054-446555f1"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 5957ee5dcb88e9a9f4cd9a23c649320d20a574cd. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/protoLabsAI/Ornith-1.5-9B-MTP-GGUF/tree/5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+      "setupUrl": "https://huggingface.co/protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+      "runtimeModelPath": "models/library/ornith-1-5-9b-mtp/variants/Ornith-1.5-9B-MTP-NVFP4.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ornith-1-5-9b-mtp",
+      "weightBytes": 6531280448,
+      "weightArtifacts": [
+        "ornith-1-5-9b-mtp-variant-8e0e5054-446555f1"
+      ]
+    },
+    {
+      "id": "ornith-1-5-9b-mtp-nvfp4-446555-native",
+      "label": "Ornith 1.5 9B MTP · NVFP4 · Native",
+      "description": "Ornith 1.5 9B MTP NVFP4 variant with native context; ECHO retrieval is disabled.",
+      "precision": "NVFP4",
+      "contextTokens": 16384,
+      "artifacts": [
+        "ornith-1-5-9b-mtp-variant-8e0e5054-446555f1"
+      ],
+      "license": "mit",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 5957ee5dcb88e9a9f4cd9a23c649320d20a574cd. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/protoLabsAI/Ornith-1.5-9B-MTP-GGUF/tree/5957ee5dcb88e9a9f4cd9a23c649320d20a574cd",
+      "setupUrl": "https://huggingface.co/protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+      "runtimeModelPath": "models/library/ornith-1-5-9b-mtp/variants/Ornith-1.5-9B-MTP-NVFP4.gguf",
+      "memoryMode": "native",
+      "variantOf": "ornith-1-5-9b-mtp",
+      "weightBytes": 6531280448,
+      "weightArtifacts": [
+        "ornith-1-5-9b-mtp-variant-8e0e5054-446555f1"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq2-m-mtp-ee4fc4",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ2_M MTP",
+      "description": "Published IQ2_M MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "IQ2_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-532ea39d-ee4fc495",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ2_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 12124624416,
+      "weightArtifacts": [
+        "davidau-27b-variant-532ea39d-ee4fc495",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq2-m-mtp-ee4fc4-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ2_M MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B IQ2_M MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-532ea39d-ee4fc495",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ2_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 12124624416,
+      "weightArtifacts": [
+        "davidau-27b-variant-532ea39d-ee4fc495",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq3-m-mtp-19ee0a",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ3_M MTP",
+      "description": "Published IQ3_M MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "IQ3_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-3b9913ad-19ee0a94",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ3_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 14532048416,
+      "weightArtifacts": [
+        "davidau-27b-variant-3b9913ad-19ee0a94",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq3-m-mtp-19ee0a-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ3_M MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B IQ3_M MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ3_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-3b9913ad-19ee0a94",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ3_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 14532048416,
+      "weightArtifacts": [
+        "davidau-27b-variant-3b9913ad-19ee0a94",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq4-xs-low-mtp-fa9218",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ4_XS LOW-MTP",
+      "description": "Published IQ4_XS LOW-MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "IQ4_XS LOW-MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-f6105272-fa921836",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-IQ4_XS.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 15309039136,
+      "weightArtifacts": [
+        "davidau-27b-variant-f6105272-fa921836",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq4-xs-low-mtp-fa9218-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ4_XS LOW-MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B IQ4_XS LOW-MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ4_XS LOW-MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-f6105272-fa921836",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-IQ4_XS.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 15309039136,
+      "weightArtifacts": [
+        "davidau-27b-variant-f6105272-fa921836",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq4-xs-mtp-318d14",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ4_XS MTP",
+      "description": "Published IQ4_XS MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "IQ4_XS MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-85227e97-318d14f8",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ4_XS.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 17033680416,
+      "weightArtifacts": [
+        "davidau-27b-variant-85227e97-318d14f8",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-iq4-xs-mtp-318d14-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · IQ4_XS MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B IQ4_XS MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ4_XS MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-85227e97-318d14f8",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ4_XS.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 17033680416,
+      "weightArtifacts": [
+        "davidau-27b-variant-85227e97-318d14f8",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q4-k-m-mtp-bc7a6c",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q4_K_M MTP",
+      "description": "Published Q4_K_M MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q4_K_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-9b973346-bc7a6cf2",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 18498573856,
+      "weightArtifacts": [
+        "davidau-27b-variant-9b973346-bc7a6cf2",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q4-k-m-mtp-bc7a6c-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q4_K_M MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q4_K_M MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q4_K_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-9b973346-bc7a6cf2",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 18498573856,
+      "weightArtifacts": [
+        "davidau-27b-variant-9b973346-bc7a6cf2",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q4-k-s-mtp-889caf",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q4_K_S MTP",
+      "description": "Published Q4_K_S MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q4_K_S MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-4159f0b9-889caf99",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_S.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 17537488416,
+      "weightArtifacts": [
+        "davidau-27b-variant-4159f0b9-889caf99",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q4-k-s-mtp-889caf-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q4_K_S MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q4_K_S MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q4_K_S MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-4159f0b9-889caf99",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_S.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 17537488416,
+      "weightArtifacts": [
+        "davidau-27b-variant-4159f0b9-889caf99",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q5-k-m-mtp-7408f5",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q5_K_M MTP",
+      "description": "Published Q5_K_M MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q5_K_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-025d0df6-7408f594",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 21182273056,
+      "weightArtifacts": [
+        "davidau-27b-variant-025d0df6-7408f594",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q5-k-m-mtp-7408f5-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q5_K_M MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q5_K_M MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q5_K_M MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-025d0df6-7408f594",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_M.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 21182273056,
+      "weightArtifacts": [
+        "davidau-27b-variant-025d0df6-7408f594",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q5-k-s-mtp-89d306",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q5_K_S MTP",
+      "description": "Published Q5_K_S MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q5_K_S MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-a2a610fe-89d30692",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_S.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 20630787616,
+      "weightArtifacts": [
+        "davidau-27b-variant-a2a610fe-89d30692",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q5-k-s-mtp-89d306-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q5_K_S MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q5_K_S MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q5_K_S MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-a2a610fe-89d30692",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q5_K_S.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 20630787616,
+      "weightArtifacts": [
+        "davidau-27b-variant-a2a610fe-89d30692",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q6-k-low-mtp-2e15fd",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q6_K LOW-MTP",
+      "description": "Published Q6_K LOW-MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q6_K LOW-MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-c46544d1-2e15fdaa",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-Q6_K.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 22431000096,
+      "weightArtifacts": [
+        "davidau-27b-variant-c46544d1-2e15fdaa",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q6-k-low-mtp-2e15fd-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q6_K LOW-MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q6_K LOW-MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q6_K LOW-MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-c46544d1-2e15fdaa",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-LOW-MTP-Q6_K.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 22431000096,
+      "weightArtifacts": [
+        "davidau-27b-variant-c46544d1-2e15fdaa",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q6-k-mtp-ac011a",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q6_K MTP",
+      "description": "Published Q6_K MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q6_K MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-d100f09a-ac011aab",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q6_K.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 24033703456,
+      "weightArtifacts": [
+        "davidau-27b-variant-d100f09a-ac011aab",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q6-k-mtp-ac011a-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q6_K MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q6_K MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q6_K MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-d100f09a-ac011aab",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q6_K.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 24033703456,
+      "weightArtifacts": [
+        "davidau-27b-variant-d100f09a-ac011aab",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q8-0-mtp-54f275",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q8_0 MTP",
+      "description": "Published Q8_0 MTP GGUF variant of DavidAU Turbo Cold Fusion 27B.",
+      "precision": "Q8_0 MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-4be2e08e-54f27515",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "echo",
+      "variantOf": "davidau-27b",
+      "weightBytes": 30239020576,
+      "weightArtifacts": [
+        "davidau-27b-variant-4be2e08e-54f27515",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "davidau-27b-q8-0-mtp-54f275-native",
+      "label": "DavidAU Turbo Cold Fusion 27B · Q8_0 MTP · Native",
+      "description": "DavidAU Turbo Cold Fusion 27B Q8_0 MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "Q8_0 MTP",
+      "contextTokens": 8192,
+      "artifacts": [
+        "davidau-27b-variant-4be2e08e-54f27515",
+        "davidau-27b-00f45cd696de"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to ceb55042229d17dcf45df52ad84698339e63d4c5. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF/tree/ceb55042229d17dcf45df52ad84698339e63d4c5",
+      "setupUrl": "https://huggingface.co/DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF",
+      "runtimeReady": true,
+      "installable": true,
+      "runtimeModelPath": "models/library/davidau-27b/variants/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q8_0.gguf",
+      "visionProjectorPath": "models/library/davidau-27b/mmproj-BF16.gguf",
+      "memoryMode": "native",
+      "variantOf": "davidau-27b",
+      "weightBytes": 30239020576,
+      "weightArtifacts": [
+        "davidau-27b-variant-4be2e08e-54f27515",
+        "davidau-27b-00f45cd696de"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-f16-8aa239",
+      "label": "Qwen Image 2.1 GGUF · F16",
+      "description": "Published F16 GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "F16",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-0ade2347-8aa239e5"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-F16.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-0ade2347-8aa239e5"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q2-k-053e2c",
+      "label": "Qwen Image 2.1 GGUF · Q2_K",
+      "description": "Published Q2_K GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q2_K",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-6f825d73-053e2cf1"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q2_K.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-6f825d73-053e2cf1"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q3-k-m-f688e4",
+      "label": "Qwen Image 2.1 GGUF · Q3_K_M",
+      "description": "Published Q3_K_M GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q3_K_M",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-4f6ca405-f688e47c"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q3_K_M.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-4f6ca405-f688e47c"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q3-k-s-e71af4",
+      "label": "Qwen Image 2.1 GGUF · Q3_K_S",
+      "description": "Published Q3_K_S GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q3_K_S",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-bd6e2c1c-e71af472"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q3_K_S.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-bd6e2c1c-e71af472"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q3-k-xl-ef42f3",
+      "label": "Qwen Image 2.1 GGUF · Q3_K_XL",
+      "description": "Published Q3_K_XL GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q3_K_XL",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-7c264ae2-ef42f3a1"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q3_K_XL.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-7c264ae2-ef42f3a1"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q4-k-m-631d53",
+      "label": "Qwen Image 2.1 GGUF · Q4_K_M",
+      "description": "Published Q4_K_M GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q4_K_M",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-1450fa3b-631d532e"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q4_K_M.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-1450fa3b-631d532e"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q4-k-s-328a2b",
+      "label": "Qwen Image 2.1 GGUF · Q4_K_S",
+      "description": "Published Q4_K_S GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q4_K_S",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-b6aa04bf-328a2b22"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q4_K_S.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-b6aa04bf-328a2b22"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q5-k-m-4b5332",
+      "label": "Qwen Image 2.1 GGUF · Q5_K_M",
+      "description": "Published Q5_K_M GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q5_K_M",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-1abd7dd5-4b533216"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q5_K_M.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-1abd7dd5-4b533216"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q5-k-s-ba9399",
+      "label": "Qwen Image 2.1 GGUF · Q5_K_S",
+      "description": "Published Q5_K_S GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q5_K_S",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-a52ee35b-ba9399e0"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q5_K_S.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-a52ee35b-ba9399e0"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q6-k-xl-9410ad",
+      "label": "Qwen Image 2.1 GGUF · Q6_K_XL",
+      "description": "Published Q6_K_XL GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q6_K_XL",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-896ebc6b-9410ad28"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q6_K_XL.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-896ebc6b-9410ad28"
+      ]
+    },
+    {
+      "id": "qwen-image-21-gguf-q8-0-c0ed4b",
+      "label": "Qwen Image 2.1 GGUF · Q8_0",
+      "description": "Published Q8_0 GGUF variant of Qwen Image 2.1 GGUF.",
+      "precision": "Q8_0",
+      "contextTokens": 0,
+      "artifacts": [
+        "qwen-image-21-gguf-variant-9a996bdb-c0ed4b2f"
+      ],
+      "license": "qwen-research",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to 2c31ccd392b367a6637841a143813320a02dff55. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/tree/2c31ccd392b367a6637841a143813320a02dff55",
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "runtimeReady": false,
+      "installable": true,
+      "refreshQuantizations": true,
+      "runtimeModelPath": "models/library/qwen-image-21-gguf/variants/qwen-image-2.1-Q8_0.gguf",
+      "variantOf": "qwen-image-21-gguf",
+      "weightArtifacts": [
+        "qwen-image-21-gguf-variant-9a996bdb-c0ed4b2f"
+      ]
     }
   ]
 }

@@ -115,7 +115,7 @@ pub(super) async fn run(core: Arc<AppCore>, app: tauri::AppHandle, request: &Cha
             let kind = event["kind"].as_str().unwrap_or("");
             if kind == "handoff" {
                 let category=event["category"].as_str().unwrap_or("background");
-                let (studio,destination)=if category=="music" {("Music Studio","music")} else if category=="background" {("Background jobs","background")} else {("Assets Studio",category)};
+                let (studio,destination)=if category=="music" {("Music Studio","music")} else if category=="background" {("Background jobs","background")} else {("Game Dev Studio",category)};
                 let text=format!("Request submitted. [Open {studio}](opencore-studio://{destination}) to view progress. ECHO will unload while the job runs and resume when it finishes.");
                 core.store.add_timeline(id,"message","assistant","OpenCore","Background job",&text,&json!({"studioJobId":event["jobId"],"category":category,"handoff":true}))?;
                 continue;

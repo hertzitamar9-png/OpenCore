@@ -2,6 +2,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ModelLibrary } from "./ModelLibrary";
 import * as api from "./api";
+import modelCatalog from "../src-tauri/resources/model-catalog.json";
+
+it("states that Phonon runtime FP32 expansion is not a downloadable quantization", () => {
+  const phonon = modelCatalog.models.find(model => model.id === "phonon-2");
+  expect(phonon?.precision).toBe("Five-value checkpoint");
+  expect(phonon?.note).toMatch(/no separate FP16, FP32, or GGUF quantization downloads/i);
+  expect(modelCatalog.models.some(model => model.variantOf === "phonon-2")).toBe(false);
+});
 
 it('chooses the speech backend separately from the chat model and labels its language support', async () => {
   const models: api.InstalledModel[] = [
@@ -95,11 +103,11 @@ describe("optional model installation", () => {
       expect(remove).toHaveBeenCalledWith("echo", "reviewed");
     } finally { library.mockRestore(); speech.mockRestore(); review.mockRestore(); stop.mockRestore(); remove.mockRestore(); }
   });
-  it("provides Uninstall on every model and never removes files before confirmation", async () => {
+  it("shows Uninstall only for installed models and never removes files before confirmation", async () => {
     const model: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Chat",
       precision: "BF16", contextTokens: 32768, license: "Apache", experimental: false, note: "Local",
       selectable: true, installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 100 };
-    const models = [model, { ...model, id: "whisper-large-v3-turbo", label: "Whisper", externalManaged: true, selectable: false },
+    const models = [model, { ...model, id: "whisper-large-v3-turbo", label: "Whisper", externalManaged: true, installed: false, selectable: false },
       { ...model, id: "native1m", label: "Native", installed: false }];
     const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models, progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 100e9 });
     const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: true, enabled: true,
@@ -107,7 +115,9 @@ describe("optional model installation", () => {
     const remove = vi.spyOn(api, "uninstallModel").mockResolvedValue();
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
-      for (const item of models) expect(await screen.findByRole("button", { name: `Uninstall ${item.label}` })).toBeEnabled();
+      expect(await screen.findByRole("button", { name: "Uninstall ECHO 3T" })).toBeEnabled();
+      expect(screen.queryByRole("button", { name: "Uninstall Whisper" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Uninstall Native" })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Uninstall ECHO 3T" }));
       expect(await screen.findByRole("dialog", { name: "Uninstall ECHO 3T?" })).toBeVisible();
       expect(remove).not.toHaveBeenCalled();

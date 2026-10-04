@@ -739,9 +739,13 @@ fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
     let output_result = std::thread::scope(|scope| -> Result<std::process::Output, String> {
         let writer = scope.spawn(move || -> Result<(), String> {
             let mut stdin = stdin;
+            let mut queued_batches = 0u64;
+            let mut queued_events = 0u64;
+            let mut last_progress_update = std::time::Instant::now();
             for (index, conversation_id) in ids.iter().enumerate() {
                 if is_cancelled() { return Err(history::SYNC_CANCELLED.into()); }
                 let mut after_id = 0;
+                let mut conversation_batches = 0u64;
                 loop {
                     if is_cancelled() { return Err(history::SYNC_CANCELLED.into()); }
                     let batch = store.archive_events_batch(conversation_id, after_id, 8)?;
@@ -750,10 +754,23 @@ fn index_imported_history_offline(store: &EventStore, runtime: &RuntimeManager,
                     let payload = echo_import_payload_unbounded(conversation_id, &batch);
                     serde_json::to_writer(&mut stdin, &payload).map_err(|error| error.to_string())?;
                     stdin.write_all(b"\n").map_err(|error| error.to_string())?;
+                    queued_batches += 1;
+                    queued_events += batch.len() as u64;
+                    conversation_batches += 1;
+                    if let Some(operation_id) = operation_id {
+                        if conversation_batches == 1 || last_progress_update.elapsed() >= std::time::Duration::from_secs(1) {
+                            let phase = format!("Indexing exact history in ECHO · conversation {}/{} · batch {} · {} total events queued", index + 1, ids.len(), conversation_batches, queued_events);
+                            store.update_operation(operation_id, &phase,
+                                (index + 1) as u64, ids.len() as u64, 0, 0, 0)?;
+                            last_progress_update = std::time::Instant::now();
+                        }
+                    }
                 }
                 if let Some(operation_id) = operation_id {
-                    store.update_operation(operation_id, "Indexing exact history in ECHO",
+                    let phase = format!("Indexing exact history in ECHO · conversation {}/{} complete · {} batches and {} events queued", index + 1, ids.len(), queued_batches, queued_events);
+                    store.update_operation(operation_id, &phase,
                         (index + 1) as u64, ids.len() as u64, 0, 0, 0)?;
+                    last_progress_update = std::time::Instant::now();
                 }
             }
             Ok(())
@@ -1430,7 +1447,7 @@ fn composer_skill_instructions(skills: &[String]) -> Result<String, String> {
             "text" => instructions.push("Text skill: write, code, and plan with the selected model. Use available workspace tools to verify changes."),
             "speech" => instructions.push("Speech skill: use studio_use list_models to select an installed speech model, then generate with an attached audio inputPath. The app hands off immediately and resumes after transcription finishes. Do not poll the job. The microphone is also available for dictation."),
             "music" => instructions.push("Music skill: compose actual title, style and original lyrics from the user's request. Call music_generate with those plain text fields and the user's original prompt. Default cot='full' and takes=1 unless the user requests otherwise. This submits directly to YuE2 Music Studio using original precision. Explain that the job starts after this chat finishes and can be watched in Music Studio. Do not wait in a status loop during this response and never claim a queued job has generated audio."),
-            "image" | "3d" | "3d-animation" | "2d-animation" => instructions.push("Assets skill: use studio_use list_models to discover installed models and connected runtimes for the enabled category. Submit the user's original prompt and appropriate settings (seed, steps, width/height, duration, inputPath if required) with studio_use generate. Image-to-3D and asset-animation models need an attached image/asset or an earlier generated output. Never invent an input path. Generation starts after this chat finishes; prompts, settings, progress and files appear in Assets Studio. If runtime setup is missing, explain the actual setup requirement. Do not fabricate an output or claim queued jobs completed."),
+            "image" | "3d" | "3d-animation" | "2d-animation" => instructions.push("Game Dev skill: use studio_use list_models to discover installed models and compatible connected runtimes for the enabled category. Submit the user's original prompt and supported settings with studio_use generate. Image controls include negativePrompt, seed, steps, width, height, guidanceScale, numImages, and outputFormat; 3D controls include inputPath, seed, resolution, chunkSize, and mesh outputFormat; animation controls include motionPrompt, seed, durationSeconds, frameCount, fps, loop, and outputFormat. Settings are runtime-specific: never imply an unsupported setting worked. Use only an attached file or a verified prior output for inputPath; never invent a path. Generation starts after this chat finishes; prompts, settings, progress and files appear in Game Dev Studio. If runtime setup is missing, explain the actual setup requirement. Do not fabricate an output or claim queued jobs completed."),
             "computer-use" => instructions.push("Computer use skill: carry out the user's Windows/terminal task with desktop_use, system_use and reflex_use. Reflex Vision is an on-demand 0.8B model and may only be used because this prompt explicitly enabled /computer-use. Inspect before acting, verify results, and avoid unnecessary vision calls."),
             "browser-use" => instructions.push("OpenCore Browser skill: use browser_use for the isolated in-app browser. Inspect before interacting and verify navigation or page changes."),
             "chrome-control" => instructions.push("Chrome control skill: use chrome_use for the user's paired Chrome tabs. List and inspect tabs before acting, then verify the page result. For an explicit development/debugging request, evaluate may run JavaScript in the selected tab's DevTools Runtime. If Chrome is not paired, explain that connection is needed and do not claim the action happened."),
@@ -1664,7 +1681,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
         return Err("Message or attachment is required".into());
     }
     let skill_instructions = composer_skill_instructions(&request.skills)?;
-    if core.studios.busy() {return Err("A studio job is using or waiting for the GPU. View its status in Music Studio or Assets Studio, or cancel it before sending another chat prompt.".into());}
+    if core.studios.busy() {return Err("A studio job is using or waiting for the GPU. View its status in Music Studio or Game Dev Studio, or cancel it before sending another chat prompt.".into());}
     music_studio::require_idle_gpu().await?;
     core.speech.release_idle_model().await?;
     let installed_categories: std::collections::HashSet<_> = model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|m|m.category).collect();

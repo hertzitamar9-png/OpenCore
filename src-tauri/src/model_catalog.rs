@@ -44,6 +44,7 @@ pub struct Model {
     #[serde(default,skip_serializing_if="Option::is_none")] pub variant_of: Option<String>,
     #[serde(default,skip_serializing_if="Option::is_none")] pub runtime_model_path: Option<String>,
     #[serde(default,skip_serializing_if="Option::is_none")] pub vision_projector_path: Option<String>,
+    #[serde(default,skip_serializing_if="Vec::is_empty")] pub weight_artifacts: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub speech_language: Option<String>,
 }
@@ -88,6 +89,11 @@ fn manifest() -> Result<Manifest, String> {
         for path in model.runtime_model_path.iter().chain(model.vision_projector_path.iter()) {
             safe_relative(path)?;
             if !data.artifacts.iter().any(|file|file.path==*path && model.artifacts.contains(&file.id)){return Err(format!("Unpinned runtime path for {}",model.id));}
+        }
+        for id in &model.weight_artifacts {
+            if !model.artifacts.contains(id) || !data.artifacts.iter().any(|file| &file.id == id) {
+                return Err(format!("Invalid weight artifact for {}", model.id));
+            }
         }
     }
     Ok(data)
@@ -242,7 +248,9 @@ pub fn list(root: &Path) -> Result<Library, String> {
         let external_managed = externally_managed_speech(root, &m.id) || (m.id == "yue2" && crate::music_weights::external_dir().is_some());
         let mut model=m.clone();
         if model.id=="yue2" {model.runtime_ready=crate::music_studio::runtime_available();}
-        let weight_bytes = if model.runtime_model_path.is_some() || model.vision_projector_path.is_some() {
+        let weight_bytes = if !model.weight_artifacts.is_empty() {
+            files.iter().filter(|file| model.weight_artifacts.contains(&file.id)).map(|file| file.bytes).sum()
+        } else if model.runtime_model_path.is_some() || model.vision_projector_path.is_some() {
             files.iter().filter(|file| model.runtime_model_path.as_deref() == Some(file.path.as_str()) ||
                 model.vision_projector_path.as_deref() == Some(file.path.as_str())).map(|file| file.bytes).sum()
         } else {
@@ -644,7 +652,7 @@ mod tests {
                 .filter(|model| model.id == *parent_id || model.variant_of.as_deref() == Some(parent_id))
                 .map(|model| model.precision.as_str()).collect();
             let expected: std::collections::BTreeSet<_> = precisions.iter().copied().collect();
-            assert_eq!(actual, expected, "quantization choices for {parent_id}");
+            assert!(expected.is_subset(&actual), "missing baseline quantization choice for {parent_id}: {actual:?}");
         }
         for model in catalog.models.iter().filter(|model| model.variant_of.as_deref().is_some_and(|parent| parent.starts_with("nanbeige-bf16"))) {
             assert_eq!(model.backend, "gguf", "Nanbeige variants must use the GGUF profile adapter");
@@ -729,6 +737,9 @@ mod tests {
         assert_eq!(native_echo.weight_bytes, echo.weight_bytes);
         assert_eq!(find("qwen38-distill-9b").weight_bytes, find("qwen38-distill-9b-native").weight_bytes);
         assert_eq!(find("fusioncore-kv").model.vram_weight_multiplier, 2);
+        let dynamic = catalog.models.iter().find(|model| model.variant_of.as_deref() == Some("swift-27b") && model.precision.ends_with("MTP")).unwrap();
+        let expected_weight_bytes: u64 = dynamic.weight_artifacts.iter().map(|id| artifact_bytes(id)).sum();
+        assert_eq!(find(&dynamic.id).weight_bytes, expected_weight_bytes, "sharded/vision variants must report the actual model files used for VRAM estimates");
     }
     #[tokio::test]
     #[ignore = "Explicit opt-in only; registers and verifies already-present speech checkpoints"]

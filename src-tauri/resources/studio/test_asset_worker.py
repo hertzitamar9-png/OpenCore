@@ -1,5 +1,5 @@
 import unittest
-from asset_worker import bounded_integer, checkpoint_dtypes
+from asset_worker import bounded_integer, checkpoint_dtypes, supported_generation_kwargs, validate_output_format
 import json, struct, tempfile
 from pathlib import Path
 
@@ -23,5 +23,22 @@ class StudioBounds(unittest.TestCase):
             header=json.dumps({"a":{"dtype":"BF16"},"b":{"dtype":"F32"}}).encode()
             (part/"model.safetensors").write_bytes(struct.pack("<Q",len(header))+header)
             with self.assertRaises(ValueError): checkpoint_dtypes(Path(folder))
+    def test_maps_game_dev_controls_to_pipeline_parameters_without_ignoring_them(self):
+        class Pipeline:
+            def __call__(self, prompt, num_inference_steps, width, height, generator,
+                         negative_prompt=None, guidance_scale=1, num_images_per_prompt=1):
+                pass
+        settings={"steps":40,"width":1024,"height":512,"seed":42,"negativePrompt":"blur",
+                  "guidanceScale":6.5,"numImages":3}
+        values=supported_generation_kwargs(Pipeline(),{"prompt":"A test"},settings,"seed")
+        self.assertEqual(values,{"num_inference_steps":40,"width":1024,"height":512,"generator":"seed",
+                                 "negative_prompt":"blur","guidance_scale":6.5,"num_images_per_prompt":3,"prompt":"A test"})
+    def test_rejects_unsupported_runtime_settings_and_output_formats(self):
+        class Pipeline:
+            def __call__(self, prompt, num_inference_steps, width, height, generator): pass
+        with self.assertRaisesRegex(RuntimeError,"does not support negative prompts"):
+            supported_generation_kwargs(Pipeline(),{"prompt":"A test"},{"negativePrompt":"blur"},"seed")
+        self.assertEqual(validate_output_format("WEBP",{"webp","png"},"outputFormat"),"webp")
+        with self.assertRaises(ValueError): validate_output_format("exe",{"webp","png"},"outputFormat")
 
 if __name__ == "__main__": unittest.main()

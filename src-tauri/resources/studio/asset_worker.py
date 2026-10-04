@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import struct
+import inspect
 from pathlib import Path
 
 
@@ -47,6 +48,47 @@ def progress(output, stage, **values):
     temporary.replace(output / "progress.json")
 
 
+def supported_generation_kwargs(pipeline, request, settings, seed):
+    """Map common studio controls only to parameters the selected pipeline supports."""
+    parameters = inspect.signature(pipeline.__call__).parameters
+    accepts_kwargs = any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters.values())
+    requested = {
+        "num_inference_steps": bounded_integer(settings, "steps", 30, 1, 100),
+        "width": bounded_integer(settings, "width", 768, 128, 2048),
+        "height": bounded_integer(settings, "height", 768, 128, 2048),
+        "generator": seed,
+    }
+    for key in requested:
+        if key not in parameters and not accepts_kwargs:
+            raise RuntimeError(f"This model runtime does not support the requested {key} setting")
+    if settings.get("negativePrompt"):
+        if "negative_prompt" not in parameters and not accepts_kwargs:
+            raise RuntimeError("This model runtime does not support negative prompts")
+        requested["negative_prompt"] = settings["negativePrompt"]
+    if "guidanceScale" in settings:
+        name = "guidance_scale" if "guidance_scale" in parameters or accepts_kwargs else "true_cfg_scale" if "true_cfg_scale" in parameters else None
+        if not name:
+            raise RuntimeError("This model runtime does not support guidance scale")
+        value = settings["guidanceScale"]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 30:
+            raise ValueError("guidanceScale must be a number from 0 to 30")
+        requested[name] = float(value)
+    count = bounded_integer(settings, "numImages", 1, 1, 8)
+    if count != 1:
+        name = "num_images_per_prompt" if "num_images_per_prompt" in parameters or accepts_kwargs else "num_images" if "num_images" in parameters else None
+        if not name:
+            raise RuntimeError("This model runtime does not support generating multiple images per job")
+        requested[name] = count
+    requested["prompt"] = request["prompt"]
+    return requested
+
+
+def validate_output_format(value, allowed, label):
+    if not isinstance(value, str) or value.lower() not in allowed:
+        raise ValueError(f"{label} must be one of: {', '.join(sorted(allowed))}")
+    return value.lower()
+
+
 def generate(request, output):
     settings = request.get("settings") or {}
     model_id = request["modelId"]
@@ -60,7 +102,7 @@ def generate(request, output):
     if model_id == "triposr":
         source = request.get("sourceDir")
         if not source or not (Path(source) / "tsr" / "system.py").is_file():
-            raise RuntimeError("Connect the official TripoSR source folder in Assets Studio")
+            raise RuntimeError("Connect the official TripoSR source folder in Game Dev Studio")
         image = Path(settings.get("inputPath", ""))
         if not image.is_file():
             raise ValueError("TripoSR requires an input image; attach an image or use an earlier image generation")
@@ -69,7 +111,10 @@ def generate(request, output):
         from PIL import Image
         from tsr.system import TSR
         resolution = bounded_integer(settings, "resolution", 256, 32, 512)
+        seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
+        output_format = validate_output_format(settings.get("outputFormat", "glb"), {"glb", "obj", "ply"}, "outputFormat")
         print("Loading TripoSR", flush=True)
+        torch.manual_seed(seed)
         generator = TSR.from_pretrained(str(model), config_name="config.yaml", weight_name="model.ckpt")
         generator.renderer.set_chunk_size(bounded_integer(settings, "chunkSize", 8192, 256, 32768))
         generator.to("cuda")
@@ -78,7 +123,7 @@ def generate(request, output):
         with torch.inference_mode():
             scene = generator([pixels], device="cuda")
             meshes = generator.extract_mesh(scene, True, resolution=resolution)
-        meshes[0].export(output / "asset.glb")
+        meshes[0].export(output / f"asset.{output_format}")
     elif model_id in {"qwen-image-21", "animation-diffusion-2d"}:
         import torch
         import diffusers
@@ -91,19 +136,38 @@ def generate(request, output):
         generator = DiffusionPipeline.from_pretrained(str(model), torch_dtype=dtypes, local_files_only=True)
         generator.enable_model_cpu_offload()
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
-        args = dict(prompt=request["prompt"], num_inference_steps=bounded_integer(settings,"steps",30,1,100),
-                    width=bounded_integer(settings,"width",768,128,2048), height=bounded_integer(settings,"height",768,128,2048),
-                    generator=torch.Generator("cpu").manual_seed(seed))
-        if settings.get("negativePrompt"):
-            args["negative_prompt"] = settings["negativePrompt"]
-        progress(output, "Generating image", steps=args["num_inference_steps"])
+        args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
+        is_animation = model_id == "animation-diffusion-2d"
+        if is_animation:
+            frame_parameters = inspect.signature(generator.__call__).parameters
+            if "num_frames" not in frame_parameters and not any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in frame_parameters.values()):
+                raise RuntimeError("The connected 2D animation pipeline does not expose frame generation")
+            args["num_frames"] = bounded_integer(settings, "frameCount", 16, 2, 240)
+        progress(output, "Generating animation frames" if is_animation else "Generating image", steps=args["num_inference_steps"])
         result = generator(**args)
+        if is_animation:
+            frames = getattr(result, "frames", None)
+            if isinstance(frames, (list, tuple)) and frames and isinstance(frames[0], (list, tuple)):
+                frames = frames[0]
+            if frames is None or len(frames) < 2:
+                raise RuntimeError("The connected animation pipeline did not return a usable frame sequence")
+            from PIL import Image
+            frames = [frame.convert("RGBA") if hasattr(frame, "convert") else Image.fromarray(frame).convert("RGBA") for frame in frames]
+            output_format = validate_output_format(settings.get("outputFormat", "gif"), {"gif", "webp"}, "outputFormat")
+            fps = bounded_integer(settings, "fps", 12, 1, 60)
+            loop = 0 if settings.get("loop", False) is True else 1
+            frames[0].save(output / f"animation.{output_format}", save_all=True, append_images=frames[1:],
+                           duration=max(1, round(1000 / fps)), loop=loop)
+            progress(output, "Animation complete", frames=len(frames), fps=fps)
+            return
         if not getattr(result, "images", None):
             raise RuntimeError("The selected pipeline did not return images")
+        output_format = validate_output_format(settings.get("outputFormat", "png"), {"png", "webp", "jpeg"}, "outputFormat")
+        extension = "jpg" if output_format == "jpeg" else output_format
         for index, image in enumerate(result.images):
-            image.save(output / f"image-{index+1}.png")
+            image.save(output / f"image-{index+1}.{extension}", format=output_format.upper())
     else:
-        raise RuntimeError(f"{model_id} needs its upstream worker connected in Assets Studio. The generic worker does not support this architecture.")
+        raise RuntimeError(f"{model_id} needs its upstream worker connected in Game Dev Studio. The generic worker does not support this architecture.")
     progress(output, "Generation complete")
 
 

@@ -119,7 +119,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
         {selectedProfile === model.id ? <Check size={15} /> : null}{selectedProfile === model.id ? "Selected" : "Use model"}
       </button> : model.speechLanguage ? <button disabled={!model.installed || installing || Boolean(pending)} aria-label={model.id === speech.modelId ? `${model.label} selected for dictation` : `Use ${model.label} for dictation`} onClick={() => void updateSpeech(() => api.setSpeechModel(model.id))}>
         {model.id === speech.modelId ? <Check size={15} /> : null}{model.id === speech.modelId ? "Dictation selected" : "Use for dictation"}
-      </button> : null}{model.setupUrl && <a href={model.setupUrl} target="_blank" rel="noreferrer" className="model-setup-link"><ExternalLink size={15} />Setup</a>}<button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Uninstall ${model.label}`} onClick={() => setDeleting(model)}><PackageMinus size={15} />Uninstall</button></footer>
+      </button> : null}{model.setupUrl && <a href={model.setupUrl} target="_blank" rel="noreferrer" className="model-setup-link"><ExternalLink size={15} />Setup</a>}{model.installed ? <button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Uninstall ${model.label}`} onClick={() => setDeleting(model)}><PackageMinus size={15} />Uninstall</button> : null}</footer>
       <span className="model-license">{model.experimental ? "Experimental · " : ""}{model.license}</span>
     </article>; })}</div>
     {deleting ? <ModelDeleteDialog model={deleting} runtimeActive={runtimeActive} onCancel={() => setDeleting(null)} onDelete={deleteModel} /> : null}

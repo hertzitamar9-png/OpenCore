@@ -1337,7 +1337,19 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .model-setup-note { color:#f2c788; }
 .model-setup-link { display:inline-flex; align-items:center; gap:6px; color:#a6d8fa; padding:8px; }
 .music-studio { overflow:auto; }
-.assets-studio { grid-column:2; grid-row:2; padding:24px; min-width:0; overflow:auto; }
+.game-dev-studio { grid-column:2; grid-row:2; padding:24px; min-width:0; overflow:auto; }
+.studio-options { border:1px solid var(--line); border-radius:12px; padding:16px; margin:12px 0; min-width:0; }
+.studio-options legend { padding:0 8px; font-weight:700; }
+.studio-presets { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; align-items:end; padding:12px; margin:12px 0; border:1px solid var(--line); border-radius:10px; }
+.studio-presets label { display:flex; flex-direction:column; gap:6px; }
+.studio-presets > div { display:flex; flex-wrap:wrap; gap:8px; }
+.studio-options-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+.studio-options-grid label { display:flex; flex-direction:column; gap:6px; }
+.studio-options-grid label small { color:var(--muted); }
+.studio-options-grid .studio-checkbox { flex-direction:row; align-items:center; flex-wrap:wrap; }
+.studio-options-grid .studio-checkbox small { flex-basis:100%; }
+.studio-options-grid .studio-checkbox input { width:auto; }
+.studio-submit-action { margin-top:12px; }
 .studio-form,.studio-jobs { border:1px solid #304455; background:#0d1c27; border-radius:12px; padding:20px; }
 .studio-form { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
 .studio-form h2,.studio-form>p,.studio-form>details,.studio-form>button,.studio-form>label:has(textarea) { grid-column:1/-1; }

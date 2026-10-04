@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test GGUF quantization catalog refresh
+        run: python -m unittest scripts.test_sync_gguf_variants -v
+      - name: Refresh published GGUF quantizations
+        run: python scripts/sync_gguf_variants.py
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64

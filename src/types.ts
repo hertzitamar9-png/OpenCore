@@ -78,6 +78,7 @@ export interface OperationRecord {
   summary: string;
   error?: string | null;
   startedAt: string;
+  lastProgressAt?: string;
   finishedAt?: string | null;
 }
 

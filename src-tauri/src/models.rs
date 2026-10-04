@@ -88,6 +88,7 @@ pub struct OperationRecord {
     pub summary: String,
     pub error: Option<String>,
     pub started_at: String,
+    pub last_progress_at: String,
     pub finished_at: Option<String>,
 }
 

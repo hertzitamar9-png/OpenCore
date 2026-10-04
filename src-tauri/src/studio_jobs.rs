@@ -450,7 +450,7 @@ impl StudioManager {
                     } else if job.category == "background" {
                         "Background jobs"
                     } else {
-                        "Assets Studio"
+                        "Game Dev Studio"
                     };
                     let text = if job.status == "completed" {
                         format!(
@@ -515,7 +515,7 @@ impl StudioManager {
         } else {
             Some(
                 self.runtime(&job.request.model_id)?
-                    .ok_or("Connect this model's runtime in Assets Studio before generating")?,
+                    .ok_or("Connect this model's runtime in Game Dev Studio before generating")?,
             )
         };
         let music = music_studio::music_studio_status().await;
@@ -915,13 +915,19 @@ fn output_files(dir: &Path) -> Result<Vec<String>, String> {
     Ok(out)
 }
 pub fn tool_spec() -> Value {
-    json!({"type":"function","function":{"name":"studio_use","description":"Control OpenCore studios. list_models lists installed category models and runtime readiness. generate queues a real job with exact prompt/settings; generation starts after this chat response finishes. status/list inspect conversation jobs. cancel stops an owned job. For music compose actual title, style and lyrics strings in settings, not field schemas. Never claim a queued job is completed. Results and prompts appear in Music Studio or Assets Studio.","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["list_models","generate","status","list","cancel"]},"category":{"type":"string","enum":CATEGORIES},"modelId":{"type":"string"},"prompt":{"type":"string"},"settings":{"type":"object","properties":{
+    json!({"type":"function","function":{"name":"studio_use","description":"Control OpenCore studios. list_models lists installed category models and runtime readiness. generate queues a real job with exact prompt/settings; generation starts after this chat response finishes. status/list inspect conversation jobs. cancel stops an owned job. For music compose actual title, style and lyrics strings in settings, not field schemas. Never claim a queued job is completed. Results and prompts appear in Music Studio or Game Dev Studio.","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["list_models","generate","status","list","cancel"]},"category":{"type":"string","enum":CATEGORIES},"modelId":{"type":"string"},"prompt":{"type":"string"},"settings":{"type":"object","properties":{
         "title":{"type":"string","description":"Actual song title"},"style":{"type":"string","description":"Actual genre, instruments, mood and vocal description"},"lyrics":{"type":"string","description":"Actual original lyrics composed for the user, with verse/chorus section markers"},
         "cot":{"type":"string","enum":["full","melody","off"]},"mode":{"type":"string","enum":["song","plan"]},"takes":{"type":"integer","minimum":1,"maximum":8},"seed":{"type":"integer"},"ode_steps":{"type":"integer","minimum":1,"maximum":256},
         "memory":{"type":"object","properties":{"quantization":{"type":"string","enum":["none"]},"offload_ar":{"type":"boolean"}}},
         "semantic_sampling":{"type":"object","properties":{"max_tokens":{"type":"integer","minimum":1},"min_tokens":{"type":"integer","minimum":1}}},
         "abc_sampling":{"type":"object","properties":{"max_tokens":{"type":"integer","minimum":1},"min_tokens":{"type":"integer","minimum":1}}},
-        "inputPath":{"type":"string","description":"Exact attached input file path or prior generated output"},"width":{"type":"integer"},"height":{"type":"integer"},"steps":{"type":"integer"},"duration":{"type":"number"},"negativePrompt":{"type":"string"}
+        "inputPath":{"type":"string","description":"Exact attached input file path or prior generated output"},
+        "width":{"type":"integer","minimum":128,"maximum":2048},"height":{"type":"integer","minimum":128,"maximum":2048},"steps":{"type":"integer","minimum":1,"maximum":100},
+        "negativePrompt":{"type":"string"},"guidanceScale":{"type":"number","minimum":0,"maximum":30},"numImages":{"type":"integer","minimum":1,"maximum":8},
+        "resolution":{"type":"integer","minimum":32,"maximum":512},"chunkSize":{"type":"integer","minimum":256,"maximum":32768},
+        "motionPrompt":{"type":"string"},"durationSeconds":{"type":"number","minimum":1,"maximum":60},"duration":{"type":"number"},
+        "frameCount":{"type":"integer","minimum":1,"maximum":2400},"fps":{"type":"integer","minimum":1,"maximum":120},"loop":{"type":"boolean"},
+        "outputFormat":{"type":"string","enum":["png","webp","jpeg","glb","fbx","bvh","gif","mp4","obj","ply"]}
     },"additionalProperties":true},"jobId":{"type":"string"}},"required":["action"]}}})
 }
 pub fn music_tool_spec() -> Value {
@@ -1146,6 +1152,15 @@ pub async fn studio_output_preview(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn chat_tool_schema_exposes_game_dev_generation_customization() {
+        let properties = tool_spec()["function"]["parameters"]["properties"]["settings"]["properties"].as_object().unwrap();
+        for name in ["inputPath", "negativePrompt", "guidanceScale", "numImages", "resolution", "chunkSize",
+                     "motionPrompt", "durationSeconds", "frameCount", "fps", "loop", "outputFormat"] {
+            assert!(properties.contains_key(name), "missing studio setting {name}");
+        }
+    }
     #[test]
     fn continuation_is_claimed_once_and_new_user_turn_supersedes_it() {
         let root =

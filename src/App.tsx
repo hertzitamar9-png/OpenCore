@@ -53,7 +53,7 @@ import { FloatingWindow } from "./FloatingWindow";
 import { ModelProfileOptions, profileDescription, profileLabel, isSelectableModelProfile, profilesForInstalledModels, selectableModelProfiles, useInstalledModelProfiles } from "./ModelProfiles";
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
-import { AssetsStudio } from './AssetsStudio';
+import { GameDevStudio } from './AssetsStudio';
 import { UpdateButton, UpdateSettings } from './AppUpdateControls';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
@@ -114,7 +114,7 @@ const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }
   { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
   { id: "models", label: "Models", icon: Box },
   { id: "music", label: "Music Studio", icon: Music2 },
-  { id: "assets", label: "Assets Studio", icon: Box },
+  { id: "assets", label: "Game Dev Studio", icon: Box },
   { id: "connectors", label: "Connectors", icon: Network },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "troubleshooting", label: "Troubleshooting", icon: CircleAlert, group: true },
@@ -131,6 +131,22 @@ const shortDate = (value?: string | null) => {
   const date = new Date(value);
   return Number.isNaN(date.valueOf()) ? value : date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 };
+
+export function historySyncProgressLabel(operation: OperationRecord, now = Date.now()): string {
+  const isEcho = operation.phase.toLowerCase().includes('echo');
+  const stage = isEcho
+    ? operation.phase
+    : operation.total
+      ? `${operation.phase} · ${operation.current}/${operation.total} files`
+      : operation.phase;
+  if (operation.status !== 'running') return stage;
+  const lastUpdate = Date.parse(operation.lastProgressAt || operation.startedAt);
+  if (!Number.isFinite(lastUpdate)) return stage;
+  const elapsed = Math.max(0, Math.floor((now - lastUpdate) / 1000));
+  if (elapsed < 15) return `${stage} · updating`;
+  const age = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+  return `${stage} · no new batch update for ${age}; this ECHO step may still be processing`;
+}
 
 function recentDecoderSpeed(logs: LogEntry[]): number | null {
   const cutoff = Date.now() - 8000;
@@ -594,7 +610,10 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     const operation = operationFor(id);
     if (!operation) return "Sync history";
     if (operation.status === "queued") return "Queued…";
-    if (operation.status === "running") return operation.total ? `Scanning files… ${operation.current}/${operation.total}` : "Scanning folders…";
+    if (operation.status === "running") {
+      if (operation.phase.toLowerCase().includes('echo')) return operation.total ? `Indexing ECHO · ${operation.current}/${operation.total} conversations` : 'Indexing ECHO…';
+      return operation.total ? `Importing transcripts · ${operation.current}/${operation.total} files` : "Scanning folders…";
+    }
     if (operation.status === "failed") return "Retry sync";
     if (operation.status === "cancelled") return "Retry sync";
     return operation.summary || "Sync complete";
@@ -822,7 +841,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
           {syncActive && syncOperation ? <button className="cancel-history-button" aria-label={`Cancel ${connector.name} import`} disabled={syncCancelBusy[connector.id]} onClick={() => void cancelHistory(syncOperation.id, connector.id)}>{syncCancelBusy[connector.id] ? "Canceling…" : "Cancel import"}</button> : null}
           <button className="clear-history-button" disabled={syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]} title="Removes the imported copy from OpenCore and ECHO. Source transcript files stay in place." onClick={() => void clearHistory(connector.id as "claude-code" | "codex")}>{historyClearBusy[connector.id] ? "Clearing…" : "Clear imported history"}</button>
           {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
-          {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? syncOperation.error : syncOperation.status === "running" ? `${syncOperation.phase}${syncOperation.total ? ` · ${syncOperation.current}/${syncOperation.total} files` : ""}` : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.startedAt)}</time>{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
+          {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? syncOperation.error : syncOperation.status === "running" ? historySyncProgressLabel(syncOperation) : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)}</time>{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
         </div> : <div className="connector-actions single">
           <button disabled={connectorActionBusy[connector.id]} onClick={() => void configure(connector.id, connector.endpoint)}>{connectorActionBusy[connector.id] ? (connector.id === "unsloth" ? "Installing…" : "Testing…") : connector.id === "unsloth" ? "Install" : "Test"}</button>
           {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
@@ -977,13 +996,14 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       <InspectorSection title="Chrome extension">
         <KeyValue label="Bridge" value={browserStatus?.connected ? "Connected" : "Not connected"} /><KeyValue label="Local port" value={String(browserStatus?.port || 8814)} />
         <p className="appearance-note">In Chrome Extensions, enable Developer mode, choose Load unpacked, and select the bundled chrome-extension folder. Open the OpenCore extension popup and pair it with the local token below.</p>
+        <button className="wide" disabled={!browserStatus?.extensionPath} onClick={() => browserStatus?.extensionPath && void revealLocalPath(browserStatus.extensionPath, onNotice)}><FolderOpen size={14} /> Open extension folder</button>
         <code className="settings-token">{browserStatus?.token || "Loading pairing token..."}</code>
         <button className="wide" disabled={!browserStatus?.token} onClick={() => browserStatus?.token && navigator.clipboard.writeText(browserStatus.token)}><Copy size={14} /> Copy pairing token</button>
         <p className="appearance-note">/chrome-control can list/open/activate/close tabs, inspect, screenshot, interact, reload, and only for explicit development/debugging, evaluate JavaScript through Chrome DevTools Runtime.</p>
       </InspectorSection>
       <InspectorSection title="Privacy & responsibility"><KeyValue label="Network" value="Localhost only" /><KeyValue label="Credentials" value="Redacted before persistence" /><KeyValue label="AI output" value="Review code and tool actions before use" /><KeyValue label="Ownership" value="You control local data and exported conversations" /></InspectorSection>
       <InspectorSection title="Storage"><KeyValue label="Conversation database" value="Local SQLite" /><KeyValue label="ECHO archive" value={snapshot.runtime.archivePath} /><button className="wide" onClick={() => void revealLocalPath(snapshot.runtime.archivePath, onNotice)}><FolderOpen size={14} /> Open archive</button><button className="wide" onClick={async () => { try { onNotice(`Index exported to ${await api.exportArchiveIndex()}`); } catch (error) { onNotice(String(error)); } }}><Download size={14} /> Export memory index</button></InspectorSection>
-      <InspectorSection title="Conversation sources"><KeyValue label="OpenCore" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("opencore") || item.client.toLowerCase().includes("unsloth")).length} conversations`} /><KeyValue label="Claude Code" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("claude")).length} conversations`} /><KeyValue label="Codex" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("codex")).length} conversations`} /><button className="wide" disabled={Boolean(syncStarting["claude-code"] || syncStarting.codex || ["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || "")))} onClick={() => { void syncHistory("claude-code"); void syncHistory("codex"); }}><RefreshCw size={14} /> {(["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || ""))) ? "Scanning local histories…" : "Sync local histories"}</button><div className="settings-sync-results">{(["claude-code", "codex"] as const).map((id) => { const result = operationFor(id); return result ? <div key={id}><strong>{id === "codex" ? "Codex" : "Claude Code"}</strong><span>{result.status === "failed" ? result.error : result.summary || `${result.phase}${result.total ? ` · ${result.current}/${result.total}` : ""}`}</span></div> : null; })}</div></InspectorSection>
+      <InspectorSection title="Conversation sources"><KeyValue label="OpenCore" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("opencore") || item.client.toLowerCase().includes("unsloth")).length} conversations`} /><KeyValue label="Claude Code" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("claude")).length} conversations`} /><KeyValue label="Codex" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("codex")).length} conversations`} /><button className="wide" disabled={Boolean(syncStarting["claude-code"] || syncStarting.codex || ["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || "")))} onClick={() => { void syncHistory("claude-code"); void syncHistory("codex"); }}><RefreshCw size={14} /> {(["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || ""))) ? "Scanning local histories…" : "Sync local histories"}</button><div className="settings-sync-results">{(["claude-code", "codex"] as const).map((id) => { const result = operationFor(id); return result ? <div key={id}><strong>{id === "codex" ? "Codex" : "Claude Code"}</strong><span>{result.status === "failed" ? result.error : result.status === "running" ? historySyncProgressLabel(result) : result.summary || result.phase}</span></div> : null; })}</div></InspectorSection>
       <InspectorSection title="API & diagnostics"><KeyValue label="Gateway" value={`http://127.0.0.1:${snapshot.runtime.gatewayPort}/v1`} /><KeyValue label="Capture" value="Routed API conversations are saved automatically" /><button className="wide" onClick={() => navigator.clipboard.writeText(`http://127.0.0.1:${snapshot.runtime.gatewayPort}/v1`)}><Copy size={14} /> Copy API endpoint</button><button className="wide" onClick={async () => { try { onNotice(`Diagnostics exported to ${await api.exportDiagnostics()}`); } catch (error) { onNotice(String(error)); } }}><FileDown size={14} /> Export diagnostics</button></InspectorSection>
     </div>
   </div>;
@@ -1154,7 +1174,7 @@ export default function App() {
       if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
       if (announced.has(payload.id)) return;
       announced.add(payload.id);
-      const studio = payload.category === 'music' ? 'Music Studio' : 'Assets Studio';
+      const studio = payload.category === 'music' ? 'Music Studio' : 'Game Dev Studio';
       setNotice(payload.status === 'completed' ? `Generation complete. Open ${studio} to view the output.` : `Generation ${payload.status}. Open ${studio} for details.`);
     }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
     return () => { disposed = true; stop?.(); };
@@ -1455,7 +1475,7 @@ export default function App() {
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
-      : view === 'assets' ? <AssetsStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
+      : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}

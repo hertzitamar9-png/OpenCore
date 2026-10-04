@@ -31,7 +31,7 @@ separate check.
 - Register `echo_search`, `echo_read` and `studio_use` tools.
 - Save prompts, completed answers, tool calls/results and error metadata into
   OpenCore's normal timeline. Imports are incremental and retries idempotent.
-- Queue installed Music/Assets Studio models through the existing job manager.
+- Queue installed Music/Game Dev Studio models through the existing job manager.
   Generation waits for the Claude turn to end and the app's GPU reservation.
   A host timer checks only owned jobs and submits one result notification when
   a job terminates, without running an LLM during the wait.

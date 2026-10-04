@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import App, { recentPromptProgress } from "./App";
+import App, { historySyncProgressLabel, recentPromptProgress } from "./App";
 import * as api from "./api";
 import opencoreLogo from "./assets/opencore-logo.png";
 import type { OperationRecord } from "./types";
@@ -21,6 +21,19 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
 }) }));
 
 describe("OpenCore", () => {
+  it("reports ECHO conversation progress and calls out stale batch updates accurately", () => {
+    const operation: OperationRecord = {
+      id: "sync", kind: "history_sync", target: "codex",
+      phase: "Indexing exact history in ECHO · conversation 77/120 complete · 518 batches and 4144 events queued",
+      status: "running", current: 77, total: 120, imported: 0, updated: 0, skipped: 0,
+      summary: "", startedAt: "2026-10-05T10:00:00Z", lastProgressAt: "2026-10-05T10:00:00Z",
+    };
+    expect(historySyncProgressLabel(operation, Date.parse("2026-10-05T10:00:05Z"))).toContain("updating");
+    const stale = historySyncProgressLabel(operation, Date.parse("2026-10-05T10:00:31Z"));
+    expect(stale).toContain("77/120 complete");
+    expect(stale).toContain("no new batch update for 31s");
+    expect(stale).not.toContain("77/120 files");
+  });
   it("opens the requested 3D category from a chat handoff link", async () => {
     const initial=await api.snapshot();
     const chat=initial.conversations[0];
@@ -30,7 +43,7 @@ describe("OpenCore", () => {
       await screen.findByLabelText("Message OpenCore");
       fireEvent.click(screen.getAllByText(chat.title,{selector:"strong"})[0]);
       fireEvent.click(await screen.findByRole("link",{name:"Open 3D generation"}));
-      expect(await screen.findByRole("heading",{name:"Assets Studio"})).toBeVisible();
+      expect(await screen.findByRole("heading",{name:"Game Dev Studio"})).toBeVisible();
       expect(screen.getByRole("button",{name:"3D assets"})).toHaveAttribute("aria-pressed","true");
     } finally {conversation.mockRestore();}
   });
@@ -71,6 +84,21 @@ describe("OpenCore", () => {
     await screen.findByLabelText("Message OpenCore");
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(await screen.findByText("OpenCore v0.2.58")).toBeInTheDocument();
+  });
+
+  it("opens the bundled Chrome extension folder from Settings", async () => {
+    const extensionPath = "C:/Program Files/OpenCore/resources/chrome-extension";
+    const status = vi.spyOn(api, "browserBridgeStatus").mockResolvedValue({
+      port: 8814, token: "pairing-token", connected: false, extensionPath,
+    });
+    const open = vi.spyOn(api, "openLocalPath").mockResolvedValue();
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Open extension folder" }));
+      await waitFor(() => expect(open).toHaveBeenCalledWith(extensionPath));
+    } finally { status.mockRestore(); open.mockRestore(); }
   });
 
   it("shows the bundled OpenCore logo while runtime state is still loading", () => {
@@ -1007,18 +1035,18 @@ describe("OpenCore", () => {
     if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
   });
 
-  it("shows persisted history-sync file progress on its connector button", async () => {
+  it("shows persisted history-sync file progress in its connector status", async () => {
     const operations = vi.spyOn(api, "listOperations").mockResolvedValue([{
       id: "sync-1", kind: "history_sync", target: "codex", phase: "Importing transcripts", status: "running",
       current: 3, total: 10, imported: 1, updated: 1, skipped: 1, summary: "", error: null,
-      startedAt: "2026-09-22T12:00:00Z", finishedAt: null,
+      startedAt: "2026-09-22T12:00:00Z", lastProgressAt: new Date().toISOString(), finishedAt: null,
     }]);
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
-      expect(await screen.findByRole("button", { name: "Scanning files… 3/10" })).toBeDisabled();
-      expect(screen.getByText("Importing transcripts · 3/10 files")).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Importing transcripts · 3/10 files" })).toBeDisabled();
+      expect(screen.getByText("Importing transcripts · 3/10 files · updating")).toBeInTheDocument();
     } finally { operations.mockRestore(); }
   });
 
@@ -1083,7 +1111,7 @@ describe("OpenCore", () => {
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
       const codex = screen.getByRole("heading", { name: "Codex" }).closest("article") as HTMLElement;
-      await within(codex).findByRole("button", { name: "Scanning files… 3/10" });
+      await within(codex).findByRole("button", { name: "Importing transcripts · 3/10 files" });
       fireEvent.click(within(codex).getByRole("button", { name: "Cancel Codex import" }));
       await waitFor(() => expect(cancel).toHaveBeenCalledWith("sync-codex"));
       expect(within(codex).getByText("Cancellation requested…")).toBeInTheDocument();
