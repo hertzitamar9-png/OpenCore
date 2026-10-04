@@ -35,10 +35,30 @@ pub fn supported_profile(profile: &str) -> bool {
         "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo") || crate::model_catalog::gguf_model(profile).is_some()
 }
 pub fn echo_profile(profile: &str) -> bool {
+    if profile == "nanbeige-bf16" { return false; }
+    if profile == "nanbeige-bf16-echo" { return true; }
+    if let Some(model) = crate::model_catalog::gguf_model(profile) {
+        if let Some(parent) = model.variant_of.as_deref().filter(|parent| parent.starts_with("nanbeige-bf16")) {
+            return parent == "nanbeige-bf16-echo";
+        }
+    }
     matches!(profile, "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16-echo" | "dualcore-echo" | "fusioncore-echo") || crate::model_catalog::gguf_model(profile).is_some()
 }
 fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
-fn nanbeige_profile(profile: &str) -> bool { matches!(profile, "nanbeige-bf16" | "nanbeige-bf16-echo") }
+fn nanbeige_profile(profile: &str) -> bool {
+    matches!(profile, "nanbeige-bf16" | "nanbeige-bf16-echo") ||
+        crate::model_catalog::gguf_model(profile).is_some_and(|model|
+            model.variant_of.as_deref().is_some_and(|parent| parent.starts_with("nanbeige-bf16")))
+}
+fn nanbeige_checkpoint(root: &Path, profile: &str) -> Result<PathBuf, String> {
+    if let Some(model) = crate::model_catalog::gguf_model(profile) {
+        if model.variant_of.as_deref().is_some_and(|parent| parent.starts_with("nanbeige-bf16")) {
+            return crate::model_catalog::safe_path(root,
+                model.runtime_model_path.as_deref().ok_or("Missing Nanbeige quantization path")?);
+        }
+    }
+    Ok(root.join("models/nanbeige").join(NANBEIGE_BF16_FILE))
+}
 fn lfm_context(_profile: &str) -> u64 {
     // LFM2.5's published native context is 131,072 tokens. ECHO manages
     // archival continuity outside that rolling model window; it must not
@@ -928,9 +948,12 @@ impl RuntimeManager {
     }
 
     fn start_nanbeige(&self, profile: &str, generation: u64) -> Result<RuntimeSnapshot, String> {
-        let checkpoint = self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE);
+        let checkpoint = match nanbeige_checkpoint(&self.install_root, profile) {
+            Ok(path) => path,
+            Err(error) => return self.fail_start(profile, error),
+        };
         if !checkpoint.is_file() {
-            return self.fail_start(profile, "Install Nanbeige BF16 from the Models tab before starting it".into());
+            return self.fail_start(profile, "Install the selected Nanbeige model variant from the Models tab before starting it".into());
         }
         let server = self.doucode_llama_server();
         if !server.is_file() {
@@ -943,7 +966,7 @@ impl RuntimeManager {
         }
         if self.stop_generation.load(Ordering::SeqCst) != generation { return Err("Runtime loading stopped".into()); }
         if let Ok(mut inner) = self.inner.lock() {
-            inner.loading_phase = "Loading Nanbeige BF16".into();
+            inner.loading_phase = "Loading Nanbeige".into();
             inner.loading_step = 1;
         }
         let checkpoint_arg = checkpoint.to_string_lossy().into_owned();
@@ -1038,7 +1061,7 @@ impl RuntimeManager {
         } else {
             match inner.profile.as_str() {
                 "echo" | "native1m" | "doucode" => ("system RAM".to_string(), "Q4_0".to_string()),
-                "nanbeige-bf16" | "nanbeige-bf16-echo" => ("system RAM".to_string(), "F16 KV".to_string()),
+                profile if nanbeige_profile(profile) => ("system RAM".to_string(), "F16 KV".to_string()),
                 "swift-27b" | "dirk-27b" | "davidau-27b" => ("system RAM".to_string(), "F16 KV".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
                 "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
@@ -1056,13 +1079,15 @@ impl RuntimeManager {
             .and_then(|port| port.parse::<u16>().ok())
             .unwrap_or_else(|| match selected_profile {
                 "doucode" => DOUCODE_DEFAULT_PORT,
-                "nanbeige-bf16" | "nanbeige-bf16-echo" => NANBEIGE_DEFAULT_PORT,
+                profile if nanbeige_profile(profile) => NANBEIGE_DEFAULT_PORT,
                 "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => LFM_DEFAULT_PORT,
                 _ => self.backend_port,
             });
         let model_path = match selected_profile {
             "doucode" => self.doucode_release_dir().display().to_string(),
-            "nanbeige-bf16" | "nanbeige-bf16-echo" => self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE).display().to_string(),
+            profile if nanbeige_profile(profile) => nanbeige_checkpoint(&self.install_root, selected_profile)
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|_| self.install_root.join("models/nanbeige").join(NANBEIGE_BF16_FILE).display().to_string()),
             "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" => self.install_root.join("models/lfm").join(LFM_FILE).display().to_string(),
             _ => crate::model_catalog::gguf_model(selected_profile).and_then(|model|model.runtime_model_path)
                 .map(|path|self.install_root.join(path).display().to_string())
@@ -1345,6 +1370,17 @@ mod tests {
         }
         assert!(!echo_profile("nanbeige-bf16"));
         assert!(echo_profile("nanbeige-bf16-echo"));
+        let root = Path::new("C:/models");
+        let regular = "nanbeige-bf16-q4-k-m";
+        let echo = "nanbeige-bf16-echo-q4-k-m";
+        assert!(supported_profile(regular));
+        assert!(supported_profile(echo));
+        assert!(nanbeige_profile(regular));
+        assert!(nanbeige_profile(echo));
+        assert!(!echo_profile(regular));
+        assert!(echo_profile(echo));
+        assert!(nanbeige_checkpoint(root, regular).unwrap().ends_with("models/nanbeige/variants/Nanbeige_Nanbeige4.2-3B-Q4_K_M.gguf"));
+        assert!(nanbeige_checkpoint(root, echo).unwrap().ends_with("models/nanbeige/variants/Nanbeige_Nanbeige4.2-3B-Q4_K_M.gguf"));
     }
 
     #[test]

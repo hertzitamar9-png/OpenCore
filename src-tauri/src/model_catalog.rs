@@ -597,6 +597,54 @@ mod tests {
         }
     }
     #[test]
+    fn gguf_model_families_offer_all_published_runtime_compatible_quants() {
+        let catalog = manifest().unwrap();
+        let expected: &[(&str, &[&str])] = &[
+            ("swift-27b", &["IQ2_S", "IQ2_XS", "IQ3_S", "IQ3_XXS"]),
+            ("dirk-27b", &["IQ2_S + F16 vision", "IQ2_XS", "IQ3_S", "IQ3_XXS", "IQ4_XS", "Q2_K_XL", "Q3_K_XL", "Q4_K_S", "Q4_K_XL", "Q5_K_XL", "Q6_K", "Q6_K_XL", "Q8_K_L", "Q8_K_XL"]),
+            ("davidau-27b", &["IQ2_M", "IQ3_M", "IQ4_XS", "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q5_K_S", "Q6_K", "Q8_0"]),
+            ("oxcoder-9b", &["Q8_0", "BF16", "Q2_K", "Q3_K_M", "Q4_K_M", "Q5_K_M", "Q6_K"]),
+            ("nim-2-coder-7b", &["Q4_K_M"]),
+            ("mimo-distill-qwen-9b", &["Q8_0", "BF16", "IQ2_M", "IQ3_M", "IQ3_XS", "IQ3_XXS", "IQ4_NL", "IQ4_XS", "Q2_K", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q4_0", "Q4_1", "Q4_K_L", "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q5_K_S", "Q6_K", "Q6_K_L", "Q6_K_S"]),
+            ("boomslang-3b", &["GGUF"]),
+            ("neohorse-1-9b", &["Q8_0", "BF16", "F16", "Q4_K_M", "Q5_K_M"]),
+            ("gmcoder", &["Q8_0", "Q4_K_M"]),
+            ("ternary-bonsai-2-27b", &["PTQ1_0", "F16"]),
+            ("zenith-9b-codecore", &["Q5_K_M", "BF16", "Q3_K_L", "Q3_K_M", "Q4_K_M", "Q4_K_S", "Q5_K_S"]),
+            ("frognano-4b", &["Q8_0", "BF16", "IQ2_M", "IQ3_M", "IQ3_XS", "IQ3_XXS", "IQ4_NL", "IQ4_XS", "Q2_K", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q4_0", "Q4_1", "Q4_K_L", "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q5_K_S", "Q6_K", "Q6_K_L", "Q6_K_S"]),
+            ("swift-27b", &["IQ2_S", "IQ2_XS", "IQ3_S", "IQ3_XXS"]),
+            ("orion-agentic-9b", &["Q6_K", "BF16", "Q3_K_L", "Q3_K_M", "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q5_K_S"]),
+            ("ornith-1-5-9b-mtp", &["Q4_K_M", "BF16", "IQ2_M", "IQ3_M", "IQ4_XS", "Q5_K_M", "Q6_K", "Q8_0"]),
+            ("oxcoder-9b", &["Q8_0", "BF16", "Q2_K", "Q3_K_M", "Q4_K_M", "Q5_K_M", "Q6_K"]),
+            ("tiel-inspired-coder-9b", &["Q8_0", "IQ4_XS", "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q6_K"]),
+            ("qwen38-distill-9b", &["Q8_0", "BF16", "Q4_K_M", "Q5_K_M", "Q6_K"]),
+            ("triumvirate-9b-coder", &["Q8_0", "IQ4_NL", "Q5_K_M", "i1-Q5_K_M"]),
+            ("nanbeige-bf16", &["BF16", "IQ2_M", "IQ3_M", "IQ3_XS", "IQ3_XXS", "IQ4_NL", "IQ4_XS", "Q2_K", "Q2_K_L", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q3_K_XL", "Q4_0", "Q4_1", "Q4_K_L", "Q4_K_M", "Q4_K_S", "Q5_K_L", "Q5_K_M", "Q5_K_S", "Q6_K", "Q6_K_L", "Q8_0"]),
+            ("nanbeige-bf16-echo", &["BF16", "IQ2_M", "IQ3_M", "IQ3_XS", "IQ3_XXS", "IQ4_NL", "IQ4_XS", "Q2_K", "Q2_K_L", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q3_K_XL", "Q4_0", "Q4_1", "Q4_K_L", "Q4_K_M", "Q4_K_S", "Q5_K_L", "Q5_K_M", "Q5_K_S", "Q6_K", "Q6_K_L", "Q8_0"]),
+        ];
+        for (parent_id, precisions) in expected {
+            let parent = catalog.models.iter().find(|model| model.id == *parent_id).unwrap_or_else(|| panic!("missing score-qualified model {parent_id}"));
+            assert!(parent.selectable, "{parent_id} must remain selectable");
+            let actual: std::collections::BTreeSet<_> = catalog.models.iter()
+                .filter(|model| model.id == *parent_id || model.variant_of.as_deref() == Some(parent_id))
+                .map(|model| model.precision.as_str()).collect();
+            let expected: std::collections::BTreeSet<_> = precisions.iter().copied().collect();
+            assert_eq!(actual, expected, "quantization choices for {parent_id}");
+        }
+        for model in catalog.models.iter().filter(|model| model.variant_of.as_deref().is_some_and(|parent| parent.starts_with("nanbeige-bf16"))) {
+            assert_eq!(model.backend, "gguf", "Nanbeige variants must use the GGUF profile adapter");
+        }
+        for parent_id in ["dirk-27b", "davidau-27b", "frognano-4b"] {
+            let parent = catalog.models.iter().find(|model| model.id == parent_id).unwrap();
+            let projector = parent.vision_projector_path.as_deref().unwrap();
+            for variant in catalog.models.iter().filter(|model| model.variant_of.as_deref() == Some(parent_id)) {
+                assert_eq!(variant.vision_projector_path.as_deref(), Some(projector), "{} must retain vision", variant.id);
+                assert!(variant.artifacts.iter().any(|id| catalog.artifacts.iter().any(|artifact|
+                    artifact.id == *id && artifact.path == projector)), "{} must install the shared projector", variant.id);
+            }
+        }
+    }
+    #[test]
     fn quantization_profiles_use_distinct_revision_pinned_runtime_files() {
         let catalog = manifest().unwrap();
         let variants: Vec<_> = catalog.models.iter().filter(|model| model.variant_of.is_some()).collect();
