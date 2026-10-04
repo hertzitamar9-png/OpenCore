@@ -126,6 +126,7 @@ describe("OpenCore", () => {
     eventHandlers.clear();
     stageClipboardAttachment.mockReset();
     window.localStorage.removeItem?.("opencore.model-profile");
+    window.localStorage.removeItem?.("opencore.reasoning-effort.v1");
     window.localStorage.removeItem?.("opencore.approval-global.v1");
     window.sessionStorage.removeItem?.("opencore.approval-chat.preview");
   });
@@ -303,6 +304,19 @@ describe("OpenCore", () => {
       fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Answer directly" } });
       fireEvent.click(screen.getByTitle("Send"));
       await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Answer directly", [], "off", "ask-every-time", [], true, 3, true, 200000, expect.any(String)));
+    } finally { send.mockRestore(); }
+  });
+
+  it("defaults to Off for faster replies and keeps Fast mode out of the composer", async () => {
+    const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      expect(screen.getByRole("button", { name: "Effort: Off" })).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Fast mode" })).not.toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Reply directly" } });
+      fireEvent.click(screen.getByTitle("Send"));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Reply directly", [], "off", "ask-every-time", [], true, 3, true, 200000, expect.any(String)));
     } finally { send.mockRestore(); }
   });
 

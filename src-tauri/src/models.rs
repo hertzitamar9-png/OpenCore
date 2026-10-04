@@ -215,10 +215,10 @@ impl ApprovalMode {
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ReasoningEffort {
+    #[default]
     #[serde(alias = "fast")]
     Off,
     Low,
-    #[default]
     Medium,
     High,
     ExtraHigh,
@@ -278,11 +278,11 @@ mod reasoning_tests {
     }
 
     #[test]
-    fn defaults_to_medium_for_older_clients() {
+    fn defaults_to_no_reasoning_for_older_clients() {
         let request: ChatSendRequest = serde_json::from_value(serde_json::json!({
             "conversationId": "test", "text": "hello"
         })).unwrap();
-        assert_eq!(request.reasoning_effort.as_str(), "medium");
+        assert_eq!(request.reasoning_effort.as_str(), "off");
         assert_eq!(request.approval_mode.as_str(), "ask-every-time");
     }
 

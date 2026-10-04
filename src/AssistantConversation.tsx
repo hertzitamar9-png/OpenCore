@@ -64,8 +64,8 @@ type ToolApprovalRequest = { requestId: string; conversationId: string; name: st
 function savedReasoningEffort(): ReasoningEffort {
   try {
     const saved = window.localStorage.getItem("opencore.reasoning-effort.v1");
-    return REASONING_MODES.find((mode) => mode.value === saved)?.value ?? "medium";
-  } catch { return "medium"; }
+    return REASONING_MODES.find((mode) => mode.value === saved)?.value ?? "off";
+  } catch { return "off"; }
 }
 
 export type ComposerDraft = { text: string; files: string[] };
