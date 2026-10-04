@@ -813,7 +813,7 @@ describe("OpenCore", () => {
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       const statusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
       expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
-      expect(within(statusbar).getByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
+      expect(await within(statusbar).findByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
       expect(within(statusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072");
       expect(within(statusbar).getByLabelText("ECHO context and archive")).toHaveAttribute(
         "title",
