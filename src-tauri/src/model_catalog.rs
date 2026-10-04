@@ -536,11 +536,14 @@ mod tests {
         std::fs::remove_dir_all(root).unwrap();
     }
     #[test]
-    fn local_ultradata_checkpoint_does_not_change_the_hub_download_pin() {
+    fn hub_download_pin_uses_the_scored_ultradata_checkpoint() {
         let catalog = manifest().unwrap();
         let echo = catalog.artifacts.iter().find(|file| file.id == "opencore-apex").unwrap();
-        assert_eq!(echo.sha256, "261ef6c572bf9916f9ea5097bc156da0ee0ef6d631d52cf59dbcf293f416b7ae");
-        assert_eq!(echo.compatible_local_sha256, ["4551c5333bb6287f0222e15a4d1e3a969df04cb7a69833125f5b3aa80239b91a"]);
+        assert_eq!(echo.sha256, "4551c5333bb6287f0222e15a4d1e3a969df04cb7a69833125f5b3aa80239b91a");
+        assert_eq!(echo.revision, "a2e97d37d2fcfd75a459d21ba8d9674aa0a44915");
+        assert_eq!(echo.filename, "OpenCore-Code-Single-File.gguf");
+        assert_eq!(echo.bytes, 5_476_762_688);
+        assert!(echo.compatible_local_sha256.is_empty());
         assert!(catalog.artifacts.iter().filter(|file| file.id != echo.id).all(|file| file.compatible_local_sha256.is_empty()));
     }
     #[test]

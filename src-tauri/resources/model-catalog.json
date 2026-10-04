@@ -40,12 +40,9 @@
       "id": "opencore-apex",
       "path": "OpenCore-Code-Single-File.gguf",
       "repo": "Pita-Ai/OpenCore-code-10kexperts-3tcontext-apex-echo-max",
-      "revision": "69cf90d90cf450df2a0a373d69d4146bbacaa84b",
+      "revision": "a2e97d37d2fcfd75a459d21ba8d9674aa0a44915",
       "filename": "OpenCore-Code-Single-File.gguf",
-      "sha256": "261ef6c572bf9916f9ea5097bc156da0ee0ef6d631d52cf59dbcf293f416b7ae",
-      "compatibleLocalSha256": [
-        "4551c5333bb6287f0222e15a4d1e3a969df04cb7a69833125f5b3aa80239b91a"
-      ],
+      "sha256": "4551c5333bb6287f0222e15a4d1e3a969df04cb7a69833125f5b3aa80239b91a",
       "bytes": 5476762688
     },
     {
@@ -2699,7 +2696,7 @@
       ],
       "license": "Apache-2.0",
       "experimental": true,
-      "note": "3T is an archive scaling goal, not simultaneous attention. Private weights require Hugging Face access.",
+      "note": "UltraData pilot checkpoint: 130/164 HumanEval; the small score difference is inconclusive. 3T is an archive goal, not simultaneous attention.",
       "selectable": true,
       "category": "text",
       "runtimeReady": true
