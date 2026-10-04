@@ -7,6 +7,11 @@ export const installClaudeBridge = () => invoke<ClaudeBridgeStatus>('install_cla
 export interface MusicStudioStatus { installed: boolean; running: boolean; owned: boolean; url: string | null; folder: string; modelLoaded: boolean; error: string | null }
 export const musicStudioStatus = () => desktop() ? invoke<MusicStudioStatus>('music_studio_status') : Promise.resolve({ installed: false, running: false, owned: false, url: null, folder: '', modelLoaded: false, error: null });
 export const startMusicStudio = () => invoke<MusicStudioStatus>('start_music_studio');
+export interface AppUpdateCheck { currentVersion: string; available: boolean; version: string | null }
+export const checkLatestAppVersion = (): Promise<AppUpdateCheck> => desktop()
+  ? invoke<AppUpdateCheck>('check_latest_app_version')
+  : Promise.resolve({ currentVersion: 'web', available: false, version: null });
+export const installLatestAppUpdate = () => invoke<void>('install_latest_app_update');
 export interface StudioRequest { modelId: string; prompt: string; settings: Record<string, unknown>; conversationId?: string | null }
 export interface StudioJob { id: string; category: string; request: StudioRequest; status: string; stage: string; createdAt: string; updatedAt: string; backendRun: string | null; progress: Record<string, unknown>; outputs: string[]; error: string | null }
 export interface StudioRuntime { modelId: string; python: string; sourceDir: string | null; runner: string | null }

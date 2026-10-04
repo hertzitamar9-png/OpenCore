@@ -13,6 +13,8 @@ it('connects the existing music interface only after the user opens it', async (
   fireEvent.click(start);
   const frame = await screen.findByTitle('YuE2 Music Studio');
   expect(frame).toHaveAttribute('src', 'http://127.0.0.1:7860');
+  expect(screen.queryByRole('region', { name: 'New generation' })).not.toBeInTheDocument();
+  expect(await screen.findByRole('region', { name: 'Generation jobs' })).toBeVisible();
 });
 it('does not embed an unrelated URL returned by the backend', async () => {
   vi.mocked(api.musicStudioStatus).mockResolvedValue({ ...status, running: true, url: 'https://other.example' });

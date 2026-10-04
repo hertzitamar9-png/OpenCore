@@ -54,6 +54,7 @@ import { ModelProfileOptions, profileDescription, profileLabel, isSelectableMode
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
 import { AssetsStudio } from './AssetsStudio';
+import { UpdateButton, UpdateSettings } from './AppUpdateControls';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
 type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "connectors" | "settings" | "troubleshooting";
@@ -241,6 +242,7 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
       </div>
     </div>
     <div className="topbar-right">
+      <UpdateButton />
       <button onClick={onExport} title="Export conversation" aria-label="Export conversation"><FileDown size={15} /> Export</button>
       <div className="connection-state"><StatusDot state={running ? "running" : snapshot.runtime.status} /><div><strong>{running ? "Connected" : snapshot.runtime.status}</strong><small>{profileLabel(running ? snapshot.runtime.profile : selectedProfile)}</small></div></div>
     </div>
@@ -969,6 +971,9 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       <InspectorSection title="ECHO virtual memory">
         <EchoMemorySettings />
       </InspectorSection>
+      <InspectorSection title="Updates">
+        <UpdateSettings />
+      </InspectorSection>
       <InspectorSection title="Chrome extension">
         <KeyValue label="Bridge" value={browserStatus?.connected ? "Connected" : "Not connected"} /><KeyValue label="Local port" value={String(browserStatus?.port || 8814)} />
         <p className="appearance-note">In Chrome Extensions, enable Developer mode, choose Load unpacked, and select the bundled chrome-extension folder. Open the OpenCore extension popup and pair it with the local token below.</p>
@@ -1420,6 +1425,7 @@ export default function App() {
         onConversationId={acceptConversationId}
         onRefresh={refreshConversation}
         onNotice={setNotice}
+        updateControl={<UpdateButton />}
         onExport={exportCurrent}
         onRename={renameCurrent}
         onDelete={deleteCurrent}

@@ -3,13 +3,9 @@ use reqwest::Url;
 use serde::Serialize;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, State};
 use tauri_plugin_updater::UpdaterExt;
-
-static UPDATE_CHECK_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 enum UpdateSource {
     Public,
@@ -26,40 +22,12 @@ fn select_update_source(token: Option<String>, manifest_url: Option<Url>) -> Upd
     }
 }
 
-struct UpdateCheckGuard;
-impl Drop for UpdateCheckGuard {
-    fn drop(&mut self) {
-        UPDATE_CHECK_ACTIVE.store(false, Ordering::Release);
-    }
-}
-
 #[derive(Clone, Serialize)]
-struct UpdateNotice {
-    state: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateCheck {
+    current_version: String,
+    available: bool,
     version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    downloaded: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    total: Option<u64>,
-}
-
-fn emit_notice(
-    app: &AppHandle,
-    state: &'static str,
-    version: Option<String>,
-    downloaded: Option<u64>,
-    total: Option<u64>,
-) {
-    let _ = app.emit(
-        "opencore-auto-update",
-        UpdateNotice {
-            state,
-            version,
-            downloaded,
-            total,
-        },
-    );
 }
 
 fn parse_cli_token(stdout: &[u8]) -> Option<String> {
@@ -179,34 +147,11 @@ fn update_allowed(status: &str, owned: bool, chats_idle: bool, jobs_busy: bool) 
     chats_idle && !jobs_busy && (status == "stopped" || status == "running" && owned)
 }
 
-/// Check the public GitHub Releases feed, or the authenticated private feed when
-/// this installation has access, and install a signed update when the app is idle.
-/// Credentials stay in Rust memory and are never sent to JS or logs.
-#[tauri::command]
-pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Result<(), String> {
-    if cfg!(debug_assertions) {
-        return Ok(());
-    }
-    if UPDATE_CHECK_ACTIVE
-        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-        .is_err()
-    {
-        return Ok(());
-    }
-    let _guard = UpdateCheckGuard;
-    let core = Arc::clone(core.inner());
-
-    // Never close OpenCore while a model or a chat turn is active. The periodic
-    // check will retry once the runtime is stopped, or on the next app launch.
-    if !is_idle(&core) || core.speech.is_active().await {
-        return Ok(());
-    }
-
+async fn configured_updater(app: &AppHandle) -> Result<tauri_plugin_updater::Updater, String> {
     let token = tauri::async_runtime::spawn_blocking(github_cli_token)
         .await
-        .ok()
-        .and_then(Result::ok)
-        .flatten();
+        .map_err(|error| error.to_string())?
+        .map_err(|error| error)?;
     let private_manifest_url = if token.is_some() {
         tauri::async_runtime::spawn_blocking(github_cli_latest_manifest_url)
             .await
@@ -227,107 +172,82 @@ pub async fn auto_update(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Resul
             .and_then(|builder| builder.header("Authorization", format!("Bearer {token}")))
             .and_then(|builder| builder.header("Accept", "application/octet-stream")),
     };
-    let builder = match builder {
-        Ok(builder) => builder,
-        Err(_) => {
-            emit_notice(&app, "failed", None, None, None);
-            return Ok(());
-        }
-    };
-    let updater = match builder.build() {
-        Ok(updater) => updater,
-        Err(_) => {
-            emit_notice(&app, "failed", None, None, None);
-            return Ok(());
-        }
-    };
-    let update = match updater.check().await {
-        Ok(update) => update,
-        Err(_) => {
-            emit_notice(&app, "failed", None, None, None);
-            return Ok(());
-        }
-    };
-    let Some(update) = update else {
-        emit_notice(
-            &app,
-            "up-to-date",
-            Some(app.package_info().version.to_string()),
-            None,
-            None,
-        );
-        return Ok(());
-    };
-    let version = update.version.clone();
-    emit_notice(&app, "downloading", Some(version.clone()), Some(0), None);
+    builder
+        .map_err(|error| error.to_string())?
+        .build()
+        .map_err(|error| error.to_string())
+}
 
-    let mut downloaded = 0_u64;
-    let mut last_reported = 0_u64;
-    let mut last_report = Instant::now();
-    let bytes = match update
-        .download(
-            |chunk_length, content_length| {
-                downloaded = downloaded.saturating_add(chunk_length as u64);
-                if downloaded.saturating_sub(last_reported) >= 1_048_576
-                    || last_report.elapsed() >= Duration::from_secs(1)
-                {
-                    emit_notice(
-                        &app,
-                        "downloading",
-                        Some(version.clone()),
-                        Some(downloaded),
-                        content_length,
-                    );
-                    last_reported = downloaded;
-                    last_report = Instant::now();
-                }
-            },
-            || {},
-        )
-        .await
-    {
-        Ok(bytes) => bytes,
-        Err(_) => {
-            emit_notice(&app, "failed", Some(version), None, None);
-            return Ok(());
-        }
-    };
-
-    // A chat or model may have started while the signed package downloaded.
-    // Defer installation until an idle check to avoid restarting mid-session.
-    if !is_idle(&core) || core.speech.is_active().await || music_has_model().await {
-        emit_notice(&app, "waiting", Some(version), None, None);
-        return Ok(());
+/// Checks the configured signed update feed only when the user asks.
+#[tauri::command]
+pub async fn check_latest_app_version(app: AppHandle) -> Result<UpdateCheck, String> {
+    let current_version = app.package_info().version.to_string();
+    if cfg!(debug_assertions) {
+        return Ok(UpdateCheck {
+            current_version,
+            available: false,
+            version: None,
+        });
     }
+    let update = configured_updater(&app)
+        .await?
+        .check()
+        .await
+        .map_err(|error| error.to_string())?;
+    Ok(UpdateCheck {
+        current_version,
+        available: update.is_some(),
+        version: update.map(|value| value.version),
+    })
+}
 
-    let _gpu = match crate::studio_jobs::reserve_gpu() {
-        Ok(guard) => guard,
-        Err(_) => {
-            emit_notice(&app, "waiting", Some(version), None, None);
-            return Ok(());
-        }
-    };
+/// Installs only after the user presses Update. A busy session is left alone.
+#[tauri::command]
+pub async fn install_latest_app_update(
+    app: AppHandle,
+    core: State<'_, Arc<AppCore>>,
+) -> Result<(), String> {
+    if cfg!(debug_assertions) {
+        return Err("Updates are available only in an installed OpenCore build.".into());
+    }
+    let core = Arc::clone(core.inner());
+    if !is_idle(&core) || core.speech.is_active().await || music_has_model().await {
+        return Err(
+            "Finish active chats, model work, or Music Studio generation before updating.".into(),
+        );
+    }
+    let updater = configured_updater(&app).await?;
+    let update = updater
+        .check()
+        .await
+        .map_err(|error| error.to_string())?
+        .ok_or_else(|| {
+            "OpenCore is already up to date. Check again for the latest version.".to_string()
+        })?;
+    let version = update.version.clone();
+    let bytes = update
+        .download(|_, _| {}, || {})
+        .await
+        .map_err(|error| error.to_string())?;
+
+    if !is_idle(&core) || core.speech.is_active().await || music_has_model().await {
+        return Err("A model or generation started during the download. Finish it, then press Update again.".into());
+    }
+    let _gpu = crate::studio_jobs::reserve_gpu()?;
     core.speech.release_idle_model().await?;
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || runtime.stop())
         .await
         .map_err(|e| e.to_string())??;
-    // Do not restart if a studio form queued a new request during model teardown.
     if core.studios.busy() || core.studios.continuation_pending() {
-        emit_notice(&app, "waiting", Some(version), None, None);
-        return Ok(());
+        return Err(
+            "A studio request started during shutdown. Finish it, then press Update again.".into(),
+        );
     }
-
-    emit_notice(&app, "installing", Some(version.clone()), None, None);
-    // Give the webview a moment to paint the in-app applying state before the
-    // Windows updater starts and exits this process.
-    tokio::time::sleep(Duration::from_millis(500)).await;
-    if update.install(bytes).is_err() {
-        emit_notice(&app, "failed", Some(version), None, None);
-    } else {
-        app.restart();
-    }
-    Ok(())
+    update
+        .install(bytes)
+        .map_err(|error| format!("Could not install OpenCore {version}: {error}"))?;
+    app.restart();
 }
 async fn music_has_model() -> bool {
     let status = crate::music_studio::music_studio_status().await;
