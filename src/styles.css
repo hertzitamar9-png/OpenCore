@@ -414,7 +414,6 @@ code, pre, .log-canvas { font-family: "Cascadia Code", Consolas, monospace; }
 .composer-control-button .control-copy small { color: #91afc3; font-size: 9px; font-weight: 650; }
 .composer-control-button .control-copy strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-weight: 720; color: #f0f7ff; font-size: 11px; }
 .composer-control-button.active, .composer-control-button:hover:not(:disabled) { background: #1a3b54; border-color: #5b9bc9; }
-.composer-control-button.fast-mode-trigger.active { border-color:#55b8e8; background:linear-gradient(115deg,#11364c,#183b46); box-shadow:0 0 12px #55b8e833; }
 .model-quantization-picker { display:flex; flex-direction:column; gap:6px; margin:12px 0; color:#9fc4da; font-size:12px; font-weight:700; }
 .model-quantization-picker select { width:100%; min-height:36px; padding:6px 9px; border:1px solid #31526a; border-radius:8px; color:#e8f5ff; background:#0e2030; font:inherit; font-size:11px; }
 .composer-control-button.effort-6 { border-color: #776fd1; background: linear-gradient(115deg,#15354b,#292449 80%); box-shadow: inset 0 0 16px #806dfa26,0 0 15px #7166d536; }

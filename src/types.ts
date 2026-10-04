@@ -192,5 +192,5 @@ export interface ChatQueueItem {
   compactAtTokens: number;
 }
 
-export type ReasoningEffort = "fast" | "off" | "low" | "medium" | "high" | "extra-high" | "max" | "opencore";
+export type ReasoningEffort = "off" | "low" | "medium" | "high" | "extra-high" | "max" | "opencore";
 export type ApprovalMode = "ask-every-time" | "approve-for-me" | "allow-chat" | "allow-all";

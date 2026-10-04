@@ -291,12 +291,28 @@ describe("OpenCore", () => {
     } finally { send.mockRestore(); }
   });
 
+  it("sends zero reasoning budget when Off is selected", async () => {
+    const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      fireEvent.click(screen.getByRole("button", { name: /Effort/ }));
+      const selector = screen.getByRole("slider", { name: "Reasoning effort" });
+      fireEvent.change(selector, { target: { value: "0" } });
+      expect(selector).toHaveAttribute("aria-valuetext", "Off");
+      fireEvent.change(screen.getByLabelText("Message OpenCore"), { target: { value: "Answer directly" } });
+      fireEvent.click(screen.getByTitle("Send"));
+      await waitFor(() => expect(send).toHaveBeenCalledWith(expect.any(String), "Answer directly", [], "off", "ask-every-time", [], true, 3, true, 200000, expect.any(String)));
+    } finally { send.mockRestore(); }
+  });
+
   it("keeps effort and approval controls in the send bar and opens one padded panel at a time", async () => {
     render(<App />);
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     const composer = document.querySelector(".chat-composer");
     expect(composer).toContainElement(screen.getByRole("button", { name: /Approval/ }));
     expect(composer).toContainElement(screen.getByRole("button", { name: /Effort/ }));
+    expect(screen.queryByRole("button", { name: "Fast mode" })).not.toBeInTheDocument();
     expect(composer).toContainElement(screen.getByTitle("Send"));
     expect(screen.queryByText(/Project tools ready/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Read files and search/)).not.toBeInTheDocument();
