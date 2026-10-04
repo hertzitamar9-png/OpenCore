@@ -39,6 +39,7 @@ pub struct Model {
     #[serde(default="default_true")] pub installable: bool,
     #[serde(default,skip_serializing_if="Option::is_none")] pub source_url: Option<String>,
     #[serde(default,skip_serializing_if="Option::is_none")] pub setup_url: Option<String>,
+    #[serde(default,skip_serializing_if="Option::is_none")] pub variant_of: Option<String>,
     #[serde(default,skip_serializing_if="Option::is_none")] pub runtime_model_path: Option<String>,
     #[serde(default,skip_serializing_if="Option::is_none")] pub vision_projector_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -590,6 +591,21 @@ mod tests {
             assert_eq!(model.category, "text");
             assert!(model.installable && !model.runtime_ready && !model.selectable, "{id}");
             assert!(!model.artifacts.is_empty(), "{id} must be downloadable from the model library");
+        }
+    }
+    #[test]
+    fn quantization_profiles_use_distinct_revision_pinned_runtime_files() {
+        let catalog = manifest().unwrap();
+        let variants: Vec<_> = catalog.models.iter().filter(|model| model.variant_of.is_some()).collect();
+        assert!(variants.len() >= 50, "expected the catalog's GGUF quant options to be materialized as selectable profiles");
+        for variant in variants {
+            let parent = variant.variant_of.as_deref().unwrap();
+            assert!(catalog.models.iter().any(|model| model.id == parent && model.selectable), "{} parent", variant.id);
+            assert!(variant.selectable && variant.installable && variant.runtime_ready, "{}", variant.id);
+            let runtime_path = variant.runtime_model_path.as_deref().unwrap_or_else(|| panic!("{} path", variant.id));
+            assert!(variant.artifacts.iter().any(|id| catalog.artifacts.iter().any(|file|
+                file.id == *id && file.path == runtime_path && file.bytes > 0 && valid_sha256(&file.sha256)
+                    && file.revision.len() == 40)), "{} must have its own pinned runtime file", variant.id);
         }
     }
     #[tokio::test]

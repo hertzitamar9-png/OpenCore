@@ -123,7 +123,7 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
                 let budget = thinking.and_then(|value| value.get("budget_tokens"))
                     .and_then(Value::as_u64).unwrap_or(1500);
                 Some(if budget >= 12000 { "max" } else if budget >= 5000 { "extra-high" }
-                    else if budget >= 2500 { "high" } else if budget >= 1000 { "medium" } else { "low" })
+                    else if budget >= 2500 { "high" } else if budget >= 1000 { "medium" } else if budget <= 512 { "fast" } else { "low" })
             }
             _ => None,
         }
@@ -136,6 +136,7 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
     let raw = explicit.or(suffix).unwrap_or("").to_ascii_lowercase();
     let effort = match raw.as_str() {
         "none" | "off" => "off",
+        "fast" => "fast",
         "minimal" | "low" => "low",
         "medium" => "medium",
         "high" => "high",
@@ -145,6 +146,15 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
         _ => return,
     };
     chat["reasoning_effort"] = Value::String(effort.into());
+    chat["reasoning_budget_tokens"] = json!(match effort {
+        "off" => 0,
+        "fast" | "low" => 512,
+        "medium" => 1500,
+        "high" => 3000,
+        "extra-high" | "opencore" => 6000,
+        "max" => 12000,
+        _ => 1500,
+    });
 }
 
 async fn call_chat(state: &GatewayState, payload: &Value) -> Result<Value, Response<Body>> {
@@ -410,7 +420,7 @@ pub async fn anthropic(
     apply_client_reasoning(payload, &mut chat, true);
     if embedded {
         let effort = chat["reasoning_effort"].as_str().unwrap_or("medium");
-        let budget = match effort { "off" => 0, "low" => 512, "medium" => 1500, "high" => 3000, _ => 6000 };
+        let budget = match effort { "off" => 0, "fast" | "low" => 512, "medium" => 1500, "high" => 3000, "max" => 12000, _ => 6000 };
         chat["reasoning_budget_tokens"] = json!(budget);
         chat["chat_template_kwargs"] = json!({"enable_thinking":budget > 0});
         chat["max_tokens"] = json!(requested_output.min(model_output_limit));
@@ -939,6 +949,21 @@ mod tests {
         let mut chat = json!({"model":"opencore"});
         apply_client_reasoning(&json!({"reasoning":{"effort":"xhigh"}}), &mut chat, false);
         assert_eq!(chat["reasoning_effort"], "extra-high");
+    }
+
+    #[test]
+    fn fast_effort_reaches_both_native_and_anthropic_requests_with_512_tokens() {
+        for anthropic in [false, true] {
+            let mut chat = json!({});
+            let payload = if anthropic {
+                json!({"thinking":{"type":"enabled","budget_tokens":512}})
+            } else {
+                json!({"reasoning":{"effort":"fast"}})
+            };
+            apply_client_reasoning(&payload, &mut chat, anthropic);
+            assert_eq!(chat["reasoning_effort"], "fast");
+            assert_eq!(chat["reasoning_budget_tokens"], 512);
+        }
     }
 
     #[test]

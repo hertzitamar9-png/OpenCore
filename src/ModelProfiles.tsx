@@ -2,6 +2,10 @@ import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { modelLibrary } from "./api";
 import type { RuntimeProfile } from "./types";
+import modelCatalog from "../src-tauri/resources/model-catalog.json";
+
+const catalogProfiles = new Map((modelCatalog.models as { id: string; label: string; description: string; selectable: boolean }[])
+  .filter(model => model.selectable).map(model => [model.id, model]));
 
 export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">; label: string; description: string }[] = [
   { id: "echo", label: "ECHO 3T", description: "Addressable history target · exact archive" },
@@ -32,10 +36,13 @@ export const selectableModelProfiles: { id: Exclude<RuntimeProfile, "stopped" | 
   { id: "ornith-1-5-9b-mtp", label: "Ornith 1.5 9B MTP", description: "Optional Q4_K_M with MTP draft head · ECHO archive · 16K attention" },
 ];
 
-export const profileLabel = (profile: string) => selectableModelProfiles.find((item) => item.id === profile)?.label ?? (profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped");
+export const profileLabel = (profile: string) => selectableModelProfiles.find((item) => item.id === profile)?.label ?? catalogProfiles.get(profile)?.label ?? (profile === "unsloth-echo" ? "Unsloth + ECHO" : "Stopped");
 
 export const profileDescription = (profile: RuntimeProfile) =>
-  selectableModelProfiles.find((item) => item.id === profile)?.description ?? "Unsloth backend · ECHO archive";
+  selectableModelProfiles.find((item) => item.id === profile)?.description ?? catalogProfiles.get(profile)?.description ?? "Unsloth backend · ECHO archive";
+
+export const isSelectableModelProfile = (profile: string) =>
+  profile === "unsloth-echo" || selectableModelProfiles.some(item => item.id === profile) || catalogProfiles.has(profile);
 
 export function ModelProfileOptions({ selectedProfile, onSelect, disabled = false, id = "model-profile-options", className = "" }: {
   selectedProfile: RuntimeProfile;
@@ -44,19 +51,24 @@ export function ModelProfileOptions({ selectedProfile, onSelect, disabled = fals
   id?: string;
   className?: string;
 }) {
-  const [installedIds, setInstalledIds] = useState<Set<string> | null>(null);
+  const [installedProfiles, setInstalledProfiles] = useState<{id:string;label:string;description:string}[] | null>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
     let active = true;
     void modelLibrary().then(library => {
-      if (active) setInstalledIds(new Set(library.models.filter(model => model.installed && model.selectable).map(model => model.id)));
+      if (active) setInstalledProfiles(library.models.filter(model => model.installed && model.selectable)
+        .map(model => ({ id: model.id, label: catalogProfiles.get(model.id)?.label || model.label, description: model.description })));
     }).catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, []);
-  const profiles = selectableModelProfiles.filter(profile => installedIds?.has(profile.id));
+  const installedIds = new Set(installedProfiles?.map(profile => profile.id) || []);
+  const profiles = [
+    ...selectableModelProfiles.filter(profile => installedIds.has(profile.id)),
+    ...(installedProfiles || []).filter(profile => !selectableModelProfiles.some(known => known.id === profile.id)),
+  ];
   return <div className={`model-picker-options ${className}`} id={id} role="group" aria-label="Choose model profile">
     {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
-      : installedIds === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
+      : installedProfiles === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
       : profiles.length === 0 ? <p className="model-picker-empty" role="status">No downloaded text models. Install one in Models.</p> : null}
     {profiles.map(({ id: profile, label, description }) => <button
       key={profile}

@@ -70,6 +70,7 @@ export interface InstalledModel {
   installed: boolean; externalManaged: boolean; downloadBytes: number; totalBytes: number;
   speechLanguage?: string;
   category?: string; backend?: string; runtimeReady?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
+  variantOf?: string;
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;

@@ -34,6 +34,20 @@ describe("downloaded model choices", () => {
     expect(screen.queryByRole("button", { name: /ECHO 3T/ })).toBeNull();
   });
 
+  it("exposes an installed quant variant as a selectable runtime profile", async () => {
+    const inventory = await api.modelLibrary();
+    const q4 = inventory.models.find(model => model.id === "qwen38-distill-9b-q4-k-m");
+    expect(q4).toBeTruthy();
+    vi.spyOn(api, "modelLibrary").mockResolvedValue({ ...inventory, models: inventory.models.map(model => ({
+      ...model, installed: model.id === q4!.id,
+    })) });
+    const choose = vi.fn();
+    render(<ModelProfileOptions selectedProfile="echo" onSelect={choose} />);
+    const option = await screen.findByRole("button", { name: /Qwen 3\.8 Distill 9B · Q4_K_M/ });
+    fireEvent.click(option);
+    expect(choose).toHaveBeenCalledWith(q4!.id);
+  });
+
   it("does not offer unchecked profiles while inventory loading fails", async () => {
     vi.spyOn(api, "modelLibrary").mockRejectedValue(new Error("Inventory unavailable"));
     render(<ModelProfileOptions selectedProfile="echo" onSelect={() => {}} />);

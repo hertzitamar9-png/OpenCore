@@ -27,6 +27,26 @@ it('chooses the speech backend separately from the chat model and labels its lan
 });
 
 describe("optional model installation", () => {
+  it("lets a user choose a real quant variant and shows its file size and estimated VRAM", async () => {
+    const base: api.InstalledModel = { id: "qwen38-distill-9b", label: "Qwen 3.8 Distill 9B", description: "Coding GGUF",
+      precision: "Q8_0", contextTokens: 16384, license: "Apache", experimental: false, note: "Pinned",
+      selectable: true, installed: false, externalManaged: false, downloadBytes: 9786060096, totalBytes: 9786060096, category: "text", backend: "gguf" };
+    const q4: api.InstalledModel = { ...base, id: "qwen38-distill-9b-q4-k-m", label: "Qwen 3.8 Distill 9B · Q4_K_M",
+      precision: "Q4_K_M", variantOf: base.id, downloadBytes: 5780090176, totalBytes: 5780090176 };
+    const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false,
+      idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, q4], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+    const install = vi.spyOn(api, "installModel").mockResolvedValue();
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+      const picker = await screen.findByRole("combobox", { name: "Quantization for Qwen 3.8 Distill 9B" });
+      expect(screen.getByRole("option", { name: /Q4_K_M · 5.78 GB download · .* VRAM est\./ })).toBeInTheDocument();
+      fireEvent.change(picker, { target: { value: q4.id } });
+      fireEvent.click(screen.getByRole("button", { name: "Install" }));
+      await waitFor(() => expect(install).toHaveBeenCalledWith(q4.id));
+    } finally { library.mockRestore(); speech.mockRestore(); install.mockRestore(); }
+  });
+
   it("stops an active runtime only after confirmation and passes the reviewed token to uninstallation", async () => {
     const model: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Chat",
       precision: "BF16", contextTokens: 32768, license: "Apache", experimental: false, note: "Local",

@@ -1,4 +1,4 @@
-export type RuntimeProfile = "stopped" | "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16" | "nanbeige-bf16-echo" | "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" | "swift-27b" | "dirk-27b" | "davidau-27b" | "oxcoder-9b" | "nim-2-coder-7b" | "ternary-bonsai-2-27b" | "mimo-distill-qwen-9b" | "frognano-4b" | "qwen38-distill-9b" | "triumvirate-9b-coder" | "orion-agentic-9b" | "zenith-9b-codecore" | "neohorse-1-9b" | "boomslang-3b" | "tiel-inspired-coder-9b" | "gmcoder" | "ornith-1-5-9b-mtp";
+export type RuntimeProfile = "stopped" | "echo" | "native1m" | "unsloth-echo" | "doucode" | "nanbeige-bf16" | "nanbeige-bf16-echo" | "dualcore-kv" | "dualcore-echo" | "fusioncore-kv" | "fusioncore-echo" | "swift-27b" | "dirk-27b" | "davidau-27b" | "oxcoder-9b" | "nim-2-coder-7b" | "ternary-bonsai-2-27b" | "mimo-distill-qwen-9b" | "frognano-4b" | "qwen38-distill-9b" | "triumvirate-9b-coder" | "orion-agentic-9b" | "zenith-9b-codecore" | "neohorse-1-9b" | "boomslang-3b" | "tiel-inspired-coder-9b" | "gmcoder" | "ornith-1-5-9b-mtp" | (string & {});
 
 export interface RuntimeSnapshot {
   profile: RuntimeProfile;
@@ -192,5 +192,5 @@ export interface ChatQueueItem {
   compactAtTokens: number;
 }
 
-export type ReasoningEffort = "off" | "low" | "medium" | "high" | "extra-high" | "max" | "opencore";
+export type ReasoningEffort = "fast" | "off" | "low" | "medium" | "high" | "extra-high" | "max" | "opencore";
 export type ApprovalMode = "ask-every-time" | "approve-for-me" | "allow-chat" | "allow-all";

@@ -45,6 +45,15 @@ const REASONING_MODES: { value: ReasoningEffort; label: string }[] = [
   { value: "opencore", label: "OpenCore" },
 ];
 
+export function requestReasoningEffort(selected: ReasoningEffort, fastMode: boolean): ReasoningEffort {
+  return fastMode ? "fast" : selected;
+}
+
+function savedFastMode(): boolean {
+  try { return window.localStorage.getItem("opencore.fast-mode.v1") === "true"; }
+  catch { return false; }
+}
+
 const APPROVAL_MODES: { value: ApprovalMode; label: string; short: string; detail: string }[] = [
   { value: "ask-every-time", label: "Ask every time", short: "Ask", detail: "Ask before every tool action, including computer controls." },
   { value: "approve-for-me", label: "Approve for me", short: "Auto", detail: "Allow reads automatically; ask before edits, commands, and computer actions." },
@@ -490,6 +499,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   const [optimistic, setOptimistic] = useState<TimelineEntry[]>([]);
   const [liveEntries, setLiveEntries] = useState<TimelineEntry[]>([]);
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>(savedReasoningEffort);
+  const [fastMode, setFastMode] = useState(savedFastMode);
   const [approvalMode, setApprovalMode] = useState<ApprovalMode>(() => savedApprovalMode(conversationId));
   const [controlOpen, setControlOpen] = useState<"effort" | "approval" | null>(null);
   const [approvalPreviewIndex, setApprovalPreviewIndex] = useState<number | null>(null);
@@ -760,7 +770,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     const skills=selectedSkills.filter(id=>available.includes(id));
     if(slash){text=resolveSlashSkill(text,slash.id);if(!skills.includes(slash.id))skills.push(slash.id);}
     if (!text && files.length === 0) return;
-    const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort, approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens };
+    const item: ChatQueueItem = { id: crypto.randomUUID(), text, files: [...files], reasoningEffort: requestReasoningEffort(reasoningEffort, fastMode), approvalMode, skills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens };
     setDraft("");
     setFiles([]);
     setSelectedSkills([...defaultSkills]);
@@ -985,6 +995,11 @@ export const AssistantConversation = memo(function AssistantConversation({
           <button type="button" className={`composer-control-button effort-trigger effort-${effortIndex} ${controlOpen === "effort" ? "active" : ""}`} aria-label={`Effort: ${effortLabel}`} aria-expanded={controlOpen === "effort"} aria-controls="effort-panel" onClick={() => setControlOpen((open) => open === "effort" ? null : "effort")}>
             <BrainCircuit size={16} /><span className="control-copy"><small>Effort</small><strong>{effortLabel}</strong></span><ChevronDown size={13} />
           </button>
+          <button type="button" className={`composer-control-button fast-mode-trigger ${fastMode ? "active" : ""}`} aria-label="Fast mode" aria-pressed={fastMode} title="Caps reasoning at 512 tokens for faster replies. May reduce answer quality." onClick={() => {
+            const next = !fastMode;
+            setFastMode(next);
+            try { window.localStorage.setItem("opencore.fast-mode.v1", String(next)); } catch { /* Session-only setting. */ }
+          }}><Zap size={16} /><span className="control-copy"><small>Speed</small><strong>{fastMode ? "Fast" : "Normal"}</strong></span></button>
           {controlOpen === "effort" ? <FloatingWindow id="effort-compact" domId="effort-panel" title="Effort" icon={<BrainCircuit size={16} />} className={`composer-popover effort-popover effort-${effortIndex}`} onClose={() => setControlOpen(null)} place="composer" initialWidth={440} initialHeight={160} minWidth={280} minHeight={145} ariaLabel="Effort settings">
             <div className="effort-bar">
               <div className="effort-rail">

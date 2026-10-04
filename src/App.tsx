@@ -50,7 +50,7 @@ import { AssistantConversation, type ComposerDraft } from "./AssistantConversati
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
-import { ModelProfileOptions, profileDescription, profileLabel, selectableModelProfiles } from "./ModelProfiles";
+import { ModelProfileOptions, profileDescription, profileLabel, isSelectableModelProfile, selectableModelProfiles } from "./ModelProfiles";
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
 import { AssetsStudio } from './AssetsStudio';
@@ -166,7 +166,7 @@ function modelLoaderDetail(snapshot: AppSnapshot): { text: string; loaded: numbe
 const readProfilePreference = (): RuntimeProfile => {
   try {
     const stored = window.localStorage.getItem("opencore.model-profile");
-    if (stored === "unsloth-echo" || selectableModelProfiles.some((profile) => profile.id === stored)) return stored as RuntimeProfile;
+    if (stored && isSelectableModelProfile(stored)) return stored as RuntimeProfile;
   } catch { /* Use the first-run profile when storage is unavailable. */ }
   return "doucode";
 };

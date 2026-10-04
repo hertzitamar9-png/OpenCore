@@ -3,6 +3,7 @@ import { Check, Download, ExternalLink, HardDrive, PackageMinus } from "lucide-r
 import * as api from "./api";
 import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
+import { estimateGgufVramRange, groupModelVariants } from "./model-variants";
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(2)} GB`;
 export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotice }: {
@@ -14,6 +15,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [category, setCategory] = useState('all');
   const [pending, setPending] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<api.InstalledModel | null>(null);
+  const [quantization, setQuantization] = useState<Record<string, string>>({});
   const [speech, setSpeech] = useState<api.SpeechStatus>({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
   const refresh = useCallback(async () => {
     try {
@@ -56,12 +58,13 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const progress = library?.progress;
   const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
   const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation']];
-  const visibleModels = library?.models.filter(model => category === 'all' || categoryOf(model) === category);
+  const modelGroups = groupModelVariants(library?.models || []);
+  const visibleModels = modelGroups.filter(group => category === 'all' || categoryOf(group.model) === category);
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
     </div>
-    <p className="model-library-note">Models download separately. Variants can share the same weights.</p>
+    <p className="model-library-note">Text GGUF models offer pinned quantizations when their source provides them; other model types keep their supported upstream format. VRAM is an estimate including runtime and KV allowance, and varies with context length and GPU offload.</p>
     {runtimeActive ? <p className="model-library-note">Stop the runtime to install or select another model. Uninstalling an active model requires confirmation to stop it first.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
@@ -69,11 +72,20 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {installing && progress.phase !== "uninstalling" ? <><progress aria-label="Model download" value={progress.phase === "preparing" ? undefined : progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{progress.currentFile === "Preparing speech runtime" ? "Setting up speech recognition for the microphone." : `${gb(progress.downloadedBytes)} / ${gb(progress.totalBytes)} · ${progress.currentFile || "Preparing download"}`}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
       {progress.error ? <p>{progress.error}</p> : null}
     </div> : null}
-    <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{library?.models.filter(model => id === 'all' || categoryOf(model) === id).length || 0}</span></button>)}</div>
-    <div className="model-library-grid">{visibleModels?.map((model) => <article key={model.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : model.id === selectedProfile) ? "selected" : ""}`}>
-      <header><div><h3>{model.label}</h3><span>{model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
+    <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => id === 'all' || categoryOf(group.model) === id).length}</span></button>)}</div>
+    <div className="model-library-grid">{visibleModels.map((group) => {
+      const chosenId = quantization[group.id] || (group.variants.some(item => item.id === selectedProfile) ? selectedProfile : group.id);
+      const model = group.variants.find(item => item.id === chosenId) || group.model;
+      const vram = model.backend === "gguf" ? estimateGgufVramRange(model.totalBytes, model.contextTokens) : null;
+      return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : model.id === selectedProfile) ? "selected" : ""}`}>
+      <header><div><h3>{group.model.label}</h3><span>{model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
-      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.downloadBytes ? gb(model.downloadBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div></dl>
+      {group.variants.length > 1 ? <label className="model-quantization-picker">Quantization
+        <select aria-label={`Quantization for ${group.model.label}`} value={model.id} disabled={Boolean(pending)} onChange={event => setQuantization(current => ({ ...current, [group.id]: event.target.value }))}>
+          {group.variants.map(variant => { const estimate = estimateGgufVramRange(variant.totalBytes, variant.contextTokens); return <option key={variant.id} value={variant.id}>{variant.precision} · {gb(variant.totalBytes)} download · {gb(estimate.minBytes)}–{gb(estimate.maxBytes)} VRAM est.</option>; })}
+        </select>
+      </label> : null}
+      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.totalBytes ? gb(model.totalBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div>{vram ? <div><dt>Estimated VRAM</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : null}</dl>
       <small>{model.note}</small>
       {model.speechLanguage && model.id === speech.modelId ? <div className="whisper-controls" aria-label="Speech settings">
         <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>
@@ -99,7 +111,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
         {model.id === speech.modelId ? <Check size={15} /> : null}{model.id === speech.modelId ? "Dictation selected" : "Use for dictation"}
       </button> : null}{model.setupUrl && <a href={model.setupUrl} target="_blank" rel="noreferrer" className="model-setup-link"><ExternalLink size={15} />Setup</a>}<button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Uninstall ${model.label}`} onClick={() => setDeleting(model)}><PackageMinus size={15} />Uninstall</button></footer>
       <span className="model-license">{model.experimental ? "Experimental · " : ""}{model.license}</span>
-    </article>)}</div>
+    </article>; })}</div>
     {deleting ? <ModelDeleteDialog model={deleting} runtimeActive={runtimeActive} onCancel={() => setDeleting(null)} onDelete={deleteModel} /> : null}
   </section>;
 }
