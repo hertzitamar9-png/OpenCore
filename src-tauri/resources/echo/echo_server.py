@@ -197,13 +197,12 @@ def tool_call_error(message, declared_tools):
 # Reasoning effort. The server takes reasoning_budget_tokens per request, so
 # the level is chosen per message rather than fixed when the server starts.
 #
-# "fast" uses one bounded 512-token reasoning pass. "off" is a real setting,
-# not budget 1: the thinking channel is disabled
-# entirely, which is what makes short factual answers fast. At the other end,
+# "off" is a real setting, not budget 1: the thinking channel is disabled
+# entirely, which makes short factual answers faster. Legacy "fast" and
+# "speed" labels resolve to this mode. At the other end,
 # "ultra" is not a bigger budget - past a point more thinking on one pass stops
 # helping - it is several passes that check each other.
 REASONING_LEVELS = {
-    "fast":        {"budget": 512,   "passes": 1},
     "off":        {"budget": 0,     "passes": 1},
     "low":        {"budget": 512,   "passes": 1},
     "medium":     {"budget": 1500,  "passes": 1},
@@ -213,7 +212,7 @@ REASONING_LEVELS = {
     "ultra":      {"budget": 6000,  "passes": 3},
 }
 REASONING_ALIASES = {
-    "speed": "fast",
+    "fast": "off", "speed": "off",
     "none": "off", "minimal": "low", "med": "medium", "normal": "medium",
     "extra_high": "extra-high", "extrahigh": "extra-high", "xhigh": "extra-high",
     "very-high": "extra-high", "maximum": "max", "ultra-max": "ultra",

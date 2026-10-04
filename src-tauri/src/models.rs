@@ -215,7 +215,7 @@ impl ApprovalMode {
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ReasoningEffort {
-    Fast,
+    #[serde(alias = "fast")]
     Off,
     Low,
     #[default]
@@ -229,7 +229,6 @@ pub enum ReasoningEffort {
 impl ReasoningEffort {
     pub fn as_str(self) -> &'static str {
         match self {
-            Self::Fast => "fast",
             Self::Off => "off",
             Self::Low => "low",
             Self::Medium => "medium",
@@ -242,7 +241,6 @@ impl ReasoningEffort {
 
     pub fn budget_tokens(self) -> u32 {
         match self {
-            Self::Fast => 512,
             Self::Off => 0,
             Self::Low => 512,
             Self::Medium => 1500,
@@ -267,7 +265,7 @@ mod reasoning_tests {
 
     #[test]
     fn accepts_all_user_reasoning_modes_and_rejects_unknown_values() {
-        for mode in ["fast", "off", "low", "medium", "high", "extra-high", "max", "opencore"] {
+        for mode in ["off", "low", "medium", "high", "extra-high", "max", "opencore"] {
             let request: ChatSendRequest = serde_json::from_value(serde_json::json!({
                 "conversationId": "test", "text": "hello", "reasoningEffort": mode
             })).unwrap();
@@ -310,11 +308,11 @@ mod reasoning_tests {
     }
 
     #[test]
-    fn fast_mode_uses_a_bounded_512_token_reasoning_budget() {
+    fn legacy_fast_mode_deserializes_to_reasoning_off() {
         let request: ChatSendRequest = serde_json::from_value(serde_json::json!({
             "conversationId": "test", "text": "hello", "reasoningEffort": "fast"
         })).unwrap();
-        assert_eq!(request.reasoning_effort.as_str(), "fast");
-        assert_eq!(request.reasoning_effort.budget_tokens(), 512);
+        assert_eq!(request.reasoning_effort.as_str(), "off");
+        assert_eq!(request.reasoning_effort.budget_tokens(), 0);
     }
 }
