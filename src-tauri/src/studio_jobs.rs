@@ -1155,7 +1155,8 @@ mod tests {
 
     #[test]
     fn chat_tool_schema_exposes_game_dev_generation_customization() {
-        let properties = tool_spec()["function"]["parameters"]["properties"]["settings"]["properties"].as_object().unwrap();
+        let spec = tool_spec();
+        let properties = spec["function"]["parameters"]["properties"]["settings"]["properties"].as_object().unwrap();
         for name in ["inputPath", "negativePrompt", "guidanceScale", "numImages", "resolution", "chunkSize",
                      "motionPrompt", "durationSeconds", "frameCount", "fps", "loop", "outputFormat"] {
             assert!(properties.contains_key(name), "missing studio setting {name}");
