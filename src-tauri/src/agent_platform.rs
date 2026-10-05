@@ -649,7 +649,7 @@ fn restore_masked_connections(value: &mut Value, previous: &PlatformConfig) -> R
     for server in servers {
         let id = server["id"].as_str().unwrap_or("");
         let old = previous.mcp_servers.iter().find(|old| old.id == id);
-        if let Some(env) = server["env"].as_object_mut() {
+        if let Some(env) = server.get_mut("env").and_then(Value::as_object_mut) {
             for (name, value) in env.iter_mut() {
                 if value.as_str() == Some(REDACTED) {
                     let prior = old
@@ -664,7 +664,7 @@ fn restore_masked_connections(value: &mut Value, previous: &PlatformConfig) -> R
                 mcp_servers: vec![old.clone()],
                 ..PlatformConfig::default()
             });
-            if let Some(args) = server["args"].as_array_mut() {
+            if let Some(args) = server.get_mut("args").and_then(Value::as_array_mut) {
                 for (index, arg) in args.iter_mut().enumerate() {
                     if arg.as_str().is_some_and(|text| text.contains(REDACTED)) {
                         if *arg != redacted["mcpServers"][0]["args"][index] {

@@ -353,6 +353,7 @@ fn redacted_tool_patch_preserves_existing_connection_secrets() {
     let saved = configuration(&fixture.store).unwrap();
     assert_eq!(saved.mcp_servers[0].env["VALUE"], "original-secret");
     assert!(!saved.mcp_servers[0].enabled);
+    assert!(saved.mcp_servers[0].args.is_empty());
     assert!(execute(
         &fixture.store,
         &fixture.root,
@@ -362,6 +363,37 @@ fn redacted_tool_patch_preserves_existing_connection_secrets() {
         ]}})
     )
     .is_err());
+}
+
+#[test]
+fn minimal_mcp_setting_changes_preserve_defaults_for_omitted_fields() {
+    let fixture = Fixture::new();
+    let result = execute(
+        &fixture.store,
+        &fixture.root,
+        "app_control",
+        &json!({"action":"set","settings":{"mcpServers":[
+            {"id":"local","name":"local","command":"node"},
+            {"id":"remote","name":"remote","url":"https://example.test/mcp"}
+        ]}}),
+    )
+    .unwrap();
+    assert_eq!(result["persisted"], true);
+    let saved = configuration(&fixture.store).unwrap();
+    assert_eq!(saved.mcp_servers.len(), 2);
+    for server in &saved.mcp_servers {
+        assert!(server.args.is_empty());
+        assert!(server.env.is_empty());
+        assert_eq!(server.startup_timeout_sec, 30);
+    }
+    assert_eq!(
+        mcp_configuration(&saved).unwrap()["local"]["command"],
+        "node"
+    );
+    assert_eq!(
+        mcp_configuration(&saved).unwrap()["remote"]["url"],
+        "https://example.test/mcp"
+    );
 }
 
 #[test]
