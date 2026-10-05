@@ -71,6 +71,17 @@ pub struct AppCore {
     reflex: Arc<reflex::ReflexManager>,
     vision: Arc<vision::VisionManager>,
     history_sync_cancellations: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
+    update_in_progress: Arc<AtomicBool>,
+}
+
+impl AppCore {
+    pub(crate) fn ensure_not_updating(&self) -> Result<(), String> {
+        if self.update_in_progress.load(Ordering::Acquire) {
+            Err("OpenCore is stopping active work to install an update. Please wait for it to restart.".into())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 struct LiveGenerationGuard {
@@ -142,6 +153,7 @@ async fn vision_frame(_window_id: i64) -> Result<vision::Frame, String> {
 
 /// Fast Reflex decisions from accessibility rows, or Reflex Vision looking at the window.
 async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str, args: serde_json::Value) -> Result<serde_json::Value, String> {
+    core.ensure_not_updating()?;
     let window_id = args.get("windowId").and_then(|v| v.as_i64()).ok_or("windowId is required; use desktop_use action=list first")?;
     let goal = args.get("goal").and_then(|v| v.as_str()).map(str::trim).filter(|goal| !goal.is_empty());
     match action {
@@ -151,6 +163,7 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             #[cfg(windows)]
             let _activity = desktop_activity::begin(app, window_id, &args);
             let frame = vision_frame(window_id).await?;
+            core.ensure_not_updating()?;
             let mut result = if action == "see" { core.vision.ask(&frame, goal).await? }
                              else { core.vision.locate(&frame, goal).await? };
             result["windowId"] = json!(window_id);
@@ -408,6 +421,7 @@ async fn start_profile(
     core: tauri::State<'_, Arc<AppCore>>,
     request: StartProfileRequest,
 ) -> Result<models::RuntimeSnapshot, String> {
+    core.ensure_not_updating()?;
     if core.studios.busy() {return Err("A studio job is queued or generating. Wait for it or cancel it in the studio before loading a text model.".into());}
     music_studio::require_idle_gpu().await?;
     core.speech.release_idle_model().await?;
@@ -415,6 +429,8 @@ async fn start_profile(
         matches!(p.phase.as_str(), "preparing" | "downloading" | "verifying" | "uninstalling")) {
         return Err("Finish the model installation before starting a runtime".into());
     }
+    let _gpu = studio_jobs::reserve_gpu()?;
+    core.ensure_not_updating()?;
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || runtime.start(&request.profile, request.attach_url))
         .await
@@ -503,9 +519,12 @@ impl Drop for ActiveChatGuard {
 async fn restart_runtime(
     core: tauri::State<'_, Arc<AppCore>>,
 ) -> Result<models::RuntimeSnapshot, String> {
+    core.ensure_not_updating()?;
     if core.studios.busy() {return Err("Wait for studio jobs before restarting the text model".into());}
     music_studio::require_idle_gpu().await?;
     core.speech.release_idle_model().await?;
+    let _gpu = studio_jobs::reserve_gpu()?;
+    core.ensure_not_updating()?;
     let runtime = core.runtime.clone();
     let profile = runtime.profile();
     if profile == "stopped" {
@@ -1692,6 +1711,7 @@ pub(crate) fn resume_background_job(core: Arc<AppCore>, app: tauri::AppHandle, m
 }
 
 async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: ChatSendRequest, background_job: Option<String>) -> Result<ChatSendResult,String> {
+    core.ensure_not_updating()?;
     let id = request.conversation_id.trim().to_string();
     if id.is_empty() {
         return Err("Conversation id is required".into());
@@ -1716,6 +1736,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
     let token = CancellationToken::new();
     {
         let mut active = core.active_chats.lock().map_err(|error| error.to_string())?;
+        core.ensure_not_updating()?;
         if active.contains_key(&id) { return Err("This conversation is already running. Stop it before retrying.".into()); }
         active.insert(id.clone(), token.clone());
     }
@@ -1981,10 +2002,11 @@ pub fn run() {
                 store.log("warn", "storage", "Using the verified recovery database; original database and WAL retained for diagnosis");
             }
             let runtime = Arc::new(RuntimeManager::new_with_resources(store.clone(), app.path().resource_dir().ok()));
+            let update_in_progress = Arc::new(AtomicBool::new(false));
             let core = Arc::new(AppCore {
                 claude_bridge: claude_bridge::BridgeState::default(),
                 studios: studio_jobs::StudioManager::new(app.path().app_data_dir()?.join("studio"))?,
-                speech: speech::SpeechManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir()?),
+                speech: speech::SpeechManager::new_with_update_gate(runtime.install_root().to_path_buf(), app.path().resource_dir()?, update_in_progress.clone()),
                 store: store.clone(),
                 runtime: runtime.clone(),
                 codex_app_server_pool: codex_app_server::CodexAppServerPool::new(),
@@ -1996,6 +2018,7 @@ pub fn run() {
                 browser: Arc::new(browser_bridge::BrowserBridge::from_store(&store)?),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
                 vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
+                update_in_progress,
             });
             core.studios.attach_app(app.handle().clone());
             claude_bridge_install::start(store.clone(), app.handle());

@@ -129,22 +129,128 @@ fn github_cli_token() -> Result<Option<String>, String> {
     Ok(None)
 }
 
-fn is_idle(core: &AppCore) -> bool {
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct UpdateStopPlan {
+    cancel_chats: bool,
+    stop_runtime: bool,
+    cancel_studio_jobs: bool,
+}
+
+fn update_stop_plan(
+    status: &str,
+    runtime_owned: bool,
+    chats_active: bool,
+    studio_jobs_active: bool,
+) -> UpdateStopPlan {
+    UpdateStopPlan {
+        cancel_chats: chats_active,
+        stop_runtime: status != "stopped" || runtime_owned || chats_active,
+        cancel_studio_jobs: studio_jobs_active,
+    }
+}
+
+struct UpdateGuard {
+    in_progress: Arc<std::sync::atomic::AtomicBool>,
+    keep_for_restart: bool,
+}
+
+impl UpdateGuard {
+    fn acquire(in_progress: Arc<std::sync::atomic::AtomicBool>) -> Result<Self, String> {
+        in_progress
+            .compare_exchange(
+                false,
+                true,
+                std::sync::atomic::Ordering::AcqRel,
+                std::sync::atomic::Ordering::Acquire,
+            )
+            .map_err(|_| "An OpenCore update is already in progress.".to_string())?;
+        Ok(Self {
+            in_progress,
+            keep_for_restart: false,
+        })
+    }
+
+    fn keep_for_restart(&mut self) {
+        self.keep_for_restart = true;
+    }
+}
+
+impl Drop for UpdateGuard {
+    fn drop(&mut self) {
+        if !self.keep_for_restart {
+            self.in_progress
+                .store(false, std::sync::atomic::Ordering::Release);
+        }
+    }
+}
+
+async fn stop_active_work_for_update(core: &AppCore) -> Result<(), String> {
     let runtime = core.runtime.snapshot();
-    update_allowed(
+    let chats_active = !core
+        .active_chats
+        .lock()
+        .map_err(|error| error.to_string())?
+        .is_empty();
+    let plan = update_stop_plan(
         &runtime.status,
         runtime.model_pid.is_some() || runtime.echo_pid.is_some(),
-        core.active_chats
+        chats_active,
+        core.studios.busy(),
+    );
+
+    if plan.cancel_chats {
+        let active = core
+            .active_chats
             .lock()
-            .map(|chats| chats.is_empty())
-            .unwrap_or(false),
-        core.studios.busy()
-            || core.studios.continuation_pending()
-            || crate::studio_jobs::gpu_reserved(),
-    )
-}
-fn update_allowed(status: &str, owned: bool, chats_idle: bool, jobs_busy: bool) -> bool {
-    chats_idle && !jobs_busy && (status == "stopped" || status == "running" && owned)
+            .map_err(|error| error.to_string())?;
+        for token in active.values() {
+            token.cancel();
+        }
+    }
+    let studio_error = if plan.cancel_studio_jobs {
+        core.studios.cancel_active().await.err()
+    } else {
+        None
+    };
+
+    // Cancel dictation and stop the verified YuE model before replacing
+    // the installed files. Keep going if YuE reports an error so the text model
+    // and other app-owned workers are still stopped safely.
+    let (_, music_result) = tokio::join!(
+        core.speech.stop_for_update(),
+        crate::music_studio::stop_for_update(),
+    );
+    core.reflex.stop();
+    core.vision.stop();
+
+    if plan.stop_runtime {
+        let runtime = core.runtime.clone();
+        runtime.request_stop();
+        tauri::async_runtime::spawn_blocking(move || runtime.stop())
+            .await
+            .map_err(|error| error.to_string())??;
+    }
+    let mut chats_stopped = false;
+    for _ in 0..100 {
+        if core
+            .active_chats
+            .lock()
+            .map_err(|error| error.to_string())?
+            .is_empty()
+        {
+            chats_stopped = true;
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+    if !chats_stopped {
+        return Err("A chat did not stop after cancellation. OpenCore stopped its model, but the update was not installed.".into());
+    }
+    if let Some(error) = studio_error {
+        return Err(error);
+    }
+    music_result?;
+    Ok(())
 }
 
 async fn configured_updater(app: &AppHandle) -> Result<tauri_plugin_updater::Updater, String> {
@@ -201,7 +307,7 @@ pub async fn check_latest_app_version(app: AppHandle) -> Result<UpdateCheck, Str
     })
 }
 
-/// Installs only after the user presses Update. A busy session is left alone.
+/// Installs only after the user presses Update. Active model work is stopped first.
 #[tauri::command]
 pub async fn install_latest_app_update(
     app: AppHandle,
@@ -211,11 +317,6 @@ pub async fn install_latest_app_update(
         return Err("Updates are available only in an installed OpenCore build.".into());
     }
     let core = Arc::clone(core.inner());
-    if !is_idle(&core) || core.speech.is_active().await || music_has_model().await {
-        return Err(
-            "Finish active chats, model work, or Music Studio generation before updating.".into(),
-        );
-    }
     let updater = configured_updater(&app).await?;
     let update = updater
         .check()
@@ -225,39 +326,20 @@ pub async fn install_latest_app_update(
             "OpenCore is already up to date. Check again for the latest version.".to_string()
         })?;
     let version = update.version.clone();
+    let mut update_guard = UpdateGuard::acquire(core.update_in_progress.clone())?;
+    stop_active_work_for_update(&core).await?;
+    let _gpu = crate::studio_jobs::reserve_gpu()?;
     let bytes = update
         .download(|_, _| {}, || {})
         .await
         .map_err(|error| error.to_string())?;
-
-    if !is_idle(&core) || core.speech.is_active().await || music_has_model().await {
-        return Err("A model or generation started during the download. Finish it, then press Update again.".into());
-    }
-    let _gpu = crate::studio_jobs::reserve_gpu()?;
-    core.speech.release_idle_model().await?;
-    let runtime = core.runtime.clone();
-    tauri::async_runtime::spawn_blocking(move || runtime.stop())
-        .await
-        .map_err(|e| e.to_string())??;
-    if core.studios.busy() || core.studios.continuation_pending() {
-        return Err(
-            "A studio request started during shutdown. Finish it, then press Update again.".into(),
-        );
-    }
     update
         .install(bytes)
         .map_err(|error| format!("Could not install OpenCore {version}: {error}"))?;
+    drop(_gpu);
+    update_guard.keep_for_restart();
     app.restart();
 }
-async fn music_has_model() -> bool {
-    let status = crate::music_studio::music_studio_status().await;
-    status.model_loaded
-        || (status.running
-            && crate::music_studio::request("GET", "/api/status", None)
-                .await
-                .is_ok_and(|s| s["status"] == "running"))
-}
-
 #[cfg(test)]
 mod tests {
     #[test]
@@ -281,13 +363,46 @@ mod tests {
     }
 
     #[test]
-    fn update_defers_background_jobs_and_unowned_or_loading_models() {
-        assert!(super::update_allowed("stopped", false, true, false));
-        assert!(super::update_allowed("running", true, true, false));
-        assert!(!super::update_allowed("running", false, true, false));
-        assert!(!super::update_allowed("starting", true, true, false));
-        assert!(!super::update_allowed("stopped", false, true, true));
-        assert!(!super::update_allowed("running", true, false, false));
+    fn update_plan_cancels_active_work_and_stops_loading_models() {
+        assert_eq!(
+            super::update_stop_plan("running", true, true, true),
+            super::UpdateStopPlan {
+                cancel_chats: true,
+                stop_runtime: true,
+                cancel_studio_jobs: true,
+            }
+        );
+        assert_eq!(
+            super::update_stop_plan("starting", false, false, false),
+            super::UpdateStopPlan {
+                stop_runtime: true,
+                ..Default::default()
+            }
+        );
+        assert_eq!(
+            super::update_stop_plan("stopped", false, false, false),
+            super::UpdateStopPlan::default()
+        );
+    }
+
+    #[test]
+    fn update_guard_rejects_parallel_updates_and_reopens_after_failure() {
+        let in_progress = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        {
+            let _guard = super::UpdateGuard::acquire(in_progress.clone()).unwrap();
+            assert!(super::UpdateGuard::acquire(in_progress.clone()).is_err());
+            assert!(in_progress.load(std::sync::atomic::Ordering::Acquire));
+        }
+        assert!(!in_progress.load(std::sync::atomic::Ordering::Acquire));
+    }
+
+    #[test]
+    fn update_guard_stays_closed_while_restarting_after_install() {
+        let in_progress = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut guard = super::UpdateGuard::acquire(in_progress.clone()).unwrap();
+        guard.keep_for_restart();
+        drop(guard);
+        assert!(in_progress.load(std::sync::atomic::Ordering::Acquire));
     }
     #[test]
     fn github_cli_token_output_is_trimmed_without_logging() {

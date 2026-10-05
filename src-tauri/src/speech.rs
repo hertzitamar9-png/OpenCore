@@ -1,7 +1,7 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::{path::PathBuf, process::Stdio, sync::{Arc, Mutex as StdMutex}, time::Duration};
+use std::{path::PathBuf, process::Stdio, sync::{atomic::{AtomicBool, Ordering}, Arc, Mutex as StdMutex}, time::Duration};
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, process::{Child, ChildStdin}, sync::{Mutex, oneshot, watch}};
 use tokio_util::sync::CancellationToken;
 
@@ -52,19 +52,28 @@ pub struct SpeechManager {
     root: PathBuf, resources: PathBuf, control: Arc<Mutex<()>>,
     session: Arc<Mutex<Option<Session>>>, worker: Arc<Mutex<Option<Worker>>>,
     settings: Arc<StdMutex<Settings>>, phase: Arc<StdMutex<String>>,
+    update_in_progress: Arc<AtomicBool>,
 }
 impl Clone for SpeechManager {
     fn clone(&self) -> Self { Self { root:self.root.clone(), resources:self.resources.clone(), control:self.control.clone(),
-        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone() } }
+        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), update_in_progress:self.update_in_progress.clone() } }
 }
 impl SpeechManager {
     pub fn new(root: PathBuf, resources: PathBuf) -> Self {
+        Self::new_with_update_gate(root, resources, Arc::new(AtomicBool::new(false)))
+    }
+    pub fn new_with_update_gate(root: PathBuf, resources: PathBuf, update_in_progress: Arc<AtomicBool>) -> Self {
         let speech_root = root.join("speech");
         let settings = std::fs::read(speech_root.join("settings.json")).ok()
             .and_then(|v| serde_json::from_slice(&v).ok()).unwrap_or_default();
         Self { root:speech_root, resources, control:Arc::new(Mutex::new(())), session:Arc::new(Mutex::new(None)),
             worker:Arc::new(Mutex::new(None)), settings:Arc::new(StdMutex::new(settings)),
-            phase:Arc::new(StdMutex::new("off".into())) }
+            phase:Arc::new(StdMutex::new("off".into())), update_in_progress }
+    }
+    fn ensure_not_updating(&self) -> Result<(), String> {
+        if self.update_in_progress.load(Ordering::Acquire) {
+            Err("OpenCore is stopping active work to install an update. Please wait for it to restart.".into())
+        } else { Ok(()) }
     }
     fn settings(&self) -> Settings { self.settings.lock().map(|v|v.clone()).unwrap_or_default() }
     pub fn selected_model(&self) -> String { self.settings().model_id }
@@ -138,6 +147,7 @@ impl SpeechManager {
     }
     pub async fn set_enabled(&self, enabled: bool) -> Result<SpeechStatus,String> {
         let _control=self.control.lock().await;
+        if enabled { self.ensure_not_updating()?; }
         let cfg=self.settings();
         if cfg.enabled == enabled { return Ok(self.status()); }
         if enabled {
@@ -162,6 +172,7 @@ impl SpeechManager {
     }
     pub async fn set_idle_mode(&self, mode:&str) -> Result<SpeechStatus,String> {
         let _control=self.control.lock().await;
+        if mode == "ram" { self.ensure_not_updating()?; }
         if !["cold","ram"].contains(&mode){return Err("Choose cold or ram idle mode".into());}
         if self.is_active().await{return Err("Finish the current dictation before changing its sleep mode.".into());}
         let cfg=self.settings();
@@ -181,6 +192,7 @@ impl SpeechManager {
     }
     pub async fn set_model(&self, id:&str) -> Result<SpeechStatus,String> {
         let _control=self.control.lock().await;
+        self.ensure_not_updating()?;
         if !crate::model_catalog::is_speech_model(id) { return Err("Unknown speech model".into()); }
         if self.is_active().await { return Err("Finish the current dictation before changing its model.".into()); }
         let cfg=self.settings();
@@ -226,6 +238,7 @@ impl SpeechManager {
     async fn start_session(&self, id: String, explicit_file: bool, gpu: Option<crate::studio_jobs::GpuReservation>) -> Result<String,String> {
         uuid::Uuid::parse_str(&id).map_err(|_|"Invalid microphone session ID".to_string())?;
         let control=self.control.lock().await;
+        self.ensure_not_updating()?;
         crate::model_catalog::require_idle()?;
         let cfg=self.settings();
         if !cfg.enabled && !explicit_file{return Err("Turn on speech to text in Models before using the microphone.".into());}
@@ -306,6 +319,7 @@ impl SpeechManager {
         Ok(id)
     }
     pub async fn transcribe(&self,id:&str,encoded:&str)->Result<Value,String>{
+        self.ensure_not_updating()?;
         let result=async{
             if encoded.len()>24*1024*1024{return Err("Recording is too large".into());}
             let bytes=base64::engine::general_purpose::STANDARD.decode(encoded).map_err(|e|e.to_string())?;
@@ -335,6 +349,12 @@ impl SpeechManager {
         if let Some(mut worker)=self.worker.lock().await.take(){worker.stop().await;}
         self.set_phase(if self.settings().enabled {"ready"} else {"off"});
         Ok(())
+    }
+    pub async fn stop_for_update(&self) {
+        let _control = self.control.lock().await;
+        self.cancel_active().await;
+        if let Some(mut worker) = self.worker.lock().await.take() { worker.stop().await; }
+        self.set_phase(if self.settings().enabled { "ready" } else { "off" });
     }
 }
 async fn wait_ready(receiver:&mut watch::Receiver<Option<Result<(),String>>>)->Result<(),String>{
@@ -392,6 +412,35 @@ pub async fn speech_cancel(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn update_gate_rejects_new_microphone_work() {
+        let root=std::env::temp_dir().join(format!("speech-update-gate-{}",uuid::Uuid::new_v4()));
+        let update=Arc::new(AtomicBool::new(true));
+        let manager=SpeechManager::new_with_update_gate(root.clone(),root.clone(),update);
+        let error=manager.start_file().await.unwrap_err();
+        assert!(error.contains("install an update"));
+        assert!(!manager.is_active().await);
+        assert!(!root.exists());
+    }
+    #[tokio::test]
+    async fn update_stop_cancels_a_live_dictation_before_returning() {
+        let root=std::env::temp_dir().join(format!("speech-update-stop-{}",uuid::Uuid::new_v4()));
+        let manager=SpeechManager::new(root.clone(),root.clone());
+        let cancel=CancellationToken::new();
+        let (input,audio)=oneshot::channel();
+        let (result_tx,result)=watch::channel(None);
+        let (_ready_tx,ready)=watch::channel(None);
+        *manager.session.lock().await=Some(Session{id:"recording".into(),audio:root.join("pending.audio"),input:Some(input),
+            result,ready,cancel:cancel.clone(),_gpu:None});
+        tokio::spawn(async move {
+            let outcome=wait_recording(audio,&cancel).await.map(|_|json!({"text":"unexpected"}));
+            let _=result_tx.send(Some(outcome));
+        });
+        tokio::time::timeout(Duration::from_secs(1),manager.stop_for_update()).await.unwrap();
+        assert!(!manager.is_active().await);
+        assert_eq!(manager.status().phase,"off");
+        if root.exists(){std::fs::remove_dir_all(root).unwrap();}
+    }
     #[tokio::test]
     async fn microphone_cannot_start_while_a_background_job_owns_gpu(){
         let root=std::env::temp_dir().join(format!("speech-gpu-{}",uuid::Uuid::new_v4()));
