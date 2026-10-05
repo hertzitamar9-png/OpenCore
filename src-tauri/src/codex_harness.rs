@@ -135,7 +135,7 @@ pub(super) async fn run(
         }
     }
     specs.extend(echo_tool_specs());
-    let mut process = tokio::process::Command::new(node_executable);
+    let mut process = tokio::process::Command::new(&node_executable);
     process
         .arg(runner)
         .current_dir(&workspace)
