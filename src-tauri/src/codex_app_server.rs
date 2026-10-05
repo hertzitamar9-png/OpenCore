@@ -122,6 +122,8 @@ pub enum AppServerError {
     RequestRejected { code: i64, message: String },
     #[error("Codex app-server request was interrupted")]
     Interrupted,
+    #[error("Codex app-server did not acknowledge turn interruption")]
+    InterruptTimeout,
     #[error("all Codex app-server process slots are busy")]
     PoolFull,
     #[error("Codex app-server did not exit after shutdown")]
@@ -134,7 +136,7 @@ impl AppServerError {
     pub fn is_recoverable(&self) -> bool {
         matches!(
             self,
-            Self::Process(_) | Self::ProcessExited { .. } | Self::ResponseChannelClosed
+            Self::Process(_) | Self::ProcessExited { .. } | Self::ResponseChannelClosed | Self::InterruptTimeout
         )
     }
 }
@@ -182,6 +184,7 @@ struct ConnectionShared {
     alive: AtomicBool,
     active_requests: AtomicUsize,
     active_turn: AtomicBool,
+    active_turn_id: RwLock<Option<String>>,
     thread_id: RwLock<Option<String>>,
     kill: mpsc::UnboundedSender<()>,
 }
@@ -244,6 +247,7 @@ impl CodexAppServer {
             alive: AtomicBool::new(true),
             active_requests: AtomicUsize::new(0),
             active_turn: AtomicBool::new(false),
+            active_turn_id: RwLock::new(None),
             thread_id: RwLock::new(None),
             kill: kill_tx,
         });
@@ -356,10 +360,18 @@ impl CodexAppServer {
             .await
             .map_err(|_| AppServerError::ResponseChannelClosed)?
         {
-            Ok(result) => Ok(result),
-            Err(error) => {
+            Ok(result) => {
                 if method == "turn/start" {
+                    if let Some(turn_id) = result.pointer("/turn/id").and_then(Value::as_str) {
+                        *self.shared.active_turn_id.write().await = Some(turn_id.to_string());
+                    }
+                }
+                Ok(result)
+            }
+            Err(error) => {
+                if method == "turn/start" && !matches!(&error, AppServerError::Interrupted) {
                     self.shared.active_turn.store(false, Ordering::SeqCst);
+                    *self.shared.active_turn_id.write().await = None;
                 }
                 Err(error)
             }
@@ -381,10 +393,46 @@ impl CodexAppServer {
     }
 
     pub async fn interrupt(&self, thread_id: &str) -> Result<(), AppServerError> {
+        let known_turn_id = self.shared.active_turn_id.read().await.clone();
+        let was_active = known_turn_id.is_some() || self.shared.active_turn.load(Ordering::SeqCst);
         self.cancel_pending_for_thread(thread_id).await;
-        self.request("turn/interrupt", json!({ "threadId": thread_id }))
-            .await?;
+        if !was_active {
+            return Ok(());
+        }
+        let turn_id = if let Some(turn_id) = known_turn_id {
+            Some(turn_id)
+        } else {
+            tokio::time::timeout(std::time::Duration::from_secs(2), async {
+                loop {
+                    if let Some(turn_id) = self.shared.active_turn_id.read().await.clone() { break Some(turn_id); }
+                    if !self.shared.active_turn.load(Ordering::SeqCst) { break None; }
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                }
+            }).await.unwrap_or(None)
+        };
+        let Some(turn_id) = turn_id else {
+            if self.shared.active_turn.load(Ordering::SeqCst) {
+                // The request was cancelled while the server was starting a turn but
+                // failed to publish its ID. Reap this process so it cannot generate
+                // invisibly after the user has pressed Stop.
+                self.shutdown().await?;
+            }
+            return Ok(());
+        };
+        let interrupt_result = tokio::time::timeout(
+            std::time::Duration::from_secs(2),
+            self.request("turn/interrupt", json!({ "threadId": thread_id, "turnId": turn_id })),
+        )
+        .await
+        .unwrap_or(Err(AppServerError::InterruptTimeout));
+        if let Err(error) = interrupt_result {
+            // A failed interrupt must not leave an unobserved generation running.
+            // Closing the process preserves the durable thread on disk for resume.
+            self.shutdown().await?;
+            return Err(error);
+        }
         self.shared.active_turn.store(false, Ordering::SeqCst);
+        *self.shared.active_turn_id.write().await = None;
         Ok(())
     }
 
@@ -653,6 +701,25 @@ impl CodexAppServerPool {
         Ok(())
     }
 
+    pub async fn remove_conversation(&self, conversation_id: &str) -> Result<(), AppServerError> {
+        let keys = self
+            .state
+            .lock()
+            .await
+            .entries
+            .keys()
+            .filter(|key| key.conversation_id == conversation_id)
+            .cloned()
+            .collect::<Vec<_>>();
+        let mut first_error = None;
+        for key in keys {
+            if let Err(error) = self.remove(&key).await {
+                first_error.get_or_insert(error);
+            }
+        }
+        first_error.map_or(Ok(()), Err)
+    }
+
     pub async fn shutdown_all(&self) -> Result<(), AppServerError> {
         let entries = {
             let mut state = self.state.lock().await;
@@ -862,15 +929,21 @@ async fn read_server_messages<R: tokio::io::AsyncBufRead + Unpin>(
                 }
             }
             Ok(message @ ServerMessage::Notification { .. }) => {
-                if let ServerMessage::Notification { method, .. } = &message {
+                if let ServerMessage::Notification { method, params } = &message {
                     if matches!(
                         method.as_str(),
                         "turn/completed" | "turn/failed" | "turn/cancelled" | "turn/interrupted"
                     ) {
                         server.shared.active_turn.store(false, Ordering::SeqCst);
+                        *server.shared.active_turn_id.write().await = None;
                     }
                     if method == "turn/started" {
                         server.shared.active_turn.store(true, Ordering::SeqCst);
+                        let turn_id = params.pointer("/turn/id").and_then(Value::as_str)
+                            .or_else(|| params.get("turnId").and_then(Value::as_str));
+                        if let Some(turn_id) = turn_id {
+                            *server.shared.active_turn_id.write().await = Some(turn_id.to_string());
+                        }
                     }
                 }
                 if server.shared.events.send(message).await.is_err() {
@@ -1017,11 +1090,13 @@ for await (const line of input) {
   } else if (message.method === 'second') {
     response(message.id, { method: 'second' });
     response(firstRequest.id, { method: 'first' });
-  } else if (message.method === 'run') {
+  } else if (message.method === 'run' || message.method === 'turn/start') {
     heldRequest = message;
+    process.stdout.write(JSON.stringify({ jsonrpc: '2.0', method: 'turn/started', params: { threadId: 'thread-3', turn: { id: 'turn-3' } } }) + '\n');
     process.stdout.write(JSON.stringify({ jsonrpc: '2.0', method: 'fixture/run-received' }) + '\n');
   } else if (message.method === 'turn/interrupt') {
-    response(message.id, {});
+    process.stdout.write(JSON.stringify({ jsonrpc: '2.0', method: 'fixture/interrupt-params', params: message.params }) + '\n');
+    if (mode !== 'interrupt_no_response') response(message.id, {});
     if (heldRequest) errorResponse(heldRequest.id, 'interrupted');
   } else if (message.method === 'die') {
     process.exit(0);
@@ -1162,13 +1237,31 @@ main().catch(() => process.exit(1));
         let pending_server = server.clone();
         let pending = tokio::spawn(async move {
             pending_server
-                .request("run", json!({ "threadId": "thread-3" }))
+                .request("turn/start", json!({ "threadId": "thread-3" }))
                 .await
         });
-        assert!(
-            matches!(server.next_event().await.unwrap(), Some(ServerMessage::Notification { method, .. }) if method == "fixture/run-received")
-        );
+        wait_for_pending(&server).await;
+        // Stop can race the first turn notification. The transport waits for the
+        // server-assigned turn ID instead of leaving generation active invisibly.
         server.interrupt("thread-3").await.unwrap();
+        let mut saw_turn_started = false;
+        let mut saw_start_request = false;
+        let interrupt_params = loop {
+            match server.next_event().await.unwrap().unwrap() {
+                ServerMessage::Notification { method, params } if method == "turn/started" => {
+                    saw_turn_started = params["turn"]["id"] == "turn-3";
+                }
+                ServerMessage::Notification { method, .. } if method == "fixture/run-received" => {
+                    saw_start_request = true;
+                }
+                ServerMessage::Notification { method, params } if method == "fixture/interrupt-params" => break params,
+                _ => {}
+            }
+        };
+        assert!(saw_turn_started);
+        assert!(saw_start_request);
+        assert_eq!(interrupt_params["threadId"], "thread-3");
+        assert_eq!(interrupt_params["turnId"], "turn-3");
         assert!(matches!(
             pending.await.unwrap(),
             Err(AppServerError::Interrupted)
@@ -1176,6 +1269,24 @@ main().catch(() => process.exit(1));
         assert!(server.is_alive());
         server.shutdown().await.unwrap();
         assert!(!server.is_alive());
+    }
+
+    #[tokio::test]
+    async fn interrupt_timeout_reaps_child_instead_of_leaving_generation_running() {
+        let pool = CodexAppServerPool::new();
+        let server = pool
+            .get_or_start(key("c3-timeout", "w1", "local", "schema1"), config("interrupt_no_response"))
+            .await
+            .unwrap();
+        let pending_server = server.clone();
+        let pending = tokio::spawn(async move {
+            pending_server.request("turn/start", json!({ "threadId": "thread-3" })).await
+        });
+        wait_for_pending(&server).await;
+        server.interrupt("thread-3").await.unwrap_err();
+        assert!(matches!(pending.await.unwrap(), Err(AppServerError::Interrupted)));
+        assert!(!server.is_alive());
+        pool.shutdown_all().await.unwrap();
     }
 
     #[tokio::test]
@@ -1237,6 +1348,24 @@ main().catch(() => process.exit(1));
             changed_schema,
             Err(AppServerError::SchemaMismatch { .. })
         ));
+        pool.shutdown_all().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn deleting_conversation_reaps_only_its_scoped_app_server_processes() {
+        let pool = CodexAppServerPool::new();
+        let deleted = pool
+            .get_or_start(key("delete-me", "w1", "local", "schema1"), config("default"))
+            .await
+            .unwrap();
+        let retained = pool
+            .get_or_start(key("keep-me", "w1", "local", "schema1"), config("default"))
+            .await
+            .unwrap();
+        pool.remove_conversation("delete-me").await.unwrap();
+        assert!(!deleted.is_alive());
+        assert!(retained.is_alive());
+        assert_eq!(pool.len().await, 1);
         pool.shutdown_all().await.unwrap();
     }
 

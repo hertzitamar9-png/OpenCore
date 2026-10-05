@@ -63,6 +63,8 @@ pub struct AppCore {
     speech: speech::SpeechManager,
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
+    codex_app_server_pool: codex_app_server::CodexAppServerPool,
+    codex_tool_bridges: gateway::CodexToolBridgeMap,
     active_chats: Mutex<HashMap<String, CancellationToken>>,
     live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
     pending_approvals: Mutex<HashMap<String, (String, tokio::sync::oneshot::Sender<bool>)>>,
@@ -525,10 +527,24 @@ fn rename_conversation(
 }
 
 #[tauri::command]
-fn delete_conversation(
+async fn delete_conversation(
     core: tauri::State<'_, Arc<AppCore>>,
     id: String,
 ) -> Result<(), String> {
+    let active = core.active_chats.lock().map_err(|error| error.to_string())?.get(&id).cloned();
+    if let Some(token) = active {
+        token.cancel();
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                if !core.active_chats.lock().map_err(|error| error.to_string())?.contains_key(&id) {
+                    return Ok::<(), String>(());
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+            }
+        }).await.map_err(|_| "The conversation could not stop cleanly; it was kept so no active work is lost".to_string())??;
+    }
+    core.codex_app_server_pool.remove_conversation(&id).await
+        .map_err(|error| format!("Could not close the conversation's Codex app-server: {error}"))?;
     core.store.delete_conversation(&id)
 }
 
@@ -1971,6 +1987,8 @@ pub fn run() {
                 speech: speech::SpeechManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir()?),
                 store: store.clone(),
                 runtime: runtime.clone(),
+                codex_app_server_pool: codex_app_server::CodexAppServerPool::new(),
+                codex_tool_bridges: Arc::new(Mutex::new(HashMap::new())),
                 active_chats: Mutex::new(HashMap::new()),
                 live_generation_runs: Arc::new(Mutex::new(HashMap::new())),
                 pending_approvals: Mutex::new(HashMap::new()),
@@ -2049,9 +2067,10 @@ pub fn run() {
             let gateway_store = store.clone();
             let gateway_app = app.handle().clone();
             let gateway_live_runs = app.state::<Arc<AppCore>>().live_generation_runs.clone();
+            let gateway_tool_bridges = app.state::<Arc<AppCore>>().codex_tool_bridges.clone();
             tauri::async_runtime::spawn(async move {
                 if let Err(error) = gateway::serve(GatewayState::new(runtime, gateway_store.clone(),
-                    gateway_app, gateway_live_runs), 8812).await {
+                    gateway_app, gateway_live_runs, gateway_tool_bridges), 8812).await {
                     gateway_store.log("error", "gateway", &error);
                 }
             });
@@ -2163,7 +2182,12 @@ pub fn run() {
                     if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
                         let app=app.clone();
                         tauri::async_runtime::spawn(async move {
-                            if let Some(core)=app.try_state::<Arc<AppCore>>() {core.studios.shutdown().await;}
+                            if let Some(core)=app.try_state::<Arc<AppCore>>() {
+                                core.studios.shutdown().await;
+                                if let Err(error)=core.codex_app_server_pool.shutdown_all().await {
+                                    core.store.log("warn","codex-app-server",&error.to_string());
+                                }
+                            }
                             music_studio::shutdown_owned().await;
                             EXIT_READY.store(true,std::sync::atomic::Ordering::Release);
                             app.exit(code.unwrap_or(0));

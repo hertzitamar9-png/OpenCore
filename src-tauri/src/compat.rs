@@ -157,7 +157,7 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
 }
 
 fn codex_agent_owns_timeline(headers: &HeaderMap) -> bool {
-    headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-sdk")
+    matches!(headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()), Some("codex-sdk" | "codex-app-server"))
         && headers.get("x-opencore-timeline-owner").and_then(|v| v.to_str().ok()) == Some("app")
 }
 
@@ -1054,6 +1054,8 @@ mod tests {
         headers.insert("x-opencore-harness", HeaderValue::from_static("codex-sdk"));
         assert!(!codex_agent_owns_timeline(&headers));
         headers.insert("x-opencore-timeline-owner", HeaderValue::from_static("app"));
+        assert!(codex_agent_owns_timeline(&headers));
+        headers.insert("x-opencore-harness", HeaderValue::from_static("codex-app-server"));
         assert!(codex_agent_owns_timeline(&headers));
         headers.insert("x-opencore-harness", HeaderValue::from_static("claude-agent-sdk"));
         assert!(!codex_agent_owns_timeline(&headers));

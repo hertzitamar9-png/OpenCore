@@ -10,7 +10,7 @@ const definitions = [{ type: 'function', function: { name: 'music_generate', des
 test('OpenCore MCP endpoint initializes and exposes only the app-provided tool manifest', async () => {
   const initialized = await handleMcpMessage({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: MCP_PROTOCOL_VERSION } }, definitions, () => {});
   assert.equal(initialized.result.protocolVersion, MCP_PROTOCOL_VERSION);
-  assert.equal(initialized.result.capabilities.tools.listChanged, false);
+  assert.equal(initialized.result.capabilities.tools.listChanged, true);
   const listed = await handleMcpMessage({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, definitions, () => {});
   assert.deepEqual(listed.result.tools, [{ name: 'music_generate', description: 'Queue generation', inputSchema: definitions[0].function.parameters }]);
   assert.equal(await handleMcpMessage({ jsonrpc: '2.0', method: 'notifications/initialized' }, definitions, () => {}), null);

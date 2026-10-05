@@ -4,6 +4,7 @@ use crate::models::{
 use crate::redaction::{redact_json, redact_text};
 use crate::project_paths::canonical_existing_directory;
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -17,6 +18,25 @@ pub struct EventStore {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProjectAssignment { Legacy, Automatic, Manual }
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodexThreadMapping {
+    pub conversation_id: String,
+    pub workspace_identity: String,
+    pub thread_id: String,
+    pub provider_id: String,
+    pub model_id: String,
+    pub runtime_version: String,
+    pub schema_hash: String,
+    pub migration_state: String,
+    pub legacy_sdk_thread_id: Option<String>,
+}
+
+fn codex_thread_mapping_key(conversation_id: &str, workspace_identity: &str) -> String {
+    let digest = Sha256::digest(format!("{conversation_id}\0{workspace_identity}").as_bytes());
+    format!("codex_app_server_thread_v1_{digest:x}")
+}
 
 impl ProjectAssignment {
     fn as_str(self) -> &'static str {
@@ -119,6 +139,72 @@ mod tests {
         assert_eq!(reopened.get_setting("echo_sync_cursor_v1_chat").unwrap(), Some("42".into()));
         drop(reopened);
         std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn saved_app_server_thread_resumes_after_app_restart_without_mutating_legacy_sdk_state() {
+        let root = std::env::temp_dir().join(format!("opencore-thread-map-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let path = root.join("history.sqlite3");
+        let mapping = CodexThreadMapping {
+            conversation_id: "conversation-a".into(),
+            workspace_identity: "c:/work/project".into(),
+            thread_id: "app-server-thread-1".into(),
+            provider_id: "opencore-local".into(),
+            model_id: "echo-local".into(),
+            runtime_version: "0.160.0".into(),
+            schema_hash: "schema-sha256".into(),
+            migration_state: "legacy_sdk_unimported".into(),
+            legacy_sdk_thread_id: Some("sdk-thread-preserved".into()),
+        };
+        {
+            let store = EventStore::open(&path).unwrap();
+            store.set_setting("codex_session:conversation-a:workspace", "sdk-thread-preserved").unwrap();
+            store.save_codex_thread_mapping(&mapping).unwrap();
+            assert_eq!(store.get_setting("codex_session:conversation-a:workspace").unwrap().as_deref(), Some("sdk-thread-preserved"));
+        }
+        let reopened = EventStore::open(&path).unwrap();
+        assert_eq!(reopened.codex_thread_mapping("conversation-a", "c:/work/project").unwrap(), Some(mapping));
+        assert_eq!(reopened.codex_thread_mapping("conversation-a", "c:/work/other").unwrap(), None);
+        assert_eq!(reopened.get_setting("codex_session:conversation-a:workspace").unwrap().as_deref(), Some("sdk-thread-preserved"));
+        drop(reopened);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn repeated_app_server_migration_preserves_original_files_timeline_ids_and_legacy_link() {
+        let root = std::env::temp_dir().join(format!("opencore-thread-migrate-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(root.join("codex")).unwrap();
+        let legacy_rollout = root.join("codex").join("legacy-session.jsonl");
+        std::fs::write(&legacy_rollout, b"{\"type\":\"assistant\",\"text\":\"keep me\"}\n").unwrap();
+        let original_rollout_hash = crate::dev_tool::sha256(&std::fs::read(&legacy_rollout).unwrap());
+        let path = root.join("history.sqlite3");
+        let store = EventStore::open(&path).unwrap();
+        store.ensure_conversation("conversation-b", "Codex", "echo", "Keep history").unwrap();
+        store.add_timeline("conversation-b", "message", "assistant", "Codex SDK", "Assistant", "original reply", &json!({"source":"legacy"})).unwrap();
+        let original_ids = store.conversation("conversation-b").unwrap().into_iter().map(|entry| entry.id).collect::<Vec<_>>();
+        let mut mapping = CodexThreadMapping {
+            conversation_id: "conversation-b".into(),
+            workspace_identity: "c:/work/project".into(),
+            thread_id: "native-thread".into(),
+            provider_id: "opencore-local".into(),
+            model_id: "echo-local".into(),
+            runtime_version: "0.160.0".into(),
+            schema_hash: "schema-sha256".into(),
+            migration_state: "legacy_sdk_unimported".into(),
+            legacy_sdk_thread_id: Some("legacy-sdk-thread".into()),
+        };
+        store.save_codex_thread_mapping(&mapping).unwrap();
+        mapping.migration_state = "legacy_history_linked".into();
+        store.save_codex_thread_mapping(&mapping).unwrap();
+        let entries = store.conversation("conversation-b").unwrap();
+        assert_eq!(entries.iter().map(|entry| entry.id).collect::<Vec<_>>(), original_ids);
+        assert_eq!(entries[0].content, "original reply");
+        assert_eq!(store.codex_thread_mapping("conversation-b", "c:/work/project").unwrap().unwrap().migration_state, "legacy_history_linked");
+        assert!(legacy_rollout.is_file());
+        assert_eq!(crate::dev_tool::sha256(&std::fs::read(&legacy_rollout).unwrap()), original_rollout_hash);
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -469,6 +555,49 @@ impl EventStore {
             "INSERT INTO settings(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             params![key, value],
         ).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub fn codex_thread_mapping(
+        &self,
+        conversation_id: &str,
+        workspace_identity: &str,
+    ) -> Result<Option<CodexThreadMapping>, String> {
+        let key = codex_thread_mapping_key(conversation_id, workspace_identity);
+        let Some(value) = self.get_setting(&key)? else { return Ok(None); };
+        let mapping: CodexThreadMapping = serde_json::from_str(&value)
+            .map_err(|error| format!("Saved Codex app-server thread mapping is invalid: {error}"))?;
+        if mapping.conversation_id != conversation_id || mapping.workspace_identity != workspace_identity {
+            return Err("Saved Codex app-server thread mapping does not match its conversation/workspace key".into());
+        }
+        Ok(Some(mapping))
+    }
+
+    pub fn save_codex_thread_mapping(&self, mapping: &CodexThreadMapping) -> Result<(), String> {
+        for (label, value) in [
+            ("conversation ID", mapping.conversation_id.as_str()),
+            ("workspace identity", mapping.workspace_identity.as_str()),
+            ("thread ID", mapping.thread_id.as_str()),
+            ("provider ID", mapping.provider_id.as_str()),
+            ("model ID", mapping.model_id.as_str()),
+            ("runtime version", mapping.runtime_version.as_str()),
+            ("schema hash", mapping.schema_hash.as_str()),
+            ("migration state", mapping.migration_state.as_str()),
+        ] {
+            if value.trim().is_empty() || value.len() > 32_768 || value.chars().any(char::is_control) {
+                return Err(format!("Codex thread mapping has an invalid {label}"));
+            }
+        }
+        let key = codex_thread_mapping_key(&mapping.conversation_id, &mapping.workspace_identity);
+        let value = serde_json::to_string(mapping).map_err(|error| error.to_string())?;
+        let mut connection = self.connection.lock().map_err(|error| error.to_string())?;
+        let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|error| error.to_string())?;
+        transaction.execute(
+            "INSERT INTO settings(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            params![key, value],
+        ).map_err(|error| error.to_string())?;
+        transaction.commit().map_err(|error| error.to_string())?;
         Ok(())
     }
 

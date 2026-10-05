@@ -18,7 +18,7 @@ export async function handleMcpMessage(message, toolDefinitions, callTool) {
       jsonrpc: '2.0', id,
       result: {
         protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.has(proposed) ? proposed : MCP_PROTOCOL_VERSION,
-        capabilities: { tools: { listChanged: false } },
+        capabilities: { tools: { listChanged: true } },
         serverInfo: { name: 'opencore-runtime-tools', version: '1.0.0' },
       },
     };
