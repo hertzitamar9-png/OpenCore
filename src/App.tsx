@@ -99,7 +99,7 @@ function savedAppearance(): Appearance {
       defaultBrowserUse: stored?.defaultBrowserUse === true,
       defaultChromeControl: stored?.defaultChromeControl === true,
       subagentsEnabled: stored?.subagentsEnabled !== false,
-      maxSubagents: Math.max(1, Math.min(1000, Number(stored?.maxSubagents) || defaultAppearance.maxSubagents)),
+      maxSubagents: Math.max(1, Math.min(8, Number(stored?.maxSubagents) || defaultAppearance.maxSubagents)),
       projectSkillsEnabled: stored?.projectSkillsEnabled !== false,
       compactAtTokens: Math.max(1024, Math.min(1000000, Number(stored?.compactAtTokens) || defaultAppearance.compactAtTokens)),
     };
@@ -967,14 +967,14 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       </InspectorSection>
       <InspectorSection title="Tools">
         <div className="appearance-choices"><button className={appearance.projectSkillsEnabled ? "active" : ""} aria-pressed={appearance.projectSkillsEnabled} onClick={() => onAppearanceChange({ ...appearance, projectSkillsEnabled: !appearance.projectSkillsEnabled })}>{appearance.projectSkillsEnabled ? "Project skills enabled" : "Project skills disabled"}</button></div>
-        <p className="appearance-note">When enabled, the Claude Agent SDK loads this workspace's Claude settings and skills. These settings control which tools can be used in new prompts.</p>
+        <p className="appearance-note">When enabled, the Codex agent runtime can read workspace guidance such as AGENTS.md and enabled skills. OpenCore app tools still follow the selected approval mode.</p>
         <div className="appearance-label">Default skills for every new prompt</div>
         <div className="appearance-choices"><button className={appearance.defaultComputerUse ? "active" : ""} aria-pressed={appearance.defaultComputerUse} onClick={() => onAppearanceChange({ ...appearance, defaultComputerUse: !appearance.defaultComputerUse })}>Computer use</button><button className={appearance.defaultBrowserUse ? "active" : ""} aria-pressed={appearance.defaultBrowserUse} onClick={() => onAppearanceChange({ ...appearance, defaultBrowserUse: !appearance.defaultBrowserUse })}>Browser</button><button className={appearance.defaultChromeControl ? "active" : ""} aria-pressed={appearance.defaultChromeControl} onClick={() => onAppearanceChange({ ...appearance, defaultChromeControl: !appearance.defaultChromeControl })}>Chrome</button></div>
         <p className="appearance-note">All are off by default. Without /computer-use, the 0.8B screen model is not exposed to the agent and cannot wake.</p>
         <div className="appearance-choices"><button className={appearance.subagentsEnabled ? "active" : ""} aria-pressed={appearance.subagentsEnabled} onClick={() => onAppearanceChange({ ...appearance, subagentsEnabled: !appearance.subagentsEnabled })}>{appearance.subagentsEnabled ? "Subagents enabled" : "Subagents disabled"}</button></div>
         <label className="appearance-label" htmlFor="max-subagents">Maximum subagent spawns per prompt <strong>{appearance.maxSubagents}</strong></label>
-        <input id="max-subagents" className="appearance-number" type="number" min="1" max="1000" step="1" value={appearance.maxSubagents} disabled={!appearance.subagentsEnabled} onChange={(event) => onAppearanceChange({ ...appearance, maxSubagents: Math.max(1, Math.min(1000, Number(event.target.value) || 1)) })} />
-        <p className="appearance-note">Hard ceiling: 1,000. Keep it low on a single-GPU machine; this is a capability limit, not a recommended spawn count.</p>
+        <input id="max-subagents" className="appearance-number" type="number" min="1" max="8" step="1" value={Math.max(1, Math.min(8, appearance.maxSubagents))} disabled={!appearance.subagentsEnabled} onChange={(event) => onAppearanceChange({ ...appearance, maxSubagents: Math.max(1, Math.min(8, Number(event.target.value) || 1)) })} />
+        <p className="appearance-note">Up to 8 Codex subagents per turn. Each one can add model calls and tool activity, so begin with a low limit on a single-GPU machine.</p>
         <p className="appearance-note">Computer use, OpenCore Browser, and Chrome control are configured above. Type / in the composer to add a skill to one prompt.</p>
       </InspectorSection>
       <InspectorSection title="Model & context">

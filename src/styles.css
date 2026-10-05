@@ -1275,6 +1275,9 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .model-library-card dt { font-size:11px; color:#a9c6da; margin-bottom:5px; }
 .model-library-card dd { margin:0; font-size:13px; }
 .model-library-card>small { line-height:1.6; color:#a9c6da; flex:1; }
+.model-runtime-precision { border:1px solid #304858; border-radius:10px; padding:12px; background:#0c1821; }
+.model-runtime-precision strong { display:block; margin-bottom:7px; }
+.model-runtime-precision p { font-size:12px; color:#a9c6da; margin-top:6px; }
 .model-library-card footer { display:flex; flex-wrap:wrap; gap:10px; }
 .model-library-card footer button { display:flex; align-items:center; justify-content:center; gap:7px; flex:1; padding:10px; border-radius:8px; }
 .model-library-card footer .model-delete-button { color:#f3a4ad; border-color:#75404b; flex:0 0 auto; min-width:86px; }

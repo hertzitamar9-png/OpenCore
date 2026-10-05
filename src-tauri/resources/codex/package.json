@@ -1,0 +1,9 @@
+{
+  "name": "opencore-codex-agent-runtime",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@openai/codex-sdk": "0.160.0"
+  }
+}

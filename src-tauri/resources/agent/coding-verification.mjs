@@ -47,6 +47,12 @@ export class CodingVerification {
     if (file) this.changed.set(file.path, file.hash);
   }
 
+  recordCodexFileChange(path) {
+    const file = this.file(path);
+    if (file) this.changed.set(file.path, file.hash);
+    else if (typeof path === 'string' && path.trim()) this.changed.set(path.replaceAll('\\', '/'), '');
+  }
+
   recordMcp(name, input, result) {
     if (name !== 'dev') return;
     if (MUTATIONS.has(input?.action) && !toolFailed(result)) {

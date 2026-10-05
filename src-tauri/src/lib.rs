@@ -1,6 +1,6 @@
 #![recursion_limit = "256"]
 
-mod claude_harness;
+mod codex_harness;
 mod claude_bridge;
 mod claude_bridge_install;
 mod artifacts;
@@ -1082,7 +1082,8 @@ async fn archive_overview(core: tauri::State<'_, Arc<AppCore>>) -> Result<archiv
 #[tauri::command]
 async fn echo_working_set(core: tauri::State<'_, Arc<AppCore>>, conversation_id: String) -> Result<Value, String> {
     let runtime = core.runtime.snapshot();
-    let sdk = core.store.get_setting(&format!("claude_context:{conversation_id}"))?
+    let sdk = core.store.get_setting(&format!("agent_context:{conversation_id}"))?
+        .or(core.store.get_setting(&format!("claude_context:{conversation_id}"))?)
         .and_then(|value| serde_json::from_str::<Value>(&value).ok());
     if !runtime::echo_profile(&runtime.profile) {
         if let Some(mut context) = sdk {
@@ -1826,10 +1827,10 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
             required.push(json!("explanation"));
         }
     }
-    // Keep every composer effort on this single Claude Agent SDK / Claude Code
-    // preset path. reasoning_effort configures the local model request; it must
+    // Keep every composer effort on the OpenAI Codex SDK orchestration path.
+    // reasoning_effort configures the local model request; it must
     // never select or bypass the agent harness.
-    let result = claude_harness::run(core.clone(), app, &request, token, workspace_root, receipts_root,
+    let result = codex_harness::run(core.clone(), app, &request, token, workspace_root, receipts_root,
         user_content, available_tools, skill_instructions).await;
     if computer_enabled {
         core.vision.stop();

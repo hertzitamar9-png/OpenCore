@@ -156,6 +156,11 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
     });
 }
 
+fn codex_agent_owns_timeline(headers: &HeaderMap) -> bool {
+    headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-sdk")
+        && headers.get("x-opencore-timeline-owner").and_then(|v| v.to_str().ok()) == Some("app")
+}
+
 async fn call_chat(state: &GatewayState, payload: &Value) -> Result<Value, Response<Body>> {
     call_chat_with_conversation(state, payload, None, false).await
 }
@@ -734,14 +739,23 @@ pub async fn responses(
     apply_client_reasoning(payload, &mut chat, false);
     let (tools, tool_kinds) = responses_tools(payload);
     if !tools.is_empty() { chat["tools"] = Value::Array(tools); }
-    let client = "Codex";
+    let client = "Codex SDK";
     let conversation = conversation_id(headers, &chat);
-    capture_request(state, &conversation, client, &redact_json(&chat));
-    let openai = match call_chat(state, &chat).await {
+    let embedded = headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-sdk");
+    let app_owns_timeline = codex_agent_owns_timeline(headers);
+    if !app_owns_timeline { capture_request(state, &conversation, client, &redact_json(&chat)); }
+    if embedded {
+        if let Some(effort) = headers.get("x-opencore-effort").and_then(|v| v.to_str().ok()) {
+            apply_client_reasoning(&json!({"reasoning":{"effort":effort}}), &mut chat, false);
+        }
+        let budget = chat["reasoning_budget_tokens"].as_u64().unwrap_or(1500);
+        chat["chat_template_kwargs"] = json!({"enable_thinking":budget > 0});
+    }
+    let openai = match call_chat_with_conversation(state, &chat, Some(&conversation), app_owns_timeline).await {
         Ok(value) => value,
         Err(response) => return response,
     };
-    capture_completion(&state.store, &conversation, client, &redact_json(&openai));
+    if !app_owns_timeline { capture_completion(&state.store, &conversation, client, &redact_json(&openai)); }
     let output = responses_output(&openai, model, &tool_kinds);
     if payload.get("stream").and_then(Value::as_bool).unwrap_or(false) {
         sse_response(responses_sse(&output))
@@ -761,13 +775,21 @@ pub async fn responses_compact(
         "role":"user",
         "content":"Create a concise working-memory summary of the conversation above. Preserve active goals, constraints, decisions, unresolved tasks, file paths, tool results, and facts needed to continue. Do not add commentary."
     }));
-    let chat = json!({
+    let mut chat = json!({
         "model":"opencore",
         "messages":messages,
         "stream":false,
         "max_tokens":2048
     });
-    let openai = match call_chat(state, &chat).await {
+    let embedded = headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-sdk");
+    let app_owns_timeline = codex_agent_owns_timeline(headers);
+    let conversation = conversation_id(headers, &chat);
+    if embedded {
+        if let Some(effort) = headers.get("x-opencore-effort").and_then(|v| v.to_str().ok()) {
+            apply_client_reasoning(&json!({"reasoning":{"effort":effort}}), &mut chat, false);
+        }
+    }
+    let openai = match call_chat_with_conversation(state, &chat, Some(&conversation), app_owns_timeline).await {
         Ok(value) => value,
         Err(response) => return response,
     };
@@ -793,14 +815,13 @@ pub async fn responses_compact(
             "total_tokens":input_tokens+output_tokens
         }
     });
-    let client = "Codex";
-    let conversation = conversation_id(headers, &chat);
-    let _ = state.store.ensure_conversation(
+    let client = "Codex SDK";
+    if !app_owns_timeline { let _ = state.store.ensure_conversation(
         &conversation,
         client,
         &state.runtime.profile(),
         "Codex compaction",
-    );
+    ); }
     let _ = state.store.add_timeline(
         &conversation,
         "echo",
@@ -810,6 +831,15 @@ pub async fn responses_compact(
         &summary,
         &json!({"kind":"codex_compaction"})
     );
+    if app_owns_timeline {
+        let key = format!("agent_context:{conversation}");
+        let mut context = state.store.get_setting(&key).ok().flatten()
+            .and_then(|value| serde_json::from_str::<Value>(&value).ok()).unwrap_or(json!({"available":true}));
+        context["compactions"] = json!(context["compactions"].as_u64().unwrap_or(0).saturating_add(1));
+        context["autoCompactEnabled"] = json!(true);
+        context["autoCompactThreshold"] = json!(state.runtime.snapshot().context_size.saturating_mul(85) / 100);
+        state.store.set_setting(&key, &context.to_string()).ok();
+    }
     json_response(StatusCode::OK, &compact)
 }
 
@@ -948,6 +978,17 @@ mod tests {
         let mut chat = json!({"model":"opencore"});
         apply_client_reasoning(&json!({"reasoning":{"effort":"xhigh"}}), &mut chat, false);
         assert_eq!(chat["reasoning_effort"], "extra-high");
+    }
+
+    #[test]
+    fn only_the_app_codex_transport_skips_duplicate_gateway_timeline_events() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-opencore-harness", HeaderValue::from_static("codex-sdk"));
+        assert!(!codex_agent_owns_timeline(&headers));
+        headers.insert("x-opencore-timeline-owner", HeaderValue::from_static("app"));
+        assert!(codex_agent_owns_timeline(&headers));
+        headers.insert("x-opencore-harness", HeaderValue::from_static("claude-agent-sdk"));
+        assert!(!codex_agent_owns_timeline(&headers));
     }
 
     #[test]

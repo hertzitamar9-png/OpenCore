@@ -8,7 +8,24 @@ it("states that Phonon runtime FP32 expansion is not a downloadable quantization
   const phonon = modelCatalog.models.find(model => model.id === "phonon-2");
   expect(phonon?.precision).toBe("Five-value checkpoint");
   expect(phonon?.note).toMatch(/no separate FP16, FP32, or GGUF quantization downloads/i);
+  expect(phonon?.runtimePrecision.runtimeDtype).toBe("FP32");
+  expect(phonon?.runtimePrecision.estimatedRuntimeBytes).toBe(2_500_000_000);
   expect(modelCatalog.models.some(model => model.variantOf === "phonon-2")).toBe(false);
+});
+
+it("shows Phonon's source checkpoint separately from its in-memory FP32 runtime", async () => {
+  const model = modelCatalog.models.find(model => model.id === "phonon-2")!;
+  const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [{
+    ...model, installed: false, externalManaged: false, downloadBytes: 164_000_000, totalBytes: 164_000_000,
+  }], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+  const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: false,
+    enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
+  try {
+    render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: /^Speech/ }));
+    expect(await screen.findByRole("region", { name: "Phonon-2 download and runtime precision" })).toHaveTextContent("Download: Five-value checkpoint. Runtime: FP32.");
+    expect(screen.getByText(/FP32 is created in memory and is not a second model download/i)).toBeVisible();
+  } finally { library.mockRestore(); speech.mockRestore(); }
 });
 
 it('chooses the speech backend separately from the chat model and labels its language support', async () => {

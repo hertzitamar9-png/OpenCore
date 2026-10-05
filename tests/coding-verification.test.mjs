@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { CodingVerification, toolFailed } from '../src-tauri/resources/claude/coding-verification.mjs';
+import { CodingVerification, toolFailed } from '../src-tauri/resources/agent/coding-verification.mjs';
 
 const hash = text => createHash('sha256').update(text).digest('hex');
 function fixture(t) {

@@ -61,7 +61,7 @@ from evoagent.echo_adapters import adapter_for  # noqa: E402
 from evoagent.echo_virtual import EchoMemoryController  # noqa: E402
 from echo_summarize import summarize, format_result  # noqa: E402
 def harness_status(_archive_root, _conversation):
-    # Legacy GVS5H is intentionally disabled. Claude Agent SDK is the only harness.
+    # Legacy GVS5H is intentionally disabled. The Codex SDK agent owns orchestration.
     return None
 
 

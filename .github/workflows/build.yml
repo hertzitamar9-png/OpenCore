@@ -43,13 +43,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install JavaScript dependencies
         run: npm ci
-      - name: Prepare Claude Agent SDK runtime
-        run: node scripts/prepare-claude-harness.mjs
-      - name: Test Claude Agent SDK transport and ECHO context policy
-        run: |
-          node scripts/test-claude-protocol.mjs
-          node scripts/test-background-handoff.mjs
-          node scripts/test-coding-feedback.mjs
+      - name: Prepare external Claude Code connector runtime
+        run: node scripts/prepare-claude-connector.mjs
+      - name: Prepare pinned OpenAI Codex SDK and CLI
+        run: node scripts/prepare-codex-harness.mjs
+      - name: Test OpenCore Codex agent orchestration and MCP tool execution
+        run: node scripts/test-codex-agent-runtime.mjs
       - name: Benchmark exact ECHO archive scaling
         if: ${{ !contains(github.event.head_commit.message, '[skip-archive-scale]') }}
         run: python scripts/echo_archive_scale.py

@@ -47,6 +47,17 @@ pub struct Model {
     #[serde(default,skip_serializing_if="Vec::is_empty")] pub weight_artifacts: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub speech_language: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runtime_precision: Option<RuntimePrecisionInfo>,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimePrecisionInfo {
+    pub source_format: String,
+    pub runtime_dtype: String,
+    pub estimated_runtime_bytes: u64,
+    pub runtime_memory_note: String,
+    pub runtime_component: String,
 }
 #[derive(Deserialize)]
 struct Manifest { artifacts: Vec<Artifact>, models: Vec<Model> }
@@ -778,6 +789,11 @@ mod tests {
         assert_eq!(turbo.speech_language.as_deref(),Some("Multilingual"));
         assert_eq!(full.speech_language.as_deref(),Some("Multilingual"));
         assert_eq!(phonon.speech_language.as_deref(),Some("English only"));
+        let runtime = phonon.runtime_precision.as_ref().unwrap();
+        assert_eq!(runtime.source_format,"Five-value checkpoint");
+        assert_eq!(runtime.runtime_dtype,"FP32");
+        assert_eq!(runtime.estimated_runtime_bytes,2_500_000_000);
+        assert!(runtime.runtime_component.contains("not a second model download"));
         assert!(turbo.artifacts.iter().all(|id|!full.artifacts.contains(id)));
         assert!(data.artifacts.iter().filter(|f|full.artifacts.contains(&f.id)).all(|f|f.repo=="Systran/faster-whisper-large-v3"));
         let root=std::env::temp_dir().join(format!("opencore-speech-receipt-{}",uuid::Uuid::new_v4()));

@@ -7,7 +7,7 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "node scripts/verify-doucode-runtime.mjs && node scripts/verify-lfm-runtime.mjs && node scripts/prepare-claude-harness.mjs && npm run build",
+      "beforeBuildCommand": "node scripts/verify-doucode-runtime.mjs && node scripts/verify-lfm-runtime.mjs && node scripts/prepare-claude-connector.mjs && node scripts/prepare-codex-harness.mjs && npm run build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -74,6 +74,8 @@
       "resources/echo/evoagent/echo_virtual.py": "echo/evoagent/echo_virtual.py",
       "resources/echo/evoagent/echo_output.py": "echo/evoagent/echo_output.py",
       "resources/claude/": "claude/",
+      "resources/agent/": "agent/",
+      "resources/codex/": "codex/",
       "resources/doucode/": "doucode/",
       "resources/lfm/checkpoint.json": "lfm/checkpoint.json",
       "resources/lfm/LICENSE.weights.txt": "lfm/LICENSE.weights.txt",

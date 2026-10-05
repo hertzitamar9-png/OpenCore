@@ -77,6 +77,7 @@ export interface InstalledModel {
   category?: string; backend?: string; runtimeReady?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
   variantOf?: string; memoryMode?: "native" | "echo"; runtimeModelPath?: string; visionProjectorPath?: string;
   vramWeightMultiplier?: number; weightBytes?: number;
+  runtimePrecision?: { sourceFormat: string; runtimeDtype: string; estimatedRuntimeBytes: number; runtimeMemoryNote: string; runtimeComponent: string };
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;

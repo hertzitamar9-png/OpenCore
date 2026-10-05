@@ -3947,6 +3947,13 @@
       "license": "CC-BY-4.0 weights; Apache-2.0 reference code",
       "experimental": false,
       "note": "English only. Single published five-value checkpoint; no separate FP16, FP32, or GGUF quantization downloads are available. The Windows reference runtime expands this compact checkpoint to about 2.5 GB of FP32 runtime memory plus audio buffers; this is runtime expansion, not a selectable or downloadable FP32 variant. Optional RAM standby; GPU memory is released after dictation.",
+      "runtimePrecision": {
+        "sourceFormat": "Five-value checkpoint",
+        "runtimeDtype": "FP32",
+        "estimatedRuntimeBytes": 2500000000,
+        "runtimeMemoryNote": "About 2.5 GB plus audio buffers; actual peak use depends on the Transformers and CUDA runtime.",
+        "runtimeComponent": "The speech runtime is prepared during setup; FP32 is created in memory and is not a second model download."
+      },
       "selectable": false,
       "speechLanguage": "English only",
       "category": "speech",

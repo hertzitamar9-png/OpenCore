@@ -65,7 +65,7 @@ export function EchoContextStatus({ conversationId, running, configuredContextTo
       {persistentEcho && !state?.active && state?.promptTokens ? <span className="echo-context-chip">Last request · {state.promptTokens.toLocaleString()} tokens</span> : null}
       {warmCacheLabel ? <span className="echo-context-chip" title={`Approximate Python object byte accounting for ${warmCache?.pages ?? 0} decoded exact pages · ${warmCache?.evictions ?? 0} evictions. Excludes allocator arenas, SQLite cache, and GPU KV.`}>{warmCacheLabel}</span> : null}
       {attentionKvLocation && attentionKvLocation !== "not loaded" ? <span className="echo-context-chip" title="Configured by the active profile launch flags; this is not a per-process allocator measurement.">Attention KV configured · {attentionKvType || "unknown"} · {attentionKvLocation}</span> : null}
-      {state?.harness?.name === "claude-agent-sdk" && <span className="echo-context-chip">Claude Agent · {state.harness.status}</span>}
+      {state?.harness?.name === "codex-sdk" && <span className="echo-context-chip">Codex agent · {state.harness.status}</span>}
     </div>
     {memory ? <details className="echo-memory-diagnostics">
       <summary>ECHO virtual memory · {memory.active_pages.length} active pages</summary>

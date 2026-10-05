@@ -63,7 +63,7 @@ describe("conversation response grouping", () => {
   it("hides internal harness startup records so they cannot look like a reply", () => {
     const turns = groupConversationTurns([
       event(1, "message", "user", "What is this?"),
-      event(2, "harness", "system", "Claude Agent SDK"),
+      event(2, "harness", "system", "OpenAI Codex SDK"),
       event(3, "message", "assistant", "It is the OpenCore logo."),
     ]);
     expect(turns.map((turn) => turn.entries.map((entry) => entry.content))).toEqual([

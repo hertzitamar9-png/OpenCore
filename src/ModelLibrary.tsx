@@ -97,6 +97,12 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       </label> : null}
       <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.totalBytes ? exactFileSize(model.totalBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Unavailable until a supported weight file is selected</dd></div> : null}</dl>
       <small>{model.note}</small>
+      {model.runtimePrecision ? <section className="model-runtime-precision" aria-label={`${model.label} download and runtime precision`}>
+        <strong>Download and runtime precision</strong>
+        <p>Download: {model.runtimePrecision.sourceFormat}. Runtime: {model.runtimePrecision.runtimeDtype}.</p>
+        <p>Estimated runtime memory: {gb(model.runtimePrecision.estimatedRuntimeBytes)}. {model.runtimePrecision.runtimeMemoryNote}</p>
+        <p>{model.runtimePrecision.runtimeComponent}</p>
+      </section> : null}
       {model.speechLanguage && model.id === speech.modelId ? <div className="whisper-controls" aria-label="Speech settings">
         <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>
           <button type="button" role="switch" aria-checked={speech.enabled} aria-label="Speech to text" className={`whisper-toggle ${speech.enabled ? "on" : ""}`}
