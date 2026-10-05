@@ -74,7 +74,7 @@ export interface InstalledModel {
   precision: string; contextTokens: number; license: string; experimental: boolean; note: string;
   installed: boolean; externalManaged: boolean; downloadBytes: number; totalBytes: number;
   speechLanguage?: string;
-  category?: string; backend?: string; runtimeReady?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
+  category?: string; backend?: string; runtimeReady?: boolean; runtimeConnected?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
   variantOf?: string; memoryMode?: "native" | "echo"; runtimeModelPath?: string; visionProjectorPath?: string;
   vramWeightMultiplier?: number; weightBytes?: number;
   runtimePrecision?: { sourceFormat: string; runtimeDtype: string; estimatedRuntimeBytes: number; runtimeMemoryNote: string; runtimeComponent: string };
@@ -97,7 +97,7 @@ export async function modelLibrary(): Promise<ModelLibrary> {
   }),
     diskFreeBytes: 240e9, minimumFreeBytes: 64 * 1024 * 1024, progress: null };
 }
-export const installedSkillModels = (): Promise<{id:string;category:string;installed:boolean}[]> => desktop() ? invoke('installed_skill_models') : Promise.resolve([]);
+export const installedSkillModels = (): Promise<{id:string;category:string;installed:boolean;runtimeConnected?:boolean}[]> => desktop() ? invoke('installed_skill_models') : Promise.resolve([]);
 export async function installModel(id: string): Promise<void> {
   if (!desktop()) throw new Error("Model installation requires the desktop application.");
   await invoke("install_model", { id });

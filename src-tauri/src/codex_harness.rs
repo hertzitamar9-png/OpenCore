@@ -278,6 +278,51 @@ fn native_app_server_home(data: &std::path::Path, scope_hash: &str) -> std::path
     data.join("codex-app-server").join(scope_hash)
 }
 
+// Only the digest leaves this function. Token values must never enter receipts,
+// prompts or logs; rotation still needs to start a fresh child environment.
+fn platform_server_identity(platform: &Value, mcp: &Value, environment: &std::collections::HashMap<std::ffi::OsString, std::ffi::OsString>) -> String {
+    let mut inherited = std::collections::BTreeMap::new();
+    for server in mcp.as_object().into_iter().flat_map(|v| v.values()) {
+        for name in server["env_vars"].as_array().into_iter().flatten().filter_map(Value::as_str)
+            .chain(server["bearer_token_env_var"].as_str()) {
+            inherited.insert(name, environment.get(std::ffi::OsStr::new(name)).map(|v| v.to_string_lossy().into_owned()));
+        }
+    }
+    dev_tool::sha256(json!({"settings":platform,"mcp":mcp,"inherited":inherited}).to_string().as_bytes())
+}
+
+fn declined_server_request(method: &str) -> Value {
+    match method {
+        "item/tool/requestUserInput" | "tool/requestUserInput" => json!({"answers":{}}),
+        "mcpServer/elicitation/request" => json!({"action":"cancel","content":null}),
+        "item/permissions/requestApproval" => json!({"permissions":{},"scope":"turn"}),
+        _ => json!({"decision":"decline"}),
+    }
+}
+
+fn bounded_read_result(value: Value, read_only: bool) -> Result<Value,String> {
+    // A result is encoded both as text and structured content. Leave headroom
+    // below the pinned server's 2 MiB JSON-RPC frame limit without losing data.
+    if read_only && serde_json::to_vec(&value).map_err(|e|e.to_string())?.len()>512*1024 {
+        return Err("This read result is too large for the agent transport. Retry with a narrower query and a smaller limit, or read one source record/file at a time. Stored records were not changed.".into());
+    }
+    Ok(value)
+}
+
+#[derive(Default)]
+struct PendingAgentInputs(std::collections::HashMap<String, (Value, CancellationToken)>);
+impl PendingAgentInputs {
+    fn insert(&mut self, id: Value, token: CancellationToken) {
+        if let Some((_, previous))=self.0.insert(id.to_string(),(id,token)) {previous.cancel();}
+    }
+    fn take(&mut self, id: &Value) -> Option<(Value,CancellationToken)> {self.0.remove(&id.to_string())}
+    fn resolved(&mut self, params: &Value, thread: &str) {
+        if params["threadId"]==thread {if let Some((_,token))=self.take(&params["requestId"]) {token.cancel();}}
+    }
+    fn clear(&mut self) {for (_,(_,token)) in self.0.drain() {token.cancel();}}
+}
+impl Drop for PendingAgentInputs {fn drop(&mut self) {self.clear();}}
+
 async fn execute_app_server_tool(
     core: Arc<AppCore>,
     app: &tauri::AppHandle,
@@ -298,15 +343,16 @@ async fn execute_app_server_tool(
     };
     let args = normalize_computer_args(name, raw_args);
     let action = clean_computer_action(args["action"].as_str().unwrap_or(""));
-    let call = json!({"type":"function","function":{"name":name,"arguments":args.to_string()}});
+    let displayed_args=crate::agent_platform::redacted_tool_arguments(name,&args);
+    let call = json!({"type":"function","function":{"name":name,"arguments":displayed_args.to_string()}});
     let _ = core.store.add_timeline(conversation_id,"tool_call","assistant","OpenCore",name,&call.to_string(),&call);
-    let read_only = matches!(name, "Read" | "Glob" | "Grep" | "echo_search" | "echo_read") ||
-        (matches!(name,"dev" | "desktop_use" | "browser_use" | "chrome_use" | "reflex_use" | "system_use" | "studio_use") &&
-            matches!(args["action"].as_str(), Some("status" | "list" | "list_models" | "inspect" | "read" | "search" | "recall" | "read_screen" | "see" | "ground" | "find_apps")));
+    let read_only = matches!(name, "Read" | "Glob" | "Grep" | "echo_search" | "echo_read" | "read_project_file" | "search_project") ||
+        (matches!(name,"dev" | "desktop_use" | "browser_use" | "chrome_use" | "reflex_use" | "system_use" | "studio_use" | "app_control" | "agent_memory" | "skill_library" | "testing_lab") &&
+            matches!(args["action"].as_str(), Some("status" | "get" | "list" | "list_models" | "catalog" | "runtime" | "job" | "inspect" | "read" | "search" | "recall" | "read_screen" | "screenshot" | "see" | "ground" | "find_apps" | "activity" | "plugins")));
     let approved = match request.approval_mode {
         ApprovalMode::AllowAll | ApprovalMode::AllowChat => true,
         ApprovalMode::ApproveForMe if read_only => true,
-        _ => match ask_tool_approval(app, &core, conversation_id, original, &args.to_string(), token).await {
+        _ => match ask_tool_approval(app, &core, conversation_id, original, &displayed_args.to_string(), token).await {
             Ok(approved) => approved,
             Err(error) => return json!({"content":[{"type":"text","text":error}],"isError":true}),
         }
@@ -317,6 +363,32 @@ async fn execute_app_server_tool(
         Err(error.into())
     } else {
         match name {
+            "app_control" | "agent_memory" | "skill_library" => match app.path().app_data_dir() {
+                Ok(data) => {
+                    let result=if name=="app_control"&&action=="navigate" {
+                        let view=args["view"].as_str().unwrap_or("");
+                        if !matches!(view,"conversations"|"settings"|"models"|"music"|"assets"|"media"|"context"|"memory"|"runtime"|"connectors") {Err("Unknown app view".into())}else {app.emit("opencore-navigate",json!({"view":view,"category":args["category"]})).map(|_|json!({"opened":view})).map_err(|e|e.to_string())}
+                    } else if name=="app_control"&&action=="job" {
+                        core.studios.get(args["jobId"].as_str().unwrap_or("")).and_then(|job|serde_json::to_value(job).map_err(|e|e.to_string()))
+                    } else {crate::agent_platform::execute(&core.store,&data,name,&args)};
+                    if result.is_ok() && name=="app_control" && args["action"]=="set" {
+                        if let Ok(config)=crate::agent_platform::configuration(&core.store) {let _=app.emit("opencore-agent-settings-changed",config);}
+                    }
+                    result
+                },
+                Err(error)=>Err(error.to_string()),
+            },
+            "testing_lab" => match app.path().app_data_dir() {
+                Ok(data)=>{
+                    let result=crate::testing_labs::execute(&core.store,&data,&args).await;
+                    if let Ok(value)=&result {if action=="configure"&&value["changed"]==true {
+                        crate::record_platform_activity(&core,app,"testing","configure","Testing profiles changed","agent",json!({"profiles":value["profiles"]}));
+                        let _=app.emit("opencore-testing-profiles-changed",&value["profiles"]);
+                    }}
+                    result
+                },
+                Err(error)=>Err(error.to_string()),
+            },
             "dev" => match artifact_root(app) {
                 Ok(root) => dev_tool::execute(workspace, &root, receipts, artifact_history, &args).await,
                 Err(error) => Err(error),
@@ -351,7 +423,7 @@ async fn execute_app_server_tool(
             _ => tooling::execute_read_only(workspace, name, &args),
         }
     };
-    let value = match result {
+    let value = match result.and_then(|value|bounded_read_result(value,read_only)) {
         Ok(value) => {
             if let Some(job_id) = value["id"].as_str().filter(|_| value["status"] == "queued" && matches!(name,"music_generate"|"studio_use"|"background_wait")) {
                 if let Err(error) = core.studios.arm_continuation(&core, job_id, request) {
@@ -364,11 +436,24 @@ async fn execute_app_server_tool(
                 let _ = core.store.add_timeline(conversation_id,"file","assistant","OpenCore",value["name"].as_str().unwrap_or("File"),value["preview_link"].as_str().unwrap_or(""),&value);
                 artifact_history.insert(0, value.clone());
             }
-            json!({"content":[{"type":"text","text":value.to_string()}],"structuredContent":value,"isError":false})
+            let mut content=vec![json!({"type":"text","text":value.to_string()})];
+            if name=="testing_lab" && action=="screenshot" {
+                if let Some(path)=value["imagePath"].as_str() {
+                    use base64::Engine;
+                    match std::fs::read(path) {
+                        Ok(bytes) if bytes.len()<=1024*1024=>content.push(json!({"type":"image","mimeType":"image/png","data":base64::engine::general_purpose::STANDARD.encode(bytes)})),
+                        Ok(_)=>content.push(json!({"type":"text","text":"The PNG exceeds the MCP inline image limit. Inspect imagePath with Codex's native view_image tool before claiming a visual check."})),
+                        _=>core.store.log("warn","testing-lab","Captured screenshot could not be attached to the agent result"),
+                    }
+                }
+            }
+            json!({"content":content,"structuredContent":value,"isError":false})
         }
         Err(error) => json!({"content":[{"type":"text","text":error}],"isError":true}),
     };
-    let _ = core.store.add_timeline(conversation_id,"tool_result","tool","OpenCore",name,&value.to_string(),&value);
+    let mut timeline=value.clone();
+    if let Some(parts)=timeline["content"].as_array_mut(){parts.retain(|p|p["type"]!="image");}
+    let _ = core.store.add_timeline(conversation_id,"tool_result","tool","OpenCore",name,&timeline.to_string(),&timeline);
     value
 }
 
@@ -388,6 +473,7 @@ pub(super) async fn run(
     if let Ok(mut active_runs) = core.live_generation_runs.lock() { active_runs.insert(id.into(), live_run.clone()); }
     let live = LiveGenerationGuard { app: app.clone(), conversation:id.into(), run:live_run, runs:core.live_generation_runs.clone() };
     let data = app.path().app_data_dir().map_err(|error| error.to_string())?;
+    let platform=crate::agent_platform::configuration(&core.store)?;
     std::fs::create_dir_all(&workspace).map_err(|error| format!("Could not prepare the Codex workspace: {error}"))?;
     let workspace_identity = std::fs::canonicalize(&workspace).map_err(|error| format!("Could not resolve the Codex workspace: {error}"))?
         .to_string_lossy().to_string();
@@ -398,7 +484,7 @@ pub(super) async fn run(
     let snapshot = core.runtime.snapshot();
     if snapshot.context_size < 8_192 { return Err("The selected OpenCore model's context window is below Codex's 8,192-token minimum.".into()); }
     let context_window_tokens = snapshot.context_size;
-    let compact_at_tokens = u64::from(request.compact_at_tokens.max(1_024))
+    let compact_at_tokens = u64::from(platform.compact_at_tokens.max(1_024))
         .min(context_window_tokens.saturating_sub(2_048)).min((context_window_tokens as f64 * 0.85) as u64) as u32;
     let packaged_root = app.path().resource_dir().map_err(|error| error.to_string())?;
     let packaged_root = PathBuf::from(packaged_root.to_string_lossy().trim_start_matches(r"\\?\"));
@@ -426,6 +512,14 @@ pub(super) async fn run(
     std::fs::create_dir_all(&codex_home).map_err(|error| format!("Could not create the Codex app-server home: {error}"))?;
     let tools_path = data.join("codex-app-server").join("tool-definitions").join(format!("{scope_hash}.json"));
     specs.extend(echo_tool_specs());
+    specs.extend(crate::agent_platform::tool_specs());
+    for spec in &mut specs {
+        if spec["function"]["name"]=="app_control" {
+            if let Some(actions)=spec["function"]["parameters"]["properties"]["action"]["enum"].as_array_mut(){actions.extend([json!("navigate"),json!("job")]);}
+            for name in ["view","category","jobId"] {spec["function"]["parameters"]["properties"][name]=json!({"type":"string"});}
+        }
+    }
+    specs.push(crate::testing_labs::tool_spec());
     let tools_json = serde_json::to_vec(&specs).map_err(|error| error.to_string())?;
     persist_app_server_tool_definitions(&tools_path, &tools_json)
         .map_err(|error| format!("Could not update OpenCore's MCP tool definitions: {error}"))?;
@@ -438,10 +532,18 @@ pub(super) async fn run(
         if let Some(value) = std::env::var_os(name) { environment.insert(name.into(), value); }
     }
     environment.insert("CODEX_HOME".into(), codex_home.as_os_str().to_os_string());
+    let platform_mcp=crate::agent_platform::mcp_configuration(&platform)?;
+    for server in platform_mcp.as_object().into_iter().flat_map(|v|v.values()) {
+        for name in server["env_vars"].as_array().into_iter().flatten().filter_map(Value::as_str)
+            .chain(server["bearer_token_env_var"].as_str()) {
+            if let Some(value)=std::env::var_os(name) {environment.insert(name.into(),value);}
+        }
+    }
+    let platform_hash=platform_server_identity(&serde_json::to_value(&platform).map_err(|e|e.to_string())?,&platform_mcp,&environment);
     let config = AppServerConfig::new(executable, runtime_version.clone(), schema_path, protocol_revision, schema_hash.clone())
         .with_environment(environment).with_working_directory(workspace.clone());
     let provider_id = "opencore-local".to_string();
-    let key = AppServerKey::new(id, workspace_identity.clone(), provider_id.clone(), schema_hash.clone());
+    let key = AppServerKey::new(id, workspace_identity.clone(), format!("{provider_id}:{platform_hash}"), schema_hash.clone());
     let server = core.codex_app_server_pool.get_or_start(key, config).await
         .map_err(|error| format!("Could not start the pinned Codex app-server: {error}"))?;
     let (tool_tx, mut tool_rx) = tokio::sync::mpsc::channel(16);
@@ -453,11 +555,21 @@ pub(super) async fn run(
         bridges.insert(bridge_token.clone(), tool_tx);
     }
     let _bridge_guard = CodexToolBridgeGuard { bridges: core.codex_tool_bridges.clone(), token:bridge_token.clone() };
-    let configuration = create_app_server_config(&gateway_url,id,request.reasoning_effort.as_str(),&workspace,&node_executable,&mcp_script,
+    let mut configuration = create_app_server_config(&gateway_url,id,request.reasoning_effort.as_str(),&workspace,&node_executable,&mcp_script,
         &bridge_token,&tools_path,context_window_tokens,compact_at_tokens,request.approval_mode,request.project_skills_enabled,
         request.subagents_enabled,request.max_subagents);
+    if let Some(servers)=platform_mcp.as_object() {
+        for (name,server) in servers {
+            let mut entry=server.clone();
+            entry["default_tools_approval_mode"]=json!(if matches!(request.approval_mode,ApprovalMode::AllowAll|ApprovalMode::AllowChat){"approve"}else{"prompt"});
+            configuration["mcp_servers"][name]=entry;
+        }
+    }
     let mut instructions = format!("You are OpenCore, running the pinned Codex app-server agent harness with the selected local OpenCore model. Work in {}. Codex owns the agent loop, tool selection, and model/tool orchestration; OpenCore supplies the local Responses inference endpoint, project/conversation-scoped ECHO, and permission-checked app tools. Follow AGENTS.md and workspace skills only when the user enabled project skills. Use the OpenCore dev tool for code edits and verification when host approval is required. Be evidence-driven: inspect current code and relevant tests before editing, preserve behavior, and verify changes. Do not claim a fix without evidence. Use automatic ECHO recall through echo_search and echo_read for older conversation decisions. For background studio work, submit it and direct the user to the relevant studio tab; do not keep the text model loaded while that job runs.\n{}",workspace.display(),guidance);
     instructions.push_str(ECHO_MEMORY_GUIDANCE);
+    instructions.push_str(&crate::agent_platform::instruction_text(&platform));
+    instructions.push_str("\nWhen asked who you are, identify yourself as OpenCore, the user's AI agent. Use app_control for real application settings, agent_memory for sourced facts/lessons and cross-studio activity, skill_library for full instructions, and testing_lab for configured PC/mobile tests. For a repair, keep existing features and edit the actual current source. Before ending, compare your work with the original request and describe observable computer changes. Distinguish model inference quality from harness capabilities. Never claim a missing runtime, tool, test or VM is available.\n");
+    instructions.push_str("Be thorough within the user's scope. Continue necessary work until the acceptance criteria are met or a concrete blocker requires user input. Do not inflate code size with padding, placeholders or duplicate features, and do not silently lower requested scope. Verification mode 'no' disables added checks; default/long/max require appropriate evidence, not ceremonial repeated tests. Inspect visuals for visible behavior when the tools exist. Use durable sourced lessons to avoid repeating a previously diagnosed failure.\n");
     if existing.is_none() {
         let prior = core.store.conversation_messages(id)?;
         let mut budget = 16_000usize;
@@ -543,9 +655,13 @@ pub(super) async fn run(
     let mut command_runs = HashSet::new();
     let mut command_outputs = std::collections::HashMap::<String,String>::new();
     let mut artifact_history = core.store.code_artifacts(id)?;
+    let mut review=crate::agent_review::ReviewState::default();
+    let mut review_count=0usize;
+    let mut pending_inputs=PendingAgentInputs::default();
+    let (input_answers_tx,mut input_answers_rx)=tokio::sync::mpsc::channel::<(Value,Result<Value,String>)>(32);
     let run_result: Result<(),String> = async {
         let turn_response = turn_start?;
-        let active_turn_id = match turn_id_from_start_response(&turn_response) {
+        let mut active_turn_id = match turn_id_from_start_response(&turn_response) {
             Ok(turn_id) => turn_id,
             Err(error) => {
                 if let Err(interrupt_error)=server.interrupt(&thread_id).await {
@@ -562,8 +678,22 @@ pub(super) async fn run(
                         if let Err(error)=server.interrupt(&thread_id).await { core.store.log("warn","codex-app-server",&format!("Turn interruption failed: {error}")); }
                         return Err("__INTERRUPTED__".into());
                     }
+                    answer=input_answers_rx.recv(), if !pending_inputs.0.is_empty() => {
+                        if let Some((request_id,answer))=answer {
+                            if let Some((_,question_token))=pending_inputs.take(&request_id) {
+                                question_token.cancel();
+                                match answer {
+                                    Ok(answer)=>server.respond(request_id,answer).await.map_err(|e|format!("Could not answer agent input: {e}"))?,
+                                    Err(error)=>{let _=server.interrupt(&thread_id).await;return Err(error);},
+                                }
+                            }
+                        }
+                        continue;
+                    }
                     tool = tool_rx.recv() => {
                         let Some(tool)=tool else { return Err("OpenCore MCP tool dispatcher stopped unexpectedly".into()); };
+                        let tool_name=tool.name.strip_prefix("mcp__opencore__").or_else(||tool.name.strip_prefix("opencore__")).unwrap_or(&tool.name).to_string();
+                        let tool_args=tool.arguments.clone();
                         let result = tokio::select! {
                             _ = token.cancelled() => {
                                 if let Err(error)=server.interrupt(&thread_id).await { core.store.log("warn","codex-app-server",&format!("Tool-call interruption failed: {error}")); }
@@ -573,6 +703,7 @@ pub(super) async fn run(
                         };
                         match result {
                             Ok(value) => {
+                                review.tool(&tool_name,&tool_args,&value);
                                 let _=tool.response.send(value);
                                 text.clear(); reasoning.clear(); live_segments.clear();
                                 let _=app.emit("opencore-generation",json!({"conversationId":id,"runId":live.run,"content":"","reasoning":"","segments":live_segments,"phase":"tool","checkpoint":true}));
@@ -585,24 +716,43 @@ pub(super) async fn run(
                         let incoming = incoming.map_err(|error|format!("Codex app-server protocol failed: {error}"))?
                             .ok_or_else(||"Codex app-server exited before completing this turn. The saved OpenCore thread is available to resume.".to_string())?;
                         match incoming {
-                            ServerMessage::Notification { .. } => {
+                            ServerMessage::Notification { ref method,ref params } => {
+                                if method=="serverRequest/resolved" {pending_inputs.resolved(params,&thread_id);continue;}
                                 if !server_message_matches_active_turn(&incoming,&thread_id,&active_turn_id) { continue; }
                                 projected_events.extend(project_app_server_notification(&mut projection,&incoming));
                                 continue;
                             }
                             ServerMessage::Request { id: request_id, method, ref params } => {
-                                if !params_match_active_turn(params,&thread_id,&active_turn_id) {
+                                let scoped_elicitation=method=="mcpServer/elicitation/request" && params["threadId"]==thread_id && params.get("turnId").is_none_or(Value::is_null);
+                                if !params_match_active_turn(params,&thread_id,&active_turn_id) && !scoped_elicitation {
                                     core.store.log("warn","codex-app-server",&format!("Declined stale or unscoped request from a previous turn: {method}"));
-                                    server.respond(request_id,json!({"decision":"decline"})).await
+                                    server.respond(request_id,declined_server_request(&method)).await
                                         .map_err(|error|format!("Could not decline stale app-server request: {error}"))?;
                                     continue;
                                 }
                                 let decision = if matches!(method.as_str(),"execCommandApproval"|"applyPatchApproval"|"item/commandExecution/requestApproval"|"item/fileChange/requestApproval") {
-                                    let detail = json!({"method":method,"params":params});
+                                    let detail = json!({"method":method,"params":crate::agent_platform::redacted_tool_arguments(&method,params)});
                                     match request.approval_mode {
                                         ApprovalMode::AllowAll | ApprovalMode::AllowChat => true,
                                         _ => ask_tool_approval(&app,&core,id,&method,&detail.to_string(),&token).await.unwrap_or(false),
                                     }
+                                } else if matches!(method.as_str(),"item/tool/requestUserInput"|"tool/requestUserInput"|"mcpServer/elicitation/request") {
+                                    // Keep consuming server events while a question is open. The
+                                    // server may resolve a nonblocking or timed input by itself.
+                                    let question_token=token.child_token();
+                                    pending_inputs.insert(request_id.clone(),question_token.clone());
+                                    let answer_tx=input_answers_tx.clone();let app=app.clone();let core=core.clone();
+                                    let conversation=id.to_string();let method=method.clone();let params=params.clone();
+                                    tokio::spawn(async move {
+                                        let answer=ask_agent_question(&app,&core,&conversation,&method,&params,&question_token).await;
+                                        let _=answer_tx.send((request_id,answer)).await;
+                                    });
+                                    continue;
+                                } else if method=="item/permissions/requestApproval" {
+                                    let displayed=crate::agent_platform::redacted_tool_arguments(&method,params);
+                                    let granted=matches!(request.approval_mode,ApprovalMode::AllowAll) || ask_tool_approval(&app,&core,id,&method,&displayed.to_string(),&token).await.unwrap_or(false);
+                                    server.respond(request_id,json!({"permissions":if granted{params["permissions"].clone()}else{json!({})},"scope":"turn"})).await.map_err(|e|format!("Could not answer permission request: {e}"))?;
+                                    continue;
                                 } else { false };
                                 if !matches!(method.as_str(),"execCommandApproval"|"applyPatchApproval"|"item/commandExecution/requestApproval"|"item/fileChange/requestApproval") {
                                     core.store.log("warn","codex-app-server",&format!("Declined unsupported app-server request: {method}"));
@@ -654,6 +804,7 @@ pub(super) async fn run(
                         if output.is_empty() { output=command_outputs.remove(call_id).unwrap_or_default(); }
                         let result=json!({"id":call_id,"command":event["command"],"output":output.chars().take(12_000).collect::<String>(),"exitCode":event["exitCode"],"status":event["status"]});
                         core.store.add_timeline(id,"tool_result","tool","Codex","Command result",&result.to_string(),&result)?;
+                        review.command(event["command"].as_str().unwrap_or("Command"),&result);
                     }
                 }
                 "command_output" => {
@@ -663,12 +814,37 @@ pub(super) async fn run(
                 "changed_files" => {
                     for change in event["changes"].as_array().into_iter().flatten() {
                         let path=change["path"].as_str().unwrap_or("");
-                        if !path.is_empty() { core.store.add_timeline(id,"file","assistant","Codex","Changed file",path,&json!({"path":path,"verification":"pending","itemId":event["id"]}))?; }
+                        if !path.is_empty() { review.changed_files.insert(path.into()); core.store.add_timeline(id,"file","assistant","Codex","Changed file",path,&json!({"path":path,"verification":"pending","itemId":event["id"]}))?; }
                     }
                 }
                 "plan" => { core.store.add_timeline(id,"progress","assistant","Codex","Plan",event["text"].as_str().unwrap_or(""),&event)?; }
                 "diagnostic" => core.store.log("info","codex-app-server",event["text"].as_str().unwrap_or("")),
-                "turn_completed" => break,
+                "external_tool" => {
+                    if event["server"]=="opencore" {continue;}
+                    core.store.add_timeline(id,"tool_result","tool","Codex","Plugin tool",event["tool"].as_str().unwrap_or("MCP"),&event)?;
+                    if event["status"]=="completed" && event["readOnlyHint"]!=true {review.changes.insert(format!("Executed plugin tool: {}",event["tool"].as_str().unwrap_or("MCP")));}
+                }
+                "turn_completed" => {
+                    pending_inputs.clear();
+                    let level=platform.verification.as_str();
+                    if review.changed() && !review.studio_handoff && review_count<crate::agent_review::review_rounds(level) {
+                        review_count+=1;
+                        let prompt=review.prompt(&request.text,level,review_count,platform.repair_attempts);
+                        core.store.add_timeline(id,"progress","system","OpenCore","Completion review",&format!("{level} verification: review {review_count}"),&review.summary(review_count,level))?;
+                        let start=turn_start_params(&thread_id,&workspace,"opencore",app_server_effort(request.reasoning_effort.as_str()),vec![json!({"type":"text","text":prompt})],request.approval_mode);
+                        let next=tokio::select! {
+                            _=token.cancelled()=>{let _=server.interrupt(&thread_id).await;return Err("__INTERRUPTED__".into());},
+                            result=server.request("turn/start",start)=>result.map_err(|e|format!("Completion review could not start: {e}"))?,
+                        };
+                        active_turn_id=turn_id_from_start_response(&next)?;
+                        projection.begin_turn(&thread_id,&active_turn_id);
+                        projected_events.clear();
+                        text.clear();reasoning.clear();live_segments.clear();
+                        let _=app.emit("opencore-generation",json!({"conversationId":id,"runId":live.run,"phase":"reviewing","checkpoint":true,"content":"","reasoning":"","segments":[]}));
+                        continue;
+                    }
+                    break;
+                }
                 "turn_failed" => return Err(event["error"].as_str().unwrap_or("Codex app-server turn failed").into()),
                 "turn_interrupted" => return Err("__INTERRUPTED__".into()),
                 _ => {}
@@ -676,6 +852,16 @@ pub(super) async fn run(
         }
         Ok(())
     }.await;
+    if review.changed() {
+        let summary=review.summary(review_count,&platform.verification);
+        let receipt=review.receipt(review_count,&platform.verification);
+        let _=core.store.add_timeline(id,"progress","system","OpenCore","Checks and changes",&receipt,&summary);
+        if platform.activity_enabled {
+            let mut event=crate::agent_platform::ActivityEvent::new("agent","changes",&receipt,"codex-app-server",summary);
+            event.conversation_id=Some(id.into());
+            if let Err(error)=crate::agent_platform::record_activity(&data,&event) {core.store.log("warn","activity",&error);}
+        }
+    }
     if let Some(value)=core.store.get_setting(&format!("agent_context:{id}"))? {
         if let Ok(mut context)=serde_json::from_str::<Value>(&value) {
             context["harness"]["status"]=json!(if run_result.is_ok(){"complete"}else if token.is_cancelled(){"interrupted"}else{"error"});
@@ -697,6 +883,43 @@ pub(super) async fn run(
 mod tests {
     use super::*;
     use crate::codex_app_server::ServerMessage;
+    #[test]
+    fn portable_mcp_and_rotated_credentials_restart_the_server_without_exposing_tokens() {
+        let settings=json!({"pluginDirectories":["C:/plugins"]});
+        let mcp=json!({"publisher":{"url":"https://example.invalid/mcp","bearer_token_env_var":"PUBLISHER_TOKEN"}});
+        let mut environment=std::collections::HashMap::new();
+        let missing=platform_server_identity(&settings,&mcp,&environment);
+        environment.insert("PUBLISHER_TOKEN".into(),std::ffi::OsString::from("first-test-token"));
+        let first=platform_server_identity(&settings,&mcp,&environment);
+        environment.insert("PUBLISHER_TOKEN".into(),std::ffi::OsString::from("rotated-test-token"));
+        let rotated=platform_server_identity(&settings,&mcp,&environment);
+        assert_ne!(missing,first);assert_ne!(first,rotated);
+        assert_eq!(rotated.len(),64);assert!(!rotated.contains("token"));
+        let changed=json!({"publisher":{"url":"https://other.invalid/mcp","bearer_token_env_var":"PUBLISHER_TOKEN"}});
+        assert_ne!(rotated,platform_server_identity(&settings,&changed,&environment));
+    }
+    #[test]
+    fn resolved_questions_cancel_only_the_exact_server_request_in_the_same_thread() {
+        let mut pending=PendingAgentInputs::default();let token=CancellationToken::new();let other=CancellationToken::new();
+        pending.insert(json!(42),token.clone());pending.insert(json!("42"),other.clone());
+        pending.resolved(&json!({"threadId":"old","requestId":42}),"active");assert!(!token.is_cancelled());
+        pending.resolved(&json!({"threadId":"active","requestId":42}),"active");assert!(token.is_cancelled());assert!(!other.is_cancelled());
+        drop(pending);assert!(other.is_cancelled());
+    }
+    #[test]
+    fn stale_requests_use_their_protocol_specific_cancel_responses() {
+        assert_eq!(declined_server_request("item/tool/requestUserInput"),json!({"answers":{}}));
+        assert_eq!(declined_server_request("mcpServer/elicitation/request"),json!({"action":"cancel","content":null}));
+        assert_eq!(declined_server_request("item/permissions/requestApproval"),json!({"permissions":{},"scope":"turn"}));
+    }
+    #[test]
+    fn large_read_results_fail_safely_before_exceeding_the_native_rpc_frame() {
+        let value=json!({"matches":[{"content":"x".repeat(600*1024)}]});
+        assert!(bounded_read_result(value.clone(),true).unwrap_err().contains("smaller limit"));
+        assert_eq!(bounded_read_result(json!({"matches":[]}),true).unwrap(),json!({"matches":[]}));
+        // Do not describe a completed mutation as failed or silently truncate its receipt.
+        assert_eq!(bounded_read_result(value.clone(),false).unwrap(),value);
+    }
     #[test]
     fn preserves_image_attachments_as_app_server_inputs() {
         let inputs = codex_user_inputs(
@@ -1045,6 +1268,7 @@ fn project_app_server_notification(
                 "fileChange" if is_completed => vec![json!({"kind":"changed_files","id":item_id,"changes":item["changes"]})],
                 "error" if is_completed => vec![json!({"kind":"diagnostic","text":item["message"]})],
                 "plan" if is_completed => vec![json!({"kind":"plan","id":item_id,"text":item["text"]})],
+                "mcpToolCall" if is_completed => vec![json!({"kind":"external_tool","id":item_id,"server":item["server"],"tool":item["tool"],"status":item["status"],"error":item["error"],"readOnlyHint":item["readOnlyHint"]})],
                 _ => Vec::new(),
             }
         }

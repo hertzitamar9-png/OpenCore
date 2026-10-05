@@ -1,6 +1,9 @@
 #![recursion_limit = "256"]
 
 mod codex_harness;
+mod agent_platform;
+mod agent_review;
+mod testing_labs;
 mod codex_app_server;
 mod claude_bridge;
 mod claude_bridge_install;
@@ -68,6 +71,7 @@ pub struct AppCore {
     active_chats: Mutex<HashMap<String, CancellationToken>>,
     live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
     pending_approvals: Mutex<HashMap<String, (String, tokio::sync::oneshot::Sender<bool>)>>,
+    pending_questions: Mutex<HashMap<String, (String, tokio::sync::oneshot::Sender<Value>)>>,
     browser: Arc<browser_bridge::BrowserBridge>,
     reflex: Arc<reflex::ReflexManager>,
     vision: Arc<vision::VisionManager>,
@@ -265,6 +269,24 @@ async fn ask_tool_approval(
     Ok(result)
 }
 
+struct PendingQuestionGuard<'a>{core:&'a AppCore,app:&'a tauri::AppHandle,id:String}
+impl Drop for PendingQuestionGuard<'_>{fn drop(&mut self){if let Ok(mut pending)=self.core.pending_questions.lock(){pending.remove(&self.id);}let _=self.app.emit("opencore-agent-question-resolved",json!({"requestId":self.id}));}}
+async fn ask_agent_question(app:&tauri::AppHandle,core:&AppCore,conversation_id:&str,method:&str,params:&Value,token:&CancellationToken)->Result<Value,String>{
+    let id=uuid::Uuid::new_v4().to_string();let (tx,rx)=tokio::sync::oneshot::channel();
+    core.pending_questions.lock().map_err(|e|e.to_string())?.insert(id.clone(),(conversation_id.into(),tx));
+    let _guard=PendingQuestionGuard{core,app,id:id.clone()};
+    app.emit("opencore-agent-question-request",json!({"requestId":id,"conversationId":conversation_id,"method":method,"params":params})).map_err(|e|e.to_string())?;
+    tokio::select!{_=token.cancelled()=>Err("__INTERRUPTED__".into()),result=rx=>result.map_err(|_|"The agent question was closed without an answer".into())}
+}
+#[tauri::command]
+fn answer_agent_question(core:tauri::State<'_,Arc<AppCore>>,request_id:String,conversation_id:String,response:Value)->Result<(),String>{
+    if serde_json::to_vec(&response).map_err(|e|e.to_string())?.len()>65536{return Err("The answer is too large".into());}
+    let mut pending=core.pending_questions.lock().map_err(|e|e.to_string())?;
+    if !pending.get(&request_id).is_some_and(|(conversation,_)|conversation==&conversation_id){return Err("This agent question is no longer active in this conversation".into());}
+    let (_,tx)=pending.remove(&request_id).ok_or("The agent question has already been answered")?;
+    tx.send(response).map_err(|_|"This agent question has already ended".into())
+}
+
 fn echo_import_payload_unbounded(conversation_id: &str, rows: &[TimelineEntry]) -> serde_json::Value {
     let messages = rows.iter().map(|row| {
         let stable_id = row.metadata.get("opencore_source_event_id")
@@ -444,12 +466,16 @@ fn select_profile(core: tauri::State<'_, Arc<AppCore>>, profile: String) -> Resu
 }
 
 #[tauri::command]
-fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<model_catalog::Library, String> {
-    model_catalog::list(core.runtime.install_root())
+fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<Value, String> {
+    let mut library=serde_json::to_value(model_catalog::list(core.runtime.install_root())?).map_err(|e|e.to_string())?;
+    if let Some(models)=library["models"].as_array_mut(){for model in models {let connected=core.studios.runtime_connected(model["id"].as_str().unwrap_or(""));model["runtimeConnected"]=json!(connected);}}
+    Ok(library)
 }
 #[tauri::command]
 fn installed_skill_models(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<Value>,String> {
-    Ok(model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|model|json!({"id":model.id,"category":model.category,"installed":true})).collect())
+    let mut models=model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|model|json!({"id":model.id,"category":model.category,"installed":true})).collect::<Vec<_>>();
+    for model in core.studios.configured_models()? {if !models.iter().any(|entry|entry["id"]==model.id){models.push(json!({"id":model.id,"category":model.category,"installed":false,"runtimeConnected":true}));}}
+    Ok(models)
 }
 #[tauri::command]
 fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id: String) -> Result<(), String> {
@@ -463,6 +489,67 @@ fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id
 }
 #[tauri::command]
 fn cancel_model_install() { model_catalog::cancel(); }
+
+pub(crate) fn record_platform_activity(core:&AppCore,app:&tauri::AppHandle,category:&str,action:&str,summary:&str,source:&str,details:Value) {
+    if !agent_platform::configuration(&core.store).is_ok_and(|c|c.activity_enabled) {return;}
+    match app.path().app_data_dir() {
+        Ok(data)=>{
+            let event=agent_platform::ActivityEvent::new(category,action,summary,source,agent_platform::redacted_tool_arguments(action,&details));
+            if let Err(error)=agent_platform::record_activity(&data,&event) {core.store.log("warn","activity",&error);}
+        },
+        Err(error)=>core.store.log("warn","activity",&error.to_string()),
+    }
+}
+
+#[tauri::command]
+fn agent_platform_configuration(core:tauri::State<'_,Arc<AppCore>>)->Result<agent_platform::PlatformConfig,String>{
+    agent_platform::configuration(&core.store)
+}
+#[tauri::command]
+fn agent_platform_save_configuration(core:tauri::State<'_,Arc<AppCore>>,app:tauri::AppHandle,configuration:agent_platform::PlatformConfig)->Result<agent_platform::PlatformConfig,String>{
+    agent_platform::execute(&core.store,&app.path().app_data_dir().map_err(|e|e.to_string())?,"app_control",&json!({"action":"set","settings":configuration,"source":"settings-ui"}))?;
+    let saved=agent_platform::configuration(&core.store)?;
+    app.emit("opencore-agent-settings-changed",&saved).map_err(|e|e.to_string())?;
+    Ok(saved)
+}
+#[tauri::command]
+fn agent_platform_skills(core:tauri::State<'_,Arc<AppCore>>)->Result<Value,String>{
+    serde_json::to_value(agent_platform::skills(&agent_platform::configuration(&core.store)?)?).map_err(|e|e.to_string())
+}
+#[tauri::command]
+fn agent_platform_plugins(core:tauri::State<'_,Arc<AppCore>>)->Result<Value,String>{
+    serde_json::to_value(agent_platform::plugins(&agent_platform::configuration(&core.store)?)?).map_err(|e|e.to_string())
+}
+#[tauri::command]
+fn agent_platform_activity(app:tauri::AppHandle,query:Option<String>,limit:Option<usize>)->Result<Value,String>{
+    serde_json::to_value(agent_platform::activity(&app.path().app_data_dir().map_err(|e|e.to_string())?,query.as_deref().unwrap_or(""),limit.unwrap_or(50))?).map_err(|e|e.to_string())
+}
+#[tauri::command]
+fn agent_platform_memories(app:tauri::AppHandle,query:Option<String>,limit:Option<usize>)->Result<Value,String>{
+    serde_json::to_value(agent_platform::memories(&app.path().app_data_dir().map_err(|e|e.to_string())?,query.as_deref().unwrap_or(""),limit.unwrap_or(50))?).map_err(|e|e.to_string())
+}
+#[tauri::command]
+fn agent_platform_action(core:tauri::State<'_,Arc<AppCore>>,app:tauri::AppHandle,name:String,args:Value)->Result<Value,String>{
+    let result=agent_platform::execute(&core.store,&app.path().app_data_dir().map_err(|e|e.to_string())?,&name,&args)?;
+    if name=="app_control"&&args["action"]=="set" {let _=app.emit("opencore-agent-settings-changed",agent_platform::configuration(&core.store)?);}
+    Ok(result)
+}
+#[tauri::command]
+fn testing_lab_profiles(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<testing_labs::TestingLabProfile>,String>{testing_labs::profiles(&core.store)}
+#[tauri::command]
+fn testing_lab_save_profiles(core:tauri::State<'_,Arc<AppCore>>,app:tauri::AppHandle,profiles:Vec<testing_labs::TestingLabProfile>)->Result<Vec<testing_labs::TestingLabProfile>,String>{
+    let changed=serde_json::to_value(testing_labs::profiles(&core.store)?).map_err(|e|e.to_string())?!=serde_json::to_value(&profiles).map_err(|e|e.to_string())?;
+    let saved=testing_labs::save_profiles(&core.store,profiles)?;
+    if changed {record_platform_activity(&core,&app,"testing","configure","Testing profiles changed","settings-ui",json!({"profiles":saved}));let _=app.emit("opencore-testing-profiles-changed",&saved);}
+    Ok(saved)
+}
+#[tauri::command]
+async fn testing_lab_action(core:tauri::State<'_,Arc<AppCore>>,app:tauri::AppHandle,args:Value)->Result<Value,String>{
+    let result=testing_labs::execute(&core.store,&app.path().app_data_dir().map_err(|e|e.to_string())?,&args).await?;
+    let action=args["action"].as_str().unwrap_or("");
+    if !matches!(action,"list"|"status"|"inspect"|"screenshot") {record_platform_activity(&core,&app,"testing",action,"Testing device action","settings-ui",json!({"request":args,"receipt":result}));}
+    Ok(result)
+}
 #[tauri::command]
 async fn model_removal_plan(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<model_catalog::RemovalPlan, String> {
     let root = core.runtime.install_root().to_path_buf();
@@ -1491,6 +1578,8 @@ fn composer_skill_instructions(skills: &[String]) -> Result<String, String> {
             "computer-use" => instructions.push("Computer use skill: carry out the user's Windows/terminal task with desktop_use, system_use and reflex_use. Reflex Vision is an on-demand 0.8B model and may only be used because this prompt explicitly enabled /computer-use. Inspect before acting, verify results, and avoid unnecessary vision calls."),
             "browser-use" => instructions.push("OpenCore Browser skill: use browser_use for the isolated in-app browser. Inspect before interacting and verify navigation or page changes."),
             "chrome-control" => instructions.push("Chrome control skill: use chrome_use for the user's paired Chrome tabs. List and inspect tabs before acting, then verify the page result. For an explicit development/debugging request, evaluate may run JavaScript in the selected tab's DevTools Runtime. If Chrome is not paired, explain that connection is needed and do not claim the action happened."),
+            "game-dev" | "web-dev" | "full-stack" | "mobile-dev" | "desktop-dev" | "mcp-server" | "plugins" | "skills-library" => instructions.push("Development skill: load the relevant full instructions with skill_library read. Inspect the existing project, preserve its features and fix reported errors in place. Use native terminal, source/diff, browser and testing lab tools for real evidence."),
+            "video" | "tts" | "voice-cloning" | "ocr" | "omni" | "policy" => instructions.push("Media skill: discover installed or connected runtimes with studio_use list_models. Submit supported settings through studio_use generate and direct the user to Media Studio. The text model releases the GPU before generation and resumes only after the background job finishes. Never claim a queued job is complete or an unconfigured model is runnable."),
             _ => return Err(format!("Unknown skill: {skill}")),
         }
     }
@@ -1725,9 +1814,9 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
     if core.studios.busy() {return Err("A studio job is using or waiting for the GPU. View its status in Music Studio or Game Dev Studio, or cancel it before sending another chat prompt.".into());}
     music_studio::require_idle_gpu().await?;
     core.speech.release_idle_model().await?;
-    let installed_categories: std::collections::HashSet<_> = model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|m|m.category).collect();
+    let installed_categories: std::collections::HashSet<_> = core.studios.available_models(core.runtime.install_root())?.into_iter().map(|m|m.category).collect();
     for skill in &request.skills {
-        if !matches!(skill.as_str(),"browser-use"|"chrome-control") && !installed_categories.contains(skill) {return Err(format!("/{} requires an installed model in that category. Open Models to install one.",skill));}
+        if !matches!(skill.as_str(),"browser-use"|"chrome-control"|"game-dev"|"web-dev"|"full-stack"|"mobile-dev"|"desktop-dev"|"mcp-server"|"plugins"|"skills-library") && !installed_categories.contains(skill) {return Err(format!("/{} requires an installed model or connected runtime in that category. Open Models or a studio to connect one.",skill));}
     }
     // Clipboard and temporary image files can disappear while the model starts.
     let (attachment_prompt, attachment_meta, attachment_images) = read_chat_attachments(&request.files, &artifact_root(&app)?)?;
@@ -1857,7 +1946,9 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
         }
     });
     if project_root.is_some() { available_tools.extend(tooling::read_only_tool_specs()); }
-    if request.skills.iter().any(|s|matches!(s.as_str(),"music"|"image"|"3d"|"3d-animation"|"2d-animation"|"speech")) {available_tools.push(studio_jobs::tool_spec());}
+    // Discovery and runtime setup remain available before a model is installed.
+    // Generation still checks the enabled category skill inside studio_use.
+    available_tools.push(studio_jobs::tool_spec());
     if request.skills.iter().any(|s|s=="music") {available_tools.push(studio_jobs::music_tool_spec());}
     available_tools.push(studio_jobs::wait_tool_spec());
     for spec in &mut available_tools {
@@ -2060,6 +2151,7 @@ pub fn run() {
                 active_chats: Mutex::new(HashMap::new()),
                 live_generation_runs: Arc::new(Mutex::new(HashMap::new())),
                 pending_approvals: Mutex::new(HashMap::new()),
+                pending_questions: Mutex::new(HashMap::new()),
                 history_sync_cancellations: Arc::new(Mutex::new(HashMap::new())),
                 browser: Arc::new(browser_bridge::BrowserBridge::from_store(&store)?),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
@@ -2180,6 +2272,17 @@ pub fn run() {
             uninstall_model,
             model_removal_plan,
             cancel_model_install,
+            agent_platform_configuration,
+            agent_platform_save_configuration,
+            agent_platform_skills,
+            agent_platform_plugins,
+            agent_platform_activity,
+            agent_platform_memories,
+            agent_platform_action,
+            answer_agent_question,
+            testing_lab_profiles,
+            testing_lab_save_profiles,
+            testing_lab_action,
             stop_runtime,
             restart_runtime,
             rename_conversation,

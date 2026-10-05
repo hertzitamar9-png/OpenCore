@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { filterComposerSkills, resolveSlashSkill, exactSlashSkill } from "./composer-skills";
+import { availableComposerSkills, filterComposerSkills, resolveSlashSkill, exactSlashSkill } from "./composer-skills";
 
 describe("composer skills", () => {
+  it('keeps development skills available without a media model', () => {
+    const ids = availableComposerSkills([]).map(skill => skill.id);
+    for (const id of ['game-dev', 'web-dev', 'full-stack', 'mobile-dev', 'desktop-dev', 'mcp-server', 'plugins', 'skills-library']) {
+      expect(ids).toContain(id);
+      expect(exactSlashSkill(`/${id} Build the project`)?.id).toBe(id);
+    }
+  });
+  it.each(['video', 'tts', 'voice-cloning', 'ocr', 'omni', 'policy'])('gates /%s on installed weights or a connected runtime', (category) => {
+    expect(filterComposerSkills(`/${category}`, [])).toEqual([]);
+    expect(filterComposerSkills(`/${category}`, [{ category, installed: false }])).toEqual([]);
+    expect(filterComposerSkills(`/${category}`, [{ category, installed: false, runtimeConnected: true }]).map(skill => skill.id)).toEqual([category]);
+    expect(filterComposerSkills(`/${category}`, [{ category, installed: true }]).map(skill => skill.id)).toEqual([category]);
+  });
   it('recognizes an exact slash command so clicking Send enables the skill',()=>{
     expect(exactSlashSkill('/music Make a song about AI')?.id).toBe('music');
     expect(exactSlashSkill('/3d Make a robot')?.id).toBe('3d');
