@@ -112,3 +112,11 @@ html[data-platform-high-contrast="true"] :is(.nav-rail, .conversation-app-rail, 
 html[data-platform-high-contrast="true"] :is(button, a, input, textarea, select, summary):focus-visible { outline-width: 3px; }
 @media (max-width: 900px) { .platform-panels { grid-template-columns: minmax(0, 1fr); } .platform-panel-wide { grid-column: auto; } }
 @media (max-width: 520px) { .agent-platform-settings { padding: 12px; } .platform-panel { padding: 15px; border-radius: 11px; } .platform-settings-header h1 { font-size: 1.5em; } .platform-form-grid { grid-template-columns: minmax(0, 1fr); } .platform-search-row { flex-wrap: wrap; } .platform-search-row button { width: 100%; } .platform-identity { flex-wrap: wrap; } }
+@media (max-width: 600px) {
+  .app-shell .topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .app-shell .topbar > .brand { display: none; }
+  .app-shell .topbar .runtime-actions { min-width: 0; }
+  .app-shell .topbar .model-picker { min-width: 0; flex: 1; }
+  .app-shell .topbar .model-picker-trigger { min-width: 0; width: 100%; max-width: 176px; }
+  .app-shell .topbar .topbar-right { gap: 6px; }
+}
