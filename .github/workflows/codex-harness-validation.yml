@@ -32,6 +32,8 @@ jobs:
           arch: x64
       - name: Install JavaScript dependencies
         run: npm ci
+      - name: Prepare packaged Node runtime for integration fixtures
+        run: node scripts/prepare-claude-connector.mjs
       - name: Prepare pinned OpenAI Codex app-server runtime
         run: node scripts/prepare-codex-harness.mjs
       - name: Probe packaged app-server schema
