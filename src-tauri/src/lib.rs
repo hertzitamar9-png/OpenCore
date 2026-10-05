@@ -1415,9 +1415,10 @@ fn read_chat_attachments(paths: &[String], image_store: &Path) -> Result<(String
             let image = artifacts::store_attached_image(image_store, &path)
                 .map_err(|error| format!("Cannot attach image {name}: {error}"))?;
             let preview = artifacts::preview(image_store, &image.id)?;
+            let local_path = artifacts::local_image_path(image_store, &image.id)?;
             entry["artifactId"] = json!(image.id);
             entry["included"] = json!(true);
-            images.push(json!({"type":"image_url","image_url":{"url":preview.data_url}}));
+            images.push(json!({"type":"image_url","localPath":local_path,"image_url":{"url":preview.data_url}}));
             prompt.push_str(&format!("\n[Attached image: {name}. Original file: {}. Its pixels are included in this message.]", path.display()));
             metadata.push(entry);
             continue;
@@ -2212,6 +2213,7 @@ mod image_attachment_tests {
         assert_eq!(meta[0]["included"], true);
         let stored = artifacts::preview(&root.join("stored"), meta[0]["artifactId"].as_str().unwrap()).unwrap();
         assert_eq!(parts[0]["image_url"]["url"], stored.data_url);
+        assert!(Path::new(parts[0]["localPath"].as_str().unwrap()).is_file());
         std::fs::remove_dir_all(root).unwrap();
     }
 }

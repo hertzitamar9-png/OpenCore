@@ -1079,6 +1079,7 @@ for await (const line of input) {
   const message = JSON.parse(line);
   if (!message.method) continue;
   if (message.method === 'initialize') {
+    if (mode === 'exit_before_initialize') process.exit(17);
     response(message.id, { codexHome: process.env.CODEX_HOME || 'fixture-home', platformFamily: 'windows', platformOs: 'windows', userAgent: 'codex-cli/0.160.0' });
   } else if (message.method === 'initialized') {
     if (mode === 'server_request') process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: 'approval-1', method: 'execCommandApproval', params: { command: 'echo approved?' } }) + '\n');
@@ -1225,6 +1226,16 @@ main().catch(() => process.exit(1));
                 .is_err());
             pool.shutdown_all().await.unwrap();
         }
+    }
+
+    #[tokio::test]
+    async fn child_exit_during_initialize_is_reported_and_not_kept_in_the_pool() {
+        let pool = CodexAppServerPool::new();
+        let result = pool
+            .get_or_start(key("init-exit", "w1", "local", "schema1"), config("exit_before_initialize"))
+            .await;
+        assert!(matches!(result, Err(AppServerError::ProcessExited { .. } | AppServerError::ResponseChannelClosed)));
+        assert_eq!(pool.len().await, 0);
     }
 
     #[tokio::test]

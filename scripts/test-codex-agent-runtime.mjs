@@ -311,7 +311,7 @@ try {
       requires_openai_auth: false, supports_websockets: false,
       http_headers: { 'x-opencore-harness': 'codex-app-server', 'x-echo-conversation': conversationId,
         'x-opencore-effort': 'off', 'x-opencore-timeline-owner': 'app' } } },
-    sandbox_mode: 'read-only', sandbox_workspace_write: { writable_roots: [workspace], network_access: false },
+    sandbox_mode: 'danger-full-access', sandbox_workspace_write: { writable_roots: [workspace], network_access: true },
     approval_policy: 'on-request', project_doc_max_bytes: 0, features: { multi_agent: false }, agents: { max_threads: 1 },
     mcp_servers: { opencore: { command: nodeExecutable, args: [path.join(resourcesDir, 'mcp-server.mjs')], default_tools_approval_mode: 'approve',
       env: { OPENCORE_MCP_BRIDGE: `${gatewayUrl}/opencore/codex-tool/${bridgeToken}`, OPENCORE_MCP_TOKEN: bridgeToken,
@@ -319,9 +319,11 @@ try {
         OPENCORE_TEST_MCP_EXITED: mcpExitedFile, NODE_OPTIONS: `--require=${hookFile}` },
       startup_timeout_sec: 30, tool_timeout_sec: 60 } },
   };
-  const threadParams = threadId => ({ cwd: workspace, model: 'opencore', modelProvider: 'opencore',
-    developerInstructions: 'Use the registered test action once, then answer briefly.', approvalPolicy: 'on-request', sandbox: 'read-only',
-    config: configuration, ...(threadId ? { threadId } : {}) });
+  const threadParams = (threadId, sandbox = 'danger-full-access') => ({ cwd: workspace, model: 'opencore', modelProvider: 'opencore',
+    developerInstructions: 'Use the registered test action once, then answer briefly.', approvalPolicy: 'on-request', sandbox,
+    config: { ...configuration, sandbox_mode: sandbox,
+      sandbox_workspace_write: { writable_roots: [workspace], network_access: sandbox === 'danger-full-access' } },
+    ...(threadId ? { threadId } : {}) });
   const started = await client.send('thread/start', threadParams());
   const threadId = started?.thread?.id;
   assert.equal(typeof threadId, 'string', `thread/start must return a durable thread id: ${JSON.stringify(started)}`);
@@ -329,12 +331,18 @@ try {
 
   await client.send('config/mcpServer/reload', null);
   await waitUntil(() => existsSync(mcpStartedFile), 'the real packaged OpenCore MCP server to start');
-  const localTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', input: [{ type: 'text', text: 'Reply with the local response check phrase.' }] });
+  const localTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', approvalPolicy: 'on-request',
+    sandboxPolicy: { type: 'dangerFullAccess' }, input: [{ type: 'text', text: 'Reply with the local response check phrase.' }] });
   const localTerminal = await terminalTurn(localTurn.turn.id);
   assert.equal(localTerminal.method, 'turn/completed', `local tool-free turn failed: ${JSON.stringify(localTerminal)}`);
   assert.ok(assistantText.includes('Local OpenCore response passed.'), `expected a local tool-free answer, got ${assistantText}`);
+  const savedTurns = await client.send('thread/turns/list', { threadId, limit: 1, sortDirection: 'desc', itemsView: 'full' });
+  assert.equal(savedTurns.data?.[0]?.status, 'completed', `the completed Codex turn was not saved for resume: ${JSON.stringify(savedTurns)}`);
+  assert.ok(savedTurns.data[0].items.some(item => item.type === 'agentMessage' && item.text === 'Local OpenCore response passed.'),
+    `thread/turns/list did not return the durable answer needed for OpenCore timeline recovery: ${JSON.stringify(savedTurns)}`);
 
-  const firstTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', input: [{ type: 'text', text: 'Call the test action with value bridge me, then report the result.' }] });
+  const firstTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', approvalPolicy: 'on-request',
+    sandboxPolicy: { type: 'dangerFullAccess' }, input: [{ type: 'text', text: 'Call the test action with value bridge me, then report the result.' }] });
   assert.equal(typeof firstTurn?.turn?.id, 'string', `turn/start must return a turn id: ${JSON.stringify(firstTurn)}`);
   const firstTerminal = await terminalTurn(firstTurn.turn.id);
   assert.equal(firstTerminal.method, 'turn/completed', `tool turn did not complete: ${JSON.stringify(firstTerminal)}`);
@@ -345,7 +353,8 @@ try {
   assert.ok(JSON.stringify(modelRequests[2]?.input).includes('bridge me'), 'the completed MCP result must return to local inference');
   assert.ok(assistantText.includes('OpenCore MCP tool loop passed.'), `expected final assistant text, got ${assistantText}`);
 
-  const cancelledTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', input: [{ type: 'text', text: 'Wait for cancellation.' }] });
+  const cancelledTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', approvalPolicy: 'on-request',
+    sandboxPolicy: { type: 'dangerFullAccess' }, input: [{ type: 'text', text: 'Wait for cancellation.' }] });
   assert.equal(typeof cancelledTurn?.turn?.id, 'string');
   await waitForRequestCount(4);
   await client.send('turn/interrupt', { threadId, turnId: cancelledTurn.turn.id });
@@ -353,10 +362,11 @@ try {
   assert.ok(['interrupted', 'cancelled'].includes(interrupted.params?.turn?.status), `expected interrupted turn status: ${JSON.stringify(interrupted)}`);
   await waitUntil(() => events.some(event => event.kind === 'model_request_aborted'), 'local inference request cancellation');
 
-  const resumed = await client.send('thread/resume', threadParams(threadId));
+  const resumed = await client.send('thread/resume', threadParams(threadId, 'read-only'));
   assert.equal(resumed?.thread?.id, threadId, 'thread/resume must return the same durable local thread');
   await client.send('config/mcpServer/reload', null);
-  const resumedTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', input: [{ type: 'text', text: 'Continue after cancellation.' }] });
+  const resumedTurn = await client.send('turn/start', { threadId, cwd: workspace, model: 'opencore', approvalPolicy: 'on-request',
+    sandboxPolicy: { type: 'readOnly', networkAccess: false }, input: [{ type: 'text', text: 'Continue after cancellation.' }] });
   const resumedTerminal = await terminalTurn(resumedTurn.turn.id);
   assert.equal(resumedTerminal.method, 'turn/completed', `resumed turn failed: ${JSON.stringify(resumedTerminal)}`);
   assert.equal(child.pid, events.find(event => event.kind === 'app_server_started')?.pid,
@@ -380,6 +390,7 @@ try {
   testPassed = true;
   console.log(JSON.stringify({ codexAppServer: manifest.cliVersion, schemaSha256: manifest.schemaSha256,
     sameThreadResumed: true, sameAppServerProcess: true, mcpToolCalls: bridgeRequests,
+    savedTurnReplay: true, perTurnSandboxOverride: true,
     cancelledInferenceRequests: events.filter(event => event.kind === 'model_request_aborted').length,
     mcpChildExited: true, hostedInference: false, passed: true }));
 } finally {

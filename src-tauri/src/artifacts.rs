@@ -152,6 +152,46 @@ pub(crate) fn store_attached_image(root: &Path, path: &Path) -> Result<ArtifactI
     create_bytes(root, &name, mime, bytes)
 }
 
+pub(crate) fn local_image_path(root: &Path, id: &str) -> Result<PathBuf, String> {
+    let (info, bytes) = load(root, id)?;
+    let extension = match info.mime.as_str() {
+        "image/png" => "png",
+        "image/jpeg" => "jpg",
+        "image/gif" => "gif",
+        "image/webp" => "webp",
+        _ => return Err("Local image input requires a supported raster image".into()),
+    };
+    let image_path = stored_path(root, id, extension)?;
+    if !image_path.is_file() {
+        let source_path = stored_path(root, id, "bin")?;
+        match std::fs::hard_link(&source_path, &image_path) {
+            Ok(()) => {}
+            Err(_) if image_path.is_file() => {
+                let existing = std::fs::read(&image_path).map_err(|read_error| read_error.to_string())?;
+                if existing != bytes { return Err("Stored local image alias does not match its source artifact".into()); }
+            }
+            Err(_) => {
+                let temporary = root.join(format!("{id}.image-{}.tmp", uuid::Uuid::new_v4()));
+                let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(&temporary)
+                    .map_err(|write_error| write_error.to_string())?;
+                use std::io::Write;
+                if let Err(write_error) = file.write_all(&bytes).and_then(|_| file.sync_all()) {
+                    let _ = std::fs::remove_file(&temporary);
+                    return Err(write_error.to_string());
+                }
+                drop(file);
+                if let Err(rename_error) = std::fs::rename(&temporary, &image_path) {
+                    let _ = std::fs::remove_file(&temporary);
+                    if !image_path.is_file() { return Err(rename_error.to_string()); }
+                }
+            }
+        }
+    }
+    let existing = std::fs::read(&image_path).map_err(|error| error.to_string())?;
+    if existing != bytes { return Err("Stored local image alias does not match its source artifact".into()); }
+    Ok(image_path)
+}
+
 pub(crate) fn preview_attached_image(path: &Path) -> Result<String, String> {
     let (_, mime, bytes) = image_bytes(path)?;
     Ok(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
@@ -259,8 +299,10 @@ mod tests {
         let draft = preview_attached_image(&image).unwrap();
         assert!(draft.starts_with("data:image/png;base64,"));
         let saved = store_attached_image(&root.join("artifacts"), &image).unwrap();
+        let local_path = local_image_path(&root.join("artifacts"), &saved.id).unwrap();
         std::fs::remove_file(image).unwrap();
         assert_eq!(preview(&root.join("artifacts"), &saved.id).unwrap().data_url, draft);
+        assert_eq!(std::fs::read(local_path).unwrap(), bytes);
         std::fs::remove_dir_all(root).unwrap();
     }
 

@@ -1,6 +1,6 @@
 //! OpenCore's local Responses model runs through the pinned Codex app-server harness.
 use super::*;
-use crate::codex_app_server::{AppServerConfig, AppServerKey, ServerMessage};
+use crate::codex_app_server::{AppServerConfig, AppServerKey, CodexAppServer, ServerMessage};
 use crate::store::CodexThreadMapping;
 use std::collections::HashSet;
 
@@ -85,14 +85,72 @@ fn codex_user_inputs(content: &Value) -> Vec<Value> {
         if part["type"] == "text" {
             part["text"].as_str().map(|text| json!({"type":"text","text":text}))
         } else if part["type"] == "image_url" {
-            part.pointer("/image_url/url").and_then(Value::as_str)
-                .map(|url| json!({"type":"image","url":url,"detail":"auto"}))
+            if let Some(path) = part["localPath"].as_str() {
+                Some(json!({"type":"localImage","path":path,"detail":"auto"}))
+            } else {
+                part.pointer("/image_url/url").and_then(Value::as_str)
+                    .map(|url| json!({"type":"image","url":url,"detail":"auto"}))
+            }
         } else if part["type"] == "image" {
-            part["url"].as_str().map(|url| json!({"type":"image","url":url,"detail":"auto"}))
+            if let Some(path) = part["localPath"].as_str() {
+                Some(json!({"type":"localImage","path":path,"detail":"auto"}))
+            } else {
+                part["url"].as_str().map(|url| json!({"type":"image","url":url,"detail":"auto"}))
+            }
         } else {
             None
         }
     }).collect()
+}
+
+fn turn_id_from_start_response(response: &Value) -> Result<String, String> {
+    response.pointer("/turn/id").and_then(Value::as_str)
+        .filter(|id| !id.trim().is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| "Codex app-server started a turn without returning its required turn ID; the saved thread is preserved.".into())
+}
+
+fn app_server_sandbox_policy(mode: ApprovalMode, workspace: &std::path::Path) -> Value {
+    match mode {
+        ApprovalMode::AllowAll => json!({"type":"dangerFullAccess"}),
+        ApprovalMode::AllowChat => json!({"type":"workspaceWrite","writableRoots":[workspace.to_string_lossy()],"networkAccess":false}),
+        ApprovalMode::ApproveForMe | ApprovalMode::AskEveryTime => json!({"type":"readOnly","networkAccess":false}),
+    }
+}
+
+fn turn_start_params(
+    thread_id: &str,
+    workspace: &std::path::Path,
+    model: &str,
+    effort: Option<&str>,
+    input: Vec<Value>,
+    approval_mode: ApprovalMode,
+) -> Value {
+    let mut params = json!({
+        "threadId":thread_id,
+        "cwd":workspace,
+        "model":model,
+        "input":input,
+        "approvalPolicy":app_server_approval_policy(),
+        "sandboxPolicy":app_server_sandbox_policy(approval_mode, workspace)
+    });
+    if let Some(effort) = effort { params["effort"] = json!(effort); }
+    params
+}
+
+fn server_message_matches_active_turn(message: &ServerMessage, thread_id: &str, turn_id: &str) -> bool {
+    let params = match message {
+        ServerMessage::Notification { params, .. } | ServerMessage::Request { params, .. } => params,
+        _ => return false,
+    };
+    params_match_active_turn(params, thread_id, turn_id)
+}
+
+fn params_match_active_turn(params: &Value, thread_id: &str, turn_id: &str) -> bool {
+    let event_thread = params.get("threadId").and_then(Value::as_str);
+    let event_turn = params.get("turnId").and_then(Value::as_str)
+        .or_else(|| params.pointer("/turn/id").and_then(Value::as_str));
+    event_thread == Some(thread_id) && event_turn == Some(turn_id)
 }
 
 fn app_server_effort(effort: &str) -> Option<&'static str> {
@@ -371,8 +429,9 @@ pub(super) async fn run(
     let tools_json = serde_json::to_vec(&specs).map_err(|error| error.to_string())?;
     persist_app_server_tool_definitions(&tools_path, &tools_json)
         .map_err(|error| format!("Could not update OpenCore's MCP tool definitions: {error}"))?;
-    let bridge_key = format!("codex_app_server_bridge_v1_{scope_hash}");
-    let bridge_token = core.store.get_or_create_pairing_token(&bridge_key)?;
+    // A fresh capability per turn prevents delayed MCP requests from a canceled
+    // turn from being delivered to the next turn's receiver.
+    let bridge_token = uuid::Uuid::new_v4().to_string();
     let gateway_url = format!("http://127.0.0.1:{}/v1", snapshot.gateway_port);
     let mut environment = std::collections::HashMap::new();
     for name in ["SystemRoot","WINDIR","TEMP","TMP","PATH","USERPROFILE","APPDATA","LOCALAPPDATA"] {
@@ -423,7 +482,11 @@ pub(super) async fn run(
     };
     let new_thread = existing.is_none();
     let thread_id = if let Some(mapping) = &existing {
-        let resume = server.request("thread/resume", thread_params(Some(&mapping.thread_id))).await
+        let mut resume_params = thread_params(Some(&mapping.thread_id));
+        // The full thread response grows without bound and is not needed to
+        // resume the durable thread. OpenCore owns and displays its timeline.
+        resume_params["excludeTurns"] = json!(true);
+        let resume = server.request("thread/resume", resume_params).await
             .map_err(|error| format!("OpenCore could not resume saved Codex thread {}. Its thread ID and original timeline remain preserved. Try this chat again after restarting OpenCore; the saved history was not overwritten. Detail: {error}",mapping.thread_id))?;
         resume.pointer("/thread/id").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| mapping.thread_id.clone())
     } else {
@@ -446,6 +509,11 @@ pub(super) async fn run(
     if !new_thread {
         server.request("config/mcpServer/reload", Value::Null).await
             .map_err(|error|format!("OpenCore could not refresh the saved thread's scoped tool list: {error}"))?;
+        let restored = reconcile_latest_codex_turn(&server, &core.store, id, &thread_id).await
+            .map_err(|error| format!("OpenCore could not reconcile the latest saved Codex turn before continuing: {error}"))?;
+        if restored > 0 {
+            core.store.log("info", "codex-app-server", &format!("Restored {restored} completed item(s) from the latest saved Codex turn."));
+        }
     }
     if new_thread {
         core.store.add_timeline(id,"harness","system","OpenCore","Agent runtime","OpenAI Codex app-server",
@@ -458,17 +526,14 @@ pub(super) async fn run(
     context["available"] = json!(true); context["active"] = json!(true); context["windowTokens"] = json!(context_window_tokens);
     context["harness"] = json!({"name":"codex-app-server","status":"working","tasks":[],"unverified":[],"threadId":thread_id});
     core.store.set_setting(&format!("agent_context:{id}"),&context.to_string())?;
-    let turn_params = {
-        let mut params = json!({"threadId":thread_id,"cwd":workspace,"model":"opencore","input":codex_user_inputs(&content)});
-        if let Some(effort) = app_server_effort(request.reasoning_effort.as_str()) { params["effort"] = json!(effort); }
-        params
-    };
+    let turn_params = turn_start_params(&thread_id,&workspace,"opencore",app_server_effort(request.reasoning_effort.as_str()),
+        codex_user_inputs(&content),request.approval_mode);
     let turn_start = tokio::select! {
         _ = token.cancelled() => {
             if let Err(error)=server.interrupt(&thread_id).await { core.store.log("warn","codex-app-server",&format!("Could not interrupt pending turn start: {error}")); }
             Err("__INTERRUPTED__".to_string())
         }
-        result = server.request("turn/start",turn_params) => result.map(|_|()).map_err(|error|error.to_string())
+        result = server.request("turn/start",turn_params) => result.map_err(|error|error.to_string())
     };
     let mut projection = AppServerTimelineProjection::default();
     let mut projected_events = std::collections::VecDeque::<Value>::new();
@@ -479,7 +544,17 @@ pub(super) async fn run(
     let mut command_outputs = std::collections::HashMap::<String,String>::new();
     let mut artifact_history = core.store.code_artifacts(id)?;
     let run_result: Result<(),String> = async {
-        turn_start?;
+        let turn_response = turn_start?;
+        let active_turn_id = match turn_id_from_start_response(&turn_response) {
+            Ok(turn_id) => turn_id,
+            Err(error) => {
+                if let Err(interrupt_error)=server.interrupt(&thread_id).await {
+                    core.store.log("warn","codex-app-server",&format!("Could not stop a turn without an ID: {interrupt_error}"));
+                }
+                return Err(error);
+            }
+        };
+        projection.begin_turn(&thread_id,&active_turn_id);
         loop {
             let event = if let Some(event) = projected_events.pop_front() { event } else {
                 tokio::select! {
@@ -510,8 +585,18 @@ pub(super) async fn run(
                         let incoming = incoming.map_err(|error|format!("Codex app-server protocol failed: {error}"))?
                             .ok_or_else(||"Codex app-server exited before completing this turn. The saved OpenCore thread is available to resume.".to_string())?;
                         match incoming {
-                            ServerMessage::Notification { .. } => { projected_events.extend(project_app_server_notification(&mut projection,&incoming)); continue; }
-                            ServerMessage::Request { id: request_id, method, params } => {
+                            ServerMessage::Notification { .. } => {
+                                if !server_message_matches_active_turn(&incoming,&thread_id,&active_turn_id) { continue; }
+                                projected_events.extend(project_app_server_notification(&mut projection,&incoming));
+                                continue;
+                            }
+                            ServerMessage::Request { id: request_id, method, ref params } => {
+                                if !params_match_active_turn(params,&thread_id,&active_turn_id) {
+                                    core.store.log("warn","codex-app-server",&format!("Declined stale or unscoped request from a previous turn: {method}"));
+                                    server.respond(request_id,json!({"decision":"decline"})).await
+                                        .map_err(|error|format!("Could not decline stale app-server request: {error}"))?;
+                                    continue;
+                                }
                                 let decision = if matches!(method.as_str(),"execCommandApproval"|"applyPatchApproval"|"item/commandExecution/requestApproval"|"item/fileChange/requestApproval") {
                                     let detail = json!({"method":method,"params":params});
                                     match request.approval_mode {
@@ -546,7 +631,7 @@ pub(super) async fn run(
                     let _=app.emit("opencore-generation",json!({"conversationId":id,"runId":live.run,"content":text,"reasoning":reasoning,"segments":live_segments,"phase":if kind=="text_delta" {"answering"} else {"reasoning"}}));
                 }
                 "assistant" | "reasoning" => {
-                    persist_app_server_agent_item(&core.store,id,&mut projection,&event)?;
+                    persist_app_server_agent_item(&core.store,id,&thread_id,&active_turn_id,&mut projection,&event)?;
                 }
                 "context" => {
                     let usage=&event["usage"];
@@ -585,6 +670,7 @@ pub(super) async fn run(
                 "diagnostic" => core.store.log("info","codex-app-server",event["text"].as_str().unwrap_or("")),
                 "turn_completed" => break,
                 "turn_failed" => return Err(event["error"].as_str().unwrap_or("Codex app-server turn failed").into()),
+                "turn_interrupted" => return Err("__INTERRUPTED__".into()),
                 _ => {}
             }
         }
@@ -614,12 +700,32 @@ mod tests {
     #[test]
     fn preserves_image_attachments_as_app_server_inputs() {
         let inputs = codex_user_inputs(
-            &json!([{"type":"text","text":"Describe"},{"type":"image_url","image_url":{"url":"data:image/png;base64,AA=="}}]),
+            &json!([{"type":"text","text":"Describe"},{"type":"image_url","localPath":"C:/attachments/picture.png","image_url":{"url":"data:image/png;base64,AA=="}}]),
         );
         assert_eq!(
             inputs[1],
-            json!({"type":"image","url":"data:image/png;base64,AA==","detail":"auto"})
+            json!({"type":"localImage","path":"C:/attachments/picture.png","detail":"auto"})
         );
+    }
+
+    #[test]
+    fn turn_start_response_requires_the_codex_turn_id_for_event_scoping() {
+        assert_eq!(turn_id_from_start_response(&json!({"turn":{"id":"turn-42"}})).unwrap(), "turn-42");
+        assert!(turn_id_from_start_response(&json!({"turn":{}})).unwrap_err().contains("turn ID"));
+    }
+
+    #[test]
+    fn turn_start_params_apply_the_current_approval_mode_as_codex_sandbox_policy() {
+        let workspace = PathBuf::from("C:/work/project");
+        let read_only = turn_start_params("thread-1", &workspace, "opencore", None, vec![], ApprovalMode::AskEveryTime);
+        assert_eq!(read_only["approvalPolicy"], "on-request");
+        assert_eq!(read_only["sandboxPolicy"], json!({"type":"readOnly","networkAccess":false}));
+
+        let workspace_write = turn_start_params("thread-1", &workspace, "opencore", None, vec![], ApprovalMode::AllowChat);
+        assert_eq!(workspace_write["sandboxPolicy"], json!({"type":"workspaceWrite","writableRoots":["C:/work/project"],"networkAccess":false}));
+
+        let unrestricted = turn_start_params("thread-1", &workspace, "opencore", None, vec![], ApprovalMode::AllowAll);
+        assert_eq!(unrestricted["sandboxPolicy"], json!({"type":"dangerFullAccess"}));
     }
     #[test]
     fn appends_codex_stream_deltas_and_keeps_ordered_segments() {
@@ -682,15 +788,42 @@ mod tests {
         };
         let completed = project_app_server_notification(&mut projection, &complete);
         assert_eq!(completed[0]["kind"], "assistant");
-        assert!(persist_app_server_agent_item(&store, "chat", &mut projection, &completed[0]).unwrap());
+        assert!(persist_app_server_agent_item(&store, "chat", "thread-1", "turn-1", &mut projection, &completed[0]).unwrap());
         assert!(project_app_server_notification(&mut projection, &complete).is_empty());
-        assert!(!persist_app_server_agent_item(&store, "chat", &mut projection, &completed[0]).unwrap());
+        assert!(!persist_app_server_agent_item(&store, "chat", "thread-1", "turn-1", &mut projection, &completed[0]).unwrap());
         let assistant = store.conversation("chat").unwrap().into_iter()
             .filter(|entry| entry.kind == "message" && entry.role == "assistant")
             .collect::<Vec<_>>();
         assert_eq!(assistant.len(), 1);
         assert_eq!(assistant[0].source, "OpenCore");
         assert_eq!(assistant[0].content, "hello");
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn completed_codex_turn_reconciliation_restores_messages_once_and_skips_incomplete_turns() {
+        let root = std::env::temp_dir().join(format!("opencore-codex-reconcile-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = EventStore::open(&root.join("history.sqlite3")).unwrap();
+        store.ensure_conversation("chat", "OpenCore", "echo", "Chat").unwrap();
+        let complete = json!({"id":"turn-1","status":"completed","items":[
+            {"id":"message-1","type":"agentMessage","text":"Recovered after restart."},
+            {"id":"reasoning-1","type":"reasoning","summary":["Checking the saved result."]}
+        ]});
+
+        assert_eq!(reconcile_completed_codex_turn(&store, "chat", "thread-1", &complete).unwrap(), 2);
+        assert_eq!(reconcile_completed_codex_turn(&store, "chat", "thread-1", &complete).unwrap(), 0);
+        let incomplete = json!({"id":"turn-2","status":"interrupted","items":[
+            {"id":"message-2","type":"agentMessage","text":"Do not present this as a completed answer."}
+        ]});
+        assert_eq!(reconcile_completed_codex_turn(&store, "chat", "thread-1", &incomplete).unwrap(), 0);
+
+        let entries = store.conversation("chat").unwrap();
+        assert_eq!(entries.iter().filter(|entry| entry.kind == "message" && entry.role == "assistant").count(), 1);
+        assert_eq!(entries.iter().find(|entry| entry.kind == "message").unwrap().content, "Recovered after restart.");
+        assert_eq!(entries.iter().filter(|entry| entry.kind == "thinking").count(), 1);
+        drop(store);
         std::fs::remove_dir_all(root).unwrap();
     }
 
@@ -800,15 +933,73 @@ mod tests {
         assert_eq!(project_app_server_notification(&mut projection, &files)[0]["changes"][0]["path"], "src/main.rs");
         let usage = ServerMessage::Notification {
             method: "thread/tokenUsage/updated".into(),
-            params: json!({"tokenUsage":{"last":{"totalTokens":1234}}}),
+            params: json!({"threadId":"thread-usage","turnId":"turn-usage","tokenUsage":{"last":{"totalTokens":1234,"inputTokens":1000,"outputTokens":234}}}),
         };
-        assert_eq!(project_app_server_notification(&mut projection, &usage)[0]["usage"]["totalTokens"], 1234);
+        let usage_event = project_app_server_notification(&mut projection, &usage);
+        assert_eq!(usage_event[0]["usage"]["totalTokens"], 1234);
+        assert_eq!(usage_event[0]["usage"]["promptTokens"], 1000);
+        assert_eq!(usage_event[0]["usage"]["outputTokens"], 234);
+    }
+
+    #[test]
+    fn turn_projection_ignores_queued_notifications_from_a_previous_turn() {
+        let mut projection = AppServerTimelineProjection::default();
+        let current_started = ServerMessage::Notification {
+            method: "turn/started".into(),
+            params: json!({"threadId":"thread-1","turn":{"id":"turn-current","status":"inProgress"}}),
+        };
+        assert_eq!(project_app_server_notification(&mut projection, &current_started)[0]["kind"], "turn_started");
+
+        let stale_delta = ServerMessage::Notification {
+            method: "item/agentMessage/delta".into(),
+            params: json!({"threadId":"thread-1","turnId":"turn-cancelled","itemId":"old-item","delta":"stale answer"}),
+        };
+        assert!(project_app_server_notification(&mut projection, &stale_delta).is_empty());
+
+        let stale_terminal = ServerMessage::Notification {
+            method: "turn/completed".into(),
+            params: json!({"threadId":"thread-1","turn":{"id":"turn-cancelled","status":"completed","items":[]}}),
+        };
+        assert!(project_app_server_notification(&mut projection, &stale_terminal).is_empty());
+
+        let current_delta = ServerMessage::Notification {
+            method: "item/agentMessage/delta".into(),
+            params: json!({"threadId":"thread-1","turnId":"turn-current","itemId":"new-item","delta":"current answer"}),
+        };
+        assert_eq!(project_app_server_notification(&mut projection, &current_delta)[0]["text"], "current answer");
+    }
+
+    #[test]
+    fn turn_completed_notification_preserves_failed_status_and_error() {
+        let mut projection = AppServerTimelineProjection::default();
+        let started = ServerMessage::Notification {
+            method: "turn/started".into(),
+            params: json!({"threadId":"thread-2","turn":{"id":"turn-failed","status":"inProgress"}}),
+        };
+        project_app_server_notification(&mut projection, &started);
+        let failed = ServerMessage::Notification {
+            method: "turn/completed".into(),
+            params: json!({"threadId":"thread-2","turn":{"id":"turn-failed","status":"failed","error":{"message":"provider request failed"},"items":[]}}),
+        };
+        let projected = project_app_server_notification(&mut projection, &failed);
+        assert_eq!(projected[0]["kind"], "turn_failed");
+        assert_eq!(projected[0]["error"], "provider request failed");
     }
 }
 
 #[derive(Default)]
 struct AppServerTimelineProjection {
     completed_items: HashSet<String>,
+    active_thread_id: Option<String>,
+    active_turn_id: Option<String>,
+}
+
+impl AppServerTimelineProjection {
+    fn begin_turn(&mut self, thread_id: &str, turn_id: &str) {
+        self.active_thread_id = Some(thread_id.to_string());
+        self.active_turn_id = Some(turn_id.to_string());
+        self.completed_items.clear();
+    }
 }
 
 fn item_text(item: &Value) -> String {
@@ -823,10 +1014,21 @@ fn project_app_server_notification(
     message: &ServerMessage,
 ) -> Vec<Value> {
     let ServerMessage::Notification { method, params } = message else { return Vec::new(); };
+    if method == "turn/started" && state.active_turn_id.is_none() {
+        if let (Some(thread_id), Some(turn_id)) = (
+            params["threadId"].as_str(),
+            params.pointer("/turn/id").and_then(Value::as_str),
+        ) {
+            state.begin_turn(thread_id, turn_id);
+        }
+    }
+    if let (Some(thread_id), Some(turn_id)) = (&state.active_thread_id, &state.active_turn_id) {
+        if !server_message_matches_active_turn(message, thread_id, turn_id) { return Vec::new(); }
+    }
     let item = &params["item"];
     match method.as_str() {
         "thread/started" => vec![json!({"kind":"thread_started","threadId":params["thread"]["id"].as_str().or_else(||params["threadId"].as_str())})],
-        "turn/started" => vec![json!({"kind":"turn_started"})],
+        "turn/started" => vec![json!({"kind":"turn_started","threadId":params["threadId"],"turnId":params.pointer("/turn/id"),"status":params.pointer("/turn/status")})],
         "item/agentMessage/delta" => vec![json!({"kind":"text_delta","text":params["delta"],"itemId":params["itemId"]})],
         "item/reasoning/textDelta" | "item/reasoning/summaryTextDelta" => vec![json!({"kind":"reasoning_delta","text":params["delta"],"itemId":params["itemId"]})],
         "item/commandExecution/outputDelta" | "process/outputDelta" => vec![json!({"kind":"command_output","text":params["delta"],"itemId":params["itemId"],"processId":params["processId"]})],
@@ -847,17 +1049,35 @@ fn project_app_server_notification(
             }
         }
         "thread/tokenUsage/updated" => {
+            let last = &params["tokenUsage"]["last"];
             let tokens = params.pointer("/tokenUsage/last/totalTokens").cloned()
                 .or_else(|| params.pointer("/tokenUsage/last/total_tokens").cloned())
                 .unwrap_or(json!(0));
-            vec![json!({"kind":"context","usage":{"totalTokens":tokens,"promptTokens":tokens,"outputTokens":0}})]
+            let input = last.get("inputTokens").cloned().or_else(||last.get("promptTokens").cloned()).unwrap_or(json!(0));
+            let output = last.get("outputTokens").cloned().unwrap_or(json!(0));
+            vec![json!({"kind":"context","usage":{"totalTokens":tokens,"promptTokens":input,"outputTokens":output}})]
         }
-        "turn/completed" => vec![json!({"kind":"turn_completed"})],
-        "turn/failed" | "turn/cancelled" | "turn/interrupted" => {
+        "turn/completed" => {
+            let status = params.pointer("/turn/status").and_then(Value::as_str).unwrap_or("unknown");
+            let error = params.pointer("/turn/error/message").and_then(Value::as_str)
+                .or_else(||params["error"]["message"].as_str());
+            match status {
+                "completed" => vec![json!({"kind":"turn_completed","status":status,"threadId":params["threadId"],"turnId":params.pointer("/turn/id")})],
+                "interrupted" => vec![json!({"kind":"turn_interrupted","status":status,"error":error.unwrap_or("Codex app-server turn was interrupted"),"threadId":params["threadId"],"turnId":params.pointer("/turn/id")})],
+                _ => vec![json!({"kind":"turn_failed","status":status,"error":error.unwrap_or("Codex app-server turn failed"),"threadId":params["threadId"],"turnId":params.pointer("/turn/id")})],
+            }
+        }
+        "turn/failed" => {
             let error = params.pointer("/turn/error/message").and_then(Value::as_str)
                 .or_else(||params["error"]["message"].as_str())
-                .unwrap_or("Codex app-server turn did not complete");
-            vec![json!({"kind":"turn_failed","error":error})]
+                .unwrap_or("Codex app-server turn failed");
+            vec![json!({"kind":"turn_failed","status":"failed","error":error})]
+        }
+        "turn/cancelled" | "turn/interrupted" => {
+            let error = params.pointer("/turn/error/message").and_then(Value::as_str)
+                .or_else(||params["error"]["message"].as_str())
+                .unwrap_or("Codex app-server turn was interrupted");
+            vec![json!({"kind":"turn_interrupted","status":"interrupted","error":error})]
         }
         _ => Vec::new(),
     }
@@ -866,6 +1086,8 @@ fn project_app_server_notification(
 fn persist_app_server_agent_item(
     store: &EventStore,
     conversation_id: &str,
+    thread_id: &str,
+    turn_id: &str,
     projection: &mut AppServerTimelineProjection,
     event: &Value,
 ) -> Result<bool, String> {
@@ -875,11 +1097,51 @@ fn persist_app_server_agent_item(
     let unique_key = format!("{}:{item_id}", if kind == "assistant" { "agentMessage" } else { "reasoning" });
     if !projection.completed_items.insert(format!("persisted:{unique_key}")) { return Ok(false); }
     let text = event["text"].as_str().unwrap_or_default();
-    if !text.is_empty() {
-        let timeline_kind = if kind == "assistant" { "message" } else { "thinking" };
-        let title = if kind == "assistant" { "Assistant" } else { "Thinking" };
-        store.add_timeline(conversation_id, timeline_kind, "assistant", "OpenCore", title, text,
-            &json!({"harness":"codex-app-server","itemId":item_id}))?;
+    if text.is_empty() { return Ok(false); }
+    let timeline_kind = if kind == "assistant" { "message" } else { "thinking" };
+    let title = if kind == "assistant" { "Assistant" } else { "Thinking" };
+    store.add_codex_app_server_item(conversation_id, thread_id, turn_id, item_id, timeline_kind, "assistant", title, text,
+        &json!({"recovered":false}))
+}
+
+fn reconcile_completed_codex_turn(
+    store: &EventStore,
+    conversation_id: &str,
+    thread_id: &str,
+    turn: &Value,
+) -> Result<usize, String> {
+    if turn["status"].as_str() != Some("completed") { return Ok(0); }
+    let Some(turn_id) = turn["id"].as_str().filter(|id| !id.trim().is_empty()) else { return Ok(0); };
+    let Some(items) = turn["items"].as_array() else { return Ok(0); };
+    let mut restored = 0;
+    for item in items {
+        let Some(item_type) = item["type"].as_str() else { continue; };
+        let (kind, role, title) = match item_type {
+            "agentMessage" => ("message", "assistant", "Assistant"),
+            "reasoning" => ("thinking", "assistant", "Thinking"),
+            _ => continue,
+        };
+        let Some(item_id) = item["id"].as_str().filter(|id| !id.trim().is_empty()) else { continue; };
+        let content = item_text(item);
+        if content.is_empty() { continue; }
+        if store.add_codex_app_server_item(conversation_id, thread_id, turn_id, item_id, kind, role, title, &content,
+            &json!({"recovered":true}))? { restored += 1; }
     }
-    Ok(true)
+    Ok(restored)
+}
+
+async fn reconcile_latest_codex_turn(
+    server: &CodexAppServer,
+    store: &EventStore,
+    conversation_id: &str,
+    thread_id: &str,
+) -> Result<usize, String> {
+    let page = server.request("thread/turns/list", json!({
+        "threadId":thread_id,
+        "limit":1,
+        "sortDirection":"desc",
+        "itemsView":"full"
+    })).await.map_err(|error| error.to_string())?;
+    let Some(turn) = page["data"].as_array().and_then(|turns| turns.first()) else { return Ok(0); };
+    reconcile_completed_codex_turn(store, conversation_id, thread_id, turn)
 }

@@ -142,6 +142,39 @@ mod tests {
     }
 
     #[test]
+    fn codex_app_server_timeline_items_are_deduplicated_atomically() {
+        let root = std::env::temp_dir().join(format!("opencore-codex-item-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = EventStore::open(&root.join("history.sqlite3")).unwrap();
+        store.ensure_conversation("chat", "OpenCore", "echo", "Chat").unwrap();
+        store.add_timeline("chat", "message", "assistant", "OpenCore", "Assistant", "Already shown before upgrade.",
+            &json!({"harness":"codex-app-server","itemId":"legacy-item"})).unwrap();
+
+        let first = store.add_codex_app_server_item("chat", "thread-a", "turn-1", "item-1",
+            "message", "assistant", "Assistant", "Recovered answer", &json!({"recovered":true})).unwrap();
+        let duplicate = store.add_codex_app_server_item("chat", "thread-a", "turn-1", "item-1",
+            "message", "assistant", "Assistant", "Recovered answer", &json!({"recovered":true})).unwrap();
+        let other_thread = store.add_codex_app_server_item("chat", "thread-b", "turn-1", "item-1",
+            "message", "assistant", "Assistant", "Separate thread", &json!({})).unwrap();
+        let legacy_duplicate = store.add_codex_app_server_item("chat", "thread-a", "turn-0", "legacy-item",
+            "message", "assistant", "Assistant", "Already shown before upgrade.", &json!({"recovered":true})).unwrap();
+
+        assert!(first);
+        assert!(!duplicate);
+        assert!(other_thread);
+        assert!(!legacy_duplicate);
+        let messages = store.conversation("chat").unwrap().into_iter()
+            .filter(|entry| entry.kind == "message" && entry.role == "assistant")
+            .collect::<Vec<_>>();
+        assert_eq!(messages.len(), 3);
+        assert_eq!(messages[1].content, "Recovered answer");
+        assert_eq!(messages[1].metadata["itemId"], "item-1");
+
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn saved_app_server_thread_resumes_after_app_restart_without_mutating_legacy_sdk_state() {
         let root = std::env::temp_dir().join(format!("opencore-thread-map-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
@@ -657,6 +690,12 @@ impl EventStore {
                    ON timeline(conversation_id, timestamp, id);
                  CREATE INDEX IF NOT EXISTS timeline_conversation_kind_id
                    ON timeline(conversation_id, kind, id);
+                 CREATE TABLE IF NOT EXISTS codex_app_server_items (
+                   conversation_id TEXT NOT NULL,
+                   thread_id TEXT NOT NULL,
+                   item_id TEXT NOT NULL,
+                   PRIMARY KEY(conversation_id,thread_id,item_id)
+                 );
                  CREATE TABLE IF NOT EXISTS logs (
                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                    timestamp TEXT NOT NULL,
@@ -1425,6 +1464,75 @@ impl EventStore {
             )
             .map_err(|e| e.to_string())?;
         Ok(connection.last_insert_rowid())
+    }
+
+    /// Persist a Codex app-server item and its deduplication key in one transaction.
+    /// This lets a resumed thread safely restore the last completed turn after a crash.
+    pub fn add_codex_app_server_item(
+        &self,
+        conversation_id: &str,
+        thread_id: &str,
+        turn_id: &str,
+        item_id: &str,
+        kind: &str,
+        role: &str,
+        title: &str,
+        content: &str,
+        metadata: &Value,
+    ) -> Result<bool, String> {
+        for (label, value) in [("conversation ID", conversation_id), ("thread ID", thread_id), ("turn ID", turn_id), ("item ID", item_id)] {
+            if value.trim().is_empty() || value.len() > 32_768 || value.chars().any(char::is_control) {
+                return Err(format!("Codex app-server {label} is invalid"));
+            }
+        }
+        let mut connection = self.connection.lock().map_err(|error| error.to_string())?;
+        let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|error| error.to_string())?;
+        // Older OpenCore builds persisted these messages before the item ledger existed.
+        // Recognize their stable Codex item ID so the first resumed turn does not duplicate it.
+        if matches!(kind, "message" | "thinking") {
+            let legacy_item_marker = format!("\"itemId\":\"{item_id}\"");
+            let was_already_projected: bool = transaction.query_row(
+                "SELECT EXISTS(SELECT 1 FROM timeline WHERE conversation_id=?1 AND source='OpenCore'
+                 AND kind=?2 AND role=?3 AND instr(metadata,'\"harness\":\"codex-app-server\"')>0
+                 AND instr(metadata,?4)>0 AND instr(metadata,'\"threadId\"')=0)",
+                params![conversation_id, kind, role, legacy_item_marker],
+                |row| row.get(0),
+            ).map_err(|error| error.to_string())?;
+            if was_already_projected {
+                transaction.execute(
+                    "INSERT OR IGNORE INTO codex_app_server_items(conversation_id,thread_id,item_id) VALUES(?1,?2,?3)",
+                    params![conversation_id, thread_id, item_id],
+                ).map_err(|error| error.to_string())?;
+                transaction.commit().map_err(|error| error.to_string())?;
+                return Ok(false);
+            }
+        }
+        let inserted = transaction.execute(
+            "INSERT OR IGNORE INTO codex_app_server_items(conversation_id,thread_id,item_id) VALUES(?1,?2,?3)",
+            params![conversation_id, thread_id, item_id],
+        ).map_err(|error| error.to_string())?;
+        if inserted == 0 {
+            transaction.rollback().map_err(|error| error.to_string())?;
+            return Ok(false);
+        }
+        let timestamp = Utc::now().to_rfc3339();
+        let mut enriched = redact_json(metadata);
+        if let Some(fields) = enriched.as_object_mut() {
+            fields.insert("harness".into(), json!("codex-app-server"));
+            fields.insert("threadId".into(), json!(thread_id));
+            fields.insert("turnId".into(), json!(turn_id));
+            fields.insert("itemId".into(), json!(item_id));
+        }
+        transaction.execute(
+            "INSERT INTO timeline(conversation_id,timestamp,kind,role,source,title,content,metadata)
+             VALUES(?1,?2,?3,?4,'OpenCore',?5,?6,?7)",
+            params![conversation_id, timestamp, kind, role, redact_text(title), redact_text(content), enriched.to_string()],
+        ).map_err(|error| error.to_string())?;
+        transaction.execute("UPDATE conversations SET updated_at=?2 WHERE id=?1", params![conversation_id, timestamp])
+            .map_err(|error| error.to_string())?;
+        transaction.commit().map_err(|error| error.to_string())?;
+        Ok(true)
     }
 
     pub fn add_bridge_timeline(&self, conversation: &str, event: &str, kind: &str,
