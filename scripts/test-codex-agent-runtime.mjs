@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createInterface } from 'node:readline';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -302,7 +302,11 @@ try {
   }, 150_000);
 
   const initialized = await client.send('initialize', { clientInfo: { name: 'opencore-packaged-runtime-test', version: '1.0.0' }, capabilities: {} });
-  assert.equal(path.resolve(initialized.codexHome), path.resolve(codexHome), 'app-server must honor the isolated CODEX_HOME');
+  const actualCodexHome = realpathSync.native(initialized.codexHome);
+  const expectedCodexHome = realpathSync.native(codexHome);
+  const normalizedActualHome = process.platform === 'win32' ? actualCodexHome.toLowerCase() : actualCodexHome;
+  const normalizedExpectedHome = process.platform === 'win32' ? expectedCodexHome.toLowerCase() : expectedCodexHome;
+  assert.equal(normalizedActualHome, normalizedExpectedHome, 'app-server must honor the isolated CODEX_HOME');
   client.notify('initialized');
   const gatewayUrl = `http://127.0.0.1:${gateway.address().port}`;
   const configuration = {
