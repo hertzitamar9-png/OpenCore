@@ -173,7 +173,8 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
   async function connect() {
     try {
       const python = await api.pickStudioFile('python'); if (!python) return;
-      const builtin = ['triposr', 'qwen-image-21', 'animation-diffusion-2d'].includes(modelId);
+      const builtin = ['triposr', 'qwen-image-21', 'animation-diffusion-2d'].includes(modelId)
+        || models.some(model => model.id === modelId && model.backend === 'diffusers');
       const runner = builtin ? null : await api.pickStudioFile('worker'); if (!builtin && !runner) return;
       const sourceDir = modelId === 'triposr' ? await api.pickStudioSourceDirectory() : null;
       if (modelId === 'triposr' && !sourceDir) return;

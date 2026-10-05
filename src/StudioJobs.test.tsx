@@ -34,6 +34,23 @@ it('builds a customized animation job from an installed animation model',async()
   fireEvent.click(screen.getByRole('button',{name:'Generate'}));
   await waitFor(()=>expect(submit).toHaveBeenCalledWith({modelId:'hy-motion-1',prompt:'A character walks into the room',settings:{seed:42,durationSeconds:6,fps:30,frameCount:180,loop:true,outputFormat:'glb',motionPrompt:'Walk slowly, then wave'}}));
 });
+it.each([
+  ['sana-16','Sana 1.6B'],
+  ['hunyuan-dit-v12-distilled','Hunyuan-DiT v1.2 Distilled'],
+])('connects %s to the built-in image worker without requesting a custom runner',async(id,label)=>{
+  const model:api.InstalledModel={id,label,category:'image',backend:'diffusers',precision:'FP16',installed:true,selectable:false,externalManaged:false,description:'Image generation',license:'Open weights',experimental:true,note:'',contextTokens:0,downloadBytes:1,totalBytes:1};
+  vi.spyOn(api,'modelLibrary').mockResolvedValue({models:[model],progress:null,diskFreeBytes:88e9,minimumFreeBytes:64e6});
+  vi.spyOn(api,'studioRuntime').mockResolvedValue(null);
+  const pick=vi.spyOn(api,'pickStudioFile').mockImplementation(async kind=>kind==='python'?'python.exe':null);
+  const configure=vi.spyOn(api,'configureStudioRuntime').mockResolvedValue();
+  render(<GenerationForm category="image" onNotice={vi.fn()}/>);
+  await screen.findByRole('option',{name:label});
+  fireEvent.click(screen.getByText(/Runtime connection/));
+  fireEvent.click(await screen.findByRole('button',{name:'Connect runtime'}));
+  await waitFor(()=>expect(configure).toHaveBeenCalledWith({modelId:id,python:'python.exe',runner:null,sourceDir:null}));
+  expect(pick).toHaveBeenCalledWith('python');
+  expect(pick).not.toHaveBeenCalledWith('worker');
+});
 it('loads saved Game Dev generation presets back into the form',async()=>{
   const motion:api.InstalledModel={id:'hy-motion-1',label:'HY-Motion 1.0',category:'3d-animation',precision:'BF16',installed:true,selectable:false,externalManaged:false,description:'Text-to-motion',license:'Apache',experimental:true,note:'',contextTokens:0,downloadBytes:1,totalBytes:1};
   vi.spyOn(api,'modelLibrary').mockResolvedValue({models:[motion],progress:null,diskFreeBytes:88e9,minimumFreeBytes:64e6});

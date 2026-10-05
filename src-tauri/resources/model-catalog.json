@@ -3374,6 +3374,276 @@
       "filename": "qwen-image-2.1-Q8_0.gguf",
       "sha256": "c0ed4b2ffd56cbe9c3df1e4a4098045256484ebe94ba5a7e4338d35ec046baa5",
       "bytes": 7640860384
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-ee03ace9a3b1",
+      "path": "models/library/hunyuan-dit-v12-distilled/model_index.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "model_index.json",
+      "sha256": "2efa723f3c6d0d3417cdaae521007ab606d20c5f8436183eaf37f10169f9e0a5",
+      "bytes": 700
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-67ecb3dc37a8",
+      "path": "models/library/hunyuan-dit-v12-distilled/scheduler/scheduler_config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "scheduler/scheduler_config.json",
+      "sha256": "8fec1b96351b2199255f683080e59cee41372334e369465d4c1fca6a242f71cc",
+      "bytes": 572
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-bcfd37e83e34",
+      "path": "models/library/hunyuan-dit-v12-distilled/text_encoder/config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "text_encoder/config.json",
+      "sha256": "968833abc78add3eeb3d2a06db3d6c7a8f1ec8b5ae1100305a6e0d5cee8aa8b2",
+      "bytes": 840
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-c8edafe2dbd0",
+      "path": "models/library/hunyuan-dit-v12-distilled/text_encoder/model.safetensors",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "text_encoder/model.safetensors",
+      "sha256": "c6c6348af2cb4d5852fe51102ce39605903dbe7925c005cf8995506cc21ea914",
+      "bytes": 1408188288
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-576e8524c732",
+      "path": "models/library/hunyuan-dit-v12-distilled/text_encoder_2/config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "text_encoder_2/config.json",
+      "sha256": "e5e73dc1b19e8a61543714a7f61e7873e1b69a774b2a9fe238b1421cc88a5e11",
+      "bytes": 776
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-da81cda6e13d",
+      "path": "models/library/hunyuan-dit-v12-distilled/text_encoder_2/model-00001-of-00002.safetensors",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "text_encoder_2/model-00001-of-00002.safetensors",
+      "sha256": "2c0c539ab8e8fba3877cc94bc483e427f74c525f817a809b028ebc8d96d75a94",
+      "bytes": 4993585936
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-146c07acb3b3",
+      "path": "models/library/hunyuan-dit-v12-distilled/text_encoder_2/model-00002-of-00002.safetensors",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "text_encoder_2/model-00002-of-00002.safetensors",
+      "sha256": "3b49976cb1fe40da28a600d783f4686024c97eb01f224c54305cce55ddcd8a5e",
+      "bytes": 1686275552
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-7025a0bf3ea9",
+      "path": "models/library/hunyuan-dit-v12-distilled/text_encoder_2/model.safetensors.index.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "text_encoder_2/model.safetensors.index.json",
+      "sha256": "7d1c96db95f747494d7c9000a04e24a65ad2ae8f80d40def94d26c8aa278052a",
+      "bytes": 19885
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-9a6c01131437",
+      "path": "models/library/hunyuan-dit-v12-distilled/tokenizer/special_tokens_map.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "tokenizer/special_tokens_map.json",
+      "sha256": "5d5b662e421ea9fac075174bb0688ee0d9431699900b90662acd44b2a350503a",
+      "bytes": 695
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-47a6faaf45c4",
+      "path": "models/library/hunyuan-dit-v12-distilled/tokenizer/tokenizer_config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "tokenizer/tokenizer_config.json",
+      "sha256": "83a1be3898d73c1f884980d96e0fb94b2728b8165be1804b8d2da077279fb1ff",
+      "bytes": 1241
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-592170b85f94",
+      "path": "models/library/hunyuan-dit-v12-distilled/tokenizer/vocab.txt",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "tokenizer/vocab.txt",
+      "sha256": "e4d5b58fd3e4756d6973acd3019f5de1f68114d4e6c1c11b5f61f4cec82a12aa",
+      "bytes": 316627
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-d9a3373af2f1",
+      "path": "models/library/hunyuan-dit-v12-distilled/tokenizer_2/special_tokens_map.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "tokenizer_2/special_tokens_map.json",
+      "sha256": "80f4c6c5cf3867d7669ff8aa8f6aebb8a7499322e62d7faae06262d6014edd61",
+      "bytes": 416
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-d8752a7548d8",
+      "path": "models/library/hunyuan-dit-v12-distilled/tokenizer_2/spiece.model",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "tokenizer_2/spiece.model",
+      "sha256": "ef78f86560d809067d12bac6c09f19a462cb3af3f54d2b8acbba26e1433125d6",
+      "bytes": 4309802
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-25c5334061cc",
+      "path": "models/library/hunyuan-dit-v12-distilled/tokenizer_2/tokenizer_config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "tokenizer_2/tokenizer_config.json",
+      "sha256": "1a58e10cd96de03535d55f2706031b7c7c8a6c5d0ee452cc58408d5890ad51f1",
+      "bytes": 861
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-98e965502aea",
+      "path": "models/library/hunyuan-dit-v12-distilled/transformer/config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "transformer/config.json",
+      "sha256": "ddfc9fee88d59bf4f69f6e1e6d8324f0ef24494b46edc5bd9401037d876dcbe2",
+      "bytes": 540
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-6e22ab20f434",
+      "path": "models/library/hunyuan-dit-v12-distilled/transformer/diffusion_pytorch_model.safetensors",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "transformer/diffusion_pytorch_model.safetensors",
+      "sha256": "af0239f15b91e424160581963873466b0eb673993b952a16e5a54ae18d521a1c",
+      "bytes": 5999962656
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-101abd63dac6",
+      "path": "models/library/hunyuan-dit-v12-distilled/vae/config.json",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "vae/config.json",
+      "sha256": "d59730ff7b5f2f4f5abd2f9572727d60ac1f8d3288e77554b10b998c606f9b12",
+      "bytes": 735
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled-86e9ee3b4fe6",
+      "path": "models/library/hunyuan-dit-v12-distilled/vae/diffusion_pytorch_model.safetensors",
+      "repo": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "filename": "vae/diffusion_pytorch_model.safetensors",
+      "sha256": "98a14dc6fe8d71c83576f135a87c61a16561c9c080abba418d2cc976ee034f88",
+      "bytes": 334643268
+    },
+    {
+      "id": "sana-16-ee03ace9a3b1",
+      "path": "models/library/sana-16/model_index.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "model_index.json",
+      "sha256": "5692423f50e7908bec51264ad39e5a9b7566970600f6089a0a40759524f5569b",
+      "bytes": 401
+    },
+    {
+      "id": "sana-16-67ecb3dc37a8",
+      "path": "models/library/sana-16/scheduler/scheduler_config.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "scheduler/scheduler_config.json",
+      "sha256": "70e8603120cc387316aa3bc7f08cb2872f6b6eb6eff6f25df1b88b6b76389e81",
+      "bytes": 840
+    },
+    {
+      "id": "sana-16-bcfd37e83e34",
+      "path": "models/library/sana-16/text_encoder/config.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "text_encoder/config.json",
+      "sha256": "3b45a277b19814724be26e4985dd24c5c3efb01bebe5139af77f99254101961a",
+      "bytes": 875
+    },
+    {
+      "id": "sana-16-42c62414782e",
+      "path": "models/library/sana-16/text_encoder/model.fp16-00001-of-00002.safetensors",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "text_encoder/model.fp16-00001-of-00002.safetensors",
+      "sha256": "e909230aabafad02d097c7dc02f2ae062b4e6b0593477c1f07679d277e09ce71",
+      "bytes": 4988024144
+    },
+    {
+      "id": "sana-16-094604b471a9",
+      "path": "models/library/sana-16/text_encoder/model.fp16-00002-of-00002.safetensors",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "text_encoder/model.fp16-00002-of-00002.safetensors",
+      "sha256": "48e14f6b7a917e54cabc4ff2047ac2bfe0dae663e771eed3a8acf4ea27dcac18",
+      "bytes": 240691624
+    },
+    {
+      "id": "sana-16-4707cc452a4f",
+      "path": "models/library/sana-16/text_encoder/model.safetensors.index.fp16.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "text_encoder/model.safetensors.index.fp16.json",
+      "sha256": "430ee03cbca19125be92ee9220e8c72a37a91d26db57a297f9e113bc6e37eb56",
+      "bytes": 23935
+    },
+    {
+      "id": "sana-16-b87c178459f0",
+      "path": "models/library/sana-16/tokenizer/tokenizer.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "tokenizer/tokenizer.json",
+      "sha256": "5f7eee611703c5ce5d1eee32d9cdcfe465647b8aff0c1dfb3bed7ad7dbb05060",
+      "bytes": 34362873
+    },
+    {
+      "id": "sana-16-47a6faaf45c4",
+      "path": "models/library/sana-16/tokenizer/tokenizer_config.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "tokenizer/tokenizer_config.json",
+      "sha256": "cb32b7929c62608d46572e813112b3ad8a841fb98fdd6a4da8559e368a951c89",
+      "bytes": 46996
+    },
+    {
+      "id": "sana-16-98e965502aea",
+      "path": "models/library/sana-16/transformer/config.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "transformer/config.json",
+      "sha256": "41d305ca78eb33f4690573d73cee4d8a138efc8f51a410bad1d051907e1bc7f2",
+      "bytes": 496
+    },
+    {
+      "id": "sana-16-a316ed4ca23f",
+      "path": "models/library/sana-16/transformer/diffusion_pytorch_model.fp16.safetensors",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "transformer/diffusion_pytorch_model.fp16.safetensors",
+      "sha256": "30cadbc6ebe74168f109fa14f1bf88badbc18cfad2a673f100322fb49a443c9c",
+      "bytes": 3208971144
+    },
+    {
+      "id": "sana-16-101abd63dac6",
+      "path": "models/library/sana-16/vae/config.json",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "vae/config.json",
+      "sha256": "4e5669aa03caa77615b73b21c9347c384cb11124a9590683e32a510df0176eb4",
+      "bytes": 1280
+    },
+    {
+      "id": "sana-16-5ac80493edfd",
+      "path": "models/library/sana-16/vae/diffusion_pytorch_model.fp16.safetensors",
+      "repo": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "filename": "vae/diffusion_pytorch_model.fp16.safetensors",
+      "sha256": "15a4b09e56d95b768a0ec9da50b702e21d920333fc9b3480d66bb5c7fad9d87f",
+      "bytes": 1249044836
     }
   ],
   "models": [
@@ -3835,7 +4105,7 @@
       "note": "Image generation/editing and transparent RGBA assets. Full pipeline includes text encoder and VAE. Requires Diffusers and CPU offload on 12 GB; upstream license restricts commercial use.",
       "selectable": false,
       "category": "image",
-      "backend": "external",
+      "backend": "diffusers",
       "sourceUrl": "https://huggingface.co/Qwen/Qwen-Image-2.1/tree/d26bb61231c349cf6b7896fa83353113880e1ba3",
       "setupUrl": "https://github.com/QwenLM/Qwen-Image",
       "runtimeReady": false,
@@ -12638,6 +12908,107 @@
       "weightArtifacts": [
         "qwen-image-21-gguf-variant-9a996bdb-c0ed4b2f"
       ]
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled",
+      "label": "Hunyuan-DiT v1.2 Distilled",
+      "description": "Hunyuan-DiT v1.2 Distilled · image",
+      "precision": "Original published",
+      "contextTokens": 0,
+      "artifacts": [
+        "hunyuan-dit-v12-distilled-ee03ace9a3b1",
+        "hunyuan-dit-v12-distilled-67ecb3dc37a8",
+        "hunyuan-dit-v12-distilled-bcfd37e83e34",
+        "hunyuan-dit-v12-distilled-c8edafe2dbd0",
+        "hunyuan-dit-v12-distilled-576e8524c732",
+        "hunyuan-dit-v12-distilled-da81cda6e13d",
+        "hunyuan-dit-v12-distilled-146c07acb3b3",
+        "hunyuan-dit-v12-distilled-7025a0bf3ea9",
+        "hunyuan-dit-v12-distilled-9a6c01131437",
+        "hunyuan-dit-v12-distilled-47a6faaf45c4",
+        "hunyuan-dit-v12-distilled-592170b85f94",
+        "hunyuan-dit-v12-distilled-d9a3373af2f1",
+        "hunyuan-dit-v12-distilled-d8752a7548d8",
+        "hunyuan-dit-v12-distilled-25c5334061cc",
+        "hunyuan-dit-v12-distilled-98e965502aea",
+        "hunyuan-dit-v12-distilled-6e22ab20f434",
+        "hunyuan-dit-v12-distilled-101abd63dac6",
+        "hunyuan-dit-v12-distilled-86e9ee3b4fe6"
+      ],
+      "weightArtifacts": [
+        "hunyuan-dit-v12-distilled-c8edafe2dbd0",
+        "hunyuan-dit-v12-distilled-da81cda6e13d",
+        "hunyuan-dit-v12-distilled-146c07acb3b3",
+        "hunyuan-dit-v12-distilled-d8752a7548d8",
+        "hunyuan-dit-v12-distilled-6e22ab20f434",
+        "hunyuan-dit-v12-distilled-86e9ee3b4fe6"
+      ],
+      "license": "Tencent Hunyuan Community License",
+      "experimental": true,
+      "note": "Tencent Hunyuan-DiT distilled image model. Uses the published checkpoint precision and Diffusers CPU offload; Python runtime setup is required. See upstream community license.",
+      "selectable": false,
+      "category": "image",
+      "backend": "diffusers",
+      "sourceUrl": "https://huggingface.co/Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled/tree/ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "setupUrl": "https://huggingface.co/Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "runtimeReady": false,
+      "installable": true
+    },
+    {
+      "id": "sana-16",
+      "label": "Sana 1.6B · FP16",
+      "description": "Sana 1.6B · FP16 · image",
+      "precision": "FP16",
+      "contextTokens": 0,
+      "artifacts": [
+        "sana-16-ee03ace9a3b1",
+        "sana-16-67ecb3dc37a8",
+        "sana-16-bcfd37e83e34",
+        "sana-16-42c62414782e",
+        "sana-16-094604b471a9",
+        "sana-16-4707cc452a4f",
+        "sana-16-b87c178459f0",
+        "sana-16-47a6faaf45c4",
+        "sana-16-98e965502aea",
+        "sana-16-a316ed4ca23f",
+        "sana-16-101abd63dac6",
+        "sana-16-5ac80493edfd"
+      ],
+      "weightArtifacts": [
+        "sana-16-42c62414782e",
+        "sana-16-094604b471a9",
+        "sana-16-a316ed4ca23f",
+        "sana-16-5ac80493edfd"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "1.6B Sana image model using the published FP16 Diffusers files. CPU offload is enabled; a compatible Diffusers Python runtime is required.",
+      "selectable": false,
+      "category": "image",
+      "backend": "diffusers",
+      "sourceUrl": "https://huggingface.co/Efficient-Large-Model/Sana_1600M_1024px_diffusers/tree/ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "setupUrl": "https://huggingface.co/Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "runtimeReady": false,
+      "installable": true
+    },
+    {
+      "id": "mage-flow-turbo",
+      "label": "Mage-Flow Turbo · 4B",
+      "description": "Mage-Flow Turbo · image generation and editing",
+      "precision": "Upstream checkpoint",
+      "contextTokens": 0,
+      "artifacts": [],
+      "weightArtifacts": [],
+      "license": "See upstream license",
+      "experimental": true,
+      "note": "Approximately 4B parameters. Upstream local weight files are not publicly verifiable by the model installer, so local download is disabled until a pinned file manifest is available.",
+      "selectable": false,
+      "category": "image",
+      "backend": "external",
+      "sourceUrl": "https://huggingface.co/spaces/microsoft/mage-flow",
+      "setupUrl": "https://huggingface.co/spaces/microsoft/mage-flow",
+      "runtimeReady": false,
+      "installable": false
     }
   ]
 }

@@ -1,9 +1,15 @@
 import unittest
-from asset_worker import bounded_integer, checkpoint_dtypes, supported_generation_kwargs, validate_output_format
-import json, struct, tempfile
+from asset_worker import bounded_integer, checkpoint_dtypes, generate, supported_generation_kwargs, validate_output_format
+import json, struct, tempfile, sys, types
 from pathlib import Path
+from unittest.mock import patch
 
 class StudioBounds(unittest.TestCase):
+    def write_safetensors_header(self, path, dtype):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        header=json.dumps({"weight":{"dtype":dtype,"shape":[1],"data_offsets":[0,2]}}).encode()
+        path.write_bytes(struct.pack("<Q",len(header))+header+b"00")
+
     def test_bounds_reject_wrong_types_and_excessive_allocations(self):
         for value in [-1, 2049, True, "768"]:
             with self.assertRaises(ValueError):
@@ -40,5 +46,70 @@ class StudioBounds(unittest.TestCase):
             supported_generation_kwargs(Pipeline(),{"prompt":"A test"},{"negativePrompt":"blur"},"seed")
         self.assertEqual(validate_output_format("WEBP",{"webp","png"},"outputFormat"),"webp")
         with self.assertRaises(ValueError): validate_output_format("exe",{"webp","png"},"outputFormat")
+
+    def test_sana_runs_through_the_builtin_fp16_diffusers_worker(self):
+        class Image:
+            def save(self, path, format=None): Path(path).write_bytes(b"image")
+        class Result: images = [Image()]
+        class Pipeline:
+            loaded = None
+            @classmethod
+            def from_pretrained(cls, path, **kwargs):
+                cls.loaded = (path, kwargs)
+                return cls()
+            def enable_model_cpu_offload(self): pass
+            def __call__(self, prompt, num_inference_steps, width, height, generator,
+                         negative_prompt=None, guidance_scale=1, num_images_per_prompt=1):
+                return Result()
+        class Generator:
+            def __init__(self, device): self.device=device
+            def manual_seed(self, seed): self.seed=seed; return self
+        torch=types.ModuleType("torch")
+        torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"
+        torch.Generator=Generator
+        diffusers=types.ModuleType("diffusers")
+        diffusers.__version__="0.35.0"; diffusers.DiffusionPipeline=Pipeline
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder); (root/"models"/"library"/"sana-16").mkdir(parents=True)
+            self.write_safetensors_header(root/"models"/"library"/"sana-16"/"transformer"/"diffusion_pytorch_model.fp16.safetensors", "F16")
+            output=root/"output"
+            request={"modelId":"sana-16","modelRoot":str(root),"prompt":"a game icon","settings":{}}
+            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):
+                generate(request,output)
+            self.assertTrue((output/"image-1.png").is_file())
+            self.assertEqual(Pipeline.loaded[1]["variant"],"fp16")
+            self.assertTrue(Pipeline.loaded[1]["local_files_only"])
+
+    def test_hunyuan_dit_runs_through_the_builtin_cpu_offload_worker(self):
+        class Image:
+            def save(self, path, format=None): Path(path).write_bytes(b"image")
+        class Result: images = [Image()]
+        class Pipeline:
+            loaded = None
+            @classmethod
+            def from_pretrained(cls, path, **kwargs):
+                cls.loaded = (path, kwargs)
+                return cls()
+            def enable_model_cpu_offload(self): pass
+            def __call__(self, prompt, num_inference_steps, width, height, generator,
+                         negative_prompt=None, guidance_scale=1, num_images_per_prompt=1):
+                return Result()
+        class Generator:
+            def __init__(self, device): self.device=device
+            def manual_seed(self, seed): self.seed=seed; return self
+        torch=types.ModuleType("torch")
+        torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"
+        torch.Generator=Generator
+        diffusers=types.ModuleType("diffusers")
+        diffusers.__version__="0.35.0"; diffusers.DiffusionPipeline=Pipeline
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder); (root/"models"/"library"/"hunyuan-dit-v12-distilled").mkdir(parents=True)
+            self.write_safetensors_header(root/"models"/"library"/"hunyuan-dit-v12-distilled"/"transformer"/"diffusion_pytorch_model.safetensors", "BF16")
+            output=root/"output"
+            request={"modelId":"hunyuan-dit-v12-distilled","modelRoot":str(root),"prompt":"a game icon","settings":{}}
+            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):
+                generate(request,output)
+            self.assertTrue((output/"image-1.png").is_file())
+            self.assertTrue(Pipeline.loaded[1]["local_files_only"])
 
 if __name__ == "__main__": unittest.main()

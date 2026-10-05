@@ -11,6 +11,13 @@ import struct
 import inspect
 from pathlib import Path
 
+DIFFUSERS_IMAGE_MODELS = {
+    "qwen-image-21": None,
+    "animation-diffusion-2d": None,
+    "sana-16": "fp16",
+    "hunyuan-dit-v12-distilled": None,
+}
+
 
 def bounded_integer(settings, name, default, low, high):
     value = settings.get(name, default)
@@ -124,7 +131,7 @@ def generate(request, output):
             scene = generator([pixels], device="cuda")
             meshes = generator.extract_mesh(scene, True, resolution=resolution)
         meshes[0].export(output / f"asset.{output_format}")
-    elif model_id in {"qwen-image-21", "animation-diffusion-2d"}:
+    elif model_id in DIFFUSERS_IMAGE_MODELS:
         import torch
         import diffusers
         from diffusers import DiffusionPipeline
@@ -133,7 +140,11 @@ def generate(request, output):
         # Keep the shipped precision; bounded CPU offload lowers VRAM residency.
         formats = {"F32": torch.float32, "F16": torch.float16, "BF16": torch.bfloat16}
         dtypes = {name: formats[dtype] for name, dtype in checkpoint_dtypes(model).items()}
-        generator = DiffusionPipeline.from_pretrained(str(model), torch_dtype=dtypes, local_files_only=True)
+        load_options = {"torch_dtype": dtypes, "local_files_only": True}
+        variant = DIFFUSERS_IMAGE_MODELS[model_id]
+        if variant:
+            load_options["variant"] = variant
+        generator = DiffusionPipeline.from_pretrained(str(model), **load_options)
         generator.enable_model_cpu_offload()
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
         args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
