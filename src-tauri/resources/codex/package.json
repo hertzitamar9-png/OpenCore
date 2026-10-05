@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
+    "@openai/codex": "0.160.0",
     "@openai/codex-sdk": "0.160.0"
   }
 }
