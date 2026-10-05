@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port 1420",
     "build": "tsc && vite build",
-    "test": "vitest run && node --test tests/file-drop-windows.test.mjs tests/chrome-connection.test.mjs tests/coding-verification.test.mjs tests/claude-bridge.test.mjs tests/codex-config.test.mjs tests/codex-mcp.test.mjs tests/codex-events.test.mjs",
+    "test": "vitest run && node --test tests/file-drop-windows.test.mjs tests/chrome-connection.test.mjs tests/coding-verification.test.mjs tests/claude-bridge.test.mjs tests/codex-config.test.mjs tests/codex-mcp.test.mjs tests/codex-events.test.mjs tests/codex-package-version.test.mjs",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build --bundles nsis"
