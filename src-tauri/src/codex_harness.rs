@@ -300,6 +300,15 @@ fn declined_server_request(method: &str) -> Value {
     }
 }
 
+fn bounded_read_result(value: Value, read_only: bool) -> Result<Value,String> {
+    // A result is encoded both as text and structured content. Leave headroom
+    // below the pinned server's 2 MiB JSON-RPC frame limit without losing data.
+    if read_only && serde_json::to_vec(&value).map_err(|e|e.to_string())?.len()>512*1024 {
+        return Err("This read result is too large for the agent transport. Retry with a narrower query and a smaller limit, or read one source record/file at a time. Stored records were not changed.".into());
+    }
+    Ok(value)
+}
+
 #[derive(Default)]
 struct PendingAgentInputs(std::collections::HashMap<String, (Value, CancellationToken)>);
 impl PendingAgentInputs {
@@ -414,7 +423,7 @@ async fn execute_app_server_tool(
             _ => tooling::execute_read_only(workspace, name, &args),
         }
     };
-    let value = match result {
+    let value = match result.and_then(|value|bounded_read_result(value,read_only)) {
         Ok(value) => {
             if let Some(job_id) = value["id"].as_str().filter(|_| value["status"] == "queued" && matches!(name,"music_generate"|"studio_use"|"background_wait")) {
                 if let Err(error) = core.studios.arm_continuation(&core, job_id, request) {
@@ -902,6 +911,14 @@ mod tests {
         assert_eq!(declined_server_request("item/tool/requestUserInput"),json!({"answers":{}}));
         assert_eq!(declined_server_request("mcpServer/elicitation/request"),json!({"action":"cancel","content":null}));
         assert_eq!(declined_server_request("item/permissions/requestApproval"),json!({"permissions":{},"scope":"turn"}));
+    }
+    #[test]
+    fn large_read_results_fail_safely_before_exceeding_the_native_rpc_frame() {
+        let value=json!({"matches":[{"content":"x".repeat(600*1024)}]});
+        assert!(bounded_read_result(value.clone(),true).unwrap_err().contains("smaller limit"));
+        assert_eq!(bounded_read_result(json!({"matches":[]}),true).unwrap(),json!({"matches":[]}));
+        // Do not describe a completed mutation as failed or silently truncate its receipt.
+        assert_eq!(bounded_read_result(value.clone(),false).unwrap(),value);
     }
     #[test]
     fn preserves_image_attachments_as_app_server_inputs() {
