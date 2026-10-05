@@ -59,7 +59,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   }
   const progress = library?.progress;
   const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
-  const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation']];
+  const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation'],['video','Video'],['tts','Speech synthesis'],['voice-cloning','Reference voice'],['ocr','Document extraction'],['omni','Omni'],['policy','Robotics policy']];
   const allModelGroups = groupModelVariants(library?.models || []);
   const modelGroups = filterGroupsByMemoryMode(allModelGroups, memoryMode);
   const visibleModels = modelGroups.filter(group => category === 'all' || categoryOf(group.model) === category);
@@ -97,6 +97,8 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       </label> : null}
       <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.totalBytes ? exactFileSize(model.totalBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Unavailable until a supported weight file is selected</dd></div> : null}</dl>
       <small>{model.note}</small>
+      {model.runtimeConnected ? <p className="model-library-note">Connected runtime. Model weights are managed separately by this runtime.</p> : null}
+      {['video','tts','voice-cloning','ocr','omni','policy'].includes(categoryOf(model)) ? <button onClick={()=>window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:categoryOf(model)}))}>Open Media Studio</button> : null}
       {model.runtimePrecision ? <section className="model-runtime-precision" aria-label={`${model.label} download and runtime precision`}>
         <strong>Download and runtime precision</strong>
         <p>Download: {model.runtimePrecision.sourceFormat}. Runtime: {model.runtimePrecision.runtimeDtype}.</p>

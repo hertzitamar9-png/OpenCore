@@ -29,13 +29,19 @@ impl Drop for GpuReservation {
     }
 }
 
-const CATEGORIES: &[&str] = &[
+pub const CATEGORIES: &[&str] = &[
     "music",
     "image",
     "3d",
     "3d-animation",
     "2d-animation",
     "speech",
+    "video",
+    "tts",
+    "voice-cloning",
+    "ocr",
+    "omni",
+    "policy",
 ];
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,6 +75,50 @@ pub struct StudioRuntime {
     pub python: PathBuf,
     pub source_dir: Option<PathBuf>,
     pub runner: Option<PathBuf>,
+}
+fn builtin_service(model_id: &str) -> bool {
+    model_id == "yue2" || model_catalog::is_speech_model(model_id)
+}
+fn builtin_worker(model: &model_catalog::Model) -> bool {
+    matches!(model.id.as_str(), "triposr" | "qwen-image-21" | "animation-diffusion-2d")
+        || (model.category == "image" && model.backend == "diffusers")
+}
+fn validate_runtime(model: &model_catalog::Model, runtime: &StudioRuntime) -> Result<(), String> {
+    if !CATEGORIES.contains(&model.category.as_str()) || builtin_service(&model.id) {
+        return Err("This model uses its built-in service or is not a studio model".into());
+    }
+    if runtime.model_id != model.id || !runtime.python.is_absolute() || !runtime.python.is_file() {
+        return Err("Choose an existing Python interpreter for this model".into());
+    }
+    if runtime.source_dir.as_ref().is_some_and(|path| !path.is_absolute() || !path.is_dir())
+        || runtime.runner.as_ref().is_some_and(|path| !path.is_absolute() || !path.is_file() || path.extension().is_none_or(|extension| extension != "py")) {
+        return Err("Choose an existing source folder and Python worker".into());
+    }
+    if !builtin_worker(model) && runtime.runner.is_none() {
+        return Err("This architecture requires an explicit publisher-compatible Python worker".into());
+    }
+    if (!model.installable || model.id == "triposr") && runtime.source_dir.is_none() {
+        return Err("Choose the existing SDK/model source folder for this architecture".into());
+    }
+    Ok(())
+}
+fn runtime_from_tool(args:&Value)->Result<StudioRuntime,String>{
+    let runtime:StudioRuntime=serde_json::from_value(args["runtime"].clone()).map_err(|e|format!("Provide runtime modelId, python, runner and sourceDir: {e}"))?;
+    if args["modelId"].as_str()!=Some(runtime.model_id.as_str()){return Err("runtime.modelId must match modelId".into());}
+    Ok(runtime)
+}
+fn worker_request(root: &Path, job: &StudioJob, runtime: &StudioRuntime) -> Result<Value, String> {
+    let mut payload = serde_json::to_value(&job.request).map_err(|error| error.to_string())?;
+    let model = model_catalog::model(&job.request.model_id).ok_or("Unknown studio model")?;
+    payload["modelRoot"] = json!(root);
+    payload["category"] = json!(job.category);
+    payload["sourceDir"] = json!(runtime.source_dir);
+    payload["protocolVersion"] = json!(1);
+    payload["modelPath"] = json!(model.runtime_model_path.as_ref().map(|path| root.join(path)));
+    payload["modelDirectory"] = json!(model.runtime_model_path.as_ref().filter(|path| path.starts_with("models/library/"))
+        .map(|path| root.join(Path::new(path).components().take(3).collect::<PathBuf>())));
+    payload["catalogModel"] = json!({"id":model.id,"category":model.category,"license":model.license,"sourceUrl":model.source_url,"setupUrl":model.setup_url,"artifactIds":model.artifacts});
+    Ok(payload)
 }
 pub struct StudioManager {
     notify: Mutex<Option<Box<dyn Fn(&StudioJob) + Send + Sync>>>,
@@ -113,6 +163,20 @@ impl StudioManager {
         if let Ok(mut value) = self.notify.lock() {
             *value = Some(Box::new(move |job| {
                 let _ = app.emit("opencore-studio-job", job);
+                if matches!(job.status.as_str(),"completed"|"failed"|"cancelled") || (job.status=="queued"&&job.created_at==job.updated_at) {
+                    if let (Ok(data),Some(core))=(app.path().app_data_dir(),app.try_state::<Arc<AppCore>>()) {
+                        if crate::agent_platform::configuration(&core.store).is_ok_and(|config|config.activity_enabled) {
+                            let summary=format!("{} generation {}: {}",job.category,job.status,job.request.prompt.chars().take(220).collect::<String>());
+                            let settings=if job.request.settings.to_string().len()<=32768 {job.request.settings.clone()} else {json!({"sha256":crate::dev_tool::sha256(job.request.settings.to_string().as_bytes()),"note":"Full settings are preserved in the studio job record; inspect the job by jobId."})};
+                            let progress=if job.progress.to_string().len()<=8192 {job.progress.clone()}else {json!({"note":"Full progress is preserved in the studio job record."})};
+                            let details=json!({"jobId":job.id,"category":job.category,"modelId":job.request.model_id,"status":job.status,"prompt":job.request.prompt.chars().take(4096).collect::<String>(),"settings":settings,"progress":progress,"outputs":job.outputs.iter().take(16).map(|path|path.chars().take(1024).collect::<String>()).collect::<Vec<_>>(),"error":job.error.as_ref().map(|text|text.chars().take(1024).collect::<String>()),"createdAt":job.created_at,"updatedAt":job.updated_at,"exactRecord":"studio/jobs.sqlite3"});
+                            let mut event=crate::agent_platform::ActivityEvent::new(&job.category,&job.status,&summary,"studio",details);
+                            event.id=format!("studio:{}:{}",job.id,job.status);
+                            event.timestamp=job.updated_at.clone();event.conversation_id=job.request.conversation_id.clone();
+                            if let Err(error)=crate::agent_platform::record_activity(&data,&event){core.store.log("warn","activity",&error);}
+                        }
+                    }
+                }
             }));
         }
     }
@@ -326,36 +390,51 @@ impl StudioManager {
             .prepare("SELECT payload FROM runtimes WHERE model_id=?1")
             .map_err(|e| e.to_string())?;
         let mut rows = stmt.query([id]).map_err(|e| e.to_string())?;
-        rows.next()
+        let runtime: Option<StudioRuntime> = rows.next()
             .map_err(|e| e.to_string())?
             .map(|row| {
                 row.get::<_, String>(0)
                     .map_err(|e| e.to_string())
                     .and_then(|v| serde_json::from_str(&v).map_err(|e| e.to_string()))
             })
-            .transpose()
+            .transpose()?;
+        Ok(runtime.filter(|runtime| model_catalog::model(id)
+            .is_some_and(|model| validate_runtime(&model, runtime).is_ok())))
+    }
+    /// A connection is an explicit user-selected executable and SDK folder,
+    /// not a model install receipt. Recheck paths after a runtime is removed.
+    pub fn runtime_connected(&self, id: &str) -> bool {
+        self.runtime(id).ok().flatten().is_some()
+    }
+    pub fn configured_models(&self) -> Result<Vec<model_catalog::Model>, String> {
+        let ids = {
+            let db = self.db.lock().map_err(|error| error.to_string())?;
+            let mut statement = db.prepare("SELECT model_id FROM runtimes ORDER BY model_id").map_err(|error| error.to_string())?;
+            let rows = statement.query_map([], |row| row.get::<_, String>(0)).map_err(|error| error.to_string())?;
+            rows.collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?
+        };
+        Ok(ids.into_iter().filter(|id| self.runtime_connected(id)).filter_map(|id| model_catalog::model(&id)).collect())
+    }
+    pub fn available_models(&self, root: &Path) -> Result<Vec<model_catalog::Model>, String> {
+        let mut models = model_catalog::installed_models(root)?;
+        for model in self.configured_models()? {
+            if !models.iter().any(|installed| installed.id == model.id) { models.push(model); }
+        }
+        Ok(models.into_iter().filter(|model| CATEGORIES.contains(&model.category.as_str())).collect())
+    }
+    fn require_available_model(&self, root: &Path, model: &model_catalog::Model) -> Result<(), String> {
+        if model_catalog::require_installed(root, &model.id).is_ok() { return Ok(()); }
+        if let Some(runtime) = self.runtime(&model.id)? {
+            if runtime.runner.is_some() && runtime.source_dir.is_some() { return Ok(()); }
+        }
+        Err("Install the selected weights or connect an explicit worker and its existing SDK/model folder in the studio".into())
     }
     pub fn configure(&self, runtime: StudioRuntime) -> Result<(), String> {
         if self.busy() {
             return Err("Wait for studio jobs before changing a runtime".into());
         }
         let model = model_catalog::model(&runtime.model_id).ok_or("Unknown studio model")?;
-        if !CATEGORIES.contains(&model.category.as_str()) || model.category == "music" {
-            return Err("This model does not use an asset runtime".into());
-        }
-        if !runtime.python.is_absolute() || !runtime.python.is_file() {
-            return Err("Choose an existing Python interpreter".into());
-        }
-        if runtime
-            .source_dir
-            .as_ref()
-            .is_some_and(|p| !p.is_absolute() || !p.is_dir())
-            || runtime.runner.as_ref().is_some_and(|p| {
-                !p.is_absolute() || !p.is_file() || p.extension().is_none_or(|s| s != "py")
-            })
-        {
-            return Err("Choose an existing runtime folder or Python worker".into());
-        }
+        validate_runtime(&model, &runtime)?;
         self.db.lock().map_err(|e|e.to_string())?.execute("INSERT INTO runtimes(model_id,payload) VALUES(?1,?2) ON CONFLICT(model_id) DO UPDATE SET payload=excluded.payload",rusqlite::params![runtime.model_id,serde_json::to_string(&runtime).map_err(|e|e.to_string())?]).map_err(|e|e.to_string())?;
         Ok(())
     }
@@ -393,7 +472,7 @@ impl StudioManager {
             "background".into()
         } else {
             let model = model_catalog::model(&request.model_id).ok_or("Unknown model")?;
-            model_catalog::require_installed(core.runtime.install_root(), &model.id)?;
+            self.require_available_model(core.runtime.install_root(), &model)?;
             validate_request(&model.category, &request)?;
             model.category
         };
@@ -468,6 +547,8 @@ impl StudioManager {
                         "Music Studio"
                     } else if job.category == "background" {
                         "Background jobs"
+                    } else if matches!(job.category.as_str(),"video"|"tts"|"voice-cloning"|"ocr"|"omni"|"policy") {
+                        "Media Studio"
                     } else {
                         "Game Dev Studio"
                     };
@@ -526,17 +607,23 @@ impl StudioManager {
         }
         let job = self.get(id)?;
         if job.category != "background" {
-            model_catalog::require_installed(core.runtime.install_root(), &job.request.model_id)?;
+            let model = model_catalog::model(&job.request.model_id).ok_or("Unknown studio model")?;
+            self.require_available_model(core.runtime.install_root(), &model)?;
         }
         // Preflight before releasing text weights. Never stop an unrelated backend.
-        let runtime = if matches!(job.category.as_str(), "music" | "speech" | "background") {
+        let runtime = if job.category == "background" || builtin_service(&job.request.model_id) {
             None
         } else {
             Some(
                 self.runtime(&job.request.model_id)?
-                    .ok_or("Connect this model's runtime in Game Dev Studio before generating")?,
+                    .ok_or("Connect this model's publisher runtime in the studio before generating")?,
             )
         };
+        if let Some(input) = job.request.settings["inputPath"].as_str() {
+            if !Path::new(input).is_absolute() || !Path::new(input).is_file() {
+                return Err("The selected studio input file is missing or is not an absolute file path".into());
+            }
+        }
         let music = music_studio::music_studio_status().await;
         if music.running
             && (music.model_loaded
@@ -609,7 +696,7 @@ impl StudioManager {
                 }
                 tokio::select! {_=token.cancelled()=>{},_=tokio::time::sleep(Duration::from_millis(500))=>{}}
             }
-        } else if job.category == "music" {
+        } else if job.request.model_id == "yue2" {
             let result = self.run_music(&job, token).await;
             if result.is_err() {
                 // Only cancel the run created by this request. Wait for cooperative cancellation before releasing the GPU lease.
@@ -635,7 +722,7 @@ impl StudioManager {
                 }
             }
             result
-        } else if job.category == "speech" {
+        } else if model_catalog::is_speech_model(&job.request.model_id) {
             let result = self.run_speech(core, &job, token).await;
             core.speech.release_idle_model().await?;
             result
@@ -747,10 +834,7 @@ impl StudioManager {
     ) -> Result<(), String> {
         let dir = self.root.join(&job.id);
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-        let mut payload = serde_json::to_value(&job.request).map_err(|e| e.to_string())?;
-        payload["modelRoot"] = json!(core.runtime.install_root());
-        payload["category"] = json!(job.category);
-        payload["sourceDir"] = json!(runtime.source_dir);
+        let payload = worker_request(core.runtime.install_root(), job, &runtime)?;
         let request_file = dir.join("request.json");
         std::fs::write(&request_file, serde_json::to_vec(&payload).unwrap())
             .map_err(|e| e.to_string())?;
@@ -788,7 +872,7 @@ impl StudioManager {
         self.update(
             &job.id,
             "running",
-            "Generating asset",
+            "Running studio model",
             json!({"pid":child.id()}),
             vec![],
             None,
@@ -802,7 +886,7 @@ impl StudioManager {
                     if progress_file.metadata().is_ok_and(|m|m.len()<64*1024) {
                         if let Ok(data)=std::fs::read(&progress_file) {
                             if let Ok(value)=serde_json::from_slice::<Value>(&data) {
-                                let stage=value["stage"].as_str().unwrap_or("Generating asset");
+                                let stage=value["stage"].as_str().unwrap_or("Running studio model");
                                 self.update(&job.id,"running",stage,value.clone(),output_files(&dir)?,None)?;
                             }
                         }
@@ -820,11 +904,11 @@ impl StudioManager {
                 .chars()
                 .rev()
                 .collect::<String>();
-            return Err(format!("Asset runtime failed: {detail}"));
+            return Err(format!("Studio runtime failed: {detail}"));
         }
         let outputs = output_files(&dir)?;
         if outputs.is_empty() {
-            return Err("The asset runtime returned no generated files".into());
+            return Err("The studio runtime returned no generated files".into());
         }
         self.update(
             &job.id,
@@ -852,7 +936,7 @@ pub fn validate_request(category: &str, request: &StudioRequest) -> Result<(), S
     if request.settings.to_string().len() > 128 * 1024 {
         return Err("Generation settings are too large".into());
     }
-    if category == "music" {
+    if category == "music" && request.model_id == "yue2" {
         for field in ["style", "lyrics"] {
             if request.settings[field]
                 .as_str()
@@ -870,6 +954,49 @@ pub fn validate_request(category: &str, request: &StudioRequest) -> Result<(), S
             );
         }
     }
+    validate_media_settings(category, &request.settings)?;
+    Ok(())
+}
+fn validate_media_settings(category: &str, settings: &Value) -> Result<(), String> {
+    let needs_input = matches!(category, "speech" | "voice-cloning" | "ocr" | "omni" | "policy")
+        || (category == "video" && settings["mode"] == "image-to-video");
+    if needs_input && settings["inputPath"].as_str().is_none_or(|path| path.trim().is_empty()) {
+        return Err(format!("{category} requires inputPath as a nonempty file path"));
+    }
+    let numeric: &[(&str, f64, f64, bool)] = &[
+        ("seed", 0.0, u32::MAX as f64, true), ("fps", 1.0, 120.0, true), ("frameCount", 1.0, 2400.0, true),
+        ("width", 128.0, 4096.0, true), ("height", 128.0, 4096.0, true), ("steps", 1.0, 256.0, true),
+        ("guidanceScale", 0.0, 30.0, false), ("speed", 0.25, 4.0, false), ("sampleRate", 8000.0, 192000.0, true),
+        ("pageStart", 1.0, 100000.0, true), ("pageEnd", 0.0, 100000.0, true), ("maxTokens", 1.0, 32768.0, true),
+        ("temperature", 0.0, 2.0, false), ("actionHorizon", 1.0, 1024.0, true), ("controlRateHz", 1.0, 500.0, false),
+    ];
+    for (name, min, max, integer) in numeric {
+        if let Some(value) = settings.get(*name) {
+            if value.as_f64().is_none_or(|number| !number.is_finite() || number < *min || number > *max || (*integer && number.fract() != 0.0)) {
+                return Err(format!("Invalid {name}: expected {} from {min} to {max}", if *integer {"integer"} else {"number"}));
+            }
+        }
+    }
+    for name in ["language", "voice", "referenceText", "embodiment", "normalizationKey", "negativePrompt"] {
+        if settings.get(name).is_some_and(|value| value.as_str().is_none()) { return Err(format!("{name} must be actual text")); }
+    }
+    if settings.get("preserveLayout").is_some_and(|value| !value.is_boolean()) { return Err("preserveLayout must be a boolean".into()); }
+    if category == "ocr" && settings["pageEnd"].as_u64().is_some_and(|last| last > 0 && last < settings["pageStart"].as_u64().unwrap_or(1)) {
+        return Err("Last page must be at or after first page".into());
+    }
+    let formats: &[&str] = match category {
+        "video" => &["mp4", "webm", "gif"], "tts" | "voice-cloning" => &["wav", "flac", "mp3"],
+        "ocr" => &["txt", "md", "json"], "omni" => &["txt", "json", "wav"], "policy" => &["json", "npz"], _ => &[],
+    };
+    if !formats.is_empty() && settings.get("outputFormat").is_some_and(|value| value.as_str().is_none_or(|format| !formats.contains(&format))) {
+        return Err(format!("Unsupported {category} output format"));
+    }
+    if category == "video" && settings.get("mode").is_some_and(|value| value.as_str().is_none_or(|mode| !["text-to-video", "image-to-video"].contains(&mode))) {
+        return Err("Video mode must be text-to-video or image-to-video".into());
+    }
+    if category == "omni" && settings.get("responseMode").is_some_and(|value| value.as_str().is_none_or(|mode| !["text", "speech", "text-and-speech"].contains(&mode))) {
+        return Err("Unsupported multimodal response mode".into());
+    }
     Ok(())
 }
 fn output_files(dir: &Path) -> Result<Vec<String>, String> {
@@ -884,6 +1011,7 @@ fn output_files(dir: &Path) -> Result<Vec<String>, String> {
         for item in std::fs::read_dir(folder).map_err(|e| e.to_string())? {
             let item = item.map_err(|e| e.to_string())?;
             let path = item.path();
+            if path == dir.join("request.json") || path == dir.join("progress.json") { continue; }
             let kind = item.file_type().map_err(|e| e.to_string())?;
             if kind.is_symlink() {
                 continue;
@@ -909,10 +1037,14 @@ fn output_files(dir: &Path) -> Result<Vec<String>, String> {
                         ext.to_string_lossy().to_ascii_lowercase().as_str(),
                         "png"
                             | "jpg"
+                            | "jpeg"
                             | "webp"
+                            | "gif"
                             | "flac"
                             | "wav"
                             | "mp3"
+                            | "ogg"
+                            | "opus"
                             | "mp4"
                             | "webm"
                             | "glb"
@@ -922,6 +1054,15 @@ fn output_files(dir: &Path) -> Result<Vec<String>, String> {
                             | "fbx"
                             | "abc"
                             | "npz"
+                            | "npy"
+                            | "ply"
+                            | "txt"
+                            | "md"
+                            | "json"
+                            | "jsonl"
+                            | "csv"
+                            | "srt"
+                            | "vtt"
                     )
                 })
             {
@@ -935,7 +1076,7 @@ fn output_files(dir: &Path) -> Result<Vec<String>, String> {
     Ok(out)
 }
 pub fn tool_spec() -> Value {
-    json!({"type":"function","function":{"name":"studio_use","description":"Control OpenCore studios. list_models lists installed category models and runtime readiness. generate queues a real job with exact prompt/settings; generation starts after this chat response finishes. status/list inspect conversation jobs. cancel stops an owned job. For music compose actual title, style and lyrics strings in settings, not field schemas. Never claim a queued job is completed. Results and prompts appear in Music Studio or Game Dev Studio.","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["list_models","generate","status","list","cancel"]},"category":{"type":"string","enum":CATEGORIES},"modelId":{"type":"string"},"prompt":{"type":"string"},"settings":{"type":"object","properties":{
+    let mut spec = json!({"type":"function","function":{"name":"studio_use","description":"Control OpenCore studios. list_models lists verified installed models and explicitly connected publisher runtimes for enabled categories, with installedWeights and runtimeConnected kept separate. generate queues a real job with exact prompt/settings; generation starts after this chat response finishes. status/list inspect conversation jobs. cancel stops an owned job. For YuE2 music compose actual title, style and lyrics strings in settings. Video, speech synthesis, reference voices, OCR, multimodal and offline policy jobs use connected publisher workers. Policy results are prediction files for review. Never claim a queued job is completed. Results, exact requests and errors appear in Music Studio, Game Dev Studio or Media Studio.","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["list_models","generate","status","list","cancel"]},"category":{"type":"string","enum":CATEGORIES},"modelId":{"type":"string"},"prompt":{"type":"string"},"settings":{"type":"object","properties":{
         "title":{"type":"string","description":"Actual song title"},"style":{"type":"string","description":"Actual genre, instruments, mood and vocal description"},"lyrics":{"type":"string","description":"Actual original lyrics composed for the user, with verse/chorus section markers"},
         "cot":{"type":"string","enum":["full","melody","off"]},"mode":{"type":"string","enum":["song","plan"]},"takes":{"type":"integer","minimum":1,"maximum":8},"seed":{"type":"integer"},"ode_steps":{"type":"integer","minimum":1,"maximum":256},
         "memory":{"type":"object","properties":{"quantization":{"type":"string","enum":["none"]},"offload_ar":{"type":"boolean"}}},
@@ -948,7 +1089,25 @@ pub fn tool_spec() -> Value {
         "motionPrompt":{"type":"string"},"durationSeconds":{"type":"number","minimum":1,"maximum":60},"duration":{"type":"number"},
         "frameCount":{"type":"integer","minimum":1,"maximum":2400},"fps":{"type":"integer","minimum":1,"maximum":120},"loop":{"type":"boolean"},
         "outputFormat":{"type":"string","enum":["png","webp","jpeg","glb","fbx","bvh","gif","mp4","obj","ply"]}
-    },"additionalProperties":true},"jobId":{"type":"string"}},"required":["action"]}}})
+    },"additionalProperties":true},"jobId":{"type":"string"}},"required":["action"]}}});
+    spec["function"]["parameters"]["properties"]["settings"]["properties"].as_object_mut().unwrap().extend(json!({
+        "mode":{"type":"string","enum":["song","plan","text-to-video","image-to-video"]},
+        "width":{"type":"integer","minimum":128,"maximum":4096},"height":{"type":"integer","minimum":128,"maximum":4096},"steps":{"type":"integer","minimum":1,"maximum":256},
+        "voice":{"type":"string","description":"Publisher runtime voice or speaker ID"},"language":{"type":"string","description":"Language code supported by the selected model, or auto"},
+        "referenceText":{"type":"string","description":"Actual transcript of the supplied inputPath reference audio"},
+        "speed":{"type":"number","minimum":0.25,"maximum":4},"sampleRate":{"type":"integer","minimum":8000,"maximum":192000},
+        "pageStart":{"type":"integer","minimum":1,"maximum":100000},"pageEnd":{"type":"integer","minimum":0,"maximum":100000,"description":"Zero includes all remaining pages"},"preserveLayout":{"type":"boolean"},
+        "responseMode":{"type":"string","enum":["text","speech","text-and-speech"]},"maxTokens":{"type":"integer","minimum":1,"maximum":32768},"temperature":{"type":"number","minimum":0,"maximum":2},
+        "embodiment":{"type":"string"},"normalizationKey":{"type":"string"},"actionHorizon":{"type":"integer","minimum":1,"maximum":1024},"controlRateHz":{"type":"number","minimum":1,"maximum":500},
+        "outputFormat":{"type":"string","enum":["png","webp","jpeg","glb","fbx","bvh","gif","mp4","webm","obj","ply","wav","flac","mp3","txt","md","json","npz","csv"]}
+    }).as_object().unwrap().clone());
+    spec["function"]["parameters"]["properties"]["action"]["enum"].as_array_mut().unwrap().extend([json!("catalog"),json!("runtime"),json!("configure_runtime")]);
+    spec["function"]["parameters"]["properties"]["query"]=json!({"type":"string","description":"A publisher/model name filter for catalog discovery"});
+    spec["function"]["parameters"]["properties"]["limit"]=json!({"type":"integer","minimum":1,"maximum":50});
+    spec["function"]["parameters"]["properties"]["runtime"]=json!({"type":"object","properties":{"modelId":{"type":"string"},"python":{"type":"string","description":"Existing absolute Python interpreter"},"runner":{"type":"string","description":"Existing absolute publisher-compatible Python worker"},"sourceDir":{"type":"string","description":"Existing absolute SDK/model directory"}},"required":["modelId","python"]});
+    let text=spec["function"]["description"].as_str().unwrap_or("").to_owned();
+    spec["function"]["description"]=json!(format!("{text} catalog discovers optional models before installation. runtime inspects a worker connection; configure_runtime connects an existing validated Python worker/SDK, subject to approval. Set up the actual publisher SDK and worker with native terminal tools only when requested; do not imply a saved connection proves generation works."));
+    spec
 }
 pub fn music_tool_spec() -> Value {
     json!({"type":"function","function":{"name":"music_generate","description":"Start one real YuE2 Music Studio song. Compose actual original title, style description and lyrics from the user's request. Fill plain text strings with the content, never JSON schemas. The queued job starts after this chat response. Its settings, progress and output appear in Music Studio.","parameters":{"type":"object","properties":{
@@ -1016,7 +1175,27 @@ pub async fn execute(
     let action = args["action"].as_str().unwrap_or("");
     let permitted = |category: &str| skills.iter().any(|s| s == category);
     match action {
-        "list_models"=>Ok(json!(model_catalog::installed_models(core.runtime.install_root())?.into_iter().filter(|m|permitted(&m.category)&&CATEGORIES.contains(&m.category.as_str())).map(|m|json!({"id":m.id,"label":m.label,"category":m.category,"runtimeConnected":(m.category=="music"&&music_studio::runtime_available())||m.category=="speech"||core.studios.runtime(&m.id).ok().flatten().is_some()})).collect::<Vec<_>>())),
+        "catalog"=>{
+            let category=args["category"].as_str().unwrap_or("");let query=args["query"].as_str().unwrap_or("").to_lowercase();
+            if query.len()>512{return Err("Catalog queries are limited to 512 bytes".into());}
+            let limit=args["limit"].as_u64().unwrap_or(20).clamp(1,50) as usize;
+            let library=serde_json::to_value(model_catalog::list(core.runtime.install_root())?).map_err(|e|e.to_string())?;
+            let models=library["models"].as_array().ok_or("Invalid catalog")?.iter().filter(|model| {
+                let c=model["category"].as_str().unwrap_or("");
+                CATEGORIES.contains(&c)&&(category.is_empty()||c==category)&&(query.is_empty()||format!("{} {}",model["id"].as_str().unwrap_or(""),model["label"].as_str().unwrap_or("")).to_lowercase().contains(&query))
+            }).take(limit).cloned().collect::<Vec<_>>();
+            Ok(json!({"models":models,"limit":limit,"note":"Catalog availability is distinct from installed weights and a working connected runtime."}))
+        },
+        "runtime"=>Ok(json!({"modelId":args["modelId"],"runtime":core.studios.runtime(args["modelId"].as_str().unwrap_or(""))?})),
+        "configure_runtime"=>{
+            core.ensure_not_updating()?;
+            let runtime=runtime_from_tool(args)?;let before=core.studios.runtime(&runtime.model_id)?;
+            let changed=serde_json::to_value(&before).map_err(|e|e.to_string())?!=serde_json::to_value(Some(&runtime)).map_err(|e|e.to_string())?;
+            core.studios.configure(runtime.clone())?;
+            if changed {crate::record_platform_activity(&core,&app,"runtime","configure","Studio runtime connected","agent",json!({"runtime":runtime}));}
+            Ok(json!({"modelId":runtime.model_id,"runtime":runtime,"changed":changed,"runtimeConnected":true,"generationVerified":false}))
+        },
+        "list_models"=>Ok(json!(core.studios.available_models(core.runtime.install_root())?.into_iter().filter(|m|permitted(&m.category)).map(|m|json!({"id":m.id,"label":m.label,"category":m.category,"installedWeights":model_catalog::require_installed(core.runtime.install_root(),&m.id).is_ok(),"runtimeConnected":(m.id=="yue2"&&music_studio::runtime_available())||model_catalog::is_speech_model(&m.id)||core.studios.runtime_connected(&m.id),"sourceUrl":m.source_url,"setupUrl":m.setup_url})).collect::<Vec<_>>())),
         "generate"=>{
             let model=model_catalog::model(args["modelId"].as_str().unwrap_or("")).ok_or("Unknown model")?;
             if !permitted(&model.category){return Err(format!("Enable /{} for this prompt before generating",model.category));}
@@ -1088,9 +1267,13 @@ pub fn cancel_studio_job(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Re
 #[tauri::command]
 pub fn configure_studio_runtime(
     core: tauri::State<'_, Arc<AppCore>>,
+    app: tauri::AppHandle,
     runtime: StudioRuntime,
 ) -> Result<(), String> {
-    core.studios.configure(runtime)
+    let changed=serde_json::to_value(core.studios.runtime(&runtime.model_id)?).map_err(|e|e.to_string())?!=serde_json::to_value(Some(&runtime)).map_err(|e|e.to_string())?;
+    core.studios.configure(runtime.clone())?;
+    if changed {crate::record_platform_activity(&core,&app,"runtime","configure","Studio runtime connected","studio-ui",json!({"runtime":runtime}));}
+    Ok(())
 }
 #[tauri::command]
 pub fn studio_runtime(
@@ -1121,7 +1304,7 @@ impl StudioManager {
         if !job.outputs.iter().any(|p| p == path) {
             return Err("Not a generated output of this job".into());
         }
-        let root = if job.category == "music" {
+        let root = if job.request.model_id == "yue2" {
             music_studio::root()
                 .join("studio-output")
                 .join(job.backend_run.ok_or("Music generation folder missing")?)
@@ -1156,11 +1339,17 @@ pub async fn studio_output_preview(
         "png" => "image/png",
         "jpg" | "jpeg" => "image/jpeg",
         "webp" => "image/webp",
+        "gif" => "image/gif",
         "flac" => "audio/flac",
         "wav" => "audio/wav",
         "mp3" => "audio/mpeg",
+        "ogg" | "opus" => "audio/ogg",
         "mp4" => "video/mp4",
         "webm" => "video/webm",
+        "txt" | "srt" | "vtt" | "jsonl" => "text/plain",
+        "md" => "text/markdown",
+        "csv" => "text/csv",
+        "json" => "application/json",
         _ => return Err("This file has no inline preview".into()),
     };
     let bytes = tokio::fs::read(path).await.map_err(|e| e.to_string())?;
@@ -1172,6 +1361,102 @@ pub async fn studio_output_preview(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn agent_runtime_configuration_cannot_switch_to_a_different_model() {
+        let args=json!({"modelId":"tts-f5-tts","runtime":{"modelId":"ocr-other","python":"C:/runtime/python.exe"}});
+        assert!(runtime_from_tool(&args).err().unwrap().contains("must match"));
+        let args=json!({"modelId":"tts-f5-tts","runtime":{"modelId":"tts-f5-tts","python":"C:/runtime/python.exe","runner":"C:/runtime/worker.py","sourceDir":"C:/runtime/sdk"}});
+        assert_eq!(runtime_from_tool(&args).unwrap().model_id,"tts-f5-tts");
+        let actions=tool_spec()["function"]["parameters"]["properties"]["action"]["enum"].as_array().unwrap().clone();
+        assert!(actions.contains(&json!("configure_runtime")));assert!(actions.contains(&json!("catalog")));
+    }
+
+    #[test]
+    fn media_requests_require_inputs_and_reject_invalid_controls() {
+        let mut request = StudioRequest { model_id: "external".into(), prompt: "Inspect the supplied input".into(), settings: json!({}), conversation_id: None };
+        for category in ["voice-cloning", "ocr", "omni", "policy", "speech"] {
+            assert!(validate_request(category, &request).unwrap_err().contains("inputPath"), "{category}");
+            request.settings = json!({"inputPath":"C:/input/observation.json"});
+            assert!(validate_request(category, &request).is_ok(), "{category}");
+            request.settings = json!({});
+        }
+        request.settings = json!({"mode":"image-to-video"});
+        assert!(validate_request("video", &request).is_err());
+        request.settings = json!({"mode":"text-to-video", "fps":24, "frameCount":81});
+        assert!(validate_request("video", &request).is_ok());
+        for bad in [json!(-1), json!(121), json!(2.5), json!("24")] {
+            request.settings["fps"] = bad;
+            assert!(validate_request("video", &request).is_err());
+        }
+        request.settings = json!({"inputPath":"invoice.png", "pageStart":5, "pageEnd":3});
+        assert!(validate_request("ocr", &request).is_err());
+        request.settings = json!({"speed":0});
+        assert!(validate_request("tts", &request).is_err());
+    }
+
+    #[test]
+    fn setup_only_models_need_an_explicit_worker_and_source_folder() {
+        let root = std::env::temp_dir().join(format!("studio-runtime-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let python = root.join("python.exe");
+        let runner = root.join("worker.py");
+        std::fs::write(&python, "fixture; never executed").unwrap();
+        std::fs::write(&runner, "fixture; never executed").unwrap();
+        let manager = StudioManager::new(root.join("jobs")).unwrap();
+        let mut runtime = StudioRuntime {model_id:"wan2-2-t2v-a14b".into(), python, runner:None, source_dir:Some(root.clone())};
+        assert!(manager.configure(runtime.clone()).is_err());
+        runtime.runner = Some(runner.clone()); runtime.source_dir = None;
+        assert!(manager.configure(runtime.clone()).is_err());
+        runtime.source_dir = Some(root.clone());
+        manager.configure(runtime).unwrap();
+        assert!(manager.runtime_connected("wan2-2-t2v-a14b"));
+        assert_eq!(manager.configured_models().unwrap()[0].category, "video");
+        std::fs::remove_file(runner).unwrap();
+        assert!(!manager.runtime_connected("wan2-2-t2v-a14b"));
+        assert!(manager.configured_models().unwrap().is_empty());
+        drop(manager);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn output_discovery_ignores_request_metadata_and_preserves_document_and_action_files() {
+        let root = std::env::temp_dir().join(format!("studio-output-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("request.json"), "{}").unwrap();
+        std::fs::write(root.join("progress.json"), "{}").unwrap();
+        std::fs::write(root.join("generation.log"), "finished").unwrap();
+        assert!(output_files(&root).unwrap().is_empty(), "metadata cannot turn a zero-output job into success");
+        for name in ["document.md", "actions.json", "actions.npz", "clip.gif"] { std::fs::write(root.join(name), "generated").unwrap(); }
+        let outputs = output_files(&root).unwrap();
+        assert_eq!(outputs.len(), 4);
+        assert!(outputs.iter().any(|file| file.ends_with("actions.json")));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn only_supported_native_model_ids_bypass_generic_workers() {
+        for id in ["yue2", "whisper-large-v3-turbo", "whisper-large-v3", "phonon-2"] { assert!(builtin_service(id)); }
+        for id in ["musicgen-small", "whisper-small", "tts-f5-tts", "wan2-2-ti2v-5b"] { assert!(!builtin_service(id)); }
+        let spec = tool_spec();
+        let settings = &spec["function"]["parameters"]["properties"]["settings"]["properties"];
+        assert_eq!(settings["actionHorizon"]["minimum"], 1);
+        assert_eq!(settings["referenceText"]["type"], "string");
+        assert!(spec["function"]["parameters"]["properties"]["category"]["enum"].as_array().unwrap().contains(&json!("ocr")));
+    }
+
+    #[test]
+    fn worker_protocol_preserves_request_inputs_and_pinned_model_identity() {
+        let job = StudioJob { id:"job".into(), category:"video".into(), request:StudioRequest {model_id:"wan2-2-ti2v-5b".into(), prompt:"A paper boat on a lake".into(), settings:json!({"fps":12,"frameCount":49,"inputPath":"C:/clips/reference.png"}), conversation_id:Some("chat".into())}, status:"queued".into(), stage:"Waiting".into(), created_at:"now".into(), updated_at:"now".into(), backend_run:None, progress:json!({}), outputs:vec![], error:None };
+        let runtime = StudioRuntime {model_id:job.request.model_id.clone(),python:PathBuf::from("C:/runtime/python.exe"),runner:Some(PathBuf::from("C:/runtime/worker.py")),source_dir:Some(PathBuf::from("C:/runtime/sdk"))};
+        let payload = worker_request(Path::new("C:/OpenCore"), &job, &runtime).unwrap();
+        assert_eq!(payload["protocolVersion"], 1);
+        assert_eq!(payload["prompt"], "A paper boat on a lake");
+        assert_eq!(payload["settings"], json!({"fps":12,"frameCount":49,"inputPath":"C:/clips/reference.png"}));
+        assert_eq!(payload["conversationId"], "chat");
+        assert_eq!(payload["sourceDir"], "C:/runtime/sdk");
+        assert!(payload["catalogModel"]["sourceUrl"].as_str().unwrap().ends_with("921dbaf3f1674a56f47e83fb80a34bac8a8f203e"));
+        assert!(payload["modelDirectory"].as_str().unwrap().ends_with("wan2-2-ti2v-5b"));
+    }
 
     #[tokio::test]
     async fn update_cancellation_drains_running_jobs_without_closing_the_manager() {

@@ -55,9 +55,13 @@ import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
 import { GameDevStudio } from './AssetsStudio';
 import { UpdateButton, UpdateSettings } from './AppUpdateControls';
+import { AgentPlatformSettings } from './AgentPlatformSettings';
+import { AgentQuestions } from './AgentQuestions';
+import { usePlatformConfiguration, executePlatformAction, platformNativeAvailable } from './agent-platform';
+import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
-type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "connectors" | "settings" | "troubleshooting";
+type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "media" | "connectors" | "settings" | "troubleshooting";
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
 type Appearance = {
@@ -115,6 +119,7 @@ const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }
   { id: "models", label: "Models", icon: Box },
   { id: "music", label: "Music Studio", icon: Music2 },
   { id: "assets", label: "Game Dev Studio", icon: Box },
+  { id: "media", label: "Media Studio", icon: Play },
   { id: "connectors", label: "Connectors", icon: Network },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "troubleshooting", label: "Troubleshooting", icon: CircleAlert, group: true },
@@ -949,6 +954,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
 
   if (view === "settings") return <div className="support-page settings-page">
     <div className="page-heading"><div><h1>Settings</h1><p>Real local controls for storage, privacy, history, and diagnostics.</p></div></div>
+    <AgentPlatformSettings />
     <div className="settings-grid">
       <InspectorSection title="Conversation appearance">
         <label className="appearance-label" htmlFor="chat-font-size">Message text size <strong>{appearance.chatFontSize}px</strong></label>
@@ -1143,11 +1149,14 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, conve
 }
 
 export default function App() {
+  const platform=usePlatformConfiguration();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>("conversations");
   const [assetCategory,setAssetCategory]=useState('image');
+  const [mediaCategory,setMediaCategory]=useState('video');
+  useEffect(()=>{let disposed=false;let stop:(()=>void)|undefined;void listen<{view:View;category?:string}>('opencore-navigate',({payload})=>{if(disposed||!nav.some(item=>item.id===payload.view))return;setView(payload.view);if(payload.category){if(payload.view==='media')setMediaCategory(payload.category);if(payload.view==='assets')setAssetCategory(payload.category);}}).then(unlisten=>{if(disposed)unlisten();else stop=unlisten;}).catch(()=>{});return()=>{disposed=true;stop?.();};},[]);
   useEffect(()=>{
-    const open=(event:Event)=>{const category=(event as CustomEvent).detail;if(!['music','image','3d','3d-animation','2d-animation','speech','background'].includes(category))return;if(category==='music')setView('music');else{setAssetCategory(category);setView('assets');}};
+    const open=(event:Event)=>{const category=(event as CustomEvent).detail;if(MEDIA_CATEGORIES.some(([id])=>id===category)){setMediaCategory(category);setView('media');}else if(category==='music')setView('music');else if(['image','3d','3d-animation','2d-animation','speech','background'].includes(category)){setAssetCategory(category);setView('assets');}};
     window.addEventListener('opencore-open-studio',open);
     return()=>window.removeEventListener('opencore-open-studio',open);
   },[]);
@@ -1174,7 +1183,7 @@ export default function App() {
       if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
       if (announced.has(payload.id)) return;
       announced.add(payload.id);
-      const studio = payload.category === 'music' ? 'Music Studio' : 'Game Dev Studio';
+      const studio = payload.category === 'music' ? 'Music Studio' : MEDIA_CATEGORIES.some(([id])=>id===payload.category) ? 'Media Studio' : 'Game Dev Studio';
       setNotice(payload.status === 'completed' ? `Generation complete. Open ${studio} to view the output.` : `Generation ${payload.status}. Open ${studio} for details.`);
     }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
     return () => { disposed = true; stop?.(); };
@@ -1183,6 +1192,14 @@ export default function App() {
   const [conversationDialog, setConversationDialog] = useState<ConversationDialog>(null);
   const [projectDialog, setProjectDialog] = useState<ProjectDialog>(null);
   const [appearance, setAppearance] = useState<Appearance>(savedAppearance);
+  useEffect(()=>{
+    const config=platform.configuration;if(!config)return;
+    setAppearance(current=>({...current,compactAtTokens:config.compactAtTokens,chatFontSize:config.appearance.fontSize,compactMessages:config.appearance.density==='compact'}));
+  },[platform.configuration]);
+  const changeAppearance=useCallback((value:Appearance)=>{
+    setAppearance(value);
+    if(platformNativeAvailable())void executePlatformAction('app_control',{action:'set',settings:{compactAtTokens:value.compactAtTokens,appearance:{fontSize:value.chatFontSize,density:value.compactMessages?'compact':'comfortable'}},source:'settings'}).catch(error=>setNotice(`Settings could not be saved: ${String(error)}`));
+  },[]);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try {
       const saved = Number(window.localStorage.getItem("opencore.sidebar.width"));
@@ -1423,7 +1440,7 @@ export default function App() {
 
   if (view === "conversations") {
     const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} />;
-    return <div className="app-window-frame"><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: `58px ${sidebarWidth}px 7px minmax(0,1fr)`, gridTemplateRows: "minmax(0,1fr) 36px" }}>
+    return <div className="app-window-frame"><AgentQuestions /><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: `58px ${sidebarWidth}px 7px minmax(0,1fr)`, gridTemplateRows: "minmax(0,1fr) 36px" }}>
       <Navigation active={view} onChange={setView} running={running} compact />
       {conversationList}<div className="conversation-resizer" role="separator" aria-label="Resize conversations" aria-orientation="vertical" onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
       <AssistantConversation
@@ -1469,14 +1486,15 @@ export default function App() {
     </div></div>;
   }
 
-  return <div className="app-window-frame" style={appearanceStyle}><WindowTitleBar /><div className="app-shell">
+  return <div className="app-window-frame" style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="app-shell">
     <Header snapshot={snapshot} busy={busy} runtimeAction={runtimeAction} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} onStart={start} onStop={stop} onRestart={restart} onExport={exportCurrent} />
     <Navigation active={view} onChange={setView} running={running} />
     {view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
       : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
-      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={setAppearance} />}
+      : view === 'media' ? <MediaStudio category={mediaCategory} onCategoryChange={setMediaCategory} onNotice={setNotice} />
+      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={changeAppearance} />}
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
   </div></div>;

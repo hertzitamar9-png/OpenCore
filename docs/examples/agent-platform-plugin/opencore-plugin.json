@@ -1,0 +1,8 @@
+{
+  "id": "sourced-project-notes",
+  "name": "Sourced Project Notes",
+  "description": "A portable local skill for recording stable project observations.",
+  "version": "1.0.0",
+  "skills": ["skills"],
+  "mcpServers": []
+}

@@ -24,7 +24,7 @@ it("shows Phonon's source checkpoint separately from its in-memory FP32 runtime"
     enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
   try {
     render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
-    fireEvent.click(await screen.findByRole("button", { name: /^Speech/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Speech\s*\d*$/ }));
     expect(await screen.findByRole("region", { name: "Phonon-2 download and runtime precision" })).toHaveTextContent("Download: Five-value checkpoint. Runtime: FP32.");
     expect(screen.getByText(/FP32 is created in memory and is not a second model download/i)).toBeVisible();
   } finally { library.mockRestore(); speech.mockRestore(); }
