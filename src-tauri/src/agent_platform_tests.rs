@@ -368,16 +368,11 @@ fn redacted_tool_patch_preserves_existing_connection_secrets() {
 #[test]
 fn minimal_mcp_setting_changes_preserve_defaults_for_omitted_fields() {
     let fixture = Fixture::new();
-    let result = execute(
-        &fixture.store,
-        &fixture.root,
-        "app_control",
-        &json!({"action":"set","settings":{"mcpServers":[
-            {"id":"local","name":"local","command":"node"},
-            {"id":"remote","name":"remote","url":"https://example.test/mcp"}
-        ]}}),
-    )
-    .unwrap();
+    let request = json!({"action":"set","settings":{"mcpServers":[
+        {"id":"local","name":"local","command":"node"},
+        {"id":"remote","name":"remote","url":"https://example.test/mcp"}
+    ]}});
+    let result = execute(&fixture.store, &fixture.root, "app_control", &request).unwrap();
     assert_eq!(result["persisted"], true);
     let saved = configuration(&fixture.store).unwrap();
     assert_eq!(saved.mcp_servers.len(), 2);
@@ -394,6 +389,10 @@ fn minimal_mcp_setting_changes_preserve_defaults_for_omitted_fields() {
         mcp_configuration(&saved).unwrap()["remote"]["url"],
         "https://example.test/mcp"
     );
+    let repeated = execute(&fixture.store, &fixture.root, "app_control", &request).unwrap();
+    assert_eq!(repeated["changed"], false);
+    assert_eq!(repeated["changes"], json!([]));
+    assert!(repeated["activityId"].is_null());
 }
 
 #[test]

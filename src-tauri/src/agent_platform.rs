@@ -731,8 +731,9 @@ fn set_settings(store: &EventStore, data: &Path, args: &Value) -> Result<Value, 
     restore_masked_connections(&mut patched, &before)?;
     let next: PlatformConfig = serde_json::from_value(patched.clone())
         .map_err(|error| format!("Invalid app settings: {error}"))?;
+    let normalized = serde_json::to_value(&next).map_err(|error| error.to_string())?;
     let mut receipt_changes = Vec::new();
-    changes(&original, &patched, "", &mut receipt_changes);
+    changes(&original, &normalized, "", &mut receipt_changes);
     let saved = persist_configuration(store, next)?;
     let event = ActivityEvent::new(
         "settings",
