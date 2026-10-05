@@ -1,6 +1,7 @@
 #![recursion_limit = "256"]
 
 mod codex_harness;
+mod codex_app_server;
 mod claude_bridge;
 mod claude_bridge_install;
 mod artifacts;
