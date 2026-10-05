@@ -1,5 +1,5 @@
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, realpath, rm } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import os from 'node:os';
 import path from 'node:path';
@@ -107,8 +107,14 @@ export async function probeCodexAppServer({ command, args = [], expectedVersion,
       clientInfo: { name: 'opencore-runtime-probe', version: '1.0.0' },
       capabilities: {},
     }, timeoutMs);
-    if (path.resolve(result.codexHome) !== path.resolve(probeHome)) {
-      throw new Error('Codex app-server ignored the isolated CODEX_HOME startup probe');
+    const [actualCodexHome, expectedCodexHome] = await Promise.all([
+      realpath(result.codexHome),
+      realpath(probeHome),
+    ]);
+    const normalizedActualHome = process.platform === 'win32' ? actualCodexHome.toLowerCase() : actualCodexHome;
+    const normalizedExpectedHome = process.platform === 'win32' ? expectedCodexHome.toLowerCase() : expectedCodexHome;
+    if (normalizedActualHome !== normalizedExpectedHome) {
+      throw new Error(`Codex app-server ignored the isolated CODEX_HOME startup probe (expected ${expectedCodexHome}, got ${actualCodexHome})`);
     }
     child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'initialized' })}\n`);
     child.stdin.end();
