@@ -538,7 +538,10 @@ fn responses_messages(payload: &Value) -> Vec<Value> {
             }
             "function_call" | "custom_tool_call" => {
                 let call_id = item.get("call_id").and_then(Value::as_str).unwrap_or("call");
-                let name = item.get("name").and_then(Value::as_str).unwrap_or("tool");
+                let local_name = item.get("name").and_then(Value::as_str).unwrap_or("tool");
+                let name = item.get("namespace").and_then(Value::as_str)
+                    .map(|namespace| format!("{namespace}__{local_name}"))
+                    .unwrap_or_else(|| local_name.to_string());
                 let arguments = if item.get("type").and_then(Value::as_str) == Some("custom_tool_call") {
                     json!({"input":item.get("input").and_then(Value::as_str).unwrap_or("")}).to_string()
                 } else {
@@ -561,46 +564,66 @@ fn responses_messages(payload: &Value) -> Vec<Value> {
     out
 }
 
-fn responses_tools(payload: &Value) -> (Vec<Value>, HashMap<String, String>) {
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct ResponseToolRoute {
+    kind: String,
+    namespace: Option<String>,
+    name: String,
+}
+
+fn responses_tools(payload: &Value) -> (Vec<Value>, HashMap<String, ResponseToolRoute>) {
     let mut out = Vec::new();
     let mut kinds = HashMap::new();
-    for tool in payload.get("tools").and_then(Value::as_array).into_iter().flatten() {
+    fn add_tool(
+        tool: &Value,
+        flat_prefix: &str,
+        namespace_path: Option<&str>,
+        out: &mut Vec<Value>,
+        kinds: &mut HashMap<String, ResponseToolRoute>,
+    ) {
         let typ = tool.get("type").and_then(Value::as_str).unwrap_or("");
-        let name = tool.get("name").and_then(Value::as_str).unwrap_or("tool").to_string();
         match typ {
-            "function" => {
-                kinds.insert(name.clone(), "function".into());
-                out.push(json!({
-                    "type":"function",
-                    "function":{
-                        "name":name,
-                        "description":tool.get("description").and_then(Value::as_str).unwrap_or(""),
-                        "parameters":tool.get("parameters").cloned().unwrap_or_else(|| json!({"type":"object"}))
-                    }
-                }));
+            "namespace" => {
+                let namespace = tool.get("name").and_then(Value::as_str).unwrap_or("");
+                if namespace.is_empty() { return; }
+                let nested_prefix = format!("{flat_prefix}{namespace}__");
+                let nested_namespace = namespace_path
+                    .map(|parent| format!("{parent}__{namespace}"))
+                    .unwrap_or_else(|| namespace.to_string());
+                for nested in tool.get("tools").and_then(Value::as_array).into_iter().flatten() {
+                    add_tool(nested, &nested_prefix, Some(&nested_namespace), out, kinds);
+                }
             }
-            "custom" => {
-                kinds.insert(name.clone(), "custom".into());
-                out.push(json!({
-                    "type":"function",
-                    "function":{
-                        "name":name,
-                        "description":tool.get("description").and_then(Value::as_str).unwrap_or(""),
-                        "parameters":{
-                            "type":"object",
-                            "properties":{"input":{"type":"string","description":"Raw tool input"}},
-                            "required":["input"]
-                        }
-                    }
-                }));
+            "function" | "custom" => {
+                let local_name = tool.get("name").and_then(Value::as_str).unwrap_or("tool");
+                let name = format!("{flat_prefix}{local_name}");
+                let kind = if typ == "custom" { "custom" } else { "function" };
+                kinds.insert(name.clone(), ResponseToolRoute {
+                    kind: kind.into(),
+                    namespace: namespace_path.map(str::to_string),
+                    name: local_name.into(),
+                });
+                let parameters = if kind == "custom" {
+                    json!({"type":"object","properties":{"input":{"type":"string","description":"Raw tool input"}},"required":["input"]})
+                } else {
+                    tool.get("parameters").cloned().unwrap_or_else(|| json!({"type":"object"}))
+                };
+                out.push(json!({"type":"function","function":{
+                    "name":name,
+                    "description":tool.get("description").and_then(Value::as_str).unwrap_or(""),
+                    "parameters":parameters
+                }}));
             }
             _ => {}
         }
     }
+    for tool in payload.get("tools").and_then(Value::as_array).into_iter().flatten() {
+        add_tool(tool, "", None, &mut out, &mut kinds);
+    }
     (out, kinds)
 }
 
-fn responses_output(openai: &Value, model: &str, tool_kinds: &HashMap<String, String>) -> Value {
+fn responses_output(openai: &Value, model: &str, tool_routes: &HashMap<String, ResponseToolRoute>) -> Value {
     let message = openai.pointer("/choices/0/message").cloned().unwrap_or_else(|| json!({}));
     let mut output = Vec::new();
     if let Some(reasoning) = message.get("reasoning_content").and_then(Value::as_str) {
@@ -627,25 +650,32 @@ fn responses_output(openai: &Value, model: &str, tool_kinds: &HashMap<String, St
             let name = call.pointer("/function/name").and_then(Value::as_str).unwrap_or("tool");
             let arguments = call.pointer("/function/arguments").and_then(Value::as_str).unwrap_or("{}");
             let call_id = call.get("id").cloned().unwrap_or(Value::String(format!("call_{}",Uuid::new_v4().simple())));
-            if tool_kinds.get(name).map(String::as_str) == Some("custom") {
+            let route = tool_routes.get(name);
+            let response_name = route.map(|route| route.name.as_str()).unwrap_or(name);
+            let namespace = route.and_then(|route| route.namespace.as_deref());
+            if route.is_some_and(|route| route.kind == "custom") {
                 let input = serde_json::from_str::<Value>(arguments).ok()
                     .and_then(|v| v.get("input").and_then(Value::as_str).map(str::to_string))
                     .unwrap_or_else(|| arguments.to_string());
-                output.push(json!({
+                let mut item = json!({
                     "id":format!("ctc_{}",Uuid::new_v4().simple()),
                     "type":"custom_tool_call","status":"completed",
                     "call_id":call_id,
-                    "name":name,
+                    "name":response_name,
                     "input":input
-                }));
+                });
+                if let Some(namespace) = namespace { item["namespace"] = json!(namespace); }
+                output.push(item);
             } else {
-                output.push(json!({
+                let mut item = json!({
                     "id":format!("fc_{}",Uuid::new_v4().simple()),
                     "type":"function_call","status":"completed",
                     "call_id":call_id,
-                    "name":name,
+                    "name":response_name,
                     "arguments":arguments
-                }));
+                });
+                if let Some(namespace) = namespace { item["namespace"] = json!(namespace); }
+                output.push(item);
             }
         }
     }
@@ -865,6 +895,44 @@ mod tests {
             true,
         ).build().unwrap();
         assert_eq!(request.headers().get("x-opencore-timeline-owner").unwrap(), "app");
+    }
+
+    #[test]
+    fn converts_codex_mcp_namespaces_into_chat_completion_tools() {
+        let (tools, routes) = responses_tools(&json!({"tools":[{
+            "type":"namespace","name":"mcp__opencore","description":"OpenCore app tools",
+            "tools":[{"type":"function","name":"test_action","description":"Run a test action",
+                "parameters":{"type":"object","properties":{"value":{"type":"string"}},"required":["value"]}}]
+        }]}));
+        assert_eq!(tools.len(), 1);
+        assert_eq!(tools[0]["function"]["name"], "mcp__opencore__test_action");
+        assert_eq!(tools[0]["function"]["parameters"]["required"][0], "value");
+        assert_eq!(routes.get("mcp__opencore__test_action"), Some(&ResponseToolRoute {
+            kind: "function".into(), namespace: Some("mcp__opencore".into()), name: "test_action".into()
+        }));
+    }
+
+    #[test]
+    fn restores_mcp_namespace_on_model_tool_calls_and_flattens_history_back_for_local_model() {
+        let (_, routes) = responses_tools(&json!({"tools":[{
+            "type":"namespace","name":"mcp__opencore","description":"OpenCore app tools",
+            "tools":[{"type":"function","name":"test_action","description":"Run a test action",
+                "parameters":{"type":"object","properties":{"value":{"type":"string"}},"required":["value"]}}]
+        }]}));
+        let response = responses_output(&json!({"choices":[{"message":{"tool_calls":[{
+            "id":"call_1","type":"function","function":{"name":"mcp__opencore__test_action","arguments":"{\"value\":\"bridge me\"}"}
+        }]}}]}), "opencore", &routes);
+        assert_eq!(response["output"][0]["type"], "function_call");
+        assert_eq!(response["output"][0]["namespace"], "mcp__opencore");
+        assert_eq!(response["output"][0]["name"], "test_action");
+
+        let history = responses_messages(&json!({"input":[
+            response["output"][0].clone(),
+            {"type":"function_call_output","call_id":"call_1","output":"{\"ok\":true,\"value\":\"bridge me\"}"}
+        ]}));
+        assert_eq!(history[0]["tool_calls"][0]["function"]["name"], "mcp__opencore__test_action");
+        assert_eq!(history[1]["role"], "tool");
+        assert_eq!(history[1]["tool_call_id"], "call_1");
     }
 
     #[test]

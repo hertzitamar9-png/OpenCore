@@ -75,6 +75,11 @@ export function buildCodexConfiguration(options) {
       opencore: {
         command: options.nodeExecutable,
         args: [options.mcpServerScript],
+        // The app owns the real per-call approval flow in its tool dispatcher.
+        // Codex must trust only this private, token-authenticated loopback MCP
+        // server so its non-interactive CLI does not reject calls before the
+        // OpenCore approval prompt can run.
+        default_tools_approval_mode: 'approve',
         env: {
           OPENCORE_MCP_BRIDGE: bridgeUrl,
           OPENCORE_MCP_TOKEN: options.bridgeToken,

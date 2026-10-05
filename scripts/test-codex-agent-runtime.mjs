@@ -6,6 +6,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildCodexConfiguration } from '../src-tauri/resources/codex/codex-config.mjs';
 
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
 const resourcesDir = path.join(appRoot, 'src-tauri/resources/codex');
@@ -13,6 +14,14 @@ const workspace = mkdtempSync(path.join(tmpdir(), 'opencore-codex-agent-e2e-'));
 const codexHome = path.join(workspace, 'codex-home');
 const scratch = path.join(workspace, 'scratch');
 mkdirSync(scratch);
+const configProbe = buildCodexConfiguration({ gatewayUrl: 'http://127.0.0.1:8812/v1', bridgeUrl: 'http://127.0.0.1:8813/tool',
+  bridgeToken: '0123456789abcdef0123456789abcdef', conversationId: 'codex-config-test', model: 'opencore',
+  contextWindowTokens: 16384, compactAtTokens: 12000, developerInstructions: '', workspace, nodeExecutable: process.execPath,
+  mcpServerScript: path.join(resourcesDir, 'mcp-server.mjs'), toolDefinitionsFile: path.join(scratch, 'tools.json'),
+  effort: 'off', sandboxMode: 'read-only', approvalPolicy: 'never', networkAccess: false, subagentsEnabled: false,
+  maxSubagents: 1, projectSkillsEnabled: false });
+assert.equal(configProbe.mcp_servers.opencore.default_tools_approval_mode, 'approve',
+  'Codex must trust its private MCP server so the OpenCore app approval RPC can run');
 const tool = { type: 'function', function: { name: 'test_action', description: 'Return a deterministic test result.',
   parameters: { type: 'object', properties: { value: { type: 'string' } }, required: ['value'], additionalProperties: false } } };
 const toolDefinitionsFile = path.join(scratch, 'tools.json');
@@ -27,6 +36,7 @@ let child;
 let gateway;
 let timeout;
 const events = [];
+const modelRequests = [];
 
 function emitSse(response, type, sequence, fields = {}) {
   const value = { type, sequence_number: sequence, ...fields };
@@ -65,7 +75,7 @@ function sendModelTurn(response, id, output) {
 
 function modelFunctionCall() {
   return { id: 'fc_open_core_test', type: 'function_call', status: 'completed', call_id: 'call_open_core_test',
-    name: 'mcp__opencore__test_action', arguments: JSON.stringify({ value: 'bridge me' }) };
+    namespace: 'mcp__opencore', name: 'test_action', arguments: JSON.stringify({ value: 'bridge me' }) };
 }
 
 try {
@@ -75,17 +85,16 @@ try {
       for await (const chunk of request) raw += chunk;
       const payload = JSON.parse(raw || '{}');
       if (!request.url?.endsWith('/responses')) { response.writeHead(404).end('{}'); return; }
+      modelRequests.push({ model: payload.model, input: payload.input, tools: payload.tools?.map(value => ({ type: value.type,
+        name: value.name, description: value.description, parameters: value.parameters, function: value.function, tools: value.tools })),
+        toolChoice: payload.tool_choice, previousResponseId: payload.previous_response_id });
       assert.equal(request.headers['x-opencore-harness'], 'codex-sdk');
       assert.equal(request.headers['x-echo-conversation'], 'codex-e2e-conversation');
       assert.equal(request.headers['x-opencore-timeline-owner'], 'app');
       requestCount++;
       if (requestCount === 1) {
-        assert.ok(Array.isArray(payload.tools) && payload.tools.some(value => value.name === 'mcp__opencore__test_action'),
-          'the local model request must contain the dynamically registered OpenCore MCP tool');
         sendModelTurn(response, 'resp_tool', [modelFunctionCall()]);
       } else {
-        const toolOutput = JSON.stringify(payload.input ?? []);
-        assert.match(toolOutput, /bridge me/, 'the model must receive the completed MCP tool result before it answers');
         sendModelTurn(response, 'resp_answer', [{ id: 'msg_final', type: 'message', status: 'completed', role: 'assistant',
           content: [{ type: 'output_text', text: 'OpenCore MCP tool loop passed.', annotations: [] }] }]);
       }
@@ -135,12 +144,27 @@ try {
   clearTimeout(timeout);
   timeout = null;
   assert.equal(result.code, 0, diagnostics || JSON.stringify({ ...result, events }));
-  assert.equal(requestCount, 2, `expected one tool-selection inference and one resumed inference; got ${requestCount}`);
-  assert.equal(permissionCalls, 1);
-  assert.equal(toolCalls, 1);
-  assert.deepEqual(bridgedCall, { name: 'test_action', arguments: { value: 'bridge me' } });
-  assert.ok(events.some(event => event.kind === 'assistant' && event.text === 'OpenCore MCP tool loop passed.'));
-  assert.ok(events.some(event => event.kind === 'turn_completed'));
+  const compactInputs = modelRequests.map(request => ({
+    tools: request.tools?.map(tool => ({ type: tool.type, name: tool.name,
+      nested: tool.tools?.map(child => child.name) })),
+    input: Array.isArray(request.input) ? request.input.map(item => ({ type: item.type, role: item.role,
+      name: item.name, call_id: item.call_id, output: item.output, arguments: item.arguments,
+      content: typeof item.content === 'string' ? item.content.slice(0, 120) : undefined })) : request.input,
+  }));
+  assert.equal(requestCount, 2, `expected one tool-selection inference and one resumed inference; got ${requestCount}: ${JSON.stringify({ compactInputs, events, diagnostics })}`);
+  const providedTools = (modelRequests[0]?.tools ?? []).flatMap(value => value.type === 'namespace'
+    ? (value.tools ?? []).map(nested => ({ ...nested, name: `${value.name}__${nested.name}` })) : [value]);
+  assert.ok(providedTools.some(value => value.name === 'mcp__opencore__test_action'),
+    `the local model request must contain the dynamically registered OpenCore MCP tool: ${JSON.stringify(modelRequests[0]?.tools)}`);
+  const toolOutputs = (modelRequests[1]?.input ?? []).filter(item => ['function_call_output', 'custom_tool_call_output'].includes(item.type));
+  assert.ok(toolOutputs.some(item => JSON.stringify(item).includes('bridge me')),
+    `the model must receive the completed MCP tool result before it answers: ${JSON.stringify(modelRequests[1]?.input)}`);
+  const evidence = JSON.stringify({ permissionCalls, toolCalls, bridgedCall, modelRequests, events, diagnostics });
+  assert.equal(permissionCalls, 1, evidence);
+  assert.equal(toolCalls, 1, evidence);
+  assert.deepEqual(bridgedCall, { name: 'test_action', arguments: { value: 'bridge me' } }, evidence);
+  assert.ok(events.some(event => event.kind === 'assistant' && event.text === 'OpenCore MCP tool loop passed.'), evidence);
+  assert.ok(events.some(event => event.kind === 'turn_completed'), evidence);
   console.log(JSON.stringify({ sdk: '0.160.0', modelRequests: requestCount, permissionChecks: permissionCalls,
     mcpCalls: toolCalls, assistantResponse: 'OpenCore MCP tool loop passed.', passed: true }));
 } finally {
