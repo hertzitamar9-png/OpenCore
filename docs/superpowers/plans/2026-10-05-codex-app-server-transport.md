@@ -106,8 +106,8 @@
 - Consumes: the pinned runtime, Rust process client, and mapped OpenCore event surface from Tasks 1–3.
 - Produces: one CI gate that starts the exact packaged app-server with a fake local Responses endpoint and the real packaged OpenCore MCP server.
 
-- [ ] Add a failing integration assertion named `packaged app-server streams, calls one MCP tool, cancels, and resumes the same local thread without restarting its scoped server`.
-- [ ] Run `node scripts/test-codex-agent-runtime.mjs`; require the test to fail against the current SDK bridge before wiring the app-server path.
-- [ ] Exercise initialize, local tool-free response, MCP tool call, cancellation, resume, version guard, and child cleanup without contacting hosted inference.
+- [x] Add a failing integration assertion named `packaged app-server streams, calls one MCP tool, cancels, and resumes the same local thread without restarting its scoped server`.
+- [x] Run `node scripts/test-codex-agent-runtime.mjs`; require the test to fail against the current SDK bridge before wiring the app-server path.
+- [x] Exercise initialize, local tool-free response, MCP tool call, cancellation, resume, version guard, and child cleanup without contacting hosted inference.
 - [ ] In Actions run `npm test`, `cargo test --lib`, the app-server integration gate, and the Windows installer build; do not run `npm run desktop:build` locally.
-- [ ] Commit as `test: gate the packaged Codex app-server path`.
+- [x] Commit as `test: gate the packaged Codex app-server path`.

@@ -123,6 +123,6 @@ export async function probeCodexAppServer({ command, args = [], expectedVersion,
       child.kill();
       if (exitPromise) await Promise.race([exitPromise, new Promise((resolve) => setTimeout(resolve, 1_500))]);
     }
-    await rm(probeHome, { recursive: true, force: true });
+    await rm(probeHome, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 }

@@ -124,14 +124,14 @@ it('does not display an invalid negative auto-compact threshold from a prior run
   } finally { read.mockRestore(); }
 });
 
-it('reports SDK summary compaction disabled and hides its stale threshold', async () => {
+it('reports automatic compaction disabled and hides its stale threshold', async () => {
   const read = vi.spyOn(api, 'echoWorkingSet').mockResolvedValue({
     available:true,liveTokens:14859,windowTokens:32768,contextMode:'persistent_echo',
     autoCompactThreshold:200000,autoCompactEnabled:false,compactions:0,offloadedMessages:12,
   });
   try {
     render(<EchoContextStatus conversationId="game" running={false} />);
-    expect(await screen.findByText('SDK summary compaction disabled')).toBeVisible();
+    expect(await screen.findByText('Automatic compaction disabled')).toBeVisible();
     expect(screen.getByText('Exact conversation history stays in the ECHO archive for source retrieval')).toBeVisible();
     expect(screen.queryByText(/Auto compact/)).not.toBeInTheDocument();
     expect(screen.queryByText(/200,000/)).not.toBeInTheDocument();

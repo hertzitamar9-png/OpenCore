@@ -157,8 +157,20 @@ fn apply_client_reasoning(payload: &Value, chat: &mut Value, anthropic: bool) {
 }
 
 fn codex_agent_owns_timeline(headers: &HeaderMap) -> bool {
-    matches!(headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()), Some("codex-sdk" | "codex-app-server"))
+    is_embedded_codex_agent(headers)
         && headers.get("x-opencore-timeline-owner").and_then(|v| v.to_str().ok()) == Some("app")
+}
+
+fn is_embedded_codex_agent(headers: &HeaderMap) -> bool {
+    matches!(headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()), Some("codex-sdk" | "codex-app-server"))
+}
+
+fn codex_client_name(headers: &HeaderMap) -> &'static str {
+    if headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-app-server") {
+        "Codex app-server"
+    } else {
+        "Codex SDK"
+    }
 }
 
 async fn call_chat(state: &GatewayState, payload: &Value) -> Result<Value, Response<Body>> {
@@ -769,9 +781,9 @@ pub async fn responses(
     apply_client_reasoning(payload, &mut chat, false);
     let (tools, tool_kinds) = responses_tools(payload);
     if !tools.is_empty() { chat["tools"] = Value::Array(tools); }
-    let client = "Codex SDK";
+    let client = codex_client_name(headers);
     let conversation = conversation_id(headers, &chat);
-    let embedded = headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-sdk");
+    let embedded = is_embedded_codex_agent(headers);
     let app_owns_timeline = codex_agent_owns_timeline(headers);
     if !app_owns_timeline { capture_request(state, &conversation, client, &redact_json(&chat)); }
     if embedded {
@@ -811,7 +823,7 @@ pub async fn responses_compact(
         "stream":false,
         "max_tokens":2048
     });
-    let embedded = headers.get("x-opencore-harness").and_then(|v| v.to_str().ok()) == Some("codex-sdk");
+    let embedded = is_embedded_codex_agent(headers);
     let app_owns_timeline = codex_agent_owns_timeline(headers);
     let conversation = conversation_id(headers, &chat);
     if embedded {
@@ -845,7 +857,7 @@ pub async fn responses_compact(
             "total_tokens":input_tokens+output_tokens
         }
     });
-    let client = "Codex SDK";
+    let client = codex_client_name(headers);
     if !app_owns_timeline { let _ = state.store.ensure_conversation(
         &conversation,
         client,
@@ -1059,6 +1071,16 @@ mod tests {
         assert!(codex_agent_owns_timeline(&headers));
         headers.insert("x-opencore-harness", HeaderValue::from_static("claude-agent-sdk"));
         assert!(!codex_agent_owns_timeline(&headers));
+    }
+
+    #[test]
+    fn app_server_transport_is_treated_as_embedded_and_keeps_its_real_client_identity() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-opencore-harness", HeaderValue::from_static("codex-app-server"));
+        assert!(is_embedded_codex_agent(&headers));
+        assert_eq!(codex_client_name(&headers), "Codex app-server");
+        headers.insert("x-opencore-timeline-owner", HeaderValue::from_static("app"));
+        assert!(codex_agent_owns_timeline(&headers));
     }
 
     #[test]

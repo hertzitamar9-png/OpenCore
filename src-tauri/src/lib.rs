@@ -42,7 +42,6 @@ mod windows_control;
 
 use crate::gateway::GatewayState;
 use crate::models::{AppSnapshot, ApprovalMode, ChatSendRequest, ChatSendResult, ConnectorInput, ConnectorStatus, ExportResult, OperationRecord, ProjectSummary, StartProfileRequest, TimelineEntry};
-use crate::redaction::redact_json;
 use crate::runtime::RuntimeManager;
 use crate::store::{EventStore, ProjectAssignment};
 use serde_json::{json, Value};
@@ -1844,7 +1843,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
             required.push(json!("explanation"));
         }
     }
-    // Keep every composer effort on the OpenAI Codex SDK orchestration path.
+    // Keep every composer effort on the pinned OpenAI Codex app-server orchestration path.
     // reasoning_effort configures the local model request; it must
     // never select or bypass the agent harness.
     let result = codex_harness::run(core.clone(), app, &request, token, workspace_root, receipts_root,

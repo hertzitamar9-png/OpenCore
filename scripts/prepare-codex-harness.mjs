@@ -12,7 +12,7 @@ const runtime = path.resolve(scriptDir, '../src-tauri/resources/codex');
 const runtimePackage = JSON.parse(readFileSync(path.join(runtime, 'package.json'), 'utf8'));
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const cliManifest = path.join(runtime, 'node_modules', '@openai', 'codex', 'package.json');
-const sdkManifest = path.join(runtime, 'node_modules', '@openai', 'codex-sdk', 'package.json');
+const legacySdkManifest = path.join(runtime, 'node_modules', '@openai', 'codex-sdk', 'package.json');
 const nativePackage = `codex-${process.platform}-${process.arch}`;
 const nativeManifest = path.join(runtime, 'node_modules', '@openai', nativePackage, 'package.json');
 const nativeVersion = expectedPlatformPackageVersion(PINNED_CODEX_VERSION, nativePackage);
@@ -24,11 +24,11 @@ function versionOf(file) {
 
 function requireVersions() {
   if (runtimePackage.dependencies?.['@openai/codex'] !== PINNED_CODEX_VERSION
-    || runtimePackage.dependencies?.['@openai/codex-sdk'] !== PINNED_CODEX_VERSION
+    || runtimePackage.dependencies?.['@openai/codex-sdk'] !== undefined
+    || existsSync(legacySdkManifest)
     || versionOf(cliManifest) !== PINNED_CODEX_VERSION
-    || versionOf(sdkManifest) !== PINNED_CODEX_VERSION
     || versionOf(nativeManifest) !== nativeVersion) {
-    throw new Error('Codex CLI, SDK compatibility bridge, and native platform package must match pinned version 0.160.0');
+    throw new Error('Codex CLI and native platform package must match pinned version 0.160.0; the obsolete SDK runner must not be installed');
   }
 }
 
@@ -62,4 +62,4 @@ try {
   rmSync(schemaProbeDir, { recursive: true, force: true });
 }
 
-console.log(`Prepared Codex app-server ${manifest.cliVersion} (${manifest.platformPackageVersion}), protocol ${manifest.schemaRevision}, schema ${manifest.schemaSha256}.`);
+console.log(`Prepared native Codex app-server ${manifest.cliVersion} (${manifest.platformPackageVersion}), protocol ${manifest.schemaRevision}, schema ${manifest.schemaSha256}.`);

@@ -23,6 +23,8 @@ test('rejects a regenerated app-server schema with a different pinned hash', asy
 
 test('app-server executable and checked-in schema must match one pinned release', async () => {
   const { codexRuntimeManifest } = await import('../scripts/codex-package-version.mjs');
+  const runtime = JSON.parse(readFileSync(new URL('../src-tauri/resources/codex/package.json', import.meta.url), 'utf8'));
+  assert.equal(runtime.dependencies?.['@openai/codex-sdk'], undefined, 'the retired SDK runner must not remain a runtime dependency');
   const manifest = codexRuntimeManifest();
   assert.equal(manifest.cliVersion, '0.160.0');
   assert.equal(manifest.platformPackage, `codex-${process.platform}-${process.arch}`);

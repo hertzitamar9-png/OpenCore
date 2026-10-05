@@ -49,7 +49,7 @@ jobs:
         run: node scripts/prepare-codex-harness.mjs
       - name: Probe packaged Codex app-server with read-only initialize
         run: node scripts/test-codex-app-server-schema.mjs
-      - name: Test OpenCore Codex agent orchestration and MCP tool execution
+      - name: Test packaged Codex app-server, local inference, MCP tools, cancellation, and resume
         run: node scripts/test-codex-agent-runtime.mjs
       - name: Benchmark exact ECHO archive scaling
         if: ${{ !contains(github.event.head_commit.message, '[skip-archive-scale]') }}
