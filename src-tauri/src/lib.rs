@@ -25,6 +25,7 @@ mod models;
 mod model_catalog;
 mod music_studio;
 mod music_weights;
+mod startup_diagnostics;
 mod studio_jobs;
 mod process_watch;
 mod native_browser;
@@ -1966,7 +1967,23 @@ fn download_artifact(app: tauri::AppHandle, id: String) -> Result<String, String
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let startup_diagnostics = startup_diagnostics::StartupDiagnostics::new();
+    startup_diagnostics.record("launch", "OpenCore process started");
+    let app_ready = Arc::new(AtomicBool::new(false));
+    let panic_diagnostics = startup_diagnostics.clone();
+    let panic_app_ready = app_ready.clone();
+    let previous_panic_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic| {
+        let details = panic.to_string();
+        if panic_app_ready.load(Ordering::Acquire) {
+            panic_diagnostics.record("panic", &details);
+        } else {
+            panic_diagnostics.show_startup_error("startup_panic", &details);
+        }
+        previous_panic_hook(panic);
+    }));
+    let setup_diagnostics = startup_diagnostics.clone();
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.unminimize(); let _ = window.show(); let _ = window.set_focus();
@@ -1976,10 +1993,23 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .setup(|app| {
+        .setup(move |app| {
+            let executable = std::env::current_exe()
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|error| format!("unavailable: {error}"));
+            let working_directory = std::env::current_dir()
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|error| format!("unavailable: {error}"));
+            setup_diagnostics.record(
+                "setup",
+                &format!(
+                    "Starting OpenCore {}; executable={executable}; working_directory={working_directory}",
+                    app.package_info().version
+                ),
+            );
             #[cfg(windows)]
             {
-                let overlay = tauri::WebviewWindowBuilder::new(app, "desktop-activity", tauri::WebviewUrl::App("index.html?desktop-activity".into()))
+                let overlay_result = tauri::WebviewWindowBuilder::new(app, "desktop-activity", tauri::WebviewUrl::App("index.html?desktop-activity".into()))
                     .title("OpenCore is using your computer")
                     .decorations(false)
                     .transparent(true)
@@ -1990,14 +2020,30 @@ pub fn run() {
                     .visible(false)
                     .resizable(false)
                     .inner_size(290.0, 54.0)
-                    .build()?;
-                overlay.set_ignore_cursor_events(true)?;
-                if let Ok(hwnd) = overlay.hwnd() {
-                    unsafe { let _ = windows::Win32::UI::WindowsAndMessaging::SetWindowDisplayAffinity(windows::Win32::Foundation::HWND(hwnd.0 as _), windows::Win32::UI::WindowsAndMessaging::WDA_EXCLUDEFROMCAPTURE); }
+                    .build();
+                match overlay_result {
+                    Ok(overlay) => {
+                        if let Err(error) = overlay.set_ignore_cursor_events(true) {
+                            setup_diagnostics.record("desktop_activity_overlay", &format!("Optional overlay mouse pass-through unavailable: {error}"));
+                        }
+                        if let Ok(hwnd) = overlay.hwnd() {
+                            unsafe { let _ = windows::Win32::UI::WindowsAndMessaging::SetWindowDisplayAffinity(windows::Win32::Foundation::HWND(hwnd.0 as _), windows::Win32::UI::WindowsAndMessaging::WDA_EXCLUDEFROMCAPTURE); }
+                        }
+                    }
+                    Err(error) => {
+                        setup_diagnostics.record("desktop_activity_overlay", &format!("Optional overlay skipped: {error}"));
+                    }
                 }
             }
-            let database = data_path(app)?;
-            let store = Arc::new(EventStore::open(&database)?);
+            let database = data_path(app).map_err(|error| {
+                setup_diagnostics.record("database_path_failed", &error);
+                error
+            })?;
+            setup_diagnostics.record("database_open", &database.display().to_string());
+            let store = Arc::new(EventStore::open(&database).map_err(|error| {
+                setup_diagnostics.record("database_open_failed", &error);
+                error
+            })?);
             if database.file_name().and_then(|name| name.to_str()) == Some("control-center.recovered.sqlite3") {
                 store.log("warn", "storage", "Using the verified recovery database; original database and WAL retained for diagnosis");
             }
@@ -2110,6 +2156,7 @@ pub fn run() {
                     });
                 }
             }
+            setup_diagnostics.record("setup", "Tauri setup completed");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -2186,39 +2233,55 @@ pub fn run() {
             ,native_browser_command
             ,desktop_command
             ,set_computer_focus_mode
-        ])
-        .build(tauri::generate_context!())
-        .expect("error while building OpenCore")
-        .run(|app,event|{
-            // The hidden computer-use overlay is also a window. Closing the
-            // main window therefore must explicitly request application exit.
-            if matches!(&event,tauri::RunEvent::WindowEvent {label,event:tauri::WindowEvent::Destroyed,..} if label=="main") {
-                app.exit(0);
-            }
-            // Keep the event loop responsive while network/WSL teardown runs.
-            // Preserve an updater restart's requested exit code.
-            static EXIT_STARTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-            static EXIT_READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-            if let tauri::RunEvent::ExitRequested {api,code,..}=event {
-                if !EXIT_READY.load(std::sync::atomic::Ordering::Acquire) {
-                    api.prevent_exit();
-                    if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
-                        let app=app.clone();
-                        tauri::async_runtime::spawn(async move {
-                            if let Some(core)=app.try_state::<Arc<AppCore>>() {
-                                core.studios.shutdown().await;
-                                if let Err(error)=core.codex_app_server_pool.shutdown_all().await {
-                                    core.store.log("warn","codex-app-server",&error.to_string());
-                                }
+        ]);
+    let app = match builder.build(tauri::generate_context!()) {
+        Ok(app) => app,
+        Err(error) => {
+            startup_diagnostics.show_startup_error(
+                "startup_failed",
+                &format!("{error} ({error:?})"),
+            );
+            return;
+        }
+    };
+    startup_diagnostics.record("event_loop", "Tauri setup completed; entering event loop");
+    let event_diagnostics = startup_diagnostics.clone();
+    let event_app_ready = app_ready.clone();
+    app.run(move |app, event| {
+        if matches!(&event, tauri::RunEvent::Ready) {
+            event_app_ready.store(true, Ordering::Release);
+            event_diagnostics.record("ready", "Tauri event loop is ready");
+        }
+        // The hidden computer-use overlay is also a window. Closing the
+        // main window therefore must explicitly request application exit.
+        if matches!(&event,tauri::RunEvent::WindowEvent {label,event:tauri::WindowEvent::Destroyed,..} if label=="main") {
+            event_diagnostics.record("main_window", "Main window was destroyed; requesting application exit");
+            app.exit(0);
+        }
+        // Keep the event loop responsive while network/WSL teardown runs.
+        // Preserve an updater restart's requested exit code.
+        static EXIT_STARTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        static EXIT_READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        if let tauri::RunEvent::ExitRequested {api,code,..}=event {
+            if !EXIT_READY.load(std::sync::atomic::Ordering::Acquire) {
+                api.prevent_exit();
+                if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
+                    let app=app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        if let Some(core)=app.try_state::<Arc<AppCore>>() {
+                            core.studios.shutdown().await;
+                            if let Err(error)=core.codex_app_server_pool.shutdown_all().await {
+                                core.store.log("warn","codex-app-server",&error.to_string());
                             }
-                            music_studio::shutdown_owned().await;
-                            EXIT_READY.store(true,std::sync::atomic::Ordering::Release);
-                            app.exit(code.unwrap_or(0));
-                        });
-                    }
+                        }
+                        music_studio::shutdown_owned().await;
+                        EXIT_READY.store(true,std::sync::atomic::Ordering::Release);
+                        app.exit(code.unwrap_or(0));
+                    });
                 }
             }
-        });
+        }
+    });
 }
 
 #[cfg(test)]
