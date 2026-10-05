@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 mod claude_harness;
 mod claude_bridge;
 mod claude_bridge_install;
