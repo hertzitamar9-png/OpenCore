@@ -670,7 +670,8 @@ mod tests {
     #[test]
     fn quantization_profiles_use_distinct_revision_pinned_runtime_files() {
         let catalog = manifest().unwrap();
-        let variants: Vec<_> = catalog.models.iter().filter(|model| model.variant_of.is_some()).collect();
+        let all_variants: Vec<_> = catalog.models.iter().filter(|model| model.variant_of.is_some()).collect();
+        let variants: Vec<_> = all_variants.iter().copied().filter(|model| model.selectable).collect();
         assert!(variants.len() >= 50, "expected the catalog's GGUF quant options to be materialized as selectable profiles");
         for variant in variants {
             let parent = variant.variant_of.as_deref().unwrap();
@@ -680,6 +681,11 @@ mod tests {
             assert!(variant.artifacts.iter().any(|id| catalog.artifacts.iter().any(|file|
                 file.id == *id && file.path == runtime_path && file.bytes > 0 && valid_sha256(&file.sha256)
                     && file.revision.len() == 40)), "{} must have its own pinned runtime file", variant.id);
+        }
+        for variant in all_variants.iter().filter(|model| !model.selectable) {
+            let parent = variant.variant_of.as_deref().unwrap();
+            assert!(catalog.models.iter().any(|model| model.id == parent), "{} parent", variant.id);
+            assert!(!variant.runtime_ready, "setup-only variant {} must not claim runtime support", variant.id);
         }
     }
     #[test]
