@@ -4,6 +4,7 @@ use crate::models::{
 use crate::redaction::{redact_json, redact_text};
 use crate::project_paths::canonical_existing_directory;
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -17,6 +18,25 @@ pub struct EventStore {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProjectAssignment { Legacy, Automatic, Manual }
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodexThreadMapping {
+    pub conversation_id: String,
+    pub workspace_identity: String,
+    pub thread_id: String,
+    pub provider_id: String,
+    pub model_id: String,
+    pub runtime_version: String,
+    pub schema_hash: String,
+    pub migration_state: String,
+    pub legacy_sdk_thread_id: Option<String>,
+}
+
+fn codex_thread_mapping_key(conversation_id: &str, workspace_identity: &str) -> String {
+    let digest = Sha256::digest(format!("{conversation_id}\0{workspace_identity}").as_bytes());
+    format!("codex_app_server_thread_v1_{digest:x}")
+}
 
 impl ProjectAssignment {
     fn as_str(self) -> &'static str {
@@ -119,6 +139,105 @@ mod tests {
         assert_eq!(reopened.get_setting("echo_sync_cursor_v1_chat").unwrap(), Some("42".into()));
         drop(reopened);
         std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn codex_app_server_timeline_items_are_deduplicated_atomically() {
+        let root = std::env::temp_dir().join(format!("opencore-codex-item-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = EventStore::open(&root.join("history.sqlite3")).unwrap();
+        store.ensure_conversation("chat", "OpenCore", "echo", "Chat").unwrap();
+        store.add_timeline("chat", "message", "assistant", "OpenCore", "Assistant", "Already shown before upgrade.",
+            &json!({"harness":"codex-app-server","itemId":"legacy-item"})).unwrap();
+
+        let first = store.add_codex_app_server_item("chat", "thread-a", "turn-1", "item-1",
+            "message", "assistant", "Assistant", "Recovered answer", &json!({"recovered":true})).unwrap();
+        let duplicate = store.add_codex_app_server_item("chat", "thread-a", "turn-1", "item-1",
+            "message", "assistant", "Assistant", "Recovered answer", &json!({"recovered":true})).unwrap();
+        let other_thread = store.add_codex_app_server_item("chat", "thread-b", "turn-1", "item-1",
+            "message", "assistant", "Assistant", "Separate thread", &json!({})).unwrap();
+        let legacy_duplicate = store.add_codex_app_server_item("chat", "thread-a", "turn-0", "legacy-item",
+            "message", "assistant", "Assistant", "Already shown before upgrade.", &json!({"recovered":true})).unwrap();
+
+        assert!(first);
+        assert!(!duplicate);
+        assert!(other_thread);
+        assert!(!legacy_duplicate);
+        let messages = store.conversation("chat").unwrap().into_iter()
+            .filter(|entry| entry.kind == "message" && entry.role == "assistant")
+            .collect::<Vec<_>>();
+        assert_eq!(messages.len(), 3);
+        assert_eq!(messages[1].content, "Recovered answer");
+        assert_eq!(messages[1].metadata["itemId"], "item-1");
+
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn saved_app_server_thread_resumes_after_app_restart_without_mutating_legacy_sdk_state() {
+        let root = std::env::temp_dir().join(format!("opencore-thread-map-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let path = root.join("history.sqlite3");
+        let mapping = CodexThreadMapping {
+            conversation_id: "conversation-a".into(),
+            workspace_identity: "c:/work/project".into(),
+            thread_id: "app-server-thread-1".into(),
+            provider_id: "opencore-local".into(),
+            model_id: "echo-local".into(),
+            runtime_version: "0.160.0".into(),
+            schema_hash: "schema-sha256".into(),
+            migration_state: "legacy_sdk_unimported".into(),
+            legacy_sdk_thread_id: Some("sdk-thread-preserved".into()),
+        };
+        {
+            let store = EventStore::open(&path).unwrap();
+            store.set_setting("codex_session:conversation-a:workspace", "sdk-thread-preserved").unwrap();
+            store.save_codex_thread_mapping(&mapping).unwrap();
+            assert_eq!(store.get_setting("codex_session:conversation-a:workspace").unwrap().as_deref(), Some("sdk-thread-preserved"));
+        }
+        let reopened = EventStore::open(&path).unwrap();
+        assert_eq!(reopened.codex_thread_mapping("conversation-a", "c:/work/project").unwrap(), Some(mapping));
+        assert_eq!(reopened.codex_thread_mapping("conversation-a", "c:/work/other").unwrap(), None);
+        assert_eq!(reopened.get_setting("codex_session:conversation-a:workspace").unwrap().as_deref(), Some("sdk-thread-preserved"));
+        drop(reopened);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn repeated_app_server_migration_preserves_original_files_timeline_ids_and_legacy_link() {
+        let root = std::env::temp_dir().join(format!("opencore-thread-migrate-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(root.join("codex")).unwrap();
+        let legacy_rollout = root.join("codex").join("legacy-session.jsonl");
+        std::fs::write(&legacy_rollout, b"{\"type\":\"assistant\",\"text\":\"keep me\"}\n").unwrap();
+        let original_rollout_hash = crate::dev_tool::sha256(&std::fs::read(&legacy_rollout).unwrap());
+        let path = root.join("history.sqlite3");
+        let store = EventStore::open(&path).unwrap();
+        store.ensure_conversation("conversation-b", "Codex", "echo", "Keep history").unwrap();
+        store.add_timeline("conversation-b", "message", "assistant", "Codex SDK", "Assistant", "original reply", &json!({"source":"legacy"})).unwrap();
+        let original_ids = store.conversation("conversation-b").unwrap().into_iter().map(|entry| entry.id).collect::<Vec<_>>();
+        let mut mapping = CodexThreadMapping {
+            conversation_id: "conversation-b".into(),
+            workspace_identity: "c:/work/project".into(),
+            thread_id: "native-thread".into(),
+            provider_id: "opencore-local".into(),
+            model_id: "echo-local".into(),
+            runtime_version: "0.160.0".into(),
+            schema_hash: "schema-sha256".into(),
+            migration_state: "legacy_sdk_unimported".into(),
+            legacy_sdk_thread_id: Some("legacy-sdk-thread".into()),
+        };
+        store.save_codex_thread_mapping(&mapping).unwrap();
+        mapping.migration_state = "legacy_history_linked".into();
+        store.save_codex_thread_mapping(&mapping).unwrap();
+        let entries = store.conversation("conversation-b").unwrap();
+        assert_eq!(entries.iter().map(|entry| entry.id).collect::<Vec<_>>(), original_ids);
+        assert_eq!(entries[0].content, "original reply");
+        assert_eq!(store.codex_thread_mapping("conversation-b", "c:/work/project").unwrap().unwrap().migration_state, "legacy_history_linked");
+        assert!(legacy_rollout.is_file());
+        assert_eq!(crate::dev_tool::sha256(&std::fs::read(&legacy_rollout).unwrap()), original_rollout_hash);
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -472,6 +591,49 @@ impl EventStore {
         Ok(())
     }
 
+    pub fn codex_thread_mapping(
+        &self,
+        conversation_id: &str,
+        workspace_identity: &str,
+    ) -> Result<Option<CodexThreadMapping>, String> {
+        let key = codex_thread_mapping_key(conversation_id, workspace_identity);
+        let Some(value) = self.get_setting(&key)? else { return Ok(None); };
+        let mapping: CodexThreadMapping = serde_json::from_str(&value)
+            .map_err(|error| format!("Saved Codex app-server thread mapping is invalid: {error}"))?;
+        if mapping.conversation_id != conversation_id || mapping.workspace_identity != workspace_identity {
+            return Err("Saved Codex app-server thread mapping does not match its conversation/workspace key".into());
+        }
+        Ok(Some(mapping))
+    }
+
+    pub fn save_codex_thread_mapping(&self, mapping: &CodexThreadMapping) -> Result<(), String> {
+        for (label, value) in [
+            ("conversation ID", mapping.conversation_id.as_str()),
+            ("workspace identity", mapping.workspace_identity.as_str()),
+            ("thread ID", mapping.thread_id.as_str()),
+            ("provider ID", mapping.provider_id.as_str()),
+            ("model ID", mapping.model_id.as_str()),
+            ("runtime version", mapping.runtime_version.as_str()),
+            ("schema hash", mapping.schema_hash.as_str()),
+            ("migration state", mapping.migration_state.as_str()),
+        ] {
+            if value.trim().is_empty() || value.len() > 32_768 || value.chars().any(char::is_control) {
+                return Err(format!("Codex thread mapping has an invalid {label}"));
+            }
+        }
+        let key = codex_thread_mapping_key(&mapping.conversation_id, &mapping.workspace_identity);
+        let value = serde_json::to_string(mapping).map_err(|error| error.to_string())?;
+        let mut connection = self.connection.lock().map_err(|error| error.to_string())?;
+        let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|error| error.to_string())?;
+        transaction.execute(
+            "INSERT INTO settings(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            params![key, value],
+        ).map_err(|error| error.to_string())?;
+        transaction.commit().map_err(|error| error.to_string())?;
+        Ok(())
+    }
+
     pub fn get_or_create_pairing_token(&self, key: &str) -> Result<String, String> {
         let mut connection = self.connection.lock().map_err(|e| e.to_string())?;
         let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
@@ -528,6 +690,12 @@ impl EventStore {
                    ON timeline(conversation_id, timestamp, id);
                  CREATE INDEX IF NOT EXISTS timeline_conversation_kind_id
                    ON timeline(conversation_id, kind, id);
+                 CREATE TABLE IF NOT EXISTS codex_app_server_items (
+                   conversation_id TEXT NOT NULL,
+                   thread_id TEXT NOT NULL,
+                   item_id TEXT NOT NULL,
+                   PRIMARY KEY(conversation_id,thread_id,item_id)
+                 );
                  CREATE TABLE IF NOT EXISTS logs (
                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                    timestamp TEXT NOT NULL,
@@ -1296,6 +1464,75 @@ impl EventStore {
             )
             .map_err(|e| e.to_string())?;
         Ok(connection.last_insert_rowid())
+    }
+
+    /// Persist a Codex app-server item and its deduplication key in one transaction.
+    /// This lets a resumed thread safely restore the last completed turn after a crash.
+    pub fn add_codex_app_server_item(
+        &self,
+        conversation_id: &str,
+        thread_id: &str,
+        turn_id: &str,
+        item_id: &str,
+        kind: &str,
+        role: &str,
+        title: &str,
+        content: &str,
+        metadata: &Value,
+    ) -> Result<bool, String> {
+        for (label, value) in [("conversation ID", conversation_id), ("thread ID", thread_id), ("turn ID", turn_id), ("item ID", item_id)] {
+            if value.trim().is_empty() || value.len() > 32_768 || value.chars().any(char::is_control) {
+                return Err(format!("Codex app-server {label} is invalid"));
+            }
+        }
+        let mut connection = self.connection.lock().map_err(|error| error.to_string())?;
+        let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+            .map_err(|error| error.to_string())?;
+        // Older OpenCore builds persisted these messages before the item ledger existed.
+        // Recognize their stable Codex item ID so the first resumed turn does not duplicate it.
+        if matches!(kind, "message" | "thinking") {
+            let legacy_item_marker = format!("\"itemId\":\"{item_id}\"");
+            let was_already_projected: bool = transaction.query_row(
+                "SELECT EXISTS(SELECT 1 FROM timeline WHERE conversation_id=?1 AND source='OpenCore'
+                 AND kind=?2 AND role=?3 AND instr(metadata,'\"harness\":\"codex-app-server\"')>0
+                 AND instr(metadata,?4)>0 AND instr(metadata,'\"threadId\"')=0)",
+                params![conversation_id, kind, role, legacy_item_marker],
+                |row| row.get(0),
+            ).map_err(|error| error.to_string())?;
+            if was_already_projected {
+                transaction.execute(
+                    "INSERT OR IGNORE INTO codex_app_server_items(conversation_id,thread_id,item_id) VALUES(?1,?2,?3)",
+                    params![conversation_id, thread_id, item_id],
+                ).map_err(|error| error.to_string())?;
+                transaction.commit().map_err(|error| error.to_string())?;
+                return Ok(false);
+            }
+        }
+        let inserted = transaction.execute(
+            "INSERT OR IGNORE INTO codex_app_server_items(conversation_id,thread_id,item_id) VALUES(?1,?2,?3)",
+            params![conversation_id, thread_id, item_id],
+        ).map_err(|error| error.to_string())?;
+        if inserted == 0 {
+            transaction.rollback().map_err(|error| error.to_string())?;
+            return Ok(false);
+        }
+        let timestamp = Utc::now().to_rfc3339();
+        let mut enriched = redact_json(metadata);
+        if let Some(fields) = enriched.as_object_mut() {
+            fields.insert("harness".into(), json!("codex-app-server"));
+            fields.insert("threadId".into(), json!(thread_id));
+            fields.insert("turnId".into(), json!(turn_id));
+            fields.insert("itemId".into(), json!(item_id));
+        }
+        transaction.execute(
+            "INSERT INTO timeline(conversation_id,timestamp,kind,role,source,title,content,metadata)
+             VALUES(?1,?2,?3,?4,'OpenCore',?5,?6,?7)",
+            params![conversation_id, timestamp, kind, role, redact_text(title), redact_text(content), enriched.to_string()],
+        ).map_err(|error| error.to_string())?;
+        transaction.execute("UPDATE conversations SET updated_at=?2 WHERE id=?1", params![conversation_id, timestamp])
+            .map_err(|error| error.to_string())?;
+        transaction.commit().map_err(|error| error.to_string())?;
+        Ok(true)
     }
 
     pub fn add_bridge_timeline(&self, conversation: &str, event: &str, kind: &str,

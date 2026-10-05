@@ -30,7 +30,7 @@ function useManualUpdate() {
   async function install() {
     if (!checked?.available) return;
     setBusy(true);
-    setMessage(`Installing OpenCore ${checked.version}…`);
+    setMessage(`Stopping active model work, then installing OpenCore ${checked.version}…`);
     try {
       await api.installLatestAppUpdate();
       setMessage('The installer is starting. OpenCore will reopen after the update.');
@@ -58,7 +58,7 @@ export function UpdateButton() {
     </button>
     {open && <div className="manual-update-popover" role="status" aria-live="polite">
       <span>{message || 'Check for an OpenCore update.'}</span>
-      {checked?.available && <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Installing…' : 'Install update'}</button>}
+      {checked?.available && <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>}
       {message.startsWith('Could not check') && <button type="button" disabled={busy} onClick={() => void check()}>{busy ? 'Checking…' : 'Try again'}</button>}
     </div>}
   </div>;
@@ -79,7 +79,7 @@ export function UpdateSettings() {
     <p>Check manually. OpenCore never downloads or installs an update without your action.</p>
     <div className="manual-update-actions">
       <button type="button" onClick={() => void check()} disabled={busy}>{busy ? 'Checking…' : 'Check latest version'}</button>
-      {checked?.available && <button type="button" onClick={() => void install()} disabled={busy}><Download size={14} />{busy ? 'Installing…' : `Update to ${checked.version}`}</button>}
+      {checked?.available && <button type="button" onClick={() => void install()} disabled={busy}><Download size={14} />{busy ? 'Updating…' : `Update to ${checked.version}`}</button>}
       <button type="button" onClick={() => void downloadAgain()}>Download installer again</button>
     </div>
     {message && <p role="status" aria-live="polite">{message}</p>}

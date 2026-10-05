@@ -12,7 +12,8 @@ const bridgeUrl = new URL(bridge);
 if (bridgeUrl.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(bridgeUrl.hostname)) {
   throw new Error('OpenCore MCP bridge must use local loopback HTTP');
 }
-const toolDefinitions = JSON.parse(readFileSync(toolsPath, 'utf8'));
+let toolDefinitionsBytes = readFileSync(toolsPath);
+let toolDefinitions = JSON.parse(toolDefinitionsBytes.toString('utf8'));
 if (!Array.isArray(toolDefinitions)) throw new Error('OpenCore tool definitions must be an array');
 
 async function callTool(name, args) {
@@ -35,6 +36,14 @@ for await (const line of input) {
     break;
   }
   try {
+    const currentBytes = readFileSync(toolsPath);
+    if (!currentBytes.equals(toolDefinitionsBytes)) {
+      const current = JSON.parse(currentBytes.toString('utf8'));
+      if (!Array.isArray(current)) throw new Error('OpenCore tool definitions must be an array');
+      toolDefinitionsBytes = currentBytes;
+      toolDefinitions = current;
+      process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/tools/list_changed' })}\n`);
+    }
     const response = await handleMcpMessage(JSON.parse(line), toolDefinitions, callTool);
     if (response !== null) process.stdout.write(`${JSON.stringify(response)}\n`);
   } catch (error) {

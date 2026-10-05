@@ -13,7 +13,16 @@ use std::convert::Infallible;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
+use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
+
+pub(crate) struct CodexToolBridgeCall {
+    pub name: String,
+    pub arguments: Value,
+    pub response: oneshot::Sender<Value>,
+}
+
+pub(crate) type CodexToolBridgeMap = Arc<Mutex<HashMap<String, mpsc::Sender<CodexToolBridgeCall>>>>;
 
 #[derive(Clone)]
 pub struct GatewayState {
@@ -21,6 +30,7 @@ pub struct GatewayState {
     pub store: Arc<EventStore>,
     pub(crate) app: AppHandle,
     pub(crate) live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
+    pub(crate) codex_tool_bridges: CodexToolBridgeMap,
     pub(crate) client: reqwest::Client,
 }
 
@@ -30,18 +40,80 @@ impl GatewayState {
         store: Arc<EventStore>,
         app: AppHandle,
         live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
+        codex_tool_bridges: CodexToolBridgeMap,
     ) -> Self {
         Self {
             runtime,
             store,
             app,
             live_generation_runs,
+            codex_tool_bridges,
             client: reqwest::Client::builder()
                 .no_proxy()
                 .timeout(std::time::Duration::from_secs(86_400))
                 .build()
                 .expect("gateway client"),
         }
+    }
+}
+
+fn json_response(status: StatusCode, value: Value) -> Response<Body> {
+    Response::builder().status(status).header("content-type", "application/json")
+        .body(Body::from(value.to_string())).unwrap()
+}
+
+fn token_matches(expected: &str, received: &str) -> bool {
+    if expected.is_empty() || expected.len() != received.len() { return false; }
+    expected.bytes().zip(received.bytes()).fold(0u8, |diff, (a, b)| diff | (a ^ b)) == 0
+}
+
+async fn codex_tool_bridge(
+    state: &GatewayState,
+    method: &axum::http::Method,
+    headers: &HeaderMap,
+    token: &str,
+    request: Request,
+) -> Response<Body> {
+    if method != axum::http::Method::POST {
+        return json_response(StatusCode::METHOD_NOT_ALLOWED, json!({"error":"POST required"}));
+    }
+    if token.len() > 128 || !token.bytes().all(|byte| byte.is_ascii_hexdigit() || byte == b'-') {
+        return json_response(StatusCode::NOT_FOUND, json!({"error":"Unknown OpenCore tool route"}));
+    }
+    let received = headers.get(axum::http::header::AUTHORIZATION)
+        .and_then(|value| value.to_str().ok()).and_then(|value| value.strip_prefix("Bearer "));
+    if !received.is_some_and(|received| token_matches(token, received)) {
+        return json_response(StatusCode::UNAUTHORIZED, json!({"error":"Invalid bridge token"}));
+    }
+    let body = match axum::body::to_bytes(request.into_body(), 1024 * 1024).await {
+        Ok(body) => body,
+        Err(_) => return json_response(StatusCode::PAYLOAD_TOO_LARGE, json!({"error":"Tool request exceeds 1 MiB"})),
+    };
+    let payload = match serde_json::from_slice::<Value>(&body) {
+        Ok(payload) => payload,
+        Err(_) => return json_response(StatusCode::BAD_REQUEST, json!({"error":"Tool request must be JSON"})),
+    };
+    let Some(name) = payload.get("name").and_then(Value::as_str).filter(|name| {
+        !name.trim().is_empty() && name.len() <= 128 && !name.chars().any(char::is_control)
+    }) else { return json_response(StatusCode::BAD_REQUEST, json!({"error":"A valid tool name is required"})); };
+    let arguments = payload.get("arguments").cloned().unwrap_or_else(|| json!({}));
+    if !arguments.is_object() {
+        return json_response(StatusCode::BAD_REQUEST, json!({"error":"Tool arguments must be an object"}));
+    }
+    let sender = match state.codex_tool_bridges.lock() {
+        Ok(bridges) => bridges.get(token).cloned(),
+        Err(_) => return json_response(StatusCode::INTERNAL_SERVER_ERROR, json!({"error":"Tool bridge unavailable"})),
+    };
+    let Some(sender) = sender else { return json_response(StatusCode::SERVICE_UNAVAILABLE, json!({"error":"No active OpenCore turn owns this tool request"})); };
+    let (response, receive) = oneshot::channel();
+    let call = CodexToolBridgeCall { name: name.into(), arguments, response };
+    if tokio::time::timeout(std::time::Duration::from_secs(5), sender.send(call)).await.is_err() {
+        return json_response(StatusCode::SERVICE_UNAVAILABLE, json!({"error":"OpenCore tool dispatcher is busy"}));
+    }
+    match tokio::time::timeout(std::time::Duration::from_secs(600), receive).await {
+        Ok(Ok(value)) => json_response(StatusCode::OK, value),
+        Ok(Err(_)) => json_response(StatusCode::SERVICE_UNAVAILABLE, json!({"error":"OpenCore turn ended before the tool completed"})),
+        Err(_) => json_response(StatusCode::GATEWAY_TIMEOUT, json!({"error":"OpenCore tool call timed out"})),
     }
 }
 
@@ -222,6 +294,10 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
             .header("content-type", "application/json")
             .body(Body::from(r#"{"status":"ok","service":"opencore-control-gateway"}"#))
             .unwrap();
+    }
+    if let Some(token) = path.strip_prefix("/opencore/codex-tool/") {
+        let headers = request.headers().clone();
+        return codex_tool_bridge(&state, &method, &headers, token, request).await;
     }
     let headers = request.headers().clone();
     let bridge = path == "/opencore/claude-bridge";

@@ -25,6 +25,17 @@ it('checks only after the user opens Update and requires a second click to insta
   expect(api.installLatestAppUpdate).toHaveBeenCalledOnce();
 });
 
+it('tells the user active model work is stopped before installation begins', async () => {
+  vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
+  vi.mocked(api.installLatestAppUpdate).mockReturnValue(new Promise(() => {}));
+  render(<UpdateButton />);
+  fireEvent.click(screen.getByRole('button', { name: 'Update' }));
+  await screen.findByText('OpenCore 1.3.0 is available.');
+  fireEvent.click(screen.getByRole('button', { name: 'Install update' }));
+  expect(await screen.findByText('Stopping active model work, then installing OpenCore 1.3.0…')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Updating…' })).toBeDisabled();
+});
+
 it('keeps Settings update checks manual and exposes the reinstall download action', async () => {
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: false, version: null });
   render(<UpdateSettings />);

@@ -1,6 +1,7 @@
 #![recursion_limit = "256"]
 
 mod codex_harness;
+mod codex_app_server;
 mod claude_bridge;
 mod claude_bridge_install;
 mod artifacts;
@@ -41,7 +42,6 @@ mod windows_control;
 
 use crate::gateway::GatewayState;
 use crate::models::{AppSnapshot, ApprovalMode, ChatSendRequest, ChatSendResult, ConnectorInput, ConnectorStatus, ExportResult, OperationRecord, ProjectSummary, StartProfileRequest, TimelineEntry};
-use crate::redaction::redact_json;
 use crate::runtime::RuntimeManager;
 use crate::store::{EventStore, ProjectAssignment};
 use serde_json::{json, Value};
@@ -62,6 +62,8 @@ pub struct AppCore {
     speech: speech::SpeechManager,
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
+    codex_app_server_pool: codex_app_server::CodexAppServerPool,
+    codex_tool_bridges: gateway::CodexToolBridgeMap,
     active_chats: Mutex<HashMap<String, CancellationToken>>,
     live_generation_runs: Arc<Mutex<HashMap<String, String>>>,
     pending_approvals: Mutex<HashMap<String, (String, tokio::sync::oneshot::Sender<bool>)>>,
@@ -69,6 +71,17 @@ pub struct AppCore {
     reflex: Arc<reflex::ReflexManager>,
     vision: Arc<vision::VisionManager>,
     history_sync_cancellations: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
+    update_in_progress: Arc<AtomicBool>,
+}
+
+impl AppCore {
+    pub(crate) fn ensure_not_updating(&self) -> Result<(), String> {
+        if self.update_in_progress.load(Ordering::Acquire) {
+            Err("OpenCore is stopping active work to install an update. Please wait for it to restart.".into())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 struct LiveGenerationGuard {
@@ -140,6 +153,7 @@ async fn vision_frame(_window_id: i64) -> Result<vision::Frame, String> {
 
 /// Fast Reflex decisions from accessibility rows, or Reflex Vision looking at the window.
 async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str, args: serde_json::Value) -> Result<serde_json::Value, String> {
+    core.ensure_not_updating()?;
     let window_id = args.get("windowId").and_then(|v| v.as_i64()).ok_or("windowId is required; use desktop_use action=list first")?;
     let goal = args.get("goal").and_then(|v| v.as_str()).map(str::trim).filter(|goal| !goal.is_empty());
     match action {
@@ -149,6 +163,7 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             #[cfg(windows)]
             let _activity = desktop_activity::begin(app, window_id, &args);
             let frame = vision_frame(window_id).await?;
+            core.ensure_not_updating()?;
             let mut result = if action == "see" { core.vision.ask(&frame, goal).await? }
                              else { core.vision.locate(&frame, goal).await? };
             result["windowId"] = json!(window_id);
@@ -406,6 +421,7 @@ async fn start_profile(
     core: tauri::State<'_, Arc<AppCore>>,
     request: StartProfileRequest,
 ) -> Result<models::RuntimeSnapshot, String> {
+    core.ensure_not_updating()?;
     if core.studios.busy() {return Err("A studio job is queued or generating. Wait for it or cancel it in the studio before loading a text model.".into());}
     music_studio::require_idle_gpu().await?;
     core.speech.release_idle_model().await?;
@@ -413,6 +429,8 @@ async fn start_profile(
         matches!(p.phase.as_str(), "preparing" | "downloading" | "verifying" | "uninstalling")) {
         return Err("Finish the model installation before starting a runtime".into());
     }
+    let _gpu = studio_jobs::reserve_gpu()?;
+    core.ensure_not_updating()?;
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || runtime.start(&request.profile, request.attach_url))
         .await
@@ -501,9 +519,12 @@ impl Drop for ActiveChatGuard {
 async fn restart_runtime(
     core: tauri::State<'_, Arc<AppCore>>,
 ) -> Result<models::RuntimeSnapshot, String> {
+    core.ensure_not_updating()?;
     if core.studios.busy() {return Err("Wait for studio jobs before restarting the text model".into());}
     music_studio::require_idle_gpu().await?;
     core.speech.release_idle_model().await?;
+    let _gpu = studio_jobs::reserve_gpu()?;
+    core.ensure_not_updating()?;
     let runtime = core.runtime.clone();
     let profile = runtime.profile();
     if profile == "stopped" {
@@ -524,10 +545,24 @@ fn rename_conversation(
 }
 
 #[tauri::command]
-fn delete_conversation(
+async fn delete_conversation(
     core: tauri::State<'_, Arc<AppCore>>,
     id: String,
 ) -> Result<(), String> {
+    let active = core.active_chats.lock().map_err(|error| error.to_string())?.get(&id).cloned();
+    if let Some(token) = active {
+        token.cancel();
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                if !core.active_chats.lock().map_err(|error| error.to_string())?.contains_key(&id) {
+                    return Ok::<(), String>(());
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+            }
+        }).await.map_err(|_| "The conversation could not stop cleanly; it was kept so no active work is lost".to_string())??;
+    }
+    core.codex_app_server_pool.remove_conversation(&id).await
+        .map_err(|error| format!("Could not close the conversation's Codex app-server: {error}"))?;
     core.store.delete_conversation(&id)
 }
 
@@ -1399,9 +1434,10 @@ fn read_chat_attachments(paths: &[String], image_store: &Path) -> Result<(String
             let image = artifacts::store_attached_image(image_store, &path)
                 .map_err(|error| format!("Cannot attach image {name}: {error}"))?;
             let preview = artifacts::preview(image_store, &image.id)?;
+            let local_path = artifacts::local_image_path(image_store, &image.id)?;
             entry["artifactId"] = json!(image.id);
             entry["included"] = json!(true);
-            images.push(json!({"type":"image_url","image_url":{"url":preview.data_url}}));
+            images.push(json!({"type":"image_url","localPath":local_path,"image_url":{"url":preview.data_url}}));
             prompt.push_str(&format!("\n[Attached image: {name}. Original file: {}. Its pixels are included in this message.]", path.display()));
             metadata.push(entry);
             continue;
@@ -1675,6 +1711,7 @@ pub(crate) fn resume_background_job(core: Arc<AppCore>, app: tauri::AppHandle, m
 }
 
 async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: ChatSendRequest, background_job: Option<String>) -> Result<ChatSendResult,String> {
+    core.ensure_not_updating()?;
     let id = request.conversation_id.trim().to_string();
     if id.is_empty() {
         return Err("Conversation id is required".into());
@@ -1699,6 +1736,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
     let token = CancellationToken::new();
     {
         let mut active = core.active_chats.lock().map_err(|error| error.to_string())?;
+        core.ensure_not_updating()?;
         if active.contains_key(&id) { return Err("This conversation is already running. Stop it before retrying.".into()); }
         active.insert(id.clone(), token.clone());
     }
@@ -1827,7 +1865,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, request: Chat
             required.push(json!("explanation"));
         }
     }
-    // Keep every composer effort on the OpenAI Codex SDK orchestration path.
+    // Keep every composer effort on the pinned OpenAI Codex app-server orchestration path.
     // reasoning_effort configures the local model request; it must
     // never select or bypass the agent harness.
     let result = codex_harness::run(core.clone(), app, &request, token, workspace_root, receipts_root,
@@ -1964,12 +2002,15 @@ pub fn run() {
                 store.log("warn", "storage", "Using the verified recovery database; original database and WAL retained for diagnosis");
             }
             let runtime = Arc::new(RuntimeManager::new_with_resources(store.clone(), app.path().resource_dir().ok()));
+            let update_in_progress = Arc::new(AtomicBool::new(false));
             let core = Arc::new(AppCore {
                 claude_bridge: claude_bridge::BridgeState::default(),
                 studios: studio_jobs::StudioManager::new(app.path().app_data_dir()?.join("studio"))?,
-                speech: speech::SpeechManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir()?),
+                speech: speech::SpeechManager::new_with_update_gate(runtime.install_root().to_path_buf(), app.path().resource_dir()?, update_in_progress.clone()),
                 store: store.clone(),
                 runtime: runtime.clone(),
+                codex_app_server_pool: codex_app_server::CodexAppServerPool::new(),
+                codex_tool_bridges: Arc::new(Mutex::new(HashMap::new())),
                 active_chats: Mutex::new(HashMap::new()),
                 live_generation_runs: Arc::new(Mutex::new(HashMap::new())),
                 pending_approvals: Mutex::new(HashMap::new()),
@@ -1977,6 +2018,7 @@ pub fn run() {
                 browser: Arc::new(browser_bridge::BrowserBridge::from_store(&store)?),
                 reflex: Arc::new(reflex::ReflexManager::new(app.path().resource_dir().ok(), runtime.install_root().to_path_buf())),
                 vision: Arc::new(vision::VisionManager::new(runtime.install_root().to_path_buf(), app.path().resource_dir().ok())),
+                update_in_progress,
             });
             core.studios.attach_app(app.handle().clone());
             claude_bridge_install::start(store.clone(), app.handle());
@@ -2048,9 +2090,10 @@ pub fn run() {
             let gateway_store = store.clone();
             let gateway_app = app.handle().clone();
             let gateway_live_runs = app.state::<Arc<AppCore>>().live_generation_runs.clone();
+            let gateway_tool_bridges = app.state::<Arc<AppCore>>().codex_tool_bridges.clone();
             tauri::async_runtime::spawn(async move {
                 if let Err(error) = gateway::serve(GatewayState::new(runtime, gateway_store.clone(),
-                    gateway_app, gateway_live_runs), 8812).await {
+                    gateway_app, gateway_live_runs, gateway_tool_bridges), 8812).await {
                     gateway_store.log("error", "gateway", &error);
                 }
             });
@@ -2162,7 +2205,12 @@ pub fn run() {
                     if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
                         let app=app.clone();
                         tauri::async_runtime::spawn(async move {
-                            if let Some(core)=app.try_state::<Arc<AppCore>>() {core.studios.shutdown().await;}
+                            if let Some(core)=app.try_state::<Arc<AppCore>>() {
+                                core.studios.shutdown().await;
+                                if let Err(error)=core.codex_app_server_pool.shutdown_all().await {
+                                    core.store.log("warn","codex-app-server",&error.to_string());
+                                }
+                            }
                             music_studio::shutdown_owned().await;
                             EXIT_READY.store(true,std::sync::atomic::Ordering::Release);
                             app.exit(code.unwrap_or(0));
@@ -2188,6 +2236,7 @@ mod image_attachment_tests {
         assert_eq!(meta[0]["included"], true);
         let stored = artifacts::preview(&root.join("stored"), meta[0]["artifactId"].as_str().unwrap()).unwrap();
         assert_eq!(parts[0]["image_url"]["url"], stored.data_url);
+        assert!(Path::new(parts[0]["localPath"].as_str().unwrap()).is_file());
         std::fs::remove_dir_all(root).unwrap();
     }
 }

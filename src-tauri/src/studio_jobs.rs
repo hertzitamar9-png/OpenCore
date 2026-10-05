@@ -226,7 +226,7 @@ impl StudioManager {
         }
         // Only OS/app code runs while waiting. The text model stays unloaded.
         loop {
-            if self.closing.load(Ordering::SeqCst) {
+            if self.closing.load(Ordering::SeqCst) || core.update_in_progress.load(Ordering::Acquire) {
                 return;
             }
             let chats = core.active_chats.lock().is_ok_and(|chats| chats.is_empty());
@@ -246,6 +246,7 @@ impl StudioManager {
             _ => return,
         };
         let result = async {
+            core.ensure_not_updating()?;
             let request =
                 serde_json::from_value(payload["request"].clone()).map_err(|e| e.to_string())?;
             core.runtime.select_profile(
@@ -287,6 +288,19 @@ impl StudioManager {
             }
             tokio::time::sleep(Duration::from_millis(250)).await;
         }
+    }
+    /// Cancel generation jobs without permanently closing the manager, as an
+    /// in-place application update may fail and leave this process running.
+    pub async fn cancel_active(&self) -> Result<(), String> {
+        {
+            let jobs = self.running.lock().map_err(|error| error.to_string())?;
+            for token in jobs.values() { token.cancel(); }
+        }
+        for _ in 0..120 {
+            if !self.busy() { return Ok(()); }
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+        Err("A studio task did not stop within 30 seconds. OpenCore stopped other model work, but the update was not installed.".into())
     }
     fn update(
         &self,
@@ -359,6 +373,7 @@ impl StudioManager {
         app: tauri::AppHandle,
         mut request: StudioRequest,
     ) -> Result<StudioJob, String> {
+        core.ensure_not_updating()?;
         let mut process_watch = None;
         let category = if request.model_id == "background-wait" {
             if request.settings["pid"]
@@ -399,18 +414,22 @@ impl StudioManager {
             outputs: vec![],
             error: None,
         };
-        self.save(&job)?;
-        if let Some(watch) = process_watch {
-            self.watches
-                .lock()
-                .map_err(|e| e.to_string())?
-                .insert(job.id.clone(), watch);
-        }
         let token = CancellationToken::new();
-        self.running
-            .lock()
-            .map_err(|e| e.to_string())?
-            .insert(job.id.clone(), token.clone());
+        {
+            let mut running = self.running.lock().map_err(|e| e.to_string())?;
+            // Serialize job registration with the updater's cancellation pass.
+            // If the update flag was set before this lock, reject; if it is set
+            // after this check, the updater will see and cancel this token.
+            core.ensure_not_updating()?;
+            self.save(&job)?;
+            if let Some(watch) = process_watch {
+                self.watches
+                    .lock()
+                    .map_err(|e| e.to_string())?
+                    .insert(job.id.clone(), watch);
+            }
+            running.insert(job.id.clone(), token.clone());
+        }
         let this = self.clone();
         let id = job.id.clone();
         tauri::async_runtime::spawn(async move {
@@ -626,7 +645,8 @@ impl StudioManager {
         }
     }
     async fn run_music(&self, job: &StudioJob, token: &CancellationToken) -> Result<(), String> {
-        music_studio::start_music_studio().await?;
+        if token.is_cancelled() { return Err("Cancelled before Music Studio started".into()); }
+        music_studio::start_music_studio_unchecked().await?;
         let current = music_studio::request("GET", "/api/status", None).await?;
         if current["status"] == "running" {
             return Err("Music Studio already has an active generation".into());
@@ -1152,6 +1172,25 @@ pub async fn studio_output_preview(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn update_cancellation_drains_running_jobs_without_closing_the_manager() {
+        let root = std::env::temp_dir().join(format!("studio-update-{}", uuid::Uuid::new_v4()));
+        let manager = StudioManager::new(root.clone()).unwrap();
+        let token = CancellationToken::new();
+        manager.running.lock().unwrap().insert("active".into(), token.clone());
+        let worker_manager = manager.clone();
+        let worker = tokio::spawn(async move {
+            token.cancelled().await;
+            worker_manager.running.lock().unwrap().remove("active");
+        });
+        tokio::time::timeout(Duration::from_secs(1), manager.cancel_active()).await.unwrap().unwrap();
+        worker.await.unwrap();
+        assert!(!manager.busy());
+        assert!(manager.cancel_active().await.is_ok(), "the manager remains available if installation fails");
+        drop(manager);
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn chat_tool_schema_exposes_game_dev_generation_customization() {

@@ -65,7 +65,11 @@ pub async fn music_studio_status()->MusicStatus {
     MusicStatus{installed:installed(&root),running,owned:owned.is_some(),url:running.then(||URL.into()),folder:root.to_string_lossy().into_owned(),model_loaded,error}
 }
 #[tauri::command]
-pub async fn start_music_studio()->Result<MusicStatus,String> {
+pub async fn start_music_studio(core: tauri::State<'_, std::sync::Arc<crate::AppCore>>)->Result<MusicStatus,String> {
+    core.ensure_not_updating()?;
+    start_music_studio_unchecked().await
+}
+pub async fn start_music_studio_unchecked()->Result<MusicStatus,String> {
     let root=root(); let mut owned=OWNED.lock().await;
     if inspect(&root).await?.is_some(){drop(owned);return Ok(music_studio_status().await);}
     if !installed(&root){return Err(format!("YuE2 Studio was not found in {}. Set OPENCORE_MUSIC_HOME to your existing installation.",root.display()));}
@@ -138,6 +142,47 @@ pub async fn shutdown_owned() {
         tokio::time::sleep(Duration::from_millis(250)).await;
     }
     let _=child.kill();let _=child.wait();
+}
+
+/// Stop the verified YuE service's active generation and unload its model.
+/// An externally launched YuE server is left available after unloading; only
+/// a child process started by OpenCore is shut down.
+pub async fn stop_for_update() -> Result<(), String> {
+    let root = root();
+    let result = async {
+        // Only send shutdown/cancel requests to the YuE service whose install
+        // identity this app verified. An unknown process on the port is not
+        // managed by OpenCore and must not block updating the app shell.
+        if matches!(inspect(&root).await, Ok(Some(_))) {
+            let mut status = request("GET", "/api/status", None).await?;
+            if status["status"] == "running" {
+                request("POST", "/api/cancel", Some(&serde_json::json!({}))).await?;
+                let mut stopped = false;
+                for _ in 0..120 {
+                    status = request("GET", "/api/status", None).await?;
+                    if !matches!(status["status"].as_str(), Some("running")) {
+                        stopped = true;
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(250)).await;
+                }
+                if !stopped {
+                    return Err("Music Studio did not stop its active generation within 30 seconds.".to_string());
+                }
+            }
+            status = request("GET", "/api/status", None).await?;
+            if status["model_loaded"] == true {
+                request("POST", "/api/model/unload", Some(&serde_json::json!({}))).await?;
+            }
+        }
+        Ok(())
+    }.await;
+    if let Err(error) = result {
+        shutdown_owned().await;
+        return Err(format!("{error} OpenCore did not install the update."));
+    }
+    shutdown_owned().await;
+    Ok(())
 }
 #[cfg(test)] mod tests {
     use super::*;

@@ -1,0 +1,49 @@
+name: Codex harness validation
+
+on:
+  push:
+    branches:
+      - 'codex/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-harness-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Prepare packaged Node runtime for integration fixtures
+        run: node scripts/prepare-claude-connector.mjs
+      - name: Prepare pinned OpenAI Codex app-server runtime
+        run: node scripts/prepare-codex-harness.mjs
+      - name: Probe packaged app-server schema
+        run: node scripts/test-codex-app-server-schema.mjs
+      - name: Test app-server inference, tools, cancellation, and resume
+        run: node scripts/test-codex-agent-runtime.mjs
+      - name: Test frontend and integration suites
+        run: npm test
+      - name: Test Rust libraries with MSVC
+        working-directory: src-tauri
+        run: cargo test --lib
+      - name: Build Windows app executable without packaging or publishing
+        run: npx tauri build --no-bundle
