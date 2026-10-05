@@ -27,23 +27,32 @@ impl StartupDiagnostics {
         &self.log_path
     }
 
-    pub fn record(&self, stage: &str, message: &str) {
+    pub fn record(&self, stage: &str, message: &str) -> bool {
         let Ok(_guard) = self.write_lock.lock() else {
             eprintln!("OpenCore startup log lock was poisoned");
-            return;
+            return false;
         };
-        let result = self.write_record(stage, message);
-        if let Err(error) = result {
-            eprintln!("Could not write OpenCore startup log: {error}");
+        match self.write_record(stage, message) {
+            Ok(()) => true,
+            Err(error) => {
+                eprintln!("Could not write OpenCore startup log: {error}");
+                false
+            }
         }
     }
 
     pub fn show_startup_error(&self, stage: &str, message: &str) {
-        self.record(stage, message);
-        let text = format!(
-            "OpenCore could not finish starting.\n\n{message}\n\nStartup details were saved to:\n{}",
-            self.log_path.display()
-        );
+        let text = if self.record(stage, message) {
+            format!(
+                "OpenCore could not finish starting.\n\n{message}\n\nStartup details were saved to:\n{}",
+                self.log_path.display()
+            )
+        } else {
+            format!(
+                "OpenCore could not finish starting.\n\n{message}\n\nOpenCore could not write its startup log. Expected path:\n{}",
+                self.log_path.display()
+            )
+        };
 
         #[cfg(windows)]
         {
@@ -138,6 +147,19 @@ mod tests {
                 .len(),
             MAX_LOG_BYTES + 1
         );
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn reports_when_the_startup_log_cannot_be_written() {
+        let root = std::env::temp_dir().join(format!("opencore-startup-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let blocked_directory = root.join("not-a-directory");
+        std::fs::write(&blocked_directory, b"block directory creation").unwrap();
+        let diagnostics = StartupDiagnostics::at_path(blocked_directory.join("startup.log"));
+
+        assert!(!diagnostics.record("launch", "starting"));
+
         let _ = std::fs::remove_dir_all(root);
     }
 }
