@@ -11,14 +11,19 @@ use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, File, Metadata};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
 #[path = "chat_import_projects.rs"]
 mod projects;
 #[path = "chat_import_opencode.rs"]
 mod opencode;
+#[path = "chat_import_snapshot.rs"]
+mod snapshot;
 use projects::SourceProject;
+use snapshot::snapshot_database;
+#[cfg(all(test, windows))]
+use snapshot::sqlite_sidecar;
 
 const MAX_TEXT_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_DATABASE_BYTES: u64 = 512 * 1024 * 1024;
@@ -27,8 +32,7 @@ const MAX_CONVERSATIONS: usize = 1_000;
 const MAX_ENTRIES: usize = 50_000;
 const MAX_COLUMNS: usize = 256;
 pub const IMPORT_CANCELLED: &str = "__CHAT_IMPORT_CANCELLED__";
-const CLOSE_HERMES_DATABASE: &str =
-    "Close Hermes/OpenCode before importing its database, or use a JSON/JSONL export.";
+const BUSY_CHAT_DATABASE: &str = "The Hermes/OpenCode database is busy in a background process. Wait for its current save or checkpoint, then retry, or import a JSON/JSONL export.";
 type ImportedRow = (String, String, String, String, String, Value);
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -1410,147 +1414,6 @@ fn prepare_rollout(
         source_format: format.into(),
         conversations: vec![conversation],
     })
-}
-
-// SQLite's read-only mode can still touch a WAL shared-memory sidecar. Copy the
-// bounded main file and WAL with read-only handles, and open only that snapshot.
-// Hermes' source database, WAL and SHM are never opened by SQLite or modified.
-struct DatabaseSnapshot {
-    root: PathBuf,
-    path: PathBuf,
-}
-impl Drop for DatabaseSnapshot {
-    fn drop(&mut self) {
-        if let Ok(entries) = fs::read_dir(&self.root) {
-            for entry in entries.flatten() {
-                let _ = fs::remove_file(entry.path());
-            }
-        }
-        let _ = fs::remove_dir(&self.root);
-    }
-}
-fn sqlite_sidecar(path: &Path, suffix: &str) -> PathBuf {
-    let mut name = path.as_os_str().to_os_string();
-    name.push(suffix);
-    PathBuf::from(name)
-}
-#[cfg(windows)]
-fn open_database_source(path: &Path) -> std::io::Result<File> {
-    use std::os::windows::fs::OpenOptionsExt;
-    // FILE_SHARE_READ only: every retained handle denies current/new writers
-    // and deletes. Length/mtime checks alone cannot synchronize SQLite WAL reuse.
-    fs::OpenOptions::new().read(true).share_mode(1).open(path)
-}
-#[cfg(windows)]
-fn database_source_error(error: std::io::Error) -> String {
-    if matches!(error.raw_os_error(), Some(32) | Some(33)) {
-        CLOSE_HERMES_DATABASE.into()
-    } else {
-        format!("Cannot acquire a read-only Hermes database snapshot: {error}")
-    }
-}
-#[cfg(not(windows))]
-fn snapshot_database(
-    _path: &Path,
-    cancelled: &dyn Fn() -> bool,
-) -> Result<DatabaseSnapshot, String> {
-    check_cancelled(cancelled)?;
-    Err("Hermes SQLite import requires exclusive writer protection available on Windows. Use a JSON/JSONL export on this platform.".into())
-}
-#[cfg(windows)]
-fn snapshot_database(
-    path: &Path,
-    cancelled: &dyn Fn() -> bool,
-) -> Result<DatabaseSnapshot, String> {
-    check_cancelled(cancelled)?;
-    // Hold the main-file guard before discovering/opening the WAL. This blocks
-    // normal SQLite writers throughout both copies, including checkpoints.
-    let main = open_database_source(path).map_err(database_source_error)?;
-    let wal = sqlite_sidecar(path, "-wal");
-    let wal_source = match open_database_source(&wal) {
-        Ok(source) => Some(source),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
-        Err(error) => return Err(database_source_error(error)),
-    };
-    let root =
-        std::env::temp_dir().join(format!("opencore-chat-snapshot-{}", uuid::Uuid::new_v4()));
-    fs::create_dir(&root)
-        .map_err(|error| format!("Cannot prepare a read-only database snapshot: {error}"))?;
-    let snapshot = DatabaseSnapshot {
-        path: root.join("history.sqlite3"),
-        root,
-    };
-    let mut sources = vec![(main, path.to_path_buf(), snapshot.path.clone())];
-    if let Some(source) = wal_source {
-        sources.push((source, wal.clone(), sqlite_sidecar(&snapshot.path, "-wal")));
-    }
-    let initial: Vec<_> = sources
-        .iter()
-        .map(|(source, _, _)| source.metadata().map_err(|error| error.to_string()))
-        .collect::<Result<_, _>>()?;
-    let total = initial.iter().try_fold(0u64, |total, meta| {
-        total
-            .checked_add(meta.len())
-            .ok_or("Database size is outside the supported range.")
-    })?;
-    if total > MAX_DATABASE_BYTES {
-        return Err("The Hermes database and WAL exceed the 512 MiB snapshot limit. Export sessions as JSONL instead.".into());
-    }
-    for ((source, _, target), before) in sources.iter_mut().zip(&initial) {
-        check_cancelled(cancelled)?;
-        if !before.is_file() {
-            return Err("The Hermes database and its WAL must be regular files.".into());
-        }
-        let mut output = File::create_new(target).map_err(|error| error.to_string())?;
-        let mut copied = 0u64;
-        let mut buffer = [0u8; 64 * 1024];
-        loop {
-            check_cancelled(cancelled)?;
-            let count = source
-                .read(&mut buffer)
-                .map_err(|error| error.to_string())?;
-            if count == 0 {
-                break;
-            }
-            copied += count as u64;
-            if copied > before.len() {
-                return Err(
-                    "The Hermes source changed during the snapshot. Close Hermes and try again."
-                        .into(),
-                );
-            }
-            output
-                .write_all(&buffer[..count])
-                .map_err(|error| error.to_string())?;
-        }
-        if copied != before.len()
-            || !unchanged(
-                before,
-                &source.metadata().map_err(|error| error.to_string())?,
-            )
-        {
-            return Err(
-                "The Hermes source changed during the snapshot. Close Hermes and try again.".into(),
-            );
-        }
-    }
-    for ((source, source_path, _), before) in sources.iter().zip(initial) {
-        if !unchanged(
-            &before,
-            &source.metadata().map_err(|error| error.to_string())?,
-        ) || !unchanged(
-            &before,
-            &fs::metadata(source_path).map_err(|error| error.to_string())?,
-        ) {
-            return Err(
-                "The Hermes source changed during the snapshot. Close Hermes and try again.".into(),
-            );
-        }
-    }
-    if sources.len() == 1 && wal.exists() {
-        return Err("Hermes created a WAL during the snapshot. Close Hermes and try again.".into());
-    }
-    Ok(snapshot)
 }
 
 fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<String>, String> {

@@ -32,6 +32,17 @@ html[data-platform-theme] {
   --theme-text-shadow: transparent;
 }
 html[data-platform-theme="dark"] {
+  color-scheme: dark;
+  --theme-link: #3d8fe9;
+  --theme-reasoning-ink: #be9bf5;
+  --theme-reasoning-border: #655188;
+  --theme-reasoning-surface: #9870df12;
+  --theme-tool-ink: #e7a0cf;
+  --theme-tool-border: #704d66;
+  --theme-tool-surface: #d677b312;
+  --theme-gradient-top: color-mix(in srgb, var(--surface) 74%, #45546a);
+  --theme-gradient-bottom: var(--bg);
+  --theme-model-field: #10243a;
   --theme-highlight: #ffffff0a;
   --theme-shadow-soft: #020a1214;
   --theme-shadow: #020a123d;
@@ -40,6 +51,17 @@ html[data-platform-theme="dark"] {
   --theme-overlay: #08121bdd;
 }
 html[data-platform-theme="light"] {
+  color-scheme: light;
+  --theme-link: #155fb7;
+  --theme-reasoning-ink: #68419d;
+  --theme-reasoning-border: #ae93d0;
+  --theme-reasoning-surface: #9870df13;
+  --theme-tool-ink: #943c77;
+  --theme-tool-border: #c89bb8;
+  --theme-tool-surface: #d677b313;
+  --theme-gradient-top: var(--surface-2);
+  --theme-gradient-bottom: var(--surface);
+  --theme-model-field: #eaf2fc;
   --theme-highlight: #ffffffb3;
   --theme-shadow-soft: #1822360a;
   --theme-shadow: #18223614;
@@ -70,7 +92,16 @@ html[data-platform-theme="light"] :is(.appearance-choices button.active, .platfo
   background: var(--blue-soft);
   border-color: var(--platform-link);
 }
-html[data-platform-theme] .aui-md a, html[data-platform-theme] .model-setup-link { color: var(--platform-link); }
+html[data-platform-theme] a[href], html[data-platform-theme] .aui-md a[href], html[data-platform-theme] .model-setup-link[href] { color: var(--theme-link); text-decoration: none; font-weight: inherit; }
+html[data-platform-theme="dark"] :is(.opencore-shell, .conversation-list-focus, .assistant-thread-panel.chat-mode, .chat-composer-wrap) {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 75%, #263345), var(--bg) 72%);
+}
+html[data-platform-theme="dark"] :is(.section-header, .section-main .timeline-heading, .statusbar, .unified-workspace-header, .floating-window-title) {
+  background: linear-gradient(180deg, var(--theme-gradient-top), var(--theme-gradient-bottom));
+}
+html[data-platform-theme="dark"] :is(.nav-rail, .conversation-app-rail) {
+  background: linear-gradient(180deg, var(--theme-gradient-top), var(--bg) 45%, color-mix(in srgb, var(--bg) 90%, #03070b));
+}
 html[data-platform-theme="light"] :is(.platform-error, .chat-import-error, .workspace-inline-error, .jobs-error) {
   color: var(--red);
   border-color: var(--theme-error-border);

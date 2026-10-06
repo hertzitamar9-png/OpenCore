@@ -1,7 +1,7 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::{path::PathBuf, process::Stdio, sync::{atomic::{AtomicBool, Ordering}, Arc, Mutex as StdMutex}, time::Duration};
+use std::{path::PathBuf, process::Stdio, sync::{atomic::{AtomicBool, Ordering}, Arc, Mutex as StdMutex}, time::{Duration, Instant}};
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, process::{Child, ChildStdin}, sync::{Mutex, oneshot, watch}};
 use tokio_util::sync::CancellationToken;
 
@@ -11,7 +11,7 @@ struct Session {
     result: watch::Receiver<Outcome>, ready: watch::Receiver<Option<Result<(), String>>>, cancel: CancellationToken,
     _gpu: Option<crate::studio_jobs::GpuReservation>,
 }
-struct Worker { child: Child, input: ChildStdin, output: BufReader<tokio::process::ChildStdout>, model_id: String, cold_start_ms: Option<u64>, wake_ms: Option<u64> }
+struct Worker { child: Child, input: ChildStdin, output: BufReader<tokio::process::ChildStdout>, model_id: String, runtime_precision: String, cold_start_ms: Option<u64>, wake_ms: Option<u64> }
 impl Worker {
     async fn read(&mut self) -> Result<Value, String> {
         let mut line = String::new();
@@ -32,19 +32,45 @@ impl Worker {
             let _ = self.child.wait().await;
         }
     }
+    async fn abort(&mut self) {
+        let _ = self.child.kill().await;
+        let _ = self.child.wait().await;
+    }
+}
+
+#[derive(Default)]
+struct StartupState { cancel: CancellationToken, started: Option<Instant>, interrupts: usize }
+struct StartupInterrupt(Arc<StdMutex<StartupState>>);
+impl Drop for StartupInterrupt {
+    fn drop(&mut self) { if let Ok(mut state)=self.0.lock() { state.interrupts=state.interrupts.saturating_sub(1); } }
+}
+fn startup_progress(value:&Value) -> Option<&str> {
+    value["progress"].as_str().filter(|phase| ["starting-runtime", "verifying-checkpoint", "building-model",
+        "expanding-weights", "applying-weights", "preparing-processor", "activating-device"].contains(phase))
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Settings { #[serde(default="default_model_id")] model_id: String, enabled: bool, idle_mode: String, cold_start_ms: Option<u64>, warm_wake_ms: Option<u64> }
+struct Settings { #[serde(default="default_model_id")] model_id: String, #[serde(default="default_runtime_precision")] runtime_precision: String, enabled: bool, idle_mode: String, cold_start_ms: Option<u64>, warm_wake_ms: Option<u64> }
 fn default_model_id() -> String { "whisper-large-v3-turbo".into() }
+fn default_runtime_precision() -> String { "bf16".into() }
+fn decode_settings(bytes:&[u8]) -> Option<Settings> {
+    let value:Value=serde_json::from_slice(bytes).ok()?;
+    let legacy_precision=value.get("runtimePrecision").is_none();
+    let mut settings:Settings=serde_json::from_value(value).ok()?;
+    if settings.model_id=="phonon-2" && legacy_precision {
+        settings.cold_start_ms=None;settings.warm_wake_ms=None;
+    }
+    Some(settings)
+}
 impl Default for Settings {
-    fn default() -> Self { Self { model_id: default_model_id(), enabled: false, idle_mode: "cold".into(), cold_start_ms: None, warm_wake_ms: None } }
+    fn default() -> Self { Self { model_id: default_model_id(), runtime_precision: default_runtime_precision(), enabled: false, idle_mode: "cold".into(), cold_start_ms: None, warm_wake_ms: None } }
 }
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpeechStatus {
     model_id: String,
+    runtime_precision: String, loading_elapsed_ms: Option<u64>,
     installed: bool, enabled: bool, idle_mode: String, worker_ready: bool,
     cold_start_ms: Option<u64>, warm_wake_ms: Option<u64>, phase: String,
 }
@@ -52,11 +78,12 @@ pub struct SpeechManager {
     root: PathBuf, resources: PathBuf, control: Arc<Mutex<()>>,
     session: Arc<Mutex<Option<Session>>>, worker: Arc<Mutex<Option<Worker>>>,
     settings: Arc<StdMutex<Settings>>, phase: Arc<StdMutex<String>>,
+    startup: Arc<StdMutex<StartupState>>,
     update_in_progress: Arc<AtomicBool>,
 }
 impl Clone for SpeechManager {
     fn clone(&self) -> Self { Self { root:self.root.clone(), resources:self.resources.clone(), control:self.control.clone(),
-        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), update_in_progress:self.update_in_progress.clone() } }
+        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), startup:self.startup.clone(), update_in_progress:self.update_in_progress.clone() } }
 }
 impl SpeechManager {
     pub fn new(root: PathBuf, resources: PathBuf) -> Self {
@@ -65,10 +92,10 @@ impl SpeechManager {
     pub fn new_with_update_gate(root: PathBuf, resources: PathBuf, update_in_progress: Arc<AtomicBool>) -> Self {
         let speech_root = root.join("speech");
         let settings = std::fs::read(speech_root.join("settings.json")).ok()
-            .and_then(|v| serde_json::from_slice(&v).ok()).unwrap_or_default();
+            .and_then(|v| decode_settings(&v)).unwrap_or_default();
         Self { root:speech_root, resources, control:Arc::new(Mutex::new(())), session:Arc::new(Mutex::new(None)),
             worker:Arc::new(Mutex::new(None)), settings:Arc::new(StdMutex::new(settings)),
-            phase:Arc::new(StdMutex::new("off".into())), update_in_progress }
+            phase:Arc::new(StdMutex::new("off".into())), startup:Arc::new(StdMutex::new(StartupState::default())), update_in_progress }
     }
     fn ensure_not_updating(&self) -> Result<(), String> {
         if self.update_in_progress.load(Ordering::Acquire) {
@@ -91,9 +118,14 @@ impl SpeechManager {
         crate::model_catalog::require_installed(self.root.parent().unwrap_or(&self.root), &self.settings().model_id).is_ok()
     }
     fn set_phase(&self, phase: &str) { if let Ok(mut p)=self.phase.lock() { *p=phase.into(); } }
+    fn interrupt_startup(&self) -> StartupInterrupt {
+        if let Ok(mut state)=self.startup.lock() { state.interrupts+=1; state.cancel.cancel(); }
+        StartupInterrupt(self.startup.clone())
+    }
     fn status(&self) -> SpeechStatus {
         let cfg=self.settings();
         SpeechStatus { model_id:cfg.model_id.clone(), installed:self.installed(), enabled:cfg.enabled, idle_mode:cfg.idle_mode.clone(),
+            runtime_precision:cfg.runtime_precision.clone(), loading_elapsed_ms:self.startup.lock().ok().and_then(|s|s.started.map(|t|t.elapsed().as_millis() as u64)),
             worker_ready:self.worker.try_lock().map(|w|w.is_some()).unwrap_or(false),
             cold_start_ms:cfg.cold_start_ms, warm_wake_ms:cfg.warm_wake_ms,
             phase:self.phase.lock().map(|p|p.clone()).unwrap_or_else(|_|"off".into()) }
@@ -109,17 +141,32 @@ impl SpeechManager {
         if cfg.idle_mode=="ram" {
             if self.worker.lock().await.is_some() { self.set_phase("sleeping"); return Ok(()); }
             self.set_phase("warming");
-            match self.spawn_worker(&cfg.model_id,"ram",false,&CancellationToken::new()).await {
+            match self.spawn_worker(&cfg.model_id,&cfg.runtime_precision,"ram",false,&CancellationToken::new()).await {
                 Ok(worker)=>{*self.worker.lock().await=Some(worker);self.set_phase("sleeping");Ok(())}
                 Err(error)=>{self.set_phase("error");Err(error)}
             }
         } else { self.set_phase("ready"); Ok(()) }
     }
-    async fn spawn_worker(&self, model_id:&str, mode:&str, awake:bool, cancel:&CancellationToken) -> Result<Worker,String> {
+    async fn spawn_worker(&self, model_id:&str, precision:&str, mode:&str, awake:bool, cancel:&CancellationToken) -> Result<Worker,String> {
+        self.ensure_not_updating()?;
+        let started=Instant::now();
+        let startup_cancel={
+            let mut state=self.startup.lock().map_err(|e|e.to_string())?;
+            if state.interrupts>0 { return Err("Speech startup was cancelled".into()); }
+            state.cancel=CancellationToken::new();state.started=Some(started);state.cancel.clone()
+        };
+        self.set_phase("starting-runtime");
+        let result=self.spawn_worker_inner(model_id,precision,mode,awake,cancel,&startup_cancel,started).await;
+        if let Ok(mut state)=self.startup.lock() {state.started=None;}
+        if result.is_err(){self.set_phase("error");}
+        result
+    }
+    async fn spawn_worker_inner(&self, model_id:&str, precision:&str, mode:&str, awake:bool, cancel:&CancellationToken, startup_cancel:&CancellationToken, started:Instant) -> Result<Worker,String> {
         let python=crate::model_catalog::speech_python_path(self.root.parent().unwrap_or(&self.root), model_id);
         let model=self.model_dir(model_id)?;
         let mut command=tokio::process::Command::new(python);
         command.arg(self.resources.join("speech").join(if model_id=="phonon-2" {"phonon_worker.py"} else {"whisper_worker.py"})).arg("--model").arg(&model).arg("--idle-mode").arg(mode);
+        if model_id=="phonon-2" {command.arg("--precision").arg(precision);}
         if awake { command.arg("--awake"); }
         command.env("PYTHONIOENCODING","utf-8").env("HF_HUB_OFFLINE","1")
             .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true);
@@ -128,33 +175,51 @@ impl SpeechManager {
         #[cfg(windows)]
         if let Some(handle)=child.raw_handle(){crate::child_guard::adopt_handle(handle);}
         let mut worker=Worker { input:child.stdin.take().ok_or("Missing Speech input")?,
-            output:BufReader::new(child.stdout.take().ok_or("Missing speech output")?), child, model_id:model_id.into(), cold_start_ms:None, wake_ms:None };
-        let ready=tokio::select! {
-            _=cancel.cancelled()=>{worker.stop().await;return Err("Speech startup was cancelled".into());}
-            value=worker.read()=>value?
-        };
-        if let Some(error)=ready["error"].as_str(){worker.stop().await;return Err(format!("Speech failed to load: {error}"));}
-        if ready["ready"]!=true { worker.stop().await;return Err("Speech exited before loading its model".into()); }
+            output:BufReader::new(child.stdout.take().ok_or("Missing speech output")?), child, model_id:model_id.into(), runtime_precision:precision.into(), cold_start_ms:None, wake_ms:None };
+        let ready=self.wait_startup_ready(&mut worker,cancel,startup_cancel).await?;
+        if model_id=="phonon-2" && ready["runtimePrecision"].as_str()!=Some(precision) {
+            worker.abort().await;return Err("Phonon-2 did not load the selected runtime precision.".into());
+        }
         let mut cfg=self.settings();
-        worker.cold_start_ms=ready["coldStartMs"].as_u64();
+        worker.cold_start_ms=Some(started.elapsed().as_millis() as u64);
         worker.wake_ms=ready["wakeMs"].as_u64();
-        if cfg.model_id==model_id {
+        if cfg.model_id==model_id && (model_id!="phonon-2" || cfg.runtime_precision==precision) {
             cfg.cold_start_ms=worker.cold_start_ms;
             cfg.warm_wake_ms=worker.wake_ms.or(cfg.warm_wake_ms);
             let _=self.save_settings(cfg);
         }
         Ok(worker)
     }
+    async fn wait_startup_ready(&self, worker:&mut Worker, cancel:&CancellationToken, startup_cancel:&CancellationToken) -> Result<Value,String> {
+        let deadline=tokio::time::Instant::now()+Duration::from_secs(190);
+        loop {
+            let response=tokio::select! {
+                biased;
+                _=cancel.cancelled()=>Err("Speech startup was cancelled".into()),
+                _=startup_cancel.cancelled()=>Err("Speech startup was cancelled".into()),
+                value=tokio::time::timeout_at(deadline,worker.read())=>value.unwrap_or_else(|_|Err("Speech did not load within 190 seconds".into())),
+            };
+            let value=match response {Ok(value)=>value,Err(error)=>{worker.abort().await;return Err(error);}};
+            if let Some(error)=value["error"].as_str(){worker.abort().await;return Err(format!("Speech failed to load: {error}"));}
+            if value["ready"]==true {return Ok(value);}
+            if let Some(phase)=startup_progress(&value) {self.set_phase(phase);continue;}
+            worker.abort().await;return Err("Speech exited before loading its model".into());
+        }
+    }
     pub async fn set_enabled(&self, enabled: bool) -> Result<SpeechStatus,String> {
+        let _interrupt=(!enabled).then(||self.interrupt_startup());
         let _control=self.control.lock().await;
         if enabled { self.ensure_not_updating()?; }
         let cfg=self.settings();
-        if cfg.enabled == enabled { return Ok(self.status()); }
+        if cfg.enabled == enabled && !(enabled && cfg.idle_mode=="ram" && self.worker.lock().await.is_none()) {
+            if !enabled {self.set_phase("off");}
+            return Ok(self.status());
+        }
         if enabled {
         if !self.installed(){return Err("Install the selected speech model and its runtime from Models first.".into());}
             if cfg.idle_mode=="ram" {
                 self.set_phase("warming");
-                let worker=self.spawn_worker(&cfg.model_id,"ram",false,&CancellationToken::new()).await?;
+                let worker=self.spawn_worker(&cfg.model_id,&cfg.runtime_precision,"ram",false,&CancellationToken::new()).await?;
                 self.save_settings(Settings{enabled:true,..self.settings()})?;
                 *self.worker.lock().await=Some(worker);
                 self.set_phase("sleeping");
@@ -171,15 +236,24 @@ impl SpeechManager {
         Ok(self.status())
     }
     pub async fn set_idle_mode(&self, mode:&str) -> Result<SpeechStatus,String> {
+        let _interrupt=if mode=="cold" {
+            // Keep admission locked until the synchronous standby interruption.
+            let session=self.session.lock().await;
+            if session.is_some(){return Err("Finish the current dictation before changing its sleep mode.".into());}
+            Some(self.interrupt_startup())
+        } else {None};
         let _control=self.control.lock().await;
         if mode == "ram" { self.ensure_not_updating()?; }
         if !["cold","ram"].contains(&mode){return Err("Choose cold or ram idle mode".into());}
         if self.is_active().await{return Err("Finish the current dictation before changing its sleep mode.".into());}
         let cfg=self.settings();
-        if cfg.idle_mode == mode { return Ok(self.status()); }
+        if cfg.idle_mode == mode && !(cfg.enabled && mode=="ram" && self.worker.lock().await.is_none()) {
+            if mode=="cold" {self.set_phase(if cfg.enabled {"ready"}else{"off"});}
+            return Ok(self.status());
+        }
         if cfg.enabled && mode=="ram" {
             self.set_phase("warming");
-            let w=self.spawn_worker(&cfg.model_id,"ram",false,&CancellationToken::new()).await?;
+            let w=self.spawn_worker(&cfg.model_id,&cfg.runtime_precision,"ram",false,&CancellationToken::new()).await?;
             self.save_settings(Settings{idle_mode:mode.into(),..self.settings()})?;
             *self.worker.lock().await=Some(w);
             self.set_phase("sleeping");
@@ -202,7 +276,7 @@ impl SpeechManager {
         let mut next=Settings{model_id:id.into(),cold_start_ms:None,warm_wake_ms:None,..cfg};
         if next.enabled && next.idle_mode=="ram" {
             self.set_phase("warming");
-            let worker=match self.spawn_worker(id,"ram",false,&CancellationToken::new()).await {
+            let worker=match self.spawn_worker(id,&next.runtime_precision,"ram",false,&CancellationToken::new()).await {
                 Ok(worker)=>worker,
                 Err(error)=>{self.set_phase("error");return Err(error);}
             };
@@ -214,6 +288,32 @@ impl SpeechManager {
             let enabled=next.enabled;
             self.save_settings(next)?;
             self.set_phase(if enabled {"ready"} else {"off"});
+        }
+        Ok(self.status())
+    }
+    pub async fn set_runtime_precision(&self, precision:&str) -> Result<SpeechStatus,String> {
+        if !["bf16","fp32"].contains(&precision) {return Err("Choose BF16 or FP32 Phonon-2 runtime precision.".into());}
+        let _control=self.control.lock().await;
+        self.ensure_not_updating()?;
+        if self.is_active().await {return Err("Finish the current dictation before changing its precision.".into());}
+        let cfg=self.settings();
+        if cfg.model_id!="phonon-2" {return Err("Runtime precision selection is available for Phonon-2.".into());}
+        if cfg.runtime_precision==precision && !(cfg.enabled && cfg.idle_mode=="ram" && self.worker.lock().await.is_none()) {
+            return Ok(self.status());
+        }
+        // The old worker exits before a replacement is created, including CPU RAM.
+        if let Some(mut worker)=self.worker.lock().await.take() {worker.stop().await;}
+        let mut next=Settings{runtime_precision:precision.into(),cold_start_ms:None,warm_wake_ms:None,..cfg};
+        if next.enabled && next.idle_mode=="ram" {
+            let worker=self.spawn_worker(&next.model_id,precision,"ram",false,&CancellationToken::new()).await?;
+            next.cold_start_ms=worker.cold_start_ms;next.warm_wake_ms=worker.wake_ms;
+            self.save_settings(next)?;
+            *self.worker.lock().await=Some(worker);
+            self.set_phase("sleeping");
+        } else {
+            let enabled=next.enabled;
+            self.save_settings(next)?;
+            self.set_phase(if enabled {"ready"}else{"off"});
         }
         Ok(self.status())
     }
@@ -239,12 +339,17 @@ impl SpeechManager {
         uuid::Uuid::parse_str(&id).map_err(|_|"Invalid microphone session ID".to_string())?;
         let control=self.control.lock().await;
         self.ensure_not_updating()?;
+        let mut session_guard=self.session.lock().await;
+        if session_guard.is_some(){return Err("A microphone session is already active".into());}
+        // A standby change can interrupt while this admission waits for the
+        // session guard. Reject before publishing a session or spawning a worker.
+        if self.startup.lock().map_err(|e|e.to_string())?.interrupts>0 {
+            return Err("Speech settings are changing. Wait for the current change, then retry dictation.".into());
+        }
         crate::model_catalog::require_idle()?;
         let cfg=self.settings();
         if !cfg.enabled && !explicit_file{return Err("Turn on speech to text in Models before using the microphone.".into());}
         if !self.installed(){return Err("Install the selected speech model and its runtime in Models.".into());}
-        let mut session_guard=self.session.lock().await;
-        if session_guard.is_some(){return Err("A microphone session is already active".into());}
         let audio=std::env::temp_dir().join(format!("opencore-speech-{id}.audio"));
         let cancel=CancellationToken::new();
         let (input,ready)=oneshot::channel();
@@ -258,7 +363,7 @@ impl SpeechManager {
             let outcome:Result<Value,String>=async{
                 if cancel.is_cancelled() { return Err("Recording cancelled".into()); }
                 let mut existing=manager.worker.lock().await.take();
-                if existing.as_ref().is_some_and(|worker|worker.model_id!=cfg.model_id) {
+                if existing.as_ref().is_some_and(|worker|worker.model_id!=cfg.model_id || (cfg.model_id=="phonon-2" && worker.runtime_precision!=cfg.runtime_precision)) {
                     if let Some(mut worker)=existing.take() { worker.stop().await; }
                 }
                 active_worker=Some(match existing {
@@ -266,14 +371,17 @@ impl SpeechManager {
                     None=>{
                         manager.set_phase("loading");
                         let mode=manager.settings().idle_mode;
-                        manager.spawn_worker(&cfg.model_id,&mode,mode=="cold",&cancel).await?
+                        manager.spawn_worker(&cfg.model_id,&cfg.runtime_precision,&mode,mode=="cold",&cancel).await?
                     }
                 });
                 let worker=active_worker.as_mut().unwrap();
                 let awake=if worker.child.id().is_some() && manager.settings().idle_mode=="ram" {
-                    manager.set_phase("loading");
+                    manager.set_phase("activating-device");
+                    if let Ok(mut state)=manager.startup.lock(){state.started=Some(Instant::now());}
                     worker.send(json!({"action":"wake"})).await?;
-                    let result=tokio::select!{_ = cancel.cancelled()=>return Err("Recording cancelled".into()),v=worker.read()=>v?};
+                    let result=tokio::select!{_ = cancel.cancelled()=>Err("Recording cancelled".into()),v=worker.read()=>v};
+                    if let Ok(mut state)=manager.startup.lock(){state.started=None;}
+                    let result=result?;
                     if let Some(error)=result["error"].as_str(){return Err(format!("Speech could not move to the GPU or CPU: {error}"));}
                     if result["awake"] != true {return Err("Speech did not enter the recording state.".into());}
                     result["wakeMs"].as_u64()
@@ -299,9 +407,12 @@ impl SpeechManager {
                 }
                 Ok(output)
             }.await;
+            if let Ok(mut state)=manager.startup.lock(){state.started=None;}
             // Signal completion only after the process has exited and released
             // CUDA allocations; the next composer waits on this result.
-            if let Some(mut worker)=active_worker.take(){worker.stop().await;}
+            if let Some(mut worker)=active_worker.take(){
+                if cancel.is_cancelled(){worker.abort().await;}else{worker.stop().await;}
+            }
             if let Err(error)=&outcome{
                 let _=ready_tx.send(Some(Err(error.clone())));
                 if let Some(mut w)=manager.worker.lock().await.take(){w.stop().await;}
@@ -344,6 +455,11 @@ impl SpeechManager {
     }
     pub async fn is_active(&self)->bool{self.session.lock().await.is_some()}
     pub async fn release_idle_model(&self) -> Result<(),String> {
+        let _interrupt={
+            let session=self.session.lock().await;
+            if session.is_some(){return Err("Finish dictation before switching models".into());}
+            self.interrupt_startup()
+        };
         let _control=self.control.lock().await;
         if self.is_active().await {return Err("Finish dictation before switching models".into());}
         if let Some(mut worker)=self.worker.lock().await.take(){worker.stop().await;}
@@ -351,6 +467,7 @@ impl SpeechManager {
         Ok(())
     }
     pub async fn stop_for_update(&self) {
+        let _interrupt=self.interrupt_startup();
         let _control = self.control.lock().await;
         self.cancel_active().await;
         if let Some(mut worker) = self.worker.lock().await.take() { worker.stop().await; }
@@ -390,6 +507,11 @@ pub async fn speech_set_model(core:tauri::State<'_,Arc<crate::AppCore>>,model_id
     let _gpu=speech_setting_reservation(&core)?;
     core.speech.set_model(&model_id).await
 }
+#[tauri::command]
+pub async fn speech_set_runtime_precision(core:tauri::State<'_,Arc<crate::AppCore>>,precision:String)->Result<SpeechStatus,String>{
+    let _gpu=speech_setting_reservation(&core)?;
+    core.speech.set_runtime_precision(&precision).await
+}
 fn speech_setting_reservation(core:&crate::AppCore)->Result<crate::studio_jobs::GpuReservation,String>{
     if core.studios.busy() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before loading speech.".into());}
     let gpu=crate::studio_jobs::reserve_gpu()?;
@@ -415,6 +537,120 @@ pub async fn speech_cancel(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:
 #[cfg(test)]
 mod tests {
     use super::*;
+    async fn protocol_fixture(source:&str) -> Worker {
+        let mut child=tokio::process::Command::new("python").args(["-u","-c",source])
+            .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true).spawn().unwrap();
+        Worker{input:child.stdin.take().unwrap(),output:BufReader::new(child.stdout.take().unwrap()),child,
+            model_id:"phonon-2".into(),runtime_precision:"bf16".into(),cold_start_ms:None,wake_ms:None}
+    }
+    #[tokio::test]
+    async fn loading_protocol_reads_progress_before_ready_and_kills_cancelled_startup() {
+        let manager=SpeechManager::new(PathBuf::from("unused"),PathBuf::from("unused"));
+        let mut worker=protocol_fixture("import json; print(json.dumps({'progress':'expanding-weights'})); print(json.dumps({'ready':True,'runtimePrecision':'bf16'}))").await;
+        let ready=manager.wait_startup_ready(&mut worker,&CancellationToken::new(),&CancellationToken::new()).await.unwrap();
+        assert_eq!(ready["runtimePrecision"],"bf16");assert_eq!(manager.status().phase,"expanding-weights");
+        worker.child.wait().await.unwrap();
+        let mut worker=protocol_fixture("import json,time; print(json.dumps({'progress':'expanding-weights'})); time.sleep(120)").await;
+        let cancel=CancellationToken::new();let signal=cancel.clone();
+        tokio::spawn(async move {tokio::time::sleep(Duration::from_millis(30)).await;signal.cancel();});
+        let error=tokio::time::timeout(Duration::from_secs(2),manager.wait_startup_ready(&mut worker,&cancel,&CancellationToken::new())).await.unwrap().unwrap_err();
+        assert!(error.contains("cancelled"));assert!(worker.child.try_wait().unwrap().is_some());
+    }
+    #[test]
+    fn phonon_precision_migration_preserves_cold_and_explicit_fp32() {
+        for mode in ["cold","ram"] {
+            let legacy=decode_settings(&serde_json::to_vec(&json!({"modelId":"phonon-2","enabled":true,"idleMode":mode,"coldStartMs":25890,"warmWakeMs":797})).unwrap()).unwrap();
+            assert_eq!(legacy.runtime_precision,"bf16");assert_eq!(legacy.idle_mode,mode);assert!(legacy.enabled);
+            assert_eq!(legacy.cold_start_ms,None);assert_eq!(legacy.warm_wake_ms,None);
+        }
+        let explicit=decode_settings(br#"{"modelId":"phonon-2","runtimePrecision":"fp32","enabled":true,"idleMode":"ram","coldStartMs":25890,"warmWakeMs":797}"#).unwrap();
+        assert_eq!(explicit.runtime_precision,"fp32");assert_eq!(explicit.idle_mode,"ram");
+        assert_eq!(explicit.cold_start_ms,Some(25890));assert_eq!(explicit.warm_wake_ms,Some(797));
+        let whisper=decode_settings(br#"{"enabled":true,"idleMode":"ram","coldStartMs":3339,"warmWakeMs":820}"#).unwrap();
+        assert_eq!(whisper.cold_start_ms,Some(3339));assert_eq!(whisper.warm_wake_ms,Some(820));
+    }
+    #[test]
+    fn loading_protocol_accepts_known_stages_and_rejects_unknown_payloads() {
+        assert_eq!(startup_progress(&json!({"progress":"expanding-weights"})),Some("expanding-weights"));
+        assert_eq!(startup_progress(&json!({"progress":"made-up-percent"})),None);
+        assert_eq!(startup_progress(&json!({"ready":true})),None);
+    }
+    #[tokio::test]
+    async fn standby_stops_interrupt_startup_before_waiting_for_control() {
+        for operation in ["update","off","cold","release"] {
+            let root=std::env::temp_dir().join(format!("speech-standby-stop-{}",uuid::Uuid::new_v4()));
+            let manager=SpeechManager::new(root.clone(),root.clone());
+            let lock=manager.control.lock().await;
+            let token={let mut state=manager.startup.lock().unwrap();state.started=Some(Instant::now());state.cancel.clone()};
+            assert!(manager.status().loading_elapsed_ms.is_some());
+            let stopping=manager.clone();
+            let task=tokio::spawn(async move {match operation {
+                "update"=>stopping.stop_for_update().await,
+                "off"=>{stopping.set_enabled(false).await.unwrap();},
+                "cold"=>{stopping.set_idle_mode("cold").await.unwrap();},
+                _=>stopping.release_idle_model().await.unwrap(),
+            }});
+            tokio::time::timeout(Duration::from_secs(1),token.cancelled()).await.unwrap();
+            assert!(!task.is_finished(),"Control must remain sequential after cancellation is signalled");
+            drop(lock);
+            task.await.unwrap();
+            assert_eq!(manager.status().phase,"off");
+            assert!(!root.exists());
+        }
+    }
+    #[tokio::test]
+    async fn rejected_idle_changes_preserve_active_dictation_and_its_startup_token() {
+        for release in [false,true] {
+            let root=std::env::temp_dir().join(format!("speech-active-settings-{}",uuid::Uuid::new_v4()));
+            let manager=SpeechManager::new(root.clone(),root.clone());
+            let session_cancel=CancellationToken::new();
+            let (input,_audio)=oneshot::channel();
+            let (_result_tx,result)=watch::channel(None);
+            let (_ready_tx,ready)=watch::channel(None);
+            *manager.session.lock().await=Some(Session{id:"active".into(),audio:root.join("pending.audio"),
+                input:Some(input),result,ready,cancel:session_cancel.clone(),_gpu:None});
+            let startup_cancel={let mut state=manager.startup.lock().unwrap();state.started=Some(Instant::now());state.cancel.clone()};
+            manager.set_phase("expanding-weights");
+            let control=manager.control.lock().await;
+            let rejected=tokio::time::timeout(Duration::from_secs(1),async {
+                if release {manager.release_idle_model().await} else {manager.set_idle_mode("cold").await.map(|_|())}
+            }).await;
+            assert!(!startup_cancel.is_cancelled(),"A rejected idle change must not cancel dictation startup");
+            assert!(!session_cancel.is_cancelled());
+            assert!(rejected.unwrap().unwrap_err().contains("dictation"));
+            let session=manager.session.lock().await;
+            assert_eq!(session.as_ref().unwrap().id,"active");
+            assert!(session.as_ref().unwrap().input.is_some());
+            let startup=manager.startup.lock().unwrap();
+            assert!(startup.started.is_some());assert_eq!(startup.interrupts,0);
+            assert_eq!(*manager.phase.lock().unwrap(),"expanding-weights");
+            assert!(!root.exists());
+            drop(control);
+        }
+    }
+    #[tokio::test]
+    async fn pending_idle_change_rejects_dictation_before_publishing_a_session() {
+        let root=std::env::temp_dir().join(format!("speech-settings-transition-{}",uuid::Uuid::new_v4()));
+        let manager=SpeechManager::new(root.clone(),root.clone());
+        let _change=manager.interrupt_startup();
+        let error=manager.start_file().await.unwrap_err();
+        assert!(error.contains("Speech settings are changing"),"Reject at admission, before checking/loading models: {error}");
+        assert!(!manager.is_active().await);
+        assert!(!root.exists());
+    }
+    #[tokio::test]
+    async fn cold_precision_choice_is_persisted_without_starting_or_downloading_a_model() {
+        let root=std::env::temp_dir().join(format!("speech-precision-{}",uuid::Uuid::new_v4()));
+        let manager=SpeechManager::new(root.clone(),root.clone());
+        manager.save_settings(Settings{model_id:"phonon-2".into(),enabled:true,..Settings::default()}).unwrap();
+        let status=manager.set_runtime_precision("fp32").await.unwrap();
+        assert_eq!(status.runtime_precision,"fp32");assert_eq!(status.idle_mode,"cold");assert!(!status.worker_ready);
+        assert!(manager.set_runtime_precision("nf4").await.is_err());
+        let restored=SpeechManager::new(root.clone(),root.clone());
+        assert_eq!(restored.settings().runtime_precision,"fp32");
+        assert!(!root.join("speech/phonon-2").exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[tokio::test]
     async fn update_gate_rejects_new_microphone_work() {
         let root=std::env::temp_dir().join(format!("speech-update-gate-{}",uuid::Uuid::new_v4()));

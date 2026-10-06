@@ -4,6 +4,7 @@ import * as api from "./api";
 import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
 import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, matchingModelVariant, modelMemoryMode } from "./model-variants";
+import { speechLoadingMessage } from "./speech-progress";
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
@@ -36,17 +37,42 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     catch (cause) { setError(String(cause)); }
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    if (!speech.enabled && !pending) return;
+    let disposed = false;
+    let checking = false;
+    const timer = window.setInterval(async () => {
+      if (checking) return;
+      checking = true;
+      try { const status = await api.speechStatus(); if (!disposed) setSpeech(status); }
+      catch { /* The controls report command failures. */ }
+      finally { checking = false; }
+    }, 1000);
+    return () => { disposed = true; window.clearInterval(timer); };
+  }, [speech.enabled, pending]);
   const installing = Boolean(library?.progress && ["preparing", "downloading", "verifying", "uninstalling"].includes(library.progress.phase));
   useEffect(() => {
-    if (!installing) return;
+    if (!installing && !pending) return;
     const timer = window.setInterval(() => void refresh(), 1000);
     return () => window.clearInterval(timer);
-  }, [installing, refresh]);
+  }, [installing, pending, refresh]);
   async function change(model: api.InstalledModel) {
     setPending(model.id);
     try {
       await api.installModel(model.id);
       await refresh();
+    } catch (cause) { onNotice(String(cause)); }
+    finally { setPending(null); }
+  }
+  async function prepareRuntime(model: api.InstalledModel) {
+    if (model.preparedRuntime?.kind !== 'woof-mlx-affine4-bf16' || !model.sourceDownloaded || runtimeActive || pending) return;
+    setPending(model.id);
+    try {
+      const files = await api.choosePreparedModelFiles();
+      if (!files) return;
+      await api.registerPreparedModel(model.id, files.path, files.manifestPath);
+      await refresh();
+      onNotice(`${model.label} is ready for the Windows runtime.`);
     } catch (cause) { onNotice(String(cause)); }
     finally { setPending(null); }
   }
@@ -68,19 +94,24 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   }
   const progress = library?.progress;
   const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
-  const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation'],['video','Video'],['tts','Speech synthesis'],['voice-cloning','Reference voice'],['ocr','Document extraction'],['omni','Omni'],['policy','Robotics policy']];
+  const categories = [['all','All models'],['installed','Installed'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation'],['video','Video'],['tts','Speech synthesis'],['voice-cloning','Reference voice'],['ocr','Document extraction'],['omni','Omni'],['policy','Robotics policy']];
   const modelById = useMemo(() => new Map((library?.models || []).map(model => [model.id, model])), [library?.models]);
   const allModelGroups = useMemo(() => groupModelVariants(library?.models || []), [library?.models]);
   const modelGroups = useMemo(() => filterGroupsByMemoryMode(allModelGroups, memoryMode), [allModelGroups, memoryMode]);
+  const categoryMatches = (group: typeof modelGroups[number], id: string) => id === 'all' || (id === 'installed' ? group.variants.some(model => model.installed) : categoryOf(group.model) === id);
+  const categoryGroups = category === 'installed' ? modelGroups.flatMap(group => {
+    const variants = group.variants.filter(model => model.installed);
+    return variants.length ? [{ ...group, variants }] : [];
+  }) : modelGroups;
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const visibleModels = modelGroups.filter(group => (category === 'all' || categoryOf(group.model) === category)
+  const visibleModels = categoryGroups.filter(group => categoryMatches(group, category)
     && words.every(word => `${group.model.label} ${group.model.description} ${group.variants.map(model => `${model.id} ${model.label} ${model.precision}`).join(' ')}`.toLowerCase().includes(word)));
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
     </div>
     <p className="model-library-note">Downloads show the pinned package size in GB and bytes. External setup entries have no app download. Text runtime VRAM estimates assume full GPU weight offload and system RAM for KV/state; actual use varies by backend. Media packages may require separate components and a compatible runtime. ECHO is available for text models.</p>
-    {runtimeActive ? <p className="model-library-note">Stop the runtime to install or select another model. Uninstalling an active model requires confirmation to stop it first.</p> : null}
+    {runtimeActive ? <p className="model-library-note">Use the bottom model menu to change an idle running model. Stop the runtime before installing. Uninstalling an active model requires confirmation to stop it first.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {!library && !error ? <p role="status">Loading model options… You can choose a category while they load.</p> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
@@ -88,8 +119,8 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {installing && progress.phase !== "uninstalling" ? <><progress aria-label="Model download" value={progress.phase === "preparing" ? undefined : progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{progress.currentFile === "Preparing speech runtime" ? "Setting up speech recognition for the microphone." : `${gb(progress.downloadedBytes)} / ${gb(progress.totalBytes)} · ${progress.currentFile || "Preparing download"}`}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
       {progress.error ? <p>{progress.error}</p> : null}
     </div> : null}
-    <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => id === 'all' || categoryOf(group.model) === id).length}</span></button>)}</div>
-    <div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => category === 'all' || categoryOf(group.model) === category).length}</span></button>)}</div>
+    <div className="model-filter-row"><span className="model-filter-label">Category</span><div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => categoryMatches(group, id)).length}</span></button>)}</div></div>
+    <div className="model-filter-row"><span className="model-filter-label">Memory mode</span><div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => categoryMatches(group, category)).length}</span></button>)}</div></div>
     <div className="model-library-search"><Search size={17} aria-hidden="true" /><input aria-label="Search models" placeholder="Find a model or quantization…" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') setQuery(''); }} />{query ? <button onClick={() => setQuery('')}>Clear search</button> : null}<span>{visibleModels.length} models</span></div>
     {library && visibleModels.length === 0 ? <p role="status">No models match these filters.</p> : null}
     <div className="model-library-grid">{visibleModels.map((group) => {
@@ -102,6 +133,10 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       const profileSelected = group.aliases[selectedProfile] === model.id;
       const vram = vramEstimate(model);
       const modeVariants = group.variants;
+      const preparedRuntime = model.preparedRuntime?.kind === 'woof-mlx-affine4-bf16' ? model.preparedRuntime : undefined;
+      const selectedPhonon = model.id === 'phonon-2' && speech.modelId === model.id;
+      const phononPrecision = speech.runtimePrecision || 'bf16';
+      const loadingSpeech = speechLoadingMessage(speech);
       return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : profileSelected) ? "selected" : ""}`}>
       <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
@@ -113,30 +148,35 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{downloadLabel(model)}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.runtimeReady === false || model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Requires a compatible runtime and its complete component set</dd></div> : null}</dl>
       <small>{model.note}</small>
       {model.runtimeConnected ? <p className="model-library-note">Connected runtime. Model weights are managed separately by this runtime.</p> : null}
+      {preparedRuntime ? <p className="model-library-note">Prepared Windows runtime · BF16 GGUF · {gb(preparedRuntime.bytes)}. {model.preparedReady ? 'Verified and ready.' : model.sourceDownloaded ? 'Choose the prepared GGUF and its adjacent conversion manifest to verify setup.' : 'Install the original source checkpoint before setting up the prepared runtime.'}</p> : null}
       {['video','tts','voice-cloning','ocr','omni','policy'].includes(categoryOf(model)) ? <button onClick={()=>window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:categoryOf(model)}))}>Open Media Studio</button> : null}
       {model.runtimePrecision ? <section className="model-runtime-precision" aria-label={`${model.label} download and runtime precision`}>
         <strong>Download and runtime precision</strong>
-        <p>Download: {model.runtimePrecision.sourceFormat}. Runtime: {model.runtimePrecision.runtimeDtype}.</p>
-        <p>Estimated runtime memory: {gb(model.runtimePrecision.estimatedRuntimeBytes)}. {model.runtimePrecision.runtimeMemoryNote}</p>
+        <p>Download: {model.runtimePrecision.sourceFormat}. Runtime: {selectedPhonon ? phononPrecision.toUpperCase() : model.runtimePrecision.runtimeDtype}.</p>
+        <p>Estimated runtime memory: {gb(selectedPhonon ? phononPrecision === 'bf16' ? 1_255_000_000 : 2_510_000_000 : model.runtimePrecision.estimatedRuntimeBytes)}. {selectedPhonon ? 'Weight tensors only; buffers and runtime overhead use additional memory.' : model.runtimePrecision.runtimeMemoryNote}</p>
         <p>{model.runtimePrecision.runtimeComponent}</p>
       </section> : null}
       {model.speechLanguage && model.id === speech.modelId ? <div className="whisper-controls" aria-label="Speech settings">
         <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>
           <button type="button" role="switch" aria-checked={speech.enabled} aria-label="Speech to text" className={`whisper-toggle ${speech.enabled ? "on" : ""}`}
-            disabled={!model.installed || Boolean(pending)} onClick={() => void updateSpeech(() => api.setSpeechEnabled(!speech.enabled))}><span />{speech.enabled ? "On" : "Off"}</button>
+            disabled={!model.installed || Boolean(pending) && !speech.enabled} onClick={() => void updateSpeech(() => api.setSpeechEnabled(!speech.enabled))}><span />{speech.enabled ? "On" : "Off"}</button>
         </div>
-        <fieldset disabled={!model.installed || Boolean(pending)}><legend>When the microphone starts</legend>
+        {selectedPhonon ? <fieldset disabled={!model.installed || Boolean(pending) || speech.phase === 'recording'}><legend>Phonon runtime precision</legend>
+          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'bf16'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('bf16'))} /><span><strong>BF16 · about 1.25 GB of weights</strong><small>Uses less runtime memory. Expanded from the same installed checkpoint.</small></span></label>
+          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'fp32'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('fp32'))} /><span><strong>FP32 · about 2.51 GB of weights</strong><small>Full float runtime. Expanded from the same installed checkpoint.</small></span></label>
+        </fieldset> : null}
+        <fieldset disabled={!model.installed}><legend>When the microphone starts</legend>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "cold"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("cold"))} />
-            <span><strong>Load from disk each time</strong><small>Default · about {speech.coldStartMs == null ? "measured on first use" : `${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
+            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon ? 'repeats runtime startup and weight expansion; ' : ''}about {speech.coldStartMs == null ? "measured on first use" : `${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
           </label>
-          <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "ram"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("ram"))} />
-            <span><strong>Keep sleeping in RAM</strong><small>Faster wake · about {speech.warmWakeMs == null ? "measured when enabled" : `${(speech.warmWakeMs / 1000).toFixed(2)} s on this device`}; weights leave the GPU while asleep.</small></span>
+          <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "ram"} disabled={Boolean(pending)} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("ram"))} />
+            <span><strong>Keep sleeping in RAM</strong><small>Recommended for frequent dictation · about {speech.warmWakeMs == null ? "measured when enabled" : `${(speech.warmWakeMs / 1000).toFixed(2)} s on this device`}; CPU weights stay in RAM and leave the GPU while asleep.</small></span>
           </label>
         </fieldset>
-        <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : speech.phase === "warming" ? "Loading speech weights into system RAM for standby…" : speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk."}</p>
+        <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : loadingSpeech || (speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk.")}</p>
       </div> : null}
       {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}
-      <footer>{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
+      <footer>{preparedRuntime && model.runtimeReady === false ? <button disabled={!model.sourceDownloaded || runtimeActive || installing || Boolean(pending)} onClick={() => void prepareRuntime(model)}>{pending === model.id ? 'Verifying setup…' : 'Use prepared GGUF'}</button> : null}{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
         <Download size={15} />{pending === model.id ? "Working…" : model.externalManaged ? model.category === 'music' ? 'Use existing weights' : "Prepare speech runtime" : "Install"}
       </button> : null}{model.selectable ? <button className={profileSelected ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
         {profileSelected ? <Check size={15} /> : null}{profileSelected ? "Selected" : "Use model"}

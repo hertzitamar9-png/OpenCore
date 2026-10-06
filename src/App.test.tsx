@@ -21,7 +21,111 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
   return () => { eventHandlers.delete(name); };
 }) }));
 
+function mockFooterModels() {
+  const base: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Installed chat model", precision: "BF16",
+    contextTokens: 262144, license: "Apache", experimental: false, note: "Pinned", selectable: true,
+    installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 5e9, category: "text", backend: "gguf" };
+  return vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, { ...base, id: "swift-27b", label: "Swift 1.5", precision: "IQ2_S" }],
+    progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+}
+
 describe("OpenCore", () => {
+  it("switches an idle running model from the footer in order and keeps competing choices paused", async () => {
+    const initial = await api.snapshot();
+    let runtime = { ...initial.runtime, status: "running", profile: "echo" };
+    const snapshot = vi.spyOn(api, "snapshot").mockImplementation(async () => ({ ...initial, runtime, activeConversationIds: [] }));
+    const library = mockFooterModels();
+    const calls: string[] = [];
+    let finishStop!: () => void;
+    const stop = vi.spyOn(api, "stopRuntime").mockImplementation(() => {
+      calls.push("stop");
+      return new Promise(resolve => { finishStop = () => { runtime = { ...runtime, status: "stopped", profile: "stopped" }; resolve(); }; });
+    });
+    const select = vi.spyOn(api, "selectProfile").mockImplementation(async profile => { calls.push(`select:${profile}`); });
+    const start = vi.spyOn(api, "startProfile").mockImplementation(async profile => { calls.push(`start:${profile}`); runtime = { ...runtime, status: "running", profile }; });
+    try {
+      render(<App />);
+      const trigger = await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" });
+      expect(trigger).toBeEnabled();
+      fireEvent.click(trigger);
+      const menu = await screen.findByRole("group", { name: "Choose model profile" });
+      expect(document.querySelector(".statusbar")).not.toContainElement(menu);
+      fireEvent.click(await within(menu).findByRole("button", { name: /^Swift 1\.5/ }));
+      expect(calls).toEqual(["stop"]);
+      fireEvent.click(trigger);
+      const waiting = await screen.findByRole("group", { name: "Choose model profile" });
+      expect(await within(waiting).findByRole("button", { name: /^Swift 1\.5/ })).toBeDisabled();
+      expect(within(waiting.parentElement!).getByRole("status")).toHaveTextContent("Changing the model…");
+      await act(async () => finishStop());
+      await screen.findByRole("button", { name: "Choose model profile, currently Swift 1.5 · ECHO" });
+      expect(calls).toEqual(["stop", "select:swift-27b", "start:swift-27b"]);
+    } finally { snapshot.mockRestore(); library.mockRestore(); stop.mockRestore(); select.mockRestore(); start.mockRestore(); }
+  });
+
+  it("opens the footer menu during an active chat and explains why model switching is held", async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, "snapshot").mockResolvedValue({ ...initial, runtime: { ...initial.runtime, status: "running", profile: "echo" }, activeConversationIds: ["preview"] });
+    const library = mockFooterModels();
+    const stop = vi.spyOn(api, "stopRuntime").mockResolvedValue();
+    const start = vi.spyOn(api, "startProfile").mockResolvedValue();
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
+      const menu = await screen.findByRole("group", { name: "Choose model profile" });
+      const alternate = await within(menu).findByRole("button", { name: /^Swift 1\.5/ });
+      expect(alternate).toBeDisabled();
+      expect(screen.getByText("Wait for the active chat to finish before changing models.")).toBeVisible();
+      fireEvent.click(alternate);
+      expect(stop).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+    } finally { snapshot.mockRestore(); library.mockRestore(); stop.mockRestore(); start.mockRestore(); }
+  });
+
+  it('keeps the footer inspectable during an app update and prevents competing runtime commands', async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, 'snapshot').mockResolvedValue({ ...initial, runtime: { ...initial.runtime, status: 'running', profile: 'echo' }, activeConversationIds: [] });
+    const library = mockFooterModels();
+    const check = vi.spyOn(api, 'checkLatestAppVersion').mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
+    let complete!: () => void;
+    const install = vi.spyOn(api, 'installLatestAppUpdate').mockImplementation(() => new Promise<void>(resolve => { complete = resolve; }));
+    const stop = vi.spyOn(api, 'stopRuntime').mockResolvedValue();
+    const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Update' }));
+      const installButton = await screen.findByRole('button', { name: 'Install update' });
+      await waitFor(() => expect(installButton).toBeEnabled());
+      fireEvent.click(installButton);
+      fireEvent.click(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
+      const menu = await screen.findByRole('group', { name: 'Choose model profile' });
+      expect(await within(menu).findByRole('button', { name: /^Swift 1\.5/ })).toBeDisabled();
+      expect(within(menu.parentElement!).getByRole('status')).toHaveTextContent('Wait for the app update to finish.');
+      expect(stop).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+      await act(async () => complete());
+      await waitFor(() => expect(within(menu).getByRole('button', { name: /^Swift 1\.5/ })).toBeEnabled());
+    } finally { if (complete) await act(async () => complete()); snapshot.mockRestore(); library.mockRestore(); check.mockRestore(); install.mockRestore(); stop.mockRestore(); start.mockRestore(); }
+  });
+
+  it('retains the current model when stopping it for a switch fails', async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, 'snapshot').mockResolvedValue({ ...initial, runtime: { ...initial.runtime, status: 'running', profile: 'echo' }, activeConversationIds: [] });
+    const library = mockFooterModels();
+    const stop = vi.spyOn(api, 'stopRuntime').mockRejectedValue(new Error('Runtime is still busy'));
+    const select = vi.spyOn(api, 'selectProfile').mockResolvedValue();
+    const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
+      const menu = await screen.findByRole('group', { name: 'Choose model profile' });
+      fireEvent.click(await within(menu).findByRole('button', { name: /^Swift 1\.5/ }));
+      expect(await screen.findByText('Could not change the model: Error: Runtime is still busy')).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' })).toBeEnabled();
+      expect(select).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+    } finally { snapshot.mockRestore(); library.mockRestore(); stop.mockRestore(); select.mockRestore(); start.mockRestore(); }
+  });
+
   it("reports ECHO conversation progress and calls out stale batch updates accurately", () => {
     const operation: OperationRecord = {
       id: "sync", kind: "history_sync", target: "codex",
@@ -859,10 +963,10 @@ describe("OpenCore", () => {
     expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /DuoCore · ECHO K2 \+ Nanbeige · competing drafts, one selected answer · ECHO archive/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
-    expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
+    expect(await topbar.findByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
     fireEvent.click(await screen.findByRole("button", { name: /1M extended · ECHO.*1,000,000-token YaRN window.*ECHO archive.*trained context 262,144/ }));
-    expect(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ })).toBeVisible();
+    expect(await topbar.findByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ }));
     expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
@@ -888,7 +992,7 @@ describe("OpenCore", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ }));
-    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
+    expect(footer).toContainElement(await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
     library.mockRestore();
   });
 

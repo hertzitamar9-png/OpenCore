@@ -1,0 +1,505 @@
+{
+  "schema": 1,
+  "verifiedAt": "2026-10-06",
+  "method": "Pinned Hub metadata plus SHA256 of fetched metadata. All GGUF weight hashes and sizes are publisher LFS pins; no score is inferred from model names.",
+  "packages": [
+    {
+      "modelId": "defiant-fable-9b",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "license": "Apache-2.0",
+      "defaultFilename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q8_0.gguf",
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download.",
+      "files": [
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ2_M.gguf",
+          "bytes": 4942441760,
+          "sha256": "ae9679dee69a4cb3a9375efa3644adc0164a362c61df2b283696d05e57df2fca",
+          "precision": "IQ2_M"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ3_M.gguf",
+          "bytes": 5615267104,
+          "sha256": "88cce3a5c2793a801e1c3f9b7ec4eaaa8d4c68ad2017718b517b6d019281eaea",
+          "precision": "IQ3_M"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_NL.gguf",
+          "bytes": 6618098976,
+          "sha256": "fc98be8168f39ed159f65c6fd193e803ae5ac1a774b738654811db1244103360",
+          "precision": "IQ4_NL"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_XS.gguf",
+          "bytes": 6396325152,
+          "sha256": "a5a35852c81f2c677c9cac813335add3be46328b66d517d94db84b76308b6217",
+          "precision": "IQ4_XS"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ2_M.gguf",
+          "bytes": 4942442720,
+          "sha256": "3349c656c2b16659a230a8d92acf0c55c2ae41876747deb5ba04a76a5a31a004",
+          "precision": "IQ2_M MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ3_M.gguf",
+          "bytes": 5722667232,
+          "sha256": "726ad4c6c41906e314052e69a294ae3372310c8d11c2e78d4e97784d5beec110",
+          "precision": "IQ3_M MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_NL.gguf",
+          "bytes": 6755547360,
+          "sha256": "c46c85c3e2d0c4d6ab62f5d7bb944739c0fd52fea8b04f786434a4358fa49def",
+          "precision": "IQ4_NL MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_XS.gguf",
+          "bytes": 6526302432,
+          "sha256": "8d33af536e35805967c9f4d77e1ed62b8212bdee282c80c6dc9b79ae6d677637",
+          "precision": "IQ4_XS MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_M.gguf",
+          "bytes": 6979975392,
+          "sha256": "d7eb4fac9389d53fa576f64a6ff53e914a00bc7705dc354d1065887565147320",
+          "precision": "Q4_K_M MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_S.gguf",
+          "bytes": 6688438496,
+          "sha256": "1899fa1c7427db6f3e87f4b215a42a5101eec21eab7fd2cea5a658aad50dc2e1",
+          "precision": "Q4_K_S MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_M.gguf",
+          "bytes": 7842429152,
+          "sha256": "a78b01d87e54c85191b7d139f229c5cdb5e9c9af08d832accd14b3b5fd1c3f6d",
+          "precision": "Q5_K_M MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_S.gguf",
+          "bytes": 7672527072,
+          "sha256": "bf2e8adeb558711630e241d72b0ec0ff0f2de1af0e8764e5f9b8b2ccfb32826e",
+          "precision": "Q5_K_S MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf",
+          "bytes": 8758786272,
+          "sha256": "b54d045cc07cc48259a2329f2b86ba8956de15a44d71d5004a6f8598d71c36d6",
+          "precision": "Q6_K MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q8_0.gguf",
+          "bytes": 10739611872,
+          "sha256": "1830f3beffb43850143bf45ee6f9d637f82ca22ddd9e08e40be1399062be32a2",
+          "precision": "Q8_0 MTP",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+          "bytes": 6828993824,
+          "sha256": "d33db5e583b9c9251402e876443791bc979f12af934bfb0630eadfb456279f84",
+          "precision": "Q4_K_M"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_S.gguf",
+          "bytes": 6551514400,
+          "sha256": "6d738a564822d8ad0f0f3b4cae135e66c90ef0f5e30ed1722c79817802e2b62b",
+          "precision": "Q4_K_S"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_M.gguf",
+          "bytes": 7667854624,
+          "sha256": "3138b1069d7a798460eba9cedf7b865f4dbf285b43117d9db549d124797cebbf",
+          "precision": "Q5_K_M"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_S.gguf",
+          "bytes": 7505194272,
+          "sha256": "282eda65148f468154ea21ebc5e39ab1f1dce898c597640ceccfc47ecc139131",
+          "precision": "Q5_K_S"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf",
+          "bytes": 8559144224,
+          "sha256": "be2e829c3cb38fc98ec53ee25311a4fa6a8437463f974fded6ce1c052c3cd643",
+          "precision": "Q6_K"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q8_0.gguf",
+          "bytes": 10481052960,
+          "sha256": "a0ed28f9af669f48ff2138f1f016bda3f1b3daf305cc3bb9c501f4c6b48e48a5",
+          "precision": "Q8_0"
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q6_K.gguf",
+          "bytes": 8758792960,
+          "sha256": "824188550771077e8ae1131d4d4826d08f79dab862d2c5725d4506931b80e9a1",
+          "precision": "Q6_K MTP / plusIQ template",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q8_0.gguf",
+          "bytes": 10739618560,
+          "sha256": "dcabfc7ab12fac26f84adb061e99eee793837c1cf1bb432a27b8790f7a91f14e",
+          "precision": "Q8_0 MTP / plusIQ template",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-bf16.gguf",
+          "bytes": 18407330272,
+          "sha256": "6a772118b107772fb83d111fec59e54b139c993fe6dc4906288a3bb81178705d",
+          "precision": "BF16 MTP / plusIQ template",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q6_K.gguf",
+          "bytes": 8758814912,
+          "sha256": "2e8be304734e365f6b77f95f255f7cbc3aa46dd112d4169f1ea5a42266e6ef76",
+          "precision": "Q6_K MTP / plusIQ tools template",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download."
+        },
+        {
+          "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q8_0.gguf",
+          "bytes": 10739640512,
+          "sha256": "701fd92f14cb7752923ecef608e1a5c5f6281affeb3dea6fc73b1b505c1c71a9",
+          "precision": "Q8_0 MTP / plusIQ tools template",
+          "note": "Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download."
+        }
+      ]
+    },
+    {
+      "modelId": "pentacoder-9b",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "repo": "pragmaticcs/PentaCoder-9B-GGUF",
+      "revision": "168934b4e037344b17762f68b732a64bd1c90281",
+      "license": "Apache-2.0",
+      "defaultFilename": "PentaCoder-9B-Q8_0.gguf",
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download.",
+      "files": [
+        {
+          "filename": "PentaCoder-9B-Q4_K_M.gguf",
+          "bytes": 5629134176,
+          "sha256": "bb18b3026bb46bd327d0db609e5341b8f1a1084fc11d7516491d179da1234077",
+          "precision": "Q4_K_M"
+        },
+        {
+          "filename": "PentaCoder-9B-Q5_K_M.gguf",
+          "bytes": 6467994976,
+          "sha256": "f68596917b77cf7f3350b53c7826a8bf44f43af7ab034b0c50a93dcc0f0e57a3",
+          "precision": "Q5_K_M"
+        },
+        {
+          "filename": "PentaCoder-9B-Q8_0.gguf",
+          "bytes": 9527526752,
+          "sha256": "65e0111ec4311d08c8a19f13b4f423f7c29de66bc0f2c824b5059aff45331f2f",
+          "precision": "Q8_0"
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ1_M.gguf",
+          "bytes": 2877296352,
+          "sha256": "426ee487286c096d0a239934c0adcbd4045c90d124d01c482631ef2a69504a75",
+          "precision": "IQ1_M / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ1_S.gguf",
+          "bytes": 2742669024,
+          "sha256": "265291b7375e309867d47885f127ca15e1bb87382ea98a811c640b4bedb885f8",
+          "precision": "IQ1_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ2_M.gguf",
+          "bytes": 3607498464,
+          "sha256": "bb8ea453b9eaf24e012675107e895badc96c702aa942ca61cedc508e06a51281",
+          "precision": "IQ2_M / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ2_S.gguf",
+          "bytes": 3427995360,
+          "sha256": "e59460e1b654df52175d595042362a4b915915ddd3083deaa3b7d853ac48ab34",
+          "precision": "IQ2_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ2_XS.gguf",
+          "bytes": 3285372640,
+          "sha256": "bc21a32fef8c96ec4c87b30155ff5c5f3bea5779fc88be949c2367894b298a79",
+          "precision": "IQ2_XS / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ2_XXS.gguf",
+          "bytes": 3101675232,
+          "sha256": "2ac06ad296a52b5090eb9b7731c7f8a43b5bc4a05b5ce0ffefa124f5987ff2cb",
+          "precision": "IQ2_XXS / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ3_M.gguf",
+          "bytes": 4415409888,
+          "sha256": "59c071885d06ce3e52e2ff0b9b1a6ebbb44aa92ce91c2c03ab1debe49be06276",
+          "precision": "IQ3_M / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ3_S.gguf",
+          "bytes": 4370845408,
+          "sha256": "edc0bad12952a7e99e0cd4813d443ef6e92c60314c3445fed0221f7796b12b94",
+          "precision": "IQ3_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ3_XS.gguf",
+          "bytes": 4243443424,
+          "sha256": "365ee271fb94f4c97a80642d7df622bf6bd1d7aefb71646290cde2c159eddb39",
+          "precision": "IQ3_XS / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ3_XXS.gguf",
+          "bytes": 3938193120,
+          "sha256": "58ce4a906d5cb4bc3d928ebcfacb0402cc81667d36f92622fc1271f933788534",
+          "precision": "IQ3_XXS / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ4_NL.gguf",
+          "bytes": 5418241760,
+          "sha256": "f4e8a2ad2f3c060752cd9feaab033fdec72cce28e4e2d798d1f9d74071ae32db",
+          "precision": "IQ4_NL / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-IQ4_XS.gguf",
+          "bytes": 5196467936,
+          "sha256": "e4b86628bbb89f8e1e88767802653c3f69afda72d5cbf9341ec3404b33a60bed",
+          "precision": "IQ4_XS / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q2_K.gguf",
+          "bytes": 3827289824,
+          "sha256": "fd75e3f8299aa77ade1c805c009be2f4b890951e7a2f036b1588dd99e29aa630",
+          "precision": "Q2_K / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q3_K_L.gguf",
+          "bytes": 4925542112,
+          "sha256": "8080f057ee20a429ebb3c09b57c400a6a8cf96562d3d99a3d36a406d150a52e0",
+          "precision": "Q3_K_L / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q3_K_M.gguf",
+          "bytes": 4623552224,
+          "sha256": "92dff9c63d936b323a948cc9f1a025e33f77f9358ff44439f000d2304072fb46",
+          "precision": "Q3_K_M / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q3_K_S.gguf",
+          "bytes": 4259434208,
+          "sha256": "013abe829289403f54b3eb034e6a38f2907778bd5a8edd2ba31e2531fbea1fc5",
+          "precision": "Q3_K_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q4_0.gguf",
+          "bytes": 5325967072,
+          "sha256": "53b1c84c4f8a4609d95ec0abcfa391e7cbeaa6d6bf53386443bfcf3fcd8701b0",
+          "precision": "Q4_0 / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q4_1.gguf",
+          "bytes": 5809360608,
+          "sha256": "6bd8d69bb8c766145b22665427851d755954aa6a092beee1c9a6f314ef2608f4",
+          "precision": "Q4_1 / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q4_K_M.gguf",
+          "bytes": 5629136608,
+          "sha256": "133d410001493e6999c41acc80563fed57db118949bb19a6d20333de6b331797",
+          "precision": "Q4_K_M / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q4_K_S.gguf",
+          "bytes": 5351657184,
+          "sha256": "405b74fa7d99870a46e8476681355c495aaa7cf8a08da37926bd7a2b5f95e582",
+          "precision": "Q4_K_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q5_K_M.gguf",
+          "bytes": 6467997408,
+          "sha256": "3c22edbf04b0b5569eac1ad6d0523318ae56d0ec01ce65e3bfd1c3398651d5f4",
+          "precision": "I1-Q5_K_M / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q5_K_S.gguf",
+          "bytes": 6305337056,
+          "sha256": "4e2485236a4f3b7bf461c5e32df6e084ec5cf7b401e68f6186f49c486d2cfbed",
+          "precision": "Q5_K_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q6_K.gguf",
+          "bytes": 7359287008,
+          "sha256": "39f46e1176899dd6b45c6390b8b9e6c01c172ecdb2fa9de95792c9b6a1aa1bb1",
+          "precision": "Q6_K / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        },
+        {
+          "filename": "PentaCoder-9B.i1-Q2_K_S.gguf",
+          "bytes": 3697266400,
+          "sha256": "4dc19b037349402e5f6748502495d63d4c4571718ac565245597e7dfe4a2e1fb",
+          "precision": "Q2_K_S / IMATRIX",
+          "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+          "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+          "note": "Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision."
+        }
+      ]
+    },
+    {
+      "modelId": "underdog-woof-4b-11",
+      "label": "Underdog Woof 4B 1.1",
+      "description": "ConwayResearch Qwen3.5-derived checkpoint, published as a 4-bit MLX model.",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "license": "Apache-2.0",
+      "sourceOnly": true,
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "note": "The publisher provides MLX affine 4-bit weights, not a Windows GGUF. Install downloads the exact source checkpoint and tokenizer. Use prepared GGUF to register the verified local reconstruction with its conversion manifest. Native and ECHO share the prepared file and become runnable only after source and prepared-file verification. BF16 storage reconstructs the published quantized values; it does not recover original full precision.",
+      "files": [
+        {
+          "filename": "LICENSE",
+          "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+          "bytes": 11544
+        },
+        {
+          "filename": "README.md",
+          "sha256": "119efcf70da25a6ae1c53dd32ad55761a8e5aefeea4991d203cb13db5fea1c03",
+          "bytes": 201
+        },
+        {
+          "filename": "chat_template.jinja",
+          "sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+          "bytes": 7756
+        },
+        {
+          "filename": "config.json",
+          "sha256": "8ce143ee295a76146f187f935eb36d0891aeae0791f88ca976ec71857a56edf9",
+          "bytes": 3124
+        },
+        {
+          "filename": "generation_config.json",
+          "sha256": "cb62c424e4c9d9d5ad55b7dde9d4a9507f60f5fc6e041a26f7d191c01f8f6b72",
+          "bytes": 138
+        },
+        {
+          "filename": "model.safetensors",
+          "sha256": "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e",
+          "bytes": 2367237149
+        },
+        {
+          "filename": "model.safetensors.index.json",
+          "sha256": "5a3779ecc1a94f395f26612fdc9a491c1884250eda9353d214322717564a69c7",
+          "bytes": 81008
+        },
+        {
+          "filename": "release-provenance.json",
+          "sha256": "fc72f99b97785ca3dac643da5a1aacb5a29313d92ecc22991a7d42b35558aa3c",
+          "bytes": 1277
+        },
+        {
+          "filename": "tokenizer.json",
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+          "bytes": 19989325
+        },
+        {
+          "filename": "tokenizer_config.json",
+          "sha256": "8f781f0d7369fb2532a77284368c2a5f9eccd6413a381dfa3795787e20ca4ca4",
+          "bytes": 1202
+        }
+      ],
+      "preparedRuntime": {
+        "kind": "woof-mlx-affine4-bf16",
+        "path": "models/prepared/underdog-woof-4b-11/Underdog-Woof-4B-1.1-MLX4bit-dequant-BF16.gguf",
+        "sha256": "965b2ae8d2b570e01f7d8d5da70f26e697c6bc587878eedb89112a37ef980df5",
+        "bytes": 8424393184,
+        "sourceRepo": "ConwayResearch/Underdog-Woof-4B-1.1",
+        "sourceRevision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+        "sourceFilename": "model.safetensors",
+        "sourceSha256": "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e",
+        "sourceBytes": 2367237149,
+        "conversionManifestSha256": "0d3101797d98295dbf984eff912d368a7bbb4ddb1543a394cf35c0a505808e2a"
+      }
+    }
+  ]
+}

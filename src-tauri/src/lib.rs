@@ -36,6 +36,7 @@ mod file_browser;
 mod history;
 mod models;
 mod model_catalog;
+mod model_prepared;
 mod music_studio;
 mod music_weights;
 mod startup_diagnostics;
@@ -2383,18 +2384,7 @@ pub fn run() {
             );
             #[cfg(windows)]
             {
-                let overlay_result = tauri::WebviewWindowBuilder::new(app, "desktop-activity", tauri::WebviewUrl::App("index.html?desktop-activity".into()))
-            .title("OpenCore activity")
-                    .decorations(false)
-                    .transparent(true)
-                    .always_on_top(true)
-                    .skip_taskbar(true)
-                    .focused(false)
-                    .focusable(false)
-                    .visible(false)
-                    .resizable(false)
-                    .inner_size(290.0, 54.0)
-                    .build();
+                let overlay_result = desktop_activity::build_overlay(app.handle());
                 match overlay_result {
                     Ok(overlay) => {
                         if let Err(error) = overlay.set_ignore_cursor_events(true) {
@@ -2549,6 +2539,7 @@ pub fn run() {
             app_update::check_latest_app_version,
             app_update::install_latest_app_update,
             speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode, speech::speech_set_model,
+            speech::speech_set_runtime_precision,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
@@ -2559,6 +2550,7 @@ pub fn run() {
             start_profile,
             list_model_library,
             install_model,
+            model_prepared::register_prepared_model,
             uninstall_model,
             model_removal_plan,
             cancel_model_install,

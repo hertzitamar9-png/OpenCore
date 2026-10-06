@@ -18,7 +18,7 @@ QUANTIZATIONS = (
     "IQ4_NL", "IQ4_XS", "IQ3_XXS", "IQ3_XS", "IQ3_S", "IQ3_M", "IQ2_XXS", "IQ2_XS", "IQ2_S", "IQ2_M",
     "I1-Q5_K_M", "IQ1_S", "IQ1_M", "Q8_K_XL", "Q8_K_L", "Q8_0", "Q7_K", "Q6_K_XL", "Q6_K_L", "Q6_K", "Q5_K_XL",
     "Q5_K_L", "Q5_K_M", "Q5_K_S", "Q5_1", "Q5_0", "Q4_K_XL", "Q4_K_L", "Q4_K_M", "Q4_K_S", "Q4_1",
-    "Q4_0", "Q3_K_XL", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q2_K_XL", "Q2_K_L", "Q2_K", "TQ2_0", "TQ1_0",
+    "Q4_0", "Q3_K_XL", "Q3_K_L", "Q3_K_M", "Q3_K_S", "Q2_K_XL", "Q2_K_L", "Q2_K_S", "Q2_K", "TQ2_0", "TQ1_0",
     "PQ2_0", "PTQ1_0", "Q6_K_S", "NVFP4", "MXFP4_MOE", "MXFP4", "FP8_E5M2", "FP8_E4M3", "FP8", "BF16", "F16", "F32",
 )
 QUANT_PATTERN = re.compile(r"(?:^|[-_.])(" + "|".join(re.escape(item) for item in QUANTIZATIONS) + r")$", re.IGNORECASE)

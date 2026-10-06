@@ -72,7 +72,8 @@ def main():
     if check.returncode:
         raise RuntimeError(check.stderr.strip() or 'Phonon reference runtime verification failed.')
     (root / 'phonon-runtime.json').write_text(json.dumps({'schema':2,'transformers':TRANSFORMERS,'zstandard':ZSTANDARD,'librosa':'0.11.0',
-        'sharedCudaRuntime':shared,'backend':'transformers-reference','weightDtype':'float32'}), encoding='utf-8')
+        'sharedCudaRuntime':shared,'backend':'transformers-reference','sourceExpansionDtype':'float32',
+        'runtimePrecisions':['bf16','fp32'],'defaultRuntimePrecision':'bf16'}), encoding='utf-8')
     print('Phonon-2 reference speech runtime ready.', flush=True)
 
 

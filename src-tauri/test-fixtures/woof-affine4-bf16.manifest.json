@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "model_id": "ConwayResearch/Underdog-Woof-4B-1.1",
+  "display_name": "Underdog-Woof-4B-1.1 (publisher MLX4bit reconstructed BF16)",
+  "source": {
+    "repo_id": "ConwayResearch/Underdog-Woof-4B-1.1",
+    "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+    "directory": "/mnt/c/Users/hertz/Documents/OpenCore Verification/model-eval-20261006/woof-mlx",
+    "files": {
+      "chat_template.jinja": {
+        "bytes": 7756,
+        "sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+      },
+      "config.json": {
+        "bytes": 3124,
+        "sha256": "8ce143ee295a76146f187f935eb36d0891aeae0791f88ca976ec71857a56edf9"
+      },
+      "generation_config.json": {
+        "bytes": 138,
+        "sha256": "cb62c424e4c9d9d5ad55b7dde9d4a9507f60f5fc6e041a26f7d191c01f8f6b72"
+      },
+      "model.safetensors": {
+        "bytes": 2367237149,
+        "sha256": "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e"
+      },
+      "model.safetensors.index.json": {
+        "bytes": 81008,
+        "sha256": "5a3779ecc1a94f395f26612fdc9a491c1884250eda9353d214322717564a69c7"
+      },
+      "tokenizer.json": {
+        "bytes": 19989325,
+        "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
+      },
+      "tokenizer_config.json": {
+        "bytes": 1202,
+        "sha256": "8f781f0d7369fb2532a77284368c2a5f9eccd6413a381dfa3795787e20ca4ca4"
+      }
+    },
+    "published_quantization": {
+      "bits": 4,
+      "mode": "affine",
+      "group_size": 64
+    }
+  },
+  "artifact": {
+    "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\Underdog-Woof-4B-1.1-MLX4bit-dequant-BF16.gguf",
+    "bytes": 8424393184,
+    "sha256": "965b2ae8d2b570e01f7d8d5da70f26e697c6bc587878eedb89112a37ef980df5",
+    "architecture": "qwen35",
+    "file_type": 32,
+    "tensor_count": 426,
+    "parameter_count": 4205751296,
+    "types": {
+      "BF16": 249,
+      "F32": 177
+    },
+    "chat_template_sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+    "eos_token_id": 248046,
+    "block_count": 32,
+    "vocab_size": 248320,
+    "rope_dimension_sections": [
+      11,
+      11,
+      10,
+      0
+    ],
+    "format": "GGUF",
+    "storage": "BF16 matrices plus F32 norms and state parameters",
+    "original_published_precision": "MLX affine4bit group_size64 with BF16 scales and biases",
+    "reconstructed_from_quantized_source": true
+  },
+  "conversion": {
+    "definition": "MLX packed U32 affine codes with BF16 auxiliaries; FP32 scale*q+bias, one BF16 ties-to-even cast",
+    "llama_cpp_repo": "https://github.com/ggml-org/llama.cpp",
+    "llama_cpp_commit": "bed0a856606ee4a24a164066f73d2379447033f5",
+    "llama_cpp_archive_sha256": "01bbacb8ca42458ed9cc2862f866be26d41e177485c81dbf4ec7567c36c32e3b",
+    "mlx_repo": "https://github.com/ml-explore/mlx",
+    "mlx_commit": "64ea011cb65f14d9ce2737e60db9a4ae91ed7441",
+    "mlx_version": "0.32.3",
+    "mlx_archive_sha256": "76ba7a886cee186d59e93fc3db91436e5e5795124fabcf04ae5e40388da44312",
+    "mlx_lm_layout_reference_commit": "a537041adc86d73cfae4cc1375b2c8851c652c60",
+    "adapter_utility_sha256": "7e4407666222528c28623889897cbc80af649fb6cb396506fbd590e2f64bb84a",
+    "gguf_verifier_sha256": "a9844c56a0db56dccd7961b4b19678d53c13ade16c9cb565ce7304c92a6af8dd",
+    "converter_arguments": [
+      "--outtype",
+      "bf16",
+      "--no-mtp",
+      "--use-temp-file",
+      "--model-name",
+      "Underdog-Woof-4B-1.1 MLX affine4bit reconstructed"
+    ],
+    "converter_exit_code": 0,
+    "source_tensor_count": 924,
+    "affine_weight_matrices": 249,
+    "quantization_auxiliaries_consumed": 498,
+    "parameter_tensors_preserved": 426,
+    "source_parameter_count": 4205751296,
+    "source_mtp_tensors": 0,
+    "source_vision_tensors": 0,
+    "omitted_source_parameter_tensors": [],
+    "environment": "Prebuilt CPU MLX and Torch wheels in WSL Ubuntu24.04 /root/.venvs/woof-conversion-20261006; no native builds"
+  },
+  "validation": {
+    "independent_mlx_fixtures": {
+      "status": "passed",
+      "mlx_version": "0.32.3",
+      "device": "Device(cpu, 0)",
+      "cases": [
+        "known packed nibbles and group boundaries",
+        "signed affine parameters",
+        "zero scale",
+        "deterministic random packed words",
+        "BF16 ties to even and signed zero",
+        "conv transpose",
+        "FP32 inverse norm shift"
+      ]
+    },
+    "packed_source_matrices_checked": 249,
+    "source_values_sampled": 2698752,
+    "norm_inverse_transforms_checked": 81,
+    "conv_inverse_transforms_checked": 24,
+    "gguf_tensors_checked": 426,
+    "gguf_values_checked": 3660288,
+    "gguf_value_head_layout": "independently checked grouped-to-tiled row, column, convolution, A_log and dt_bias mapping",
+    "gguf_exp_relative_tolerance": 2e-07,
+    "status": "passed",
+    "inference_test_run_by_converter": false
+  },
+  "precision_limits": [
+    "Dequantization reconstructs the published affine values; it does not recover the unavailable pre-quantization weights.",
+    "One final BF16 cast follows the pinned Metal quantized weight decoder. The independent MLX reference used FP32 auxiliaries then an MLX BF16 cast; CPU default BF16 dequantization rounds the multiply and add separately.",
+    "No MLX versus llama.cpp inference-output parity claim is made. Windows/GPU inference readiness is a separate runtime gate."
+  ],
+  "reports": {
+    "validation.json": {
+      "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\validation.json",
+      "sha256": "3f43944eb6a323a9a57292e5fca5c9d9debd17361d83c5c84594ba2090045e8a"
+    },
+    "hf-conversion.json": {
+      "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\hf-conversion.json",
+      "sha256": "f8251e841177f294465d0010623327ccadfaf4ee8aec394623c0681b00e6d32a"
+    },
+    "gguf-validation.json": {
+      "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\gguf-validation.json",
+      "sha256": "c3568dd592f7b117329546398c85822eed0814ed277476d02ce6f78de4923045"
+    },
+    "tooling-provenance.json": {
+      "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\tooling-provenance.json",
+      "sha256": "aeb87a0f40cea4be8126dfa923b3b125dab00839880aea7d140b4c1eb17271b7"
+    },
+    "conversion-environment.txt": {
+      "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\conversion-environment.txt",
+      "sha256": "3468db69bb9270a6adc87adeb67b107bd9b339989416bd17b388d1b4592d251a"
+    },
+    "gguf-converter.log": {
+      "path": "C:\\Users\\hertz\\Documents\\OpenCore Verification\\model-eval-20261006\\woof-conversion\\gguf-converter.log",
+      "sha256": "929586b3b8e2a494cc5e0cac6e9b954e08e1931dae068c39e9d058a0482c8c66"
+    }
+  }
+}

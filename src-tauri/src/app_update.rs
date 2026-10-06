@@ -288,7 +288,8 @@ async fn configured_updater(app: &AppHandle) -> Result<tauri_plugin_updater::Upd
         .map_err(|error| error.to_string())
 }
 
-/// Checks the configured signed update feed only when the user asks.
+/// Read-only check of the configured signed update feed. The header checks on
+/// launch to expose an available update; installing still requires a user action.
 #[tauri::command]
 pub async fn check_latest_app_version(app: AppHandle) -> Result<UpdateCheck, String> {
     let current_version = app.package_info().version.to_string();

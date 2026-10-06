@@ -1,34 +1,64 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Download } from 'lucide-react';
 import * as api from './api';
 
 type CheckedVersion = Awaited<ReturnType<typeof api.checkLatestAppVersion>>;
 
-function useManualUpdate() {
+let pendingVersionCheck: Promise<CheckedVersion> | null = null;
+const versionCheckListeners = new Set<(checked: CheckedVersion | null) => void>();
+let installingUpdate = false;
+const installListeners = new Set<() => void>();
+const subscribeInstall = (listener: () => void) => { installListeners.add(listener); return () => { installListeners.delete(listener); }; };
+export const useAppUpdateInstalling = () => useSyncExternalStore(subscribeInstall, () => installingUpdate);
+
+function setInstallingUpdate(value: boolean) {
+  installingUpdate = value;
+  installListeners.forEach(listener => listener());
+}
+
+function checkAppVersion() {
+  if (!pendingVersionCheck) {
+    pendingVersionCheck = api.checkLatestAppVersion().finally(() => { pendingVersionCheck = null; });
+  }
+  return pendingVersionCheck;
+}
+
+function useManualUpdate(checkOnMount = false) {
   const [checked, setChecked] = useState<CheckedVersion | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const installing = useAppUpdateInstalling();
 
-  async function check() {
+  useEffect(() => {
+    versionCheckListeners.add(setChecked);
+    return () => { versionCheckListeners.delete(setChecked); };
+  }, []);
+
+  const check = useCallback(async () => {
     setBusy(true);
     setMessage('Checking the latest version…');
     try {
-      const result = await api.checkLatestAppVersion();
-      setChecked(result);
+      const result = await checkAppVersion();
+      versionCheckListeners.forEach(listener => listener(result));
       setMessage(result.available && result.version
         ? `OpenCore ${result.version} is available.`
         : `OpenCore ${result.currentVersion} is up to date.`);
     } catch (error) {
-      setChecked(null);
+      versionCheckListeners.forEach(listener => listener(null));
       setMessage(`Could not check for updates: ${String(error)}`);
     } finally {
       setBusy(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (checkOnMount) void check();
+  }, [checkOnMount, check]);
 
   async function install() {
-    if (!checked?.available) return;
+    if (!checked?.available || installingUpdate) return;
+    setInstallingUpdate(true);
     setBusy(true);
     setMessage(`Stopping active model work, then installing OpenCore ${checked.version}…`);
     try {
@@ -37,30 +67,39 @@ function useManualUpdate() {
     } catch (error) {
       setMessage(`Could not install the update: ${String(error)}`);
     } finally {
+      setInstallingUpdate(false);
       setBusy(false);
     }
   }
 
-  return { checked, message, busy, check, install };
+  return { checked, message, busy: busy || installing, check, install };
 }
 
 export function UpdateButton() {
   const [open, setOpen] = useState(false);
-  const { checked, message, busy, check, install } = useManualUpdate();
+  const [showMessage, setShowMessage] = useState(false);
+  const { checked, message, busy, check, install } = useManualUpdate(true);
+  useEffect(() => {
+    if (!open || !message) { setShowMessage(false); return; }
+    setShowMessage(true);
+    const timer = window.setTimeout(() => setShowMessage(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [open, message]);
   async function openUpdate() {
     setOpen((current) => !current);
     if (!open) await check();
   }
 
+  if (!checked?.available) return null;
+
   return <div className="manual-update-control">
+    {open && <div className="manual-update-inline">
+      {showMessage && <span className="manual-update-message" role="status" aria-live="polite">{message}</span>}
+      <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>
+    </div>}
     <button type="button" className="manual-update-button" aria-label="Update" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}>
       <Download size={14} /> Update
     </button>
-    {open && <div className="manual-update-popover" role="status" aria-live="polite">
-      <span>{message || 'Check for an OpenCore update.'}</span>
-      {checked?.available && <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>}
-      {message.startsWith('Could not check') && <button type="button" disabled={busy} onClick={() => void check()}>{busy ? 'Checking…' : 'Try again'}</button>}
-    </div>}
   </div>;
 }
 

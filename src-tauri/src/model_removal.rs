@@ -53,6 +53,7 @@ fn model_files(root: &Path, model: &Model, data: &Manifest) -> Result<Vec<(PathB
         files.push((safe_path(root, &format!("{}.partial", artifact.path))?, false));
         files.push((safe_path(root, &format!("models/receipts/file-{}.json", artifact.id))?, false));
     }
+    files.extend(crate::model_prepared::managed_files(root,model)?.into_iter().map(|path|(path,false)));
     if model.id == "phonon-2" { files.push((safe_path(root, "speech/phonon-2/model.fermion")?, false)); }
     if let Some(external) = external_whisper_model_for(&model.id) {
         files.extend(whisper_files(&external).into_iter().map(|path| (path, true)));
@@ -66,7 +67,8 @@ fn model_files(root: &Path, model: &Model, data: &Manifest) -> Result<Vec<(PathB
 pub(super) fn plan(root: &Path, id: &str, data: &Manifest) -> Result<RemovalPlan, String> {
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
     let mut shared: BTreeMap<PathBuf, Vec<String>> = BTreeMap::new();
-    for other in data.models.iter().filter(|m| m.id != id && installed(root, m, data)) {
+    for other in data.models.iter().filter(|m| m.id != id &&
+        (installed(root,m,data) || (m.prepared_runtime.is_some() && source_downloaded(root,m,data)))) {
         for (path, _) in model_files(root, other, data)? {
             shared.entry(path).or_default().push(other.label.clone());
         }
@@ -214,5 +216,36 @@ mod tests {
         assert!(remove(&fixture.root, "echo", &fixture.data, &reviewed.confirmation_token).is_err());
         fixture.data.artifacts[0].path = "../outside.gguf".into();
         assert!(plan(&fixture.root, "echo", &fixture.data).is_err());
+    }
+
+    #[test]
+    fn prepared_woof_removal_protects_the_other_mode_and_never_external_inputs() {
+        let _guard=MODEL_CATALOG_TEST_LOCK.lock().unwrap();
+        let mut fixture=Fixture::new("underdog-woof-4b-11","models/woof-source/model.safetensors");
+        let mut native=fixture.data.models[0].clone();
+        native.id="underdog-woof-4b-11-native".into();native.label="Woof Native".into();native.memory_mode="native".into();
+        fixture.data.models.push(native);
+        let source=fixture.write("models/woof-source/model.safetensors",b"fixture");
+        record_file(&fixture.root,&fixture.data.artifacts[0],&source).unwrap();
+        for model in &fixture.data.models {
+            std::fs::write(model_receipt(&fixture.root,model),serde_json::to_vec(&model.artifacts).unwrap()).unwrap();
+        }
+        let prepared=fixture.data.models[0].prepared_runtime.as_ref().unwrap();
+        let runtime=fixture.write(&prepared.path,b"GGUFtest");
+        let metadata=fixture.write(&format!("{}.manifest.json",prepared.path),b"manifest");
+        let receipt=fixture.write(&format!("models/receipts/prepared-{}.json",prepared.sha256),b"receipt");
+        let external=fixture.write("original-conversion.gguf",b"preserve external original");
+        let unrelated=fixture.write("models/prepared/personal-notes.txt",b"preserve unrelated file");
+        let reviewed=plan(&fixture.root,"underdog-woof-4b-11",&fixture.data).unwrap();
+        assert_eq!(reviewed.files.len(),1,"Only this mode's source receipt is unshared");
+        assert!(reviewed.retained_files.iter().any(|file|file.path==runtime.to_string_lossy()));
+        remove(&fixture.root,"underdog-woof-4b-11",&fixture.data,&reviewed.confirmation_token).unwrap();
+        assert!(source.is_file() && runtime.is_file() && metadata.is_file() && receipt.is_file());
+        let last=plan(&fixture.root,"underdog-woof-4b-11-native",&fixture.data).unwrap();
+        assert!(last.retained_files.is_empty());
+        remove(&fixture.root,"underdog-woof-4b-11-native",&fixture.data,&last.confirmation_token).unwrap();
+        assert!(!source.exists() && !runtime.exists() && !metadata.exists() && !receipt.exists());
+        assert_eq!(std::fs::read(external).unwrap(),b"preserve external original");
+        assert_eq!(std::fs::read(unrelated).unwrap(),b"preserve unrelated file");
     }
 }

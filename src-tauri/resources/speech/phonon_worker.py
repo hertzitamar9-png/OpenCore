@@ -1,6 +1,6 @@
 """Offline English Phonon-2 reference inference with bounded audio chunks.
 
-Expands the checkpoint's actual five learned levels to FP32; it does not load
+Expands the checkpoint's actual five learned levels to selected FP32 or BF16; it does not load
 the teacher's weight file or substitute another ASR model. CUDA is temporary.
 """
 import argparse
@@ -37,7 +37,7 @@ def transcribe(model, processor, audio, np, torch, device):
     with torch.inference_mode():
         for block in audio_blocks(audio, np):
             inputs = processor([block], sampling_rate=16000, return_tensors='pt', padding=True)
-            features = inputs['input_features'].to(device=device, dtype=torch.float32)
+            features = inputs['input_features'].to(device=device, dtype=model.dtype)
             mask = inputs.get('attention_mask')
             if mask is not None:
                 mask = mask.to(device)
@@ -54,8 +54,11 @@ def main():
     parser.add_argument('--model', required=True)
     parser.add_argument('--idle-mode', choices=('cold','ram'), required=True)
     parser.add_argument('--awake', action='store_true')
+    parser.add_argument('--precision', choices=('bf16', 'fp32'), default='bf16')
     args = parser.parse_args()
     directory = Path(args.model).resolve()
+    started = time.monotonic()
+    emit({'progress': 'starting-runtime'})
     try:
         import av
         import numpy as np
@@ -63,14 +66,16 @@ def main():
         import torch
         torch.set_num_threads(2)
         torch.set_num_interop_threads(1)
+        dtype = torch.bfloat16 if args.precision == 'bf16' else torch.float32
+        emit({'progress': 'verifying-checkpoint'})
         container = directory / 'model.fermion'
         if not container.is_file() or container.stat().st_size != CONTAINER_BYTES or digest(container) != CONTAINER_SHA:
             raise RuntimeError('Phonon-2 container is missing or corrupted. Reinstall the speech model.')
         require_ram(psutil, MIN_RAM_FREE, 'Phonon-2 reference checkpoint loading')
-        started = time.monotonic()
         sys.path.insert(0, str(directory))
-        from reference_transformers import load_model
-        model, processor, receipt = load_model(str(container), str(directory / 'processor'), dtype=torch.float32)
+        from phonon_loading import load_model
+        model, processor, receipt = load_model(str(container), str(directory / 'processor'), dtype=dtype,
+            progress=lambda stage: emit({'progress': stage}))
         gc.collect()
         device = 'cpu'
 
@@ -78,6 +83,8 @@ def main():
             nonlocal device
             begin = time.monotonic()
             if torch.cuda.is_available() and gpu_free(torch) >= MIN_GPU_FREE:
+                if dtype == torch.bfloat16 and not torch.cuda.is_bf16_supported():
+                    raise RuntimeError('This GPU does not support Phonon-2 BF16. Choose FP32 in Models.')
                 try:
                     model.to('cuda:0')
                     device = 'cuda:0'
@@ -95,10 +102,13 @@ def main():
                 torch.cuda.empty_cache()
             gc.collect()
 
+        if args.awake:
+            emit({'progress': 'activating-device'})
         wake_ms = activate() if args.awake else None
         emit({'ready':True,'modelId':'phonon-2','language':'en','device':device,
             'coldStartMs':round((time.monotonic()-started)*1000),'wakeMs':wake_ms,
-            'params':receipt['params'],'weightDtype':'float32'})
+            'params':receipt['params'],'weightDtype':str(dtype).removeprefix('torch.'),
+            'runtimePrecision':args.precision})
         for line in sys.stdin:
             try:
                 request = json.loads(line)
@@ -125,7 +135,10 @@ def main():
             except Exception as error:
                 if args.idle_mode == 'ram':
                     sleep()
-                emit({'error':str(error)})
+                detail = str(error)
+                if dtype == torch.bfloat16 and ('not implemented' in detail.lower() or 'unsupported' in detail.lower()):
+                    detail = f'Phonon-2 BF16 is unsupported by this {device} runtime: {detail}. Choose FP32 in Models.'
+                emit({'error':detail})
         sleep()
         return 0
     except Exception as error:

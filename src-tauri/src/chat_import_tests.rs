@@ -1173,7 +1173,7 @@ fn hermes_wal_rows_are_included_without_changing_database_or_sidecars() {
 
 #[test]
 #[cfg(windows)]
-fn a_live_hermes_writer_is_rejected_without_touching_database_or_sidecars() {
+fn an_idle_live_hermes_connection_imports_committed_wal_without_touching_sources() {
     let fixture = Fixture::new();
     let source = fixture.root.join("active.db");
     make_hermes_database(&source);
@@ -1187,9 +1187,10 @@ fn a_live_hermes_writer_is_rejected_without_touching_database_or_sidecars() {
         fs::read(&wal).unwrap(),
         fs::read(&shm).unwrap(),
     ];
-    let error = import_file(fixture.store(), &source, "hermes").unwrap_err();
-    assert_eq!(error, CLOSE_HERMES_DATABASE);
-    assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+    let report = import_file(fixture.store(), &source, "hermes").unwrap();
+    assert_eq!(report.imported, 1);
+    assert!(fixture.store().conversation(copied_id(&report)).unwrap().iter()
+        .any(|row| row.content == "Pending WAL message"));
     assert_eq!(
         before,
         [
@@ -1198,12 +1199,127 @@ fn a_live_hermes_writer_is_rejected_without_touching_database_or_sidecars() {
             fs::read(&shm).unwrap()
         ]
     );
-    drop(writer);
+    // All source locks must have been released before returning to the caller.
+    writer.execute("UPDATE sessions SET title='Still writable'", []).unwrap();
 }
 
 #[test]
 #[cfg(windows)]
-fn live_writer_and_same_size_wal_checkpoint_reuse_cannot_import_mixed_generations() {
+fn idle_live_rollback_connection_imports_without_creating_sidecars() {
+    let fixture = Fixture::new();
+    let source = fixture.root.join("rollback.db");
+    make_hermes_database(&source);
+    let writer = Connection::open(&source).unwrap();
+    let before = fs::read(&source).unwrap();
+    let report = import_file(fixture.store(), &source, "hermes").unwrap();
+    assert_eq!(report.imported, 1);
+    assert_eq!(fs::read(&source).unwrap(), before);
+    for suffix in ["-wal", "-shm", "-journal"] {
+        assert!(!sqlite_sidecar(&source, suffix).exists());
+    }
+    writer.execute("UPDATE sessions SET title='Still writable'", []).unwrap();
+}
+
+#[test]
+#[cfg(windows)]
+fn an_unfinished_live_transaction_is_busy_and_source_bytes_are_preserved() {
+    let fixture = Fixture::new();
+    let source = fixture.root.join("writing.db");
+    make_hermes_database(&source);
+    let writer = Connection::open(&source).unwrap();
+    writer.execute_batch("PRAGMA journal_mode=WAL; BEGIN IMMEDIATE;
+        UPDATE messages SET content='Not committed';").unwrap();
+    let paths = [source.clone(), sqlite_sidecar(&source, "-wal"), sqlite_sidecar(&source, "-shm")];
+    let read_sources = || paths.iter().map(|path| {
+        if path == &paths[2] {
+            // An active Windows WAL writer exclusively locks unused SHM bytes
+            // 120..127, so ReadFile cannot cross them. Compare every content byte
+            // around those lock slots without mapping the source in this test.
+            let mut file = File::open(path).unwrap();
+            let mut bytes = vec![0; 128];
+            file.read_exact(&mut bytes[..120]).unwrap();
+            file.seek(SeekFrom::Start(128)).unwrap();
+            file.read_to_end(&mut bytes).unwrap();
+            bytes
+        } else {
+            fs::read(path).unwrap()
+        }
+    }).collect::<Vec<_>>();
+    let before = read_sources();
+    assert_eq!(import_file(fixture.store(), &source, "hermes").unwrap_err(), BUSY_CHAT_DATABASE);
+    assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+    assert_eq!(before, read_sources());
+    writer.execute_batch("ROLLBACK;").unwrap();
+    assert_eq!(import_file(fixture.store(), &source, "hermes").unwrap().imported, 1);
+}
+
+#[test]
+#[cfg(windows)]
+fn cancelled_snapshot_releases_locks_and_does_not_import_partial_history() {
+    let fixture = Fixture::new();
+    let source = fixture.root.join("cancelled.db");
+    make_hermes_database(&source);
+    let writer = Connection::open(&source).unwrap();
+    writer.execute_batch("PRAGMA journal_mode=WAL;
+        INSERT INTO messages VALUES(4,'db-session','user','Committed before cancellation',NULL,NULL,NULL,1760000004.0,NULL,1);").unwrap();
+    let checks = Cell::new(0);
+    let report = import_file_with_cancellation(fixture.store(), &source, "hermes", &|| {
+        checks.set(checks.get() + 1);
+        checks.get() >= 6
+    }, &mut |_| {}).unwrap();
+    assert!(report.cancelled);
+    assert_eq!(report.imported, 0);
+    assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+    writer.execute("UPDATE sessions SET title='Still writable'", []).unwrap();
+}
+
+#[test]
+#[cfg(windows)]
+fn a_new_source_reader_can_connect_while_snapshot_locks_are_held() {
+    let fixture = Fixture::new();
+    let source = fixture.root.join("reading.db");
+    make_hermes_database(&source);
+    let writer = Connection::open(&source).unwrap();
+    writer.execute_batch("PRAGMA journal_mode=WAL;
+        INSERT INTO messages VALUES(4,'db-session','user','Committed before reading',NULL,NULL,NULL,1760000004.0,NULL,1);").unwrap();
+    let checks = Cell::new(0);
+    let observed = Cell::new(false);
+    let snapshot = snapshot_database(&source, &|| {
+        checks.set(checks.get() + 1);
+        if checks.get() == 3 {
+            // The first copy cancellation check runs after main + SHM locks.
+            let reader = Connection::open_with_flags(&source, OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+            let count: i64 = reader.query_row("SELECT count(*) FROM messages", [], |row| row.get(0)).unwrap();
+            assert_eq!(count, 4);
+            observed.set(true);
+        }
+        false
+    }).unwrap();
+    assert!(observed.get());
+    drop(snapshot);
+    writer.execute("UPDATE sessions SET title='Still writable'", []).unwrap();
+}
+
+#[test]
+#[cfg(windows)]
+fn a_hot_rollback_journal_is_rejected_without_recovering_the_source() {
+    let fixture = Fixture::new();
+    let source = fixture.root.join("recover.db");
+    make_hermes_database(&source);
+    let journal = sqlite_sidecar(&source, "-journal");
+    let mut bytes = vec![0; 1024];
+    bytes[..8].copy_from_slice(&[0xd9, 0xd5, 0x05, 0xf9, 0x20, 0xa1, 0x63, 0xd7]);
+    fs::write(&journal, &bytes).unwrap();
+    let before = fs::read(&source).unwrap();
+    assert!(import_file(fixture.store(), &source, "hermes").unwrap_err().contains("unfinished rollback transaction"));
+    assert_eq!(fs::read(&source).unwrap(), before);
+    assert_eq!(fs::read(&journal).unwrap(), bytes);
+    assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+}
+
+#[test]
+#[cfg(windows)]
+fn live_writer_and_same_size_wal_checkpoint_reuse_never_imports_mixed_generations() {
     use std::sync::{
         atomic::{AtomicBool, Ordering},
         mpsc, Arc,
@@ -1217,6 +1333,7 @@ fn live_writer_and_same_size_wal_checkpoint_reuse_cannot_import_mixed_generation
     let (ready, started) = mpsc::channel();
     let worker = std::thread::spawn(move || {
         let writer = Connection::open(worker_path).unwrap();
+        writer.busy_timeout(std::time::Duration::from_secs(3)).unwrap();
         writer
             .execute_batch(
                 "PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0;
@@ -1250,10 +1367,20 @@ fn live_writer_and_same_size_wal_checkpoint_reuse_cannot_import_mixed_generation
     let result = import_file(fixture.store(), &source, "hermes");
     stop.store(true, Ordering::SeqCst);
     worker.join().unwrap();
-    // The writer's read/write handle spans the entire import attempt. No main/WAL
-    // generation is copied; file timestamps and equal lengths cannot bypass it.
-    assert_eq!(result.unwrap_err(), CLOSE_HERMES_DATABASE);
-    assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+    match result {
+        Ok(report) => {
+            assert_eq!(report.imported, 1);
+            let item = &report.conversations[0];
+            assert!(matches!(item.title.as_str(), "Generation A" | "Generation B"));
+            let rows = fixture.store().conversation(copied_id(&report)).unwrap();
+            assert!(rows.iter().filter(|row| row.kind == "message")
+                .all(|row| row.content == item.title));
+        }
+        Err(error) => {
+            assert_eq!(error, BUSY_CHAT_DATABASE);
+            assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+        }
+    }
 }
 
 #[test]

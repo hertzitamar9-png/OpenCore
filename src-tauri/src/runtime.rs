@@ -935,7 +935,7 @@ impl RuntimeManager {
 
     fn start_catalog_gguf(&self, model:&crate::model_catalog::Model, generation:u64)->Result<RuntimeSnapshot,String> {
         let profile=model.id.as_str();
-        let checkpoint=crate::model_catalog::safe_path(&self.install_root,model.runtime_model_path.as_deref().ok_or("Missing GGUF runtime path")?)?;
+        let checkpoint=crate::model_catalog::runtime_model_path(&self.install_root,model)?;
         let server=self.doucode_llama_server();
         if !server.is_file(){return self.fail_start(profile,"The bundled GGUF inference runtime is missing".into());}
         if Self::port_open(self.backend_port) && !self.reclaim_stale_opencore_port(self.backend_port,false){return self.fail_start(profile,"Chat backend port is occupied by another application".into());}

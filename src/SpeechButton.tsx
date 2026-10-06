@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LoaderCircle, Mic } from "lucide-react";
 import * as api from "./api";
 import { openSpeechSession } from './speechSession';
+import { speechLoadingMessage } from './speech-progress';
 
 export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: string) => void; onError: (message: string) => void }) {
   const [phase, setPhase] = useState<"idle" | "starting" | "recording" | "transcribing">("idle");
@@ -14,6 +15,7 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const cancelled = useRef(false);
   const [level, setLevel] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState<api.SpeechStatus | null>(null);
   const meter = useRef<AudioContext | undefined>(undefined);
   const frame = useRef(0);
   const button = useRef<HTMLButtonElement>(null);
@@ -39,10 +41,25 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
     alive.current = true;
     return () => { alive.current = false; finish(true); };
   }, []);
+  useEffect(() => {
+    if (phase !== 'starting') return;
+    let disposed = false;
+    let pending = false;
+    const refresh = async () => {
+      if (pending) return;
+      pending = true;
+      try { const status = await api.speechStatus(); if (!disposed) setLoadingStatus(status); }
+      catch { /* Startup itself reports errors; progress is optional. */ }
+      finally { pending = false; }
+    };
+    void refresh();
+    const poll = window.setInterval(() => void refresh(), 500);
+    return () => { disposed = true; window.clearInterval(poll); };
+  }, [phase]);
 
   const start = async () => {
     if (busy.current) return;
-    busy.current = true; recordingRequested.current = true; cancelled.current = false; setPhase("starting");
+    busy.current = true; recordingRequested.current = true; cancelled.current = false; setLoadingStatus(null); setPhase("starting");
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") throw new Error("Microphone recording is unavailable in this window.");
@@ -124,5 +141,5 @@ export function SpeechButton({ onTranscript, onError }: { onTranscript: (text: s
       {phase === 'recording' && <span className="speech-level" style={{ clipPath: `inset(${(1 - level) * 100}% 0 0 0)` }}><Mic size={22} /></span>}
     </span>
     {(phase === 'starting' || phase === 'transcribing') && <LoaderCircle size={12} className="speech-spinner" />}
-  </button>{phase !== 'idle' && <span className="speech-status" role="status">{phase === 'recording' ? level > .12 ? 'Listening' : 'Listening · quiet' : phase === 'starting' ? 'Loading Microphone' : 'Transcribing'}</span>}</span>;
+  </button>{phase !== 'idle' && <span className="speech-status" role="status">{phase === 'recording' ? level > .12 ? 'Listening' : 'Listening · quiet' : phase === 'starting' ? speechLoadingMessage(loadingStatus) || 'Loading Microphone' : 'Transcribing'}</span>}</span>;
 }
