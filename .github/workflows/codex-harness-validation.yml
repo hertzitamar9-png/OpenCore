@@ -30,6 +30,14 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      - uses: actions/cache/restore@v4
+        id: native-cache
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
       - name: Install JavaScript dependencies
         run: npm ci
       - name: Prepare packaged Node runtime for integration fixtures
@@ -43,7 +51,28 @@ jobs:
       - name: Test frontend and integration suites
         run: npm test
       - name: Test Rust libraries with MSVC
+        id: rust-tests
         working-directory: src-tauri
         run: cargo test --lib
+      - name: Diagnose a failed Windows test executable
+        if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
+        shell: powershell
+        run: ./scripts/windows-loader-diagnostics.ps1
+      - name: Preserve Windows loader diagnostics
+        if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-loader-diagnostics
+          path: artifacts/windows-loader/
+          retention-days: 7
       - name: Build Windows app executable without packaging or publishing
         run: npx tauri build --no-bundle
+      - name: Save compiled native dependencies for diagnostic retries
+        if: ${{ always() && steps.native-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
