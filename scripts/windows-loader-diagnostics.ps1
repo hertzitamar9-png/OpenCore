@@ -26,6 +26,7 @@ foreach ($executable in $executables) {
   $imports = @(& dumpbin /imports $executable.FullName)
   if ($LASTEXITCODE -ne 0) { throw "dumpbin failed for $($executable.Name)" }
   $imports | Set-Content -LiteralPath (Join-Path $OutputDirectory "$($executable.Name).imports.txt")
+  Copy-Item -LiteralPath $executable.FullName -Destination (Join-Path $OutputDirectory $executable.Name)
   $moduleName = $null
   $module = [IntPtr]::Zero
   foreach ($line in $imports) {
@@ -42,7 +43,7 @@ foreach ($executable in $executables) {
       $diagnostics += [pscustomobject]@{ binary=$executable.Name; module=$moduleName; path=$resolved.ToString(); loadError=$errorCode }
     } elseif ($moduleName -and $module -ne [IntPtr]::Zero -and $line -match '^\s+[0-9A-Fa-f]+\s+([A-Za-z_?][^\s]+)\s*$') {
       $symbol = $Matches[1]
-      if ([OpenCoreLoaderProbe]::GetProcAddress($module, $symbol) -eq [IntPtr]::Zero) {
+      if ($symbol -notmatch '^Ordinal' -and [OpenCoreLoaderProbe]::GetProcAddress($module, $symbol) -eq [IntPtr]::Zero) {
         $diagnostics += [pscustomobject]@{ binary=$executable.Name; module=$moduleName; missingEntryPoint=$symbol }
       }
     }
@@ -51,3 +52,9 @@ foreach ($executable in $executables) {
 }
 $diagnostics | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'loader-probe.json')
 $diagnostics | ConvertTo-Json -Depth 4
+foreach ($log in @('Application', 'System')) {
+  Get-WinEvent -FilterHashtable @{ LogName=$log; StartTime=(Get-Date).AddMinutes(-15) } -MaxEvents 100 -ErrorAction SilentlyContinue |
+    Where-Object { $_.Message -match '(?i)opencore|entry point|entrypoint' } |
+    Select-Object TimeCreated, Id, ProviderName, Message |
+    ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $OutputDirectory "$log-events.json")
+}
