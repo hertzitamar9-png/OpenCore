@@ -31,6 +31,14 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      - uses: actions/cache/restore@v4
+        id: native-cache
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
       - name: Verify installed Rust toolchain
         shell: powershell
         run: |
@@ -86,12 +94,24 @@ jobs:
         run: python -m unittest discover -s src-tauri/resources/studio -p "test*.py"
       - name: Test Rust
         working-directory: src-tauri
-        run: cargo test --lib
+        shell: pwsh
+        run: |
+          ../scripts/prepare-windows-rust-test-manifest.ps1
+          cargo test --lib
       - name: Test automatic Claude bridge installation with isolated settings
         working-directory: src-tauri
         run: cargo test --lib claude_bridge_install -- --include-ignored
       - name: Test release version ordering
         run: node --test scripts/test-release-versioning.mjs
+      - name: Save compiled native dependencies
+        if: ${{ always() && steps.native-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
       - name: Version this push
         shell: powershell
         run: |
