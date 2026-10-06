@@ -38,6 +38,7 @@ jobs:
             ~/.cargo/git
             src-tauri/target
           key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          restore-keys: windows-native-workspace-v1-
       - name: Install JavaScript dependencies
         run: npm ci
       - name: Prepare packaged Node runtime for integration fixtures

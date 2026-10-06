@@ -39,6 +39,7 @@ jobs:
             ~/.cargo/git
             src-tauri/target
           key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          restore-keys: windows-native-workspace-v1-
       - name: Verify installed Rust toolchain
         shell: powershell
         run: |

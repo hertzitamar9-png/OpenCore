@@ -101,6 +101,66 @@ mod platform {
     use uiautomation::types::Point;
     use uiautomation::{UIAutomation, UIElement};
 
+    struct ComApartment;
+
+    impl Drop for ComApartment {
+        fn drop(&mut self) {
+            unsafe { windows_uia::Win32::System::Com::CoUninitialize() };
+        }
+    }
+
+    struct AutomationSession {
+        // Release the client before balancing this thread's COM initialization.
+        automation: UIAutomation,
+        _apartment: ComApartment,
+    }
+
+    fn automation_session(background_only: bool) -> Result<AutomationSession, String> {
+        use windows_uia::core::Interface;
+        use windows_uia::Win32::System::Com::{
+            CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED,
+        };
+        use windows_uia::Win32::UI::Accessibility::{CUIAutomation8, IUIAutomation, IUIAutomation2};
+
+        unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.ok()
+            .map_err(|error| format!("Cannot initialize desktop accessibility: {error}"))?;
+        let apartment = ComApartment;
+        let automation = if background_only {
+            // UI Automation defaults to focusing controls before pattern actions.
+            // Configure and verify the client before obtaining any target elements
+            // or patterns; a legacy client cannot provide this background policy.
+            let client: IUIAutomation2 = unsafe {
+                CoCreateInstance(&CUIAutomation8, None, CLSCTX_INPROC_SERVER)
+            }.map_err(|error| format!("Background accessibility is unavailable: cannot create a client with automatic focus control: {error}"))?;
+            unsafe { client.SetAutoSetFocus(false) }
+                .map_err(|error| format!("Background accessibility is unavailable: cannot disable automatic focus: {error}"))?;
+            if unsafe { client.AutoSetFocus() }
+                .map_err(|error| format!("Background accessibility is unavailable: cannot verify automatic focus is disabled: {error}"))?
+                .as_bool()
+            {
+                return Err("Background accessibility is unavailable: automatic focus remains enabled".into());
+            }
+            let configured: IUIAutomation = client.cast()
+                .map_err(|error| format!("Background accessibility is unavailable: cannot use the configured client: {error}"))?;
+            UIAutomation::from(configured)
+        } else {
+            UIAutomation::new_direct().map_err(|error| error.to_string())?
+        };
+        Ok(AutomationSession { automation, _apartment: apartment })
+    }
+
+    #[cfg(test)]
+    pub(super) fn background_auto_set_focus_for_test() -> Result<bool, String> {
+        use windows_uia::core::Interface;
+        use windows_uia::Win32::UI::Accessibility::{IUIAutomation, IUIAutomation2};
+
+        let session = automation_session(true)?;
+        let configured: &IUIAutomation = session.automation.as_ref();
+        let client: IUIAutomation2 = configured.cast().map_err(|error| error.to_string())?;
+        unsafe { client.AutoSetFocus() }.map(|enabled| enabled.as_bool())
+            .map_err(|error| error.to_string())
+    }
+
     fn windows(automation: &UIAutomation) -> Result<Vec<UIElement>, String> {
         let root = automation.get_root_element().map_err(|e| e.to_string())?;
         let walker = automation.get_control_view_walker().map_err(|e| e.to_string())?;
@@ -617,10 +677,11 @@ mod platform {
     }
 
     fn run_action(action: &str, args: &Value) -> Result<Value, String> {
-        let automation = UIAutomation::new().map_err(|e| e.to_string())?;
+        let session = automation_session(!foreground_fallback_allowed(args))?;
+        let automation = &session.automation;
         if action == "list" {
             let mut rows = vec![json!({"windowId":0,"title":"Whole desktop","bounds":rect_json(&automation.get_root_element().map_err(|e| e.to_string())?)})];
-            rows.extend(windows(&automation)?.into_iter().filter_map(|element| {
+            rows.extend(windows(automation)?.into_iter().filter_map(|element| {
                 let id: isize = element.get_native_window_handle().ok()?.into();
                 if id <= 0 { return None; }
                 Some(json!({"windowId":id,"title":element.get_name().unwrap_or_default(),"bounds":rect_json(&element)}))
@@ -628,14 +689,14 @@ mod platform {
             return Ok(json!({"windows":rows}));
         }
         let id = args["windowId"].as_i64().ok_or("Select a window first")? as isize;
-        let window = if id == 0 { automation.get_root_element().map_err(|e| e.to_string())? } else { window_by_id(&automation, id)? };
+        let window = if id == 0 { automation.get_root_element().map_err(|e| e.to_string())? } else { window_by_id(automation, id)? };
         match action {
             "read_screen" => read_screen(args),
-            "inspect" => Ok(json!({"windowId":id,"title":window.get_name().unwrap_or_default(),"bounds":rect_json(&window),"coordinateSpace":"window","elements":inspect_tree(&automation, &window)})),
+            "inspect" => Ok(json!({"windowId":id,"title":window.get_name().unwrap_or_default(),"bounds":rect_json(&window),"coordinateSpace":"window","elements":inspect_tree(automation, &window)})),
             "invoke" | "set_value" => {
                 use uiautomation::patterns::{UIInvokePattern, UIValuePattern};
                 let element_id = args["elementId"].as_u64().unwrap_or(160) as usize;
-                let element = element_by_index(&automation, &window, element_id)?;
+                let element = element_by_index(automation, &window, element_id)?;
                 if action == "invoke" {
                     let pattern = element.get_pattern::<UIInvokePattern>()
                         .map_err(|_| "This control cannot be invoked without foreground pointer input".to_string())?;
@@ -683,7 +744,7 @@ mod platform {
                 use uiautomation::patterns::UIScrollPattern;
                 use uiautomation::types::ScrollAmount;
                 let point = window_point(&window, args)?;
-                let element = scrollable_at(&automation, &window, &point)?;
+                let element = scrollable_at(automation, &window, &point)?;
                 let amount = if args["direction"] == "up" { ScrollAmount::SmallDecrement }
                              else { ScrollAmount::SmallIncrement };
                 element.get_pattern::<UIScrollPattern>().map_err(|e| e.to_string())?
@@ -698,7 +759,7 @@ mod platform {
             "interact" | "set_at" | "commit_enter" | "commit_text" => {
                 use uiautomation::patterns::{UIExpandCollapsePattern, UIInvokePattern, UISelectionItemPattern, UITogglePattern, UIValuePattern};
                 let point = window_point(&window, args)?;
-                let element = match element_at(&automation, &window, &point) {
+                let element = match element_at(automation, &window, &point) {
                     Ok(element) => element,
                     Err(_) if action == "interact" && foreground_fallback_allowed(args) => return foreground_click(id, &point, true),
                     Err(_) if !foreground_fallback_allowed(args) => return Err("This control does not expose background interaction. Foreground pointer and keyboard input are disabled; use the control in the application.".into()),

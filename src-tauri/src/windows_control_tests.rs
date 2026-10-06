@@ -351,6 +351,20 @@ fn wait_for(operation: &str, mut predicate: impl FnMut() -> bool) {
 }
 
 #[test]
+fn strict_accessibility_client_disables_automatic_pattern_focus() {
+    assert_eq!(
+        std::env::var("GITHUB_ACTIONS").as_deref(),
+        Ok("true"),
+        "native accessibility tests must run only on GitHub Actions"
+    );
+    assert!(
+        !platform::background_auto_set_focus_for_test()
+            .expect("strict production client must expose verified automatic focus control"),
+        "every strict client must disable automatic focus before obtaining controls or patterns"
+    );
+}
+
+#[test]
 fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     let fixture = Fixture::new();
     wait_for(
@@ -534,8 +548,12 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     scroll["direction"] = json!("down");
     let before_scroll =
         unsafe { SendMessageW(hwnd(fixture.list), LB_GETTOPINDEX, WPARAM(0), LPARAM(0)).0 };
+    let selected_before_scroll =
+        unsafe { SendMessageW(hwnd(fixture.list), LB_GETCURSEL, WPARAM(0), LPARAM(0)).0 };
     let scrolled = platform::run("scroll_at", &scroll).expect("occluded ScrollPattern list");
     assert_eq!(scrolled["scrolled"], true);
+    assert_eq!(scrolled["inputMode"], "accessibility");
+    assert_eq!(scrolled["backgroundVerified"], true);
     let after_scroll =
         unsafe { SendMessageW(hwnd(fixture.list), LB_GETTOPINDEX, WPARAM(0), LPARAM(0)).0 };
     assert!(
@@ -544,6 +562,37 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     );
     fixture.assert_desktop_unchanged(
         "ScrollPattern list scroll",
+        foreground,
+        cursor,
+        activations,
+        z_changes,
+    );
+    fixture.assert_covered(&scroll);
+    assert_eq!(
+        unsafe { SendMessageW(hwnd(fixture.list), LB_GETCURSEL, WPARAM(0), LPARAM(0)).0 },
+        selected_before_scroll,
+        "background scroll must not change the selected list item"
+    );
+
+    scroll["direction"] = json!("up");
+    let scrolled_up =
+        platform::run("scroll_at", &scroll).expect("occluded upward ScrollPattern list");
+    assert_eq!(scrolled_up["scrolled"], true);
+    assert_eq!(scrolled_up["inputMode"], "accessibility");
+    assert_eq!(scrolled_up["backgroundVerified"], true);
+    let after_up_scroll =
+        unsafe { SendMessageW(hwnd(fixture.list), LB_GETTOPINDEX, WPARAM(0), LPARAM(0)).0 };
+    assert!(
+        after_up_scroll < after_scroll,
+        "background upward scroll must change the real visible list position"
+    );
+    assert_eq!(
+        unsafe { SendMessageW(hwnd(fixture.list), LB_GETCURSEL, WPARAM(0), LPARAM(0)).0 },
+        selected_before_scroll,
+        "background upward scroll must not change the selected list item"
+    );
+    fixture.assert_desktop_unchanged(
+        "upward ScrollPattern list scroll",
         foreground,
         cursor,
         activations,
