@@ -27,6 +27,7 @@ jobs:
         with:
           arch: x64
       - uses: actions/cache/restore@v4
+        id: native-cache
         with:
           path: |
             ~/.cargo/registry
@@ -50,3 +51,12 @@ jobs:
           $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
           [IO.File]::WriteAllText($runnerConfig, "[target.x86_64-pc-windows-msvc]`nrunner = $runner`n", [Text.UTF8Encoding]::new($false))
           cargo --config $runnerConfig test --lib
+      - name: Save compiled native dependencies
+        if: ${{ always() && steps.native-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}

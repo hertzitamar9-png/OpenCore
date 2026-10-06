@@ -10,6 +10,44 @@ fn foreground_fallback_allowed(args: &Value) -> bool {
 #[cfg(windows)]
 static MANUAL_DISPATCH_ACTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
+#[cfg(windows)]
+fn validate_external_manual_window(args: &Value) -> Result<(), String> {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::System::Threading::GetCurrentProcessId;
+    use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetWindowThreadProcessId, IsWindow, GA_ROOT};
+    let id = args["windowId"].as_i64().filter(|id| *id > 0)
+        .ok_or("Choose an external application window for manual background input")?;
+    let target = HWND(id as *mut core::ffi::c_void);
+    if !unsafe { IsWindow(target) }.as_bool() {
+        return Err("The selected window is no longer available; no input was sent".into());
+    }
+    let root = unsafe { GetAncestor(target, GA_ROOT) };
+    let (mut target_process, mut root_process) = (0, 0);
+    unsafe {
+        GetWindowThreadProcessId(target, Some(&mut target_process));
+        GetWindowThreadProcessId(root, Some(&mut root_process));
+    }
+    if target_process == 0 || root_process == 0 {
+        return Err("Cannot verify the selected application's ownership; no input was sent".into());
+    }
+    let own_process = unsafe { GetCurrentProcessId() };
+    if target_process == own_process || root_process == own_process {
+        // Windows lets its foreground process activate its own windows despite
+        // LockSetForegroundWindow. Refuse this case instead of promising focus
+        // protection that the OS does not provide.
+        return Err("Manual background input to OpenCore-owned windows is unsupported. Use those controls directly in OpenCore; no input was sent.".into());
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+pub(crate) fn validate_manual_target(action: &str, args: &Value) -> Result<(), String> {
+    if args["manualControl"].as_bool() == Some(true) && crate::desktop_policy::shows_activity(action) {
+        validate_external_manual_window(args)?;
+    }
+    Ok(())
+}
+
 /// Parent-owned foreground protection. It contains no thread-bound mutex guard
 /// so the helper protocol can await a result while retaining the lease.
 #[cfg(windows)]
@@ -21,6 +59,7 @@ pub(crate) struct ManualForegroundGuard {
 impl ManualForegroundGuard {
     pub(crate) fn acquire(args: &Value) -> Result<Option<Self>, String> {
         if args["manualControl"].as_bool() != Some(true) { return Ok(None); }
+        validate_external_manual_window(args)?;
         use std::sync::atomic::Ordering;
         use windows::Win32::System::Threading::GetCurrentProcessId;
         use windows::Win32::UI::WindowsAndMessaging::{
@@ -728,6 +767,9 @@ mod platform {
         // Keep the policy at the native boundary too, including callers that do
         // not enter through the asynchronous Tauri command.
         validate_action(action, args)?;
+        if !crate::desktop_helper::in_helper() {
+            validate_manual_target(action, args)?;
+        }
         let check_background = !foreground_fallback_allowed(args)
             && matches!(action, "interact" | "invoke" | "set_value" | "set_at" | "commit_text" | "commit_enter" | "scroll_at");
         let original = if check_background {

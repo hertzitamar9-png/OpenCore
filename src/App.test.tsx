@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App, { historySyncProgressLabel, recentPromptProgress } from "./App";
 import * as api from "./api";
 import opencoreLogo from "./assets/opencore-logo.png";
-import type { OperationRecord } from "./types";
+import type { ArchiveEvent, ArchivePageRef, OperationRecord } from "./types";
 import * as dialog from "@tauri-apps/plugin-dialog";
 import { installExternalLinkGuard } from "./external-links";
 import * as platform from './agent-platform';
@@ -490,6 +490,88 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("button", { name: "Search" }));
       await waitFor(() => expect(search).toHaveBeenCalledWith("some code", 75, ["orphan-archive"]));
     } finally { overview.mockRestore(); search.mockRestore(); list.mockRestore(); read.mockRestore(); }
+  });
+
+  it("keeps archive controls usable while reading the first pages and ignores closed archive responses", async () => {
+    const firstPages: ArchivePageRef[] = Array.from({ length: 40 }, (_, index) => ({
+      archiveFile: "first.db", pageId: String(index + 1), conversationId: "first-archive",
+      offsetStart: index * 100, offsetEnd: (index + 1) * 100, timestamp: index + 1,
+    }));
+    const extraPage = { ...firstPages[0], pageId: "41", offsetStart: 4000, offsetEnd: 4100 };
+    const secondPage = { ...firstPages[0], archiveFile: "second.db", conversationId: "second-archive" };
+    const overview = vi.spyOn(api, "archiveOverview").mockResolvedValue({
+      archives: 2, pages: 42, sourceBytes: 4200, storedBytes: 4200, summaries: [],
+      conversations: [
+        { conversationId: "first-archive", pages: 41, sourceBytes: 4100, storedBytes: 4100, lastTimestamp: 2 },
+        { conversationId: "second-archive", pages: 1, sourceBytes: 100, storedBytes: 100, lastTimestamp: 1 },
+      ],
+    });
+    let finishActivity!: (events: ArchiveEvent[]) => void;
+    const activity = new Promise<ArchiveEvent[]>(resolve => { finishActivity = resolve; });
+    const events = vi.spyOn(api, "listArchiveEvents").mockResolvedValue([]).mockImplementationOnce(() => activity);
+    const pages = vi.spyOn(api, "listArchivePages").mockImplementation(async (id, offset) => id === "first-archive" ? offset ? [extraPage] : firstPages : [secondPage]);
+    const pending = new Map<string, { promise: Promise<string>; resolve: (text: string) => void }[]>();
+    const read = vi.spyOn(api, "readArchivePage").mockImplementation((file, pageId) => {
+      if (file === "second.db") return Promise.resolve("Second archive exact text");
+      let resolve!: (text: string) => void;
+      const promise = new Promise<string>(done => { resolve = done; });
+      pending.set(pageId, [...(pending.get(pageId) || []), { promise, resolve }]);
+      return promise;
+    });
+    try {
+      render(<App />);
+      await screen.findByText("Build a data analysis script", { selector: "h2" });
+      fireEvent.click(screen.getByRole("button", { name: "Memory" }));
+      await screen.findByRole("option", { name: "Archived chat · first-archive" });
+      fireEvent.change(screen.getByRole("combobox", { name: "Memory scope" }), { target: { value: "chat:first-archive" } });
+      const reader = await screen.findByRole("region", { name: "Open archive" });
+      await within(reader).findByText("Page 40");
+      await waitFor(() => expect(read).toHaveBeenCalledTimes(4));
+      expect(screen.getByRole("button", { name: "Search" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Index activity and files" })).toBeEnabled();
+      expect(within(reader).getByRole("button", { name: "Load more pages" })).toBeEnabled();
+      expect(within(reader).getByRole("status", { name: "Archive reading status" })).toHaveTextContent("0 read · 4 opening");
+      await act(async () => { pending.get("1")![0].resolve("First verified exact page"); });
+      expect(within(reader).getByText("First verified exact page")).toBeVisible();
+      expect(within(reader).getByRole("status", { name: "Archive reading status" })).toHaveTextContent("1 read · 3 opening");
+      fireEvent.click(within(reader).getByRole("button", { name: "Load more pages" }));
+      const extra = (await within(reader).findByText("Page 41")).closest("article")!;
+      expect(pages).toHaveBeenCalledWith("first-archive", 40, 40);
+      expect(within(extra).getByRole("button", { name: "Open page" })).toBeEnabled();
+      expect(read).toHaveBeenCalledTimes(4);
+      const fifth = within(reader).getByText("Page 5").closest("article")!;
+      expect(within(fifth).getByText("Exact text is available on demand. Select Open page to read it.")).toBeVisible();
+      fireEvent.click(within(fifth).getByRole("button", { name: "Open page" }));
+      expect(read).toHaveBeenCalledTimes(5);
+      await act(async () => {
+        for (const id of ["2", "3", "4"]) pending.get(id)![0].resolve(`Verified exact page ${id}`);
+      });
+      expect(within(reader).getByRole("status", { name: "Archive reading status" })).toHaveTextContent("4 read · 1 opening");
+      expect(read).toHaveBeenCalledTimes(5);
+
+      fireEvent.change(screen.getByRole("combobox", { name: "Memory scope" }), { target: { value: "chat:second-archive" } });
+      await screen.findByText("Second archive exact text");
+      fireEvent.click(within(screen.getByRole("region", { name: "Open archive" })).getByRole("button", { name: "Close archive" }));
+      expect(screen.queryByRole("region", { name: "Open archive" })).not.toBeInTheDocument();
+      fireEvent.change(screen.getByRole("combobox", { name: "Memory scope" }), { target: { value: "chat:first-archive" } });
+      const reopened = await screen.findByRole("region", { name: "Open archive" });
+      const reopenedFifth = (await within(reopened).findByText("Page 5")).closest("article")!;
+      fireEvent.click(within(reopenedFifth).getByRole("button", { name: "Open page" }));
+      await waitFor(() => expect(pending.get("5")).toHaveLength(2));
+      await act(async () => {
+        pending.get("5")![0].resolve("Stale page from the closed archive");
+        finishActivity([{ eventId: "stale", conversationId: "first-archive", timestamp: 1, kind: "message", role: "user", source: "OpenCore", title: "Old activity", content: "Stale activity from the closed archive", metadata: {}, contentBytes: 38, truncated: false }]);
+      });
+      expect(screen.queryByText("Stale page from the closed archive")).not.toBeInTheDocument();
+      expect(screen.queryByText("Stale activity from the closed archive")).not.toBeInTheDocument();
+      expect(within(reopenedFifth).getByRole("button", { name: "Opening…" })).toBeDisabled();
+      await act(async () => { pending.get("5")![1].resolve("Fresh verified fifth page"); });
+      expect(within(reopenedFifth).getByText("Fresh verified fifth page")).toBeVisible();
+      expect(within(reopenedFifth).getByRole("button", { name: "Reload" })).toBeEnabled();
+    } finally {
+      await act(async () => { for (const requests of pending.values()) for (const request of requests) request.resolve("Remaining exact page"); finishActivity([]); });
+      overview.mockRestore(); events.mockRestore(); pages.mockRestore(); read.mockRestore();
+    }
   });
 
   it("requires an explicit confirmation before enabling an allow everything mode", async () => {

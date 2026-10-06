@@ -221,6 +221,7 @@ impl Drop for HelperLease {
 pub(crate) async fn execute(action: String, mut args: Value, mut command: tokio::process::Command) -> Result<Value, String> {
     use tokio::io::AsyncWriteExt;
     prepare(&action, &mut args)?;
+    crate::windows_control::validate_manual_target(&action, &args)?;
     let request = serde_json::to_vec(&Request { version: 1, action, args: args.clone() }).map_err(|error| error.to_string())?;
     if request.len() + 1 > MAX_REQUEST_BYTES { return Err("Desktop helper request exceeds its size limit".into()); }
     command.stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped())

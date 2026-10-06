@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Check, Download, ExternalLink, HardDrive, PackageMinus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Check, Download, ExternalLink, HardDrive, PackageMinus, Search } from "lucide-react";
 import * as api from "./api";
 import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
@@ -20,15 +20,18 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [library, setLibrary] = useState<api.ModelLibrary | null>(null);
   const [error, setError] = useState("");
   const [category, setCategory] = useState('all');
+  const [query, setQuery] = useState('');
   const [memoryMode, setMemoryMode] = useState<"all" | "native" | "echo">("all");
   const [pending, setPending] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<api.InstalledModel | null>(null);
   const [quantization, setQuantization] = useState<Record<string, string>>({});
   const [speech, setSpeech] = useState<api.SpeechStatus>({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
   const refresh = useCallback(async () => {
+    // A slow speech worker must not block browsing the model catalog.
+    void api.speechStatus().then(setSpeech).catch(() => {});
     try {
-      const [models, status] = await Promise.all([api.modelLibrary(), api.speechStatus()]);
-      setLibrary(models); setSpeech(status); setError("");
+      const models = await api.modelLibrary();
+      setLibrary(models); setError("");
     }
     catch (cause) { setError(String(cause)); }
   }, []);
@@ -66,9 +69,12 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const progress = library?.progress;
   const categoryOf = (model: api.InstalledModel) => model.category || (model.speechLanguage ? 'speech' : model.selectable ? 'text' : 'computer-use');
   const categories = [['all','All models'],['text','Text'],['speech','Speech'],['computer-use','Computer use'],['music','Music'],['image','2D images'],['3d','3D assets'],['3d-animation','3D animation'],['2d-animation','2D animation'],['video','Video'],['tts','Speech synthesis'],['voice-cloning','Reference voice'],['ocr','Document extraction'],['omni','Omni'],['policy','Robotics policy']];
-  const allModelGroups = groupModelVariants(library?.models || []);
-  const modelGroups = filterGroupsByMemoryMode(allModelGroups, memoryMode);
-  const visibleModels = modelGroups.filter(group => category === 'all' || categoryOf(group.model) === category);
+  const modelById = useMemo(() => new Map((library?.models || []).map(model => [model.id, model])), [library?.models]);
+  const allModelGroups = useMemo(() => groupModelVariants(library?.models || []), [library?.models]);
+  const modelGroups = useMemo(() => filterGroupsByMemoryMode(allModelGroups, memoryMode), [allModelGroups, memoryMode]);
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const visibleModels = modelGroups.filter(group => (category === 'all' || categoryOf(group.model) === category)
+    && words.every(word => `${group.model.label} ${group.model.description} ${group.variants.map(model => `${model.id} ${model.label} ${model.precision}`).join(' ')}`.toLowerCase().includes(word)));
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
@@ -76,6 +82,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     <p className="model-library-note">Downloads show the pinned package size in GB and bytes. External setup entries have no app download. Text runtime VRAM estimates assume full GPU weight offload and system RAM for KV/state; actual use varies by backend. Media packages may require separate components and a compatible runtime. ECHO is available for text models.</p>
     {runtimeActive ? <p className="model-library-note">Stop the runtime to install or select another model. Uninstalling an active model requires confirmation to stop it first.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
+    {!library && !error ? <p role="status">Loading model options… You can choose a category while they load.</p> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
       <div><strong>{library?.models.find((model) => model.id === progress.modelId)?.label || progress.modelId}</strong><span>{progress.phase}</span></div>
       {installing && progress.phase !== "uninstalling" ? <><progress aria-label="Model download" value={progress.phase === "preparing" ? undefined : progress.downloadedBytes} max={Math.max(1, progress.totalBytes)} /><small>{progress.currentFile === "Preparing speech runtime" ? "Setting up speech recognition for the microphone." : `${gb(progress.downloadedBytes)} / ${gb(progress.totalBytes)} · ${progress.currentFile || "Preparing download"}`}</small><button onClick={() => void api.cancelModelInstall().catch((cause) => onNotice(String(cause)))}>Cancel download</button></> : null}
@@ -83,10 +90,12 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     </div> : null}
     <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => id === 'all' || categoryOf(group.model) === id).length}</span></button>)}</div>
     <div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => category === 'all' || categoryOf(group.model) === category).length}</span></button>)}</div>
+    <div className="model-library-search"><Search size={17} aria-hidden="true" /><input aria-label="Search models" placeholder="Find a model or quantization…" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') setQuery(''); }} />{query ? <button onClick={() => setQuery('')}>Clear search</button> : null}<span>{visibleModels.length} models</span></div>
+    {library && visibleModels.length === 0 ? <p role="status">No models match these filters.</p> : null}
     <div className="model-library-grid">{visibleModels.map((group) => {
-      const remembered = library?.models.find(item => item.id === quantization[group.id]);
+      const remembered = modelById.get(quantization[group.id]);
       const matchingRemembered = matchingModelVariant(group, remembered);
-      const selected = library?.models.find(item => item.id === selectedProfile);
+      const selected = modelById.get(selectedProfile);
       const matchingSelection = matchingModelVariant(group, selected);
       const chosenId = matchingRemembered?.id || matchingSelection?.id || group.variants[0]?.id || group.id;
       const model = group.variants.find(item => item.id === chosenId) || group.model;
