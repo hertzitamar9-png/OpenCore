@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applyPlatformAppearance, defaultPlatformConfiguration, loadPlatformConfiguration,
   parseMcpServers, parseTestingLabProfiles, savePlatformConfiguration,
-  usePlatformConfiguration, validatePlatformConfiguration,
+  usePlatformConfiguration, validatePlatformConfiguration, PLATFORM_SETTINGS_EVENT,
 } from "./agent-platform";
 
 const bridge = vi.hoisted(() => ({
@@ -91,6 +91,21 @@ describe("platform configuration boundaries", () => {
     expect(root.style.getPropertyValue("--platform-accent-text")).toBe("#ffffff");
   });
 
+  it("keeps accent links readable against their surface even for white and black accent choices", () => {
+    const luminance = (color: string) => {
+      const channels = [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16) / 255)
+        .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+      return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+    };
+    const root = document.createElement("div");
+    for (const theme of ["light", "dark"] as const) for (const accentColor of ["#ffffff", "#000000", "#7c5cff"]) {
+      applyPlatformAppearance({ ...defaultPlatformConfiguration().appearance, theme, accentColor }, root);
+      const ink = luminance(root.style.getPropertyValue("--platform-link"));
+      const surface = luminance(root.style.getPropertyValue("--surface"));
+      expect((Math.max(ink, surface) + .05) / (Math.min(ink, surface) + .05)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it("updates bootstrap state when the native settings event changes verification", async () => {
     bridge.invoke.mockResolvedValue(defaultPlatformConfiguration());
     const { result, unmount } = renderHook(() => usePlatformConfiguration());
@@ -103,6 +118,27 @@ describe("platform configuration boundaries", () => {
     expect(result.current.configuration?.compactAtTokens).toBe(333333);
     unmount();
     expect(bridge.unlisten).toHaveBeenCalled();
+  });
+
+  it("keeps a newer tool update when an older UI save finishes acknowledging its source", async () => {
+    const initial = defaultPlatformConfiguration();
+    const acknowledged = { ...initial, systemPrompt: "Saved UI instruction" };
+    const newer = { ...acknowledged, verification: "long" as const };
+    let reads = 0;
+    bridge.invoke.mockImplementation(async (command: string) => {
+      if (command === "agent_platform_configuration") return ++reads === 1 ? initial : acknowledged;
+      if (command === "agent_platform_action") return { persisted: true };
+      throw new Error(`Unexpected command: ${command}`);
+    });
+    const { result, unmount } = renderHook(() => usePlatformConfiguration());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    window.addEventListener(PLATFORM_SETTINGS_EVENT, () => {
+      bridge.handlers.get(PLATFORM_SETTINGS_EVENT)?.({ payload: newer });
+    }, { once: true });
+    await act(async () => { await result.current.savePatch({ systemPrompt: acknowledged.systemPrompt }); });
+    expect(result.current.configuration?.systemPrompt).toBe("Saved UI instruction");
+    expect(result.current.configuration?.verification).toBe("long");
+    unmount();
   });
 
   it("rejects incomplete lab targets and preserves valid existing-device profiles", () => {

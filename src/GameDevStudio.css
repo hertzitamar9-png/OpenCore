@@ -1,0 +1,24 @@
+.game-dev-studio { grid-column:2; grid-row:2; min-width:0; min-height:0; overflow:auto; padding:24px; color:var(--text); }
+.game-dev-studio>header p { color:var(--muted); line-height:1.6; }
+.studio-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; margin:18px 0; color:var(--text); }
+.studio-form,.studio-jobs { min-width:0; border:1px solid var(--line); background:var(--surface); padding:22px; border-radius:14px; }
+.studio-form>.studio-model-setup,.studio-form>.studio-presets,.studio-form>.studio-options,.studio-form>.studio-runtime { grid-column:1/-1; }
+.studio-form>label,.studio-options-grid>label { min-width:0; color:var(--text); }
+.studio-input-field { display:flex; flex-direction:column; gap:8px; min-width:0; color:var(--text); }
+.studio-input-field small { color:var(--muted); overflow-wrap:anywhere; }
+.studio-form input,.studio-form select,.studio-form textarea { min-width:0; max-width:100%; box-sizing:border-box; background:var(--surface-2); color:var(--text); border-color:var(--line); }
+.studio-form input:focus,.studio-form select:focus,.studio-form textarea:focus { outline:2px solid var(--platform-accent); outline-offset:2px; }
+.studio-presets { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); margin:0; }
+.studio-presets>div { align-items:center; }
+.studio-options { margin:0; }
+.studio-options>p,.studio-queue-note,.studio-runtime>p { color:var(--muted); line-height:1.6; margin:0 0 14px; }
+.studio-options-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:18px; }
+.studio-form .studio-queue-note { margin:0; font-size:12px; }
+.studio-form pre,.studio-jobs pre { min-width:0; max-width:100%; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; }
+.studio-form [role=alert],.studio-jobs [role=alert] { color:var(--red); overflow-wrap:anywhere; }
+.studio-runtime>button { margin-bottom:12px; }
+.studio-jobs { color:var(--text); }
+.studio-jobs>header,.studio-job>header { flex-wrap:wrap; }
+.studio-output { min-width:0; overflow-wrap:anywhere; }
+.studio-output>img,.studio-output>audio,.studio-output>video { max-width:100%; }
+@media(max-width:800px) { .game-dev-studio { padding:16px; } .studio-form { grid-template-columns:minmax(0,1fr); } .studio-form,.studio-jobs { padding:16px; } }

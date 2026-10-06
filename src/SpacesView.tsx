@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
-import { ArchiveRestore, ArrowLeft, FileCode2, Files, FolderPlus, LayoutGrid, List, MessageSquare, RefreshCw, Search } from 'lucide-react';
+import { ArchiveRestore, ArrowLeft, Eye, FileCode2, Files, FolderPlus, LayoutGrid, List, MessageSquare, RefreshCw, Search } from 'lucide-react';
 import { CaptureCoverage, FileLineCounts } from './FileChangesReceipt';
 import { FileSnapshotView } from './FileSnapshotView';
 import { fileSize, subscribeWorkspaceFiles, workspaceFiles, type FileRecord, type WorkspaceFilesResult } from './workspaces';
 import './workspaces.css';
+import './message-media.css';
 
-export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpenFile }: { conversationId?: string; onNotice: (message: string) => void; onOpenConversation?: (id: string) => void; onOpenFile?: (file: FileRecord) => void }) {
+export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpenFile, onOpenExternal }: { conversationId?: string; onNotice: (message: string) => void; onOpenConversation?: (id: string) => void; onOpenFile?: (file: FileRecord) => void; onOpenExternal?: (file: FileRecord) => Promise<void> | void }) {
   const [history, setHistory] = useState<WorkspaceFilesResult>({ files: [], coverage: [] });
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [grid, setGrid] = useState(false);
   const [selected, setSelected] = useState<FileRecord | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const revision = useRef(0);
   const alive = useRef(true);
   const refresh = useCallback(async () => {
@@ -54,6 +56,13 @@ export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpe
     finally { if (alive.current) setBusy(false); }
   }
   function select(file: FileRecord) { if (onOpenFile) onOpenFile(file); else setSelected(file); }
+  async function openFile(file: FileRecord) {
+    if (!onOpenExternal) return select(file);
+    setOpeningId(file.id);
+    try { await onOpenExternal(file); }
+    catch (cause) { onNotice(`Could not open file in browser: ${String(cause)}`); }
+    finally { if (alive.current) setOpeningId(null); }
+  }
   const versions = new Map<string, number>();
   for (const file of history.files) versions.set(file.source, (versions.get(file.source) || 0) + 1);
   return <section className="spaces-view" aria-label={conversationId ? 'Chat files' : 'Spaces'}>
@@ -70,10 +79,11 @@ export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpe
     {error && <p role="alert" className="workspace-inline-error">{error}</p>}
     {selected && <div className="spaces-selected-file"><button className="spaces-back" onClick={() => setSelected(null)}><ArrowLeft size={14} />Back to files</button><FileSnapshotView file={selected} onNotice={onNotice} /></div>}
     {!selected && <div className={grid ? 'spaces-file-grid' : 'spaces-file-list'}>{history.files.map(file => <article className="spaces-file" key={file.id}>
-      <button className="spaces-file-open" onClick={() => select(file)} title={file.source}><FileCode2 size={grid ? 25 : 17} /><span><strong>{file.path}</strong><small>{file.change} · {fileSize(file.size)} · {file.snapshotAvailable ? 'Snapshot saved' : 'Source reference'}</small></span>
+      <button className="spaces-file-open" onClick={() => void openFile(file)} disabled={openingId !== null} title={onOpenExternal ? `Open ${file.path} in the external browser` : file.source}><FileCode2 size={grid ? 25 : 17} /><span><strong>{file.path}</strong><small>{openingId === file.id ? 'Opening in browser…' : `${file.change} · ${fileSize(file.size)} · ${file.snapshotAvailable ? 'Snapshot saved' : 'Source reference'}`}</small></span>
         <FileLineCounts added={file.added} removed={file.removed} />
       </button>
       <div className="spaces-file-origin"><time dateTime={file.timestamp} title={file.timestamp}>{new Date(file.timestamp).toLocaleString()}</time><span title={file.turnId}>{file.origin || 'workspace'} · {(versions.get(file.source) || 0)} {(versions.get(file.source) || 0) === 1 ? 'version' : 'versions'}</span>
+        {onOpenExternal && <button onClick={() => select(file)} aria-label={`Preview saved version of ${file.path}`} title="Preview snapshot and diff"><Eye size={14} /></button>}
         {file.conversationId && onOpenConversation && <button onClick={() => onOpenConversation(file.conversationId)} aria-label={`Open originating chat for ${file.path}`} title="Open originating chat"><MessageSquare size={13} /></button>}
       </div>
     </article>)}</div>}

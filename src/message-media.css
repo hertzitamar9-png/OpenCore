@@ -1,0 +1,13 @@
+.inline-image-unavailable {
+  border: 1px solid var(--border, #334155);
+  background: var(--surface, #101923);
+  color: var(--text, #d6e1ec);
+  padding: 16px;
+  min-width: 180px;
+  text-align: left;
+}
+.inline-image-unavailable > span { display: grid; gap: 7px; }
+.inline-image-unavailable small { color: var(--muted, #95a7ba); font-size: 12px; }
+.message-attachments { max-width: 100%; flex-wrap: wrap; }
+.spaces-file-origin > button { flex-shrink: 0; }
+.spaces-file-open:disabled { opacity: .7; }

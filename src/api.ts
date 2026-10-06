@@ -335,7 +335,8 @@ export async function listOperations(): Promise<OperationRecord[]> {
   return desktop() ? invoke<OperationRecord[]>("list_operations") : [];
 }
 
-export async function startHistorySync(id: "claude-code" | "codex"): Promise<OperationRecord> {
+export type AgentConnectorId = "claude-code" | "codex" | "opencode" | "hermes";
+export async function startHistorySync(id: AgentConnectorId): Promise<OperationRecord> {
   if (!desktop()) throw new Error("History sync requires the desktop application.");
   return invoke<OperationRecord>("start_history_sync", { id });
 }
@@ -345,7 +346,7 @@ export async function cancelHistorySync(id: string): Promise<void> {
   await invoke("cancel_history_sync", { id });
 }
 
-export async function clearImportedHistory(id: "claude-code" | "codex"): Promise<string> {
+export async function clearImportedHistory(id: AgentConnectorId): Promise<string> {
   if (!desktop()) throw new Error("Imported history cleanup requires the desktop application.");
   return invoke<string>("clear_imported_history", { id });
 }
@@ -425,9 +426,14 @@ export async function healthCheck(): Promise<string> {
   return invoke<string>("health_check");
 }
 
-export async function configureAgentConnector(id: "claude-code" | "codex"): Promise<string> {
+export async function configureAgentConnector(id: AgentConnectorId, profileFolder?: string): Promise<string> {
   if (!desktop()) return "Desktop backend required.";
-  return invoke<string>("configure_agent_connector", { id });
+  return invoke<string>("configure_agent_connector", { id, profileFolder });
+}
+
+export async function setAgentConnectorFolder(id: 'opencode' | 'hermes', folder: string): Promise<string> {
+  if (!desktop()) throw new Error('Agent connectors require the desktop application.');
+  return invoke<string>('set_agent_connector_folder', { id, folder });
 }
 
 export async function sendChatMessage(conversationId: string, text: string, files: string[], reasoningEffort: ReasoningEffort, approvalMode: ApprovalMode, skills: string[] = [], subagentsEnabled = false, maxSubagents = 3, projectSkillsEnabled = true, compactAtTokens = 200000, submissionId = crypto.randomUUID()): Promise<ChatSendResult> {

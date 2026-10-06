@@ -20,10 +20,29 @@ afterEach(() => vi.clearAllMocks());
 it("offers each source format and cannot import without a selected file", () => {
   render(<ChatImportDialog onClose={vi.fn()} onImport={vi.fn()} />);
   expect(screen.getByRole("combobox", { name: "Source format" })).toHaveValue("auto");
-  for (const name of ["Auto detect", "OpenCore", "Hermes Agent", "Codex", "Claude Code", "Generic JSON"]) {
+  for (const name of ["Auto detect", "OpenCore", "Hermes Agent", "OpenCode", "Codex", "Claude Code", "Generic JSON"]) {
     expect(screen.getByRole("option", { name })).toBeInTheDocument();
   }
   expect(screen.getByRole("button", { name: "Import chats" })).toBeDisabled();
+});
+
+it("previews OpenCode's original folder status and imports with the native source format", async () => {
+  const file = "C:\\exports\\opencode.json";
+  vi.mocked(open).mockResolvedValue(file);
+  const inspect = vi.fn().mockResolvedValue({ ...preview, sourceFormat: "opencode", samples: [
+    { ...preview.samples[0], sourceFolder: "C:\\work\\original-project", folderStatus: "missing" },
+  ] });
+  const importFile = vi.fn().mockResolvedValue({ ...report, sourceFormat: "opencode", conversations: [
+    { ...report.conversations[0], sourceFolder: "C:\\work\\original-project", folderStatus: "missing" },
+  ] });
+  render(<ChatImportDialog onClose={vi.fn()} onImport={importFile} onPreview={inspect} />);
+  fireEvent.change(screen.getByRole("combobox", { name: "Source format" }), { target: { value: "opencode" } });
+  fireEvent.click(screen.getByRole("button", { name: "Choose file" }));
+  expect(await screen.findByText(/Original folder is missing/)).toHaveTextContent("C:\\work\\original-project");
+  expect(inspect).toHaveBeenCalledWith(file, "opencode");
+  fireEvent.click(screen.getByRole("button", { name: "Import chats" }));
+  await waitFor(() => expect(importFile).toHaveBeenCalledWith(file, "opencode"));
+  expect(await screen.findByRole("region", { name: "Import results" })).toHaveTextContent("Original folder is missing");
 });
 
 it("uses the native file picker and previews the source before importing", async () => {

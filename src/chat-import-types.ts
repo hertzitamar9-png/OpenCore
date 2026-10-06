@@ -1,4 +1,6 @@
-export type ImportFormat = "auto" | "opencore" | "hermes" | "codex" | "claude" | "generic";
+export type ImportFormat = "auto" | "opencore" | "hermes" | "opencode" | "codex" | "claude" | "generic";
+
+export type ImportFolderStatus = "not-recorded" | "nonlocal" | "missing" | "unavailable" | "available" | "linked";
 
 export type ImportConversationResult = {
   conversationId: string;
@@ -8,6 +10,9 @@ export type ImportConversationResult = {
   entries: number;
   warnings: string[];
   error?: string | null;
+  sourceFolder?: string | null;
+  folderStatus?: ImportFolderStatus;
+  projectId?: string | null;
 };
 
 export type ImportReport = {
@@ -30,5 +35,6 @@ export type ImportPreview = {
   conversations: number;
   entries: number;
   warnings: string[];
-  samples: Array<{ sourceConversationId: string; title: string; entries: number; warnings: string[]; error?: string | null }>;
+  samples: Array<{ sourceConversationId: string; title: string; entries: number; warnings: string[]; error?: string | null;
+    sourceFolder?: string | null; folderStatus?: ImportFolderStatus }>;
 };

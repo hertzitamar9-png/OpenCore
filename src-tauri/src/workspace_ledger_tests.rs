@@ -150,6 +150,144 @@ fn studio_references_are_linked_to_the_job_and_deduplicated() {
 }
 
 #[test]
+fn browser_routes_legacy_absolute_outputs_without_revealing_source_directories() {
+    let f = Fixture::new();
+    f.write("index.html", b"<script src='assets/game.js'></script>");
+    f.write("assets/game.js", b"window.recorded = true;");
+    f.write("one/result.png", b"first image");
+    f.write("two/result.png", b"second image");
+    let outputs = [
+        "index.html",
+        "assets/game.js",
+        "one/result.png",
+        "two/result.png",
+    ]
+    .map(|path| f.workspace.join(path));
+    let result = f
+        .ledger
+        .register_outputs("chat", "legacy-studio", &outputs)
+        .unwrap();
+    let id = result["files"][0]["id"].as_str().unwrap();
+    // This is the pre-existing ledger format: path is the absolute display/source path.
+    assert!(Path::new(result["files"][0]["path"].as_str().unwrap()).is_absolute());
+    let (target, manifest) = f.ledger.browser_manifest(id, None).unwrap();
+    assert_eq!(target, "index.html");
+    assert_eq!(
+        manifest.keys().map(String::as_str).collect::<Vec<_>>(),
+        [
+            "assets/game.js",
+            "index.html",
+            "one/result.png",
+            "two/result.png"
+        ]
+    );
+    f.write("assets/game.js", b"later unrelated script");
+    assert_eq!(
+        f.ledger
+            .browser_asset(&manifest["assets/game.js"])
+            .unwrap()
+            .bytes,
+        b"window.recorded = true;"
+    );
+}
+
+#[test]
+fn browser_capture_keeps_unchanged_assets_and_both_exact_versions_after_restart() {
+    let f = Fixture::new();
+    f.write("index.html", b"<h1>Before</h1>");
+    f.write("assets/game.css", b"body { color: blue; }");
+    f.write("assets/game.js", b"window.recorded = true;");
+    f.write("assets/image.png", b"\x89PNG\r\n\x1a\nimage");
+    let capture = f.capture("modify-page");
+    f.write(
+        "index.html",
+        b"<h1>After</h1><script src='assets/game.js'></script>",
+    );
+    let result = f.ledger.finish_turn(capture, "completed").unwrap();
+    assert_eq!(result["files"].as_array().unwrap().len(), 1);
+    let id = result["files"][0]["id"].as_str().unwrap();
+    f.write("assets/game.css", b"later unrelated stylesheet");
+    let reopened = WorkspaceLedger::new(f.root.join("data")).unwrap();
+    let (_, after) = reopened.browser_manifest(id, Some("after")).unwrap();
+    assert_eq!(
+        after.keys().map(String::as_str).collect::<Vec<_>>(),
+        [
+            "assets/game.css",
+            "assets/game.js",
+            "assets/image.png",
+            "index.html"
+        ]
+    );
+    assert_eq!(
+        reopened
+            .browser_asset(&after["assets/game.css"])
+            .unwrap()
+            .bytes,
+        b"body { color: blue; }"
+    );
+    assert_eq!(
+        reopened.browser_asset(&after["index.html"]).unwrap().bytes,
+        b"<h1>After</h1><script src='assets/game.js'></script>"
+    );
+    let (_, before) = reopened.browser_manifest(id, Some("before")).unwrap();
+    assert_eq!(
+        reopened.browser_asset(&before["index.html"]).unwrap().bytes,
+        b"<h1>Before</h1>"
+    );
+    assert_eq!(
+        reopened
+            .browser_asset(&before["assets/game.js"])
+            .unwrap()
+            .bytes,
+        b"window.recorded = true;"
+    );
+    let object = reopened
+        .object_path(&sha256(b"body { color: blue; }"))
+        .unwrap();
+    fs::write(object, b"tampered asset").unwrap();
+    assert!(reopened
+        .browser_asset(&after["assets/game.css"])
+        .err()
+        .unwrap()
+        .contains("hash"));
+}
+
+#[test]
+fn historical_capture_without_asset_metadata_never_reads_current_or_other_capture_assets() {
+    let f = Fixture::new();
+    f.write("index.html", b"<h1>Before</h1>");
+    f.write("assets/game.js", b"old independently indexed script");
+    f.ledger
+        .command(json!({"action":"index","workspace":f.workspace}))
+        .unwrap();
+    let capture = f.capture("historical-page");
+    f.write("index.html", b"<script src='assets/game.js'></script>");
+    let result = f.ledger.finish_turn(capture, "completed").unwrap();
+    let id = result["files"][0]["id"].as_str().unwrap();
+    // Simulate a completed capture written before full asset manifests existed.
+    f.ledger
+        .database()
+        .unwrap()
+        .execute("DELETE FROM capture_assets", [])
+        .unwrap();
+    f.write("assets/game.js", b"current unrecorded script");
+    let reopened = WorkspaceLedger::new(f.root.join("data")).unwrap();
+    let (target, manifest) = reopened.browser_manifest(id, None).unwrap();
+    assert_eq!(target, "index.html");
+    assert_eq!(
+        manifest.keys().map(String::as_str).collect::<Vec<_>>(),
+        ["index.html"]
+    );
+    assert_eq!(
+        reopened
+            .browser_asset(&manifest["index.html"])
+            .unwrap()
+            .bytes,
+        b"<script src='assets/game.js'></script>"
+    );
+}
+
+#[test]
 fn indexed_published_artifacts_use_real_name_mime_and_current_snapshot_only() {
     let f = Fixture::new();
     f.write("artifact-id.bin", b"<h1>Saved HTML</h1>");

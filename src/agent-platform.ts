@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { serializeSettingsSave, waitForSettingsSaves } from "./useSettingsAutosave";
 
 export type VerificationMode = "no" | "default" | "long" | "max";
 export interface AppearanceConfig {
@@ -37,6 +38,57 @@ export interface PlatformConfig {
   activityEnabled: boolean;
   memoryEnabled: boolean;
   appearance: AppearanceConfig;
+}
+export type PlatformConfigurationPatch = Omit<Partial<PlatformConfig>, "appearance"> & { appearance?: Partial<AppearanceConfig> };
+export type PlatformDraftField = Exclude<keyof PlatformConfig, "appearance"> | `appearance.${keyof AppearanceConfig}`;
+
+export function platformDraftField(configuration: PlatformConfig, field: PlatformDraftField): unknown {
+  return field.startsWith("appearance.") ? configuration.appearance[field.slice(11) as keyof AppearanceConfig]
+    : configuration[field as Exclude<keyof PlatformConfig, "appearance">];
+}
+
+const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+export function platformConfigurationChanges(before: PlatformConfig, after: PlatformConfig): PlatformConfigurationPatch {
+  const patch: PlatformConfigurationPatch = {};
+  for (const key of Object.keys(after) as (keyof PlatformConfig)[]) {
+    if (key === "appearance") {
+      const appearance: Partial<AppearanceConfig> = {};
+      for (const field of Object.keys(after.appearance) as (keyof AppearanceConfig)[])
+        if (!same(before.appearance[field], after.appearance[field])) Object.assign(appearance, { [field]: after.appearance[field] });
+      if (Object.keys(appearance).length) patch.appearance = appearance;
+    } else if (!same(before[key], after[key])) Object.assign(patch, { [key]: after[key] });
+  }
+  return patch;
+}
+
+// Source updates replace untouched fields while edits, including invalid drafts,
+// survive older acknowledgments and changes made by the agent's settings tools.
+export function reconcilePlatformDraft(draft: PlatformConfig, before: PlatformConfig, incoming: PlatformConfig, edited?: ReadonlySet<PlatformDraftField>): PlatformConfig {
+  const changes = platformConfigurationChanges(before, draft);
+  // An A -> B -> A edit can equal an older acknowledged source while its latest
+  // write is still queued. Explicit edit ownership outlives that coincidence.
+  for (const field of edited ?? []) {
+    if (field.startsWith("appearance.")) Object.assign(changes.appearance ??= {}, { [field.slice(11)]: platformDraftField(draft, field) });
+    else Object.assign(changes, { [field]: platformDraftField(draft, field) });
+  }
+  return { ...incoming, ...changes, appearance: { ...incoming.appearance, ...changes.appearance } };
+}
+
+export function validPlatformDraft(source: PlatformConfig, draft: PlatformConfig, servers: McpServer[] | null): PlatformConfig {
+  let valid = source;
+  for (const key of Object.keys(draft) as (keyof PlatformConfig)[]) {
+    if (key === "appearance") {
+      for (const field of Object.keys(draft.appearance) as (keyof AppearanceConfig)[]) {
+        const next = { ...valid, appearance: { ...valid.appearance, [field]: draft.appearance[field] } };
+        if (!validatePlatformConfiguration(next).length) valid = next;
+      }
+    } else {
+      if (key === "mcpServers" && servers === null) continue;
+      const next = { ...valid, [key]: key === "mcpServers" ? servers : draft[key] } as PlatformConfig;
+      if (!validatePlatformConfiguration(next).length) valid = next;
+    }
+  }
+  return valid;
 }
 export interface PlatformSkill {
   id: string; name: string; description: string; source: string;
@@ -230,15 +282,29 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 export async function loadPlatformConfiguration(): Promise<PlatformConfig> {
+  await waitForSettingsSaves("agent-platform");
   return platformNativeAvailable() ? invoke<PlatformConfig>("agent_platform_configuration") : defaultPlatformConfiguration();
 }
 export async function savePlatformConfiguration(configuration: PlatformConfig): Promise<PlatformConfig> {
   requireNative();
   const errors = validatePlatformConfiguration(configuration);
   if (errors.length) throw new Error(errors.join(" "));
-  const saved = await invoke<PlatformConfig>("agent_platform_save_configuration", { configuration });
-  window.dispatchEvent(new CustomEvent<PlatformConfig>(PLATFORM_SETTINGS_EVENT, { detail: saved }));
-  return saved;
+  return serializeSettingsSave("agent-platform", async () => {
+    const saved = await invoke<PlatformConfig>("agent_platform_save_configuration", { configuration });
+    window.dispatchEvent(new CustomEvent<PlatformConfig>(PLATFORM_SETTINGS_EVENT, { detail: saved }));
+    return saved;
+  });
+}
+export async function savePlatformConfigurationPatch(settings: PlatformConfigurationPatch): Promise<PlatformConfig> {
+  requireNative();
+  return serializeSettingsSave("agent-platform", async () => {
+    // The native partial-update path merges under CONFIG_WRITE, so independent
+    // tool or UI changes are retained instead of overwritten by a stale snapshot.
+    await invoke("agent_platform_action", { name: "app_control", args: { action: "set", settings, source: "settings-ui" } });
+    const saved = await invoke<PlatformConfig>("agent_platform_configuration");
+    window.dispatchEvent(new CustomEvent<PlatformConfig>(PLATFORM_SETTINGS_EVENT, { detail: saved }));
+    return saved;
+  });
 }
 export const listPlatformSkills = (): Promise<PlatformSkill[]> => platformNativeAvailable() ? invoke("agent_platform_skills") : Promise.resolve([]);
 export const listPlatformPlugins = (): Promise<PlatformPlugin[]> => platformNativeAvailable() ? invoke("agent_platform_plugins") : Promise.resolve([]);
@@ -250,16 +316,39 @@ export function executePlatformAction<T = unknown>(name: "app_control" | "agent_
   requireNative(); return invoke<T>("agent_platform_action", { name, args });
 }
 export async function loadTestingLabProfiles(): Promise<TestingLabProfile[]> {
+  await waitForSettingsSaves("testing-lab");
   return platformNativeAvailable() ? parseTestingLabProfiles(JSON.stringify(await invoke("testing_lab_profiles"))) : [];
 }
 export async function saveTestingLabProfiles(profiles: TestingLabProfile[]): Promise<TestingLabProfile[]> {
   requireNative();
   const validated = parseTestingLabProfiles(JSON.stringify(profiles));
-  const saved = await invoke("testing_lab_save_profiles", { profiles: validated });
-  return parseTestingLabProfiles(JSON.stringify(saved));
+  return serializeSettingsSave("testing-lab", async () => {
+    await invoke("testing_lab_save_profiles", { profiles: validated });
+    // A tool can update the target before the UI receives the save receipt.
+    // Read the current source under this queue, rather than normalize to an old receipt.
+    return parseTestingLabProfiles(JSON.stringify(await invoke("testing_lab_profiles")));
+  });
 }
 export function executeTestingLabAction(args: TestingLabAction): Promise<unknown> {
   requireNative(); return invoke("testing_lab_action", { args });
+}
+
+function colorLuminance(color: string): number {
+  const channels = [1, 3, 5].map(offset => {
+    const value = parseInt(color.slice(offset, offset + 2), 16) / 255;
+    return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+  });
+  return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+}
+function readableAccent(color: string, light: boolean): string {
+  const surface = colorLuminance(light ? "#e9ebf2" : "#20242b");
+  const rgb = [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16));
+  for (let step = 0; step <= 64; ++step) {
+    const adjusted = `#${rgb.map(channel => Math.round(channel + ((light ? 0 : 255) - channel) * step / 64).toString(16).padStart(2, "0")).join("")}`;
+    const ink = colorLuminance(adjusted);
+    if ((Math.max(ink, surface) + .05) / (Math.min(ink, surface) + .05) >= 4.5) return adjusted;
+  }
+  return light ? "#000000" : "#ffffff";
 }
 
 export function applyPlatformAppearance(appearance: AppearanceConfig, root: HTMLElement = document.documentElement): void {
@@ -272,13 +361,10 @@ export function applyPlatformAppearance(appearance: AppearanceConfig, root: HTML
   root.style.colorScheme = theme;
   const font = appearance.fontFamily === "system" ? '"Segoe UI", system-ui, sans-serif'
     : `"${appearance.fontFamily.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}", system-ui, sans-serif`;
-  const channels = [1, 3, 5].map(offset => {
-    const value = parseInt(appearance.accentColor.slice(offset, offset + 2), 16) / 255;
-    return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
-  });
-  const luminance = channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+  const luminance = colorLuminance(appearance.accentColor);
   const variables: Record<string, string> = {
     "--platform-accent": appearance.accentColor, "--blue": appearance.accentColor,
+    "--platform-link": readableAccent(appearance.accentColor, theme === "light"),
     "--platform-accent-text": luminance > .179 ? "#000000" : "#ffffff",
     "--blue-soft": `${appearance.accentColor}25`, "--platform-font-family": font,
     "--platform-font-size": `${appearance.fontSize}px`, "--chat-font-size": `${appearance.fontSize}px`,
@@ -286,9 +372,11 @@ export function applyPlatformAppearance(appearance: AppearanceConfig, root: HTML
     ...(theme === "light" ? {
       "--bg": "#f4f5f8", "--surface": "#ffffff", "--surface-2": "#f1f2f6", "--surface-3": "#e9ebf2",
       "--text": "#202432", "--muted": "#596477", "--line": "#c6cbd6", "--line-soft": "#e0e3ea",
+      "--green": "#116348", "--amber": "#87531a", "--red": "#a72337", "--violet": "#6445b2",
     } : {
       "--bg": "#090b0f", "--surface": "#101217", "--surface-2": "#171a20", "--surface-3": "#20242b",
       "--text": "#edf0f3", "--muted": "#abb3c0", "--line": "#3b424e", "--line-soft": "#282d35",
+      "--green": "#35d38a", "--amber": "#f5ad32", "--red": "#ff646d", "--violet": "#9b6cff",
     }),
   };
   if (appearance.highContrast) Object.assign(variables, theme === "light" ? {
@@ -343,10 +431,10 @@ export function usePlatformConfiguration() {
       query?.removeEventListener?.("change", systemChanged);
     };
   }, [accept, preview, reload]);
-  const save = useCallback(async (value: PlatformConfig) => {
-    const saved = await savePlatformConfiguration(value);
-    if (mounted.current) accept(saved);
-    return saved;
-  }, [accept]);
-  return { configuration, loading, error, preview, reload, save };
+  // Writers publish their source result to the listener above. Accepting the
+  // same result again after await could replace a newer native tool event.
+  const save = useCallback(savePlatformConfiguration, []);
+  const savePatch = useCallback(savePlatformConfigurationPatch, []);
+  const getCurrentConfiguration = useCallback(() => current.current, []);
+  return { configuration, loading, error, preview, reload, save, savePatch, getCurrentConfiguration };
 }

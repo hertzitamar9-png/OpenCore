@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { CircleStop, ExternalLink, FolderOpen, Play, RefreshCw } from 'lucide-react';
+import { CircleStop, FolderOpen, Play, RefreshCw } from 'lucide-react';
 import * as api from './api';
+import { StudioModelSetup } from './StudioModelSetup';
+import { selectStudioModel } from './studio-model-selection';
 import './MediaStudio.css';
 
 export const MEDIA_CATEGORIES = [
@@ -64,13 +66,38 @@ const inputLabels: Record<string, string> = {video: 'Choose reference image', 'v
 const prompts: Record<string, [string, string]> = {tts: ['Text to speak', ''], 'voice-cloning': ['Text to speak', ''], ocr: ['Extraction instruction', 'Extract the text and structure of this document.'], omni: ['Question or instruction', ''], policy: ['Task instruction', '']};
 const active = (job: api.StudioJob) => ['queued', 'starting', 'running'].includes(job.status);
 const inputRequired = (category: string, values: Record<string, unknown>) => ['voice-cloning', 'ocr', 'omni', 'policy'].includes(category) || (category === 'video' && values.mode === 'image-to-video');
-const defaults = (category: string) => Object.fromEntries((controlsByCategory[category] || []).map(control => [control.key, control.value]));
+function controlsForModel(category: string, modelId: string): Control[] {
+  const base = controlsByCategory[category] || [];
+  if (modelId === 'omni-voxtral-mini-4b-realtime-2602') return [
+    {key: 'responseMode', label: 'Response mode', kind: 'select', value: 'text', options: ['text']},
+    {key: 'outputFormat', label: 'Output format', kind: 'select', value: 'txt', options: ['txt', 'json']},
+  ];
+  if (modelId.startsWith('tts-qwen3-') || modelId.startsWith('voice-cloning-qwen3-')) {
+    const languages = ['auto', 'Chinese', 'English', 'Japanese', 'Korean', 'German', 'French', 'Russian', 'Portuguese', 'Spanish', 'Italian'];
+    const design = modelId.includes('voicedesign');
+    return [...base.filter(control => control.key !== 'speed' && !(design && control.key === 'voice')).map(control => {
+      if (control.key === 'voice') return {...control, kind: 'select', value: 'Ryan', options: ['Vivian', 'Serena', 'Uncle_Fu', 'Dylan', 'Eric', 'Ryan', 'Aiden', 'Ono_Anna', 'Sohee']} as Control;
+      if (control.key === 'language') return {...control, kind: 'select', options: languages} as Control;
+      if (control.key === 'sampleRate') return {...control, value: 24000, min: 24000, max: 24000};
+      return control;
+    }), ...(modelId === 'tts-qwen3-customvoice-1-7b' || design ? [{key: 'voiceInstruction', label: design ? 'Voice description' : 'Voice style instruction', kind: 'textarea', value: ''}] as Control[] : [])];
+  }
+  if (category !== 'video' || !modelId.startsWith('ltx-25')) return base;
+  const distilled = modelId.includes('distilled');
+  const values: Record<string, number> = {width: 960, height: 544, frameCount: 121, steps: distilled ? 8 : 30, guidanceScale: distilled ? 1 : 4};
+  return base.map(control => control.key in values ? {...control, value: values[control.key],
+    ...(['width', 'height'].includes(control.key) ? {step: 32} : {}),
+    ...(distilled && control.key === 'steps' ? {min: 8, max: 8} : {}),
+    ...(distilled && control.key === 'guidanceScale' ? {min: 1, max: 1} : {}),
+  } : control);
+}
+const defaults = (category: string, modelId = '') => Object.fromEntries(controlsForModel(category, modelId).map(control => [control.key, control.value]));
 
-function validatedSettings(category: string, values: Record<string, unknown>, inputPath: string, advancedJson: string) {
+function validatedSettings(category: string, values: Record<string, unknown>, inputPath: string, advancedJson: string, modelId: string) {
   const parsed: unknown = JSON.parse(advancedJson);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Advanced settings must be a JSON object.');
   const settings: Record<string, unknown> = {...values, ...(inputPath ? {inputPath} : {}), ...parsed};
-  for (const control of controlsByCategory[category] || []) {
+  for (const control of controlsForModel(category, modelId)) {
     const value = settings[control.key];
     if (control.kind === 'number') {
       if (typeof value !== 'number' || !Number.isFinite(value) || value < control.min! || value > control.max! || ((control.step ?? 1) === 1 && !Number.isInteger(value))) throw new Error(`${control.label} must be between ${control.min} and ${control.max}${(control.step ?? 1) === 1 ? ' and a whole number' : ''}.`);
@@ -80,6 +107,10 @@ function validatedSettings(category: string, values: Record<string, unknown>, in
   }
   if (inputRequired(category, settings) && (typeof settings.inputPath !== 'string' || !settings.inputPath.trim())) throw new Error('Choose the input file required by this category.');
   if (category === 'ocr' && Number(settings.pageEnd) > 0 && Number(settings.pageEnd) < Number(settings.pageStart)) throw new Error('Last page must be at or after first page.');
+  if (modelId.startsWith('ltx-25')) {
+    if (Number(settings.frameCount) % 8 !== 1) throw new Error('LTX 2.5 frame count must be 8n + 1, for example 121.');
+    if (Number(settings.width) % 32 || Number(settings.height) % 32) throw new Error('LTX 2.5 width and height must be divisible by 32.');
+  }
   return settings;
 }
 
@@ -95,9 +126,9 @@ export function MediaStudio({category, models, onCategoryChange, onNotice = () =
 
 function MediaGenerationForm({category, label, models: providedModels, onNotice, onSubmitted}: {category: string; label: string; models?: MediaModel[]; onNotice: (message: string) => void; onSubmitted: () => void}) {
   const [models, setModels] = useState<MediaModel[]>(providedModels?.filter(model => model.category === category) || []);
-  const [modelId, setModelId] = useState(models[0]?.id || '');
+  const [modelId, setModelId] = useState(() => selectStudioModel(models, category));
   const [prompt, setPrompt] = useState(prompts[category]?.[1] || '');
-  const [values, setValues] = useState<Record<string, unknown>>(defaults(category));
+  const [values, setValues] = useState<Record<string, unknown>>(() => defaults(category, modelId));
   const [inputPath, setInputPath] = useState('');
   const [advancedJson, setAdvancedJson] = useState('{}');
   const [runtime, setRuntime] = useState<api.StudioRuntime | null>(null);
@@ -106,12 +137,14 @@ function MediaGenerationForm({category, label, models: providedModels, onNotice,
   const [error, setError] = useState('');
   const selected = models.find(model => model.id === modelId);
   const connected = Boolean(runtime?.modelId === modelId || selected?.runtimeConnected);
+  const canGenerate = connected && Boolean(selected?.installed || runtime?.runner && runtime?.sourceDir);
+  useEffect(() => {setValues(defaults(category, modelId));}, [category, modelId]);
   useEffect(() => {
     let alive = true;
     const apply = (all: MediaModel[]) => {
       if (!alive) return;
       const candidates = all.filter(model => model.category === category);
-      setModels(candidates); setModelId(current => candidates.some(model => model.id === current) ? current : candidates[0]?.id || '');
+      setModels(candidates); setModelId(current => selectStudioModel(candidates, category, current));
     };
     if (providedModels) { apply(providedModels); return () => { alive = false; }; }
     const refresh = () => api.modelLibrary().then(library => apply(library.models)).catch(cause => { if (alive) setError(String(cause)); });
@@ -141,9 +174,9 @@ function MediaGenerationForm({category, label, models: providedModels, onNotice,
   async function submit() {
     setBusy(true); setError('');
     try {
-      if (!connected) throw new Error('Connect the selected model runtime before generating.');
+      if (!canGenerate) throw new Error('Connect the selected model runtime and installed or existing publisher weights before generating.');
       if (!prompt.trim() || new TextEncoder().encode(prompt).length > 64 * 1024) throw new Error('Enter a prompt of at most 64 KiB.');
-      const settings = validatedSettings(category, values, inputPath, advancedJson);
+      const settings = validatedSettings(category, values, inputPath, advancedJson, modelId);
       await api.submitStudioJob({modelId, prompt, settings});
       onSubmitted(); onNotice('Generation queued. Review its exact request and progress below.');
     } catch (cause) { setError(String(cause)); }
@@ -159,13 +192,14 @@ function MediaGenerationForm({category, label, models: providedModels, onNotice,
   return <form className="media-form" aria-label={`New ${label.toLowerCase()} job`} onSubmit={event => {event.preventDefault(); void submit();}}><h2>{label}</h2>
     {!models.length ? <p>No catalog models in this category are available. Open Models to inspect publisher sources and setup requirements.</p> : <>
       <label>Model<select aria-label="Model" value={modelId} disabled={connecting || busy} onChange={event => setModelId(event.target.value)}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
-      <section className="media-model-status" aria-label="Model availability"><strong>{connected ? selected?.installed ? 'Connected runtime · verified weights' : 'Connected runtime · external weights' : 'Setup needed'}</strong><span>Verified installed weights: {selected?.installed ? 'Yes' : 'No'}</span><p>{selected?.note}</p><div>{selected?.sourceUrl && <a href={selected.sourceUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} />Pinned publisher source</a>}{selected?.setupUrl && <a href={selected.setupUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} />Runtime setup</a>}</div><button type="button" disabled={connecting || busy} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Connect runtime'}</button><small>Choose the Python interpreter, a trusted worker, and the existing SDK/model folder. The queue runs the worker with the selected inputs. This connection records no weight download.</small>{runtime && <details><summary>Connected worker and source</summary><pre>{JSON.stringify(runtime, null, 2)}</pre></details>}</section>
+      {selected && <StudioModelSetup key={modelId} model={selected} connected={connected} disabled={connecting || busy} onRefresh={async () => {const library = await api.modelLibrary(); setModels(library.models.filter(model => model.category === category));}} onNotice={onNotice} />}
       <label>{prompts[category]?.[0] || 'Prompt'}<textarea aria-label={prompts[category]?.[0] || 'Prompt'} value={prompt} onChange={event => setPrompt(event.target.value)} /></label>
       {inputLabels[category] && <div className="media-input"><button type="button" onClick={() => void api.pickStudioFile('input').then(path => { if (path) setInputPath(path); }).catch(cause => setError(String(cause)))}>{inputLabels[category]}</button><span>{inputPath || (inputRequired(category, values) ? 'Required input file' : 'Optional reference image')}</span>{inputPath && <button type="button" onClick={() => setInputPath('')}>Clear input</button>}</div>}
       {category === 'policy' && <p>Save observations in the publisher SDK’s JSON or NPZ schema. This job produces action predictions to inspect; deploying them uses the robot’s configured SDK.</p>}
-      <fieldset><legend>Job controls</legend><p>Controls are sent to the selected worker. Its model adapter defines supported modes, dimensions, voices, and formats.</p><div className="media-controls">{(controlsByCategory[category] || []).map(controlField)}</div></fieldset>
+      <fieldset><legend>Job controls</legend><p>{modelId.startsWith('ltx-25') ? 'LTX 2.5 uses dimensions divisible by 32 and frame counts of 8n + 1. Distilled checkpoints use 8 steps and guidance 1.' : 'Prepare settings before installation. The model adapter defines supported modes, sizes, voices, and formats.'}</p><div className="media-controls">{controlsForModel(category, modelId).map(controlField)}</div></fieldset>
       <details className="media-advanced"><summary>Advanced model settings</summary><p>Additional SDK options and overrides are saved with the request.</p><textarea aria-label="Advanced settings JSON" value={advancedJson} onChange={event => setAdvancedJson(event.target.value)} /></details>
-      <button type="submit" className="media-generate" disabled={busy || connecting || !connected || !prompt.trim() || (inputRequired(category, values) && !inputPath)}><Play size={16} />{busy ? 'Submitting…' : 'Generate'}</button>
+      <section className="media-runtime"><button type="button" disabled={connecting || busy} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Connect runtime'}</button><details><summary>Runtime connection · {connected ? 'Connected' : 'Setup needed'}</summary><p>Use a publisher-compatible local adapter. Choose its Python environment, worker, and existing SDK/model folder. Saving a connection does not verify generation.</p>{runtime && <pre>{JSON.stringify(runtime, null, 2)}</pre>}</details></section>
+      <button type="submit" className="media-generate" disabled={busy || connecting || !canGenerate || !prompt.trim() || (inputRequired(category, values) && !inputPath)}><Play size={16} />{busy ? 'Submitting…' : 'Generate'}</button>
       <p className="media-queue-note">Jobs share OpenCore’s durable GPU queue. The text model is released before generation, and chat continuations resume after the job.</p>
     </>}{error && <p role="alert">{error}</p>}
   </form>;

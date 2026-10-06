@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { CircleStop, FolderOpen, Play, RefreshCw } from 'lucide-react';
 import * as api from './api';
+import { StudioModelSetup } from './StudioModelSetup';
+import { selectStudioModel } from './studio-model-selection';
+import './GameDevStudio.css';
 
 export const GAME_DEV_CATEGORIES = [
   ['image', '2D images'],
@@ -59,6 +62,23 @@ const settingsForCategory: Record<string, Control[]> = {
 
 const active = (job: api.StudioJob) => ['queued', 'starting', 'running'].includes(job.status);
 
+function controlsForModel(category: string, modelId: string): Control[] {
+  const controls = settingsForCategory[category] || [];
+  if (modelId === 'trellis-2-4b') return controls.filter(control => control.key !== 'chunkSize').map(control => control.key === 'resolution' ? {...control, kind: 'number', value: 512, min: 512, max: 1536, step: 512, help: 'Publisher pipeline resolutions: 512, 1024, or 1536. Requires at least 24 GB VRAM.'} : control) as Control[];
+  if (modelId.startsWith('wan-animate-2-')) {
+    const distilled = modelId.endsWith('distilled');
+    const changes: Record<string, number | string> = {steps: distilled ? 10 : 40, width: 640, height: 800, frameCount: 81, fps: 24, outputFormat: 'mp4'};
+    return [...controls.filter(control => control.key !== 'motionPrompt').map(control => control.key in changes ? {...control, value: changes[control.key], ...(['width', 'height'].includes(control.key) ? {step: 32} : {}), ...(control.key === 'outputFormat' ? {options: ['mp4', 'gif', 'webp']} : {})} as Control : control),
+      {key: 'drivingVideoPath', label: 'Driving video path', kind: 'text', value: '', help: 'Required: the video that drives the character’s motion.'},
+      ...(distilled ? [{key: 'guidanceScale', label: 'Guidance scale', kind: 'number', value: 1, min: 1, max: 1}, {key: 'flowSolver', label: 'Flow solver', kind: 'select', value: 'euler', options: ['euler']}] as Control[] : [])];
+  }
+  const values: Record<string, number> = modelId === 'qwen-image-21' ? {steps: 40, width: 2048, height: 2048}
+    : modelId.startsWith('flux-2-klein') ? {steps: modelId.includes('base') ? 50 : 4, guidanceScale: modelId.includes('base') ? 4 : 1, width: 1024, height: 1024}
+    : modelId === 'z-image-turbo' ? {steps: 9, guidanceScale: 0, width: 1024, height: 1024}
+    : {};
+  return controls.map(control => control.kind === 'number' && control.key in values ? {...control, value: values[control.key]} : control);
+}
+
 export function StudioJobs({ category, onNotice }: { category: string; onNotice: (message: string) => void }) {
   const [jobs, setJobs] = useState<api.StudioJob[]>([]);
   const [error, setError] = useState('');
@@ -98,7 +118,21 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [runtime, setRuntime] = useState<api.StudioRuntime | null>(null);
-  const customControls = settingsForCategory[category] || [];
+  const [connecting, setConnecting] = useState(false);
+  const customControls = controlsForModel(category, modelId);
+  const selected = models.find(model => model.id === modelId);
+  const connected = runtime?.modelId === modelId || Boolean(selected?.runtimeConnected);
+  const builtInService = ['yue2', 'whisper-large-v3-turbo', 'whisper-large-v3', 'phonon-2'].includes(modelId);
+  const canGenerate = Boolean(selected && (builtInService ? selected.installed : connected && (selected.installed || runtime?.runner && runtime?.sourceDir)));
+  const needsImage = ['triposr', 'triposg', 'trellis-image-large', 'trellis-2-4b', 'hunyuan-3d-21', 'pixal3d', 'spar3d'].includes(modelId) || modelId.startsWith('wan-animate-2-');
+  const needsDrivingVideo = modelId.startsWith('wan-animate-2-');
+
+  async function refreshModels() {
+    const library = await api.modelLibrary();
+    const candidates = library.models.filter(model => model.category === category);
+    setModels(candidates);
+    setModelId(current => selectStudioModel(candidates, category, current));
+  }
 
   useEffect(() => {
     let alive = true;
@@ -106,16 +140,16 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
       try {
         const library = await api.modelLibrary();
         if (alive) {
-          const installed = library.models.filter(model => model.installed && model.category === category);
-          setModels(installed);
-          setModelId(current => installed.some(model => model.id === current) ? current : installed[0]?.id || '');
+          const candidates = library.models.filter(model => model.category === category);
+          setModels(candidates);
+          setModelId(current => selectStudioModel(candidates, category, current));
         }
       } catch (cause) { if (alive) setError(String(cause)); }
     };
     void refresh(); const timer = setInterval(() => void refresh(), 3000);
     return () => { alive = false; clearInterval(timer); };
   }, [category]);
-  useEffect(() => { setControls(Object.fromEntries(customControls.map(control => [control.key, control.value]))); }, [category]);
+  useEffect(() => { if (!presetId) setControls(Object.fromEntries(customControls.map(control => [control.key, control.value]))); }, [category, modelId]);
   useEffect(() => {
     setPresetId('');
     try {
@@ -123,7 +157,11 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
       setPresets(Array.isArray(value) ? value.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string') : []);
     } catch { setPresets([]); }
   }, [category]);
-  useEffect(() => { void api.studioRuntime(modelId).then(setRuntime).catch(() => setRuntime(null)); }, [modelId]);
+  useEffect(() => {
+    let alive = true; setRuntime(null);
+    if (modelId) void api.studioRuntime(modelId).then(value => {if (alive) setRuntime(value);}).catch(() => {if (alive) setRuntime(null);});
+    return () => {alive = false;};
+  }, [modelId]);
 
   function setControl(key: string, value: unknown) { setControls(current => ({ ...current, [key]: value })); }
   function savePreset() {
@@ -157,6 +195,8 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
   async function submit() {
     setBusy(true); setError('');
     try {
+      if (!canGenerate) throw new Error('Install the selected weights and connect its runtime before generating.');
+      if (!prompt.trim() || new TextEncoder().encode(prompt).length > 64 * 1024) throw new Error('Enter a prompt of at most 64 KiB.');
       const parsed = JSON.parse(advancedJson);
       if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('Advanced settings must be a JSON object');
       const settings = {
@@ -165,22 +205,32 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
         ...(category === 'music' ? { title, style, lyrics, memory: { quantization: 'none', offload_ar: true } } : {}),
         ...parsed,
       };
+      for (const control of customControls) {
+        const value = (settings as Record<string, unknown>)[control.key];
+        if (control.kind === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || value < control.min || value > control.max || ((control.step ?? 1) >= 1 && !Number.isInteger(value)))) throw new Error(`${control.label} must be between ${control.min} and ${control.max}.`);
+        if (control.kind === 'checkbox' && typeof value !== 'boolean' || control.kind === 'select' && !control.options.includes(String(value))) throw new Error(`Invalid ${control.label.toLowerCase()}.`);
+      }
+      if (needsImage && !(settings as Record<string, unknown>).inputPath) throw new Error('Choose the reference image required by this model.');
+      if (needsDrivingVideo && !String((settings as Record<string, unknown>).drivingVideoPath || '').trim()) throw new Error('Choose the driving video required by Wan Animate 2.');
+      if (modelId === 'trellis-2-4b' && ![512, 1024, 1536].includes(Number((settings as Record<string, unknown>).resolution))) throw new Error('TRELLIS 2 resolution must be 512, 1024, or 1536.');
       await api.submitStudioJob({ modelId, prompt, settings });
       onNotice('Generation queued. Its prompt, settings, and progress appear below.');
     } catch (cause) { setError(String(cause)); }
     finally { setBusy(false); }
   }
   async function connect() {
+    setConnecting(true); setError('');
     try {
       const python = await api.pickStudioFile('python'); if (!python) return;
       const builtin = ['triposr', 'qwen-image-21', 'animation-diffusion-2d'].includes(modelId)
         || models.some(model => model.id === modelId && model.backend === 'diffusers');
       const runner = builtin ? null : await api.pickStudioFile('worker'); if (!builtin && !runner) return;
-      const sourceDir = modelId === 'triposr' ? await api.pickStudioSourceDirectory() : null;
-      if (modelId === 'triposr' && !sourceDir) return;
+      const sourceDir = !builtin || modelId === 'triposr' ? await api.pickStudioSourceDirectory() : null;
+      if ((!builtin || modelId === 'triposr') && !sourceDir) return;
       const value = { modelId, python, runner, sourceDir };
       await api.configureStudioRuntime(value); setRuntime(value); onNotice('Runtime connected.');
     } catch (cause) { setError(String(cause)); }
+    finally {setConnecting(false);}
   }
 
   function renderControl(control: Control) {
@@ -189,22 +239,25 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
     if (control.kind === 'select') return <label key={control.key}>{control.label}<select aria-label={control.label} value={String(value)} onChange={event => setControl(control.key, event.target.value)}>{control.options.map(option => <option key={option} value={option}>{option.toUpperCase()}</option>)}</select>{control.help && <small>{control.help}</small>}</label>;
     const field = control.kind === 'textarea'
       ? <textarea aria-label={control.label} value={String(value)} onChange={event => setControl(control.key, event.target.value)} />
-      : <input aria-label={control.label} type="number" min={control.kind === 'number' ? control.min : undefined} max={control.kind === 'number' ? control.max : undefined} step={control.kind === 'number' ? control.step || 1 : undefined} value={String(value)} onChange={event => setControl(control.key, Number(event.target.value))} />;
-    return <label key={control.key}>{control.label}{field}{control.help && <small>{control.help}</small>}</label>;
+      : <input aria-label={control.label} type={control.kind === 'number' ? 'number' : 'text'} min={control.kind === 'number' ? control.min : undefined} max={control.kind === 'number' ? control.max : undefined} step={control.kind === 'number' ? control.step || 1 : undefined} value={String(value)} onChange={event => setControl(control.key, control.kind === 'number' ? Number(event.target.value) : event.target.value)} />;
+    return <label key={control.key}>{control.label}{field}{control.key === 'drivingVideoPath' && <button type="button" onClick={() => void api.pickStudioFile('input').then(path => path && setControl(control.key, path)).catch(cause => setError(String(cause)))}>Choose driving video</button>}{control.help && <small>{control.help}</small>}</label>;
   }
 
   return <section className="studio-form" aria-label="New generation"><h2>New generation</h2>
-    {!models.length ? <p>Install a model in this category from Models to unlock generation and its chat skill.</p> : <>
-      <label>Model<select value={modelId} onChange={event => setModelId(event.target.value)}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
+    {!models.length ? <p>No catalog models are available yet. You can prepare a prompt and save generation presets below.</p> : <>
+      <label>Model<select aria-label="Model" value={modelId} disabled={busy || connecting} onChange={event => {setPresetId(''); setModelId(event.target.value);}}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
+      {selected && GAME_DEV_CATEGORIES.some(([id]) => id === category) && <StudioModelSetup key={modelId} model={selected} connected={connected} disabled={busy || connecting} onRefresh={refreshModels} onNotice={onNotice} />}
+    </>}
       {GAME_DEV_CATEGORIES.some(([id]) => id === category) && <div className="studio-presets" aria-label="Saved generation presets"><label>Presets<select aria-label="Presets" value={presetId} onChange={event => loadPreset(event.target.value)}><option value="">Select a preset…</option>{presets.map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</select></label><label>Preset name<input aria-label="Preset name" value={presetName} onChange={event => setPresetName(event.target.value)} placeholder="My style" /></label><div><button type="button" onClick={savePreset}>Save preset</button><button type="button" disabled={!presetId} onClick={deletePreset}>Delete preset</button><button type="button" onClick={resetSettings}>Reset to defaults</button></div></div>}
       <label>Prompt<textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={category === 'music' ? 'A song about AI…' : 'Describe the asset or animation…'} /></label>
       {category === 'music' ? <><label>Title<input value={title} onChange={event => setTitle(event.target.value)} /></label><label>Style<textarea value={style} onChange={event => setStyle(event.target.value)} placeholder="Genre, instruments, mood, vocals…" /></label><label>Lyrics<textarea value={lyrics} onChange={event => setLyrics(event.target.value)} /></label></> : <>
-        {['3d', '3d-animation', '2d-animation'].includes(category) && <label>Input asset or reference<button type="button" onClick={() => void api.pickStudioFile('input').then(path => path && setInputPath(path)).catch(cause => setError(String(cause)))}>Choose image or asset</button><small>{inputPath || 'Optional unless required by the selected model. You can reuse files from prior generations.'}</small></label>}
-        {customControls.length > 0 && <fieldset className="studio-options"><legend>Generation controls</legend><div className="studio-options-grid">{customControls.map(renderControl)}</div></fieldset>}
+        {['3d', '3d-animation', '2d-animation'].includes(category) && <div className="studio-input-field"><span>Input asset or reference</span><button type="button" onClick={() => void api.pickStudioFile('input').then(path => path && setInputPath(path)).catch(cause => setError(String(cause)))}>Choose image or asset</button><small>{inputPath || (needsImage ? 'Required reference image.' : 'Optional unless required by the selected model. You can reuse files from prior generations.')}</small>{inputPath && <button type="button" onClick={() => setInputPath('')}>Clear reference</button>}</div>}
+        {customControls.length > 0 && <fieldset className="studio-options"><legend>Generation controls</legend><p>Prepare settings before installation. The selected adapter defines supported sizes, sampling options, and output formats.</p><div className="studio-options-grid">{customControls.map(renderControl)}</div></fieldset>}
       </>}
       <details><summary>Advanced model settings</summary><p>Pass model-specific settings supported by the connected runtime. Advanced values override matching controls above.</p><textarea aria-label="Generation settings JSON" value={advancedJson} onChange={event => setAdvancedJson(event.target.value)} /></details>
-      {!['music', 'speech'].includes(category) && <details><summary>Runtime connection · {runtime ? 'Connected' : 'Setup needed'}</summary><p>Use the model’s compatible local worker. Worker support and output formats depend on the model and installed runtime.</p><button onClick={() => void connect()}>Connect runtime</button></details>}
-      <button className="studio-submit-action" disabled={busy || !prompt.trim() || (category === 'music' && (!style.trim() || !lyrics.trim()))} onClick={event => { event.preventDefault(); void submit(); }}><Play size={16} />{busy ? 'Submitting…' : 'Generate'}</button>
-    </>}{error && <p role="alert">{error}</p>}
+      {!builtInService && selected && <details className="studio-runtime"><summary>Runtime connection · {connected ? 'Connected' : 'Setup needed'}</summary><p>{selected.backend === 'diffusers' || modelId === 'triposr' ? 'Connect the Python environment containing this model’s dependencies to use the built-in adapter.' : 'Connect the model’s publisher-compatible local runtime. Its adapter defines supported inputs and output formats.'}</p><button type="button" disabled={busy || connecting} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Connect runtime'}</button>{runtime && <details><summary>Connection details</summary><pre>{JSON.stringify(runtime, null, 2)}</pre></details>}</details>}
+      <button className="studio-submit-action" disabled={busy || connecting || !canGenerate || !prompt.trim() || (needsImage && !inputPath) || (needsDrivingVideo && !String(controls.drivingVideoPath || '').trim()) || (category === 'music' && (!style.trim() || !lyrics.trim()))} onClick={event => { event.preventDefault(); void submit(); }}><Play size={16} />{busy ? 'Submitting…' : 'Generate'}</button>
+      {GAME_DEV_CATEGORIES.some(([id]) => id === category) && <p className="studio-queue-note">One model uses the GPU at a time. The queue releases the chat model for generation and resumes the conversation afterward.</p>}
+    {error && <p role="alert">{error}</p>}
   </section>;
 }

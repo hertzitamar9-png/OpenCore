@@ -59,7 +59,7 @@ import { ChatImportDialog } from "./ChatImportDialog";
 import { ChatExportDialog } from "./ChatExportDialog";
 import { ImportedChats } from "./ImportedChats";
 import type { ImportFormat } from "./chat-import-types";
-import type { FileRecord } from "./workspaces";
+import { openWorkspaceFileExternal, type FileRecord } from "./workspaces";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
@@ -69,8 +69,10 @@ import { MusicStudio } from './MusicStudio';
 import { GameDevStudio } from './AssetsStudio';
 import { UpdateButton, UpdateSettings } from './AppUpdateControls';
 import { AgentPlatformSettings } from './AgentPlatformSettings';
+import { AgentConnectorControls } from './AgentConnectorControls';
+import { SETTINGS_SAVE_ERROR_EVENT, type SettingsSaveError } from './useSettingsAutosave';
 import { AgentQuestions } from './AgentQuestions';
-import { usePlatformConfiguration, executePlatformAction, platformNativeAvailable } from './agent-platform';
+import { usePlatformConfiguration, executePlatformAction } from './agent-platform';
 import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
@@ -108,7 +110,7 @@ function savedAppearance(): Appearance {
   try {
     const stored = JSON.parse(window.localStorage.getItem(appearanceKey) || "null") as Partial<Appearance> | null;
     return {
-      chatFontSize: Math.max(13, Math.min(18, Number(stored?.chatFontSize) || defaultAppearance.chatFontSize)),
+      chatFontSize: Math.max(10, Math.min(24, Number(stored?.chatFontSize) || defaultAppearance.chatFontSize)),
       terminalFontSize: Math.max(10, Math.min(20, Number(stored?.terminalFontSize) || defaultAppearance.terminalFontSize)),
       compactMessages: stored?.compactMessages === true,
       keepUserWindowInFront: stored?.keepUserWindowInFront === true,
@@ -554,7 +556,7 @@ function ArchiveEventCard({ event, onNotice }: { event: ArchiveEvent; onNotice: 
   </article>;
 }
 
-function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; onSelectProfile: (profile: RuntimeProfile) => void; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; onAppearanceChange: (value: Appearance) => void }) {
+function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, appearanceStorageError, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; onSelectProfile: (profile: RuntimeProfile) => void; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; appearanceStorageError: string; onAppearanceChange: (value: Appearance) => void }) {
   const [connectorForm, setConnectorForm] = useState({ name: "", endpoint: "", matchPattern: "", kind: "openai" });
   const [connectorNotice, setConnectorNotice] = useState("");
   const [memoryQuery, setMemoryQuery] = useState("");
@@ -654,21 +656,24 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       setConnectorFeedback((current) => ({ ...current, [id]: { message: String(error), error: true } }));
     } finally { setConnectorActionBusy((current) => ({ ...current, [id]: false })); }
   };
-  const connectAgent = async (id: "claude-code" | "codex") => {
+  const connectAgent = async (id: api.AgentConnectorId, profileFolder?: string) => {
     setProfileBusy((current) => ({ ...current, [id]: true }));
     try {
-      setConnectorNotice(await api.configureAgentConnector(id));
+      const message = await api.configureAgentConnector(id, profileFolder);
+      setConnectorNotice(message);
       await onRefresh();
-    } catch (error) { setConnectorNotice(String(error)); }
+      return message;
+    } catch (error) { setConnectorNotice(String(error)); throw error; }
     finally { setProfileBusy((current) => ({ ...current, [id]: false })); }
   };
-  const syncHistory = async (id: "claude-code" | "codex") => {
+  const syncHistory = async (id: api.AgentConnectorId) => {
     setSyncStarting((current) => ({ ...current, [id]: true }));
     try {
       const operation = await api.startHistorySync(id);
       operationsRef.current = [operation, ...operationsRef.current];
       setOperations(operationsRef.current);
-    } catch (error) { setConnectorNotice(String(error)); onNotice(String(error)); }
+      return operation;
+    } catch (error) { setConnectorNotice(String(error)); onNotice(String(error)); throw error; }
     finally { setSyncStarting((current) => ({ ...current, [id]: false })); }
   };
 
@@ -682,16 +687,19 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     } finally { setSyncCancelBusy((current) => ({ ...current, [target]: false })); }
   };
 
-  const clearHistory = async (id: "claude-code" | "codex") => {
-    if (!window.confirm(`Clear imported ${id === "codex" ? "Codex" : "Claude Code"} conversations from OpenCore and ECHO? Original transcript files will not be changed.`)) return;
+  const clearHistory = async (id: api.AgentConnectorId) => {
+    const name = { codex: 'Codex', 'claude-code': 'Claude Code', opencode: 'OpenCode', hermes: 'Hermes Agent' }[id];
+    if (!window.confirm(`Clear imported ${name} conversations from OpenCore and ECHO? Original transcript files will not be changed.`)) return null;
     setHistoryClearBusy((current) => ({ ...current, [id]: true }));
     setConnectorFeedback((current) => { const next = { ...current }; delete next[id]; return next; });
     try {
       const message = await api.clearImportedHistory(id);
       setConnectorFeedback((current) => ({ ...current, [id]: { message, error: false } }));
       await onRefresh();
+      return message;
     } catch (error) {
       setConnectorFeedback((current) => ({ ...current, [id]: { message: String(error), error: true } }));
+      throw error;
     } finally { setHistoryClearBusy((current) => ({ ...current, [id]: false })); }
   };
 
@@ -859,12 +867,16 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       return <article key={connector.id}>
         <div className="connector-icon"><Network /></div>
         <div className="connector-copy"><h2>{connector.name}</h2><p>{connector.details}</p><code>{history ? "OpenCore local model connector" : connector.endpoint}</code></div>
-        <div className="connector-state"><StatusDot state={connector.status} /><strong>{connector.status}</strong><span>{history ? (connector.status === "configured" ? "Opt-in profile added" : "Profile not added") : connector.observable ? "Observable" : "Not observable"}</span></div>
+        <div className="connector-state"><StatusDot state={connector.status} /><strong>{connector.status}</strong><span>{history ? (connector.status === "configured" ? "Opt-in profile added" : connector.status === "observed" ? "Local requests observed" : "Profile not added") : connector.observable ? "Observable" : "Not observable"}</span></div>
         {history ? <div className="connector-actions">
-          <button className="primary" disabled={profileBusy[connector.id]} onClick={() => connectAgent(connector.id as "claude-code" | "codex")}>{profileBusy[connector.id] ? "Writing profile…" : connector.status === "configured" ? "Refresh profile" : "Add profile"}</button>
-          <button className="sync-history-button" disabled={syncActive || syncStarting[connector.id]} onClick={() => syncHistory(connector.id as "claude-code" | "codex")}>{syncLabel(connector.id)}</button>
+          {connector.id === 'opencode' || connector.id === 'hermes' ? <AgentConnectorControls id={connector.id} busy={profileBusy[connector.id] || syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]}
+            onConfigure={connectAgent} onSelectFolder={async (id, folder) => { const result = await api.setAgentConnectorFolder(id, folder); await onRefresh(); return result; }} onSync={syncHistory} onClear={clearHistory}
+            onResult={setConnectorNotice} onError={setConnectorNotice} /> : <>
+          <button className="primary" disabled={profileBusy[connector.id]} onClick={() => void connectAgent(connector.id as api.AgentConnectorId).catch(() => {})}>{profileBusy[connector.id] ? "Writing profile…" : connector.status === "configured" ? "Refresh profile" : "Add profile"}</button>
+          <button className="sync-history-button" disabled={syncActive || syncStarting[connector.id]} onClick={() => void syncHistory(connector.id as api.AgentConnectorId).catch(() => {})}>{syncLabel(connector.id)}</button>
+          <button className="clear-history-button" disabled={syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]} title="Removes the imported copy from OpenCore and ECHO. Source transcript files stay in place." onClick={() => void clearHistory(connector.id as api.AgentConnectorId).catch(() => {})}>{historyClearBusy[connector.id] ? "Clearing…" : "Clear imported history"}</button>
+          </>}
           {syncActive && syncOperation ? <button className="cancel-history-button" aria-label={`Cancel ${connector.name} import`} disabled={syncCancelBusy[connector.id]} onClick={() => void cancelHistory(syncOperation.id, connector.id)}>{syncCancelBusy[connector.id] ? "Canceling…" : "Cancel import"}</button> : null}
-          <button className="clear-history-button" disabled={syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]} title="Removes the imported copy from OpenCore and ECHO. Source transcript files stay in place." onClick={() => void clearHistory(connector.id as "claude-code" | "codex")}>{historyClearBusy[connector.id] ? "Clearing…" : "Clear imported history"}</button>
           {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
           {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? syncOperation.error : syncOperation.status === "running" ? historySyncProgressLabel(syncOperation) : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)}</time>{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
         </div> : <div className="connector-actions single">
@@ -976,14 +988,11 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     <div className="page-heading"><div><h1>Settings</h1><p>Real local controls for storage, privacy, history, and diagnostics.</p></div></div>
     <AgentPlatformSettings />
     <div className="settings-grid">
-      <InspectorSection title="Conversation appearance">
-        <label className="appearance-label" htmlFor="chat-font-size">Message text size <strong>{appearance.chatFontSize}px</strong></label>
-        <input id="chat-font-size" className="appearance-range" type="range" min="13" max="18" step="1" value={appearance.chatFontSize} onChange={(event) => onAppearanceChange({ ...appearance, chatFontSize: Number(event.target.value) })} />
+      <InspectorSection title="Terminal appearance">
         <label className="appearance-label" htmlFor="terminal-font-size">Terminal/log text <strong>{appearance.terminalFontSize}px</strong></label>
         <input id="terminal-font-size" className="appearance-range" type="range" min="10" max="20" step="1" value={appearance.terminalFontSize} onChange={(event) => onAppearanceChange({ ...appearance, terminalFontSize: Number(event.target.value) })} />
-        <div className="appearance-label">Message spacing</div>
-        <div className="appearance-choices"><button className={!appearance.compactMessages ? "active" : ""} aria-pressed={!appearance.compactMessages} onClick={() => onAppearanceChange({ ...appearance, compactMessages: false })}>Comfortable</button><button className={appearance.compactMessages ? "active" : ""} aria-pressed={appearance.compactMessages} onClick={() => onAppearanceChange({ ...appearance, compactMessages: true })}>Compact</button></div>
-        <p className="appearance-note">Changes apply to Conversations immediately and remain on this computer.</p>
+        <p className="appearance-note">Changes apply immediately. Message text and spacing are configured in Appearance above.</p>
+        {appearanceStorageError ? <p className="workspace-inline-error" role="alert">Local preferences could not be saved: {appearanceStorageError}</p> : <p className="appearance-note" role="status">Local preferences saved automatically.</p>}
       </InspectorSection>
       <InspectorSection title="Computer use">
         <div className="appearance-label">Window focus</div>
@@ -1008,8 +1017,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         <KeyValue label="ECHO model native window" value="262,144 tokens per inference" />
         <KeyValue label="DuoCore package context" value="Up to 65,536 live tokens · auto-fits free RAM; ECHO keeps the exact archive" />
         <KeyValue label="1M extended profile" value="1,000,000-token YaRN window; original trained context 262,144" />
-        <label className="appearance-label" htmlFor="context-compact-tokens">Requested native-model auto-compaction trigger <strong>{appearance.compactAtTokens.toLocaleString()} tokens</strong></label>
-        <input id="context-compact-tokens" className="appearance-number" type="number" min="1024" max="1000000" step="1024" value={appearance.compactAtTokens} onChange={(event) => onAppearanceChange({ ...appearance, compactAtTokens: Number(event.target.value) || 0 })} onBlur={() => { if (appearance.compactAtTokens < 1024 || appearance.compactAtTokens > 1000000) onAppearanceChange({ ...appearance, compactAtTokens: Math.max(1024, Math.min(1000000, appearance.compactAtTokens || 1024)) }); }} />
+        <KeyValue label="Requested auto-compaction trigger" value={`${appearance.compactAtTokens.toLocaleString()} tokens`} />
         <p className="appearance-note">Effective trigger for the configured {snapshot.runtime.contextSize.toLocaleString()}-token model window: <strong>{effectiveCompactTokens.toLocaleString()} tokens</strong>{effectiveCompactTokens < appearance.compactAtTokens ? " (lowered to leave room for the response and tool results)" : ""}. Native profiles compact automatically at this point. ECHO profiles preserve the exact conversation history in the archive; compaction only bounds the active model window.</p>
         <p className="appearance-note">This is an exact token count. The configured inference window sets the per-request ceiling. YaRN length extension does not mean the model was trained at that length. ECHO keeps the full conversation archive separately, with storage limited by available disk.</p>
       </InspectorSection>
@@ -1029,7 +1037,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       </InspectorSection>
       <InspectorSection title="Privacy & responsibility"><KeyValue label="Network" value="Localhost only" /><KeyValue label="Credentials" value="Redacted before persistence" /><KeyValue label="AI output" value="Review code and tool actions before use" /><KeyValue label="Ownership" value="You control local data and exported conversations" /></InspectorSection>
       <InspectorSection title="Storage"><KeyValue label="Conversation database" value="Local SQLite" /><KeyValue label="ECHO archive" value={snapshot.runtime.archivePath} /><button className="wide" onClick={() => void revealLocalPath(snapshot.runtime.archivePath, onNotice)}><FolderOpen size={14} /> Open archive</button><button className="wide" onClick={async () => { try { onNotice(`Index exported to ${await api.exportArchiveIndex()}`); } catch (error) { onNotice(String(error)); } }}><Download size={14} /> Export memory index</button></InspectorSection>
-      <InspectorSection title="Conversation sources"><KeyValue label="OpenCore" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("opencore") || item.client.toLowerCase().includes("unsloth")).length} conversations`} /><KeyValue label="Claude Code" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("claude")).length} conversations`} /><KeyValue label="Codex" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("codex")).length} conversations`} /><button className="wide" disabled={Boolean(syncStarting["claude-code"] || syncStarting.codex || ["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || "")))} onClick={() => { void syncHistory("claude-code"); void syncHistory("codex"); }}><RefreshCw size={14} /> {(["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || ""))) ? "Scanning local histories…" : "Sync local histories"}</button><div className="settings-sync-results">{(["claude-code", "codex"] as const).map((id) => { const result = operationFor(id); return result ? <div key={id}><strong>{id === "codex" ? "Codex" : "Claude Code"}</strong><span>{result.status === "failed" ? result.error : result.status === "running" ? historySyncProgressLabel(result) : result.summary || result.phase}</span></div> : null; })}</div></InspectorSection>
+      <InspectorSection title="Conversation sources"><KeyValue label="OpenCore" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("opencore") || item.client.toLowerCase().includes("unsloth")).length} conversations`} /><KeyValue label="Claude Code" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("claude")).length} conversations`} /><KeyValue label="Codex" value={`${snapshot.conversations.filter((item) => item.client.toLowerCase().includes("codex")).length} conversations`} /><button className="wide" disabled={Boolean(syncStarting["claude-code"] || syncStarting.codex || ["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || "")))} onClick={() => { void syncHistory("claude-code").catch(() => {}); void syncHistory("codex").catch(() => {}); }}><RefreshCw size={14} /> {(["claude-code", "codex"].some((id) => ["queued", "running"].includes(operationFor(id)?.status || ""))) ? "Scanning local histories…" : "Sync local histories"}</button><div className="settings-sync-results">{(["claude-code", "codex"] as const).map((id) => { const result = operationFor(id); return result ? <div key={id}><strong>{id === "codex" ? "Codex" : "Claude Code"}</strong><span>{result.status === "failed" ? result.error : result.status === "running" ? historySyncProgressLabel(result) : result.summary || result.phase}</span></div> : null; })}</div></InspectorSection>
       <InspectorSection title="API & diagnostics"><KeyValue label="Gateway" value={`http://127.0.0.1:${snapshot.runtime.gatewayPort}/v1`} /><KeyValue label="Capture" value="Routed API conversations are saved automatically" /><button className="wide" onClick={() => navigator.clipboard.writeText(`http://127.0.0.1:${snapshot.runtime.gatewayPort}/v1`)}><Copy size={14} /> Copy API endpoint</button><button className="wide" onClick={async () => { try { onNotice(`Diagnostics exported to ${await api.exportDiagnostics()}`); } catch (error) { onNotice(String(error)); } }}><FileDown size={14} /> Export diagnostics</button></InspectorSection>
     </div>
   </div>;
@@ -1195,6 +1203,11 @@ export default function App() {
   const [liveGeneration, setLiveGeneration] = useState<{ conversationId: string; runId: string; content?: string; reasoning?: string; segments?: { kind: "thinking" | "text"; content: string }[]; phase?: string }>();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
+  useEffect(() => {
+    const failedSave = (event: Event) => setNotice(`Settings could not be saved: ${(event as CustomEvent<SettingsSaveError>).detail.error}`);
+    window.addEventListener(SETTINGS_SAVE_ERROR_EVENT, failedSave);
+    return () => window.removeEventListener(SETTINGS_SAVE_ERROR_EVENT, failedSave);
+  }, []);
   const [importOpen, setImportOpen] = useState(false);
   const [importProgress, setImportProgress] = useState<{current: number; total: number} | null>(null);
   const [exportChatId, setExportChatId] = useState<string | null>(null);
@@ -1262,13 +1275,13 @@ export default function App() {
   const [conversationDialog, setConversationDialog] = useState<ConversationDialog>(null);
   const [projectDialog, setProjectDialog] = useState<ProjectDialog>(null);
   const [appearance, setAppearance] = useState<Appearance>(savedAppearance);
+  const [appearanceStorageError, setAppearanceStorageError] = useState('');
   useEffect(()=>{
-    const config=platform.configuration;if(!config)return;
-    setAppearance(current=>({...current,compactAtTokens:config.compactAtTokens,chatFontSize:config.appearance.fontSize,compactMessages:config.appearance.density==='compact'}));
+    const config = platform.configuration;
+    if (config) setAppearance(current => ({ ...current, compactAtTokens: config.compactAtTokens, chatFontSize: config.appearance.fontSize, compactMessages: config.appearance.density === 'compact' }));
   },[platform.configuration]);
   const changeAppearance=useCallback((value:Appearance)=>{
-    setAppearance(value);
-    if(platformNativeAvailable())void executePlatformAction('app_control',{action:'set',settings:{compactAtTokens:value.compactAtTokens,appearance:{fontSize:value.chatFontSize,density:value.compactMessages?'compact':'comfortable'}},source:'settings'}).catch(error=>setNotice(`Settings could not be saved: ${String(error)}`));
+    setAppearance(current => ({ ...value, chatFontSize: current.chatFontSize, compactMessages: current.compactMessages, compactAtTokens: current.compactAtTokens }));
   },[]);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try {
@@ -1296,7 +1309,7 @@ export default function App() {
     if (!runtime || !["running", "starting"].includes(runtime.status) || runtime.profile === "stopped" || runtime.profile === selectedProfile) return;
     setSelectedProfile(runtime.profile);
   }, [snapshot?.runtime.profile, snapshot?.runtime.status, selectedProfile, setSelectedProfile]);
-  useEffect(() => { try { window.localStorage.setItem(appearanceKey, JSON.stringify(appearance)); } catch { /* The preference still works for this session. */ } }, [appearance]);
+  useEffect(() => { try { window.localStorage.setItem(appearanceKey, JSON.stringify(appearance)); setAppearanceStorageError(''); } catch (error) { setAppearanceStorageError(String(error)); } }, [appearance]);
   useEffect(() => { void api.setComputerFocusMode(appearance.keepUserWindowInFront).catch((error: unknown) => setNotice(String(error))); }, [appearance.keepUserWindowInFront]);
   useEffect(() => { try { window.localStorage.setItem("opencore.sidebar.width", String(sidebarWidth)); } catch { /* Session-only layout. */ } }, [sidebarWidth]);
   useEffect(() => {
@@ -1590,8 +1603,8 @@ export default function App() {
       : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
       : view === 'media' ? <MediaStudio category={mediaCategory} onCategoryChange={setMediaCategory} onNotice={setNotice} />
       : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} onNotice={setNotice} />
-      : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} />
-      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={changeAppearance} />;
+      : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} onOpenExternal={async file => { await openWorkspaceFileExternal(file.id); }} />
+      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} appearanceStorageError={appearanceStorageError} onAppearanceChange={changeAppearance} />;
 
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />

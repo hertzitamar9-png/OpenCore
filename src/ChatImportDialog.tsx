@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FileUp, FolderOpen } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FloatingWindow } from "./FloatingWindow";
-import type { ImportFormat, ImportPreview, ImportReport } from "./chat-import-types";
+import type { ImportFolderStatus, ImportFormat, ImportPreview, ImportReport } from "./chat-import-types";
 import "./ChatImportDialog.css";
 
 export type ChatImportDialogProps = {
@@ -16,9 +16,17 @@ export type ChatImportDialogProps = {
 
 const formats: Array<[ImportFormat, string]> = [
   ["auto", "Auto detect"], ["opencore", "OpenCore"], ["hermes", "Hermes Agent"],
+  ["opencode", "OpenCode"],
   ["codex", "Codex"], ["claude", "Claude Code"], ["generic", "Generic JSON"],
 ];
 const sourceLabel = (source: string) => formats.find(([value]) => value === source)?.[1] ?? source;
+
+function OriginalFolder({ folder, status }: { folder?: string | null; status?: ImportFolderStatus }) {
+  if (!status) return null;
+  const label = ({ "not-recorded": "No original project folder was recorded", nonlocal: "Folder is not available on this computer",
+    missing: "Original folder is missing", unavailable: "Original folder is unavailable", available: "Original folder is available", linked: "Linked to the original project folder" })[status];
+  return <p className="chat-import-item-warning">{label}{folder ? <>: <code>{folder}</code></> : null}</p>;
+}
 
 export function ChatImportDialog({ onClose, onImport, onPreview, onImported, onCancelImport, progress }: ChatImportDialogProps) {
   const [format, setFormat] = useState<ImportFormat>("auto");
@@ -128,7 +136,7 @@ export function ChatImportDialog({ onClose, onImport, onPreview, onImported, onC
       </label>
       <div className="chat-import-file"><button ref={chooseButton} disabled={busy || picking} onClick={() => void chooseFile()}>
         <FolderOpen size={16} />{picking ? "Choosing…" : "Choose file"}</button>
-        {path ? <code title={path}>{path}</code> : <span>JSON, JSONL or a Hermes SQLite database</span>}</div>
+        {path ? <code title={path}>{path}</code> : <span>JSON, JSONL or an OpenCode/Hermes SQLite database</span>}</div>
       {reviewing ? <p role="status">Reading chat history…</p> : null}
       {busy ? <p role="status">{progress && progress.total > 0
         ? `Importing ${progress.current} of ${progress.total} conversations…` : "Importing chat history…"}</p> : null}
@@ -139,6 +147,7 @@ export function ChatImportDialog({ onClose, onImport, onPreview, onImported, onC
         <strong>{sourceLabel(preview.sourceFormat)}</strong><p>{preview.conversations} conversations · {preview.entries} entries</p>
         <ul>{preview.samples.map((sample, index) => <li key={`${sample.sourceConversationId}-${index}`}>
           <span>{sample.title}</span><small>{sample.entries} entries</small>
+          <OriginalFolder folder={sample.sourceFolder} status={sample.folderStatus} />
           {sample.error ? <p className="chat-import-item-error">{sample.error}</p> : null}
           {sample.warnings.map((warning, warningIndex) => <p className="chat-import-item-warning" key={warningIndex}>{warning}</p>)}
         </li>)}</ul>
@@ -148,6 +157,7 @@ export function ChatImportDialog({ onClose, onImport, onPreview, onImported, onC
         <p>{report.imported} imported · {report.updated} updated · {report.skipped} skipped{report.failed > 0 ? ` · ${report.failed} failed` : ""}</p>
         <ul>{report.conversations.map((conversation, index) => <li key={`${conversation.conversationId}-${index}`}>
           <span>{conversation.title}</span><small>{({ imported: "Imported", updated: "Updated", skipped: "Already copied", failed: "Failed" })[conversation.status]}</small>
+          <OriginalFolder folder={conversation.sourceFolder} status={conversation.folderStatus} />
           {conversation.error ? <p className="chat-import-item-error">{conversation.error}</p> : null}
           {conversation.warnings.map((warning, warningIndex) => <p className="chat-import-item-warning" key={warningIndex}>{warning}</p>)}
         </li>)}</ul>

@@ -1193,6 +1193,33 @@ impl RuntimeManager {
         }
     }
 
+    pub fn configure_agent_connector(&self, id: &str, source_profile: Option<&Path>) -> Result<String, String> {
+        let context = self.snapshot().context_size;
+        let selected = self.store.get_setting(&format!("agent_connector_source_folder_{id}"))?.map(PathBuf::from);
+        let source_profile = source_profile.or(selected.as_deref());
+        let result = match id {
+            "codex" => connector_config::configure_codex(),
+            "claude-code" => connector_config::configure_claude_code(),
+            "opencode" => connector_config::configure_opencode(context),
+            "hermes" => connector_config::configure_hermes(context, source_profile),
+            _ => Err(format!("Unsupported agent connector: {id}")),
+        }?;
+        self.invalidate_connectors_cache();
+        Ok(result)
+    }
+
+    pub fn set_agent_connector_folder(&self, id: &str, folder: &Path) -> Result<String, String> {
+        if !matches!(id, "hermes" | "opencode") { return Err("Choose an OpenCode or Hermes connector".into()); }
+        if !folder.is_absolute() || !folder.is_dir() { return Err("Choose an existing absolute source profile folder".into()); }
+        let valid = if id == "hermes" {
+            folder.join("config.yaml").is_file() || folder.join("state.db").is_file()
+        } else { folder.join("opencode.db").is_file() || folder.join("storage").is_dir() };
+        if !valid { return Err("The selected folder has no history/config for this connector".into()); }
+        self.store.set_setting(&format!("agent_connector_source_folder_{id}"), &folder.to_string_lossy())?;
+        self.invalidate_connectors_cache();
+        Ok(format!("Selected {} as the {id} source folder", folder.display()))
+    }
+
     pub fn connectors(&self) -> Vec<ConnectorStatus> {
         {
             let inner = self.inner.lock().expect("runtime lock");
@@ -1206,22 +1233,27 @@ impl RuntimeManager {
         let profile = std::env::var_os("USERPROFILE").map(PathBuf::from).unwrap_or_default();
         for connector in &mut connectors {
             if connector.kind == "history" {
-                let root = if connector.id == "claude-code" {
-                    profile.join(".claude").join("projects")
-                } else {
-                    profile.join(".codex").join("sessions")
+                let (root, configured) = match connector.id.as_str() {
+                    "opencode" => (connector_config::opencode_history_root().unwrap_or_default(), connector_config::opencode_configured()),
+                    "hermes" => (connector_config::hermes_history_root().unwrap_or_default(), connector_config::hermes_configured()),
+                    "claude-code" => (profile.join(".claude").join("projects"), connector_config::claude_configured()),
+                    _ => (profile.join(".codex").join("sessions"), connector_config::codex_configured()),
                 };
-                let configured = if connector.id == "claude-code" {
-                    connector_config::claude_configured()
-                } else {
-                    connector_config::codex_configured()
-                };
+                let selected = self.store.get_setting(&format!("agent_connector_source_folder_{}", connector.id)).ok().flatten().map(PathBuf::from);
+                let configured = if connector.id == "hermes" {
+                    connector_config::hermes_configured_in(selected.as_deref())
+                } else { configured };
+                let root = selected.unwrap_or(root);
                 if configured {
                     connector.status = "configured".into();
                     connector.details = if connector.id == "codex" {
                         "OpenCore Local profile is installed. Your normal Codex account remains the default; launch codex --profile opencore to use the local model.".into()
                     } else if connector.id == "claude-code" {
                         "OpenCore Local settings are installed separately. Your normal Claude account remains the default; launch Claude with --settings ~/.claude/opencore-settings.json to use the local model.".into()
+                    } else if connector.id == "opencode" {
+                        "OpenCore is available in OpenCode's /models picker. Launch opencode --model opencore/opencore; sync imports conversation history with original project folders.".into()
+                    } else if connector.id == "hermes" {
+                        format!("OpenCore Local profile is installed. {} Sync imports the selected Hermes profile's history and original project folders.", connector_config::hermes_launch_guidance(&root))
                     } else {
                         "Connected to OpenCore. Load ECHO 3T or the 1M extended profile and this client will use it.".into()
                     };
@@ -1231,6 +1263,10 @@ impl RuntimeManager {
                 } else {
                     connector.status = "offline".into();
                     connector.details = "Client history/config was not found.".into();
+                }
+                if connector.observable {
+                    connector.status = "observed".into();
+                    connector.details.push_str(" OpenCore has observed requests from this client.");
                 }
                 continue;
             }
@@ -1267,6 +1303,33 @@ impl Drop for RuntimeManager {
 mod tests {
     use super::*;
     use std::net::TcpListener;
+
+    #[test]
+    fn hermes_connector_guidance_uses_selected_custom_home_after_observed_requests() {
+        let fixture = std::env::temp_dir().join(format!("opencore-hermes-guidance-{}", uuid::Uuid::new_v4()));
+        let root = fixture.join("Custom Hermes home");
+        let profile = root.join("profiles").join("coder");
+        std::fs::create_dir_all(&profile).unwrap();
+        let original = b"model:\n  default: original\n  provider: nous\n";
+        std::fs::write(profile.join("config.yaml"), original).unwrap();
+        let store = Arc::new(EventStore::open(&fixture.join("events.sqlite3")).unwrap());
+        let manager = RuntimeManager::new(store.clone());
+        manager.set_agent_connector_folder("hermes", &profile).unwrap();
+        let result = manager.configure_agent_connector("hermes", None).unwrap();
+        let guidance = connector_config::hermes_launch_guidance(&root);
+        assert!(result.contains(&guidance));
+        assert!(root.join("profiles").join("opencore").join("config.yaml").is_file());
+        for observed in [false, true] {
+            if observed { store.observe_client("Hermes Agent"); manager.invalidate_connectors_cache(); }
+            let connector = manager.connectors().into_iter().find(|connector| connector.id == "hermes").unwrap();
+            assert_eq!(connector.status, if observed { "observed" } else { "configured" });
+            assert!(connector.details.contains(&guidance));
+        }
+        assert_eq!(std::fs::read(profile.join("config.yaml")).unwrap(), original);
+        assert!(!root.join("active_profile").exists());
+        drop(manager); drop(store);
+        std::fs::remove_dir_all(fixture).unwrap();
+    }
 
     #[test]
     fn readiness_requires_http_200_not_just_an_open_port() {

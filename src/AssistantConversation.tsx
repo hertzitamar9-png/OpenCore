@@ -34,6 +34,7 @@ import type { WorkspacePreview, WorkspaceTab } from "./WorkspacePanel";
 import { FloatingWindow } from "./FloatingWindow";
 import { SpeechButton } from "./SpeechButton";
 import { ModelProfileOptions, profileLabel } from "./ModelProfiles";
+import './message-media.css';
 import type { ApprovalMode, ChatQueueItem, ProjectSummary, ReasoningEffort, RuntimeProfile, RuntimeSnapshot, TelemetrySnapshot, TimelineEntry } from "./types";
 
 const REASONING_MODES: { value: ReasoningEffort; label: string }[] = [
@@ -146,34 +147,49 @@ function convertTurn(turn: ConversationTurn, active: boolean): ThreadMessageLike
 }
 
 type ArtifactActions = { preview: (id: string) => void; previewAttachment: (path: string) => void; download: (id: string) => void; remoteImage: (url: string) => void; browserLink: (url: string) => void };
-const ArtifactActionsContext = createContext<ArtifactActions | null>(null);
+export const ArtifactActionsContext = createContext<ArtifactActions | null>(null);
 
-function MessageImage({ src, alt }: { src?: string; alt?: string }) {
+export function MessageImage({ src, alt }: { src?: string; alt?: string }) {
   const actions = useContext(ArtifactActionsContext);
   const artifact = parseArtifactLink(src);
-  const [imageUrl, setImageUrl] = useState(artifact ? "" : src || "");
+  const path = localFilePath(src);
+  const [image, setImage] = useState<{ source?: string; url: string; error: string }>({ source: src, url: artifact || path ? "" : src || "", error: "" });
   useEffect(() => {
-    if (!artifact || artifact.action !== "preview") { setImageUrl(src || ""); return; }
+    setImage({ source: src, url: artifact || path ? "" : src || "", error: "" });
+    if (!artifact && !path) return;
     let active = true;
-    api.previewArtifact(artifact.id).then((item) => { if (active && item.mime.startsWith("image/")) setImageUrl(item.dataUrl); }).catch(() => {});
+    const preview = path ? api.previewAttachmentImage(path) : api.previewArtifact(artifact!.id).then(item => {
+      if (!item.mime.startsWith("image/")) throw new Error("This file is not an image");
+      return item.dataUrl;
+    });
+    preview.then(url => { if (active) setImage({ source: src, url, error: "" }); })
+      .catch((error: unknown) => { if (active) setImage({ source: src, url: "", error: String(error) }); });
     return () => { active = false; };
   }, [src]);
-  if (!imageUrl) return <span className="inline-image-loading">{alt || "Image"}</span>;
-  return <button type="button" className="inline-image-button" aria-label={`Preview ${alt || "image"}`} onClick={() => artifact ? actions?.preview(artifact.id) : src && actions?.remoteImage(src)}>
-    <img src={imageUrl} alt={alt || "Image"} loading="lazy" />
+  const current = image.source === src ? image : { url: "", error: "" };
+  const openPreview = () => path ? actions?.previewAttachment(path) : artifact ? actions?.preview(artifact.id) : src && actions?.remoteImage(src);
+  if (!current.url && !current.error) return <span className="inline-image-loading" role="status">Loading {alt || "image"}…</span>;
+  return <button type="button" className={`inline-image-button${current.error ? " inline-image-unavailable" : ""}`} aria-label={`Preview ${alt || "image"}`} onClick={openPreview}>
+    {current.error ? <span title={current.error}><FileText size={20} aria-hidden="true" /><strong>{alt || "Image"}</strong><small>Image preview unavailable · Open file</small></span>
+      : <img src={current.url} alt={alt || "Image"} loading="lazy" onError={() => setImage({ source: src, url: "", error: "The image could not be displayed" })} />}
   </button>;
 }
 
 type AttachedFile = { name: string; path?: string; artifactId?: string };
+// Native metadata paths are literal filenames; file URLs still need percent decoding.
+const attachmentPath = (value: string) => localFilePath(value, !/^[A-Za-z]:[\\/]/.test(value));
 
 function attachedFiles(value: unknown): AttachedFile[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item): AttachedFile[] => {
-    if (typeof item === "string") return [{ name: item.split(/[\\/]/).pop() || "Attachment", path: item }];
+    if (typeof item === "string") {
+      const path = attachmentPath(item);
+      return path ? [{ name: path.split(/[\\/]/).pop() || "Attachment", path }] : [];
+    }
     if (!item || typeof item !== "object") return [];
     const file = item as Record<string, unknown>;
     if (typeof file.name !== "string") return [];
-    return [{ name: file.name, path: typeof file.path === "string" ? file.path : undefined,
+    return [{ name: file.name, path: typeof file.path === "string" ? attachmentPath(file.path) || undefined : undefined,
       artifactId: typeof file.artifactId === "string" ? file.artifactId : undefined }];
   });
 }
@@ -199,6 +215,7 @@ function AttachedFilePreview({ file, onRemove }: { file: AttachedFile; onRemove?
   const isImage = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
   const [imageUrl, setImageUrl] = useState("");
   useEffect(() => {
+    setImageUrl("");
     if (!isImage) return;
     let active = true;
     const preview = file.artifactId
@@ -218,6 +235,11 @@ function AttachedFilePreview({ file, onRemove }: { file: AttachedFile; onRemove?
     </button>
     {onRemove ? <button type="button" className="attachment-remove" aria-label={`Remove ${file.name}`} onClick={onRemove}><X size={13} /></button> : null}
   </div>;
+}
+
+function MessageAttachments({ value }: { value: unknown }) {
+  const files = attachedFiles(value);
+  return files.length ? <div className="message-attachments">{files.map((file, index) => <AttachedFilePreview key={`${file.path || file.artifactId || file.name}-${index}`} file={file} />)}</div> : null;
 }
 
 function GeneratedArtifact({ id, name, mime, size }: { id: string; name: string; mime?: string; size?: number }) {
@@ -391,7 +413,7 @@ function ToolGroup({ steps, active }: { steps: ToolStep[]; active: boolean }) {
   </details>;
 }
 
-function ResponseActivity({ events, active }: { events: TimelineEntry[]; active: boolean }) {
+export function ResponseActivity({ events, active }: { events: TimelineEntry[]; active: boolean }) {
   const latest = events.filter((entry) => entry.kind !== "echo").at(-1);
   const working = active;
   const segments = buildResponseSegments(events);
@@ -407,7 +429,7 @@ function ResponseActivity({ events, active }: { events: TimelineEntry[]; active:
       : segment.entry.kind === "file" && typeof segment.entry.metadata.id === "string"
         ? <GeneratedArtifact key={segment.key} id={segment.entry.metadata.id} name={segment.entry.title || "Generated file"} mime={typeof segment.entry.metadata.mime === "string" ? segment.entry.metadata.mime : undefined} size={typeof segment.entry.metadata.size === "number" ? segment.entry.metadata.size : undefined} />
       : segment.entry.kind === "message"
-        ? <div key={segment.key} className="assistant-response-answer"><ResponseMarkdown content={segment.entry.content} /></div>
+        ? <div key={segment.key} className="assistant-response-answer"><ResponseMarkdown content={segment.entry.content} /><MessageAttachments value={segment.entry.metadata.files} /></div>
       : segment.entry.kind === "error"
         ? <details key={segment.key} className="assistant-disclosure kind-error" open><summary><Code2 size={14} /><strong>Error</strong><span>{segment.entry.title}</span></summary><div>{displayText(segment.entry.content)}</div></details>
       : null)}

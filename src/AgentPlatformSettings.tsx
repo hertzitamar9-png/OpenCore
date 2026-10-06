@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { BookOpen, Boxes, CheckCheck, Database, FlaskConical, History, Palette, Plug, Save, SlidersHorizontal, Sparkles } from "lucide-react";
+import { BookOpen, Boxes, CheckCheck, Database, FlaskConical, History, Palette, Plug, SlidersHorizontal, Sparkles } from "lucide-react";
 import { openLocalPath } from "./api";
 import { listen } from "@tauri-apps/api/event";
 import {
-  applyPlatformAppearance, defaultPlatformConfiguration, directoryLines, errorMessage,
+  applyPlatformAppearance, directoryLines, errorMessage,
   executePlatformAction, executeTestingLabAction, listPlatformPlugins, listPlatformSkills,
   loadTestingLabProfiles, parseMcpServers, parseTestingLabProfiles, saveTestingLabProfiles,
   searchPlatformActivity, searchPlatformMemories, usePlatformConfiguration,
+  platformConfigurationChanges, platformDraftField, reconcilePlatformDraft, validPlatformDraft,
   validatePlatformConfiguration, VERIFICATION_OPTIONS,
   type AppearanceConfig, type McpServer, type PlatformActivity, type PlatformConfig,
-  type PlatformMemory, type PlatformPlugin, type PlatformSkill, type TestingLabAction, type TestingLabProfile,
+  type PlatformDraftField, type PlatformMemory, type PlatformPlugin, type PlatformSkill, type TestingLabAction, type TestingLabProfile,
 } from "./agent-platform";
+import { useSettingsAutosave } from "./useSettingsAutosave";
 import "./agent-platform.css";
 
 function Panel({ id, title, icon, children, wide = false }: { id: string; title: string; icon: ReactNode; children: ReactNode; wide?: boolean }) {
@@ -43,12 +45,12 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
   const [skillDirectoryText, setSkillDirectoryText] = useState("");
   const [pluginDirectoryText, setPluginDirectoryText] = useState("");
   const [mcpText, setMcpText] = useState("[]");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [numberText, setNumberText] = useState({ repairAttempts: "", compactAtTokens: "", fontSize: "" });
   const callback = useRef(onConfigurationChange);
   callback.current = onConfigurationChange;
-  const savedAppearance = useRef(platform.configuration?.appearance);
+  const source = useRef<PlatformConfig | null>(null);
+  const lastSubmitted = useRef<PlatformConfig | null>(null);
+  const edited = useRef(new Set<PlatformDraftField>());
 
   const [skills, setSkills] = useState<PlatformSkill[]>([]);
   const [plugins, setPlugins] = useState<PlatformPlugin[]>([]);
@@ -80,26 +82,37 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
   const [labProfiles, setLabProfiles] = useState<TestingLabProfile[]>([]);
   const [labText, setLabText] = useState("[]");
   const [labLoading, setLabLoading] = useState(true);
-  const [labSaving, setLabSaving] = useState(false);
   const [labError, setLabError] = useState("");
   const [labNotice, setLabNotice] = useState("");
   const [labBusy, setLabBusy] = useState<string | null>(null);
   const [labReceipts, setLabReceipts] = useState<Record<string, unknown>>({});
+  const labSource = useRef(labProfiles);
+  const labEdited = useRef(false);
+  labSource.current = labProfiles;
 
   useEffect(() => {
     if (!platform.configuration) return;
-    setDraft(platform.configuration);
-    setSkillDirectoryText(platform.configuration.skillDirectories.join("\n"));
-    setPluginDirectoryText(platform.configuration.pluginDirectories.join("\n"));
-    setMcpText(pretty(platform.configuration.mcpServers));
-    savedAppearance.current = platform.configuration.appearance;
-    callback.current?.(platform.configuration);
+    const incoming = platform.configuration, before = source.current;
+    setDraft(current => current && before ? { ...reconcilePlatformDraft(current, before, incoming, edited.current), mcpServers: incoming.mcpServers } : incoming);
+    setSkillDirectoryText(text => !edited.current.has("skillDirectories") && (!before || pretty(directoryLines(text)) === pretty(before.skillDirectories)) ? incoming.skillDirectories.join("\n") : text);
+    setPluginDirectoryText(text => !edited.current.has("pluginDirectories") && (!before || pretty(directoryLines(text)) === pretty(before.pluginDirectories)) ? incoming.pluginDirectories.join("\n") : text);
+    setMcpText(text => {
+      if (edited.current.has("mcpServers")) return text;
+      if (!before) return pretty(incoming.mcpServers);
+      try { return pretty(parseMcpServers(text)) === pretty(before.mcpServers) ? pretty(incoming.mcpServers) : text; }
+      catch { return text; }
+    });
+    setNumberText(text => ({
+      repairAttempts: !edited.current.has("repairAttempts") && (!before || (text.repairAttempts !== "" && Number(text.repairAttempts) === before.repairAttempts)) ? String(incoming.repairAttempts) : text.repairAttempts,
+      compactAtTokens: !edited.current.has("compactAtTokens") && (!before || (text.compactAtTokens !== "" && Number(text.compactAtTokens) === before.compactAtTokens)) ? String(incoming.compactAtTokens) : text.compactAtTokens,
+      fontSize: !edited.current.has("appearance.fontSize") && (!before || (text.fontSize !== "" && Number(text.fontSize) === before.appearance.fontSize)) ? String(incoming.appearance.fontSize) : text.fontSize,
+    }));
+    source.current = incoming;
+    callback.current?.(incoming);
   }, [platform.configuration]);
   useEffect(() => {
-    if (draft && !validatePlatformConfiguration({ ...defaultPlatformConfiguration(), appearance: draft.appearance }).length)
-      applyPlatformAppearance(draft.appearance);
-  }, [draft?.appearance]);
-  useEffect(() => () => { if (savedAppearance.current) applyPlatformAppearance(savedAppearance.current); }, []);
+    if (draft && platform.configuration) applyPlatformAppearance(validPlatformDraft(platform.configuration, draft, null).appearance);
+  }, [draft?.appearance, platform.configuration]);
 
   const refreshLibrary = useCallback(async () => {
     const request = ++libraryRequest.current;
@@ -139,7 +152,15 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
     void listen<TestingLabProfile[]>("opencore-testing-profiles-changed", ({ payload }) => {
       if (!active) return;
       changed = true;
-      try { const profiles = parseTestingLabProfiles(pretty(payload)); setLabProfiles(profiles); setLabText(pretty(profiles)); setLabError(""); setLabNotice("Testing profiles refreshed from the app."); }
+      try {
+        const profiles = parseTestingLabProfiles(pretty(payload));
+        setLabText(text => {
+          if (labEdited.current) return text;
+          try { return pretty(parseTestingLabProfiles(text)) === pretty(labSource.current) ? pretty(profiles) : text; }
+          catch { return text; }
+        });
+        setLabProfiles(profiles); setLabError(""); setLabNotice("Testing profiles refreshed from the app.");
+      }
       catch (cause) { setLabError(errorMessage(cause)); }
     }).then(stop => { if (active) unlisten = stop; else stop(); }).catch(() => {});
     loadTestingLabProfiles().then(profiles => { if (active && !changed) { setLabProfiles(profiles); setLabText(pretty(profiles)); } })
@@ -159,21 +180,83 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
   const effectiveDraft = draft ? { ...draft, mcpServers: mcp.servers ?? draft.mcpServers } : null;
   const validation = effectiveDraft ? validatePlatformConfiguration(effectiveDraft) : [];
   const labDirty = lab.profiles ? pretty(lab.profiles) !== pretty(labProfiles) : true;
-  const dirty = effectiveDraft && pretty(effectiveDraft) !== pretty(platform.configuration);
+  const autosave = useSettingsAutosave({
+    value: draft && platform.configuration ? validPlatformDraft(platform.configuration, draft, mcp.servers) : null,
+    savedValue: platform.configuration,
+    enabled: !platform.preview && !platform.loading,
+    save: async (value: PlatformConfig) => {
+      const before = source.current ?? value;
+      const changed = platformConfigurationChanges(before, value);
+      const reverted = platformConfigurationChanges(lastSubmitted.current ?? before, value);
+      lastSubmitted.current = value;
+      return platform.savePatch({ ...reverted, ...changed, appearance: { ...reverted.appearance, ...changed.appearance } });
+    },
+    onSaved: (configuration, submitted) => {
+      const incoming = platform.getCurrentConfiguration() ?? configuration;
+      setDraft(current => {
+        if (!current) return incoming;
+        for (const field of edited.current) {
+          if (field !== "mcpServers" && pretty(platformDraftField(current, field)) === pretty(platformDraftField(submitted, field))) edited.current.delete(field);
+        }
+        return { ...reconcilePlatformDraft(current, submitted, incoming), mcpServers: incoming.mcpServers };
+      });
+      setSkillDirectoryText(text => pretty(directoryLines(text)) === pretty(submitted.skillDirectories) ? incoming.skillDirectories.join("\n") : text);
+      setPluginDirectoryText(text => pretty(directoryLines(text)) === pretty(submitted.pluginDirectories) ? incoming.pluginDirectories.join("\n") : text);
+      setMcpText(text => {
+        try {
+          if (pretty(parseMcpServers(text)) !== pretty(submitted.mcpServers)) return text;
+          edited.current.delete("mcpServers");
+          return pretty(incoming.mcpServers);
+        } catch { return text; }
+      });
+      setNumberText(text => ({
+        repairAttempts: text.repairAttempts !== "" && Number(text.repairAttempts) === submitted.repairAttempts ? String(incoming.repairAttempts) : text.repairAttempts,
+        compactAtTokens: text.compactAtTokens !== "" && Number(text.compactAtTokens) === submitted.compactAtTokens ? String(incoming.compactAtTokens) : text.compactAtTokens,
+        fontSize: text.fontSize !== "" && Number(text.fontSize) === submitted.appearance.fontSize ? String(incoming.appearance.fontSize) : text.fontSize,
+      }));
+    },
+  });
+  const labAutosave = useSettingsAutosave({
+    value: lab.profiles, savedValue: labProfiles,
+    enabled: !platform.preview && !labLoading,
+    save: saveTestingLabProfiles,
+    onSaved: (profiles, submitted) => {
+      setLabProfiles(profiles);
+      setLabText(text => {
+        try {
+          if (pretty(parseTestingLabProfiles(text)) !== pretty(submitted)) return text;
+          labEdited.current = false;
+          return pretty(profiles);
+        }
+        catch { return text; }
+      });
+    },
+  });
+  const labSaving = labAutosave.status === "saving";
+
+  useEffect(() => {
+    if (!draft || !platform.configuration || autosave.hasPendingWrites()) return;
+    const current = { ...draft, mcpServers: mcp.servers ?? draft.mcpServers };
+    for (const field of edited.current) {
+      if (field === "mcpServers" && !mcp.servers) continue;
+      if (pretty(platformDraftField(current, field)) === pretty(platformDraftField(platform.configuration, field))) edited.current.delete(field);
+    }
+  }, [draft, platform.configuration, mcp.servers, autosave.status, autosave.hasPendingWrites]);
+  useEffect(() => {
+    if (!labAutosave.hasPendingWrites() && lab.profiles && pretty(lab.profiles) === pretty(labProfiles)) labEdited.current = false;
+  }, [lab.profiles, labProfiles, labAutosave.status, labAutosave.hasPendingWrites]);
 
   function update<K extends keyof PlatformConfig>(key: K, value: PlatformConfig[K]) {
+    if (key !== "appearance") edited.current.add(key as Exclude<keyof PlatformConfig, "appearance">);
     setDraft(previous => previous ? { ...previous, [key]: value } : previous);
-    setNotice(""); setSaveError("");
   }
   function appearance(value: Partial<AppearanceConfig>) {
-    if (draft) update("appearance", { ...draft.appearance, ...value });
+    for (const field of Object.keys(value) as (keyof AppearanceConfig)[]) edited.current.add(`appearance.${field}`);
+    setDraft(previous => previous ? { ...previous, appearance: { ...previous.appearance, ...value } } : previous);
   }
-  async function save() {
-    if (!effectiveDraft || mcp.error || validation.length) return;
-    setSaving(true); setSaveError(""); setNotice("");
-    try { await platform.save(effectiveDraft); setNotice("Settings saved on this computer."); }
-    catch (cause) { setSaveError(`Could not save settings: ${errorMessage(cause)}`); }
-    finally { setSaving(false); }
+  function editMcp(text: string) {
+    edited.current.add("mcpServers");
+    setMcpText(text);
   }
   async function readSkill(skill: PlatformSkill) {
     setReadingSkills(previous => [...previous, skill.id]); setSkillError("");
@@ -211,7 +294,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
       env: {}, url: kind === "http" ? "https://example.com/mcp" : null,
       bearerTokenEnvVar: kind === "http" ? "MCP_TOKEN" : null, startupTimeoutSec: 30, toolTimeoutSec: 600,
     };
-    setMcpText(pretty([...mcp.servers, server])); setNotice("");
+    editMcp(pretty([...mcp.servers, server]));
   }
   function addLab(kind: "virtualbox" | "android") {
     if (!lab.profiles) return;
@@ -220,14 +303,8 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
     const profile: TestingLabProfile = { id: `device-${count}`, label: kind === "virtualbox" ? "Existing Windows VM" : "Existing Android device",
       kind, enabled: false, executable: kind === "virtualbox" ? "VBoxManage" : "adb",
       ...(kind === "virtualbox" ? { vmName: "Your existing VM name", guestUser: "", passwordEnv: "" } : { deviceSerial: "", avdName: "", emulatorExecutable: "" }) };
+    labEdited.current = true;
     setLabText(pretty([...lab.profiles, profile])); setLabNotice("");
-  }
-  async function saveLabs() {
-    if (!lab.profiles) return;
-    setLabSaving(true); setLabError(""); setLabNotice("");
-    try { const profiles = await saveTestingLabProfiles(lab.profiles); setLabProfiles(profiles); setLabText(pretty(profiles)); setLabNotice("Testing profiles saved on this computer."); }
-    catch (cause) { setLabError(`Could not save testing profiles: ${errorMessage(cause)}`); }
-    finally { setLabSaving(false); }
   }
   async function runLab(profile: TestingLabProfile, action: TestingLabAction["action"]) {
     setLabBusy(profile.id); setLabError("");
@@ -242,19 +319,18 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
   </div>;
 
   const visibleSkills = skills.filter(skill => `${skill.name} ${skill.description} ${skill.source}`.toLowerCase().includes(skillSearch.toLowerCase()));
-  const locked = saving || platform.loading;
+  const locked = platform.loading;
   return <div className="agent-platform-settings">
     <header className="platform-settings-header">
       <div><h1><SlidersHorizontal size={25} /> Agent settings</h1><p>OpenCore’s instructions, tools, appearance, and sourced memory.</p></div>
-      <div className="platform-save-controls"><span>{platform.preview ? "Preview defaults" : dirty ? "Unsaved changes" : "Source configuration loaded"}</span>
-        <button className="platform-primary" disabled={locked || platform.preview || Boolean(mcp.error) || validation.length > 0} onClick={() => void save()}><Save size={16} />{saving ? "Saving settings…" : "Save settings"}</button>
+      <div className="platform-save-controls"><span role="status" aria-label="Agent settings save status" aria-live="polite">{platform.preview ? "Preview · Changes are not persisted" : autosave.status === "saving" ? "Saving…" : autosave.status === "error" ? "Could not save settings" : mcp.error || validation.length ? "Saved · Invalid edits need correction" : "Saved · Changes save automatically"}</span>
+        {autosave.status === "error" && <button onClick={autosave.retry}>Retry saving settings</button>}
       </div>
     </header>
     {platform.preview && <p className="platform-banner" role="status">Browser preview — settings and device actions are not persisted. Open the desktop application to save.</p>}
     {platform.error && <p className="platform-error" role="alert">{platform.error}</p>}
-    {saveError && <p className="platform-error" role="alert">{saveError}</p>}
-    {notice && <p className="platform-success" role="status">{notice}</p>}
-    {validation.length > 0 && <div className="platform-error" role="alert"><strong>Correct these settings before saving:</strong><ul>{validation.map(value => <li key={value}>{value}</li>)}</ul></div>}
+    {autosave.error && <p className="platform-error" role="alert">Could not save settings: {autosave.error}</p>}
+    {validation.length > 0 && <div className="platform-error" role="alert"><strong>These edits need correction. Other valid settings save automatically:</strong><ul>{validation.map(value => <li key={value}>{value}</li>)}</ul></div>}
 
     <div className="platform-panels">
       <Panel id="platform-identity" title="Identity and instructions" icon={<Sparkles size={19} />}>
@@ -273,13 +349,13 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
         </div></fieldset>
         <p className="platform-note">{VERIFICATION_OPTIONS.find(option => option.value === draft.verification)?.description}</p>
         <label className="platform-field" htmlFor="platform-repairs">Repair attempts</label>
-        <input id="platform-repairs" type="number" min={0} max={10} step={1} value={draft.repairAttempts} disabled={locked} onChange={event => update("repairAttempts", Number(event.target.value))} />
+        <input id="platform-repairs" type="number" min={0} max={10} step={1} value={numberText.repairAttempts} disabled={locked} aria-invalid={!Number.isInteger(draft.repairAttempts) || draft.repairAttempts < 0 || draft.repairAttempts > 10} onChange={event => { const text = event.target.value; setNumberText(current => ({ ...current, repairAttempts: text })); update("repairAttempts", text === "" ? NaN : Number(text)); }} />
         <p className="platform-note">Suggested correction attempts per defect after review. This guides the agent; it is not a hard execution limit. Zero asks for review without added repairs. Studio handoffs release the text model for the GPU queue.</p>
       </Panel>
 
       <Panel id="platform-context" title="Context and compaction" icon={<SlidersHorizontal size={19} />}>
         <label className="platform-field" htmlFor="platform-compaction">Auto-compaction trigger (tokens)</label>
-        <input id="platform-compaction" type="number" min={1024} max={3000000} step={1} value={draft.compactAtTokens} disabled={locked} onChange={event => update("compactAtTokens", Number(event.target.value))} />
+        <input id="platform-compaction" type="number" min={1024} max={3000000} step={1} value={numberText.compactAtTokens} disabled={locked} aria-invalid={!Number.isInteger(draft.compactAtTokens) || draft.compactAtTokens < 1024 || draft.compactAtTokens > 3000000} onChange={event => { const text = event.target.value; setNumberText(current => ({ ...current, compactAtTokens: text })); update("compactAtTokens", text === "" ? NaN : Number(text)); }} />
         <p className="platform-note">Requested trigger: {draft.compactAtTokens.toLocaleString()} tokens. The loaded model’s usable window and response reserve determine the effective trigger. ECHO keeps exact archived history separately.</p>
         <p className="platform-note">The same source configuration is used by the settings UI and OpenCore’s structured settings tools.</p>
       </Panel>
@@ -295,7 +371,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
             <input aria-label="Pick accent color" type="color" value={/^#[0-9a-fA-F]{6}$/.test(draft.appearance.accentColor) ? draft.appearance.accentColor : "#7c5cff"} disabled={locked} onChange={event => appearance({ accentColor: event.target.value })} />
             <input id="platform-accent" value={draft.appearance.accentColor} disabled={locked} spellCheck={false} maxLength={7} onChange={event => appearance({ accentColor: event.target.value })} />
           </div></div>
-          <div><label className="platform-field" htmlFor="platform-text-size">Text size (pixels)</label><input id="platform-text-size" type="number" min={10} max={24} step={1} value={draft.appearance.fontSize} disabled={locked} onChange={event => appearance({ fontSize: Number(event.target.value) })} /></div>
+          <div><label className="platform-field" htmlFor="platform-text-size">Text size (pixels)</label><input id="platform-text-size" type="number" min={10} max={24} step={1} value={numberText.fontSize} disabled={locked} aria-invalid={!Number.isInteger(draft.appearance.fontSize) || draft.appearance.fontSize < 10 || draft.appearance.fontSize > 24} onChange={event => { const text = event.target.value; setNumberText(current => ({ ...current, fontSize: text })); appearance({ fontSize: text === "" ? NaN : Number(text) }); }} /></div>
         </div>
         <label className="platform-field" htmlFor="platform-font">Font family</label><input id="platform-font" list="platform-fonts" value={draft.appearance.fontFamily} disabled={locked} onChange={event => appearance({ fontFamily: event.target.value })} /><datalist id="platform-fonts"><option value="system" /><option value="Segoe UI" /><option value="Arial" /><option value="Cascadia Code" /><option value="Consolas" /></datalist>
         <fieldset className="platform-choice-fieldset"><legend>Spacing</legend><div className="platform-choices">
@@ -303,7 +379,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
         </div></fieldset>
         <Toggle label="Reduce motion" checked={draft.appearance.reducedMotion} disabled={locked} onChange={reducedMotion => appearance({ reducedMotion })} />
         <Toggle label="High contrast" checked={draft.appearance.highContrast} disabled={locked} onChange={highContrast => appearance({ highContrast })} />
-        <div className="platform-appearance-preview">Readable text <span>Accent and spacing preview</span></div><p className="platform-note">Valid changes preview immediately. Save settings to keep them after restarting.</p>
+        <div className="platform-appearance-preview">Readable text <span>Accent and spacing preview</span></div><p className="platform-note">Valid changes apply immediately and save automatically.</p>
       </Panel>
 
       <Panel id="platform-skills" title="Skills" icon={<BookOpen size={19} />}>
@@ -318,7 +394,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
           {skill.path && <code className="platform-path">{skill.path}</code>}
           <button disabled={platform.preview || readingSkills.includes(skill.id)} onClick={() => void readSkill(skill)} aria-label={`Read ${skill.name} instructions`}>{readingSkills.includes(skill.id) ? "Reading instructions…" : "Read instructions"}</button>
           {skillBodies[skill.id] !== undefined && <details open><summary>Loaded instructions</summary><pre className="platform-code">{skillBodies[skill.id]}</pre></details>}
-        </article>)}{!visibleSkills.length && <p className="platform-empty">{platform.preview ? "The desktop application discovers your built-in and custom skills." : libraryLoading ? "Discovering skills…" : "No skills match this filter. Save custom directories, then refresh the library."}</p>}</div>
+        </article>)}{!visibleSkills.length && <p className="platform-empty">{platform.preview ? "The desktop application discovers your built-in and custom skills." : libraryLoading ? "Discovering skills…" : "No skills match this filter. Add a custom directory to refresh the library."}</p>}</div>
       </Panel>
 
       <Panel id="platform-plugins" title="Portable plugins" icon={<Boxes size={19} />}>
@@ -330,22 +406,22 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
           <Toggle label={`Enable ${plugin.name}`} checked={!draft.disabledPlugins.includes(plugin.id)} disabled={locked} onChange={enabled => update("disabledPlugins", changedDisabled(draft.disabledPlugins, plugin.id, enabled))} />
           <code className="platform-path">{plugin.path}</code><p className="platform-note">{plugin.skills.length} skills · {plugin.mcpServers.length} MCP servers{plugin.mcpServers.length ? `: ${plugin.mcpServers.join(", ")}` : ""}</p>
           {plugin.warnings.map((warning, index) => <p className="platform-error" key={index}>{warning}</p>)}
-        </article>)}{!plugins.length && <p className="platform-empty">{platform.preview ? "Open the desktop application to discover local plugin folders." : libraryLoading ? "Discovering plugins…" : "No portable plugins discovered. Save a plugin directory to populate this list."}</p>}</div>
+        </article>)}{!plugins.length && <p className="platform-empty">{platform.preview ? "Open the desktop application to discover local plugin folders." : libraryLoading ? "Discovering plugins…" : "No portable plugins discovered. Add a plugin directory to populate this list."}</p>}</div>
         <details><summary>Portable plugin example</summary><p className="platform-note">Place opencore-plugin.json at the plugin root and SKILL.md files under skills/. Paths in the manifest stay within that plugin folder.</p><pre className="platform-code">{pretty(pluginExample)}</pre></details>
       </Panel>
 
       <Panel id="platform-mcp" title="MCP connections" icon={<Plug size={19} />} wide>
         <p className="platform-note">Configure stdio commands or HTTP endpoints. Each profile needs a unique id and name, an enabled switch, and timeouts. For stdio, env can include local secrets. For HTTP, bearerTokenEnvVar references an existing environment variable for authorization. Agent tools receive redacted configuration.</p>
         <div className="platform-toolbar"><button disabled={locked || Boolean(mcp.error)} onClick={() => addMcp("stdio")}>Add stdio example</button><button disabled={locked || Boolean(mcp.error)} onClick={() => addMcp("http")}>Add HTTP example</button><span>{mcp.servers?.filter(server => server.enabled).length ?? 0} enabled profiles</span></div>
-        <label className="platform-field" htmlFor="platform-mcp-json">MCP profiles JSON</label><textarea id="platform-mcp-json" className="platform-json-editor" rows={12} value={mcpText} spellCheck={false} disabled={locked} aria-invalid={Boolean(mcp.error)} aria-describedby="platform-mcp-help" onChange={event => { setMcpText(event.target.value); setNotice(""); setSaveError(""); }} />
+        <label className="platform-field" htmlFor="platform-mcp-json">MCP profiles JSON</label><textarea id="platform-mcp-json" className="platform-json-editor" rows={12} value={mcpText} spellCheck={false} disabled={locked} aria-invalid={Boolean(mcp.error)} aria-describedby="platform-mcp-help" onChange={event => editMcp(event.target.value)} />
         {mcp.error && <p className="platform-error" role="alert">{mcp.error}</p>}
-        <p id="platform-mcp-help" className="platform-note">Examples start disabled. Stdio uses command, args, and env; HTTP uses url and bearerTokenEnvVar with empty args/env. Edit startupTimeoutSec (1–600) and toolTimeoutSec (1–3,600), then enable and save. Local stdio secret values are visible in this editor.</p>
+        <p id="platform-mcp-help" className="platform-note">Examples start disabled. Stdio uses command, args, and env; HTTP uses url and bearerTokenEnvVar with empty args/env. Valid edits save automatically. Local stdio secret values are visible in this editor.</p>
         {mcp.servers && <div className="platform-connection-summaries">{mcp.servers.map(server => <div key={server.id}><strong>{server.name}</strong><span>{server.command ? "stdio" : "HTTP"} · {server.enabled ? "Enabled" : "Disabled"}</span><code>{server.command ?? server.url}</code></div>)}</div>}
       </Panel>
 
       <Panel id="platform-activity" title="Activity history" icon={<History size={19} />}>
         <Toggle label="Record app activity" checked={draft.activityEnabled} disabled={locked} onChange={enabled => update("activityEnabled", enabled)} />
-        <p className="platform-note">Search indexed records of actual settings changes and studio work. Recording changes take effect after Save settings.</p>
+        <p className="platform-note">Search indexed records of actual settings changes and studio work. Recording changes take effect as soon as they are saved automatically.</p>
         <form className="platform-search-row" onSubmit={event => { event.preventDefault(); void refreshActivity(activityQuery); }}><label className="platform-sr-only" htmlFor="platform-activity-search">Search activity history</label><input id="platform-activity-search" type="search" placeholder="Search activity" value={activityQuery} onChange={event => setActivityQuery(event.target.value)} /><button type="submit" disabled={activityLoading || platform.preview}>{activityLoading ? "Searching…" : "Search activity"}</button></form>
         {activityError && <p className="platform-error" role="alert">{activityError}</p>}
         <div className="platform-records">{activity.map(record => <article className="platform-record" key={record.id}>
@@ -378,18 +454,19 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
 
       <Panel id="platform-testing" title="Testing lab" icon={<FlaskConical size={19} />} wide>
         <p className="platform-note">Connect existing VirtualBox PCs or Android devices and emulators. Set VBoxManage or adb in executable, and the VM name or device serial. An AVD also needs an installed emulator executable. VM images and mobile SDKs must already be installed.</p>
-        <div className="platform-toolbar"><button disabled={labLoading || labSaving || Boolean(lab.error)} onClick={() => addLab("virtualbox")}>Add VirtualBox example</button><button disabled={labLoading || labSaving || Boolean(lab.error)} onClick={() => addLab("android")}>Add Android example</button></div>
-        <label className="platform-field" htmlFor="platform-lab-json">Testing profiles JSON</label><textarea id="platform-lab-json" className="platform-json-editor" rows={8} value={labText} spellCheck={false} disabled={labLoading || labSaving} aria-invalid={Boolean(lab.error)} onChange={event => { setLabText(event.target.value); setLabNotice(""); }} />
+        <div className="platform-toolbar"><button disabled={labLoading || Boolean(lab.error)} onClick={() => addLab("virtualbox")}>Add VirtualBox example</button><button disabled={labLoading || Boolean(lab.error)} onClick={() => addLab("android")}>Add Android example</button></div>
+        <label className="platform-field" htmlFor="platform-lab-json">Testing profiles JSON</label><textarea id="platform-lab-json" className="platform-json-editor" rows={8} value={labText} spellCheck={false} disabled={labLoading} aria-invalid={Boolean(lab.error)} onChange={event => { labEdited.current = true; setLabText(event.target.value); setLabNotice(""); }} />
         {lab.error && <p className="platform-error" role="alert">{lab.error}</p>}{labError && <p className="platform-error" role="alert">{labError}</p>}
-        <div className="platform-toolbar"><button className="platform-primary" disabled={platform.preview || labLoading || labSaving || !lab.profiles} onClick={() => void saveLabs()}>{labSaving ? "Saving testing profiles…" : "Save testing profiles"}</button>{labDirty && <span>Save profile edits before running actions.</span>}</div>
+        {labAutosave.error && <p className="platform-error" role="alert">Could not save testing profiles: {labAutosave.error}</p>}
+        <div className="platform-toolbar"><span role="status" aria-label="Testing profiles save status">{platform.preview ? "Preview · Changes are not persisted" : labLoading ? "Loading profiles…" : labAutosave.status === "saving" ? "Saving…" : labAutosave.status === "error" ? "Could not save profiles" : lab.error ? "Invalid profile edits need correction" : "Saved · Profiles save automatically"}</span>{labAutosave.status === "error" && <button onClick={labAutosave.retry}>Retry saving testing profiles</button>}{labDirty && <span>Device actions wait for valid profile edits to be saved.</span>}</div>
         {labNotice && <p className="platform-success" role="status">{labNotice}</p>}
         <div className="platform-lab-devices">{labProfiles.map(profile => <article className="platform-record" key={profile.id}>
           <div className="platform-record-title"><strong>{profile.label}</strong><span className="platform-badge">{profile.kind === "virtualbox" ? "VirtualBox" : "Android"}</span></div><p className="platform-note">{profile.enabled ? "Enabled" : "Disabled"} · {profile.vmName || profile.deviceSerial || profile.avdName || "Default ADB device"}</p>
           <div className="platform-toolbar">{(["status", "inspect", "start", "stop", "screenshot"] as const).map(action => <button key={action} disabled={platform.preview || !profile.enabled || labDirty || labBusy !== null || labSaving || (profile.kind === "android" && ((action === "start" && !profile.avdName) || (action === "stop" && !profile.avdName && !profile.deviceSerial?.startsWith("emulator-"))))} title={profile.kind === "android" && action === "start" && !profile.avdName ? "Configure an existing AVD to start an emulator. Connected devices use Status." : undefined} onClick={() => void runLab(profile, action)} aria-label={`${action[0].toUpperCase() + action.slice(1)} ${profile.label}`}>{labBusy === profile.id ? "Working…" : action[0].toUpperCase() + action.slice(1)}</button>)}</div>
           {labReceipts[profile.id] !== undefined && <details open><summary>Device action receipt</summary><pre className="platform-code">{pretty(labReceipts[profile.id])}</pre>{screenshotPath(labReceipts[profile.id]) && <button disabled={platform.preview} aria-label={`Open screenshot ${profile.label}`} onClick={() => void openLocalPath(screenshotPath(labReceipts[profile.id])!).catch(cause => setLabError(`Could not open screenshot: ${errorMessage(cause)}`))}>Open screenshot</button>}</details>}
-        </article>)}{!labProfiles.length && <p className="platform-empty">{platform.preview ? "Device actions require the desktop application." : labLoading ? "Loading testing profiles…" : "No testing devices configured. Add an example, update it for your existing device, and save."}</p>}</div>
+        </article>)}{!labProfiles.length && <p className="platform-empty">{platform.preview ? "Device actions require the desktop application." : labLoading ? "Loading testing profiles…" : "No testing devices configured. Add an example and update it for your existing device. Valid edits save automatically."}</p>}</div>
       </Panel>
     </div>
-    <footer className="platform-settings-footer"><span>Settings are stored in OpenCore’s local source configuration.</span><button disabled={locked || platform.preview} onClick={() => { setNotice(""); setSaveError(""); void platform.reload(); }}>Reload saved settings</button></footer>
+    <footer className="platform-settings-footer"><span>Settings save automatically to OpenCore’s local source configuration.</span><button disabled={locked || platform.preview || autosave.status === "saving"} onClick={() => void platform.reload()}>Reload saved settings</button></footer>
   </div>;
 }
