@@ -858,8 +858,8 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     wait_for("released dispatch foreground verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.target));
     fixture.restore_cover();
 
-    // No input is authorized until WM_QUEUESYNC proves the DLL actually runs
-    // in the exact external GUI thread. Stall that queue, then inspect both
+    // No input is authorized until the private marker proves the DLL runs in
+    // the exact external GUI thread. Stall that queue, then inspect both
     // the closure and real control to prove failed acknowledgement sends none.
     fixture.phase("unacknowledged activation protection");
     fixture.flush_desktop();
@@ -914,8 +914,8 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     let recovered_state = fixture.state();
     let recovered_cursor = cursor_position().unwrap();
     let fresh = super::ManualForegroundGuard::acquire(&manual).unwrap().unwrap();
-    // Both old and new hooks can finish the acknowledgement marker. Drain
-    // the target before comparing their metadata across the older teardown.
+    // Unhook can return while the acknowledgement callback finishes. Drain
+    // the target before comparing metadata across the older guard's teardown.
     fixture.flush_desktop();
     let fresh_token = unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) };
     let fresh_ack = unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationAck.v1")) };

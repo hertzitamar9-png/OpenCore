@@ -1,5 +1,6 @@
-/* A bounded activation veto on one selected application's GUI thread.
- * No app startup, input hooks, keyboard/text capture, remote memory or timers.
+/* A bounded activation veto and temporary private-marker acknowledgement on
+ * one selected application's GUI thread. No app startup, keyboard/text
+ * capture, remote memory or timers.
  * The installing parent owns the hook and the two expiring window properties.
  */
 #define WIN32_LEAN_AND_MEAN
@@ -11,6 +12,7 @@
 
 #define OC_LEASE_PROPERTY L"OpenCore.ManualActivationLease.v1"
 #define OC_ACK_PROPERTY L"OpenCore.ManualActivationAck.v1"
+#define OC_PREFLIGHT_MESSAGE L"OpenCore.ManualActivationPreflight.v1"
 #define OC_MAX_LEASE_MS 2500ULL
 
 typedef struct OC_LEASE {
@@ -37,37 +39,58 @@ static BOOL CALLBACK find_live_lease(HWND window, LPARAM data) {
 }
 
 __declspec(dllexport) UINT WINAPI OpenCoreDesktopHookAbi(void) {
-    return 1U;
+    return 2U;
+}
+
+__declspec(dllexport) LRESULT CALLBACK OpenCoreDesktopAckProc(int code, WPARAM wparam, LPARAM lparam) {
+    if (code == HC_ACTION && wparam == PM_REMOVE && lparam != 0) {
+        MSG *message = (MSG *)lparam;
+        UINT marker = RegisterWindowMessageW(OC_PREFLIGHT_MESSAGE);
+        /* Read only the message identity until it is our dedicated marker.
+         * No keyboard, text, mouse or unrelated message payload is examined.
+         */
+        if (marker != 0 && message->message == marker) {
+            HWND window = message->hwnd;
+            ULONG_PTR token = (ULONG_PTR)message->wParam;
+            ULONGLONG deadline = (ULONGLONG)token >> 16;
+            ULONGLONG now = GetTickCount64();
+            if (message->lParam == 0 && window != NULL
+                && GetAncestor(window, GA_ROOT) == window
+                && GetWindowThreadProcessId(window, NULL) == GetCurrentThreadId()
+                && deadline > now && deadline - now <= OC_MAX_LEASE_MS
+                && (ULONG_PTR)GetPropW(window, OC_LEASE_PROPERTY) == token) {
+                SetPropW(window, OC_ACK_PROPERTY, (HANDLE)token);
+                /* Consume this private marker without delivering a custom
+                 * message or any input to the application's window procedure.
+                 */
+                message->message = WM_NULL;
+                message->wParam = 0;
+                message->lParam = 0;
+            }
+        }
+    }
+    return CallNextHookEx(NULL, code, wparam, lparam);
 }
 
 __declspec(dllexport) LRESULT CALLBACK OpenCoreDesktopCbtProc(int code, WPARAM wparam, LPARAM lparam) {
-    if (code == HCBT_ACTIVATE || code == HCBT_QS) {
+    if (code == HCBT_ACTIVATE) {
         OC_LEASE lease = { NULL, 0ULL, 0 };
         /* The hook is installed only on the exact selected GUI thread. Do not
          * inspect keyboard, mouse, focus, window creation or other hook data.
          */
         EnumThreadWindows(GetCurrentThreadId(), find_live_lease, (LPARAM)&lease);
         if (lease.window != NULL) {
-            if (code == HCBT_QS) {
-                /* A queued WM_QUEUESYNC proves this DLL is running in the
-                 * target before the parent permits any actual mutation.
-                 */
-                if ((ULONG_PTR)GetPropW(lease.window, OC_LEASE_PROPERTY) == lease.token) {
-                    SetPropW(lease.window, OC_ACK_PROPERTY, (HANDLE)lease.token);
-                }
-            } else {
-                const CBTACTIVATESTRUCT *activation = (const CBTACTIVATESTRUCT *)lparam;
-                ULONGLONG now = GetTickCount64();
-                /* An ordinary user click can still activate the target. The
-                 * parent observes the change and never restores user focus.
-                 * Recheck expiry and identity at the veto, since a previous
-                 * callback may still finish after its parent has unhooked.
-                 */
-                if (lease.deadline > now && lease.deadline - now <= OC_MAX_LEASE_MS
-                    && (ULONG_PTR)GetPropW(lease.window, OC_LEASE_PROPERTY) == lease.token
-                    && (activation == NULL || !activation->fMouse)) {
-                    return 1;
-                }
+            const CBTACTIVATESTRUCT *activation = (const CBTACTIVATESTRUCT *)lparam;
+            ULONGLONG now = GetTickCount64();
+            /* An ordinary user click can still activate the target. The
+             * parent observes the change and never restores user focus.
+             * Recheck expiry and identity at the veto, since a previous
+             * callback may still finish after its parent has unhooked.
+             */
+            if (lease.deadline > now && lease.deadline - now <= OC_MAX_LEASE_MS
+                && (ULONG_PTR)GetPropW(lease.window, OC_LEASE_PROPERTY) == lease.token
+                && (activation == NULL || !activation->fMouse)) {
+                return 1;
             }
         }
     }

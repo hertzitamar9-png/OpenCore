@@ -17,9 +17,10 @@ $intermediate = Join-Path $env:RUNNER_TEMP 'opencore-focus-guard'
 $object = Join-Path $intermediate 'opencore-focus-guard.obj'
 $library = Join-Path $intermediate 'opencore-focus-guard.lib'
 $sourceText = Get-Content -LiteralPath $source -Raw
-if ($sourceText -notmatch '\bUINT\s+WINAPI\s+OpenCoreDesktopHookAbi\s*\(\s*(?:void)?\s*\)' -or
-    $sourceText -notmatch '\bLRESULT\s+CALLBACK\s+OpenCoreDesktopCbtProc\s*\(\s*int(?:\s+\w+)?\s*,\s*WPARAM(?:\s+\w+)?\s*,\s*LPARAM(?:\s+\w+)?\s*\)') {
-  throw 'The desktop focus guard C source does not declare the agreed Windows hook ABI.'
+if ($sourceText -notmatch '\bUINT\s+WINAPI\s+OpenCoreDesktopHookAbi\s*\(\s*(?:void)?\s*\)\s*\{\s*return\s+2[Uu]?\s*;\s*\}' -or
+    $sourceText -notmatch '\bLRESULT\s+CALLBACK\s+OpenCoreDesktopCbtProc\s*\(\s*int(?:\s+\w+)?\s*,\s*WPARAM(?:\s+\w+)?\s*,\s*LPARAM(?:\s+\w+)?\s*\)' -or
+    $sourceText -notmatch '\bLRESULT\s+CALLBACK\s+OpenCoreDesktopAckProc\s*\(\s*int(?:\s+\w+)?\s*,\s*WPARAM(?:\s+\w+)?\s*,\s*LPARAM(?:\s+\w+)?\s*\)') {
+  throw 'The desktop focus guard C source does not declare the agreed Windows hook ABI 2.'
 }
 $compiler = (Get-Command cl.exe -ErrorAction Stop).Source
 $dumpbin = (Get-Command dumpbin.exe -ErrorAction Stop).Source
@@ -66,7 +67,7 @@ try {
 $exports = @(& $dumpbin /nologo /exports $dll 2>&1)
 if ($LASTEXITCODE -ne 0) { throw "Could not inspect desktop focus guard exports: $($exports -join "`n")" }
 $exportText = $exports -join "`n"
-foreach ($name in @('OpenCoreDesktopHookAbi', 'OpenCoreDesktopCbtProc')) {
+foreach ($name in @('OpenCoreDesktopHookAbi', 'OpenCoreDesktopCbtProc', 'OpenCoreDesktopAckProc')) {
   if ($exportText -cnotmatch "(?m)^\s+\d+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+$name\s*$") {
     throw "The desktop focus guard DLL is missing the exact export $name."
   }

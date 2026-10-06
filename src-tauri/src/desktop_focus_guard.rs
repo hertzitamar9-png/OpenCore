@@ -12,8 +12,8 @@ use windows::Win32::Foundation::{CloseHandle, FreeLibrary, HANDLE, HINSTANCE, HM
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryExW, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR, LOAD_LIBRARY_SEARCH_SYSTEM32};
 use windows::Win32::System::SystemInformation::{GetTickCount64, IMAGE_FILE_MACHINE, IMAGE_FILE_MACHINE_AMD64, IMAGE_FILE_MACHINE_UNKNOWN};
 use windows::Win32::System::Threading::{GetCurrentProcess, GetCurrentProcessId, IsWow64Process2, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
-use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetPropW, GetWindowThreadProcessId, IsWindow, PostThreadMessageW,
-    RemovePropW, SetPropW, SetWindowsHookExW, UnhookWindowsHookEx, GA_ROOT, HHOOK, WH_CBT, WM_QUEUESYNC};
+use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetPropW, GetWindowThreadProcessId, IsWindow, PostMessageW,
+    RegisterWindowMessageW, RemovePropW, SetPropW, SetWindowsHookExW, UnhookWindowsHookEx, GA_ROOT, HHOOK, WH_CBT, WH_GETMESSAGE};
 
 const LEASE_MS: u64 = 2500;
 const PREFLIGHT_TIMEOUT: Duration = Duration::from_millis(500);
@@ -29,6 +29,7 @@ fn lease_token(deadline: u64, sequence: u64) -> Result<u64, String> {
 struct HookLibrary {
     module: isize,
     callback: CbtProc,
+    acknowledgement: CbtProc,
     // Prevent resource replacement between verification and mapping. The
     // module is pinned for this parent process's lifetime; no remote frees.
     _file: std::fs::File,
@@ -66,10 +67,12 @@ fn load_library() -> Result<Arc<HookLibrary>, String> {
         let parsed = (|| {
             let abi = unsafe { GetProcAddress(module, s!("OpenCoreDesktopHookAbi")) }.ok_or("The activation guard ABI export is missing")?;
             let abi: unsafe extern "system" fn() -> u32 = unsafe { std::mem::transmute(abi) };
-            if unsafe { abi() } != 1 { return Err("The activation guard ABI is unsupported".to_string()); }
+            if unsafe { abi() } != 2 { return Err("The activation guard ABI is unsupported".to_string()); }
             let callback = unsafe { GetProcAddress(module, s!("OpenCoreDesktopCbtProc")) }.ok_or("The activation guard callback is missing")?;
             let callback: CbtProc = unsafe { std::mem::transmute(callback) };
-            Ok(Arc::new(HookLibrary { module: module.0 as isize, callback, _file: file }))
+            let acknowledgement = unsafe { GetProcAddress(module, s!("OpenCoreDesktopAckProc")) }.ok_or("The activation guard acknowledgement callback is missing")?;
+            let acknowledgement: CbtProc = unsafe { std::mem::transmute(acknowledgement) };
+            Ok(Arc::new(HookLibrary { module: module.0 as isize, callback, acknowledgement, _file: file }))
         })();
         if parsed.is_err() { unsafe { let _ = FreeLibrary(module); } }
         parsed
@@ -92,6 +95,7 @@ fn architecture(process: HANDLE) -> Result<IMAGE_FILE_MACHINE, String> {
 /// without retaining a thread-bound COM object or borrowed native callback.
 pub(crate) struct ActivationVeto {
     hook: isize,
+    ack_hook: isize,
     window: isize,
     process: u32,
     thread: u32,
@@ -121,7 +125,7 @@ impl ActivationVeto {
         let library = load_library()?;
         static SEQUENCE: AtomicU64 = AtomicU64::new(1);
         let sequence = SEQUENCE.fetch_add(1, Ordering::SeqCst);
-        let mut veto = Self { hook: 0, window: window.0 as isize, process, thread,
+        let mut veto = Self { hook: 0, ack_hook: 0, window: window.0 as isize, process, thread,
             token: lease_token(unsafe { GetTickCount64() } + LEASE_MS, sequence)?,
             lease_owned: false, _library: library };
         if !veto.owns_window() {
@@ -151,20 +155,36 @@ impl ActivationVeto {
             HINSTANCE(veto._library.module as *mut core::ffi::c_void), thread) }
             .map_err(|error| format!("This application does not allow protected background activation; no input was sent: {error}"))?;
         veto.hook = hook.0 as isize;
-        unsafe { PostThreadMessageW(thread, WM_QUEUESYNC, WPARAM(0), LPARAM(0)) }
+        let ack_hook = unsafe { SetWindowsHookExW(WH_GETMESSAGE, Some(veto._library.acknowledgement),
+            HINSTANCE(veto._library.module as *mut core::ffi::c_void), thread) }
+            .map_err(|error| format!("This application does not allow background protection preflight; no input was sent: {error}"))?;
+        veto.ack_hook = ack_hook.0 as isize;
+        let marker = unsafe { RegisterWindowMessageW(w!("OpenCore.ManualActivationPreflight.v1")) };
+        if marker == 0 || !veto.owns_window() {
+            return Err("Cannot arm activation protection preflight for the selected window; no input was sent".into());
+        }
+        // GetMsgProc is invoked when GetMessage/PeekMessage retrieves this
+        // marker. Its callback reads only this message's scalar fields, proves
+        // the exact root/thread/token, then consumes it as WM_NULL.
+        unsafe { PostMessageW(window, marker, WPARAM(veto.token as usize), LPARAM(0)) }
             .map_err(|error| format!("Cannot confirm activation protection in the selected application's GUI thread; no input was sent: {error}"))?;
         let limit = Instant::now() + PREFLIGHT_TIMEOUT;
         loop {
-            let ack = unsafe { GetPropW(window, w!("OpenCore.ManualActivationAck.v1")) }.0 as usize as u64;
-            if ack == veto.token { break; }
             if Instant::now() >= limit || !veto.owns_window() {
                 return Err("This application did not confirm protected background activation. Background input is unsupported here; no input was sent.".into());
             }
+            let ack = unsafe { GetPropW(window, w!("OpenCore.ManualActivationAck.v1")) }.0 as usize as u64;
+            if ack == veto.token { break; }
             std::thread::sleep(Duration::from_millis(2));
         }
-        if !veto.owns_window() {
-            return Err("The selected application's GUI thread changed during protection preflight; no input was sent".into());
+        if !veto.owns_window() || Instant::now() >= limit {
+            return Err("Activation protection preflight exceeded its deadline or the selected application's GUI thread changed; no input was sent".into());
         }
+        // Leave only the activation callback installed during real input.
+        // Failed unhook refuses approval and Drop retries both hook cleanups.
+        unsafe { UnhookWindowsHookEx(ack_hook) }
+            .map_err(|error| format!("Cannot finish activation protection preflight; no input was sent: {error}"))?;
+        veto.ack_hook = 0;
         // Preflight consumes part of the original lease. Renew immediately
         // before approval so the existing two-second dispatch deadline fits.
         let renewed = lease_token(unsafe { GetTickCount64() } + LEASE_MS, sequence)?;
@@ -192,6 +212,7 @@ impl Drop for ActivationVeto {
         // Unhook first. Windows may finish an already-running callback after
         // this returns, so the library remains process-pinned and callbacks
         // reference only expiring kernel window properties, never Rust state.
+        if self.ack_hook != 0 { unsafe { let _ = UnhookWindowsHookEx(HHOOK(self.ack_hook as *mut core::ffi::c_void)); } }
         if self.hook != 0 { unsafe { let _ = UnhookWindowsHookEx(HHOOK(self.hook as *mut core::ffi::c_void)); } }
         if self.lease_owned && self.owns_window() {
             let window = HWND(self.window as *mut core::ffi::c_void);
