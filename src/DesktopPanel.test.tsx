@@ -183,6 +183,31 @@ it("maps wheel scrolling to the app capture with strict background arguments", a
   await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", { windowId: 10, x: 240, y: 135, direction: "up", backgroundOnly: true, allowForegroundFallback: false }));
 });
 
+it("adds the capture crop origin to clicks and wheel actions, including a refreshed origin", async () => {
+  const command = desktop();
+  let origin = { x: 8, y: 7 };
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return { ...screenshot(Number(args.windowId)), origin } as never;
+    return { activated: true, scrolled: true, inputMode: "accessibility" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 488, y: 277, backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Refresh capture" })).toBeEnabled());
+  fireEvent.wheel(image, { clientX: 220, clientY: 107.5, deltaY: -120 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", { windowId: 10, x: 248, y: 142, direction: "up", backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Refresh capture" })).toBeEnabled());
+  origin = { x: 0, y: 0 };
+  const capturesBeforeRefresh = command.mock.calls.filter(([action]) => action === "screenshot").length;
+  fireEvent.click(screen.getByRole("button", { name: "Refresh capture" }));
+  await waitFor(() => expect(command.mock.calls.filter(([action]) => action === "screenshot").length).toBeGreaterThan(capturesBeforeRefresh));
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 480, y: 270, backgroundOnly: true, allowForegroundFallback: false }));
+});
+
 it("does not enable text input for an unconfirmed pointer fallback response", async () => {
   const command = desktop();
   command.mockImplementation(async (action, args = {}) => {

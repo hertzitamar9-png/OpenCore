@@ -1381,3 +1381,8 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .claude-bridge-actions { flex-wrap: wrap; }
 .claude-bridge-command { margin-top: 12px; padding: 10px; border: 1px solid var(--border, #2b4153); border-radius: 8px; }
 .claude-bridge-command code { flex: 1; overflow-wrap: anywhere; min-width: 0; white-space: pre-wrap; }
+.imported-chat-count,.imported-chat-status { margin: 8px 12px; color: var(--muted); font-size: 12px; }
+.imported-chat-more { display: block; width: calc(100% - 24px); margin: 10px 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--blue); }
+.imported-chat-error { margin: 10px 12px; color: var(--red); font-size: 12px; overflow-wrap: anywhere; }
+.imported-chat-error button { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; background: var(--surface); color: var(--text); }
+.imported-chat-group>.conversation-group-heading[aria-expanded="false"]>svg { transform: rotate(-90deg); }

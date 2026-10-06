@@ -57,6 +57,7 @@ import { BackgroundJobs } from "./BackgroundJobs";
 import { SpacesView } from "./SpacesView";
 import { ChatImportDialog } from "./ChatImportDialog";
 import { ChatExportDialog } from "./ChatExportDialog";
+import { ImportedChats } from "./ImportedChats";
 import type { ImportFormat } from "./chat-import-types";
 import type { FileRecord } from "./workspaces";
 import { WindowTitleBar } from "./WindowTitleBar";
@@ -321,10 +322,11 @@ function ProjectConversationGroup({ project, items, selected, collapsed, onToggl
   </section>;
 }
 
-function ConversationsList({ conversations, projects: projectDefinitions, selected, onSelect, onNew, onExit, onCreateProject, onTogglePin, onEditProject, onRemoveProject, onOpenProjectFolder, onChangeProjectFolder }: {
+function ConversationsList({ conversations, projects: projectDefinitions, selected, onSelect, onNew, onExit, onCreateProject, onTogglePin, onEditProject, onRemoveProject, onOpenProjectFolder, onChangeProjectFolder, importRevision }: {
   conversations: ConversationSummary[]; projects: ProjectSummary[]; selected?: string; onSelect: (id: string) => void; onNew: () => void; onExit: () => void; onCreateProject: (name: string, folderPath: string) => Promise<boolean>;
   onTogglePin: (item: ConversationSummary) => void; onEditProject: (project: ProjectSummary) => void; onRemoveProject: (project: ProjectSummary) => void;
   onOpenProjectFolder: (project: ProjectSummary) => Promise<string>; onChangeProjectFolder: (project: ProjectSummary) => Promise<string>;
+  importRevision: number;
 }) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
@@ -336,6 +338,8 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
   const [projectError, setProjectError] = useState("");
   const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["imported", "Imported"], ["projects", "Projects"]] as const;
   const needle = deferredQuery.trim().toLowerCase();
+  const importedRevision = useMemo(() => `${importRevision}:${JSON.stringify(conversations.map(item => [item.id, item.updatedAt, item.title, item.pinned]))}`, [conversations, importRevision]);
+  const importedRows = (items: ConversationSummary[]) => <ConversationRows items={items} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />;
   const searched = useMemo(() => conversations.filter((item) => !needle || `${item.title} ${item.client} ${item.project || ""}`.toLowerCase().includes(needle)), [conversations, needle]);
   const sourceItems = useMemo(() => {
     const isImported = (item: ConversationSummary) => item.client.toLowerCase().startsWith("imported ");
@@ -349,7 +353,6 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
       opencore: searched.filter(isOpenCore),
       claude: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("claude")),
       codex: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("codex")),
-      imported: searched.filter(isImported),
     };
   }, [searched]);
   const projects = useMemo(() => {
@@ -380,16 +383,16 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
     <div className="search conversation-search"><Search size={14} /><input aria-label="Search conversations" placeholder="Search…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
     <div className="conversation-sections">{sections.map(([id, label]) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}>{label}</button>)}</div>
     <div className="conversation-scroll">
-      {searched.length === 0 ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
+      {searched.length === 0 && section !== "imported" ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
       {section === "all" ? <>
         {sourceItems.pinned.length ? <CollapsibleConversationGroup id="all-pinned" label="Pinned" count={sourceItems.pinned.length} collapsed={collapsed.has("all-pinned")} onToggle={toggle}><ConversationRows items={sourceItems.pinned} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup> : null}
         <CollapsibleConversationGroup id="all-recent" label="Recent" count={sourceItems.recent.length} collapsed={collapsed.has("all-recent")} onToggle={toggle}><ConversationRows items={sourceItems.recent} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-opencore" label="OpenCore" count={sourceItems.opencore.length} collapsed={collapsed.has("all-opencore")} onToggle={toggle}><ConversationRows items={sourceItems.opencore} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-claude" label="Claude Code" count={sourceItems.claude.length} collapsed={collapsed.has("all-claude")} onToggle={toggle}><ConversationRows items={sourceItems.claude} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-codex" label="Codex" count={sourceItems.codex.length} collapsed={collapsed.has("all-codex")} onToggle={toggle}><ConversationRows items={sourceItems.codex} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        {sourceItems.imported.length ? <CollapsibleConversationGroup id="all-imported" label="Imported" count={sourceItems.imported.length} collapsed={collapsed.has("all-imported")} onToggle={toggle}><ConversationRows items={sourceItems.imported} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup> : null}
+        <ImportedChats query={needle} revision={importedRevision} grouped renderRows={importedRows} />
         <CollapsibleConversationGroup id="all-projects" label="Projects" count={projects.length} collapsed={collapsed.has("all-projects")} onToggle={toggle}>{projectGroups}</CollapsibleConversationGroup>
-      </> : section === "projects" ? projectGroups : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
+      </> : section === "projects" ? projectGroups : section === "imported" ? <ImportedChats query={needle} revision={importedRevision} renderRows={importedRows} /> : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
     </div>
   </section>;
 }
@@ -1179,6 +1182,8 @@ export default function App() {
   },[]);
   const [selectedProfile, setSelectedProfileState] = useState<RuntimeProfile>(readProfilePreference);
   const [selectedConversation, setSelectedConversation] = useState<string>();
+  const [importedSelection, setImportedSelection] = useState<ConversationSummary | null>(null);
+  const [importRevision, setImportRevision] = useState(0);
   const [conversationEpoch, setConversationEpoch] = useState(0);
   const composerDrafts = useRef(new Map<string, ComposerDraft>());
   const draftKey = selectedConversation || `new-${conversationEpoch}`;
@@ -1393,8 +1398,17 @@ export default function App() {
     return () => { live = false; window.clearInterval(timer); };
   }, [selectedConversation, selectedActive]);
 
-  const selected = useMemo(() => snapshot?.conversations.find((item) => item.id === selectedConversation), [snapshot, selectedConversation]);
-  const act = async (operation: () => Promise<unknown>): Promise<boolean> => { setBusy(true); setNotice(undefined); try { await operation(); await refresh(); return true; } catch (error) { setNotice(String(error)); return false; } finally { setBusy(false); } };
+  useEffect(() => {
+    let current = true;
+    setImportedSelection(previous => previous?.id === selectedConversation ? previous : null);
+    if (selectedConversation?.startsWith("import:")) void api.importedConversationSummary(selectedConversation)
+      .then(item => { if (current) setImportedSelection(item); })
+      .catch(error => { if (current) setNotice(String(error)); });
+    return () => { current = false; };
+  }, [selectedConversation, importRevision]);
+  const selected = useMemo(() => snapshot?.conversations.find((item) => item.id === selectedConversation) ||
+    (importedSelection?.id === selectedConversation ? importedSelection : undefined), [snapshot, selectedConversation, importedSelection]);
+  const act = async (operation: () => Promise<unknown>): Promise<boolean> => { setBusy(true); setNotice(undefined); try { await operation(); await refresh(); if (selectedConversation?.startsWith("import:")) setImportRevision(value => value + 1); return true; } catch (error) { setNotice(String(error)); return false; } finally { setBusy(false); } };
   const start = async () => {
     setRuntimeAction("starting"); setNotice(undefined);
     try { await api.startProfile(selectedProfile); await refresh(); }
@@ -1522,7 +1536,7 @@ export default function App() {
 
   const hideConversationList = conversationsCollapsed || (workspaceOpen && viewportWidth < 1440);
   const mainBlocked = studioActive ? 'Wait for the active studio task to finish.' : (snapshot.activeConversationIds || []).some(id => id !== selectedConversation) || Boolean(inferenceOwner && inferenceOwner !== selectedConversation) ? 'Another chat is working. Wait for it to finish before sending.' : undefined;
-  const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} />;
+  const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} importRevision={importRevision} />;
   const conversationContent = <div className={`conversation-content-grid ${hideConversationList ? 'conversation-list-collapsed' : ''}`} style={{'--conversation-list-width': `${sidebarWidth}px`} as CSSProperties}>
       {conversationList}<div className="conversation-resizer" role="separator" tabIndex={0} aria-label="Resize conversations" aria-orientation="vertical" aria-valuemin={230} aria-valuemax={600} aria-valuenow={sidebarWidth} onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setSidebarWidth(current => Math.min(600, Math.max(230, current + (event.key === 'ArrowRight' ? 24 : -24)))); } }} onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
       <div className="conversation-chat-content"><AssistantConversation
@@ -1591,7 +1605,7 @@ export default function App() {
     {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
     {importOpen && <ChatImportDialog onClose={() => setImportOpen(false)} onImport={importChats} onPreview={api.previewChatFile} progress={importProgress}
       onCancelImport={async () => { if (importRequest.current) await api.cancelChatFileImport(importRequest.current); }}
-      onImported={async (report) => { await refresh(); setNotice(`${report.cancelled ? 'Import cancelled' : 'Chats imported'} · ${report.imported} new · ${report.updated} updated · ${report.skipped} already copied${report.failed ? ` · ${report.failed} failed` : ''}`); }} />}
+      onImported={async (report) => { await refresh(); setImportRevision(value => value + 1); setNotice(`${report.cancelled ? 'Import cancelled' : 'Chat import finished'} · ${report.imported} new · ${report.updated} updated · ${report.skipped} already copied${report.failed ? ` · ${report.failed} failed` : ''}`); }} />}
     {exportChatId && <ChatExportDialog onClose={() => setExportChatId(null)} onExport={async (format) => { const path = await api.exportConversation(exportChatId, format); setNotice(`Exported to ${path}`); setExportChatId(null); }} />}
   </div></div>;
 }

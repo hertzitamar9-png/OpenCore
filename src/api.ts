@@ -121,7 +121,7 @@ export type BrowserStatus = { port: number; token: string; connected: boolean; e
 export type BrowserTab = { tabId: number; title: string; url: string; active: boolean };
 export type BrowserShot = { tabId: number; dataUrl: string; viewport: { width: number; height: number } };
 export type DesktopWindow = { windowId: number; title: string; bounds: { left: number; top: number; width: number; height: number } };
-export type DesktopShot = { windowId: number; bounds: DesktopWindow["bounds"]; dataUrl: string };
+export type DesktopShot = { windowId: number; bounds: DesktopWindow["bounds"]; origin?: { x: number; y: number }; dataUrl: string };
 
 export async function desktopCommand<T>(action: string, args: Record<string, unknown> = {}): Promise<T> {
   if (!desktop()) throw new Error("Windows control requires the desktop application.");
@@ -226,6 +226,23 @@ export async function exportConversation(id: string, format: "json" | "markdown"
   if (!desktop()) throw new Error("Export requires the desktop application.");
   const result = await invoke<{ path: string }>("export_conversation", { id, format });
   return result.path;
+}
+
+export interface ImportedConversationPage {
+  conversations: import("./types").ConversationSummary[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+export async function listImportedConversations(query = "", offset = 0, limit = 100): Promise<ImportedConversationPage> {
+  if (!desktop()) return { conversations: [], total: 0, offset, limit };
+  return invoke<ImportedConversationPage>("list_imported_conversations", { query, offset, limit });
+}
+
+export async function importedConversationSummary(id: string): Promise<import("./types").ConversationSummary | null> {
+  if (!desktop()) return null;
+  return invoke<import("./types").ConversationSummary | null>("get_imported_conversation_summary", { id });
 }
 
 export async function previewChatFile(path: string, format: ImportFormat): Promise<ImportPreview> {

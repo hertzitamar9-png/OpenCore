@@ -107,7 +107,9 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
       }
       setShot(previous => previous?.windowId === captured.windowId && previous.dataUrl === captured.dataUrl &&
         previous.bounds.width === captured.bounds.width && previous.bounds.height === captured.bounds.height &&
-        previous.bounds.left === captured.bounds.left && previous.bounds.top === captured.bounds.top ? previous : captured);
+        previous.bounds.left === captured.bounds.left && previous.bounds.top === captured.bounds.top &&
+        (previous.origin?.x ?? 0) === (captured.origin?.x ?? 0) &&
+        (previous.origin?.y ?? 0) === (captured.origin?.y ?? 0) ? previous : captured);
       captureError.current = "";
     } catch (error) {
       if (!latest()) return;
@@ -233,7 +235,8 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     if (!shot || shot.windowId !== selection.current.windowId) return null;
     const rect = event.currentTarget.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return null;
-    return browserPoint(event.clientX, event.clientY, rect.left, rect.top, rect.width, rect.height, shot.bounds.width, shot.bounds.height);
+    const captured = browserPoint(event.clientX, event.clientY, rect.left, rect.top, rect.width, rect.height, shot.bounds.width, shot.bounds.height);
+    return { x: captured.x + (shot.origin?.x ?? 0), y: captured.y + (shot.origin?.y ?? 0) };
   };
   const scroll = (event: WheelEvent<HTMLImageElement>) => {
     if (size === "actual" || event.deltaY === 0) return;

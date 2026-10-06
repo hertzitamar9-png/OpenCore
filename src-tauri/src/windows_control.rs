@@ -217,6 +217,83 @@ mod platform {
         best.ok_or("This control does not expose background scrolling. Use scrolling in the application.".into())
     }
 
+    fn native_background_button(window_id: isize, element: &UIElement) -> Result<Option<Value>, String> {
+        use uiautomation::patterns::UIInvokePattern;
+        use windows::Win32::Foundation::{GetLastError, SetLastError, HWND, LPARAM, WPARAM, ERROR_ACCESS_DENIED, ERROR_SUCCESS};
+        use windows::Win32::System::Threading::GetCurrentThreadId;
+        use windows::Win32::UI::Input::KeyboardAndMouse::IsWindowEnabled;
+        use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetClassNameW, GetDlgCtrlID,
+            GetParent, GetWindowLongW, GetWindowThreadProcessId, IsChild, IsWindow, IsWindowVisible,
+            SendMessageTimeoutW, BN_CLICKED, BS_DEFPUSHBUTTON, BS_PUSHBUTTON, GA_ROOT, GWL_STYLE,
+            SMTO_ABORTIFHUNG, SMTO_BLOCK, SMTO_ERRORONEXIT, WM_COMMAND};
+
+        let handle = element.get_native_window_handle().ok().map(Into::<isize>::into).filter(|id| *id > 0);
+        let Some(handle) = handle else {
+            if element.get_classname().is_ok_and(|class| class.eq_ignore_ascii_case("Button")
+                || class.starts_with("WindowsForms10.BUTTON")) {
+                return Err("This native button cannot be verified for background interaction.".into());
+            }
+            return Ok(None);
+        };
+        let button = HWND(handle as *mut std::ffi::c_void);
+        let target = HWND(window_id as *mut std::ffi::c_void);
+        let mut class = [0u16; 256];
+        let length = unsafe { GetClassNameW(button, &mut class) };
+        if length <= 0 {
+            return Err("The native control is no longer available for verified background interaction.".into());
+        }
+        let class = String::from_utf16_lossy(&class[..length.max(0) as usize]);
+        if class.starts_with("WindowsForms10.BUTTON") {
+            return Err("This native button provider requires foreground focus and does not expose verified background interaction.".into());
+        }
+        if !class.eq_ignore_ascii_case("Button") { return Ok(None); }
+        unsafe {
+            if !IsWindow(button).as_bool() || !IsWindow(target).as_bool()
+                || !IsChild(target, button).as_bool() || GetAncestor(button, GA_ROOT) != target {
+                return Err("The native button no longer belongs to the selected window.".into());
+            }
+            let parent = GetParent(button).map_err(|error| format!("Native background button has no parent: {error}"))?;
+            if !IsWindowEnabled(button).as_bool() || !IsWindowEnabled(parent).as_bool()
+                || !IsWindowEnabled(target).as_bool() || !IsWindowVisible(button).as_bool() {
+                return Err("The native background button is disabled or unavailable.".into());
+            }
+            // Win32's accessibility Button proxy calls SetFocus for Invoke,
+            // Toggle and Select. Only verified stateless push buttons can use
+            // their parent notification directly; checkbox/radio state needs
+            // a different implementation, so those controls fail explicitly.
+            let kind = GetWindowLongW(button, GWL_STYLE) as u32 & 0x0f;
+            if kind != BS_PUSHBUTTON as u32 && kind != BS_DEFPUSHBUTTON as u32 {
+                return Err("This native button kind requires foreground interaction; background toggle or selection is unavailable.".into());
+            }
+            element.get_pattern::<UIInvokePattern>().map_err(|_| "This native push button does not expose background activation.".to_string())?;
+            let control_id = GetDlgCtrlID(button);
+            if !(0..=u16::MAX as i32).contains(&control_id) {
+                return Err("The native button has no supported notification identifier.".into());
+            }
+            // A same-queue SendMessageTimeout ignores its timeout. Native
+            // commands use a blocking worker; refuse a direct UI-thread call.
+            if GetWindowThreadProcessId(parent, None) == GetCurrentThreadId() {
+                return Err("Background button actions must run outside the target UI thread.".into());
+            }
+            // BN_CLICKED: LOWORD = control ID, HIWORD = notification code,
+            // LPARAM = button HWND. This sends no mouse/keyboard input, no
+            // BM_CLICK and no SetFocus. UIPI restrictions remain enforced.
+            SetLastError(ERROR_SUCCESS);
+            let sent = SendMessageTimeoutW(parent, WM_COMMAND,
+                WPARAM(control_id as usize | (BN_CLICKED as usize) << 16), LPARAM(handle),
+                SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT, 1000, None);
+            if sent.0 == 0 {
+                let error = GetLastError();
+                if error == ERROR_ACCESS_DENIED {
+                    return Err("Windows blocked the background button notification (access denied; the target may require a higher privilege level).".into());
+                }
+                return Err(format!("The background button notification timed out or failed (Windows error {}).", error.0));
+            }
+        }
+        Ok(Some(json!({"activated":true,"inputMode":"window-message","notification":"BN_CLICKED",
+            "name":element.get_name().unwrap_or_default()})))
+    }
+
     fn foreground_click(window_id: isize, point: &Point, allowed: bool) -> Result<Value, String> {
         if !allowed { return Err("This control needs foreground mouse input. Turn off Keep my window in front to use it.".into()); }
         use windows::Win32::Foundation::{HWND, POINT};
@@ -407,6 +484,29 @@ mod platform {
         // Keep the policy at the native boundary too, including callers that do
         // not enter through the asynchronous Tauri command.
         validate_action(action, args)?;
+        let check_background = !foreground_fallback_allowed(args)
+            && matches!(action, "interact" | "invoke" | "set_value" | "set_at" | "commit_text" | "commit_enter" | "scroll_at");
+        let original = if check_background {
+            Some((unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() },
+                super::cursor_position().ok_or("Cannot verify the desktop cursor for background interaction")?))
+        } else { None };
+        let result = run_action(action, args);
+        // Accessibility providers and application notification handlers can
+        // themselves take focus. Report that failure without silently restoring
+        // focus or claiming the control supports background interaction.
+        if let Some((foreground, cursor)) = original {
+            let current = unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() };
+            if current != foreground {
+                return Err(format!("This control changed the foreground window during background interaction (before {:#x}, after {:#x}). Background interaction is unsupported by this control.", foreground.0 as usize, current.0 as usize));
+            }
+            if super::cursor_position() != Some(cursor) {
+                return Err("This control changed the desktop cursor during background interaction. Background interaction is unsupported by this control.".into());
+            }
+        }
+        result
+    }
+
+    fn run_action(action: &str, args: &Value) -> Result<Value, String> {
         let automation = UIAutomation::new().map_err(|e| e.to_string())?;
         if action == "list" {
             let mut rows = vec![json!({"windowId":0,"title":"Whole desktop","bounds":rect_json(&automation.get_root_element().map_err(|e| e.to_string())?)})];
@@ -427,8 +527,17 @@ mod platform {
                 let element_id = args["elementId"].as_u64().unwrap_or(160) as usize;
                 let element = element_by_index(&automation, &window, element_id)?;
                 if action == "invoke" {
-                    element.get_pattern::<UIInvokePattern>().map_err(|_| "This control cannot be invoked without foreground pointer input".to_string())?
-                        .invoke().map_err(|e| e.to_string())?;
+                    let pattern = element.get_pattern::<UIInvokePattern>()
+                        .map_err(|_| "This control cannot be invoked without foreground pointer input".to_string())?;
+                    if !foreground_fallback_allowed(args) {
+                        if let Some(mut result) = native_background_button(id, &element)? {
+                            result["windowId"] = json!(id);
+                            result["elementId"] = json!(element_id);
+                            result["action"] = json!(action);
+                            return Ok(result);
+                        }
+                    }
+                    pattern.invoke().map_err(|e| e.to_string())?;
                 } else {
                     element.get_pattern::<UIValuePattern>().map_err(|_| "This control cannot accept a value without foreground keyboard input".to_string())?
                         .set_value(args["text"].as_str().unwrap_or_default()).map_err(|e| e.to_string())?;
@@ -512,6 +621,9 @@ mod platform {
                 }
                 if action != "interact" {
                     return Err("This point is not an editable control".into());
+                }
+                if !foreground_fallback_allowed(args) {
+                    if let Some(result) = native_background_button(id, &element)? { return Ok(result); }
                 }
                 if let Ok(pattern) = element.get_pattern::<UIInvokePattern>() {
                     pattern.invoke().map_err(|e| e.to_string())?;

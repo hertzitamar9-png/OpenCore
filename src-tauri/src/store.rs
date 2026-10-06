@@ -23,6 +23,10 @@ mod side_chat_tests;
 #[path = "store_export.rs"]
 mod store_export;
 
+#[path = "store_import_listing.rs"]
+mod store_import_listing;
+pub use store_import_listing::ImportedConversationPage;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProjectAssignment { Legacy, Automatic, Manual }
 
@@ -1452,14 +1456,128 @@ impl EventStore {
         title: &str,
         rows: &[(String, String, String, String, String, Value)],
     ) -> Result<bool, String> {
-        let now = Utc::now().to_rfc3339();
-        let latest = rows.iter().rev().find(|row| !row.0.is_empty())
-            .map(|row| row.0.as_str()).unwrap_or(&now);
         let mut connection = self.connection.lock().map_err(|e| e.to_string())?;
         let transaction = connection.transaction().map_err(|e| e.to_string())?;
         let exists: bool = transaction.query_row(
             "SELECT EXISTS(SELECT 1 FROM conversations WHERE id=?1)", [id], |row| row.get(0),
         ).map_err(|e| e.to_string())?;
+        Self::write_imported_history(&transaction, id, client, title, rows)?;
+        transaction.commit().map_err(|e| e.to_string())?;
+        Ok(!exists)
+    }
+
+    /// Claim only verified portable copies, and commit history and its dedup receipt together.
+    /// Older copies without a receipt can recover from the same stored provenance checks.
+    pub fn replace_imported_history_with_receipt(
+        &self,
+        id: &str,
+        client: &str,
+        title: &str,
+        rows: &[(String, String, String, String, String, Value)],
+        receipt_key: &str,
+        fingerprint: &str,
+    ) -> Result<&'static str, String> {
+        let occupied = "This copy's ID belongs to an existing chat. No messages were changed.";
+        let invalid = "The imported conversation has invalid copy provenance. No messages were changed.";
+        let is_digest = |value: &str| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit());
+        let first = rows.first().ok_or("The conversation has no importable history.")?;
+        let expected = &first.5["portableImport"];
+        let format = expected["format"].as_str().ok_or(invalid)?;
+        let source_id = expected["sourceConversationId"].as_str().ok_or(invalid)?;
+        let expected_client = match format {
+            "opencore" => "Imported OpenCore",
+            "hermes" => "Imported Hermes",
+            "codex" => "Imported Codex",
+            "claude" => "Imported Claude Code",
+            "generic" => "Imported JSON",
+            _ => return Err(invalid.into()),
+        };
+        let prefix = format!("import:{format}:");
+        if client != expected_client || !id.strip_prefix(prefix.as_str()).map(&is_digest).unwrap_or(false)
+            || receipt_key != format!("portable_chat_import_v1_{id}") || !is_digest(fingerprint)
+        {
+            return Err(invalid.into());
+        }
+        let matches_provenance = |metadata: &Value, legacy: bool| {
+            let provenance = &metadata["portableImport"];
+            provenance["version"].as_u64() == Some(1)
+                && provenance["format"].as_str() == Some(format)
+                && provenance["sourceConversationId"].as_str() == Some(source_id)
+                && provenance["eventId"].as_str().map(&is_digest).unwrap_or(false)
+                && match provenance.get("copyId") {
+                    Some(copy_id) => copy_id.as_str() == Some(id),
+                    None => legacy,
+                }
+        };
+        if rows.iter().any(|row| !matches_provenance(&row.5, false)) {
+            return Err(invalid.into());
+        }
+        let mut connection = self.connection.lock().map_err(|e| e.to_string())?;
+        let transaction = connection.transaction().map_err(|e| e.to_string())?;
+        let existing_client: Option<String> = transaction.query_row(
+            "SELECT client FROM conversations WHERE id=?1", [id], |row| row.get(0),
+        ).optional().map_err(|e| e.to_string())?;
+        let receipt: Option<String> = transaction.query_row(
+            "SELECT value FROM settings WHERE key=?1", [receipt_key], |row| row.get(0),
+        ).optional().map_err(|e| e.to_string())?;
+        if let Some(existing_client) = &existing_client {
+            if existing_client != client {
+                return Err(occupied.into());
+            }
+            // Verify every copied row, including rows beyond the UI's history page.
+            // Native continuations have another source and no portableImport field.
+            let mut statement = transaction.prepare(
+                "SELECT timestamp,kind,role,source,content,metadata FROM timeline WHERE conversation_id=?1 ORDER BY id",
+            ).map_err(|e| e.to_string())?;
+            let mut existing = statement.query([id]).map_err(|e| e.to_string())?;
+            let mut ordinal = 0usize;
+            while let Some(row) = existing.next().map_err(|e| e.to_string())? {
+                let source: String = row.get(3).map_err(|e| e.to_string())?;
+                let metadata: String = row.get(5).map_err(|e| e.to_string())?;
+                let metadata: Value = serde_json::from_str(&metadata).map_err(|_| occupied.to_string())?;
+                if !source.starts_with("Imported ") && metadata.get("portableImport").is_none() {
+                    continue;
+                }
+                if source != client || !matches_provenance(&metadata, true) || ordinal >= 50_000 {
+                    return Err(occupied.into());
+                }
+                let timestamp: String = row.get(0).map_err(|e| e.to_string())?;
+                let kind: String = row.get(1).map_err(|e| e.to_string())?;
+                let role: String = row.get(2).map_err(|e| e.to_string())?;
+                let content: String = row.get(4).map_err(|e| e.to_string())?;
+                let source_identity = format!("{id}\0{client}\0{ordinal}\0{timestamp}\0{kind}\0{role}\0{content}");
+                let stable_id = format!("{:x}", Sha256::digest(source_identity.as_bytes()));
+                if metadata["opencore_source_event_id"].as_str() != Some(stable_id.as_str()) {
+                    return Err(occupied.into());
+                }
+                ordinal += 1;
+            }
+            if ordinal == 0 {
+                return Err(occupied.into());
+            }
+            if receipt.as_deref() == Some(fingerprint) {
+                return Ok("skipped");
+            }
+        }
+        Self::write_imported_history(&transaction, id, client, title, rows)?;
+        transaction.execute(
+            "INSERT INTO settings(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            params![receipt_key, fingerprint],
+        ).map_err(|error| format!("Cannot save the import receipt; no history was changed: {error}"))?;
+        transaction.commit().map_err(|e| e.to_string())?;
+        Ok(if existing_client.is_none() { "imported" } else { "updated" })
+    }
+
+    fn write_imported_history(
+        transaction: &rusqlite::Transaction<'_>,
+        id: &str,
+        client: &str,
+        title: &str,
+        rows: &[(String, String, String, String, String, Value)],
+    ) -> Result<(), String> {
+        let now = Utc::now().to_rfc3339();
+        let latest = rows.iter().rev().find(|row| !row.0.is_empty())
+            .map(|row| row.0.as_str()).unwrap_or(&now);
         transaction.execute(
             "INSERT INTO conversations(id,title,client,profile,status,created_at,updated_at)
              VALUES(?1,?2,?3,'history','imported',?4,?5)
@@ -1489,8 +1607,7 @@ impl EventStore {
                     .map_err(|e| e.to_string())?;
             }
         }
-        transaction.commit().map_err(|e| e.to_string())?;
-        Ok(!exists)
+        Ok(())
     }
 
     pub fn add_timeline(

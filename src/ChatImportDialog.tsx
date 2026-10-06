@@ -97,7 +97,7 @@ export function ChatImportDialog({ onClose, onImport, onPreview, onImported, onC
       if (!mounted.current) return;
       setReport(result);
       try { await onImported?.(result); }
-      catch (cause) { if (mounted.current) setError(`Chats were imported, but refreshing the view failed: ${String(cause)}`); }
+      catch (cause) { if (mounted.current) setError(`Import finished, but refreshing the view failed: ${String(cause)}`); }
     } catch (cause) { if (mounted.current) setError(String(cause)); }
     finally {
       inFlight.current = false;

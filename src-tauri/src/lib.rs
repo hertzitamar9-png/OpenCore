@@ -189,10 +189,14 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             }
             if action != "see" { result["coordinate_space"] = json!("window_relative"); }
             if action == "ground_click" && result.get("found").and_then(Value::as_bool) == Some(true) {
-                let clicked = desktop_action(app, "click".into(),
-                    json!({"windowId":window_id,"x":result["x"],"y":result["y"]})).await?;
+                let background_only = KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst) || args["backgroundOnly"].as_bool().unwrap_or(false);
+                let mut click_args = json!({"windowId":window_id,"x":result["x"],"y":result["y"]});
+                for key in ["backgroundOnly", "allowForegroundFallback", "holdActivityUntilComplete"] {
+                    if let Some(value) = args.get(key) { click_args[key] = value.clone(); }
+                }
+                let clicked = desktop_action(app, if background_only { "interact" } else { "click" }.into(), click_args).await?;
+                result["clicked"] = json!(clicked["activated"].as_bool().unwrap_or(false));
                 result["click"] = clicked;
-                result["clicked"] = json!(true);
             }
             Ok(result)
         }
@@ -214,6 +218,9 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             Ok(picked)
         }
         "play_snake" => {
+            if KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst) || args["backgroundOnly"].as_bool().unwrap_or(false) {
+                return Err("Real-time keyboard play requires foreground input. Keep-window mode is enabled, so OpenCore will not switch windows.".into());
+            }
             core.reflex.ensure_running().await?;
             let seconds = args.get("seconds").and_then(|v| v.as_f64()).unwrap_or(90.0).clamp(5.0, 600.0);
             #[cfg(windows)]
@@ -546,6 +553,20 @@ fn list_conversations(
     query: Option<String>,
 ) -> Result<Vec<models::ConversationSummary>, String> {
     core.store.list_conversations(query.as_deref())
+}
+
+#[tauri::command]
+async fn list_imported_conversations(core: tauri::State<'_, Arc<AppCore>>, query: String, offset: usize, limit: usize) -> Result<store::ImportedConversationPage, String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || core.store.list_imported_conversations(&query, offset, limit))
+        .await.map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn get_imported_conversation_summary(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<Option<models::ConversationSummary>, String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || core.store.imported_conversation_summary(&id))
+        .await.map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -2510,6 +2531,8 @@ pub fn run() {
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
+            list_imported_conversations,
+            get_imported_conversation_summary,
             get_conversation,
             select_profile,
             start_profile,

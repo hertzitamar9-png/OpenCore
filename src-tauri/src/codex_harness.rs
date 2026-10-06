@@ -452,7 +452,13 @@ async fn execute_app_server_tool(
             },
             "browser_use" => native_browser::agent_command(app, action, &args).await,
             "chrome_use" => core.browser.command(action, args.clone()).await,
-            "reflex_use" => reflex_action(app, &core, action, args.clone()).await,
+            "reflex_use" => {
+                let mut reflex_args = args.clone();
+                if let Some(fields) = reflex_args.as_object_mut() {
+                    fields.insert("holdActivityUntilComplete".into(), json!(true));
+                }
+                reflex_action(app, &core, action, reflex_args).await
+            },
             "system_use" => {
                 let mut system = computer_ops::with_workspace(args.clone(), workspace);
                 system["keepUserWindowInFront"] = json!(KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst));

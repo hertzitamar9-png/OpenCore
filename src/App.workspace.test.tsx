@@ -29,6 +29,7 @@ describe('OpenCore shared workspace', () => {
     const report: ImportReport = {sourceFormat: 'hermes', sourcePath: path, imported: 1, updated: 0, skipped: 0, failed: 0, current: 1, total: 1, cancelled: false, warnings: [], conversations: [{conversationId: copied.id, sourceConversationId: 'session-1', title: copied.title, status: 'imported', entries: 2, warnings: []}]};
     let imported = false;
     vi.spyOn(api, 'snapshot').mockImplementation(async () => imported ? {...initial, conversations: [...initial.conversations, copied]} : initial);
+    vi.spyOn(api, 'listImportedConversations').mockImplementation(async () => ({conversations: imported ? [copied] : [], total: imported ? 1 : 0, offset: 0, limit: 100}));
     vi.mocked(chooseFile).mockResolvedValue(path);
     vi.spyOn(api, 'previewChatFile').mockResolvedValue({sourceFormat: 'hermes', sourcePath: path, conversations: 1, entries: 2, warnings: [], samples: [{sourceConversationId: 'session-1', title: copied.title, entries: 2, warnings: []}]});
     const importFile = vi.spyOn(api, 'importChatFile').mockImplementation(async () => { imported = true; return report; });
@@ -51,8 +52,35 @@ describe('OpenCore shared workspace', () => {
     fireEvent.click(within(dialog).getByRole('button', {name: 'Done'}));
     fireEvent.click(screen.getByRole('button', {name: 'Close workspace'}));
     fireEvent.click(screen.getByRole('button', {name: 'Imported'}));
-    expect(screen.getByText('Hermes project notes')).toBeVisible();
+    expect(await screen.findByText('Hermes project notes')).toBeVisible();
     expect(screen.getByText(/^Imported Hermes(?: ·|$)/)).toBeVisible();
+  });
+
+  it('finds and opens old imported chats beyond the recent snapshot and loads later pages', async () => {
+    const initial = await api.snapshot();
+    const imported = Array.from({length: 102}, (_, index) => ({...initial.conversations[0],
+      id: `import:hermes:old-${index}`, client: 'Imported Hermes', title: `Older imported notes ${index}`,
+      updatedAt: '2020-01-01T00:00:00Z', pinned: false}));
+    const page = vi.spyOn(api, 'listImportedConversations').mockImplementation(async (query = '', offset = 0, limit = 100) => {
+      const matches = imported.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
+      return {conversations: matches.slice(offset, offset + limit), total: matches.length, offset, limit};
+    });
+    vi.spyOn(api, 'importedConversationSummary').mockImplementation(async id => imported.find(item => item.id === id) ?? null);
+    const history = vi.spyOn(api, 'conversation').mockResolvedValue([]);
+    render(<App />);
+    await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'Imported'}));
+    expect(await screen.findByText('Older imported notes 99')).toBeVisible();
+    expect(screen.queryByText('Older imported notes 101')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', {name: 'Load more imported chats'}));
+    expect(await screen.findByText('Older imported notes 101')).toBeVisible();
+    expect(page).toHaveBeenCalledWith('', 100, 100);
+    fireEvent.change(screen.getByLabelText('Search conversations'), {target: {value: 'notes 101'}});
+    await waitFor(() => expect(page).toHaveBeenCalledWith('notes 101', 0, 100));
+    await waitFor(() => expect(screen.queryByText('Older imported notes 99')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByText('Older imported notes 101'));
+    expect(await screen.findByRole('heading', {name: 'Older imported notes 101', level: 2})).toBeVisible();
+    expect(history).toHaveBeenCalledWith(imported[101].id);
   });
 
   it('exports portable JSON through a format choice and keeps the current chat', async () => {
