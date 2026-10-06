@@ -53,6 +53,7 @@ pub(crate) fn validate_manual_target(action: &str, args: &Value) -> Result<(), S
 #[cfg(windows)]
 pub(crate) struct ManualForegroundGuard {
     locked: bool,
+    activation: Option<crate::desktop_focus_guard::ActivationVeto>,
 }
 
 #[cfg(windows)]
@@ -67,7 +68,7 @@ impl ManualForegroundGuard {
         };
         MANUAL_DISPATCH_ACTIVE.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
             .map_err(|_| "A manual background action is already being applied. Wait for its result before applying another action.".to_string())?;
-        let mut guard = Self { locked: false };
+        let mut guard = Self { locked: false, activation: None };
         let foreground = unsafe { GetForegroundWindow() };
         let mut process_id = 0;
         unsafe { GetWindowThreadProcessId(foreground, Some(&mut process_id)); }
@@ -77,6 +78,10 @@ impl ManualForegroundGuard {
         unsafe { LockSetForegroundWindow(LSFW_LOCK) }
             .map_err(|error| format!("Windows could not protect OpenCore's foreground focus. No input was sent: {error}"))?;
         guard.locked = true;
+        // The foreground lock denies global handoff, but Windows can still
+        // activate/reorder a target's local input queue before returning false.
+        // Veto that activation in the exact target GUI thread before mutation.
+        guard.activation = Some(crate::desktop_focus_guard::ActivationVeto::acquire(args["windowId"].as_i64().unwrap() as isize)?);
         if unsafe { GetForegroundWindow() } != foreground {
             return Err("The foreground app changed before dispatch. No input was sent; return to OpenCore before applying the action.".into());
         }
@@ -88,6 +93,7 @@ impl ManualForegroundGuard {
 impl Drop for ManualForegroundGuard {
     fn drop(&mut self) {
         use windows::Win32::UI::WindowsAndMessaging::{LockSetForegroundWindow, LSFW_UNLOCK};
+        self.activation.take();
         if self.locked { unsafe { let _ = LockSetForegroundWindow(LSFW_UNLOCK); } }
         MANUAL_DISPATCH_ACTIVE.store(false, std::sync::atomic::Ordering::SeqCst);
     }

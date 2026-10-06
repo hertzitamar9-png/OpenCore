@@ -37,8 +37,11 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             src-tauri/target
-          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}
           restore-keys: windows-native-workspace-v1-
+      - name: Build and verify desktop focus guard DLL before Cargo
+        shell: pwsh
+        run: ./scripts/build-desktop-focus-guard.ps1
       - name: Install JavaScript dependencies
         run: npm ci
       - name: Prepare packaged Node runtime for integration fixtures
@@ -88,4 +91,4 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             src-tauri/target
-          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}

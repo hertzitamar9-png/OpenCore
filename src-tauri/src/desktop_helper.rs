@@ -206,13 +206,53 @@ async fn protocol(
 #[cfg(windows)]
 struct HelperLease {
     job: Option<crate::child_guard::ProcessJob>,
+    process: HelperProcess,
     foreground: Option<crate::windows_control::ManualForegroundGuard>,
+}
+
+/// Duplicate the already-owned process handle, never reopen a possibly reused
+/// PID. A dropped future still has a bounded process-exit barrier after its
+/// kill-on-close job is closed and before foreground protection is released.
+#[cfg(windows)]
+struct HelperProcess(usize);
+
+#[cfg(windows)]
+impl HelperProcess {
+    fn duplicate(child: &tokio::process::Child) -> Result<Self, String> {
+        use windows::Win32::Foundation::{DuplicateHandle, HANDLE, DUPLICATE_SAME_ACCESS};
+        use windows::Win32::System::Threading::GetCurrentProcess;
+        let source = child.raw_handle().ok_or("The desktop helper has no owned process handle")?;
+        let mut duplicate = HANDLE::default();
+        unsafe {
+            DuplicateHandle(GetCurrentProcess(), HANDLE(source), GetCurrentProcess(),
+                &mut duplicate, 0, false, DUPLICATE_SAME_ACCESS)
+                .map_err(|error| format!("Cannot retain the desktop helper's exit handle: {error}"))?;
+        }
+        Ok(Self(duplicate.0 as usize))
+    }
+
+    fn wait_for_exit(&self, milliseconds: u32) -> bool {
+        use windows::Win32::Foundation::{HANDLE, WAIT_OBJECT_0};
+        use windows::Win32::System::Threading::WaitForSingleObject;
+        (unsafe { WaitForSingleObject(HANDLE(self.0 as *mut core::ffi::c_void), milliseconds) }) == WAIT_OBJECT_0
+    }
+}
+
+#[cfg(windows)]
+impl Drop for HelperProcess {
+    fn drop(&mut self) {
+        use windows::Win32::Foundation::{CloseHandle, HANDLE};
+        unsafe { let _ = CloseHandle(HANDLE(self.0 as *mut core::ffi::c_void)); }
+    }
 }
 
 #[cfg(windows)]
 impl Drop for HelperLease {
     fn drop(&mut self) {
         self.job.take();
+        if !self.process.wait_for_exit(2_000) {
+            eprintln!("Desktop helper exit could not be confirmed within cleanup's deadline; its target action may have completed.");
+        }
         self.foreground.take();
     }
 }
@@ -227,8 +267,10 @@ pub(crate) async fn execute(action: String, mut args: Value, mut command: tokio:
     command.stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::null()).creation_flags(0x0800_0000).kill_on_drop(true);
     let mut child = command.spawn().map_err(|error| format!("Cannot start the headless desktop helper: {error}"))?;
+    let process = HelperProcess::duplicate(&child)?;
     let mut lease = HelperLease {
         job: Some(crate::child_guard::ProcessJob::for_async_child(&child)?),
+        process,
         foreground: None,
     };
     let mut input = child.stdin.take().ok_or("Desktop helper input is unavailable")?;
@@ -246,6 +288,10 @@ pub(crate) async fn execute(action: String, mut args: Value, mut command: tokio:
     // after timeout/transport failure. A hung COM call cannot survive in OpenCore.
     lease.job.take();
     let _ = tokio::time::timeout(std::time::Duration::from_secs(2), child.kill()).await;
+    if !lease.process.wait_for_exit(0) {
+        let cleanup = "The owned desktop helper's exit could not be confirmed. Its action may have completed; verify the target before retrying.";
+        return Err(match outcome { Err(error) => format!("{error} {cleanup}"), Ok(_) => cleanup.into() });
+    }
     lease.foreground.take();
     outcome
 }

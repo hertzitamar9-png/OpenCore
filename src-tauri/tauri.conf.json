@@ -43,6 +43,7 @@
       "icons/icon.ico"
     ],
     "resources": {
+      "resources/desktop/opencore-focus-guard.dll": "desktop/opencore-focus-guard.dll",
       "resources/studio/asset_worker.py": "studio/asset_worker.py",
       "resources/speech/whisper_worker.py": "speech/whisper_worker.py",
       "resources/speech/prepare_runtime.py": "speech/prepare_runtime.py",

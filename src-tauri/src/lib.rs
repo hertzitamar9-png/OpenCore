@@ -26,6 +26,8 @@ mod compat;
 mod computer_ops;
 #[cfg(windows)]
 mod desktop_capture;
+#[cfg(windows)]
+mod desktop_focus_guard;
 mod desktop_policy;
 pub mod desktop_helper;
 mod connector_config;

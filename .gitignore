@@ -41,6 +41,10 @@
 /src-tauri/resources/*.exe
 /src-tauri/resources/*.png
 /src-tauri/resources/*.sha256
+/src-tauri/resources/desktop/opencore-focus-guard.dll
+/src-tauri/resources/desktop/*.obj
+/src-tauri/resources/desktop/*.lib
+/src-tauri/resources/desktop/*.exp
 
 /src-tauri/resources/claude/node.exe
 /src-tauri/resources/claude/node

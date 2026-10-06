@@ -19,6 +19,7 @@ static TARGET_Z_CHANGES: AtomicUsize = AtomicUsize::new(0);
 static BUTTON_HANDLER_ENTERED: AtomicBool = AtomicBool::new(false);
 static BUTTON_HANDLER_SAW_INPUT: AtomicBool = AtomicBool::new(false);
 static TARGET_FOREGROUND_ALLOWED: AtomicBool = AtomicBool::new(false);
+static TARGET_QUEUE_STALLED: AtomicBool = AtomicBool::new(false);
 static SELF_BUTTON_CLICKS: AtomicUsize = AtomicUsize::new(0);
 static TARGET_DIRECTORY: OnceLock<std::path::PathBuf> = OnceLock::new();
 static TARGET_EVENTS: Mutex<Vec<TargetEvent>> = Mutex::new(Vec::new());
@@ -28,6 +29,7 @@ static EVENT_BARRIER_REQUEST: AtomicUsize = AtomicUsize::new(0);
 static EVENT_BARRIER_DONE: AtomicUsize = AtomicUsize::new(0);
 const FIXTURE_ACTIVATE: u32 = WM_APP + 7;
 const FIXTURE_EVENT_BARRIER: u32 = WM_APP + 8;
+const FIXTURE_STALL_QUEUE: u32 = WM_APP + 9;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 struct TargetEvent {
@@ -97,6 +99,7 @@ struct TargetState {
     handler_entered: bool,
     handler_saw_input: bool,
     foreground_allowed: bool,
+    queue_stalled: bool,
     events: Vec<TargetEvent>,
 }
 
@@ -119,6 +122,7 @@ fn record_target_state() {
         handler_entered: BUTTON_HANDLER_ENTERED.load(Ordering::SeqCst),
         handler_saw_input: BUTTON_HANDLER_SAW_INPUT.load(Ordering::SeqCst),
         foreground_allowed: TARGET_FOREGROUND_ALLOWED.load(Ordering::SeqCst),
+        queue_stalled: TARGET_QUEUE_STALLED.load(Ordering::SeqCst),
         events: TARGET_EVENTS.lock().unwrap().clone(),
     };
     let result = serde_json::to_vec(&state).map_err(std::io::Error::other).and_then(|data| {
@@ -161,6 +165,19 @@ unsafe extern "system" fn target_proc(
                 );
             }
             BUTTON_CLICKS.fetch_add(1, Ordering::SeqCst);
+            record_target_state();
+            LRESULT(0)
+        }
+        FIXTURE_STALL_QUEUE => {
+            // A bounded, deliberately non-pumping GUI thread proves hook
+            // registration alone cannot authorize an unacknowledged mutation.
+            TARGET_QUEUE_STALLED.store(true, Ordering::SeqCst);
+            record_target_state();
+            let deadline = Instant::now() + Duration::from_secs(3);
+            while !target_flag("resume-queue") && Instant::now() < deadline {
+                thread::sleep(Duration::from_millis(2));
+            }
+            TARGET_QUEUE_STALLED.store(false, Ordering::SeqCst);
             record_target_state();
             LRESULT(0)
         }
@@ -754,14 +771,11 @@ fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
                 let error = operation.await.unwrap_err();
                 assert!(error.contains("dispatch deadline") && error.contains("may have completed"), "{error}");
             }
-            let deadline = Instant::now() + Duration::from_secs(2);
-            loop {
-                let mut code = 259u32; // STILL_ACTIVE returned by GetExitCodeProcess.
-                unsafe { GetExitCodeProcess(process.0, &mut code).unwrap(); }
-                if code != 259 { break; }
-                assert!(Instant::now() < deadline, "the owned blocked desktop helper survived teardown");
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
+            // Drop/return itself is the exit barrier: eventual termination
+            // after foreground protection was released is insufficient.
+            let mut code = 259u32; // STILL_ACTIVE returned by GetExitCodeProcess.
+            unsafe { GetExitCodeProcess(process.0, &mut code).unwrap(); }
+            assert_ne!(code, 259, "the owned blocked desktop helper survived its protection teardown");
         });
         assert!(started.elapsed() < Duration::from_secs(10), "blocked manual dispatch retained its lock too long");
         fixture.assert_desktop_unchanged("blocked helper teardown", foreground, cursor, activations, z_changes);
@@ -823,19 +837,102 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     // foreground process. It is denied during dispatch, then succeeds after
     // the same production guard releases, proving this is a genuine attempt.
     let manual = fixture.args(fixture.button);
+    fixture.flush_desktop();
     let cover = unsafe { GetForegroundWindow() };
+    let probe_cursor = cursor_position().unwrap();
+    let probe_state = fixture.state();
+    fixture.assert_covered(&manual);
     fixture.phase("protected direct external activation probe");
     let activated = platform::manual_dispatch(&manual, || {
         Ok(fixture.attempt_activation())
     }).expect("manual dispatch must protect its foreground process");
     assert!(!activated, "the dispatch must deny an external target's foreground activation");
-    assert_eq!(unsafe { GetForegroundWindow() }, cover);
+    fixture.assert_desktop_unchanged("protected direct activation probe", cover, probe_cursor,
+        probe_state.activations, probe_state.z_changes);
+    fixture.assert_covered(&manual);
     let exact_error: Result<(), String> = platform::manual_dispatch(&manual, || Err("fixture dispatch error".into()));
     assert_eq!(exact_error, Err("fixture dispatch error".into()));
     fixture.phase("deliberate failed-dispatch activation probe");
     assert!(fixture.attempt_activation(),
         "a failed dispatch must release its lock; this activation is fixture verification only");
     wait_for("released dispatch foreground verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.target));
+    fixture.restore_cover();
+
+    // No input is authorized until WM_QUEUESYNC proves the DLL actually runs
+    // in the exact external GUI thread. Stall that queue, then inspect both
+    // the closure and real control to prove failed acknowledgement sends none.
+    fixture.phase("unacknowledged activation protection");
+    fixture.flush_desktop();
+    let preflight_state = fixture.state();
+    let preflight_cursor = cursor_position().unwrap();
+    unsafe { PostMessageW(hwnd(fixture.target), FIXTURE_STALL_QUEUE, WPARAM(0), LPARAM(0)).unwrap(); }
+    wait_for("target queue stall", || fixture.state().queue_stalled);
+    let sent = AtomicBool::new(false);
+    let started = Instant::now();
+    let error = platform::manual_dispatch(&manual, || {
+        sent.store(true, Ordering::SeqCst);
+        Ok(())
+    }).unwrap_err();
+    fixture.flag("resume-queue");
+    assert!(error.contains("did not confirm") && error.contains("no input was sent"), "{error}");
+    assert!(!sent.load(Ordering::SeqCst), "unacknowledged protection must never run the mutation");
+    assert!(started.elapsed() < Duration::from_secs(2), "hook acknowledgement must be bounded");
+    wait_for("target queue resumes", || !fixture.state().queue_stalled);
+    fixture.assert_desktop_unchanged("failed activation acknowledgement", cover, preflight_cursor,
+        preflight_state.activations, preflight_state.z_changes);
+    fixture.assert_covered(&manual);
+    assert_eq!(fixture.state().button_clicks, preflight_state.button_clicks);
+    assert!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) }.0.is_null());
+    assert!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationAck.v1")) }.0.is_null());
+    fixture.phase("deliberate failed-preflight activation probe");
+    assert!(fixture.attempt_activation(), "failed preflight must release its hook and foreground lock");
+    fixture.restore_cover();
+
+    // Retain the actual hook and stale properties while its monotonic lease
+    // expires. No foreground lock is held here, so successful real activation
+    // proves expiry itself releases the veto even if its parent stops cleanup.
+    use windows::Win32::System::SystemInformation::GetTickCount64;
+    fixture.phase("activation lease expires while hook remains installed");
+    fixture.flush_desktop();
+    let expiry_state = fixture.state();
+    let expiry_cursor = cursor_position().unwrap();
+    let stale = crate::desktop_focus_guard::ActivationVeto::acquire(fixture.target).unwrap();
+    let stale_token = unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) }.0 as usize as u64;
+    assert_ne!(stale_token, 0);
+    wait_for("activation lease expiry", || unsafe { GetTickCount64() } > (stale_token >> 16));
+    assert_eq!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) }.0 as usize as u64, stale_token);
+    fixture.assert_desktop_unchanged("idle activation lease expiry", cover, expiry_cursor,
+        expiry_state.activations, expiry_state.z_changes);
+    fixture.assert_covered(&manual);
+    assert!(fixture.attempt_activation(), "an expired lease must permit ordinary target activation while its hook remains installed");
+    fixture.restore_cover();
+
+    // A fresh action recovers expired metadata. Dropping the old guard must
+    // neither erase the new lease/ACK nor permit its protected activation.
+    fixture.phase("recover an expired activation lease");
+    fixture.flush_desktop();
+    let recovered_state = fixture.state();
+    let recovered_cursor = cursor_position().unwrap();
+    let fresh = super::ManualForegroundGuard::acquire(&manual).unwrap().unwrap();
+    // Both old and new hooks can finish the acknowledgement marker. Drain
+    // the target before comparing their metadata across the older teardown.
+    fixture.flush_desktop();
+    let fresh_token = unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) };
+    let fresh_ack = unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationAck.v1")) };
+    assert_ne!(fresh_token.0 as usize as u64, stale_token);
+    assert!(!fresh_ack.0.is_null());
+    drop(stale);
+    assert_eq!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) }, fresh_token);
+    assert_eq!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationAck.v1")) }, fresh_ack);
+    assert!(!fixture.attempt_activation(), "fresh protection must survive an expired guard's teardown");
+    drop(fresh);
+    fixture.assert_desktop_unchanged("recovered activation protection", cover, recovered_cursor,
+        recovered_state.activations, recovered_state.z_changes);
+    fixture.assert_covered(&manual);
+    assert!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) }.0.is_null());
+    assert!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationAck.v1")) }.0.is_null());
+    fixture.phase("deliberate recovered-guard release probe");
+    assert!(fixture.attempt_activation(), "successful protection teardown must permit normal activation");
     fixture.restore_cover();
     fixture.phase("direct background controls and accessibility discovery");
 
