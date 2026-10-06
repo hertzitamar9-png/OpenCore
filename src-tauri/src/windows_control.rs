@@ -529,6 +529,34 @@ pub(crate) fn restore_cursor_if_unchanged(expected: (i32, i32), original: (i32, 
 mod tests {
     use super::*;
     #[test]
+    fn background_only_rejects_pointer_and_keyboard_actions() {
+        let args = json!({"windowId":1,"x":40,"y":20,"toX":90,"toY":80,
+            "text":"hello","key":"Enter","direction":"down","url":"https://example.com",
+            "backgroundOnly":true,"allowForegroundFallback":true});
+        for action in ["move", "click", "drag", "type", "key", "scroll", "navigate_url"] {
+            assert!(validate_action(action, &args).is_err(), "{action} must not inject foreground input in background mode");
+        }
+    }
+
+    #[test]
+    fn background_only_requires_a_real_window_for_controls() {
+        let args = json!({"windowId":0,"x":40,"y":20,"elementId":1,"text":"hello",
+            "direction":"down","backgroundOnly":true});
+        for action in ["interact", "set_at", "commit_text", "commit_enter", "scroll_at", "invoke", "set_value"] {
+            assert!(validate_action(action, &args).is_err(), "{action} must not target the entire desktop");
+        }
+    }
+
+    #[test]
+    fn background_flags_must_be_boolean() {
+        for flag in ["backgroundOnly", "allowForegroundFallback"] {
+            let mut args = json!({"windowId":1,"x":40,"y":20});
+            args[flag] = json!("false");
+            assert!(validate_action("interact", &args).is_err(), "{flag} must not silently enable a fallback");
+        }
+    }
+
+    #[test]
     fn desktop_commands_are_bounded() {
         assert!(validate_action("execute", &json!({})).is_err());
         assert!(validate_action("click", &json!({"windowId":1,"x":-1,"y":4})).is_err());
@@ -650,3 +678,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(all(windows, test))]
+#[path = "windows_control_tests.rs"]
+mod native_tests;
