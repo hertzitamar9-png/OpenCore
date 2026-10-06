@@ -3,7 +3,10 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tauri::Manager;
 use windows::Win32::Foundation::{HWND, RECT};
-use windows::Win32::UI::WindowsAndMessaging::{GetWindowRect, IsIconic, IsWindow};
+use windows::Win32::UI::WindowsAndMessaging::{
+    IsIconic, IsWindow, SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOOWNERZORDER,
+    SWP_SHOWWINDOW,
+};
 
 const IDLE_GRACE: Duration = Duration::from_millis(350);
 const TRACK_INTERVAL: Duration = Duration::from_millis(32);
@@ -12,6 +15,17 @@ const TRACK_INTERVAL: Duration = Duration::from_millis(32);
 struct Geometry {
     position: (i32, i32),
     size: (u32, u32),
+}
+
+impl Geometry {
+    fn from_rect(rect: RECT) -> Option<Self> {
+        let width = rect.right.checked_sub(rect.left)?;
+        let height = rect.bottom.checked_sub(rect.top)?;
+        (width > 0 && height > 0).then_some(Self {
+            position: (rect.left, rect.top),
+            size: (width as u32, height as u32),
+        })
+    }
 }
 
 struct Activity {
@@ -137,20 +151,19 @@ fn update(app: &tauri::AppHandle, worker: u64) -> bool {
         return false;
     };
     let hwnd = HWND(window_id as *mut std::ffi::c_void);
-    let mut rect = RECT::default();
     let valid = unsafe {
         IsWindow(hwnd).as_bool()
             && !IsIconic(hwnd).as_bool()
-            && GetWindowRect(hwnd, &mut rect).is_ok()
     };
-    let (width, height) = (rect.right - rect.left, rect.bottom - rect.top);
-    if !valid || width <= 0 || height <= 0 {
+    let geometry = valid.then(|| crate::desktop_capture::visible_window_rect(window_id as isize).ok())
+        .flatten().and_then(Geometry::from_rect);
+    let Some(geometry) = geometry else {
         activity.cancel();
         hide(app, &mut activity);
         activity.worker = None;
         crate::desktop_capture::stop_capture();
         return false;
-    }
+    };
     let Some(overlay) = app.get_webview_window("desktop-activity") else {
         activity.cancel();
         activity.visible = false;
@@ -158,22 +171,22 @@ fn update(app: &tauri::AppHandle, worker: u64) -> bool {
         activity.worker = None;
         return false;
     };
-    let geometry = Geometry {
-        position: (rect.left, rect.top),
-        size: (width as u32, height as u32),
-    };
-    let positioned = if activity.geometry.map(|old| old.position) != Some(geometry.position) {
-        overlay.set_position(tauri::PhysicalPosition::new(rect.left, rect.top))
-    } else {
-        Ok(())
-    };
-    let sized =
-        if positioned.is_ok() && activity.geometry.map(|old| old.size) != Some(geometry.size) {
-            overlay.set_size(tauri::PhysicalSize::new(width as u32, height as u32))
-        } else {
-            Ok(())
-        };
-    if positioned.is_err() || sized.is_err() || (!activity.visible && overlay.show().is_err()) {
+    // Move, resize and show together, using the exact DWM frame and physical
+    // coordinates. SWP_NOACTIVATE also protects the first show and DPI changes;
+    // there is no foreground handoff to this transparent overlay.
+    let placed = if activity.geometry != Some(geometry) || !activity.visible {
+        (|| -> Result<(), String> {
+            let _dpi = crate::desktop_capture::PhysicalDpiScope::new()?;
+            let handle = overlay.hwnd().map_err(|error| error.to_string())?;
+            unsafe {
+                SetWindowPos(HWND(handle.0 as _), HWND_TOPMOST,
+                    geometry.position.0, geometry.position.1,
+                    geometry.size.0 as i32, geometry.size.1 as i32,
+                    SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_SHOWWINDOW)
+            }.map_err(|error| error.to_string())
+        })()
+    } else { Ok(()) };
+    if placed.is_err() {
         activity.cancel();
         hide(app, &mut activity);
         activity.worker = None;
@@ -224,6 +237,19 @@ pub(crate) fn begin(app: &tauri::AppHandle, window_id: i64, args: &serde_json::V
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn border_geometry_uses_visible_physical_bounds_on_negative_origin_monitors() {
+        // A 150% display to the left of the primary display. These DWM values
+        // are already physical pixels; no DPI multiplier or outer resize edge
+        // belongs in the overlay position or size.
+        let visible = RECT { left: -1920, top: 132, right: -480, bottom: 972 };
+        let geometry = Geometry::from_rect(visible).unwrap();
+        assert_eq!(geometry.position, (-1920, 132));
+        assert_eq!(geometry.size, (1440, 840));
+        assert!(Geometry::from_rect(RECT { left: 10, top: 20, right: 10, bottom: 40 }).is_none());
+        assert!(Geometry::from_rect(RECT { left: 10, top: 20, right: 9, bottom: 40 }).is_none());
+    }
 
     #[test]
     fn adjacent_actions_keep_the_indicator_active_with_one_worker() {

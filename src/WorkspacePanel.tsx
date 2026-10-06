@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { open as chooseFile } from '@tauri-apps/plugin-dialog';
 import { AppWindow, FileDown, Files, Globe2, MessageSquare, Plus, SlidersHorizontal, X } from 'lucide-react';
@@ -32,6 +32,7 @@ const tabs = [
 
 export function WorkspacePanel({open, tab, width, snapPx, onTabChange, onClose, onWidthChange, onSnapChange, conversationId, onNotice, onOpenConversation, preview, file, browserLocation, sideChat, obscured = false}: Props) {
   const root = useRef<HTMLElement>(null);
+  const snapId = useId();
   const drag = useRef<{x: number; width: number} | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [maxWidth, setMaxWidth] = useState(Math.max(320, window.innerWidth - 390));
@@ -94,7 +95,7 @@ export function WorkspacePanel({open, tab, width, snapPx, onTabChange, onClose, 
       onPointerCancel={() => { drag.current = null; }}
       onPointerUp={event => { finishResize(); if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
     <header className="unified-workspace-header"><Files size={16} /><strong>Workspace</strong><button title="Workspace layout settings" aria-label="Workspace layout settings" aria-expanded={snapOpen} onClick={() => setSnapOpen(current => !current)}><SlidersHorizontal size={15} /></button><button aria-label="Close workspace" title="Close workspace" onClick={onClose}><X size={17} /></button></header>
-    {snapOpen ? <div className="workspace-snap-control"><span>Snap strength</span><input type="range" aria-label="Workspace snap strength" min="0" max="80" value={snapPx} onChange={event => onSnapChange(Number(event.target.value))} /><strong>{snapPx}px</strong></div> : null}
+    {snapOpen ? <div className="workspace-snap-control"><label htmlFor={snapId}>Snap strength</label><input id={snapId} type="range" aria-label="Workspace snap strength" aria-describedby={`${snapId}-help`} aria-valuetext={snapPx === 0 ? 'Off' : `${snapPx} pixel tolerance`} min="0" max="80" value={snapPx} onChange={event => onSnapChange(Number(event.target.value))} /><strong>{snapPx === 0 ? 'Off' : `${snapPx}px`}</strong><p id={`${snapId}-help`}>When you release the resize handle, the sidebar snaps to 35%, 50%, or 65% of the available width if it is within this many pixels. Higher values make snapping easier; 0 turns it off.</p></div> : null}
     <div className="unified-workspace-tabs" role="tablist" aria-label="Workspace views">{tabs.map((item, index) => <button key={item.id} id={`workspace-tab-${item.id}`} ref={node => { tabRefs.current[index] = node; }} role="tab" aria-selected={tab === item.id} aria-controls={`workspace-view-${item.id}`} tabIndex={tab === item.id ? 0 : -1} onClick={() => onTabChange(item.id)} onKeyDown={event => {
       if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
       event.preventDefault();

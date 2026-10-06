@@ -28,6 +28,45 @@ fn config(value: Value) -> PlatformConfig {
 }
 
 #[test]
+fn old_default_accent_migrates_once_and_preserves_other_preferences() {
+    let fixture = Fixture::new();
+    let saved = json!({"systemPrompt":"Keep my preferences", "compactAtTokens":180000,
+        "appearance":{"theme":"light", "accentColor":"#7C5CFF", "fontFamily":"Arial", "fontSize":18,
+            "density":"compact", "reducedMotion":true, "highContrast":true}});
+    fixture.store.set_setting(CONFIG_KEY, &saved.to_string()).unwrap();
+    let migrated = configuration(&fixture.store).unwrap();
+    assert_eq!(migrated.appearance.accent_color, "#245ca8");
+    assert_eq!(migrated.appearance.theme, "light");
+    assert_eq!(migrated.appearance.font_family, "Arial");
+    assert_eq!(migrated.appearance.font_size, 18);
+    assert_eq!(migrated.appearance.density, "compact");
+    assert!(migrated.appearance.reduced_motion && migrated.appearance.high_contrast);
+    assert_eq!(migrated.system_prompt, "Keep my preferences");
+    assert_eq!(migrated.compact_at_tokens, 180000);
+    let reopened = EventStore::open(&fixture.root.join("events.sqlite3")).unwrap();
+    assert_eq!(configuration(&reopened).unwrap(), migrated);
+
+    // A later explicit choice of the old purple is a custom preference.
+    let mut customized = migrated;
+    customized.appearance.accent_color = "#7c5cff".into();
+    save_configuration(&reopened, customized.clone()).unwrap();
+    assert_eq!(configuration(&reopened).unwrap(), customized);
+}
+
+#[test]
+fn accent_migration_keeps_custom_colors_and_records_explicit_first_saves() {
+    let fixture = Fixture::new();
+    let customized = config(json!({"appearance":{"accentColor":"#9944aa", "theme":"system"}}));
+    fixture.store.set_setting(CONFIG_KEY, &serde_json::to_string(&customized).unwrap()).unwrap();
+    assert_eq!(configuration(&fixture.store).unwrap(), customized);
+
+    let fresh = Fixture::new();
+    let purple = config(json!({"appearance":{"accentColor":"#7c5cff"}}));
+    save_configuration(&fresh.store, purple.clone()).unwrap();
+    assert_eq!(configuration(&fresh.store).unwrap(), purple);
+}
+
+#[test]
 fn invalid_settings_do_not_replace_persisted_configuration() {
     let fixture = Fixture::new();
     let good =

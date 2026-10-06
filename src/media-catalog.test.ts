@@ -3,6 +3,43 @@ import catalog from '../src-tauri/resources/model-catalog.json';
 import evidence from '../src-tauri/resources/model-catalog-evidence.json';
 
 describe('media catalog provenance and availability', () => {
+  it('keeps the official Qwen Image pipeline and all twelve verified Unsloth denoisers together', () => {
+    const pipeline = catalog.models.find(model => model.id === 'qwen-image-21');
+    const denoisers = catalog.models.filter(model => model.id.startsWith('qwen-image-21-gguf'));
+    expect(pipeline).toMatchObject({ precision: 'BF16', backend: 'diffusers', runtimeReady: false });
+    expect(denoisers).toHaveLength(12);
+    expect(catalog.models.find(model => model.id === 'qwen-image-21-gguf')?.variantOf).toBe(pipeline?.id);
+    for (const model of denoisers) {
+      const proof = evidence.entries.find(entry => entry.modelId === model.id);
+      expect(proof?.revision).toBe('2c31ccd392b367a6637841a143813320a02dff55');
+      expect(model).toMatchObject({ selectable: false, runtimeReady: false, backend: 'external', installable: true });
+      expect(model.note).toMatch(/denoiser only/i);
+      expect(model.note).toMatch(/text encoder.*VAE/);
+      const file = catalog.artifacts.find(file => file.id === model.artifacts[0]);
+      expect(proof?.publishedFiles).toContainEqual({ filename: file?.filename, bytes: file?.bytes, sha256: file?.sha256 });
+    }
+  });
+
+  it('offers official MiniCPM-o 4.5 GGUF bundles with their audio, speech and vision companions', () => {
+    const models = catalog.models.filter(model => model.id.startsWith('omni-minicpm-o-4-5-gguf-'));
+    expect(models).toHaveLength(11);
+    for (const model of models) {
+      expect(model).toMatchObject({ category: 'omni', variantOf: 'omni-minicpm-o-4-5', backend: 'external', runtimeReady: false, selectable: false, installable: true });
+      expect(model.note).toMatch(/llama\.cpp-omni/);
+      const files = catalog.artifacts.filter(file => model.artifacts.includes(file.id));
+      expect(files.filter(file => /^MiniCPM-o-4_5-.*\.gguf$/.test(file.filename))).toHaveLength(1);
+      for (const filename of ['audio/MiniCPM-o-4_5-audio-F16.gguf', 'vision/MiniCPM-o-4_5-vision-F16.gguf', 'tts/MiniCPM-o-4_5-tts-F16.gguf', 'token2wav-gguf/hifigan2.gguf']) {
+        expect(files.some(file => file.filename === filename)).toBe(true);
+      }
+    }
+  });
+
+  it('describes Qwen3 Omni Captioner as audio input and text output', () => {
+    const model = catalog.models.find(model => model.id === 'omni-qwen3-omni-30b-a3b-captioner');
+    expect(model).toMatchObject({ category: 'omni', backend: 'external', runtimeReady: false, selectable: false, installable: true });
+    expect(model?.note).toMatch(/audio input only.*text output only/);
+    expect(model?.note).toMatch(/30 seconds/);
+  });
   it.each(['video', 'tts', 'voice-cloning', 'ocr', 'omni', 'policy'])('provides ten distinct publisher identities for %s without inventing install support', category => {
     const models = catalog.models.filter(model => model.category === category);
     expect(models.length).toBeGreaterThanOrEqual(10);

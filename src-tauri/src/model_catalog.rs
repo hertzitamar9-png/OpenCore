@@ -69,7 +69,7 @@ pub fn gguf_model(id:&str)->Option<Model> {
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64, weight_bytes: u64 }
+pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64, weight_bytes: u64, artifact_identity: Option<String> }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallProgress {
@@ -271,10 +271,17 @@ pub fn list(root: &Path) -> Result<Library, String> {
         };
         Ok(ModelInfo { model, installed: installed(root, m, &data), external_managed,
             download_bytes: if external_managed { 0 } else { remaining_download_bytes(root, &files)? },
-            total_bytes: files.iter().map(|f| f.bytes).sum(), weight_bytes })
+            total_bytes: files.iter().map(|f| f.bytes).sum(), weight_bytes, artifact_identity: artifact_identity(&files) })
     }).collect::<Result<Vec<_>, _>>()?;
     Ok(Library { models, progress: PROGRESS.lock().map_err(|e| e.to_string())?.clone(),
         disk_free_bytes: free_bytes(root), minimum_free_bytes: MIN_FREE_BYTES })
+}
+fn artifact_identity(files: &[&Artifact]) -> Option<String> {
+    if files.is_empty() { return None; }
+    let mut identities: Vec<_> = files.iter().map(|file|
+        (&file.path, &file.repo, &file.revision, &file.filename, &file.sha256, file.bytes)).collect();
+    identities.sort_unstable();
+    serde_json::to_string(&identities).ok()
 }
 fn update(phase: &str, bytes: u64, current_file: &str, error: Option<String>) {
     if let Ok(mut state) = PROGRESS.lock() {
@@ -517,6 +524,41 @@ pub fn uninstall(root: &Path, id: &str, confirmation_token: &str) -> Result<(), 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn artifact_identity_requires_known_files_and_preserves_delivery_details() {
+        assert_eq!(artifact_identity(&[]), None, "unknown external weight sets are not duplicate downloads");
+        let catalog = manifest().unwrap();
+        let first = catalog.artifacts[0].clone();
+        let second = catalog.artifacts[1].clone();
+        assert_eq!(artifact_identity(&[&first, &second]), artifact_identity(&[&second, &first]));
+        let mut different = first.clone();
+        different.filename = format!("alternative-{}", different.filename);
+        assert_ne!(artifact_identity(&[&first]), artifact_identity(&[&different]), "same size and precision do not prove equal artifacts");
+        different = first.clone();
+        different.path = format!("models/alternative/{}", different.filename);
+        assert_ne!(artifact_identity(&[&first]), artifact_identity(&[&different]), "separate delivery paths stay distinct");
+    }
+    #[test]
+    fn current_image_and_omni_downloads_do_not_claim_runtime_support() {
+        let catalog = manifest().unwrap();
+        let qwen = catalog.models.iter().find(|model| model.id == "qwen-image-21").unwrap();
+        assert_eq!(qwen.precision, "BF16");
+        let denoisers: Vec<_> = catalog.models.iter().filter(|model| model.id.starts_with("qwen-image-21-gguf")).collect();
+        assert_eq!(denoisers.len(), 12);
+        assert_eq!(denoisers.iter().find(|model| model.id == "qwen-image-21-gguf").unwrap().variant_of.as_deref(), Some(qwen.id.as_str()));
+        let omni: Vec<_> = catalog.models.iter().filter(|model| model.id.starts_with("omni-minicpm-o-4-5-gguf-")).collect();
+        assert_eq!(omni.len(), 11);
+        for model in denoisers.iter().chain(omni.iter()) {
+            assert!(model.installable && !model.selectable && !model.runtime_ready, "{}", model.id);
+            assert!(!model.artifacts.is_empty());
+            assert!(model.artifacts.iter().all(|id| catalog.artifacts.iter().any(|file| file.id == *id)));
+        }
+        for model in omni {
+            for component in ["audio/MiniCPM-o-4_5-audio-F16.gguf", "vision/MiniCPM-o-4_5-vision-F16.gguf", "token2wav-gguf/hifigan2.gguf"] {
+                assert!(catalog.artifacts.iter().any(|file| model.artifacts.contains(&file.id) && file.filename == component), "{} needs {}", model.id, component);
+            }
+        }
+    }
     #[test]
     fn approved_local_checkpoint_remains_installed_without_redownload() {
         let root = std::env::temp_dir().join(format!("opencore-local-checkpoint-{}", uuid::Uuid::new_v4()));

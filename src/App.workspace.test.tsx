@@ -22,6 +22,30 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('OpenCore shared workspace', () => {
+  it('uses one sidebar icon and retains the selected workspace view when reopening', async () => {
+    vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com'});
+    vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
+    render(<App />);
+    await screen.findByLabelText('Message OpenCore');
+    expect(screen.queryByRole('button', {name: 'OpenCore Browser'})).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: 'Computer use'})).not.toBeInTheDocument();
+    const toggle = screen.getByRole('button', {name: 'Workspace'});
+    expect(toggle.textContent).toBe('');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    const workspace = screen.getByRole('complementary', {name: 'Workspace'});
+    expect(toggle).toHaveAttribute('aria-controls', workspace.id);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(within(workspace).getByRole('tab', {name: 'Computer'}));
+    expect(await within(workspace).findByLabelText('Window')).toBeVisible();
+    fireEvent.click(within(workspace).getByRole('button', {name: 'Close workspace'}));
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(within(workspace).getByRole('tab', {name: 'Computer'})).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(within(workspace).getByRole('tab', {name: 'Browser'}));
+    await waitFor(() => expect(within(workspace).getByLabelText('Browser address')).toHaveValue('https://example.com'));
+  });
+
   it.each(['Computer', 'closed'])('retains the %s workspace choice when a late frontend browser open emits an event', async (choice) => {
     let resolveOpen!: (result: {open: boolean; url: string}) => void;
     const opened = new Promise<{open: boolean; url: string}>(resolve => { resolveOpen = resolve; });
@@ -33,8 +57,9 @@ describe('OpenCore shared workspace', () => {
     vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
     render(<App />);
     await screen.findByLabelText('Message OpenCore');
-    fireEvent.click(screen.getByRole('button', {name: 'OpenCore Browser'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
+    fireEvent.click(within(workspace).getByRole('tab', {name: 'Browser'}));
     await waitFor(() => expect(command.mock.calls.some(([action]) => action === 'open')).toBe(true));
     if (choice === 'Computer') fireEvent.click(within(workspace).getByRole('tab', {name: 'Computer'}));
     else fireEvent.click(within(workspace).getByRole('button', {name: 'Close workspace'}));
@@ -77,8 +102,9 @@ describe('OpenCore shared workspace', () => {
     const browser = vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com'});
     render(<App />);
     await screen.findByLabelText('Message OpenCore');
-    fireEvent.click(screen.getByRole('button', {name: 'OpenCore Browser'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
+    fireEvent.click(within(workspace).getByRole('tab', {name: 'Browser'}));
     await within(workspace).findByLabelText('Browser address');
     browser.mockClear();
     fireEvent.click(screen.getByRole('button', {name: 'Import chats'}));
@@ -156,8 +182,9 @@ describe('OpenCore shared workspace', () => {
     vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
     render(<App />);
     await screen.findByLabelText('Message OpenCore');
-    fireEvent.click(screen.getByRole('button', {name: 'OpenCore Browser'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
+    fireEvent.click(within(workspace).getByRole('tab', {name: 'Browser'}));
     await waitFor(() => expect(within(workspace).getByLabelText('Browser address')).toHaveValue('https://example.com'));
     expect(within(workspace).getByRole('tab', {name: 'Browser'})).toHaveAttribute('aria-selected', 'true');
     command.mockClear();

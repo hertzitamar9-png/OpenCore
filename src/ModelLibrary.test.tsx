@@ -54,6 +54,46 @@ it('chooses the speech backend separately from the chat model and labels its lan
 });
 
 describe("optional model installation", () => {
+  it("selects distinct BF16 packages by ID and labels setup profiles without zero-byte downloads", async () => {
+    const base: api.InstalledModel = { id: "video-distilled", label: "Video Distilled BF16", description: "Distilled pipeline",
+      precision: "BF16", contextTokens: 0, license: "Publisher", experimental: true, note: "Publisher setup required",
+      selectable: false, installed: false, externalManaged: false, downloadBytes: 0, totalBytes: 0,
+      category: "video", backend: "external", installable: false, runtimeReady: false, setupUrl: "https://example.com/distilled" };
+    const dev = { ...base, id: "video-dev", label: "Video Dev BF16", description: "Full development pipeline", variantOf: base.id, setupUrl: "https://example.com/dev" };
+    const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false,
+      idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, dev], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+      const picker = await screen.findByRole("combobox", { name: /Quantization for Video/ });
+      expect(screen.getByRole("option", { name: /Video Dev BF16/ })).toHaveTextContent(/External setup/);
+      expect(screen.queryByRole("option", { name: /0\.000 GB|0 bytes download/ })).not.toBeInTheDocument();
+      fireEvent.change(picker, { target: { value: dev.id } });
+      expect(picker).toHaveValue(dev.id);
+      expect(screen.getByText(dev.description)).toBeVisible();
+      expect(screen.getByRole("link", { name: "Setup" })).toHaveAttribute("href", dev.setupUrl);
+    } finally { library.mockRestore(); speech.mockRestore(); }
+  });
+
+  it("keeps the exact Native delivery when its precision also exists in ECHO", async () => {
+    const base: api.InstalledModel = { id: "coder", label: "Coder", description: "Chat",
+      precision: "Q8_0", contextTokens: 16384, license: "Apache", experimental: false, note: "Pinned",
+      selectable: true, installed: false, externalManaged: false, downloadBytes: 5e9, totalBytes: 5e9,
+      category: "text", backend: "gguf", memoryMode: "echo", artifactIdentity: "pinned-coder" };
+    const native = { ...base, id: "coder-native", label: "Coder Native", variantOf: base.id, memoryMode: "native" as const };
+    const speech = vi.spyOn(api, "speechStatus").mockResolvedValue({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false,
+      idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, native], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+    const install = vi.spyOn(api, "installModel").mockResolvedValue();
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+      const picker = await screen.findByRole("combobox", { name: /Quantization for Coder/ });
+      fireEvent.change(picker, { target: { value: native.id } });
+      expect(picker).toHaveValue(native.id);
+      fireEvent.click(screen.getByRole("button", { name: "Install" }));
+      await waitFor(() => expect(install).toHaveBeenCalledWith(native.id));
+    } finally { library.mockRestore(); speech.mockRestore(); install.mockRestore(); }
+  });
   it("lets a user choose a real quant variant and shows its file size and estimated VRAM", async () => {
     const base: api.InstalledModel = { id: "qwen38-distill-9b", label: "Qwen 3.8 Distill 9B", description: "Coding GGUF",
       precision: "Q8_0", contextTokens: 16384, license: "Apache", experimental: false, note: "Pinned",

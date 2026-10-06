@@ -494,7 +494,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   onConversationId, onRefresh, onNotice, onExport, onRename, onDelete,
   pinned, project, projectId, projects, onPin, onMoveProject, onCreateProject,
   defaultSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, updateControl,
-  onOpenWorkspace, onOpenPreview, onOpenBrowserLink, onOpenFileRecord, onSettingsChange, onActivityChange, onWorkspaceObscuredChange,
+  onOpenPreview, onOpenBrowserLink, onOpenFileRecord, onSettingsChange, onActivityChange, onWorkspaceObscuredChange,
   initialSettings, embedded = false, inferenceBlocked, sendMessage = api.sendChatMessage,
 }: Props) {
   const [draft, setDraft] = useState(initialDraft?.text || "");
@@ -897,8 +897,6 @@ export const AssistantConversation = memo(function AssistantConversation({
         <span>{client || "OpenCore"} · {chatTurnCount} messages{activityCount ? ` · ${activityCount} activities` : ""}</span>
       </div>
       <div className="conversation-actions">
-        <button className="workspace-open-button" onClick={() => onOpenWorkspace?.("browser")} title="OpenCore Browser" aria-label="OpenCore Browser"><Globe2 size={16} /><span>Browse</span></button>
-        <button className="workspace-open-button" onClick={() => onOpenWorkspace?.("computer")} title="Computer use" aria-label="Computer use"><AppWindow size={16} /><span>Computer</span></button>
         {conversationId ? /claude|codex/i.test(client) ? <span className="source-project-locked" title="Linked to the source project folder"><FolderOpen size={15} /> {projects.find((item) => item.id === projectId)?.name || project || client}</span> : <ProjectPicker value={projectId} legacyName={project && !projectId ? project : undefined} projects={projects} onChange={onMoveProject} onCreate={onCreateProject} /> : null}
         {updateControl}
         {conversationId ? <button onClick={onPin} title={pinned ? "Unpin conversation" : "Pin conversation"} aria-label={pinned ? "Unpin conversation" : "Pin conversation"}>{pinned ? <PinOff size={16} /> : <Pin size={16} />}</button> : null}

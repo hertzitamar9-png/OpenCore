@@ -16,6 +16,8 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 const CONFIG_KEY: &str = "agent_platform_configuration_v1";
+const DEFAULT_ACCENT_COLOR: &str = "#245ca8";
+const ACCENT_DEFAULT_MIGRATION_KEY: &str = "agent_platform_blue_default_v1";
 const LEDGER_FILENAME: &str = "agent-platform.sqlite3";
 const REDACTED: &str = "[REDACTED]";
 const MAX_QUERY_BYTES: usize = 512;
@@ -80,7 +82,7 @@ impl Default for AppearanceConfig {
     fn default() -> Self {
         Self {
             theme: "dark".into(),
-            accent_color: "#7c5cff".into(),
+            accent_color: DEFAULT_ACCENT_COLOR.into(),
             font_family: "system".into(),
             font_size: 14,
             density: "comfortable".into(),
@@ -209,12 +211,27 @@ pub struct MemoryRecord {
 }
 
 pub fn configuration(store: &EventStore) -> Result<PlatformConfig, String> {
-    let config = match store.get_setting(CONFIG_KEY)? {
+    let _guard = CONFIG_WRITE.lock().map_err(|error| error.to_string())?;
+    configuration_unlocked(store)
+}
+
+fn configuration_unlocked(store: &EventStore) -> Result<PlatformConfig, String> {
+    let mut config: PlatformConfig = match store.get_setting(CONFIG_KEY)? {
         Some(value) => serde_json::from_str(&value)
             .map_err(|error| format!("Saved agent configuration is invalid: {error}"))?,
         None => PlatformConfig::default(),
     };
     validate_configuration(&config)?;
+    if store.get_setting(ACCENT_DEFAULT_MIGRATION_KEY)?.as_deref() != Some("1") {
+        // Only the historical default changes. After this first read, an explicit
+        // choice of that same purple is preserved like any other custom accent.
+        if config.appearance.accent_color.eq_ignore_ascii_case("#7c5cff") {
+            config.appearance.accent_color = DEFAULT_ACCENT_COLOR.into();
+            let encoded = serde_json::to_string(&config).map_err(|error| error.to_string())?;
+            store.set_setting(CONFIG_KEY, &encoded)?;
+        }
+        store.set_setting(ACCENT_DEFAULT_MIGRATION_KEY, "1")?;
+    }
     Ok(config)
 }
 
@@ -239,6 +256,7 @@ fn persist_configuration(
         return Err("Agent configuration exceeds 1 MiB".into());
     }
     store.set_setting(CONFIG_KEY, &encoded)?;
+    store.set_setting(ACCENT_DEFAULT_MIGRATION_KEY, "1")?;
     Ok(config)
 }
 
@@ -724,7 +742,7 @@ fn set_settings(store: &EventStore, data: &Path, args: &Value) -> Result<Value, 
     let source = args["source"].as_str().unwrap_or("agent/app_control");
     bounded_text(source, "source", 2_048, true)?;
     let _guard = CONFIG_WRITE.lock().map_err(|error| error.to_string())?;
-    let before = configuration(store)?;
+    let before = configuration_unlocked(store)?;
     let original = serde_json::to_value(&before).map_err(|error| error.to_string())?;
     let mut patched = original.clone();
     merge_patch(&mut patched, &args["settings"])?;

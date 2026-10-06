@@ -4,8 +4,8 @@ export interface ClaudeBridgeStatus { installed: boolean; connected: boolean; ac
 const emptyClaudeBridge: ClaudeBridgeStatus = { installed: false, connected: false, active: false, pluginPath: '', launchCommand: '', lastSeen: null, minimumVersion: '2.1.287' };
 export const claudeBridgeStatus = (): Promise<ClaudeBridgeStatus> => desktop() ? invoke('claude_bridge_status') : Promise.resolve(emptyClaudeBridge);
 export const installClaudeBridge = () => invoke<ClaudeBridgeStatus>('install_claude_bridge');
-export interface MusicStudioStatus { installed: boolean; running: boolean; owned: boolean; url: string | null; folder: string; modelLoaded: boolean; error: string | null }
-export const musicStudioStatus = () => desktop() ? invoke<MusicStudioStatus>('music_studio_status') : Promise.resolve({ installed: false, running: false, owned: false, url: null, folder: '', modelLoaded: false, error: null });
+export interface MusicStudioStatus { installed: boolean; running: boolean; owned: boolean; url: string | null; folder: string; modelLoaded: boolean; integrationCurrent?: boolean; error: string | null }
+export const musicStudioStatus = (): Promise<MusicStudioStatus> => desktop() ? invoke<MusicStudioStatus>('music_studio_status') : Promise.resolve({ installed: false, running: false, owned: false, url: null, folder: '', modelLoaded: false, error: null });
 export const startMusicStudio = () => invoke<MusicStudioStatus>('start_music_studio');
 export interface AppUpdateCheck { currentVersion: string; available: boolean; version: string | null }
 export const checkLatestAppVersion = (): Promise<AppUpdateCheck> => desktop()
@@ -78,6 +78,7 @@ export interface InstalledModel {
   category?: string; backend?: string; runtimeReady?: boolean; runtimeConnected?: boolean; installable?: boolean; sourceUrl?: string; setupUrl?: string;
   variantOf?: string; memoryMode?: "native" | "echo"; runtimeModelPath?: string; visionProjectorPath?: string;
   vramWeightMultiplier?: number; weightBytes?: number;
+  artifactIdentity?: string | null;
   runtimePrecision?: { sourceFormat: string; runtimeDtype: string; estimatedRuntimeBytes: number; runtimeMemoryNote: string; runtimeComponent: string };
 }
 export interface ModelLibrary {
@@ -89,11 +90,15 @@ export async function modelLibrary(): Promise<ModelLibrary> {
   return { models: modelCatalog.models.map((model) => {
     const files = modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id));
     const exactBytes = files.reduce((sum, file) => sum + file.bytes, 0);
-    const weightFiles = model.runtimeModelPath
+    const artifactIdentity = files.length ? JSON.stringify(files.map(file =>
+      [file.path, file.repo, file.revision, file.filename, file.sha256, file.bytes]).sort((a, b) =>
+        JSON.stringify(a) < JSON.stringify(b) ? -1 : JSON.stringify(a) > JSON.stringify(b) ? 1 : 0)) : null;
+    const pinnedWeights = "weightArtifacts" in model ? model.weightArtifacts : undefined;
+    const weightFiles = pinnedWeights?.length ? files.filter(file => pinnedWeights.includes(file.id)) : model.runtimeModelPath
       ? files.filter(file => file.path === model.runtimeModelPath || file.path === model.visionProjectorPath)
       : files.filter(file => /\.(gguf|safetensors|bin|pt|pth|ckpt|onnx|model|tflite)$/i.test(file.filename));
     return { ...model, memoryMode: model.memoryMode === "echo" ? "echo" as const : "native" as const,
-      installed: false, externalManaged: false, downloadBytes: exactBytes, totalBytes: exactBytes,
+      installed: false, externalManaged: false, downloadBytes: exactBytes, totalBytes: exactBytes, artifactIdentity,
       weightBytes: weightFiles.length ? weightFiles.reduce((sum, file) => sum + file.bytes, 0) : exactBytes };
   }),
     diskFreeBytes: 240e9, minimumFreeBytes: 64 * 1024 * 1024, progress: null };

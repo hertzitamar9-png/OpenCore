@@ -76,6 +76,11 @@ pub struct StudioRuntime {
     pub source_dir: Option<PathBuf>,
     pub runner: Option<PathBuf>,
 }
+#[derive(Default)]
+struct MusicAdmission {
+    request_sent: bool,
+    run: Option<String>,
+}
 fn builtin_service(model_id: &str) -> bool {
     model_id == "yue2" || model_catalog::is_speech_model(model_id)
 }
@@ -122,6 +127,7 @@ fn worker_request(root: &Path, job: &StudioJob, runtime: &StudioRuntime) -> Resu
 }
 pub struct StudioManager {
     notify: Mutex<Option<Box<dyn Fn(&StudioJob) + Send + Sync>>>,
+    save_gate: Mutex<()>,
     db: Mutex<rusqlite::Connection>,
     root: PathBuf,
     running: Mutex<HashMap<String, CancellationToken>>,
@@ -137,6 +143,7 @@ impl StudioManager {
         db.execute_batch("PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS runtimes(model_id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS continuations(id TEXT PRIMARY KEY,payload TEXT NOT NULL,user_entry INTEGER NOT NULL,status TEXT NOT NULL);").map_err(|e|e.to_string())?;
         let this = Arc::new(Self {
             notify: Mutex::new(None),
+            save_gate: Mutex::new(()),
             db: Mutex::new(db),
             root,
             running: Mutex::new(HashMap::new()),
@@ -155,8 +162,30 @@ impl StudioManager {
         Ok(this)
     }
     fn save(&self, job: &StudioJob) -> Result<(), String> {
-        self.db.lock().map_err(|e|e.to_string())?.execute("INSERT INTO jobs(id,payload) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",rusqlite::params![job.id,serde_json::to_string(job).map_err(|e|e.to_string())?]).map_err(|e|e.to_string())?;
-        self.notify(job);
+        // Keep event delivery in the same order as durable writes. Otherwise an
+        // older running event could arrive after the accepted cancelled event.
+        let _save = self.save_gate.lock().map_err(|error| error.to_string())?;
+        let mut saved = job.clone();
+        {
+            let db = self.db.lock().map_err(|error| error.to_string())?;
+            let previous: Option<StudioJob> = db.query_row("SELECT payload FROM jobs WHERE id=?1", [&job.id], |row| row.get::<_, String>(0)).ok().and_then(|text| serde_json::from_str(&text).ok());
+            // A stale progress/error/completion write must never undo an accepted cancel.
+            if let Some(previous) = previous {
+                // The backend ID acknowledges a launched worker and cannot be erased
+                // by a cancel snapshot captured before that acknowledgement.
+                if saved.backend_run.is_none() { saved.backend_run = previous.backend_run; }
+                if previous.status == "cancelled" {
+                    saved.status = "cancelled".into();
+                    saved.error = None;
+                    if job.status != "cancelled" || previous.progress["cleanupPending"] == false {
+                        saved.stage = previous.stage;
+                        saved.progress["cleanupPending"] = previous.progress["cleanupPending"].clone();
+                    }
+                }
+            }
+            db.execute("INSERT INTO jobs(id,payload) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",rusqlite::params![saved.id,serde_json::to_string(&saved).map_err(|e|e.to_string())?]).map_err(|e|e.to_string())?;
+        }
+        self.notify(&saved);
         Ok(())
     }
     pub fn attach_app(&self, app: tauri::AppHandle) {
@@ -453,8 +482,18 @@ impl StudioManager {
         Ok(())
     }
     pub fn cancel(&self, id: &str) -> Result<(), String> {
-        if let Some(token) = self.running.lock().map_err(|e| e.to_string())?.get(id) {
+        let token = self.running.lock().map_err(|e| e.to_string())?.get(id).cloned();
+        if let Some(token) = token {
             token.cancel();
+            let mut job = self.get(id)?;
+            if active(&job.status) {
+                job.status = "cancelled".into();
+                job.stage = "Cancelled · releasing resources".into();
+                job.error = None;
+                job.progress["cleanupPending"] = json!(true);
+                job.updated_at = chrono::Utc::now().to_rfc3339();
+                self.save(&job)?;
+            }
             Ok(())
         } else {
             Err("This job is no longer active".into())
@@ -527,8 +566,11 @@ impl StudioManager {
         let id = job.id.clone();
         tauri::async_runtime::spawn(async move {
             let result = this.run(&core, &app, &id, &token).await;
+            let result = if token.is_cancelled() { Err("Generation cancelled".to_string()) } else { result };
             if let Err(error) = result {
                 let saved = this.get(&id).ok();
+                let mut progress = saved.as_ref().map(|job| job.progress.clone()).unwrap_or(json!({}));
+                progress["cleanupPending"] = json!(false);
                 let _ = this.update(
                     &id,
                     if token.is_cancelled() {
@@ -541,12 +583,9 @@ impl StudioManager {
                     } else {
                         "Generation failed"
                     },
-                    saved
-                        .as_ref()
-                        .map(|j| j.progress.clone())
-                        .unwrap_or(json!({})),
+                    progress,
                     saved.map(|j| j.outputs).unwrap_or_default(),
-                    Some(error),
+                    (!token.is_cancelled()).then_some(error),
                 );
             }
             if let Ok(mut running) = this.running.lock() {
@@ -643,7 +682,7 @@ impl StudioManager {
             && (music.model_loaded
                 || music_studio::request("GET", "/api/status", None)
                     .await
-                    .is_ok_and(|s| s["status"] == "running"))
+                    .is_ok_and(|s| music_studio::worker_active(&s)))
         {
             return Err("Music Studio has an active or loaded model. Finish it or unload it before this job.".into());
         }
@@ -711,29 +750,15 @@ impl StudioManager {
                 tokio::select! {_=token.cancelled()=>{},_=tokio::time::sleep(Duration::from_millis(500))=>{}}
             }
         } else if job.request.model_id == "yue2" {
-            let result = self.run_music(&job, token).await;
-            if result.is_err() {
-                // Only cancel the run created by this request. Wait for cooperative cancellation before releasing the GPU lease.
-                if let Some(run) = self.get(id)?.backend_run {
-                    if music_studio::request("GET", "/api/status", None)
-                        .await
-                        .is_ok_and(|s| s["run"] == run && s["status"] == "running")
-                    {
-                        let _ =
-                            music_studio::request("POST", "/api/cancel", Some(&json!({}))).await;
-                        for _ in 0..120 {
-                            if music_studio::request("GET", "/api/status", None)
-                                .await
-                                .is_ok_and(|s| s["status"] != "running")
-                            {
-                                break;
-                            }
-                            tokio::time::sleep(Duration::from_millis(500)).await;
-                        }
-                    }
-                    let _ =
-                        music_studio::request("POST", "/api/model/unload", Some(&json!({}))).await;
-                }
+            let mut admission = MusicAdmission::default();
+            let result = self.run_music(&job, token, &mut admission).await;
+            if result.is_err() && admission.request_sent {
+                // Do not release the GPU lease on a timer or an unknown HTTP result.
+                // Only cancel the run created here, then verify worker and model cleanup.
+                // A lost response or failed DB write does not prove the worker
+                // never started. Keep the lease even without an acknowledged ID;
+                // observe unknown runs without cancelling someone else's work.
+                self.wait_music_cleanup(id, admission.run.as_deref(), token).await;
             }
             result
         } else if model_catalog::is_speech_model(&job.request.model_id) {
@@ -745,13 +770,43 @@ impl StudioManager {
                 .await
         }
     }
-    async fn run_music(&self, job: &StudioJob, token: &CancellationToken) -> Result<(), String> {
+    async fn wait_music_cleanup(&self, id: &str, run: Option<&str>, token: &CancellationToken) {
+        let mut cancellation_sent = false;
+        let mut cleanup_notice = false;
+        loop {
+            let cleaned = match music_studio::request("GET", "/api/status", None).await {
+                Ok(status) if music_studio::worker_active(&status) && status["worker_finished"] != true => {
+                    if run.is_some_and(|run| status["run"].as_str() == Some(run)) && !cancellation_sent {
+                        cancellation_sent = music_studio::request("POST", "/api/cancel", Some(&json!({"expectedRun":run}))).await.is_ok();
+                    }
+                    false
+                }
+                Ok(_) => music_studio::request("POST", "/api/model/unload", Some(&json!({}))).await.is_ok()
+                    && music_studio::request("GET", "/api/info", None).await.is_ok_and(|info| info["model_loaded"] == false && info["worker_active"] != true),
+                Err(_) => false,
+            };
+            if cleaned { return; }
+            if !cleanup_notice {
+                if let Ok(job) = self.get(id) {
+                    let mut progress = job.progress;
+                    progress["cleanupPending"] = json!(true);
+                    let _ = self.update(id, if token.is_cancelled() {"cancelled"} else {"running"},
+                        if token.is_cancelled() {"Cancelled · waiting for resources to be released"} else {"Waiting for Music Studio resources to be released"}, progress, job.outputs, None);
+                }
+                cleanup_notice = true;
+            }
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+    }
+    async fn run_music(&self, job: &StudioJob, token: &CancellationToken, admission: &mut MusicAdmission) -> Result<(), String> {
         if token.is_cancelled() { return Err("Cancelled before Music Studio started".into()); }
         music_studio::start_music_studio_unchecked().await?;
+        if token.is_cancelled() { return Err("Cancelled before Music Studio started".into()); }
         let current = music_studio::request("GET", "/api/status", None).await?;
-        if current["status"] == "running" {
+        if music_studio::worker_active(&current) {
             return Err("Music Studio already has an active generation".into());
         }
+        admission.request_sent = true;
         let result =
             music_studio::request("POST", "/api/generate", Some(&job.request.settings)).await?;
         let run = result["run"]
@@ -761,13 +816,14 @@ impl StudioManager {
         if run.is_empty() || run.contains(['/', '\\', ':']) || run == "." || run == ".." {
             return Err("Music Studio returned an unsafe generation folder".into());
         }
+        admission.run = Some(run.clone());
         let mut saved = self.get(&job.id)?;
         saved.backend_run = Some(run.clone());
         self.save(&saved)?;
         let mut cancellation_sent = false;
         loop {
             if token.is_cancelled() && !cancellation_sent {
-                music_studio::request("POST", "/api/cancel", Some(&json!({}))).await?;
+                music_studio::request("POST", "/api/cancel", Some(&json!({"expectedRun":run}))).await?;
                 cancellation_sent = true;
             }
             let status = music_studio::request("GET", "/api/status", None).await?;
@@ -775,11 +831,18 @@ impl StudioManager {
                 return Err("Music Studio switched to a different generation".into());
             }
             let state = status["status"].as_str().unwrap_or("unknown");
+            // Cancelling inside the embedded studio must cancel its OpenCore job too.
+            if state == "cancelled" { token.cancel(); }
             let stage = status["stage"].as_str().unwrap_or("Generating music");
             let dir = music_studio::root().join("studio-output").join(&run);
             let outputs = output_files(&dir)?;
             match state {
                 "done" => {
+                    if music_studio::worker_active(&status) {
+                        self.update(&job.id, "running", "Finishing music and releasing resources", status.clone(), outputs, None)?;
+                        tokio::time::sleep(Duration::from_millis(250)).await;
+                        continue;
+                    }
                     if outputs.is_empty() {
                         return Err("Music Studio finished without output files".into());
                     }
@@ -788,6 +851,12 @@ impl StudioManager {
                     return Ok(());
                 }
                 "error" | "cancelled" => {
+                    if music_studio::worker_active(&status) && status["worker_finished"] != true {
+                        self.update(&job.id, if token.is_cancelled() {"cancelled"} else {"running"},
+                            if token.is_cancelled() {"Cancelled · releasing resources"} else {"Releasing resources after a Music Studio error"}, json!({"cleanupPending":true}), outputs, None)?;
+                        tokio::time::sleep(Duration::from_millis(250)).await;
+                        continue;
+                    }
                     let error = status["error"].as_str().unwrap_or(stage).to_string();
                     let _ =
                         music_studio::request("POST", "/api/model/unload", Some(&json!({}))).await;
@@ -798,7 +867,11 @@ impl StudioManager {
                 }
                 _ => return Err(format!("Unexpected Music Studio state: {state}")),
             }
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            if cancellation_sent {
+                tokio::time::sleep(Duration::from_millis(250)).await;
+            } else {
+                tokio::select! { _=token.cancelled()=>{}, _=tokio::time::sleep(Duration::from_secs(1))=>{} }
+            }
         }
     }
     async fn run_speech(
@@ -1553,6 +1626,36 @@ mod tests {
         assert!(validate_request("text", &r).is_err());
     }
     #[test]
+    fn cancel_is_saved_immediately_and_late_worker_writes_do_not_revert_it() {
+        let root = std::env::temp_dir().join(format!("studio-cancel-{}", uuid::Uuid::new_v4()));
+        let manager = StudioManager::new(root.clone()).unwrap();
+        let job = StudioJob { id:"cancel-now".into(), category:"music".into(), request:StudioRequest {model_id:"yue2".into(),prompt:"A song".into(),settings:json!({}),conversation_id:None},status:"running".into(),stage:"Verifying files".into(),created_at:"today".into(),updated_at:"today".into(),backend_run:None,progress:json!({}),outputs:vec![],error:None };
+        manager.save(&job).unwrap();
+        let token = CancellationToken::new();
+        manager.running.lock().unwrap().insert(job.id.clone(), token.clone());
+        manager.cancel(&job.id).unwrap();
+        assert!(token.is_cancelled());
+        let cancelled = manager.get(&job.id).unwrap();
+        assert_eq!(cancelled.status, "cancelled");
+        assert_eq!(cancelled.progress["cleanupPending"], true);
+        assert!(manager.busy(), "GPU lease remains occupied until the worker finishes cleanup");
+        manager.update(&job.id, "failed", "Generation failed", json!({}), vec![], Some("Late failure".into())).unwrap();
+        let mut stale = job.clone(); stale.backend_run = Some("accepted-run".into());
+        manager.save(&stale).unwrap();
+        let saved = manager.get(&job.id).unwrap();
+        assert_eq!(saved.status, "cancelled");
+        assert!(saved.error.is_none());
+        assert_eq!(saved.backend_run.as_deref(), Some("accepted-run"));
+        manager.update(&job.id, "cancelled", "Cancelled", json!({"cleanupPending":false}), vec![], None).unwrap();
+        let mut stale_cancel = cancelled.clone();
+        stale_cancel.backend_run = None;
+        manager.save(&stale_cancel).unwrap();
+        assert_eq!(manager.get(&job.id).unwrap().progress["cleanupPending"], false);
+        assert_eq!(manager.get(&job.id).unwrap().backend_run.as_deref(), Some("accepted-run"));
+        drop(manager);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn interrupted_jobs_keep_the_original_request_on_reopen() {
         let root = std::env::temp_dir().join(format!("studio-test-{}", uuid::Uuid::new_v4()));
         let manager = StudioManager::new(root.clone()).unwrap();
@@ -1628,7 +1731,7 @@ mod tests {
         };
         manager.save(&job).unwrap();
         manager
-            .run_music(&job, &CancellationToken::new())
+            .run_music(&job, &CancellationToken::new(), &mut MusicAdmission::default())
             .await
             .unwrap();
         let result = manager.get(&job.id).unwrap();

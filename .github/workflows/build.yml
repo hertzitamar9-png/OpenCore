@@ -9,7 +9,11 @@ permissions:
   contents: write
 
 jobs:
+  native-check:
+    if: github.ref != 'refs/heads/main'
+    uses: ./.github/workflows/native-check.yml
   windows:
+    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

@@ -3,7 +3,7 @@ import { BookOpen, Boxes, CheckCheck, Database, FlaskConical, History, Palette, 
 import { openLocalPath } from "./api";
 import { listen } from "@tauri-apps/api/event";
 import {
-  applyPlatformAppearance, directoryLines, errorMessage,
+  applyPlatformAppearance, DEFAULT_ACCENT_COLOR, directoryLines, errorMessage,
   executePlatformAction, executeTestingLabAction, listPlatformPlugins, listPlatformSkills,
   loadTestingLabProfiles, parseMcpServers, parseTestingLabProfiles, saveTestingLabProfiles,
   searchPlatformActivity, searchPlatformMemories, usePlatformConfiguration,
@@ -368,7 +368,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
         </div></fieldset>
         <div className="platform-form-grid">
           <div><label className="platform-field" htmlFor="platform-accent">Accent color</label><div className="platform-color-field">
-            <input aria-label="Pick accent color" type="color" value={/^#[0-9a-fA-F]{6}$/.test(draft.appearance.accentColor) ? draft.appearance.accentColor : "#7c5cff"} disabled={locked} onChange={event => appearance({ accentColor: event.target.value })} />
+            <input aria-label="Pick accent color" type="color" value={/^#[0-9a-fA-F]{6}$/.test(draft.appearance.accentColor) ? draft.appearance.accentColor : DEFAULT_ACCENT_COLOR} disabled={locked} onChange={event => appearance({ accentColor: event.target.value })} />
             <input id="platform-accent" value={draft.appearance.accentColor} disabled={locked} spellCheck={false} maxLength={7} onChange={event => appearance({ accentColor: event.target.value })} />
           </div></div>
           <div><label className="platform-field" htmlFor="platform-text-size">Text size (pixels)</label><input id="platform-text-size" type="number" min={10} max={24} step={1} value={numberText.fontSize} disabled={locked} aria-invalid={!Number.isInteger(draft.appearance.fontSize) || draft.appearance.fontSize < 10 || draft.appearance.fontSize > 24} onChange={event => { const text = event.target.value; setNumberText(current => ({ ...current, fontSize: text })); appearance({ fontSize: text === "" ? NaN : Number(text) }); }} /></div>

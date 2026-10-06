@@ -15,13 +15,19 @@ type Props = {
 type Point = { x: number; y: number };
 type Context = { windowId: number | null; revision: number; activity: number };
 type Editor = { windowId: number; at: Point };
-type BackgroundResult = { message?: string; backgroundVerified?: boolean; warning?: { message?: string } };
+type BackgroundResult = { message?: string; backgroundVerified?: boolean; warning?: { message?: string }; inputMode?: string };
 type Interaction = BackgroundResult & { editable?: boolean; value?: string; activated?: boolean; inputMode?: string };
 type TextResult = BackgroundResult & { updated?: boolean; submitted?: boolean };
 type Feedback = { error: boolean; warning?: boolean; message: string };
 type PendingEdit = { context: Context; at: Point; text: string };
-const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false };
+const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false, manualControl: true };
 const DESKTOP_VIEW_ONLY = "Entire desktop is view only. Select an app window to use background controls.";
+
+function requireBackgroundInput(result: BackgroundResult) {
+  if (result.inputMode && !["accessibility", "window-message"].includes(result.inputMode)) {
+    throw new Error("This control does not support background interaction. Foreground input is disabled in Computer; use a supported background control in the app.");
+  }
+}
 
 export function DesktopPanel({ onClose, onNotice, embedded = false, active = true, onExpandedChange }: Props) {
   const [windows, setWindows] = useState<api.DesktopWindow[]>([]);
@@ -100,7 +106,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     const latest = () => current(target) && sequence === captureSequence.current;
     if (manual) setCapturing(true);
     try {
-      const listed = await api.desktopCommand<{ windows: api.DesktopWindow[] }>("list");
+      const listed = await api.desktopCommand<{ windows: api.DesktopWindow[] }>("list", BACKGROUND_CONTROL);
       if (!latest()) return;
       setWindows(previous => {
         // Accessibility enumeration can briefly omit a still-open window.
@@ -110,7 +116,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
           ? [...listed.windows, retained] : listed.windows;
       });
       if (target.windowId == null) return;
-      const captured = await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: target.windowId });
+      const captured = await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: target.windowId, ...BACKGROUND_CONTROL });
       if (!latest()) return;
       if (captured.windowId !== target.windowId || captured.bounds.width <= 0 || captured.bounds.height <= 0) {
         throw new Error("The selected window capture is unavailable. Refresh the capture or choose another window.");
@@ -171,6 +177,8 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     updates.current = updates.current.catch(() => {}).then(async () => {
       if (!current(edit.context) || captureError.current) return;
       const result = await api.desktopCommand<TextResult>("set_at", { windowId: edit.context.windowId, ...edit.at, text: edit.text, ...BACKGROUND_CONTROL });
+      requireBackgroundInput(result);
+      if (!result.updated) throw new Error(result.message || "Background text update could not be confirmed. Your local draft was kept.");
       if (current(edit.context) && (result.warning || result.backgroundVerified === false)) completed(result, "Text updated.");
       if (current(edit.context) && localDraft.current?.windowId === edit.context.windowId &&
         localDraft.current.at.x === edit.at.x && localDraft.current.at.y === edit.at.y && localDraft.current.text === edit.text) localDraft.current = null;
@@ -187,7 +195,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     const timer = window.setTimeout(() => { pending.current = null; queueEdit(update); }, 180);
     pending.current = { timer, edit: update };
   };
-  const control = async <T,>(action: string, args: Record<string, unknown>, done: (result: T, target: Context) => void) => {
+  const control = async <T extends BackgroundResult,>(action: string, args: Record<string, unknown>, done: (result: T, target: Context) => void) => {
     const target = context();
     if (!current(target) || target.windowId == null || controlBusy.current || captureError.current) return;
     if (target.windowId === 0) { setFeedback({ error: false, message: DESKTOP_VIEW_ONLY }); return; }
@@ -207,6 +215,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
       if (!current(target) || captureError.current) return;
       const result = await api.desktopCommand<T>(action, { windowId: target.windowId, ...args, ...BACKGROUND_CONTROL });
       if (!current(target)) return;
+      requireBackgroundInput(result);
       done(result, target);
       void refresh(true);
     } catch (error) { if (current(target)) report(error); }

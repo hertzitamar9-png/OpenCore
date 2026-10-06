@@ -18,6 +18,8 @@ static DELAY_BUTTON_HANDLER: AtomicBool = AtomicBool::new(false);
 static BUTTON_HANDLER_ENTERED: AtomicBool = AtomicBool::new(false);
 static INDEPENDENT_INPUT_COMPLETE: AtomicBool = AtomicBool::new(false);
 static BUTTON_HANDLER_SAW_INPUT: AtomicBool = AtomicBool::new(false);
+static TRY_TARGET_FOREGROUND: AtomicBool = AtomicBool::new(false);
+static TARGET_FOREGROUND_ALLOWED: AtomicBool = AtomicBool::new(false);
 
 unsafe extern "system" fn target_proc(
     hwnd: HWND,
@@ -28,6 +30,9 @@ unsafe extern "system" fn target_proc(
     match message {
         WM_COMMAND if wparam.0 & 0xffff == 101 && wparam.0 >> 16 == 0 => {
             BUTTON_NOTIFICATION_SOURCE.store(lparam.0 as usize, Ordering::SeqCst);
+            if TRY_TARGET_FOREGROUND.swap(false, Ordering::SeqCst) {
+                TARGET_FOREGROUND_ALLOWED.store(SetForegroundWindow(hwnd).as_bool(), Ordering::SeqCst);
+            }
             if DELAY_BUTTON_HANDLER.swap(false, Ordering::SeqCst) {
                 BUTTON_HANDLER_ENTERED.store(true, Ordering::SeqCst);
                 let deadline = Instant::now() + Duration::from_millis(750);
@@ -119,6 +124,8 @@ impl Fixture {
         BUTTON_HANDLER_ENTERED.store(false, Ordering::SeqCst);
         INDEPENDENT_INPUT_COMPLETE.store(false, Ordering::SeqCst);
         BUTTON_HANDLER_SAW_INPUT.store(false, Ordering::SeqCst);
+        TRY_TARGET_FOREGROUND.store(false, Ordering::SeqCst);
+        TARGET_FOREGROUND_ALLOWED.store(false, Ordering::SeqCst);
         let (sender, receiver) = mpsc::sync_channel(1);
         let thread = thread::spawn(move || unsafe {
             let target = CreateWindowExW(
@@ -255,6 +262,7 @@ impl Fixture {
     }
 
     fn args(&self, control: isize) -> Value {
+        let _dpi = crate::desktop_capture::PhysicalDpiScope::new().unwrap();
         let (mut window, mut child) = (RECT::default(), RECT::default());
         unsafe {
             GetWindowRect(hwnd(self.target), &mut window).unwrap();
@@ -263,10 +271,11 @@ impl Fixture {
         json!({"windowId":self.target,
             "x":child.left - window.left + (child.right - child.left) / 2,
             "y":child.top - window.top + (child.bottom - child.top) / 2,
-            "backgroundOnly":true,"allowForegroundFallback":true})
+            "backgroundOnly":true,"allowForegroundFallback":true,"manualControl":true})
     }
 
     fn assert_covered(&self, args: &Value) {
+        let _dpi = crate::desktop_capture::PhysicalDpiScope::new().unwrap();
         let mut rect = RECT::default();
         unsafe {
             GetWindowRect(hwnd(self.target), &mut rect).unwrap();
@@ -350,6 +359,93 @@ fn wait_for(operation: &str, mut predicate: impl FnMut() -> bool) {
     }
 }
 
+fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
+    cursor: (i32, i32), activations: usize, z_changes: usize) {
+    use windows::Win32::Foundation::{CloseHandle, HANDLE};
+    use windows::Win32::System::Threading::{GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
+
+    struct ProcessHandle(HANDLE);
+    impl Drop for ProcessHandle {
+        fn drop(&mut self) { unsafe { let _ = CloseHandle(self.0); } }
+    }
+    struct Receipt(std::path::PathBuf);
+    impl Drop for Receipt {
+        fn drop(&mut self) { let _ = std::fs::remove_file(&self.0); }
+    }
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+
+    // Exercise the actual parent/helper handshake, including a same-process
+    // target notification handler that tries to activate its own window.
+    let clicks = BUTTON_CLICKS.load(Ordering::SeqCst);
+    TRY_TARGET_FOREGROUND.store(true, Ordering::SeqCst);
+    let delegated = runtime.block_on(crate::windows_control::command("interact".into(), button.clone()))
+        .expect("headless helper must invoke the covered fixture control");
+    assert_eq!(delegated["activated"], true);
+    assert_eq!(delegated["inputMode"], "window-message");
+    assert!(!TARGET_FOREGROUND_ALLOWED.load(Ordering::SeqCst),
+        "foreground protection must cover a same-process target notification handler");
+    assert_eq!(BUTTON_CLICKS.load(Ordering::SeqCst), clicks + 1);
+    fixture.assert_desktop_unchanged("headless button dispatch", foreground, cursor, activations, z_changes);
+    fixture.assert_covered(button);
+
+    let mut edit = fixture.args(fixture.edit);
+    edit["text"] = json!("headless helper background text");
+    let delegated = runtime.block_on(crate::windows_control::command("commit_text".into(), edit))
+        .expect("headless helper must update the covered native edit");
+    assert_eq!(delegated["updated"], true);
+    assert_eq!(delegated["submitted"], false);
+    assert_eq!(fixture.edit_text(), "headless helper background text");
+    fixture.assert_desktop_unchanged("headless text dispatch", foreground, cursor, activations, z_changes);
+
+    // Both an expired dispatch and a dropped command future must end their
+    // exact owned subprocess, then release foreground protection. Hold its
+    // process handle before teardown so an exited/reused PID cannot fake this.
+    for cancel in [false, true] {
+        let activations = TARGET_ACTIVATIONS.load(Ordering::SeqCst);
+        let z_changes = TARGET_Z_CHANGES.load(Ordering::SeqCst);
+        let receipt = Receipt(std::env::temp_dir().join(format!("opencore-desktop-helper-{}.pid", uuid::Uuid::new_v4())));
+        let mut args = button.clone();
+        args["processReceipt"] = json!(receipt.0.to_string_lossy());
+        let mut command = crate::desktop_helper::helper_command().unwrap();
+        command.env("OPENCORE_DESKTOP_HELPER_TEST_MODE", "hang_dispatch");
+        let started = Instant::now();
+        runtime.block_on(async {
+            let mut operation = Box::pin(crate::desktop_helper::execute("interact".into(), args, command));
+            let process = loop {
+                tokio::select! {
+                    result = &mut operation => panic!("blocked fixture ended before its receipt: {result:?}"),
+                    _ = tokio::time::sleep(Duration::from_millis(10)) => {}
+                }
+                if let Some(pid) = std::fs::read_to_string(&receipt.0).ok().and_then(|text| text.parse::<u32>().ok()) {
+                    break ProcessHandle(unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) }.unwrap());
+                }
+                assert!(started.elapsed() < Duration::from_secs(10), "headless fixture never reached its dispatch");
+            };
+            if cancel {
+                drop(operation);
+            } else {
+                let error = operation.await.unwrap_err();
+                assert!(error.contains("dispatch deadline") && error.contains("may have completed"), "{error}");
+            }
+            let deadline = Instant::now() + Duration::from_secs(2);
+            loop {
+                let mut code = 259u32; // STILL_ACTIVE returned by GetExitCodeProcess.
+                unsafe { GetExitCodeProcess(process.0, &mut code).unwrap(); }
+                if code != 259 { break; }
+                assert!(Instant::now() < deadline, "the owned blocked desktop helper survived teardown");
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        });
+        assert!(started.elapsed() < Duration::from_secs(10), "blocked manual dispatch retained its lock too long");
+        fixture.assert_desktop_unchanged("blocked helper teardown", foreground, cursor, activations, z_changes);
+        assert!(unsafe { SetForegroundWindow(hwnd(fixture.target)) }.as_bool(),
+            "helper teardown must release its foreground lock; this activation is fixture verification only");
+        wait_for("released helper foreground verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.target));
+        assert!(unsafe { SetForegroundWindow(hwnd(fixture.cover)) }.as_bool());
+        wait_for("helper foreground fixture restore", || unsafe { GetForegroundWindow() } == hwnd(fixture.cover));
+    }
+}
+
 #[test]
 fn strict_accessibility_client_disables_automatic_pattern_focus() {
     assert_eq!(
@@ -371,6 +467,43 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
         "foreground fixture setup",
         || unsafe { GetForegroundWindow() } == hwnd(fixture.cover),
     );
+    // The same process's UIA client and an application's notification handler
+    // can both attempt activation. The production manual dispatch guard must
+    // block an explicit SetForegroundWindow call too, then release on errors.
+    let manual = json!({"manualControl":true});
+    let cover = unsafe { GetForegroundWindow() };
+    let activated = platform::manual_dispatch(&manual, || {
+        Ok(unsafe { SetForegroundWindow(hwnd(fixture.target)) }.as_bool())
+    }).expect("manual dispatch must protect its foreground process");
+    assert!(!activated, "the dispatch must deny target foreground activation, including a same-process call");
+    assert_eq!(unsafe { GetForegroundWindow() }, cover);
+    let exact_error: Result<(), String> = platform::manual_dispatch(&manual, || Err("fixture dispatch error".into()));
+    assert_eq!(exact_error, Err("fixture dispatch error".into()));
+    assert!(unsafe { SetForegroundWindow(hwnd(fixture.target)) }.as_bool(),
+        "a failed dispatch must release its lock; this activation is fixture verification only");
+    wait_for("released dispatch foreground verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.target));
+    assert!(unsafe { SetForegroundWindow(hwnd(fixture.cover)) }.as_bool());
+    wait_for("foreground fixture restore after dispatch verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.cover));
+
+    // A worker entering from an unaware thread must obtain physical rectangles
+    // and restore that thread's exact original context when finished.
+    use windows::Win32::UI::HiDpi::{AreDpiAwarenessContextsEqual, GetThreadDpiAwarenessContext,
+        SetThreadDpiAwarenessContext, DPI_AWARENESS_CONTEXT_UNAWARE};
+    let original_dpi = unsafe { SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_UNAWARE) };
+    assert!(!original_dpi.0.is_null());
+    let physical = crate::desktop_capture::physical_window_rect(fixture.target)
+        .expect("physical rectangle must be available from an unaware worker");
+    assert!(unsafe { AreDpiAwarenessContextsEqual(GetThreadDpiAwarenessContext(), DPI_AWARENESS_CONTEXT_UNAWARE) }.as_bool(),
+        "physical bounds must restore the worker's DPI context");
+    let expected = {
+        let _dpi = crate::desktop_capture::PhysicalDpiScope::new().unwrap();
+        let mut rect = RECT::default();
+        unsafe { GetWindowRect(hwnd(fixture.target), &mut rect).unwrap(); }
+        rect
+    };
+    assert_eq!((physical.left, physical.top, physical.right, physical.bottom),
+        (expected.left, expected.top, expected.right, expected.bottom));
+    unsafe { SetThreadDpiAwarenessContext(original_dpi); }
     let foreground = unsafe { GetForegroundWindow() };
     let cursor = cursor_position().expect("fixture desktop cursor");
     let activations = TARGET_ACTIVATIONS.load(Ordering::SeqCst);
@@ -636,10 +769,15 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     );
     println!("background native fixture: button invoked, text updated, list scrolled {}->{}, unsupported canvas/Enter rejected; foreground={:#x}, cursor=({}, {}), no target activation or z changes", before_scroll, after_scroll, foreground.0 as usize, cursor.0, cursor.1);
 
+    verify_headless_helper(&fixture, &button, foreground, cursor, activations, z_changes);
+
     // Change desktop input from another thread only after the real notification
     // handler begins. Its completed button outcome must survive the warning,
     // and the background action must not restore the independent cursor input.
     let cursor_before_delay = cursor_position().unwrap();
+    let clicks_before_delay = BUTTON_CLICKS.load(Ordering::SeqCst);
+    let activations = TARGET_ACTIVATIONS.load(Ordering::SeqCst);
+    let z_changes = TARGET_Z_CHANGES.load(Ordering::SeqCst);
     let (left, width) = unsafe {
         (
             GetSystemMetrics(SM_XVIRTUALSCREEN),
@@ -680,7 +818,7 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     );
     assert_eq!(
         BUTTON_CLICKS.load(Ordering::SeqCst),
-        3,
+        clicks_before_delay + 1,
         "the notification must execute once; a warning must not invite duplicate activation"
     );
     assert_eq!(completed["activated"], true);

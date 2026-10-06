@@ -3,10 +3,16 @@ import { Check, Download, ExternalLink, HardDrive, PackageMinus } from "lucide-r
 import * as api from "./api";
 import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
-import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, modelMemoryMode } from "./model-variants";
+import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, matchingModelVariant, modelMemoryMode } from "./model-variants";
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
+const downloadLabel = (model: api.InstalledModel) => model.totalBytes > 0
+  ? model.externalManaged ? `Existing weights · ${exactFileSize(model.totalBytes)}` : `${exactFileSize(model.totalBytes)} download`
+  : model.runtimeConnected ? "Runtime manages weights" : model.installable === false
+    ? "External setup · no app download" : model.installed ? "No download required" : "Download size unavailable";
+const vramEstimate = (model: api.InstalledModel) => model.selectable && model.backend !== "external" && (model.weightBytes || model.totalBytes)
+  ? estimateGgufVramRange(model.weightBytes || model.totalBytes, model.contextTokens, model.vramWeightMultiplier || 1) : null;
 export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotice }: {
   selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void;
   runtimeActive: boolean; onNotice: (notice: string) => void;
@@ -67,7 +73,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
     </div>
-    <p className="model-library-note">Each listed download shows the pinned file size in GB and bytes. VRAM is an estimate for full GPU weight offload; actual use varies by backend and layer offload. KV/state for these profiles is kept in system RAM, so longer context does not multiply the weight VRAM estimate. ECHO is available for text models; media generators use their task-specific runtime.</p>
+    <p className="model-library-note">Downloads show the pinned package size in GB and bytes. External setup entries have no app download. Text runtime VRAM estimates assume full GPU weight offload and system RAM for KV/state; actual use varies by backend. Media packages may require separate components and a compatible runtime. ECHO is available for text models.</p>
     {runtimeActive ? <p className="model-library-note">Stop the runtime to install or select another model. Uninstalling an active model requires confirmation to stop it first.</p> : null}
     {error ? <div role="alert">{error}<button onClick={() => void refresh()}>Retry</button></div> : null}
     {progress ? <div className="model-install-progress" role={progress.error ? "alert" : "status"}>
@@ -78,24 +84,24 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     <div className="model-category-tabs" role="group" aria-label="Model categories">{categories.map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}<span>{modelGroups.filter(group => id === 'all' || categoryOf(group.model) === id).length}</span></button>)}</div>
     <div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => category === 'all' || categoryOf(group.model) === category).length}</span></button>)}</div>
     <div className="model-library-grid">{visibleModels.map((group) => {
-      const allVariants = allModelGroups.find(item => item.id === group.id)?.variants || group.variants;
-      const remembered = allVariants.find(item => item.id === quantization[group.id]);
-      const matchingRemembered = remembered && group.variants.find(item => item.precision === remembered.precision);
-      const selected = allVariants.find(item => item.id === selectedProfile);
-      const matchingSelection = selected && group.variants.find(item => item.precision === selected.precision);
+      const remembered = library?.models.find(item => item.id === quantization[group.id]);
+      const matchingRemembered = matchingModelVariant(group, remembered);
+      const selected = library?.models.find(item => item.id === selectedProfile);
+      const matchingSelection = matchingModelVariant(group, selected);
       const chosenId = matchingRemembered?.id || matchingSelection?.id || group.variants[0]?.id || group.id;
       const model = group.variants.find(item => item.id === chosenId) || group.model;
-      const vram = model.weightBytes || model.totalBytes ? estimateGgufVramRange(model.weightBytes || model.totalBytes, model.contextTokens, model.vramWeightMultiplier || 1) : null;
+      const profileSelected = group.aliases[selectedProfile] === model.id;
+      const vram = vramEstimate(model);
       const modeVariants = group.variants;
-      return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : model.id === selectedProfile) ? "selected" : ""}`}>
+      return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : profileSelected) ? "selected" : ""}`}>
       <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
       {modeVariants.length > 1 ? <label className="model-quantization-picker">Mode and quantization
         <select aria-label={`Quantization for ${group.model.label}`} value={model.id} disabled={Boolean(pending)} onChange={event => setQuantization(current => ({ ...current, [group.id]: event.target.value }))}>
-          {modeVariants.map(variant => { const estimate = variant.weightBytes || variant.totalBytes ? estimateGgufVramRange(variant.weightBytes || variant.totalBytes, variant.contextTokens, variant.vramWeightMultiplier || 1) : null; return <option key={variant.id} value={variant.id}>{modelMemoryMode(variant) === "echo" ? "ECHO" : "Native"} · {variant.precision} · {exactFileSize(variant.totalBytes)} download{estimate ? ` · ${gb(estimate.minBytes)}–${gb(estimate.maxBytes)} VRAM est.` : " · VRAM estimate unavailable"}</option>; })}
+          {modeVariants.map(variant => { const estimate = vramEstimate(variant); const needsPackageLabel = variant.backend === "external" || modeVariants.some(other => other.id !== variant.id && other.precision === variant.precision && modelMemoryMode(other) === modelMemoryMode(variant)); return <option key={variant.id} value={variant.id}>{modelMemoryMode(variant) === "echo" ? "ECHO" : "Native"} · {variant.precision}{needsPackageLabel ? ` · ${variant.label}` : ""} · {downloadLabel(variant)}{estimate ? ` · ${gb(estimate.minBytes)}–${gb(estimate.maxBytes)} VRAM est.` : " · VRAM estimate unavailable"}</option>; })}
         </select>
       </label> : null}
-      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{model.totalBytes ? exactFileSize(model.totalBytes) : model.installable === false ? "See setup" : "Already downloaded"}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Unavailable until a supported weight file is selected</dd></div> : null}</dl>
+      <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{downloadLabel(model)}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.runtimeReady === false || model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Requires a compatible runtime and its complete component set</dd></div> : null}</dl>
       <small>{model.note}</small>
       {model.runtimeConnected ? <p className="model-library-note">Connected runtime. Model weights are managed separately by this runtime.</p> : null}
       {['video','tts','voice-cloning','ocr','omni','policy'].includes(categoryOf(model)) ? <button onClick={()=>window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:categoryOf(model)}))}>Open Media Studio</button> : null}
@@ -123,8 +129,8 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}
       <footer>{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
         <Download size={15} />{pending === model.id ? "Working…" : model.externalManaged ? model.category === 'music' ? 'Use existing weights' : "Prepare speech runtime" : "Install"}
-      </button> : null}{model.selectable ? <button className={selectedProfile === model.id ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
-        {selectedProfile === model.id ? <Check size={15} /> : null}{selectedProfile === model.id ? "Selected" : "Use model"}
+      </button> : null}{model.selectable ? <button className={profileSelected ? "active" : ""} disabled={!model.installed || runtimeActive || installing || Boolean(pending)} onClick={() => onSelect(model.id as RuntimeProfile)}>
+        {profileSelected ? <Check size={15} /> : null}{profileSelected ? "Selected" : "Use model"}
       </button> : model.speechLanguage ? <button disabled={!model.installed || installing || Boolean(pending)} aria-label={model.id === speech.modelId ? `${model.label} selected for dictation` : `Use ${model.label} for dictation`} onClick={() => void updateSpeech(() => api.setSpeechModel(model.id))}>
         {model.id === speech.modelId ? <Check size={15} /> : null}{model.id === speech.modelId ? "Dictation selected" : "Use for dictation"}
       </button> : null}{model.setupUrl && <a href={model.setupUrl} target="_blank" rel="noreferrer" className="model-setup-link"><ExternalLink size={15} />Setup</a>}{model.installed ? <button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Uninstall ${model.label}`} onClick={() => setDeleting(model)}><PackageMinus size={15} />Uninstall</button> : null}</footer>

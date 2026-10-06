@@ -98,7 +98,7 @@ def source_gguf_artifact(catalog: dict, model: dict) -> dict | None:
 def refreshable_parents(catalog: dict) -> list[tuple[dict, dict]]:
     result = []
     for model in catalog["models"]:
-        if model.get("variantOf"):
+        if model.get("variantOf") and not model.get("refreshQuantizations"):
             continue
         regular_text_gguf = (model.get("selectable") and model.get("category") == "text"
                              and model.get("backend") == "gguf" and model.get("memoryMode", "echo") == "echo")
@@ -196,6 +196,10 @@ def add_repository_variants(catalog: dict, parent: dict, repository: dict) -> in
             "runtimeModelPath": primary_paths[0], "variantOf": parent_id,
             "weightArtifacts": artifact_ids.copy(),
         })
+        if parent.get("category") == "image":
+            experimental["note"] = (f"Published {precision} GGUF denoiser only, pinned to {revision}. "
+                                    "Also requires its matching text encoder and VAE plus a compatible image runtime; "
+                                    "app image runtime setup is separate and local generation is unverified.")
         if is_text_gguf:
             experimental["memoryMode"] = "echo"
         if projector_path:

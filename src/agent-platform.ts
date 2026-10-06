@@ -118,6 +118,7 @@ export interface TestingLabAction {
 }
 
 export const PLATFORM_SETTINGS_EVENT = "opencore-agent-settings-changed";
+export const DEFAULT_ACCENT_COLOR = "#245ca8";
 export const VERIFICATION_OPTIONS: { value: VerificationMode; label: string; description: string }[] = [
   { value: "no", label: "No checks", description: "Skip added review turns. The requested work and its acceptance criteria still apply." },
   { value: "default", label: "Default", description: "A bounded review of changed work with evidence from the tools used." },
@@ -130,7 +131,7 @@ export function defaultPlatformConfiguration(): PlatformConfig {
     systemPrompt: "", compactAtTokens: 200000, verification: "default", repairAttempts: 3,
     skillDirectories: [], pluginDirectories: [], disabledSkills: [], disabledPlugins: [],
     mcpServers: [], activityEnabled: true, memoryEnabled: true,
-    appearance: { theme: "dark", accentColor: "#7c5cff", fontFamily: "system", fontSize: 14,
+    appearance: { theme: "dark", accentColor: DEFAULT_ACCENT_COLOR, fontFamily: "system", fontSize: 14,
       density: "comfortable", reducedMotion: false, highContrast: false },
   };
 }
@@ -341,7 +342,7 @@ function colorLuminance(color: string): number {
   return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
 }
 function readableAccent(color: string, light: boolean): string {
-  const surface = colorLuminance(light ? "#e9ebf2" : "#20242b");
+  const surface = colorLuminance(light ? "#e9ebf2" : "#142536");
   const rgb = [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16));
   for (let step = 0; step <= 64; ++step) {
     const adjusted = `#${rgb.map(channel => Math.round(channel + ((light ? 0 : 255) - channel) * step / 64).toString(16).padStart(2, "0")).join("")}`;
@@ -362,9 +363,10 @@ export function applyPlatformAppearance(appearance: AppearanceConfig, root: HTML
   const font = appearance.fontFamily === "system" ? '"Segoe UI", system-ui, sans-serif'
     : `"${appearance.fontFamily.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}", system-ui, sans-serif`;
   const luminance = colorLuminance(appearance.accentColor);
+  const linkColor = readableAccent(appearance.accentColor, theme === "light");
   const variables: Record<string, string> = {
     "--platform-accent": appearance.accentColor, "--blue": appearance.accentColor,
-    "--platform-link": readableAccent(appearance.accentColor, theme === "light"),
+    "--platform-link": linkColor, "--violet": linkColor,
     "--platform-accent-text": luminance > .179 ? "#000000" : "#ffffff",
     "--blue-soft": `${appearance.accentColor}25`, "--platform-font-family": font,
     "--platform-font-size": `${appearance.fontSize}px`, "--chat-font-size": `${appearance.fontSize}px`,
@@ -372,11 +374,11 @@ export function applyPlatformAppearance(appearance: AppearanceConfig, root: HTML
     ...(theme === "light" ? {
       "--bg": "#f4f5f8", "--surface": "#ffffff", "--surface-2": "#f1f2f6", "--surface-3": "#e9ebf2",
       "--text": "#202432", "--muted": "#596477", "--line": "#c6cbd6", "--line-soft": "#e0e3ea",
-      "--green": "#116348", "--amber": "#87531a", "--red": "#a72337", "--violet": "#6445b2",
+      "--green": "#116348", "--amber": "#87531a", "--red": "#a72337",
     } : {
-      "--bg": "#090b0f", "--surface": "#101217", "--surface-2": "#171a20", "--surface-3": "#20242b",
-      "--text": "#edf0f3", "--muted": "#abb3c0", "--line": "#3b424e", "--line-soft": "#282d35",
-      "--green": "#35d38a", "--amber": "#f5ad32", "--red": "#ff646d", "--violet": "#9b6cff",
+      "--bg": "#08121b", "--surface": "#0c1823", "--surface-2": "#101f2c", "--surface-3": "#142536",
+      "--text": "#e3edf7", "--muted": "#abb3c0", "--line": "#263b4d", "--line-soft": "#1b2d3c",
+      "--green": "#35d38a", "--amber": "#f5ad32", "--red": "#ff646d",
     }),
   };
   if (appearance.highContrast) Object.assign(variables, theme === "light" ? {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CircleStop, FolderOpen, Play, RefreshCw } from 'lucide-react';
 import * as api from './api';
 import { StudioModelSetup } from './StudioModelSetup';
@@ -83,9 +83,22 @@ export function StudioJobs({ category, onNotice }: { category: string; onNotice:
   const [jobs, setJobs] = useState<api.StudioJob[]>([]);
   const [error, setError] = useState('');
   const [previews, setPreviews] = useState<Record<string, { dataUrl: string; mime: string }>>({});
-  async function refresh() { try { setJobs((await api.listStudioJobs()).filter(job => job.category === category)); } catch (cause) { setError(String(cause)); } }
+  const cancellationPending = useRef(new Set<string>());
+  const cancelledView = (job: api.StudioJob): api.StudioJob => ({...job, status: 'cancelled', stage: 'Cancelled · releasing resources', error: null, progress: {...job.progress, cancellationPending: true}});
+  async function refresh() { try { setJobs((await api.listStudioJobs()).filter(job => job.category === category).map(job => {
+    if (!cancellationPending.current.has(job.id)) return job;
+    if (active(job)) return cancelledView(job);
+    cancellationPending.current.delete(job.id);
+    return job;
+  })); } catch (cause) { setError(String(cause)); } }
   useEffect(() => { void refresh(); const timer = setInterval(() => void refresh(), 1500); return () => clearInterval(timer); }, [category]);
-  async function cancel(id: string) { try { await api.cancelStudioJob(id); await refresh(); } catch (cause) { onNotice(String(cause)); } }
+  async function cancel(id: string) {
+    if (cancellationPending.current.has(id)) return;
+    cancellationPending.current.add(id);
+    setJobs(current => current.map(job => job.id === id ? cancelledView(job) : job));
+    try { await api.cancelStudioJob(id); await refresh(); }
+    catch (cause) { cancellationPending.current.delete(id); await refresh(); onNotice(`Could not cancel: ${String(cause)}`); }
+  }
   async function preview(job: api.StudioJob, path: string) { try { const value = await api.studioOutputPreview(job.id, path); setPreviews(current => ({ ...current, [path]: value })); } catch (cause) { onNotice(String(cause)); } }
   return <section className="studio-jobs" aria-label="Generation jobs"><header><h2>Generations</h2><button onClick={() => void refresh()} aria-label="Refresh generations"><RefreshCw size={16} /></button></header>
     {error && <p role="alert">{error}</p>}
@@ -97,7 +110,7 @@ export function StudioJobs({ category, onNotice }: { category: string; onNotice:
       {Object.keys(job.progress).length > 0 && <details><summary>Progress</summary><pre>{JSON.stringify(job.progress, null, 2)}</pre></details>}
       {job.outputs.map(path => <div className="studio-output" key={path}><span>{path.split(/[\\/]/).pop()}</span><button onClick={() => void api.openStudioOutput(job.id, path).catch(cause => onNotice(String(cause)))}><FolderOpen size={14} />Open folder</button>{/\.(png|jpe?g|webp|flac|wav|mp3|mp4|webm|gif)$/i.test(path) && <button onClick={() => void preview(job, path)}>Preview</button>}
         {previews[path] && (previews[path].mime.startsWith('image/') ? <img src={previews[path].dataUrl} alt="Generated output" /> : previews[path].mime.startsWith('audio/') ? <audio controls src={previews[path].dataUrl} /> : <video controls src={previews[path].dataUrl} />)}</div>)}
-      {!active(job) && <button onClick={() => void api.submitStudioJob({ ...job.request, conversationId: null }).then(() => refresh()).catch(cause => onNotice(String(cause)))}>Generate another version</button>}
+      {!active(job) && !job.progress.cancellationPending && !job.progress.cleanupPending && <button onClick={() => void api.submitStudioJob({ ...job.request, conversationId: null }).then(() => refresh()).catch(cause => onNotice(String(cause)))}>Generate another version</button>}
     </article>)}
   </section>;
 }

@@ -4,12 +4,14 @@ pub fn apply(action: &str, args: &mut Value, keep_window_in_front: bool) -> Resu
     let fields = args
         .as_object_mut()
         .ok_or("Desktop action arguments must be an object")?;
-    for flag in ["backgroundOnly", "allowForegroundFallback"] {
+    for flag in ["backgroundOnly", "allowForegroundFallback", "manualControl"] {
         if fields.get(flag).is_some_and(|value| !value.is_boolean()) {
             return Err(format!("{flag} must be true or false"));
         }
     }
     let background = keep_window_in_front
+        || fields.get("manualControl").and_then(Value::as_bool) == Some(true)
+        || fields.get("allowForegroundFallback").and_then(Value::as_bool) == Some(false)
         || fields
             .get("backgroundOnly")
             .and_then(Value::as_bool)
@@ -98,5 +100,23 @@ mod tests {
             assert!(!shows_activity(action));
         }
         assert!(shows_activity("interact"));
+    }
+
+    #[test]
+    fn refusing_fallback_and_manual_controls_enforce_the_entire_background_policy() {
+        for policy in [
+            json!({"allowForegroundFallback":false}),
+            json!({"manualControl":true,"backgroundOnly":false,"allowForegroundFallback":true}),
+        ] {
+            let mut args = policy.clone();
+            apply("interact", &mut args, false).unwrap();
+            assert_eq!(args["backgroundOnly"], true);
+            assert_eq!(args["allowForegroundFallback"], false);
+            for action in ["move", "click", "drag", "type", "key", "scroll", "navigate_url"] {
+                assert!(apply(action, &mut policy.clone(), false).is_err(),
+                    "{action} must respect an explicit background policy");
+            }
+        }
+        assert!(apply("interact", &mut json!({"manualControl":"true"}), false).is_err());
     }
 }

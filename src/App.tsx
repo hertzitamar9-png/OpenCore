@@ -33,6 +33,7 @@ import {
   Network,
   Play,
   PanelLeft,
+  PanelRight,
   Pin,
   PinOff,
   RefreshCw,
@@ -1252,15 +1253,15 @@ export default function App() {
     void listen<{source?: string} | null>('opencore-open-native-browser', ({payload}) => { if (!disposed && payload?.source === 'agent') openWorkspace('browser'); }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
     return () => { disposed = true; stop?.(); };
   }, [openWorkspace]);
-  useEffect(() => { void api.listStudioJobs().then(jobs => { for (const job of jobs) studioJobs.current.set(job.id, job.status); setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status))); }).catch(() => {}); }, []);
+  useEffect(() => { void api.listStudioJobs().then(jobs => { for (const job of jobs) studioJobs.current.set(job.id, job.progress?.cleanupPending ? 'stopping' : job.status); setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing','stopping'].includes(status))); }).catch(() => {}); }, []);
   useEffect(() => {
     let disposed = false;
     let stop: (() => void) | undefined;
     const announced = new Set<string>();
     void listen<api.StudioJob>("opencore-studio-job", ({payload}) => {
       if (disposed) return;
-      studioJobs.current.set(payload.id, payload.status);
-      setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status)));
+      studioJobs.current.set(payload.id, payload.progress?.cleanupPending ? 'stopping' : payload.status);
+      setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing','stopping'].includes(status)));
       if (!['completed','failed','cancelled'].includes(payload.status)) return;
       const conversation = payload.request?.conversationId;
       if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
@@ -1609,7 +1610,7 @@ export default function App() {
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
-      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><Files size={16} /><span>Workspace</span></button></div></header>
+      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
       <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
     </div>
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />

@@ -56,6 +56,7 @@ class GgufVariantRefreshTests(unittest.TestCase):
             "id": "qwen-image-21-gguf", "label": "Qwen Image GGUF", "precision": "Q6_K",
             "artifacts": ["base"], "selectable": False, "installable": True,
             "category": "image", "backend": "external", "refreshQuantizations": True,
+            "variantOf": "qwen-image-21",
         }
         catalog = {"models": [parent], "artifacts": [{
             "id": "base", "path": "models/library/qwen-image/qwen-image-Q6_K.gguf",
@@ -71,6 +72,8 @@ class GgufVariantRefreshTests(unittest.TestCase):
         self.assertEqual(variant["backend"], "external")
         self.assertFalse(variant["selectable"])
         self.assertNotIn("memoryMode", variant)
+        self.assertIn("text encoder", variant["note"])
+        self.assertIn("runtime setup", variant["note"])
         self.assertEqual([item["id"] for item in catalog["models"]], ["qwen-image-21-gguf", variant["id"]])
 
 

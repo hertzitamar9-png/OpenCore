@@ -1,6 +1,4 @@
-/* Legacy components keep their original dark material colors as fallbacks.
-   This palette replaces those colors in light mode without changing geometry,
-   gradients, component hierarchy, or the colors of displayed media. */
+/* Shared palette tokens let every component follow the selected theme and accent. */
 html[data-platform-theme] {
   --panel: var(--surface);
   --border: var(--line);
@@ -10,7 +8,7 @@ html[data-platform-theme] {
   color: var(--text);
   background: var(--bg);
 }
-html[data-platform-theme="light"], html[data-platform-high-contrast="true"] {
+html[data-platform-theme] {
   --theme-canvas: var(--bg);
   --theme-panel: var(--surface);
   --theme-raised: var(--surface-2);
@@ -33,6 +31,14 @@ html[data-platform-theme="light"], html[data-platform-high-contrast="true"] {
   --theme-warning-border: color-mix(in srgb, var(--amber) 45%, var(--line));
   --theme-text-shadow: transparent;
 }
+html[data-platform-theme="dark"] {
+  --theme-highlight: #ffffff0a;
+  --theme-shadow-soft: #020a1214;
+  --theme-shadow: #020a123d;
+  --theme-shadow-strong: #020a1299;
+  --theme-backdrop: #020a128c;
+  --theme-overlay: #08121bdd;
+}
 html[data-platform-theme="light"] {
   --theme-highlight: #ffffffb3;
   --theme-shadow-soft: #1822360a;
@@ -49,12 +55,12 @@ html[data-platform-theme="light"] :is(.page-heading h1, .section-heading strong,
   color: var(--text);
   text-shadow: none;
 }
-html[data-platform-theme="light"] :is(button.primary, .platform-primary, .send-button, .jobs-primary) {
+html[data-platform-theme] :is(button.primary, .platform-primary, .send-button, .jobs-primary) {
   color: var(--platform-accent-text);
   background: var(--platform-accent);
   border-color: var(--platform-link);
 }
-html[data-platform-theme="light"] :is(button.primary, .platform-primary, .send-button, .jobs-primary):hover:not(:disabled) {
+html[data-platform-theme] :is(button.primary, .platform-primary, .send-button, .jobs-primary):hover:not(:disabled) {
   color: var(--platform-accent-text);
   background: var(--platform-accent);
   filter: brightness(.95);

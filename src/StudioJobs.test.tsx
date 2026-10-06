@@ -162,3 +162,18 @@ it('shows chat-submitted prompts, progress and failures without calling them com
   expect(screen.getByText(/Original lyrics/)).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'Cancel'}));await waitFor(()=>expect(cancel).toHaveBeenCalledWith('job'));
 });
+it('acknowledges cancellation immediately while the worker stops and ignores stale polling',async()=>{
+  const job:api.StudioJob={id:'cancel-now',category:'music',request:{modelId:'yue2',prompt:'A song',settings:{}},status:'running',stage:'Verifying model files',createdAt:'today',updatedAt:'today',backendRun:null,progress:{},outputs:[],error:null};
+  vi.spyOn(api,'listStudioJobs').mockResolvedValue([job]);
+  let finish!:()=>void;
+  vi.spyOn(api,'cancelStudioJob').mockImplementation(()=>new Promise<void>(resolve=>{finish=resolve;}));
+  render(<StudioJobs category="music" onNotice={vi.fn()}/>);
+  fireEvent.click(await screen.findByRole('button',{name:'Cancel'}));
+  expect(screen.getByText(/cancelled · Cancelled/)).toBeVisible();
+  expect(screen.queryByRole('button',{name:'Cancel'})).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Generate another version'})).not.toBeInTheDocument();
+  finish();
+  await waitFor(()=>expect(api.listStudioJobs).toHaveBeenCalledTimes(2));
+  expect(screen.getByText(/cancelled · Cancelled/)).toBeVisible();
+  expect(screen.queryByText(/running · Verifying/)).not.toBeInTheDocument();
+});
