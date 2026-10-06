@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-use windows::core::w;
+use windows::core::{w, HSTRING};
 use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::*;
 
@@ -60,6 +60,7 @@ struct Fixture {
     button: isize,
     edit: isize,
     canvas: isize,
+    list: isize,
     thread: Option<thread::JoinHandle<()>>,
 }
 
@@ -142,6 +143,30 @@ impl Fixture {
             )
             .unwrap();
             SetWindowLongPtrW(canvas, GWLP_WNDPROC, canvas_proc as *const () as isize);
+            let list = CreateWindowExW(
+                WS_EX_CLIENTEDGE,
+                w!("LISTBOX"),
+                w!("Background fixture scrolling"),
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | WINDOW_STYLE(LBS_NOINTEGRALHEIGHT as u32),
+                20,
+                315,
+                350,
+                75,
+                target,
+                None,
+                HINSTANCE::default(),
+                None,
+            )
+            .unwrap();
+            for row in 0..100 {
+                let text = HSTRING::from(format!("Fixture row {row}"));
+                SendMessageW(
+                    list,
+                    LB_ADDSTRING,
+                    WPARAM(0),
+                    LPARAM(text.as_ptr() as isize),
+                );
+            }
             let cover = CreateWindowExW(
                 WINDOW_EX_STYLE::default(),
                 w!("STATIC"),
@@ -166,6 +191,7 @@ impl Fixture {
                     button.0 as isize,
                     edit.0 as isize,
                     canvas.0 as isize,
+                    list.0 as isize,
                 ))
                 .unwrap();
             let mut message = MSG::default();
@@ -175,7 +201,7 @@ impl Fixture {
             }
             let _ = DestroyWindow(cover);
         });
-        let (target, cover, button, edit, canvas) =
+        let (target, cover, button, edit, canvas, list) =
             receiver.recv_timeout(Duration::from_secs(10)).unwrap();
         Self {
             target,
@@ -183,6 +209,7 @@ impl Fixture {
             button,
             edit,
             canvas,
+            list,
             thread: Some(thread),
         }
     }
@@ -293,6 +320,22 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     assert_eq!(cursor_position(), Some(cursor));
     fixture.assert_covered(&edit);
 
+    let mut scroll = fixture.args(fixture.list);
+    scroll["direction"] = json!("down");
+    let before_scroll =
+        unsafe { SendMessageW(hwnd(fixture.list), LB_GETTOPINDEX, WPARAM(0), LPARAM(0)).0 };
+    let scrolled = platform::run("scroll_at", &scroll).expect("occluded ScrollPattern list");
+    assert_eq!(scrolled["scrolled"], true);
+    let after_scroll =
+        unsafe { SendMessageW(hwnd(fixture.list), LB_GETTOPINDEX, WPARAM(0), LPARAM(0)).0 };
+    assert!(
+        after_scroll > before_scroll,
+        "background scrolling must change the real visible list position"
+    );
+    assert_eq!(unsafe { GetForegroundWindow() }, foreground);
+    assert_eq!(cursor_position(), Some(cursor));
+    fixture.assert_covered(&scroll);
+
     let mut canvas = fixture.args(fixture.canvas);
     let error = platform::run("interact", &canvas).unwrap_err();
     assert!(
@@ -322,5 +365,5 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
         z_changes,
         "target must not be temporarily exposed or reordered"
     );
-    println!("background native fixture: button invoked, text updated, unsupported canvas/Enter rejected; foreground={:#x}, cursor=({}, {}), no target activation or z changes", foreground.0 as usize, cursor.0, cursor.1);
+    println!("background native fixture: button invoked, text updated, list scrolled {}->{}, unsupported canvas/Enter rejected; foreground={:#x}, cursor=({}, {}), no target activation or z changes", before_scroll, after_scroll, foreground.0 as usize, cursor.0, cursor.1);
 }

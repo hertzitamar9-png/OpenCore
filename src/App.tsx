@@ -19,6 +19,7 @@ import {
   Download,
   ExternalLink,
   FileDown,
+  FileUp,
   Files,
   FolderOpen,
   Gauge,
@@ -54,6 +55,9 @@ import { WorkspacePanel, type WorkspacePreview, type WorkspaceTab } from "./Work
 import { SideChat } from "./SideChat";
 import { BackgroundJobs } from "./BackgroundJobs";
 import { SpacesView } from "./SpacesView";
+import { ChatImportDialog } from "./ChatImportDialog";
+import { ChatExportDialog } from "./ChatExportDialog";
+import type { ImportFormat } from "./chat-import-types";
 import type { FileRecord } from "./workspaces";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
@@ -324,26 +328,28 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
 }) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "projects">("all");
+  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "imported" | "projects">("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(["all-projects"]));
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectFolder, setProjectFolder] = useState("");
   const [projectError, setProjectError] = useState("");
-  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["projects", "Projects"]] as const;
+  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["imported", "Imported"], ["projects", "Projects"]] as const;
   const needle = deferredQuery.trim().toLowerCase();
   const searched = useMemo(() => conversations.filter((item) => !needle || `${item.title} ${item.client} ${item.project || ""}`.toLowerCase().includes(needle)), [conversations, needle]);
   const sourceItems = useMemo(() => {
+    const isImported = (item: ConversationSummary) => item.client.toLowerCase().startsWith("imported ");
     const isOpenCore = (item: ConversationSummary) => {
       const client = item.client.toLowerCase();
-      return client.includes("opencore") || client.includes("unsloth") || item.id.startsWith("opencore:") || item.id.startsWith("local:");
+      return !isImported(item) && (client.includes("opencore") || client.includes("unsloth") || item.id.startsWith("opencore:") || item.id.startsWith("local:"));
     };
     return {
       pinned: searched.filter((item) => item.pinned),
       recent: searched.slice(0, 20),
       opencore: searched.filter(isOpenCore),
-      claude: searched.filter((item) => item.client.toLowerCase().includes("claude")),
-      codex: searched.filter((item) => item.client.toLowerCase().includes("codex")),
+      claude: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("claude")),
+      codex: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("codex")),
+      imported: searched.filter(isImported),
     };
   }, [searched]);
   const projects = useMemo(() => {
@@ -381,6 +387,7 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
         <CollapsibleConversationGroup id="all-opencore" label="OpenCore" count={sourceItems.opencore.length} collapsed={collapsed.has("all-opencore")} onToggle={toggle}><ConversationRows items={sourceItems.opencore} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-claude" label="Claude Code" count={sourceItems.claude.length} collapsed={collapsed.has("all-claude")} onToggle={toggle}><ConversationRows items={sourceItems.claude} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-codex" label="Codex" count={sourceItems.codex.length} collapsed={collapsed.has("all-codex")} onToggle={toggle}><ConversationRows items={sourceItems.codex} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
+        {sourceItems.imported.length ? <CollapsibleConversationGroup id="all-imported" label="Imported" count={sourceItems.imported.length} collapsed={collapsed.has("all-imported")} onToggle={toggle}><ConversationRows items={sourceItems.imported} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup> : null}
         <CollapsibleConversationGroup id="all-projects" label="Projects" count={projects.length} collapsed={collapsed.has("all-projects")} onToggle={toggle}>{projectGroups}</CollapsibleConversationGroup>
       </> : section === "projects" ? projectGroups : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
     </div>
@@ -1183,6 +1190,18 @@ export default function App() {
   const [liveGeneration, setLiveGeneration] = useState<{ conversationId: string; runId: string; content?: string; reasoning?: string; segments?: { kind: "thinking" | "text"; content: string }[]; phase?: string }>();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
+  const [importOpen, setImportOpen] = useState(false);
+  const [importProgress, setImportProgress] = useState<{current: number; total: number} | null>(null);
+  const [exportChatId, setExportChatId] = useState<string | null>(null);
+  const importRequest = useRef<string | null>(null);
+  useEffect(() => {
+    if (!importOpen) return;
+    let closed = false;
+    const subscription = listen<{requestId: string; report: {current: number; total: number}}>('opencore-chat-import-progress', event => {
+      if (!closed && importRequest.current === event.payload.requestId) setImportProgress({current: event.payload.report.current, total: event.payload.report.total});
+    });
+    return () => { closed = true; void subscription.then(unlisten => unlisten()); };
+  }, [importOpen]);
   const [inferenceOwner, setInferenceOwner] = useState<string>();
   const [studioActive, setStudioActive] = useState(false);
   const studioJobs = useRef(new Map<string, string>());
@@ -1389,7 +1408,14 @@ export default function App() {
     finally { setRuntimeAction(null); }
   };
   const restart = () => act(api.restartRuntime);
-  const exportCurrent = () => selectedConversation ? act(async () => setNotice(`Exported to ${await api.exportConversation(selectedConversation, "markdown")}`)) : setNotice("Select a conversation to export.");
+  const exportCurrent = () => selectedConversation ? setExportChatId(selectedConversation) : setNotice("Select a conversation to export.");
+  const importChats = useCallback(async (path: string, format: ImportFormat) => {
+    const requestId = crypto.randomUUID();
+    importRequest.current = requestId;
+    setImportProgress({current: 0, total: 0});
+    try { return await api.importChatFile(path, format, requestId); }
+    finally { if (importRequest.current === requestId) importRequest.current = null; }
+  }, []);
   const renameCurrent = () => {
     if (!selectedConversation || !selected) return setNotice("Select a conversation to rename.");
     setConversationDialog({ kind: "rename", value: selected.title });
@@ -1556,12 +1582,16 @@ export default function App() {
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
-      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton /><button className="workspace-access" aria-label="Workspace" aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><Files size={16} /><span>Workspace</span></button></div></header>
-      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
+      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><Files size={16} /><span>Workspace</span></button></div></header>
+      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
     </div>
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
     {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
     {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
+    {importOpen && <ChatImportDialog onClose={() => setImportOpen(false)} onImport={importChats} onPreview={api.previewChatFile} progress={importProgress}
+      onCancelImport={async () => { if (importRequest.current) await api.cancelChatFileImport(importRequest.current); }}
+      onImported={async (report) => { await refresh(); setNotice(`${report.cancelled ? 'Import cancelled' : 'Chats imported'} · ${report.imported} new · ${report.updated} updated · ${report.skipped} already copied${report.failed ? ` · ${report.failed} failed` : ''}`); }} />}
+    {exportChatId && <ChatExportDialog onClose={() => setExportChatId(null)} onExport={async (format) => { const path = await api.exportConversation(exportChatId, format); setNotice(`Exported to ${path}`); setExportChatId(null); }} />}
   </div></div>;
 }

@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import * as api from './api';
 import { installExternalLinkGuard } from './external-links';
+import { open as chooseFile } from '@tauri-apps/plugin-dialog';
+import type { ImportReport } from './chat-import-types';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }));
 vi.mock('@tauri-apps/api/app', () => ({ getVersion: vi.fn(async () => '0.2.110') }));
@@ -20,6 +22,52 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('OpenCore shared workspace', () => {
+  it('imports a copied Hermes chat, reveals it in Imported and retains the current chat', async () => {
+    const initial = await api.snapshot();
+    const copied = {...initial.conversations[0], id: 'import:hermes:copy', client: 'Imported Hermes', title: 'Hermes project notes', pinned: false};
+    const path = 'C:/exports/hermes.json';
+    const report: ImportReport = {sourceFormat: 'hermes', sourcePath: path, imported: 1, updated: 0, skipped: 0, failed: 0, current: 1, total: 1, cancelled: false, warnings: [], conversations: [{conversationId: copied.id, sourceConversationId: 'session-1', title: copied.title, status: 'imported', entries: 2, warnings: []}]};
+    let imported = false;
+    vi.spyOn(api, 'snapshot').mockImplementation(async () => imported ? {...initial, conversations: [...initial.conversations, copied]} : initial);
+    vi.mocked(chooseFile).mockResolvedValue(path);
+    vi.spyOn(api, 'previewChatFile').mockResolvedValue({sourceFormat: 'hermes', sourcePath: path, conversations: 1, entries: 2, warnings: [], samples: [{sourceConversationId: 'session-1', title: copied.title, entries: 2, warnings: []}]});
+    const importFile = vi.spyOn(api, 'importChatFile').mockImplementation(async () => { imported = true; return report; });
+    const browser = vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com'});
+    render(<App />);
+    await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'OpenCore Browser'}));
+    const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
+    await within(workspace).findByLabelText('Browser address');
+    browser.mockClear();
+    fireEvent.click(screen.getByRole('button', {name: 'Import chats'}));
+    const dialog = screen.getByRole('dialog', {name: 'Import chats'});
+    await waitFor(() => expect(browser).toHaveBeenCalledWith('hide'));
+    fireEvent.click(within(dialog).getByRole('button', {name: 'Choose file'}));
+    await within(dialog).findByRole('region', {name: 'Source preview'});
+    fireEvent.click(within(dialog).getByRole('button', {name: 'Import chats'}));
+    await waitFor(() => expect(importFile).toHaveBeenCalledWith(path, 'auto', expect.any(String)));
+    expect(await within(dialog).findByRole('region', {name: 'Import results'})).toHaveTextContent('1 imported');
+    expect(screen.getByRole('heading', {name: initial.conversations[0].title, level: 2})).toBeVisible();
+    fireEvent.click(within(dialog).getByRole('button', {name: 'Done'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Close workspace'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Imported'}));
+    expect(screen.getByText('Hermes project notes')).toBeVisible();
+    expect(screen.getByText(/^Imported Hermes(?: ·|$)/)).toBeVisible();
+  });
+
+  it('exports portable JSON through a format choice and keeps the current chat', async () => {
+    const initial = await api.snapshot();
+    const exported = vi.spyOn(api, 'exportConversation').mockResolvedValue('C:/exports/chat.json');
+    render(<App />);
+    await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'Export conversation'}));
+    const dialog = await screen.findByRole('dialog', {name: 'Export chat'});
+    fireEvent.click(within(dialog).getByRole('button', {name: /Export JSON/}));
+    await waitFor(() => expect(exported).toHaveBeenCalledWith(initial.conversations[0].id, 'json'));
+    expect(screen.getByRole('heading', {name: initial.conversations[0].title, level: 2})).toBeVisible();
+    expect(screen.queryByRole('dialog', {name: 'Export chat'})).not.toBeInTheDocument();
+  });
+
   it('keeps workspace access and compact navigation when changing sections', async () => {
     render(<App />);
     await screen.findByLabelText('Message OpenCore');

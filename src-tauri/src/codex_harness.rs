@@ -443,7 +443,13 @@ async fn execute_app_server_tool(
             "background_wait" => crate::studio_jobs::submit_wait(core.clone(),app.clone(),conversation_id,&args),
             "background_use" => crate::scheduler::execute(core.clone(),app.clone(),&args,
                 Some(crate::scheduler::BackgroundContext { request:request.clone(), model_profile:core.runtime.profile(), workspace:workspace.to_path_buf() })).await,
-            "desktop_use" => desktop_action(app, action.into(), args.clone()).await,
+            "desktop_use" => {
+                let mut desktop_args = args.clone();
+                if let Some(fields) = desktop_args.as_object_mut() {
+                    fields.insert("holdActivityUntilComplete".into(), json!(true));
+                }
+                desktop_action(app, action.into(), desktop_args).await
+            },
             "browser_use" => native_browser::agent_command(app, action, &args).await,
             "chrome_use" => core.browser.command(action, args.clone()).await,
             "reflex_use" => reflex_action(app, &core, action, args.clone()).await,

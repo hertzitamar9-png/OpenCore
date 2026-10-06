@@ -168,14 +168,26 @@ $control = $activation.SelectSingleNode("//*[local-name()='assemblyIdentity' and
 if ($null -eq $control) { throw 'The embedded test manifest does not activate Common Controls v6.' }
 Write-Host "Common Controls v6 embedded for Cargo-selected native tests: $executable"
 # This is Cargo's actual invocation, including filters, ignored-test switches and
-# all future libtest arguments. Output is inherited and the exact exit code is
-# returned. No Cargo command can relink between manifest activation and execution.
+# all future libtest arguments. Drain both output streams explicitly: inherited
+# handles from a no-console Windows child can otherwise hide libtest failures.
+# No Cargo command can relink between manifest activation and execution.
 $test = [System.Diagnostics.Process]::new()
 $test.StartInfo = New-NativeTestProcessStartInfo $executable $TestArguments (Get-Location).ProviderPath
+$test.StartInfo.RedirectStandardOutput = $true
+$test.StartInfo.RedirectStandardError = $true
 try {
   if (-not $test.Start()) { throw 'Could not start the Cargo-selected native library tests.' }
+  $stdout = $test.StandardOutput.ReadToEndAsync()
+  $stderr = $test.StandardError.ReadToEndAsync()
   $test.WaitForExit()
   $testExitCode = $test.ExitCode
+  $standardOutput = $stdout.GetAwaiter().GetResult()
+  $standardError = $stderr.GetAwaiter().GetResult()
+  [IO.File]::WriteAllText((Join-Path $output 'stdout.log'), $standardOutput, [Text.UTF8Encoding]::new($false))
+  [IO.File]::WriteAllText((Join-Path $output 'stderr.log'), $standardError, [Text.UTF8Encoding]::new($false))
+  if ($standardOutput) { [Console]::Out.Write($standardOutput) }
+  if ($standardError) { [Console]::Error.Write($standardError) }
+  Write-Host "Cargo-selected native tests exited with $testExitCode"
 } finally {
   $test.Dispose()
 }

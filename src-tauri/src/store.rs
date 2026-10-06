@@ -20,6 +20,9 @@ pub struct EventStore {
 #[path = "side_chat_tests.rs"]
 mod side_chat_tests;
 
+#[path = "store_export.rs"]
+mod store_export;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProjectAssignment { Legacy, Automatic, Manual }
 

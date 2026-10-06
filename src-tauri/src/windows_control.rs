@@ -1,14 +1,32 @@
 use base64::Engine;
 use serde_json::{json, Value};
 
+fn foreground_fallback_allowed(args: &Value) -> bool {
+    args["backgroundOnly"].as_bool() != Some(true)
+        && args["allowForegroundFallback"].as_bool().unwrap_or(true)
+}
+
 pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> {
-    if !matches!(action, "list" | "inspect" | "screenshot" | "read_screen" | "invoke" | "set_value" | "move" | "click" | "drag" | "type" | "key" | "scroll" | "interact" | "set_at" | "commit_enter" | "commit_text" | "navigate_url") {
+    if !matches!(action, "list" | "inspect" | "screenshot" | "read_screen" | "invoke" | "set_value" | "move" | "click" | "drag" | "type" | "key" | "scroll" | "scroll_at" | "interact" | "set_at" | "commit_enter" | "commit_text" | "navigate_url") {
         return Err("Unsupported desktop action".into());
+    }
+    for flag in ["backgroundOnly", "allowForegroundFallback", "holdActivityUntilComplete"] {
+        if args.get(flag).is_some_and(|value| !value.is_boolean()) {
+            return Err(format!("{flag} must be true or false"));
+        }
+    }
+    if args["backgroundOnly"].as_bool() == Some(true) {
+        if matches!(action, "move" | "click" | "drag" | "type" | "key" | "scroll" | "navigate_url") {
+            return Err("Background interaction does not support foreground pointer or keyboard input. Use an accessible control with interact, set_at or scroll_at.".into());
+        }
+        if matches!(action, "invoke" | "set_value") && args["windowId"].as_i64() == Some(0) {
+            return Err("Choose an application window for background interaction".into());
+        }
     }
     if action != "list" && args.get("windowId").and_then(Value::as_i64).is_none_or(|id| id < 0) {
         return Err("Select a window, or use windowId 0 for the whole desktop".into());
     }
-    if matches!(action, "move" | "click" | "drag" | "interact" | "set_at" | "commit_enter" | "commit_text") {
+    if matches!(action, "move" | "click" | "drag" | "interact" | "set_at" | "commit_enter" | "commit_text" | "scroll_at") {
         for field in ["x", "y"] {
             if args.get(field).and_then(Value::as_f64).is_none_or(|n| !n.is_finite() || !(0.0..=10000.0).contains(&n)) {
                 return Err("Desktop coordinates are out of bounds".into());
@@ -28,7 +46,7 @@ pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> 
     if matches!(action, "type" | "set_at" | "commit_text") && args.get("text").and_then(Value::as_str).is_none_or(|s| s.len() > 4000) {
         return Err("Text must be at most 4000 characters".into());
     }
-    if matches!(action, "interact" | "set_at" | "commit_enter" | "commit_text") && args["windowId"].as_i64() == Some(0) {
+    if matches!(action, "interact" | "set_at" | "commit_enter" | "commit_text" | "scroll_at") && args["windowId"].as_i64() == Some(0) {
         return Err("Choose an application window for background interaction".into());
     }
     if matches!(action, "invoke" | "set_value") && args.get("elementId").and_then(Value::as_u64).is_none_or(|id| id >= 160) {
@@ -46,7 +64,7 @@ pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> 
             return Err("Enter a valid HTTP or HTTPS URL".into());
         }
     }
-    if action == "scroll" && !matches!(args.get("direction").and_then(Value::as_str), Some("up" | "down")) {
+    if matches!(action, "scroll" | "scroll_at") && !matches!(args.get("direction").and_then(Value::as_str), Some("up" | "down")) {
         return Err("Unsupported scroll direction".into());
     }
     Ok(())
@@ -167,6 +185,36 @@ mod platform {
             }
         }
         best.ok_or("No accessible control at this point. Use the app directly for this control.".into())
+    }
+
+    fn scrollable_at(automation: &UIAutomation, window: &UIElement, point: &Point) -> Result<UIElement, String> {
+        use uiautomation::patterns::UIScrollPattern;
+        let walker = automation.get_control_view_walker().map_err(|e| e.to_string())?;
+        let mut best = None;
+        let mut best_depth = 0;
+        let mut queue = std::collections::VecDeque::from([(window.clone(), 0usize)]);
+        let mut seen = 0;
+        while let Some((element, depth)) = queue.pop_front() {
+            seen += 1;
+            if seen > 600 { break; }
+            let within = element.get_bounding_rectangle().is_ok_and(|rect| {
+                point.get_x() >= rect.get_left() && point.get_y() >= rect.get_top()
+                    && point.get_x() < rect.get_left() + rect.get_width()
+                    && point.get_y() < rect.get_top() + rect.get_height()
+            });
+            if !within { continue; }
+            if depth >= best_depth && element.get_pattern::<UIScrollPattern>()
+                .is_ok_and(|pattern| pattern.is_vertically_scrollable().unwrap_or(false)) {
+                best = Some(element.clone());
+                best_depth = depth;
+            }
+            if depth < 12 {
+                for child in walker.get_children(&element).unwrap_or_default().into_iter().take(80) {
+                    queue.push_back((child, depth + 1));
+                }
+            }
+        }
+        best.ok_or("This control does not expose background scrolling. Use scrolling in the application.".into())
     }
 
     fn foreground_click(window_id: isize, point: &Point, allowed: bool) -> Result<Value, String> {
@@ -356,6 +404,9 @@ mod platform {
     }
 
     pub(super) fn run(action: &str, args: &Value) -> Result<Value, String> {
+        // Keep the policy at the native boundary too, including callers that do
+        // not enter through the asynchronous Tauri command.
+        validate_action(action, args)?;
         let automation = UIAutomation::new().map_err(|e| e.to_string())?;
         if action == "list" {
             let mut rows = vec![json!({"windowId":0,"title":"Whole desktop","bounds":rect_json(&automation.get_root_element().map_err(|e| e.to_string())?)})];
@@ -400,12 +451,29 @@ mod platform {
                 if bytes.len() > 12 * 1024 * 1024 { return Err("Window image is too large".into()); }
                 Ok(json!({"windowId":id,"bounds":rect_json(&window),"dataUrl":format!("data:image/png;base64,{}",base64::engine::general_purpose::STANDARD.encode(bytes))}))
             }
-            "interact" | "set_at" | "commit_enter" => {
+            "scroll_at" => {
+                use uiautomation::patterns::UIScrollPattern;
+                use uiautomation::types::ScrollAmount;
+                let point = window_point(&window, args)?;
+                let element = scrollable_at(&automation, &window, &point)?;
+                let amount = if args["direction"] == "up" { ScrollAmount::SmallDecrement }
+                             else { ScrollAmount::SmallIncrement };
+                element.get_pattern::<UIScrollPattern>().map_err(|e| e.to_string())?
+                    .scroll(ScrollAmount::NoAmount, amount).map_err(|e| e.to_string())?;
+                Ok(json!({"scrolled":true,"inputMode":"accessibility","direction":args["direction"],
+                    "name":element.get_name().unwrap_or_default()}))
+            }
+            "commit_text" if foreground_fallback_allowed(args) => {
+                let point = window_point(&window, args)?;
+                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), true)
+            }
+            "interact" | "set_at" | "commit_enter" | "commit_text" => {
                 use uiautomation::patterns::{UIExpandCollapsePattern, UIInvokePattern, UISelectionItemPattern, UITogglePattern, UIValuePattern};
                 let point = window_point(&window, args)?;
                 let element = match element_at(&automation, &window, &point) {
                     Ok(element) => element,
-                    Err(_) if action == "interact" => return foreground_click(id, &point, args["allowForegroundFallback"].as_bool().unwrap_or(true)),
+                    Err(_) if action == "interact" && foreground_fallback_allowed(args) => return foreground_click(id, &point, true),
+                    Err(_) if !foreground_fallback_allowed(args) => return Err("This control does not expose background interaction. Foreground pointer and keyboard input are disabled; use the control in the application.".into()),
                     Err(error) => return Err(error),
                 };
                 if element.is_password().unwrap_or(false) {
@@ -414,11 +482,21 @@ mod platform {
                 if let Ok(value) = element.get_pattern::<UIValuePattern>() {
                     if !value.is_readonly().unwrap_or(true) {
                         if action == "interact" {
-                            return Ok(json!({"editable":true,"value":value.get_value().unwrap_or_default(),"name":element.get_name().unwrap_or_default()}));
+                            return Ok(json!({"editable":true,"value":value.get_value().unwrap_or_default(),
+                                "name":element.get_name().unwrap_or_default(),"inputMode":"accessibility"}));
                         }
-                        if action == "set_at" {
+                        if matches!(action, "set_at" | "commit_text") {
                             value.set_value(args["text"].as_str().unwrap_or_default()).map_err(|e| e.to_string())?;
-                            return Ok(json!({"editable":true,"updated":true}));
+                            if action == "commit_text" {
+                                // ValuePattern sets text, but supplies no submit or
+                                // Enter operation. Never claim a message was sent.
+                                return Ok(json!({"editable":true,"updated":true,"submitted":false,
+                                    "inputMode":"accessibility","message":"Text updated. This control does not expose background submission. Activate a supported submit button or press Enter in the application."}));
+                            }
+                            return Ok(json!({"editable":true,"updated":true,"inputMode":"accessibility"}));
+                        }
+                        if !foreground_fallback_allowed(args) {
+                            return Err("This control does not expose background submission. Activate a supported submit button or press Enter in the application.".into());
                         }
                         let hwnd = windows::Win32::Foundation::HWND(id as *mut std::ffi::c_void);
                         unsafe {
@@ -444,13 +522,9 @@ mod platform {
                 } else if let Ok(pattern) = element.get_pattern::<UIExpandCollapsePattern>() {
                     pattern.expand().map_err(|e| e.to_string())?;
                 } else {
-                    return foreground_click(id, &point, args["allowForegroundFallback"].as_bool().unwrap_or(true));
+                    return foreground_click(id, &point, foreground_fallback_allowed(args));
                 }
-                Ok(json!({"activated":true,"name":element.get_name().unwrap_or_default()}))
-            }
-            "commit_text" => {
-                let point = window_point(&window, args)?;
-                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), args["allowForegroundFallback"].as_bool().unwrap_or(true))
+                Ok(json!({"activated":true,"name":element.get_name().unwrap_or_default(),"inputMode":"accessibility"}))
             }
             "drag" => {
                 let start = window_point(&window, args)?;
@@ -464,7 +538,7 @@ mod platform {
             "move" | "click" => {
                 let point = window_point(&window, args)?;
                 if action == "click" && id != 0 {
-                    let result = foreground_click(id, &point, args["allowForegroundFallback"].as_bool().unwrap_or(true))?;
+                    let result = foreground_click(id, &point, foreground_fallback_allowed(args))?;
                     return Ok(json!({"windowId":id,"x":args["x"],"y":args["y"],"action":action,
                         "activated":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}));
                 }
@@ -549,10 +623,23 @@ mod tests {
 
     #[test]
     fn background_flags_must_be_boolean() {
-        for flag in ["backgroundOnly", "allowForegroundFallback"] {
+        for flag in ["backgroundOnly", "allowForegroundFallback", "holdActivityUntilComplete"] {
             let mut args = json!({"windowId":1,"x":40,"y":20});
             args[flag] = json!("false");
             assert!(validate_action("interact", &args).is_err(), "{flag} must not silently enable a fallback");
+        }
+    }
+
+    #[test]
+    fn background_scroll_requires_a_window_point_and_supported_direction() {
+        assert!(validate_action("scroll_at", &json!({"windowId":1,"x":40,"y":20,
+            "direction":"down","backgroundOnly":true})).is_ok());
+        for args in [
+            json!({"windowId":1,"direction":"down","backgroundOnly":true}),
+            json!({"windowId":1,"x":-1,"y":20,"direction":"down","backgroundOnly":true}),
+            json!({"windowId":1,"x":40,"y":20,"direction":"left","backgroundOnly":true}),
+        ] {
+            assert!(validate_action("scroll_at", &args).is_err());
         }
     }
 

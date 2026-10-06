@@ -65,6 +65,7 @@ export const speechCancel = (sessionId: string) => invoke<void>("speech_cancel",
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AppSnapshot, ArchiveEvent, ArchiveOverview, ArchivePageRef, ArchiveSearchHit, ApprovalMode, ChatSendResult, ConnectorInput, ConnectorStatus, OperationRecord, ProjectSummary, ReasoningEffort, RuntimeProfile, TimelineEntry } from "./types";
 import { previewSnapshot, previewTimeline } from "./mock";
+import type { ImportFormat, ImportPreview, ImportReport } from "./chat-import-types";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
 const desktop = () => "__TAURI_INTERNALS__" in window;
@@ -225,6 +226,21 @@ export async function exportConversation(id: string, format: "json" | "markdown"
   if (!desktop()) throw new Error("Export requires the desktop application.");
   const result = await invoke<{ path: string }>("export_conversation", { id, format });
   return result.path;
+}
+
+export async function previewChatFile(path: string, format: ImportFormat): Promise<ImportPreview> {
+  if (!desktop()) throw new Error("Chat imports require the OpenCore desktop application.");
+  return invoke<ImportPreview>("preview_chat_file", {path, format});
+}
+
+export async function importChatFile(path: string, format: ImportFormat, requestId: string): Promise<ImportReport> {
+  if (!desktop()) throw new Error("Chat imports require the OpenCore desktop application.");
+  return invoke<ImportReport>("import_chat_file", {path, format, requestId});
+}
+
+export async function cancelChatFileImport(requestId: string): Promise<boolean> {
+  if (!desktop()) return false;
+  return invoke<boolean>("cancel_chat_file_import", {requestId});
 }
 
 export async function renameConversation(id: string, title: string): Promise<void> {
