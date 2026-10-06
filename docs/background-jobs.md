@@ -16,6 +16,10 @@ The scheduler database and worker logs are separate from conversation storage, m
 
 ## Integration
 
+For a GPU training pipeline that needs an agent turn every 500 steps, make each worker save its checkpoint, emit the matching named event and exit. The agent wake then owns the released GPU; a subsequent worker resumes the saved training checkpoint. An event alone does not unload a running training process. Continuous GPU workers retain ownership until exit, so their prompt wakes wait in the queue. CPU event workers can continue while the agent runs.
+
+Agent job commands are restricted to their originating chat, including lists, logs and task/run IDs. An agent cannot rewrite a different chat's saved approval policy or emit reserved runtime completion events. The native Jobs UI and authenticated external event senders retain installation-wide access for explicitly configured workflows.
+
 Register `scheduler`, `scheduler_cron` and `scheduler_worker`. `core.background` is an `Arc<BackgroundManager>` constructed with its dedicated app-data directory. Attach it with `attach_app(core, app)` once the managed core exists. Call `shutdown().await` at quit; use reusable `cancel_active().await` during an update. `busy_gpu()` remains true through worker reservation release. Chat/start admission checks `gpu_reserved()` under the active-chat lock; GPU workers reserve first and recheck that lock before a claim.
 
 `background_command` calls `scheduler::execute(core, app, &args, context)`. For creation, native integration resolves the trusted latest chat request, captured profile and workspace from `conversationId`; do not deserialize a task-supplied context or upgrade a missing mode. Agent tool mutations pass the existing approval bridge. The root adapter is `resume_scheduled_job(core, app, request, run_id, evidence)` returning a boxed Send future. `BackgroundManager::run_token(run_id)` exposes the cancellation token for that adapter.

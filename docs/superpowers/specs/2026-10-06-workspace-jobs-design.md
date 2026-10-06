@@ -30,7 +30,7 @@ Keep the compact navigation rail across all sections. Use a common restrained he
 
 The resizable right workspace panel has Files, Browser, Computer and Side chat tabs. File previews and browser links open there; computer use has an embedded layout, with the same existing controls. Panels must not overlap the conversation composer or use competing floating windows. Hide native browser views when switching tabs or closing the panel. Preserve original browser behavior and DOM bounds placement.
 
-Side chat branches the main chat's current persisted context, uses the same selected model/context ceiling and shares its project/workspace. It has separate visible messages and can run only when another inference/studio task is idle. It must not feed side messages into the main chat without an explicit user action. Label it as a branch; the history snapshot is taken when created. Use ECHO references to the parent where supported, preserve the actual context limit and permission settings, and support opening the branch as a full chat.
+Side chat branches the main chat's current persisted context, uses the same selected model/context ceiling and shares its project/workspace. It has separate visible messages and can run only when another inference/studio task is idle. It must not feed side messages into the main chat without an explicit user action. Label it as a branch; the history snapshot is taken when created. Import the exact copied ECHO context under the branch's own stable source IDs so later parent activity cannot bypass that snapshot; preserve the actual context limit and permission settings, and support opening the branch as a full chat.
 
 ## Integration contracts
 

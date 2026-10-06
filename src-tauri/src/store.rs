@@ -596,7 +596,8 @@ impl EventStore {
         let inherited = transaction.execute("INSERT INTO timeline(conversation_id,timestamp,kind,role,source,title,content,metadata)
             SELECT ?2,timestamp,kind,role,source,title,content,
               json_set(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,
-                '$.sideChatInherited',json('true'),'$.sideChatParent',?1,'$.sideChatSourceEntry',id)
+                '$.sideChatInherited',json('true'),'$.sideChatParent',?1,'$.sideChatSourceEntry',id,
+                '$.opencore_source_event_id','side:'||?2||':'||id)
             FROM timeline WHERE conversation_id=?1 AND id<=?3 ORDER BY timestamp,id",
             params![parent,id,copied_through]).map_err(|e| e.to_string())?;
         transaction.execute("INSERT INTO conversation_branches(id,parent_id,workspace_origin,copied_through,inherited_entries,context_tokens,created_at)
@@ -1748,6 +1749,19 @@ impl EventStore {
         }
     }
 
+    /// Direct identity lookups must not use the bounded sidebar listing.
+    pub fn conversation_exists(&self, id: &str) -> Result<bool, String> {
+        self.connection.lock().map_err(|e|e.to_string())?
+            .query_row("SELECT EXISTS(SELECT 1 FROM conversations WHERE id=?1)",[id],|row|row.get(0))
+            .map_err(|e|e.to_string())
+    }
+
+    pub fn conversation_project_id(&self, id: &str) -> Result<Option<String>, String> {
+        self.connection.lock().map_err(|e|e.to_string())?
+            .query_row("SELECT project_id FROM conversations WHERE id=?1",[id],|row|row.get::<_,Option<String>>(0))
+            .optional().map(Option::flatten).map_err(|e|e.to_string())
+    }
+
     pub fn list_conversations(
         &self,
         query: Option<&str>,
@@ -1787,6 +1801,10 @@ impl EventStore {
 
     pub fn echo_conversation_scope(&self, conversation_id: &str) -> Result<Vec<String>, String> {
         let connection = self.connection.lock().map_err(|e| e.to_string())?;
+        let branch:bool=connection.query_row("SELECT EXISTS(SELECT 1 FROM conversation_branches WHERE id=?1)",[conversation_id],|row|row.get(0)).map_err(|e|e.to_string())?;
+        // The exact inherited timeline is imported under the branch's own
+        // stable source IDs. Reading a live parent would bypass the fork cutoff.
+        if branch {return Ok(vec![conversation_id.to_string()]);}
         let project_id: Option<String> = connection.query_row(
             "SELECT project_id FROM conversations WHERE id=?1", [conversation_id], |row| row.get(0),
         ).optional().map_err(|error| error.to_string())?.flatten();
@@ -1801,9 +1819,6 @@ impl EventStore {
             rows.collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?
         } else { vec![conversation_id.to_string()] };
         if !ids.iter().any(|id| id == conversation_id) { ids.push(conversation_id.to_string()); }
-        let parent: Option<String> = connection.query_row("SELECT parent_id FROM conversation_branches WHERE id=?1", [conversation_id], |row| row.get(0))
-            .optional().map_err(|e| e.to_string())?;
-        if let Some(parent) = parent { if !ids.contains(&parent) { ids.push(parent); } }
         Ok(ids)
     }
 

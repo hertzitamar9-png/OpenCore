@@ -216,14 +216,11 @@ pub(crate) fn preview_attached_file(path: &Path) -> Result<AttachmentPreview, St
 }
 
 fn load(root: &Path, id: &str) -> Result<(ArtifactInfo, Vec<u8>), String> {
-    let meta = std::fs::read(stored_path(root, id, "json")?).map_err(|_| "Artifact is unavailable")?;
+    let meta = crate::workspace_ledger::read_confined(root,&stored_path(root,id,"json")?,64*1024)?;
     let info: ArtifactInfo = serde_json::from_slice(&meta).map_err(|_| "Artifact metadata is invalid")?;
     if info.id != id || safe_name(&info.name).is_err() { return Err("Artifact metadata is invalid".into()); }
     let path = stored_path(root, id, "bin")?;
-    if path.metadata().map_err(|_| "Artifact is unavailable")?.len() > MAX_ARTIFACT_BYTES as u64 {
-        return Err("Artifact exceeds the preview limit".into());
-    }
-    let bytes = std::fs::read(path).map_err(|_| "Artifact is unavailable")?;
+    let bytes = crate::workspace_ledger::read_confined(root,&path,MAX_ARTIFACT_BYTES as u64)?;
     if bytes.len() != info.size { return Err("Artifact size does not match its metadata".into()); }
     Ok((info, bytes))
 }
@@ -272,6 +269,27 @@ pub(crate) fn download(root: &Path, downloads: &Path, id: &str) -> Result<PathBu
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn artifact_metadata_and_content_links_are_rejected_before_read() {
+        let root=std::env::temp_dir().join(format!("opencore-artifact-link-{}",uuid::Uuid::new_v4()));
+        let files=root.join("artifacts");
+        let item=create(&files,"game.html","<h1>outside</h1>","utf8").unwrap();
+        for extension in ["json","bin"] {
+            let path=stored_path(&files,&item.id,extension).unwrap();
+            let outside=root.join(format!("outside.{extension}"));
+            std::fs::rename(&path,&outside).unwrap();
+            #[cfg(unix)] let linked=std::os::unix::fs::symlink(&outside,&path);
+            #[cfg(windows)] let linked=std::os::windows::fs::symlink_file(&outside,&path);
+            #[cfg(not(any(unix,windows)))] let linked:std::io::Result<()>=Err(std::io::Error::other("symlinks unavailable"));
+            match linked {
+                Ok(())=>{assert!(snapshot_source(&files,&item.id).is_err());assert!(preview(&files,&item.id).is_err());std::fs::remove_file(&path).unwrap();},
+                Err(error)=>eprintln!("Artifact link probe unavailable on this host: {error}"),
+            }
+            std::fs::rename(outside,path).unwrap();
+        }
+        assert!(preview(&files,&item.id).is_ok());
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn artifact_preview_and_download_are_confined_and_do_not_overwrite() {
         let root = std::env::temp_dir().join(format!("opencore-artifact-{}", uuid::Uuid::new_v4()));

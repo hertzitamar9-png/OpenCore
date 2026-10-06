@@ -23,18 +23,20 @@ type Props = {
   ariaLabel?: string;
   domId?: string;
   place?: "right" | "left" | "center" | "composer";
+  composerElement?: HTMLElement | null;
   modal?: boolean;
 };
 
-function initialRect(id: string, width: number, height: number, place: Props["place"], minWidth: number, minHeight: number): FloatingRect {
+function initialRect(id: string, width: number, height: number, place: Props["place"], minWidth: number, minHeight: number, composerElement?: HTMLElement | null): FloatingRect {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   let x = place === "center" ? (vw - width) / 2 : place === "left" ? 62 : vw - width - 20;
   let y = place === "center" ? (vh - height) / 2 : place === "left" ? 8 : 76;
   if (place === "composer") {
-    const anchor = document.querySelector(id.startsWith("effort") ? ".effort-trigger" : ".approval-trigger")?.getBoundingClientRect();
-    const chat = document.querySelector(".chat-composer-wrap")?.getBoundingClientRect();
-    const composer = document.querySelector(".chat-composer")?.getBoundingClientRect();
+    const scope = composerElement ?? document;
+    const anchor = scope.querySelector(id.startsWith("effort") ? ".effort-trigger" : ".approval-trigger")?.getBoundingClientRect();
+    const chat = (composerElement?.closest(".chat-composer-wrap") ?? document.querySelector(".chat-composer-wrap"))?.getBoundingClientRect();
+    const composer = (composerElement ?? document.querySelector(".chat-composer"))?.getBoundingClientRect();
     if (chat) width = Math.min(width, Math.max(280, chat.width - 16));
     minWidth = Math.min(minWidth, width);
     if (anchor) {
@@ -54,8 +56,8 @@ function initialRect(id: string, width: number, height: number, place: Props["pl
   return clampFloatingRect({ x, y, width, height }, vw, vh, minWidth, minHeight);
 }
 
-export function FloatingWindow({ id, title, icon, status, children, onClose, initialWidth = 760, initialHeight = 600, minWidth = 340, minHeight = 220, className = "", ariaLabel, domId, place = "right", modal = false }: Props) {
-  const [box, setBox] = useState(() => initialRect(id, initialWidth, initialHeight, place, minWidth, minHeight));
+export function FloatingWindow({ id, title, icon, status, children, onClose, initialWidth = 760, initialHeight = 600, minWidth = 340, minHeight = 220, className = "", ariaLabel, domId, place = "right", composerElement, modal = false }: Props) {
+  const [box, setBox] = useState(() => initialRect(id, initialWidth, initialHeight, place, minWidth, minHeight, composerElement));
   const layer = useRef(modal ? ++topModalLayer : ++topLayer);
   const panel = useRef<HTMLElement>(null);
   const pointer = useRef<{ startX: number; startY: number; box: FloatingRect; edge?: ResizeEdge } | null>(null);

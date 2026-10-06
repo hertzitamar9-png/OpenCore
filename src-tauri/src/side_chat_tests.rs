@@ -1,6 +1,25 @@
 use super::*;
 
 #[test]
+fn old_conversation_identity_and_project_survive_sidebar_limit() {
+    let root=std::env::temp_dir().join(format!("opencore-old-chat-{}",uuid::Uuid::new_v4()));
+    std::fs::create_dir_all(&root).unwrap();
+    let store=EventStore::open(&root.join("history.sqlite3")).unwrap();
+    let project=store.create_project("Original workspace",&root).unwrap();
+    store.ensure_conversation("old","OpenCore","echo","Old chat").unwrap();
+    store.set_project_by_id("old",Some(&project.id),ProjectAssignment::Manual).unwrap();
+    store.connection.lock().unwrap().execute("UPDATE conversations SET updated_at='2000-01-01' WHERE id='old'",[]).unwrap();
+    for index in 0..505 {store.ensure_conversation(&format!("new-{index}"),"OpenCore","echo","New chat").unwrap();}
+    assert!(!store.list_conversations(None).unwrap().iter().any(|chat|chat.id=="old"));
+    assert!(store.conversation_exists("old").unwrap());
+    assert_eq!(store.conversation_project_id("old").unwrap(),Some(project.id));
+    store.delete_conversation("old").unwrap();
+    assert!(!store.conversation_exists("old").unwrap());
+    assert_eq!(store.conversation_project_id("old").unwrap(),None);
+    drop(store);std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn side_chat_preserves_all_context_and_isolates_new_messages() {
     let root = std::env::temp_dir().join(format!("opencore-side-chat-{}", uuid::Uuid::new_v4()));
     let store = EventStore::open(&root.join("history.sqlite3")).unwrap();
@@ -13,14 +32,18 @@ fn side_chat_preserves_all_context_and_isolates_new_messages() {
     assert_eq!(info["inheritedEntries"], 180);
     assert_eq!(info["contextTokens"], 262_144);
     assert_eq!(store.workspace_conversation_id("side").unwrap(), "main");
-    assert_eq!(store.echo_conversation_scope("side").unwrap(), vec!["side", "main"]);
+    assert_eq!(store.echo_conversation_scope("side").unwrap(), vec!["side"]);
     store.add_timeline("side", "message", "user", "OpenCore", "You", "Side only", &json!({})).unwrap();
     assert_eq!(store.conversation("main").unwrap().len(), 180);
     let copied = store.conversation("side").unwrap();
     assert_eq!(copied.len(), 181);
     assert_eq!(copied[0].content, "Keep exact message 0");
     assert!(copied[0].metadata["sideChatInherited"].as_bool().unwrap());
+    assert!(copied[0].metadata["opencore_source_event_id"].as_str().unwrap().starts_with("side:side:"));
     assert_eq!(copied.last().unwrap().content, "Side only");
+    store.add_timeline("main","message","user","OpenCore","Later main","Future parent message",&json!({})).unwrap();
+    assert!(!store.conversation("side").unwrap().iter().any(|row|row.content=="Future parent message"));
+    assert_eq!(store.echo_conversation_scope("side").unwrap(),vec!["side"]);
     drop(store);
     std::fs::remove_dir_all(root).unwrap();
 }
@@ -46,7 +69,7 @@ fn side_chat_shares_project_but_never_reuses_source_harness_mapping() {
     assert!(store.codex_thread_mapping("side", "workspace").unwrap().is_none());
     assert_eq!(store.codex_thread_mapping("main", "workspace").unwrap(), Some(mapping));
     assert_eq!(store.echo_conversation_scope("main").unwrap(),vec!["main"]);
-    assert_eq!(store.echo_conversation_scope("side").unwrap(),vec!["main","side"]);
+    assert_eq!(store.echo_conversation_scope("side").unwrap(),vec!["side"]);
     store.create_side_chat("side", "nested", "echo", 262_144).unwrap();
     assert_eq!(store.workspace_conversation_id("nested").unwrap(), "main");
     assert_eq!(store.side_chat_info("nested").unwrap().unwrap()["parentId"], "side");

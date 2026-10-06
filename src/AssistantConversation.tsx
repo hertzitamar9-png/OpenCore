@@ -1,4 +1,4 @@
-import { createContext, memo, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, memo, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ActionBarPrimitive,
   AssistantRuntimeProvider,
@@ -525,6 +525,10 @@ export const AssistantConversation = memo(function AssistantConversation({
   useEffect(() => { onSettingsChange?.({approvalMode, reasoningEffort, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens}); }, [approvalMode, reasoningEffort, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, onSettingsChange]);
   useEffect(() => { onWorkspaceObscuredChange?.(controlOpen !== null || confirmApproval !== null || pendingTool !== null); return () => onWorkspaceObscuredChange?.(false); }, [controlOpen, confirmApproval, pendingTool, onWorkspaceObscuredChange]);
   const controlsRef = useRef<HTMLDivElement>(null);
+  const surfaceId = useId().replace(/:/g, "");
+  const effortPanelId = embedded ? `side-effort-${surfaceId}` : "effort-panel";
+  const approvalPanelId = embedded ? `side-approval-${surfaceId}` : "approval-panel";
+  const composerMenuId = embedded ? `side-composer-menu-${surfaceId}` : "composer-action-menu";
   const effortIndex = REASONING_MODES.findIndex((mode) => mode.value === reasoningEffort);
   const effortLabel = REASONING_MODES[effortIndex].label;
   const approvalLabel = APPROVAL_MODES.find((mode) => mode.value === approvalMode)?.label;
@@ -571,13 +575,14 @@ export const AssistantConversation = memo(function AssistantConversation({
   useEffect(() => {
     if (!controlOpen) return;
     const outside = (event: PointerEvent) => {
-      if (controlsRef.current && !controlsRef.current.contains(event.target as Node) && !(event.target as HTMLElement).closest("#effort-panel,#approval-panel,#tools-panel")) setControlOpen(null);
+      const inPanel = [effortPanelId, approvalPanelId, "tools-panel"].some(id => document.getElementById(id)?.contains(event.target as Node));
+      if (controlsRef.current && !controlsRef.current.contains(event.target as Node) && !inPanel) setControlOpen(null);
     };
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setControlOpen(null); };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
     return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
-  }, [controlOpen]);
+  }, [controlOpen, effortPanelId, approvalPanelId]);
 
   useEffect(() => {
     if (!composerMenu) return;
@@ -945,14 +950,14 @@ export const AssistantConversation = memo(function AssistantConversation({
         }}
       >
         <div className="composer-action-anchor" ref={composerMenuRef}>
-          <button ref={composerMenuTriggerRef} type="button" className="attach-button composer-plus-button" aria-label="Add files or choose model" aria-expanded={composerMenu !== null} aria-controls="composer-action-menu" onClick={() => setComposerMenu((open) => open === null ? "actions" : null)} title="Add files or choose model"><Plus size={19} /></button>
-          {composerMenu === "actions" ? <div className="composer-action-popover" id="composer-action-menu" role="menu" aria-label="Composer actions">
+          <button ref={composerMenuTriggerRef} type="button" className="attach-button composer-plus-button" aria-label="Add files or choose model" aria-expanded={composerMenu !== null} aria-controls={composerMenuId} onClick={() => setComposerMenu((open) => open === null ? "actions" : null)} title="Add files or choose model"><Plus size={19} /></button>
+          {composerMenu === "actions" ? <div className="composer-action-popover" id={composerMenuId} role="menu" aria-label="Composer actions">
             <button type="button" role="menuitem" onClick={() => { setComposerMenu(null); void chooseFiles(); }}><Paperclip size={16} /><span>Upload files or images</span></button>
             <button type="button" role="menuitem" aria-haspopup="menu" onClick={() => setComposerMenu("model")}><BrainCircuit size={16} /><span className="composer-action-model-copy">Model<small>{profileLabel(selectedProfile)}</small></span><ChevronRight size={15} /></button>
           </div> : null}
-          {composerMenu === "model" ? <div className="composer-action-popover composer-model-popover" id="composer-action-menu" role="menu" aria-label="Model selection">
+          {composerMenu === "model" ? <div className="composer-action-popover composer-model-popover" id={composerMenuId} role="menu" aria-label="Model selection">
             <div className="composer-model-heading"><button type="button" aria-label="Back to composer actions" onClick={() => setComposerMenu("actions")}><ArrowLeft size={14} /></button><span><strong>Model</strong><small>Current · {profileLabel(selectedProfile)}</small></span></div>
-            <ModelProfileOptions selectedProfile={selectedProfile} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} disabled={profileLocked} id="composer-model-profile-options" className="composer-model-options" />
+            <ModelProfileOptions selectedProfile={selectedProfile} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} disabled={profileLocked} id={embedded ? `side-model-options-${surfaceId}` : "composer-model-profile-options"} className="composer-model-options" />
           </div> : null}
         </div>
         <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />
@@ -993,13 +998,13 @@ export const AssistantConversation = memo(function AssistantConversation({
         />
         {draggingFiles ? <div className="composer-drop-overlay" role="status" aria-live="polite">Drop files to attach</div> : null}
         <div className="composer-controls">
-          <button type="button" className={`composer-control-button approval-trigger ${controlOpen === "approval" ? "active" : ""}`} aria-label={`Approval: ${approvalLabel}`} aria-expanded={controlOpen === "approval"} aria-controls="approval-panel" onClick={() => setControlOpen((open) => open === "approval" ? null : "approval")}>
+          <button type="button" className={`composer-control-button approval-trigger ${controlOpen === "approval" ? "active" : ""}`} aria-label={`Approval: ${approvalLabel}`} aria-expanded={controlOpen === "approval"} aria-controls={approvalPanelId} onClick={() => setControlOpen((open) => open === "approval" ? null : "approval")}>
             <ShieldCheck size={16} /><span className="control-copy"><small>Approval</small><strong>{approvalShort}</strong></span><ChevronDown size={13} />
           </button>
-          <button type="button" className={`composer-control-button effort-trigger effort-${effortIndex} ${controlOpen === "effort" ? "active" : ""}`} aria-label={`Effort: ${effortLabel}`} aria-expanded={controlOpen === "effort"} aria-controls="effort-panel" onClick={() => setControlOpen((open) => open === "effort" ? null : "effort")}>
+          <button type="button" className={`composer-control-button effort-trigger effort-${effortIndex} ${controlOpen === "effort" ? "active" : ""}`} aria-label={`Effort: ${effortLabel}`} aria-expanded={controlOpen === "effort"} aria-controls={effortPanelId} onClick={() => setControlOpen((open) => open === "effort" ? null : "effort")}>
             <BrainCircuit size={16} /><span className="control-copy"><small>Effort</small><strong>{effortLabel}</strong></span><ChevronDown size={13} />
           </button>
-          {controlOpen === "effort" ? <FloatingWindow id="effort-compact" domId="effort-panel" title="Effort" icon={<BrainCircuit size={16} />} className={`composer-popover effort-popover effort-${effortIndex}`} onClose={() => setControlOpen(null)} place="composer" initialWidth={440} initialHeight={160} minWidth={280} minHeight={145} ariaLabel="Effort settings">
+          {controlOpen === "effort" ? <FloatingWindow id="effort-compact" domId={effortPanelId} title="Effort" icon={<BrainCircuit size={16} />} className={`composer-popover effort-popover effort-${effortIndex}`} onClose={() => setControlOpen(null)} place="composer" composerElement={controlsRef.current} initialWidth={440} initialHeight={160} minWidth={280} minHeight={145} ariaLabel="Effort settings">
             <div className="effort-bar">
               <div className="effort-rail">
                 <div className="effort-segments">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index === effortIndex ? "lit" : ""} />)}</div>
@@ -1008,7 +1013,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             </div>
             <div className="effort-labels" aria-hidden="true">{REASONING_MODES.map((mode, index) => <span key={mode.value} className={index === effortIndex ? "selected" : ""}>{mode.label}</span>)}</div>
           </FloatingWindow> : null}
-          {controlOpen === "approval" ? <FloatingWindow id="approval" domId="approval-panel" title="Approval" icon={<ShieldCheck size={16} />} className="composer-popover approval-popover" onClose={() => setControlOpen(null)} place="composer" initialWidth={510} initialHeight={160} minWidth={280} minHeight={140} ariaLabel="Approval settings">
+          {controlOpen === "approval" ? <FloatingWindow id="approval" domId={approvalPanelId} title="Approval" icon={<ShieldCheck size={16} />} className="composer-popover approval-popover" onClose={() => setControlOpen(null)} place="composer" composerElement={controlsRef.current} initialWidth={510} initialHeight={160} minWidth={280} minHeight={140} ariaLabel="Approval settings">
             <p className="control-explanation">{APPROVAL_MODES.find(mode => mode.value === approvalMode)?.detail}</p>
             <div className="approval-bar" role="group" aria-label="Approval mode"><div className="approval-rail"><div className="approval-segments" aria-hidden="true">{APPROVAL_MODES.map((mode, index) => <span key={mode.value} className={index <= shownApprovalIndex ? "lit" : ""} />)}</div><input className="approval-range" type="range" min="0" max="3" step="1" value={shownApprovalIndex} aria-label="Approval level" aria-valuetext={APPROVAL_MODES[shownApprovalIndex].label} onChange={(event) => { const index = Number(event.target.value); approvalPreviewRef.current = index; setApprovalPreviewIndex(index); }} onPointerUp={commitApprovalRange} onKeyUp={commitApprovalRange} onBlur={commitApprovalRange} onPointerCancel={() => { approvalPreviewRef.current = null; setApprovalPreviewIndex(null); }} /></div><div className="approval-labels">{APPROVAL_MODES.map((mode) => <button type="button" key={mode.value} aria-pressed={mode.value === approvalMode} onClick={() => chooseApprovalMode(mode.value)}>{mode.label}</button>)}</div></div>
           </FloatingWindow> : null}

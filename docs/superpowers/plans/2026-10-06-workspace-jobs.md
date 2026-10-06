@@ -74,8 +74,16 @@ Root files: lib.rs, codex_harness.rs, gateway.rs, store.rs as necessary, focused
 
 - [ ] Register managers/native APIs/tools and authenticated loopback webhook route.
 - [ ] Capture before/after chat task changes and studio outputs; emit trigger events after real completion.
-- [ ] Copy main history/project into a separate persisted side-chat branch, share workspace and ECHO parent references.
+- [ ] Copy main history/project into a separate persisted side-chat branch, share workspace and freeze ECHO recall to its copied context.
 - [ ] Wake tasks using actual harness/system evidence; wait for existing GPU work, retain approval mode and release inference.
 - [ ] Local frontend suite/typecheck and browser preview; independent whole-branch review.
 - [ ] Actions native CI/build; private main merge, signed release installation and actual shortcut verification.
 - [ ] Report verified launch evidence, implemented capabilities and material limitations.
+
+## Verification record before native CI
+
+- Installed v0.2.110 was recovered in place and launched from both actual desktop and Start menu shortcuts; the original intermittent white-flash exit was not reproduced on demand. The app remained responsive through feature implementation. Final feature release still requires the same installed checks.
+- Unified frontend passed 246 Vitest tests, 44 Node tests and the TypeScript/Vite production build. Mocked shell preview covered 800-pixel and 1600-pixel desktop widths, receipts/snapshots, Browser/Computer tabs, isolated branch replies and Effort/Approval persistence on full-chat navigation.
+- The installed pinned Codex app-server passed real stdio initialize/inference/MCP/cancellation/resume with local deterministic Responses fixtures. A fresh second app-server using the same isolated CODEX_HOME forked actual durable context through a saved turn, excluded later work and left the source unchanged.
+- Review fixes retain a queued schedule when foreground work wins admission, restrict branch ECHO to the copied context, use direct old-chat identity/project lookups, validate artifact handles before reads, recheck speech admission under GPU ownership and retain cancellation across runtime startup.
+- Native Rust tests and Windows builds are intentionally delegated to GitHub Actions. No local native build/test was run. Model inference benchmarks, model downloads and unrelated GPU applications are outside this change.

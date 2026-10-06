@@ -217,6 +217,18 @@ impl BackgroundManager {
         serde_json::from_str(&payload).map_err(|error| error.to_string())
     }
     pub fn emit(&self, event: Value) -> Result<Value, String> {
+        self.emit_scoped(event,None)
+    }
+    fn emit_scoped(&self, mut event: Value, conversation: Option<&str>) -> Result<Value, String> {
+        if let Some(conversation)=conversation {
+            if !event.is_object() { return Err("Event must be a JSON object".into()); }
+            check_event_conversation(&event,conversation)?;
+            let name=event["name"].as_str().unwrap_or(""); let id=event["id"].as_str().unwrap_or("");
+            if ["generation.","studio.","background."].iter().any(|prefix|name.starts_with(*prefix)) || ["generation:","studio:","background:"].iter().any(|prefix|id.starts_with(*prefix)) {
+                return Err("Runtime completion events are emitted by OpenCore; use a custom event name and id".into());
+            }
+            event["conversationId"]=json!(conversation);
+        }
         if event.to_string().len() > 65_536 { return Err("Event body exceeds 64 KiB".into()); }
         let id = event["id"].as_str().filter(|id| !id.trim().is_empty() && id.len() <= 256).ok_or("A stable event id up to 256 characters is required")?;
         let name = event["name"].as_str().filter(|name| !name.trim().is_empty() && name.len() <= 200).ok_or("Event name is required")?;
@@ -233,7 +245,7 @@ impl BackgroundManager {
         let mut queued = 0;
         for payload in tasks {
             let task: BackgroundTask = serde_json::from_str(&payload).map_err(|error| error.to_string())?;
-            if task.schedule.matches(&event) && queue(&transaction, &task, format!("event:{id}"), None, json!({"event":event}))? { queued += 1; }
+            if conversation.is_none_or(|id|task.conversation_id.as_deref()==Some(id)) && task.schedule.matches(&event) && queue(&transaction, &task, format!("event:{id}"), None, json!({"event":event}))? { queued += 1; }
         }
         transaction.commit().map_err(|error| error.to_string())?;
         drop(db); self.changed();
@@ -362,10 +374,20 @@ impl BackgroundManager {
     }
     fn set_pid(&self, id: &str, pid: u32) -> Result<(), String> {
         let mut run = self.run(id)?; run.pid = Some(pid);
-        save_run(&self.db.lock().map_err(|error| error.to_string())?, &run)?; self.changed(); Ok(())
+        save_run(&*self.db.lock().map_err(|error| error.to_string())?, &run)?; self.changed(); Ok(())
     }
     fn finish(&self, id: &str, outcome: Result<Value, String>, cancelled: bool, interrupted: bool) -> Result<(), String> {
         let mut run = self.run(id)?;
+        if !cancelled && !interrupted && outcome.as_ref().err().is_some_and(|error|error==crate::SCHEDULED_ADMISSION_BUSY) {
+            // Foreground work won the chat admission race. No inference or
+            // timeline write happened; retain the same durable occurrence.
+            run.status="queued".into(); run.started_at=None; run.finished_at=None; run.error=None;
+            let waits=run.evidence["admissionWaits"].as_u64().unwrap_or(0);
+            run.evidence["admissionWaits"]=json!(waits.saturating_add(1));
+            run.evidence["lastAdmissionWaitAt"]=json!(now());
+            save_run(&*self.db.lock().map_err(|error|error.to_string())?,&run)?;
+            self.changed(); return Ok(());
+        }
         run.finished_at = Some(now());
         match outcome {
             Ok(value) => {
@@ -377,13 +399,17 @@ impl BackgroundManager {
             },
             Err(error) => { run.status = if cancelled { if interrupted { "interrupted" } else { "cancelled" } } else { "failed" }.into(); run.error = Some(error); }
         }
-        save_run(&self.db.lock().map_err(|error| error.to_string())?, &run)?;
+        save_run(&*self.db.lock().map_err(|error| error.to_string())?, &run)?;
         let _ = self.emit(json!({"id":format!("background:{}:{}",run.id,run.status),"name":format!("background.{}",run.status),"runId":run.id,"taskId":run.task_id,"status":run.status,"exitCode":run.exit_code,"conversationId":run.conversation_id}));
         self.changed(); Ok(())
     }
     fn create_or_update(&self, args: &Value, context: Option<BackgroundContext>, update: bool) -> Result<BackgroundTask, String> {
+        command_conversation(args,context.as_ref())?;
         let input = args.get("task").ok_or("Task definition is required")?;
         let existing = if update { Some(self.task(args["taskId"].as_str().ok_or("taskId is required")?)?) } else { None };
+        // Authenticate the caller against the origin before replacing its
+        // execution settings with the immutable task's saved settings.
+        if let Some(existing)=existing.as_ref() { check_task_context(existing,context.as_ref())?; }
         let name = input["name"].as_str().map(str::trim).filter(|name| !name.is_empty() && name.len() <= 200).ok_or("Job name is required, up to 200 characters")?.to_string();
         let schedule: Schedule = serde_json::from_value(input["schedule"].clone()).map_err(|error| format!("Invalid schedule: {error}"))?;
         schedule.validate()?;
@@ -415,7 +441,7 @@ impl BackgroundManager {
     fn pause(&self, id: &str, paused: bool) -> Result<BackgroundTask, String> {
         let mut task = self.task(id)?; task.paused = paused; task.updated_at = now();
         // Keep the previous due instant on resume so missed occurrences coalesce once.
-        save_task(&self.db.lock().map_err(|error| error.to_string())?, &task)?; self.changed(); Ok(task)
+        save_task(&*self.db.lock().map_err(|error| error.to_string())?, &task)?; self.changed(); Ok(task)
     }
     fn delete(&self, id: &str) -> Result<(), String> {
         let _ = self.task(id)?;
@@ -452,6 +478,77 @@ impl BackgroundManager {
         let tasks: Vec<_> = self.tasks()?.into_iter().filter(|task| conversation.is_none_or(|id| task.conversation_id.as_deref() == Some(id))).collect();
         Ok(json!({"tasks":tasks,"runs":self.runs(conversation,500)?,"webhook":{"url":self.webhook_url(),"token":if reveal_token { Some(self.webhook_token()) } else { None }},"execution":{"appMustBeOpen":true,"noPermanentService":true,"gpuWorkersHoldReservationUntilExit":true}}))
     }
+    fn command(&self,args:&Value,context:Option<BackgroundContext>)->Result<Value,String> {
+        let conversation=command_conversation(args,context.as_ref())?;
+        if context.is_some() {
+            if let Some(id)=args.get("taskId").filter(|value|!value.is_null()) {
+                let task=self.task(id.as_str().ok_or("taskId must be a string")?)?;
+                check_task_context(&task,context.as_ref())?;
+            }
+            if let Some(id)=args.get("runId").filter(|value|!value.is_null()) {
+                let run=self.run(id.as_str().ok_or("runId must be a string")?)?;
+                check_run_context(&run,context.as_ref())?;
+            }
+        }
+        let action=args["action"].as_str().unwrap_or("list");
+        let id=||args["taskId"].as_str().ok_or_else(||"taskId is required".to_string());
+        match action {
+            "list"|"status"=>self.list(conversation.as_deref(),context.is_none()),
+            "context"=>context.map(|context|json!(context)).ok_or_else(||"Send a chat message first to capture its model and approval settings".into()),
+            "create"=>self.create_or_update(args,context,false).map(|task|json!(task)),
+            "update"=>self.create_or_update(args,context,true).map(|task|json!(task)),
+            "pause"=>self.pause(id()?,true).map(|task|json!(task)),
+            "resume"=>self.pause(id()?,false).map(|task|json!(task)),
+            "delete"=>{self.delete(id()?)?;Ok(json!({"deleted":true}))},
+            "run_now"=>self.run_now(id()?).map(|run|json!(run)),
+            "cancel"=>self.cancel(args["runId"].as_str().ok_or("runId is required")?).map(|run|json!(run)),
+            "logs"=>{let run=self.run(args["runId"].as_str().ok_or("runId is required")?)?;scheduler_worker::read_logs(&self.root.join("logs").join(run.id))},
+            "emit"=>self.emit_scoped(args.get("event").cloned().ok_or("event is required")?,context.as_ref().map(|context|context.request.conversation_id.as_str())),
+            "webhook_setup"=>Ok(json!({"url":self.webhook_url(),"token":self.webhook_token()})),
+            "rotate_token"=>{
+                if context.is_some() {return Err("Webhook token management is available in the native Jobs screen".into());}
+                let token=format!("{}{}",uuid::Uuid::new_v4().simple(),uuid::Uuid::new_v4().simple());
+                self.db.lock().map_err(|error|error.to_string())?.execute("UPDATE settings SET value=?1 WHERE key='webhook_token'",[&token]).map_err(|error|error.to_string())?;
+                self.changed();Ok(json!({"url":self.webhook_url(),"token":token}))
+            },
+            _=>Err("Unknown background action".into()),
+        }
+    }
+}
+fn command_conversation(args:&Value,context:Option<&BackgroundContext>)->Result<Option<String>,String> {
+    let Some(context)=context else {return Ok(args["conversationId"].as_str().map(str::to_string));};
+    let caller=context.request.conversation_id.as_str();
+    if caller.trim().is_empty() {return Err("Originating chat context is required".into());}
+    for supplied in [args.get("conversationId"),args.get("task").and_then(|task|task.get("conversationId"))].into_iter().flatten() {
+        if !supplied.is_null() && supplied.as_str()!=Some(caller) {return Err("Background jobs are scoped to the originating chat".into());}
+    }
+    Ok(Some(caller.to_string()))
+}
+fn check_task_context(task:&BackgroundTask,context:Option<&BackgroundContext>)->Result<(),String> {
+    if let Some(context)=context {
+        let caller=context.request.conversation_id.as_str();
+        if task.conversation_id.as_deref()!=Some(caller) || task.context.as_ref().is_some_and(|saved|saved.request.conversation_id!=caller) {
+            return Err("Background job not found in this chat".into());
+        }
+    }
+    Ok(())
+}
+fn check_run_context(run:&BackgroundRun,context:Option<&BackgroundContext>)->Result<(),String> {
+    if context.is_some_and(|context|run.conversation_id.as_deref()!=Some(context.request.conversation_id.as_str())) {return Err("Background run not found in this chat".into());}
+    Ok(())
+}
+fn check_event_conversation(event:&Value,conversation:&str)->Result<(),String> {
+    match event {
+        Value::Object(fields)=>{
+            for (key,value) in fields {
+                if matches!(key.as_str(),"conversationId"|"conversation_id") && !value.is_null() && value.as_str()!=Some(conversation) {return Err("An agent event cannot impersonate another chat".into());}
+                check_event_conversation(value,conversation)?;
+            }
+        },
+        Value::Array(values)=>{for value in values {check_event_conversation(value,conversation)?;}},
+        _=>{},
+    }
+    Ok(())
 }
 fn save_task(db: &Connection, task: &BackgroundTask) -> Result<(), String> {
     db.execute("INSERT INTO tasks(id,payload,paused,next_due,deleted) VALUES(?1,?2,?3,?4,0) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,paused=excluded.paused,next_due=excluded.next_due", params![task.id,serde_json::to_string(task).map_err(|error| error.to_string())?,task.paused,task.next_due]).map_err(|error| error.to_string())?; Ok(())
@@ -475,25 +572,7 @@ fn cancel_queued(db: &Connection, task_id: &str, reason: &str) -> Result<(), Str
 
 pub async fn execute(core: Arc<AppCore>, _app: tauri::AppHandle, args: &Value, context: Option<BackgroundContext>) -> Result<Value, String> {
     core.ensure_not_updating()?;
-    let manager = &core.background;
-    let action = args["action"].as_str().unwrap_or("list");
-    let id = || args["taskId"].as_str().ok_or_else(|| "taskId is required".to_string());
-    match action {
-        "list" | "status" => manager.list(args["conversationId"].as_str(), context.is_none()),
-        "context" => context.map(|context| json!(context)).ok_or_else(|| "Send a chat message first to capture its model and approval settings".into()),
-        "create" => manager.create_or_update(args, context, false).map(|task| json!(task)),
-        "update" => manager.create_or_update(args, context, true).map(|task| json!(task)),
-        "pause" => manager.pause(id()?, true).map(|task| json!(task)),
-        "resume" => manager.pause(id()?, false).map(|task| json!(task)),
-        "delete" => { manager.delete(id()?)?; Ok(json!({"deleted":true})) },
-        "run_now" => manager.run_now(id()?).map(|run| json!(run)),
-        "cancel" => manager.cancel(args["runId"].as_str().ok_or("runId is required")?).map(|run| json!(run)),
-        "logs" => { let run = manager.run(args["runId"].as_str().ok_or("runId is required")?)?; scheduler_worker::read_logs(&manager.root.join("logs").join(run.id)) },
-        "emit" => manager.emit(args.get("event").cloned().ok_or("event is required")?),
-        "webhook_setup" => Ok(json!({"url":manager.webhook_url(),"token":manager.webhook_token()})),
-        "rotate_token" => { let token = format!("{}{}",uuid::Uuid::new_v4().simple(),uuid::Uuid::new_v4().simple()); manager.db.lock().map_err(|error| error.to_string())?.execute("UPDATE settings SET value=?1 WHERE key='webhook_token'",[&token]).map_err(|error| error.to_string())?; manager.changed(); Ok(json!({"url":manager.webhook_url(),"token":token})) },
-        _ => Err("Unknown background action".into()),
-    }
+    core.background.command(args,context)
 }
 pub fn tool_spec() -> Value {
     json!({"type":"function","function":{"name":"background_use","description":"Create durable schedules and named-event triggers while OpenCore is open. Prompt jobs save this chat's exact model, workspace and approval settings and invoke the real agent when GPU work is idle. Workers run an explicitly approved executable/argument array in a saved directory, hidden, with logs, exit codes and process-tree cancellation. Use event triggers for training checkpoints; stepModulo 500 matches positive steps 500,1000,1500. Missed schedules coalesce after reopen; interrupted runs are evidence and are not silently repeated. GPU workers hold the GPU until exit, so agent checkpoints wait. No inference polling or permanent OS service. webhook_setup reveals the loopback bearer token only when explicitly requested. Never fabricate worker results or completion.","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["list","status","create","update","pause","resume","delete","run_now","cancel","logs","emit","webhook_setup"]},"taskId":{"type":"string"},"runId":{"type":"string"},"conversationId":{"type":"string"},"task":{"type":"object","description":"name, schedule and taskAction. schedule kinds: once {at ISO}, interval {everySeconds,startAt?}, cron {expression,timezone utc|local}, event {name,filters?,stepModulo?,stepField?}. taskAction: prompt {prompt}, worker {worker:{command,args,cwd,usesGpu,longRunning,waitPolicy when-idle|allow-during-chat}}. Saved permissions cannot be raised by task JSON."},"event":{"type":"object","description":"Stable id, name and structured fields/data."}},"required":["action"]}}})
@@ -505,6 +584,24 @@ mod tests {
     fn fixture() -> (PathBuf, Arc<BackgroundManager>) { let root = std::env::temp_dir().join(format!("background-scheduler-{}",uuid::Uuid::new_v4())); let manager = BackgroundManager::new(root.clone()).unwrap(); (root, manager) }
     fn context(mode: &str) -> BackgroundContext {
         BackgroundContext { request: serde_json::from_value(json!({"conversationId":"chat","text":"source task","approvalMode":mode,"reasoningEffort":"high","skills":["web-dev"],"subagentsEnabled":true,"maxSubagents":3,"projectSkillsEnabled":true,"compactAtTokens":200000})).unwrap(), model_profile:"echo-3t".into(), workspace:std::env::temp_dir() }
+    }
+    #[test]
+    fn foreground_admission_race_preserves_the_same_occurrence_for_retry() {
+        let (root,manager)=fixture();
+        create(&manager,json!({"kind":"once","at":"2026-01-01T00:00:00Z"}));
+        manager.enqueue_due(date_ms("2026-10-06T00:00:00Z").unwrap()).unwrap();
+        let run=manager.runs(None,10).unwrap().remove(0);
+        manager.claim(&run.id).unwrap().unwrap();
+        manager.finish(&run.id,Err(crate::SCHEDULED_ADMISSION_BUSY.into()),false,false).unwrap();
+        let queued=manager.run(&run.id).unwrap();
+        assert_eq!(queued.status,"queued"); assert_eq!(queued.occurrence,run.occurrence);
+        assert!(queued.started_at.is_none()); assert!(queued.finished_at.is_none());
+        assert_eq!(queued.evidence["admissionWaits"],1);
+        assert_eq!(manager.runs(None,10).unwrap().len(),1);
+        manager.claim(&run.id).unwrap().unwrap();
+        manager.finish(&run.id,Err(crate::SCHEDULED_ADMISSION_BUSY.into()),true,false).unwrap();
+        assert_eq!(manager.run(&run.id).unwrap().status,"cancelled");
+        drop(manager); let _=std::fs::remove_dir_all(root);
     }
     fn create(manager: &BackgroundManager, schedule: Value) -> BackgroundTask { manager.create_or_update(&json!({"task":{"name":"Scheduled review","conversationId":"chat","schedule":schedule,"taskAction":{"kind":"prompt","prompt":"Review existing evidence"}}}),Some(context("ask-every-time")),false).unwrap() }
     #[test]
@@ -593,5 +690,89 @@ mod tests {
         assert!(manager.busy_gpu()); manager.cancel_active().await.unwrap(); wait.await.unwrap();
         assert!(!manager.busy_gpu()); assert!(!manager.stopping.load(Ordering::Acquire)); assert!(!manager.closing.load(Ordering::Acquire));
         assert!(manager.run_now(&task.id).is_ok()); drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    fn chat_context(id:&str, mode:&str)->BackgroundContext {
+        let mut saved=context(mode); saved.request.conversation_id=id.into(); saved
+    }
+    fn chat_task(manager:&BackgroundManager,id:&str)->BackgroundTask {
+        manager.create_or_update(&json!({"task":{"name":format!("{id} private task"),"schedule":{"kind":"event","name":"training.checkpoint"},"taskAction":{"kind":"prompt","prompt":format!("{id} private prompt")}}}),Some(chat_context(id,"ask-every-time")),false).unwrap()
+    }
+    #[test]
+    fn agent_lists_are_isolated_by_chat_even_when_parent_and_side_share_workspace() {
+        let (root,manager)=fixture(); let main=chat_task(&manager,"main"); let side=chat_task(&manager,"side");
+        manager.run_now(&main.id).unwrap(); manager.run_now(&side.id).unwrap();
+        for conversation in ["main","side"] {
+            let result=manager.command(&json!({"action":"list"}),Some(chat_context(conversation,"ask-every-time"))).unwrap();
+            assert_eq!(result["tasks"].as_array().unwrap().len(),1); assert_eq!(result["runs"].as_array().unwrap().len(),1);
+            assert_eq!(result["tasks"][0]["conversationId"],conversation); assert_eq!(result["runs"][0]["conversationId"],conversation);
+            assert!(result["webhook"]["token"].is_null());
+            let other=if conversation=="main" {"side"} else {"main"};
+            for action in ["list","status"] { assert!(manager.command(&json!({"action":action,"conversationId":other}),Some(chat_context(conversation,"allow-all"))).is_err()); }
+        }
+        let native=manager.command(&json!({"action":"list"}),None).unwrap();
+        assert_eq!(native["tasks"].as_array().unwrap().len(),2); assert_eq!(native["runs"].as_array().unwrap().len(),2); assert!(native["webhook"]["token"].is_string());
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn cross_chat_task_ids_cannot_read_mutate_or_swap_to_the_targets_saved_context() {
+        let (root,manager)=fixture(); let main=chat_task(&manager,"main"); let side=chat_task(&manager,"side");
+        for (caller,target) in [("main",&side),("side",&main)] {
+            for action in ["status","pause","resume","delete","run_now","update"] {
+                let args=json!({"action":action,"conversationId":caller,"taskId":target.id,"task":{"name":"Injected update","schedule":{"kind":"event","name":"training.checkpoint"},"taskAction":{"kind":"prompt","prompt":"Read another chat"},"context":{"request":{"conversationId":caller,"approvalMode":"allow-all"}}}});
+                assert!(manager.command(&args,Some(chat_context(caller,"allow-all"))).is_err(),"{caller} {action}");
+            }
+            // Direct update also enforces ownership before loading saved execution settings.
+            assert!(manager.create_or_update(&json!({"taskId":target.id,"task":{"name":"Direct override","schedule":{"kind":"event","name":"training.checkpoint"},"taskAction":{"kind":"prompt","prompt":"Changed"}}}),Some(chat_context(caller,"allow-all")),true).is_err());
+            let preserved=manager.task(&target.id).unwrap(); assert_eq!(preserved.name,target.name); assert!(!preserved.paused); assert_eq!(preserved.context.unwrap().request.approval_mode.as_str(),"ask-every-time");
+        }
+        assert!(manager.runs(None,10).unwrap().is_empty());
+        assert!(manager.command(&json!({"action":"pause","taskId":side.id}),None).is_ok());
+        assert!(manager.task(&side.id).unwrap().paused);
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn cross_chat_run_ids_cannot_expose_logs_or_cancel_private_work() {
+        let (root,manager)=fixture(); let main=chat_task(&manager,"main"); let side=chat_task(&manager,"side");
+        let main_run=manager.run_now(&main.id).unwrap(); let side_run=manager.run_now(&side.id).unwrap();
+        for run in [&main_run,&side_run] {
+            let directory=root.join("logs").join(&run.id); std::fs::create_dir_all(&directory).unwrap();
+            std::fs::write(directory.join("stdout.log"),format!("{} private stdout",run.conversation_id.as_deref().unwrap())).unwrap();
+        }
+        for (caller,target,own) in [("main",&side_run,&main_run),("side",&main_run,&side_run)] {
+            for action in ["status","logs","cancel"] { assert!(manager.command(&json!({"action":action,"runId":target.id}),Some(chat_context(caller,"allow-all"))).is_err(),"{caller} {action}"); }
+            assert_eq!(manager.run(&target.id).unwrap().status,"queued");
+            let own_logs=manager.command(&json!({"action":"logs","runId":own.id}),Some(chat_context(caller,"ask-every-time"))).unwrap();
+            assert_eq!(own_logs["stdout"],format!("{caller} private stdout"));
+        }
+        let native=manager.command(&json!({"action":"logs","runId":side_run.id}),None).unwrap(); assert_eq!(native["stdout"],"side private stdout");
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn agent_creation_rejects_conflicting_metadata_and_updates_keep_original_policy() {
+        let (root,manager)=fixture();
+        for top_level in [true,false] {
+            let mut args=json!({"action":"create","task":{"name":"Wrong chat","schedule":{"kind":"event","name":"training.checkpoint"},"taskAction":{"kind":"prompt","prompt":"Review"}}});
+            if top_level {args["conversationId"]=json!("side");} else {args["task"]["conversationId"]=json!("side");}
+            assert!(manager.command(&args,Some(chat_context("main","ask-every-time"))).is_err());
+        }
+        let task=chat_task(&manager,"main");
+        let result=manager.command(&json!({"action":"update","taskId":task.id,"task":{"name":"Updated own task","schedule":{"kind":"event","name":"training.checkpoint"},"taskAction":{"kind":"prompt","prompt":"Continue"},"context":{"request":{"conversationId":"main","approvalMode":"allow-all"}}}}),Some(chat_context("main","allow-all"))).unwrap();
+        assert_eq!(result["context"]["request"]["approvalMode"],"ask-every-time"); assert_eq!(result["conversationId"],"main");
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn agent_events_cannot_impersonate_other_chats_or_runtime_events() {
+        let (root,manager)=fixture(); chat_task(&manager,"main"); chat_task(&manager,"side");
+        for event in [json!({"id":"wrong-root","name":"training.checkpoint","conversationId":"side"}),json!({"id":"wrong-data","name":"training.checkpoint","data":{"conversationId":"side"}}),json!({"id":"generation:reserved:completed","name":"training.checkpoint"}),json!({"id":"reserved-name","name":"background.completed"})] {
+            assert!(manager.command(&json!({"action":"emit","event":event}),Some(chat_context("main","allow-all"))).is_err());
+        }
+        let custom=json!({"action":"emit","event":{"id":"custom-checkpoint","name":"training.checkpoint","data":{"runId":"external-training-1","step":500}}});
+        assert_eq!(manager.command(&custom,Some(chat_context("main","ask-every-time"))).unwrap()["queued"],1);
+        let own=manager.runs(Some("main"),10).unwrap(); assert_eq!(own.len(),1); assert_eq!(own[0].evidence["event"]["conversationId"],"main");
+        assert!(manager.runs(Some("side"),10).unwrap().is_empty());
+        assert_eq!(manager.command(&custom,Some(chat_context("main","ask-every-time"))).unwrap()["duplicate"],true);
+        // Authenticated external workers keep intentionally shared named workflows.
+        assert_eq!(manager.emit(json!({"id":"external-checkpoint","name":"training.checkpoint","data":{"runId":"external-training-1","step":1000}})).unwrap()["queued"],2);
+        drop(manager); let _=std::fs::remove_dir_all(root);
     }
 }

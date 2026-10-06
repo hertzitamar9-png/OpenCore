@@ -7,6 +7,19 @@ import { NativeBrowserPanel } from "./NativeBrowserPanel";
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); openFileDialog.mockReset(); });
 
+it("opens a new web tab for a chat link after the last tab was closed", async () => {
+  const command = vi.spyOn(api, "nativeBrowserCommand").mockImplementation(async (action, args = {}) => ({open: action === "status" ? !args.tabId : action !== "close", url: args.url || "https://example.com"}) as never);
+  const props = {onClose: () => {}, onNotice: () => {}, preview: null, onDownload: () => {}, width: 520, onWidthChange: () => {}, side: "right" as const, onSideChange: () => {}, snapPx: 0, onSnapChange: () => {}, embedded: true};
+  const {rerender} = render(<NativeBrowserPanel {...props} />);
+  await waitFor(() => expect(screen.getByLabelText("Browser address")).toHaveValue("https://example.com"));
+  fireEvent.click(screen.getByRole("button", {name: "Close Web 1"}));
+  expect(screen.getByText("No web tabs open.")).toBeVisible();
+  rerender(<NativeBrowserPanel {...props} navigateTo={{url: "https://example.com/report", requestId: "chat-link-after-close"}} />);
+  await waitFor(() => expect(command).toHaveBeenCalledWith("navigate", expect.objectContaining({url: "https://example.com/report", tabId: expect.any(String)})));
+  expect(screen.getByLabelText("Browser address")).toHaveValue("https://example.com/report");
+  expect(screen.getAllByRole("tab")).toHaveLength(1);
+});
+
 it("keeps a page opened by the model when the browser panel mounts", async () => {
   const command = vi.spyOn(api, "nativeBrowserCommand").mockResolvedValue({
     open: true, url: "http://127.0.0.1:8989/task/45",

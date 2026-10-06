@@ -58,6 +58,8 @@ const events = [];
 let assistantText = '';
 let client;
 let processClosed;
+let forkChild;
+let forkClosed;
 
 function waitUntil(predicate, label, timeoutMs = 20_000) {
   const deadline = Date.now() + timeoutMs;
@@ -379,13 +381,22 @@ try {
 
   // A side chat must fork the actual persisted context, not start an empty
   // thread or silently seed a short summary. Freeze at one completed turn.
-  const forked = await client.send('thread/fork', {
+  // OpenCore creates the fork in a fresh app-server with the same CODEX_HOME.
+  // Its process must recover persisted provider/context metadata correctly.
+  forkChild = spawn(manifest.appServerExecutable, ['app-server', '--listen', 'stdio://'], {
+    cwd: workspace, env: safeRuntimeEnvironment(), windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  forkClosed = new Promise(resolve => forkChild.once('close', (code, signal) => resolve({ code, signal })));
+  const forkClient = new JsonRpcClient(forkChild);
+  await forkClient.send('initialize', { clientInfo: { name: 'opencore-side-fork-test', version: '1.0.0' }, capabilities: {} });
+  forkClient.notify('initialized');
+  const forked = await forkClient.send('thread/fork', {
     threadId, lastTurnId: localTurn.turn.id, cwd: workspace, excludeTurns: true,
   });
   const branchId = forked?.thread?.id;
   assert.equal(typeof branchId, 'string', `thread/fork returned no branch: ${JSON.stringify(forked)}`);
   assert.notEqual(branchId, threadId, 'side chat must have its own durable thread ID');
-  const branchTurns = await client.send('thread/turns/list', {
+  const branchTurns = await forkClient.send('thread/turns/list', {
     threadId: branchId, limit: 20, sortDirection: 'asc', itemsView: 'full',
   });
   assert.ok(JSON.stringify(branchTurns).includes('Local OpenCore response passed.'),
@@ -398,6 +409,9 @@ try {
   assert.ok(JSON.stringify(parentTurns).includes('OpenCore MCP tool loop passed.'),
     'fork must not truncate or replace the original chat');
   events.push({ kind: 'side_context_fork_verified', parentId: threadId, branchId, through: localTurn.turn.id });
+  forkChild.stdin.end();
+  const forkExit = await Promise.race([forkClosed, new Promise(resolve => setTimeout(() => resolve(null), 12_000))]);
+  assert.equal(forkExit?.code, 0, `side fork app-server did not close cleanly: ${diagnostics}`);
 
   const closed = await closeAppServer();
   assert.equal(closed?.code, 0, `app-server did not exit cleanly: ${JSON.stringify(closed)}\n${diagnostics}`);
@@ -416,11 +430,16 @@ try {
   testPassed = true;
   console.log(JSON.stringify({ codexAppServer: manifest.cliVersion, schemaSha256: manifest.schemaSha256,
     sameThreadResumed: true, sameAppServerProcess: true, mcpToolCalls: bridgeRequests,
-    savedTurnReplay: true, perTurnSandboxOverride: true, sideContextFork: true,
+    savedTurnReplay: true, perTurnSandboxOverride: true, sideContextFork: true, freshProcessSideFork: true,
     cancelledInferenceRequests: events.filter(event => event.kind === 'model_request_aborted').length,
     mcpChildExited: true, hostedInference: false, passed: true }));
 } finally {
   if (hardTimeout) clearTimeout(hardTimeout);
+  if (forkChild && pidIsRunning(forkChild.pid)) {
+    spawnSync(process.platform === 'win32' ? 'taskkill.exe' : 'kill',
+      process.platform === 'win32' ? ['/PID', String(forkChild.pid), '/T', '/F'] : ['-KILL', String(forkChild.pid)],
+      { windowsHide: true, stdio: 'ignore' });
+  }
   if (child && (child.exitCode === null && child.signalCode === null || pidIsRunning(child.pid))) {
     await closeAppServer();
     if (pidIsRunning(child.pid)) spawnSync(process.platform === 'win32' ? 'taskkill.exe' : 'kill',

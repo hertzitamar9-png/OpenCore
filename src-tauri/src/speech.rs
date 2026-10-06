@@ -392,13 +392,16 @@ pub async fn speech_set_model(core:tauri::State<'_,Arc<crate::AppCore>>,model_id
 }
 fn speech_setting_reservation(core:&crate::AppCore)->Result<crate::studio_jobs::GpuReservation,String>{
     if core.studios.busy() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before loading speech.".into());}
-    crate::studio_jobs::reserve_gpu()
+    let gpu=crate::studio_jobs::reserve_gpu()?;
+    if !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat before loading speech.".into());}
+    Ok(gpu)
 }
 #[tauri::command]
 pub async fn speech_start(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:Option<String>)->Result<String,String>{
     if core.studios.busy() || core.studios.continuation_pending() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before using the microphone.".into());}
     crate::music_studio::require_idle_gpu().await?;
     let gpu=crate::studio_jobs::reserve_gpu()?;
+    if !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat before using the microphone.".into());}
     let runtime=core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move||runtime.stop()).await.map_err(|e|e.to_string())??;
     core.vision.stop();core.reflex.stop();

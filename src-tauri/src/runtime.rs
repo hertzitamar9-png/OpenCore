@@ -635,9 +635,16 @@ impl RuntimeManager {
     }
 
     pub fn ensure_running(&self) -> Result<RuntimeSnapshot, String> {
+        self.ensure_running_cancellable(&tokio_util::sync::CancellationToken::new())
+    }
+
+    pub(crate) fn ensure_running_cancellable(&self, token: &tokio_util::sync::CancellationToken) -> Result<RuntimeSnapshot, String> {
         if crate::studio_jobs::gpu_reserved() {return Err("A studio generation is using the GPU. Wait for it or cancel it in the studio.".into());}
+        // Capture generation before checking cancellation. A stop from the
+        // chat's watcher must not become a new startup's accepted generation.
         let generation = self.stop_generation.load(Ordering::SeqCst);
         let _gate = self.start_gate.lock().map_err(|e| e.to_string())?;
+        if token.is_cancelled() {return Err("__INTERRUPTED_BEFORE_SAVE__".into());}
         if self.stop_generation.load(Ordering::SeqCst) != generation { return Err("Runtime loading stopped".into()); }
         let snapshot = self.snapshot();
         if snapshot.status == "running" {
@@ -1298,6 +1305,21 @@ mod tests {
         assert_eq!(manager.upstream_url(), "http://127.0.0.1:8813");
         drop(manager);
         let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn cancellation_after_profile_stop_cannot_restart_the_model() {
+        let path=std::env::temp_dir().join(format!("opencore-cancel-start-{}.sqlite3",uuid::Uuid::new_v4()));
+        let store=Arc::new(EventStore::open(&path).unwrap());
+        let manager=RuntimeManager::new(store);
+        let token=tokio_util::sync::CancellationToken::new();
+        manager.stop().unwrap();
+        token.cancel();
+        manager.request_stop();
+        assert_eq!(manager.ensure_running_cancellable(&token).unwrap_err(),"__INTERRUPTED_BEFORE_SAVE__");
+        assert_eq!(manager.snapshot().status,"stopped");
+        assert!(manager.inner.lock().unwrap().model.is_none());
+        drop(manager);let _=std::fs::remove_file(path);
     }
 
     #[test]

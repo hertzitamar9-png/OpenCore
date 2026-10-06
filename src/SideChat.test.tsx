@@ -13,6 +13,60 @@ vi.mock('@tauri-apps/api/event', () => ({listen: vi.fn(async (name: string, call
 afterEach(() => { vi.restoreAllMocks(); handlers.clear(); });
 
 describe('Side chat branch', () => {
+  it('keeps changed branch effort and approval when opening it as a full chat', async () => {
+    const original = await api.snapshot(); const parent = original.conversations[0];
+    const branchId = 'side:updated-settings';
+    vi.spyOn(api, 'snapshot').mockResolvedValue({...original, conversations: [...original.conversations, {...parent, id: branchId, title: 'Changed branch settings'}]});
+    vi.spyOn(api, 'conversation').mockResolvedValue([]);
+    vi.spyOn(sideChat, 'createSideChat').mockResolvedValue({conversationId: branchId, parentId: parent.id, title: 'Changed branch settings', contextTokens: 32768, sharedWorkspace: true});
+    const send = vi.spyOn(api, 'sendChatMessage').mockResolvedValue({conversationId: branchId, title: 'Changed branch settings'});
+    render(<App />); await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
+    const input = await screen.findByLabelText('Message side chat'); const branch = input.closest('main')!;
+    fireEvent.click(within(branch).getByRole('button', {name: /^Effort:/}));
+    fireEvent.change(screen.getByRole('slider', {name: 'Reasoning effort'}), {target: {value: '2'}});
+    fireEvent.click(screen.getByRole('button', {name: 'Close Effort'}));
+    fireEvent.click(within(branch).getByRole('button', {name: /^Approval:/})); fireEvent.click(screen.getByRole('button', {name: 'Approve for me'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Open as full chat'}));
+    const mainInput = await screen.findByLabelText('Message OpenCore'); const main = mainInput.closest('main')!;
+    expect(within(main).getByRole('button', {name: 'Effort: Medium'})).toBeVisible();
+    expect(within(main).getByRole('button', {name: 'Approval: Approve for me'})).toBeVisible();
+    fireEvent.change(mainInput, {target: {value: 'Continue this branch'}}); fireEvent.keyDown(mainInput, {key: 'Enter'});
+    await waitFor(() => expect(send).toHaveBeenCalledWith(branchId, 'Continue this branch', [], 'medium', 'approve-for-me', expect.any(Array), expect.any(Boolean), 3, true, expect.any(Number), expect.any(String)));
+  });
+
+  it('anchors branch controls to its own composer and keeps accessible targets distinct', async () => {
+    const original = await api.snapshot(); const parent = original.conversations[0];
+    vi.spyOn(sideChat, 'createSideChat').mockResolvedValue({conversationId: 'side:controls', parentId: parent.id, title: 'Control branch', contextTokens: 32768, sharedWorkspace: true});
+    vi.spyOn(api, 'conversation').mockResolvedValue([]);
+    const originalRect = HTMLElement.prototype.getBoundingClientRect;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (!this.matches('.chat-composer-wrap,.chat-composer,.effort-trigger,.approval-trigger')) return originalRect.call(this);
+      const side = Boolean(this.closest('.side-chat-thread'));
+      const left = side ? 600 : 50; const width = side ? 400 : 500;
+      return {x: left, y: 650, left, right: left + width, top: 650, bottom: 750, width, height: 100, toJSON: () => ({})};
+    });
+    render(<App />); const mainInput = await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
+    const branchInput = await screen.findByLabelText('Message side chat');
+    const main = mainInput.closest('main')!; const branch = branchInput.closest('main')!;
+    const effort = within(branch).getByRole('button', {name: /^Effort:/});
+    fireEvent.click(effort);
+    const effortPanel = screen.getByRole('region', {name: 'Effort settings'});
+    expect(Number.parseFloat(effortPanel.style.left)).toBeGreaterThanOrEqual(600);
+    expect(effort).toHaveAttribute('aria-controls', effortPanel.id);
+    expect(within(main).getByRole('button', {name: /^Effort:/}).getAttribute('aria-controls')).not.toBe(effortPanel.id);
+    fireEvent.change(within(effortPanel).getByRole('slider', {name: 'Reasoning effort'}), {target: {value: '3'}});
+    expect(effort).toHaveAccessibleName('Effort: High'); expect(effortPanel).toBeVisible();
+    fireEvent.click(screen.getByRole('button', {name: 'Close Effort'}));
+    const approval = within(branch).getByRole('button', {name: /^Approval:/});
+    fireEvent.click(approval);
+    const approvalPanel = screen.getByRole('region', {name: 'Approval settings'});
+    expect(Number.parseFloat(approvalPanel.style.left)).toBeGreaterThanOrEqual(600);
+    expect(approval).toHaveAttribute('aria-controls', approvalPanel.id);
+    expect(within(main).getByRole('button', {name: /^Approval:/}).getAttribute('aria-controls')).not.toBe(approvalPanel.id);
+  });
+
   it('sends into a separate branch with the parent permissions and opens it as a full chat', async () => {
     const original = await api.snapshot(); const parent = original.conversations[0];
     let created = false;

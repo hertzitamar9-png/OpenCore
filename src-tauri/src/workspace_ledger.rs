@@ -1285,7 +1285,7 @@ fn windows_handle_path(file: &File) -> Result<PathBuf, String> {
 fn unchanged(before: &fs::Metadata, after: &fs::Metadata) -> bool {
     before.len() == after.len() && before.modified().ok() == after.modified().ok()
 }
-fn read_confined(root: &Path, path: &Path, limit: u64) -> Result<Vec<u8>, String> {
+pub(crate) fn read_confined(root: &Path, path: &Path, limit: u64) -> Result<Vec<u8>, String> {
     let mut file = open_confined(root, path)?;
     let before = file.metadata().map_err(err)?;
     if before.len() > limit {

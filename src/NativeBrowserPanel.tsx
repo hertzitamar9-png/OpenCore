@@ -42,6 +42,7 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
   const visibleRef = useRef(visible);
   visibleRef.current = visible && !obscured;
   const navigatedRequest = useRef<string | null>(null);
+  const openingRequest = useRef<string | null>(null);
   const webTabsRef = useRef<WebTab[]>([]);
   const [source, setSource] = useState<"web" | "files" | "chrome">("web");
   const [webTabs, setWebTabs] = useState<WebTab[]>([{ id: "default", title: "Web 1", url: DEFAULT_WEB_URL }]);
@@ -95,7 +96,16 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
   }, [activeWebTabId, webTabs, source, loading, error, obscured, visible]);
 
   useEffect(() => {
-    if (!visible || !navigateTo || navigatedRequest.current === navigateTo.requestId || !activeWebTab || loading) return;
+    if (!visible || !navigateTo || navigatedRequest.current === navigateTo.requestId) return;
+    if (!activeWebTab) {
+      if (openingRequest.current === navigateTo.requestId) return;
+      openingRequest.current = navigateTo.requestId;
+      const tab = {id: crypto.randomUUID(), title: `Web ${nextWebTabNumber.current++}`, url: navigateTo.url};
+      setLoading(true); setError(""); setSource("web");
+      setWebTabs(tabs => [...tabs, tab]); setActiveWebTabId(tab.id);
+      return;
+    }
+    if (loading) return;
     navigatedRequest.current = navigateTo.requestId;
     setSource("web");
     void browserCommand<{ url?: string }>("navigate", activeWebTab.id, { url: navigateTo.url }).then(result => {
