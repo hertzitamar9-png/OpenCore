@@ -1236,7 +1236,7 @@ export default function App() {
   useEffect(() => { try { window.localStorage.setItem('opencore.workspace.width', String(workspaceWidth)); window.localStorage.setItem('opencore.workspace.snap', String(workspaceSnap)); } catch { /* Session layout still works. */ } }, [workspaceWidth, workspaceSnap]);
   useEffect(() => {
     let disposed = false; let stop: (() => void) | undefined;
-    void listen('opencore-open-native-browser', () => { if (!disposed) openWorkspace('browser'); }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
+    void listen<{source?: string} | null>('opencore-open-native-browser', ({payload}) => { if (!disposed && payload?.source === 'agent') openWorkspace('browser'); }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
     return () => { disposed = true; stop?.(); };
   }, [openWorkspace]);
   useEffect(() => { void api.listStudioJobs().then(jobs => { for (const job of jobs) studioJobs.current.set(job.id, job.status); setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status))); }).catch(() => {}); }, []);

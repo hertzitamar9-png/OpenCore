@@ -58,6 +58,13 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
   webTabsRef.current = webTabs;
   const activeWebTab = webTabs.find((tab) => tab.id === activeWebTabId) ?? null;
   const activeFileTab = fileTabs.find((tab) => tab.id === activeFileTabId) ?? null;
+  const operationEpoch = useRef(0);
+  useEffect(() => {
+    operationEpoch.current += 1;
+    return () => { operationEpoch.current += 1; };
+  }, [activeWebTabId, source, visible, obscured]);
+  const acceptsReply = (tabId: string, epoch: number) => visibleRef.current
+    && selectedWebTabRef.current === tabId && operationEpoch.current === epoch;
 
   useEffect(() => {
     let active = true;
@@ -111,11 +118,13 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
     if (loading) return;
     navigatedRequest.current = navigateTo.requestId;
     setSource("web");
+    const epoch = operationEpoch.current;
     void browserCommand<{ url?: string }>("navigate", activeWebTab.id, { url: navigateTo.url }).then(result => {
+      if (!acceptsReply(activeWebTab.id, epoch)) return;
       const url = result.url || navigateTo.url;
       setAddress(url);
       setWebTabs(tabs => tabs.map(tab => tab.id === activeWebTab.id ? { ...tab, url } : tab));
-    }).catch(reason => onNotice(`Browser: ${String(reason)}`));
+    }).catch(reason => { if (acceptsReply(activeWebTab.id, epoch)) onNotice(`Browser: ${String(reason)}`); });
   }, [visible, navigateTo, activeWebTabId, loading, onNotice]);
 
   useEffect(() => {
@@ -141,27 +150,46 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
   }, [activeWebTabId, loading, error, source, onNotice, visible, obscured]);
 
   useEffect(() => {
-    if (!visible || loading || error || source !== "web" || !activeWebTab) return;
+    if (!visible || obscured || loading || error || source !== "web" || !activeWebTab) return;
+    let active = true;
+    const epoch = operationEpoch.current;
     const timer = window.setInterval(() => {
       void browserCommand<{ url: string }>("status", activeWebTab.id).then((result) => {
+        if (!active || !acceptsReply(activeWebTab.id, epoch)) return;
         if (result.url && document.activeElement?.getAttribute("aria-label") !== "Browser address") {
           setAddress(result.url);
           setWebTabs((tabs) => tabs.map((tab) => tab.id === activeWebTab.id ? { ...tab, url: result.url } : tab));
         }
       }).catch(() => {});
     }, 1300);
-    return () => window.clearInterval(timer);
-  }, [activeWebTabId, loading, error, source, visible]);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [activeWebTabId, loading, error, source, visible, obscured]);
 
   const act = async (action: string, args: Record<string, unknown> = {}) => {
     if (!activeWebTab) return;
+    const epoch = operationEpoch.current;
     try {
       const result = await browserCommand<{ url?: string }>(action, activeWebTab.id, args);
+      if (!acceptsReply(activeWebTab.id, epoch)) return;
       if (result.url) {
         setAddress(result.url);
         setWebTabs((tabs) => tabs.map((tab) => tab.id === activeWebTab.id ? { ...tab, url: result.url! } : tab));
       }
-    } catch (reason) { onNotice(`Browser: ${String(reason)}`); }
+    } catch (reason) { if (acceptsReply(activeWebTab.id, epoch)) onNotice(`Browser: ${String(reason)}`); }
+  };
+
+  const retry = async () => {
+    if (!activeWebTab) return;
+    const epoch = operationEpoch.current;
+    setError(""); setLoading(true);
+    try {
+      const result = await browserCommand<{ url?: string }>("open", activeWebTab.id, {url: address});
+      if (!acceptsReply(activeWebTab.id, epoch)) {
+        if (!visibleRef.current || selectedWebTabRef.current !== activeWebTab.id) void browserCommand("hide", activeWebTab.id).catch(() => {});
+        return;
+      }
+      setAddress(result.url || address); setLoading(false);
+    } catch (reason) { if (acceptsReply(activeWebTab.id, epoch)) { setError(String(reason)); setLoading(false); } }
   };
 
   const addWebTab = () => {
@@ -230,7 +258,7 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
       </div>
       {activeWebTab ? <>
         <div className="native-browser-toolbar"><button aria-label="Back" title="Back" onClick={() => void act("back")}><ArrowLeft size={16} /></button><button aria-label="Forward" title="Forward" onClick={() => void act("forward")}><ArrowRight size={16} /></button><button aria-label="Reload" title="Reload" onClick={() => void act("reload")}><RefreshCw size={16} /></button><div className="native-browser-address"><Globe2 size={15} /><input aria-label="Browser address" value={address} onChange={(event) => setAddress(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void act("navigate", { url: address }); }} placeholder="Enter a URL" /></div><button className="native-browser-go" onClick={() => void act("navigate", { url: address })}>Go</button></div>
-        <div className="native-browser-stage" ref={stage}>{loading ? <span>Opening browser…</span> : error ? <span>{error} <button onClick={() => { if (!activeWebTab) return; setError(""); setLoading(true); void browserCommand<{ url: string }>("open", activeWebTab.id, { url: address }).then((result) => { setAddress(result.url || address); setLoading(false); }).catch((reason) => { setError(String(reason)); setLoading(false); }); }}>Retry</button></span> : null}</div>
+        <div className="native-browser-stage" ref={stage}>{loading ? <span>Opening browser…</span> : error ? <span>{error} <button onClick={() => void retry()}>Retry</button></span> : null}</div>
       </> : <div className="browser-empty"><span>No web tabs open.</span><button onClick={addWebTab}>Open a web tab</button></div>}
     </> : null}
     {source === "files" ? <>

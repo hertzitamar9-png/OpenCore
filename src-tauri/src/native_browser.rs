@@ -66,7 +66,6 @@ pub(crate) fn command(app: &tauri::AppHandle, action: &str, args: &Value) -> Res
             app.get_webview(&label).ok_or("The browser closed while opening")?
                 .navigate(destination(address)?).map_err(|e| e.to_string())?;
         }
-        let _ = app.emit("opencore-open-native-browser", ());
     }
     let Some(view) = app.get_webview(&label) else {
         if action == "status" || action == "close" { return Ok(json!({"open":false})); }
@@ -102,6 +101,8 @@ pub(crate) async fn agent_command(app: &tauri::AppHandle, action: &str, args: &V
     if matches!(action, "open" | "navigate") {
         let requested = destination(args.get("url").and_then(Value::as_str).unwrap_or("https://www.google.com"))?;
         command(app, action, args)?;
+        // Frontend lifecycle opens must not override a later workspace/tab choice.
+        let _ = app.emit("opencore-open-native-browser", json!({"source":"agent"}));
         for _ in 0..60 {
             let view = app.get_webview(LABEL).ok_or("OpenCore Browser closed during navigation")?;
             if view.url().is_ok_and(|url| url == requested) {

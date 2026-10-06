@@ -96,6 +96,35 @@ it("opens and closes web tabs without replacing the other tab", async () => {
   vi.unstubAllGlobals();
 });
 
+it.each(['poll', 'navigate'])("ignores a delayed old-tab %s URL after switching tabs", async (operation) => {
+  let resolveOld!: (result: {open: boolean; url: string}) => void;
+  const oldReply = new Promise<{open: boolean; url: string}>(resolve => { resolveOld = resolve; });
+  let polling = false;
+  let poll!: () => void;
+  const setInterval = window.setInterval.bind(window);
+  vi.spyOn(window, 'setInterval').mockImplementation((handler, delay, ...args) => {
+    if (delay === 1300 && typeof handler === 'function') poll = () => handler(...args);
+    return setInterval(handler, delay, ...args);
+  });
+  const command = vi.spyOn(api, 'nativeBrowserCommand').mockImplementation(async (action, args = {}) => {
+    if (!args.tabId && ((action === 'status' && polling) || action === 'navigate')) return oldReply as never;
+    return {open: true, url: args.tabId ? 'https://example.com/current' : 'https://example.com/original'} as never;
+  });
+  vi.stubGlobal('crypto', {randomUUID: () => 'new-tab'});
+  render(<NativeBrowserPanel onClose={() => {}} onNotice={() => {}} preview={null}
+    onDownload={() => {}} width={520} onWidthChange={() => {}} side="right" onSideChange={() => {}}
+    snapPx={0} onSnapChange={() => {}} embedded />);
+  await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/original'));
+  if (operation === 'poll') { polling = true; act(() => poll()); }
+  else fireEvent.click(screen.getByRole('button', {name: 'Go'}));
+  fireEvent.click(screen.getByRole('button', {name: 'New web tab'}));
+  await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/current'));
+  await act(async () => { resolveOld({open: true, url: 'https://example.com/stale'}); await oldReply; });
+  expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/current');
+  fireEvent.click(screen.getByRole('button', {name: 'Go'}));
+  expect(command).toHaveBeenCalledWith('navigate', {tabId: 'new-tab', url: 'https://example.com/current'});
+});
+
 it("opens selected files in their own closable tabs", async () => {
   const command = vi.spyOn(api, "nativeBrowserCommand").mockResolvedValue({ open: true, url: "https://example.com" });
   const first = { name: "model.png", mime: "image/png", size: 1, dataUrl: "data:image/png;base64,AA==", text: null };

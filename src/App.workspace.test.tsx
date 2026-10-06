@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import * as api from './api';
@@ -22,6 +22,47 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('OpenCore shared workspace', () => {
+  it.each(['Computer', 'closed'])('retains the %s workspace choice when a late frontend browser open emits an event', async (choice) => {
+    let resolveOpen!: (result: {open: boolean; url: string}) => void;
+    const opened = new Promise<{open: boolean; url: string}>(resolve => { resolveOpen = resolve; });
+    const command = vi.spyOn(api, 'nativeBrowserCommand').mockImplementation(async action => {
+      if (action === 'status') return {open: false} as never;
+      if (action === 'open') return opened as never;
+      return {open: true} as never;
+    });
+    vi.spyOn(api, 'desktopCommand').mockResolvedValue({windows: []});
+    render(<App />);
+    await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'OpenCore Browser'}));
+    const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
+    await waitFor(() => expect(command.mock.calls.some(([action]) => action === 'open')).toBe(true));
+    if (choice === 'Computer') fireEvent.click(within(workspace).getByRole('tab', {name: 'Computer'}));
+    else fireEvent.click(within(workspace).getByRole('button', {name: 'Close workspace'}));
+    await act(async () => {
+      // An unmarked frontend lifecycle notification must not override the user's selection.
+      for (const handler of handlers.get('opencore-open-native-browser') ?? []) handler({payload: null});
+      resolveOpen({open: true, url: 'https://example.com/late'});
+      await opened;
+    });
+    if (choice === 'Computer') {
+      expect(within(workspace).getByRole('tab', {name: 'Computer'})).toHaveAttribute('aria-selected', 'true');
+      expect(within(workspace).getByLabelText('Window')).toBeVisible();
+    } else expect(screen.queryByRole('complementary', {name: 'Workspace'})).not.toBeInTheDocument();
+    expect(command).toHaveBeenCalledWith('hide');
+  });
+
+  it('opens the Browser workspace for an explicit agent navigation request', async () => {
+    vi.spyOn(api, 'nativeBrowserCommand').mockResolvedValue({open: true, url: 'https://example.com/agent'});
+    render(<App />);
+    await screen.findByLabelText('Message OpenCore');
+    await act(async () => {
+      for (const handler of handlers.get('opencore-open-native-browser') ?? []) handler({payload: {source: 'agent'}});
+    });
+    const workspace = await screen.findByRole('complementary', {name: 'Workspace'});
+    expect(within(workspace).getByRole('tab', {name: 'Browser'})).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(within(workspace).getByLabelText('Browser address')).toHaveValue('https://example.com/agent'));
+  });
+
   it('imports a copied Hermes chat, reveals it in Imported and retains the current chat', async () => {
     const initial = await api.snapshot();
     const copied = {...initial.conversations[0], id: 'import:hermes:copy', client: 'Imported Hermes', title: 'Hermes project notes', pinned: false};
