@@ -40,6 +40,7 @@ jobs:
           key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}
           restore-keys: windows-native-workspace-v1-
       - name: Build and verify desktop focus guard DLL before Cargo
+        id: desktop-guard
         shell: pwsh
         run: ./scripts/build-desktop-focus-guard.ps1
       - name: Install JavaScript dependencies
@@ -84,7 +85,7 @@ jobs:
       - name: Build Windows app executable without packaging or publishing
         run: npx tauri build --no-bundle
       - name: Save compiled native dependencies for diagnostic retries
-        if: ${{ always() && steps.native-cache.outputs.cache-hit != 'true' }}
+        if: ${{ always() && steps.desktop-guard.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: |

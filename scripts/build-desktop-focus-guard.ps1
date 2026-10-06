@@ -29,8 +29,8 @@ Push-Location -LiteralPath $intermediate
 try {
   $compilerArguments = @(
     '/nologo', '/TC', '/LD', '/O2', '/W4', '/WX', '/MT', '/guard:cf',
-    "/Fo$object", "/Fe$dll", $source, 'user32.lib', 'kernel32.lib',
-    '/link', '/MACHINE:X64', '/INCREMENTAL:NO', '/DYNAMICBASE', '/NXCOMPAT',
+    "/Fo$object", "/Fe$dll", $source,
+    '/link', 'user32.lib', 'kernel32.lib', '/MACHINE:X64', '/INCREMENTAL:NO', '/DYNAMICBASE', '/NXCOMPAT',
     '/GUARD:CF', '/MANIFEST:EMBED', "/IMPLIB:$library"
   )
   & $compiler @compilerArguments
