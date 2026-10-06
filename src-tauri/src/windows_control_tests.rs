@@ -2,24 +2,79 @@
 use super::{cursor_position, platform};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{mpsc, OnceLock};
+use std::sync::{mpsc, Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
 use windows::core::{w, HSTRING};
 use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
+use windows::Win32::UI::Input::KeyboardAndMouse::GetActiveWindow;
 use windows::Win32::UI::WindowsAndMessaging::*;
 
 static BUTTON_CLICKS: AtomicUsize = AtomicUsize::new(0);
 static BUTTON_NOTIFICATION_SOURCE: AtomicUsize = AtomicUsize::new(0);
 static CANVAS_CLICKS: AtomicUsize = AtomicUsize::new(0);
 static TARGET_ACTIVATIONS: AtomicUsize = AtomicUsize::new(0);
+static TARGET_LOCAL_ACTIVATIONS: AtomicUsize = AtomicUsize::new(0);
 static TARGET_Z_CHANGES: AtomicUsize = AtomicUsize::new(0);
 static BUTTON_HANDLER_ENTERED: AtomicBool = AtomicBool::new(false);
 static BUTTON_HANDLER_SAW_INPUT: AtomicBool = AtomicBool::new(false);
 static TARGET_FOREGROUND_ALLOWED: AtomicBool = AtomicBool::new(false);
 static SELF_BUTTON_CLICKS: AtomicUsize = AtomicUsize::new(0);
 static TARGET_DIRECTORY: OnceLock<std::path::PathBuf> = OnceLock::new();
+static TARGET_EVENTS: Mutex<Vec<TargetEvent>> = Mutex::new(Vec::new());
+static FOREGROUND_EVENTS: Mutex<Vec<ForegroundEvent>> = Mutex::new(Vec::new());
+static EVENT_COVER: AtomicUsize = AtomicUsize::new(0);
+static EVENT_BARRIER_REQUEST: AtomicUsize = AtomicUsize::new(0);
+static EVENT_BARRIER_DONE: AtomicUsize = AtomicUsize::new(0);
 const FIXTURE_ACTIVATE: u32 = WM_APP + 7;
+const FIXTURE_EVENT_BARRIER: u32 = WM_APP + 8;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+struct TargetEvent {
+    phase: String,
+    message: String,
+    foreground: isize,
+    local_active: isize,
+    detail: usize,
+}
+
+#[derive(Clone, Debug)]
+struct ForegroundEvent {
+    window: isize,
+    time: u32,
+}
+
+unsafe extern "system" fn foreground_event(
+    _hook: windows_uia::Win32::UI::Accessibility::HWINEVENTHOOK,
+    event: u32,
+    window: windows_uia::Win32::Foundation::HWND,
+    object: i32,
+    child: i32,
+    _thread: u32,
+    time: u32,
+) {
+    if event == EVENT_SYSTEM_FOREGROUND {
+        FOREGROUND_EVENTS.lock().unwrap().push(ForegroundEvent { window: window.0 as isize, time });
+    } else if event == EVENT_OBJECT_NAMECHANGE && window.0 as usize == EVENT_COVER.load(Ordering::SeqCst)
+        && object == OBJID_CLIENT.0 && child > 0 {
+        // This marker shares the same out-of-context hook as foreground
+        // events, whose delivery is guaranteed to remain in sequential order.
+        EVENT_BARRIER_DONE.store(child as usize, Ordering::SeqCst);
+    }
+}
+
+fn record_target_event(message: &str, detail: usize) {
+    let event = TargetEvent {
+        phase: std::fs::read_to_string(target_directory().join("phase")).unwrap_or_else(|_| "setup".into()),
+        message: message.into(),
+        foreground: unsafe { GetForegroundWindow() }.0 as isize,
+        local_active: unsafe { GetActiveWindow() }.0 as isize,
+        detail,
+    };
+    let mut events = TARGET_EVENTS.lock().unwrap();
+    events.push(event);
+    if events.len() > 32 { events.remove(0); }
+}
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct TargetHandles {
@@ -31,16 +86,18 @@ struct TargetHandles {
     list: isize,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct TargetState {
     button_clicks: usize,
     button_source: usize,
     canvas_clicks: usize,
     activations: usize,
+    local_activations: usize,
     z_changes: usize,
     handler_entered: bool,
     handler_saw_input: bool,
     foreground_allowed: bool,
+    events: Vec<TargetEvent>,
 }
 
 fn target_directory() -> &'static std::path::Path {
@@ -57,10 +114,12 @@ fn record_target_state() {
         button_source: BUTTON_NOTIFICATION_SOURCE.load(Ordering::SeqCst),
         canvas_clicks: CANVAS_CLICKS.load(Ordering::SeqCst),
         activations: TARGET_ACTIVATIONS.load(Ordering::SeqCst),
+        local_activations: TARGET_LOCAL_ACTIVATIONS.load(Ordering::SeqCst),
         z_changes: TARGET_Z_CHANGES.load(Ordering::SeqCst),
         handler_entered: BUTTON_HANDLER_ENTERED.load(Ordering::SeqCst),
         handler_saw_input: BUTTON_HANDLER_SAW_INPUT.load(Ordering::SeqCst),
         foreground_allowed: TARGET_FOREGROUND_ALLOWED.load(Ordering::SeqCst),
+        events: TARGET_EVENTS.lock().unwrap().clone(),
     };
     let result = serde_json::to_vec(&state).map_err(std::io::Error::other).and_then(|data| {
         std::fs::write(target_directory().join("state.next"), data)?;
@@ -80,9 +139,12 @@ unsafe extern "system" fn target_proc(
 ) -> LRESULT {
     match message {
         WM_COMMAND if wparam.0 & 0xffff == 101 && wparam.0 >> 16 == 0 => {
+            record_target_event("button notification entered", 0);
             BUTTON_NOTIFICATION_SOURCE.store(lparam.0 as usize, Ordering::SeqCst);
             if target_flag("try-foreground") {
-                TARGET_FOREGROUND_ALLOWED.store(SetForegroundWindow(hwnd).as_bool(), Ordering::SeqCst);
+                let allowed = SetForegroundWindow(hwnd).as_bool();
+                TARGET_FOREGROUND_ALLOWED.store(allowed, Ordering::SeqCst);
+                record_target_event("button foreground attempt", if allowed { 1 } else { 0 });
             }
             if target_flag("delay-button") {
                 BUTTON_HANDLER_ENTERED.store(true, Ordering::SeqCst);
@@ -104,6 +166,7 @@ unsafe extern "system" fn target_proc(
         }
         FIXTURE_ACTIVATE => {
             let allowed = SetForegroundWindow(hwnd).as_bool();
+            record_target_event("explicit foreground probe", if allowed { 1 } else { 0 });
             if allowed {
                 // Grant activation back only to the test parent that launched
                 // this exact owned process. This is fixture setup/verification.
@@ -114,14 +177,31 @@ unsafe extern "system" fn target_proc(
             LRESULT(if allowed { 1 } else { 0 })
         }
         WM_ACTIVATE if wparam.0 & 0xffff != 0 => {
-            TARGET_ACTIVATIONS.fetch_add(1, Ordering::SeqCst);
+            // WM_ACTIVATE reports the active window of this input queue. It
+            // can occur while the entire application remains in the background.
+            // Keep that evidence, and separately count real foreground activation.
+            // https://devblogs.microsoft.com/oldnewthing/20131016-00/?p=2913
+            TARGET_LOCAL_ACTIVATIONS.fetch_add(1, Ordering::SeqCst);
+            if GetForegroundWindow() == hwnd { TARGET_ACTIVATIONS.fetch_add(1, Ordering::SeqCst); }
+            record_target_event("WM_ACTIVATE active", wparam.0);
+            record_target_state();
+            DefWindowProcW(hwnd, message, wparam, lparam)
+        }
+        WM_ACTIVATE => {
+            record_target_event("WM_ACTIVATE inactive", wparam.0);
             record_target_state();
             DefWindowProcW(hwnd, message, wparam, lparam)
         }
         WM_WINDOWPOSCHANGING => {
             TARGET_Z_CHANGES.fetch_add(1, Ordering::SeqCst);
+            let flags = if lparam.0 == 0 { 0 } else { (*(lparam.0 as *const WINDOWPOS)).flags.0 };
+            record_target_event("WM_WINDOWPOSCHANGING", flags as usize);
             record_target_state();
             DefWindowProcW(hwnd, message, wparam, lparam)
+        }
+        WM_NULL => {
+            record_target_state();
+            LRESULT(0)
         }
         WM_CLOSE => {
             let _ = DestroyWindow(hwnd);
@@ -153,6 +233,7 @@ struct Fixture {
     canvas: isize,
     list: isize,
     own_button: isize,
+    foreground_event_start: AtomicUsize,
     process: OwnedTargetProcess,
     directory: FixtureDirectory,
     _cover_window: OwnedCoverWindow,
@@ -182,6 +263,14 @@ struct OwnedCoverWindow {
     thread: Option<thread::JoinHandle<()>>,
 }
 
+struct OwnedForegroundHook(windows_uia::Win32::UI::Accessibility::HWINEVENTHOOK);
+
+impl Drop for OwnedForegroundHook {
+    fn drop(&mut self) {
+        unsafe { let _ = windows_uia::Win32::UI::Accessibility::UnhookWinEvent(self.0); }
+    }
+}
+
 impl Drop for OwnedCoverWindow {
     fn drop(&mut self) {
         unsafe { let _ = PostMessageW(hwnd(self.window), WM_CLOSE, WPARAM(0), LPARAM(0)); }
@@ -191,6 +280,13 @@ impl Drop for OwnedCoverWindow {
 
 unsafe extern "system" fn cover_proc(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     match message {
+        FIXTURE_EVENT_BARRIER => {
+            // Do not synthesize a foreground event. A name-change marker on
+            // our disposable cover only drains the observer's event queue.
+            windows_uia::Win32::UI::Accessibility::NotifyWinEvent(EVENT_OBJECT_NAMECHANGE,
+                windows_uia::Win32::Foundation::HWND(hwnd.0), OBJID_CLIENT.0, wparam.0 as i32);
+            LRESULT(0)
+        }
         WM_COMMAND if wparam.0 & 0xffff == 201 && wparam.0 >> 16 == 0 => {
             SELF_BUTTON_CLICKS.fetch_add(1, Ordering::SeqCst);
             LRESULT(0)
@@ -338,6 +434,9 @@ impl Fixture {
         assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"),
             "Native fixture tests run only in GitHub Actions");
         SELF_BUTTON_CLICKS.store(0, Ordering::SeqCst);
+        FOREGROUND_EVENTS.lock().unwrap().clear();
+        EVENT_BARRIER_REQUEST.store(0, Ordering::SeqCst);
+        EVENT_BARRIER_DONE.store(0, Ordering::SeqCst);
         let directory = FixtureDirectory(std::env::temp_dir().join(format!("opencore-desktop-target-{}", uuid::Uuid::new_v4())));
         std::fs::create_dir(&directory.0).unwrap();
         let (sender, receiver) = mpsc::sync_channel(1);
@@ -347,6 +446,11 @@ impl Fixture {
                 w!("OpenCore Foreground Cover Fixture"), WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                 40, 40, 520, 440, None, None, HINSTANCE::default(), None).unwrap();
             SetWindowLongPtrW(cover, GWLP_WNDPROC, cover_proc as *const () as isize);
+            EVENT_COVER.store(cover.0 as usize, Ordering::SeqCst);
+            let hook = windows_uia::Win32::UI::Accessibility::SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND, EVENT_OBJECT_NAMECHANGE, None, Some(foreground_event), 0, 0, WINEVENT_OUTOFCONTEXT);
+            assert!(!hook.0.is_null(), "the pumping cover thread must observe every foreground transition");
+            let _foreground_hook = OwnedForegroundHook(hook);
             let own_button = CreateWindowExW(WINDOW_EX_STYLE::default(), w!("BUTTON"),
                 w!("Rejected OpenCore-owned target fixture"), WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 20, 20, 230, 36, cover, HMENU(201usize as *mut std::ffi::c_void),
@@ -395,6 +499,7 @@ impl Fixture {
         }
         Self { target: handles.target, cover, button: handles.button, edit: handles.edit,
             canvas: handles.canvas, list: handles.list, own_button, process,
+            foreground_event_start: AtomicUsize::new(0),
             _cover_window: cover_window, directory }
     }
 
@@ -422,6 +527,26 @@ impl Fixture {
         std::fs::write(self.directory.0.join(name), []).unwrap();
     }
 
+    fn phase(&self, name: &str) {
+        std::fs::write(self.directory.0.join("phase"), name).unwrap();
+    }
+
+    fn flush_desktop(&self) {
+        // Cross-input-queue activation is asynchronous. Drain both windows
+        // before sampling counters; polling GetForegroundWindow alone does
+        // not prove that activation/deactivation notifications have completed.
+        // https://devblogs.microsoft.com/oldnewthing/20161118-00/?p=94745
+        for window in [self.target, self.cover] {
+            let sent = unsafe { SendMessageTimeoutW(hwnd(window), WM_NULL, WPARAM(0), LPARAM(0),
+                SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT, 1000, None) };
+            assert_ne!(sent.0, 0, "fixture window must answer its activation queue barrier: {}", window_description(hwnd(window)));
+        }
+        let sequence = EVENT_BARRIER_REQUEST.fetch_add(1, Ordering::SeqCst) + 1;
+        assert!(sequence <= i32::MAX as usize);
+        unsafe { PostMessageW(hwnd(self.cover), FIXTURE_EVENT_BARRIER, WPARAM(sequence), LPARAM(0)).unwrap(); }
+        wait_for("sequential foreground-event observer barrier", || EVENT_BARRIER_DONE.load(Ordering::SeqCst) >= sequence);
+    }
+
     fn attempt_activation(&self) -> bool {
         // The activation API runs in the external target process, which is
         // allowed to activate outside a protected dispatch. A parent-process
@@ -430,12 +555,24 @@ impl Fixture {
         let sent = unsafe { SendMessageTimeoutW(hwnd(self.target), FIXTURE_ACTIVATE, WPARAM(0), LPARAM(0),
             SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT, 1000, Some(&mut outcome)) };
         assert_ne!(sent.0, 0, "the controlled external target must answer its activation probe");
+        self.flush_desktop();
+        if outcome != 0 {
+            let events = FOREGROUND_EVENTS.lock().unwrap().clone();
+            let start = self.foreground_event_start.load(Ordering::SeqCst);
+            assert!(events[start..].iter().any(|event| event.window == self.target),
+                "a successful deliberate activation must be detected by the real foreground-event observer: {events:?}");
+        }
         outcome != 0
     }
 
     fn restore_cover(&self) {
+        self.phase("deliberate cover restoration");
         assert!(unsafe { SetForegroundWindow(hwnd(self.cover)) }.as_bool());
         wait_for("foreground cover restore", || unsafe { GetForegroundWindow() } == hwnd(self.cover));
+        self.flush_desktop();
+        // Only deliberate test activation/restoration creates a new baseline.
+        // Never rebase after a background action or discovery phase.
+        self.foreground_event_start.store(FOREGROUND_EVENTS.lock().unwrap().len(), Ordering::SeqCst);
     }
 
     fn assert_covered(&self, args: &Value) {
@@ -466,7 +603,14 @@ impl Fixture {
         activations: usize,
         z_changes: usize,
     ) {
+        self.flush_desktop();
         let current = unsafe { GetForegroundWindow() };
+        let state = self.state();
+        let events = FOREGROUND_EVENTS.lock().unwrap().clone();
+        let observed: Vec<_> = events[self.foreground_event_start.load(Ordering::SeqCst)..].iter()
+            .map(|event| (event.window, event.time)).collect();
+        assert!(observed.iter().all(|(window, _)| *window == foreground.0 as isize),
+            "{operation}: every foreground transition must remain on the cover, including brief transitions; events={observed:?}; target={state:?}");
         assert_eq!(
             current,
             foreground,
@@ -481,16 +625,16 @@ impl Fixture {
             "{operation}: desktop cursor changed"
         );
         assert_eq!(
-            self.state().activations,
+            state.activations,
             activations,
-            "{operation}: target must not be briefly activated; {}",
-            window_description(hwnd(self.target))
+            "{operation}: target must not be briefly activated in the foreground; {}; evidence={state:?}",
+            window_description(hwnd(self.target)),
         );
         assert_eq!(
-            self.state().z_changes,
+            state.z_changes,
             z_changes,
-            "{operation}: target must not be temporarily exposed or reordered; {}",
-            window_description(hwnd(self.target))
+            "{operation}: target must not be temporarily exposed or reordered; {}; evidence={state:?}",
+            window_description(hwnd(self.target)),
         );
     }
 
@@ -530,9 +674,28 @@ fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
     }
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
 
+    fixture.phase("headless startup only");
+    let mut startup = crate::desktop_helper::helper_command().unwrap();
+    startup.env("OPENCORE_DESKTOP_HELPER_TEST_MODE", "startup_only");
+    let started = runtime.block_on(crate::desktop_helper::execute("inspect".into(), button.clone(), startup))
+        .expect("headless fixture startup must complete without a desktop action");
+    assert_eq!(started["startupOnly"], true);
+    fixture.assert_desktop_unchanged("headless startup only", foreground, cursor, activations, z_changes);
+    fixture.assert_covered(button);
+
+    fixture.phase("cold headless accessibility discovery");
+    let discovered = runtime.block_on(crate::windows_control::command("inspect".into(), button.clone()))
+        .expect("headless fixture must discover its covered accessible controls");
+    assert!(discovered["elements"].as_array().unwrap().iter()
+        .any(|element| element["name"] == "Background fixture action"));
+    fixture.assert_desktop_unchanged("cold headless accessibility discovery", foreground, cursor, activations, z_changes);
+    fixture.assert_covered(button);
+
     // Exercise the actual parent/helper handshake. The external target's real
     // notification handler attempts to activate its own window while the
     // foreground OpenCore process protects the dispatch.
+    fixture.phase("headless button discovery, dispatch and teardown");
+    let local_activations = fixture.state().local_activations;
     let clicks = fixture.state().button_clicks;
     fixture.flag("try-foreground");
     let delegated = runtime.block_on(crate::windows_control::command("interact".into(), button.clone()))
@@ -544,7 +707,13 @@ fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
     assert_eq!(fixture.state().button_clicks, clicks + 1);
     fixture.assert_desktop_unchanged("headless button dispatch", foreground, cursor, activations, z_changes);
     fixture.assert_covered(button);
+    let evidence = fixture.state();
+    if evidence.local_activations != local_activations {
+        println!("headless button local WM_ACTIVATE notifications {}->{}; foreground-event history and actual foreground activation remained unchanged; evidence={evidence:?}",
+            local_activations, evidence.local_activations);
+    }
 
+    fixture.phase("headless text discovery, dispatch and teardown");
     let mut edit = fixture.args(fixture.edit);
     edit["text"] = json!("headless helper background text");
     let delegated = runtime.block_on(crate::windows_control::command("commit_text".into(), edit))
@@ -558,6 +727,7 @@ fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
     // exact owned subprocess, then release foreground protection. Hold its
     // process handle before teardown so an exited/reused PID cannot fake this.
     for cancel in [false, true] {
+        fixture.phase(if cancel { "canceled headless dispatch" } else { "expired headless dispatch" });
         let activations = fixture.state().activations;
         let z_changes = fixture.state().z_changes;
         let receipt = Receipt(std::env::temp_dir().join(format!("opencore-desktop-helper-{}.pid", uuid::Uuid::new_v4())));
@@ -595,6 +765,7 @@ fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
         });
         assert!(started.elapsed() < Duration::from_secs(10), "blocked manual dispatch retained its lock too long");
         fixture.assert_desktop_unchanged("blocked helper teardown", foreground, cursor, activations, z_changes);
+        fixture.phase("deliberate released helper activation probe");
         assert!(fixture.attempt_activation(),
             "helper teardown must release its foreground lock; this activation is fixture verification only");
         wait_for("released helper foreground verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.target));
@@ -653,6 +824,7 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     // the same production guard releases, proving this is a genuine attempt.
     let manual = fixture.args(fixture.button);
     let cover = unsafe { GetForegroundWindow() };
+    fixture.phase("protected direct external activation probe");
     let activated = platform::manual_dispatch(&manual, || {
         Ok(fixture.attempt_activation())
     }).expect("manual dispatch must protect its foreground process");
@@ -660,10 +832,12 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     assert_eq!(unsafe { GetForegroundWindow() }, cover);
     let exact_error: Result<(), String> = platform::manual_dispatch(&manual, || Err("fixture dispatch error".into()));
     assert_eq!(exact_error, Err("fixture dispatch error".into()));
+    fixture.phase("deliberate failed-dispatch activation probe");
     assert!(fixture.attempt_activation(),
         "a failed dispatch must release its lock; this activation is fixture verification only");
     wait_for("released dispatch foreground verification", || unsafe { GetForegroundWindow() } == hwnd(fixture.target));
     fixture.restore_cover();
+    fixture.phase("direct background controls and accessibility discovery");
 
     // A worker entering from an unaware thread must obtain physical rectangles
     // and restore that thread's exact original context when finished.
@@ -977,6 +1151,7 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
         cursor_before_delay.1,
     );
     fixture.flag("delay-button");
+    fixture.phase("completed background action with independent cursor input");
     let evidence_directory = fixture.directory.0.clone();
     let independent_input = thread::spawn(move || {
         wait_for("delayed button handler entry", || {

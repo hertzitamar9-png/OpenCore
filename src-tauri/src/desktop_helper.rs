@@ -295,6 +295,9 @@ mod tests {
         assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
         let mode = std::env::var("OPENCORE_DESKTOP_HELPER_TEST_MODE").unwrap();
         let code = serve(|action, args| {
+            if mode == "startup_only" {
+                return Ok(serde_json::json!({"startupOnly":true}));
+            }
             if mode == "hang_dispatch" {
                 return dispatch_with_parent(|| {
                     if let Some(path) = args["processReceipt"].as_str() {
