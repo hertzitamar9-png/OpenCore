@@ -55,8 +55,10 @@ jobs:
         working-directory: src-tauri
         shell: pwsh
         run: |
-          & ../scripts/prepare-windows-rust-test-manifest.ps1
-          cargo test --lib
+          $runner = @('pwsh', '-NoLogo', '-NoProfile', '-File', (Resolve-Path ../scripts/prepare-windows-rust-test-manifest.ps1).Path) | ConvertTo-Json -Compress
+          $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
+          [IO.File]::WriteAllText($runnerConfig, "[target.x86_64-pc-windows-msvc]`nrunner = $runner`n", [Text.UTF8Encoding]::new($false))
+          cargo --config $runnerConfig test --lib
       - name: Diagnose a failed Windows test executable
         if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
         shell: powershell

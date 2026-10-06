@@ -1,51 +1,87 @@
-# Cargo's library test executable does not receive Tauri's application manifest.
-# TaskDialogIndirect requires Common Controls v6 before the Windows loader runs.
-# Prepare only Cargo's current test artifact; the production app is untouched.
+# Cargo target runner: activate Common Controls v6 after linking and immediately
+# before running Cargo's selected library test executable. Never invoke Cargo here.
+param(
+  [Parameter(Position = 0)]
+  [string]$TestExecutable,
+  [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
+  [AllowEmptyCollection()]
+  [AllowEmptyString()]
+  [string[]]$TestArguments = @()
+)
+
 $ErrorActionPreference = 'Stop'
 # An absent original RT_MANIFEST is expected; inspect native exit codes below.
 $PSNativeCommandUseErrorActionPreference = $false
-if ($env:GITHUB_ACTIONS -ne 'true' -or [string]::IsNullOrEmpty($env:RUNNER_TEMP)) {
-  throw 'Windows native test preparation runs only in GitHub Actions.'
+if ($env:GITHUB_ACTIONS -ne 'true' -or [string]::IsNullOrEmpty($env:RUNNER_TEMP) -or
+    [string]::IsNullOrEmpty($env:GITHUB_WORKSPACE)) {
+  throw 'The Windows native test runner runs only in GitHub Actions.'
 }
-$cargo = (Get-Command cargo.exe -ErrorAction Stop).Source
-$manifestTool = (Get-Command mt.exe -ErrorAction Stop).Source
-$output = Join-Path $env:RUNNER_TEMP 'opencore-rust-test-manifest'
-New-Item -ItemType Directory -Force -Path $output | Out-Null
-$cargoMessages = Join-Path $output 'cargo-artifacts.jsonl'
-$cargoDiagnostics = Join-Path $output 'cargo-stderr.log'
-# -Wait follows the entire descendant tree, including MSVC's persistent PDB
-# server. Wait for Cargo itself and show its progress as the redirected log grows.
-$compile = Start-Process -FilePath $cargo -ArgumentList @('test', '--lib', '--no-run', '--message-format=json') `
-  -WorkingDirectory (Get-Location).Path -WindowStyle Hidden -PassThru `
-  -RedirectStandardOutput $cargoMessages -RedirectStandardError $cargoDiagnostics
-$diagnosticsStream = [System.IO.File]::Open($cargoDiagnostics, [System.IO.FileMode]::Open,
-  [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
-$diagnosticsReader = [System.IO.StreamReader]::new($diagnosticsStream)
-try {
-  do {
-    $progress = $diagnosticsReader.ReadToEnd()
-    if ($progress.Length -gt 0) { Write-Host -NoNewline $progress }
-  } while (-not $compile.WaitForExit(1000))
-  # Drain redirected output callbacks before parsing the completed artifact log.
-  $compile.WaitForExit()
-  $progress = $diagnosticsReader.ReadToEnd()
-  if ($progress.Length -gt 0) { Write-Host -NoNewline $progress }
-} finally {
-  $diagnosticsReader.Dispose()
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+  throw 'Use pwsh (PowerShell 7) so every Cargo test argument is forwarded exactly.'
 }
-$messages = @(Get-Content -LiteralPath $cargoMessages | ForEach-Object { $_ | ConvertFrom-Json })
-foreach ($message in $messages) {
-  if ($message.reason -eq 'compiler-message' -and $message.message.rendered) {
-    Write-Host $message.message.rendered
+
+function Resolve-NativeTestExecutable {
+  param([string]$Executable, [string]$Workspace)
+  if ([string]::IsNullOrWhiteSpace($Executable)) {
+    throw 'Cargo must supply the library test executable as the first runner argument.'
   }
+  $checkout = (Resolve-Path -LiteralPath $Workspace -ErrorAction Stop).ProviderPath
+  $target = [System.IO.Path]::GetFullPath((Join-Path $checkout 'src-tauri/target')).TrimEnd('\', '/')
+  $item = Get-Item -LiteralPath $Executable -ErrorAction Stop
+  if ($item -isnot [System.IO.FileInfo]) { throw 'Cargo selected an executable that is not a regular file.' }
+  $path = [System.IO.Path]::GetFullPath($item.FullName)
+  $prefix = $target + [System.IO.Path]::DirectorySeparatorChar
+  if (-not $path.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw 'Cargo selected a test executable outside this Actions checkout target directory.'
+  }
+  $relative = $path.Substring($prefix.Length).Replace('\', '/')
+  if ($relative -cnotmatch '^(?:x86_64-pc-windows-msvc/)?(?:debug|release)/deps/opencore_control_center_lib-[0-9a-f]{16}\.exe$') {
+    throw 'Cargo must select the hashed OpenCore library test executable in target deps.'
+  }
+  # Do not follow a link into a different artifact or checkout.
+  for ($entry = $item; $null -ne $entry; $entry = if ($entry -is [System.IO.FileInfo]) { $entry.Directory } else { $entry.Parent }) {
+    if (($entry.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+      throw 'The Cargo test artifact path contains a filesystem link.'
+    }
+    if ($entry.FullName.TrimEnd('\', '/') -ieq $checkout.TrimEnd('\', '/')) { break }
+  }
+  $reader = [System.IO.BinaryReader]::new([System.IO.File]::OpenRead($path))
+  try {
+    if ($reader.BaseStream.Length -lt 64 -or $reader.ReadUInt16() -ne 0x5a4d) {
+      throw 'Cargo selected an invalid Windows test executable.'
+    }
+    [void]$reader.BaseStream.Seek(0x3c, [System.IO.SeekOrigin]::Begin)
+    $peOffset = $reader.ReadInt32()
+    if ($peOffset -lt 64 -or $peOffset -gt ($reader.BaseStream.Length - 6)) {
+      throw 'The Cargo test executable has an invalid PE header offset.'
+    }
+    [void]$reader.BaseStream.Seek($peOffset, [System.IO.SeekOrigin]::Begin)
+    if ($reader.ReadUInt32() -ne 0x4550 -or $reader.ReadUInt16() -ne 0x8664) {
+      throw 'The Cargo test runner requires the x86_64 Windows executable.'
+    }
+  } finally {
+    $reader.Dispose()
+  }
+  return $path
 }
-if ($compile.ExitCode -ne 0) { throw "Compiling Rust library tests failed with exit code $($compile.ExitCode)." }
-$executables = @($messages | Where-Object {
-  $_.reason -eq 'compiler-artifact' -and $_.profile.test -and
-  $_.target.name -eq 'opencore_control_center_lib' -and $_.executable
-} | ForEach-Object { $_.executable } | Sort-Object -Unique)
-if ($executables.Count -ne 1) { throw "Expected one current OpenCore library test executable; Cargo reported $($executables.Count)." }
-$executable = (Resolve-Path -LiteralPath $executables[0]).Path
+
+function New-NativeTestProcessStartInfo {
+  param([string]$Executable, [AllowEmptyCollection()][AllowEmptyString()][string[]]$Arguments, [string]$WorkingDirectory)
+  $info = [System.Diagnostics.ProcessStartInfo]::new()
+  $info.FileName = $Executable
+  $info.WorkingDirectory = $WorkingDirectory
+  $info.UseShellExecute = $false
+  $info.CreateNoWindow = $true
+  # ArgumentList handles spaces, embedded quotes and empty arguments without
+  # rebuilding a command line or applying PowerShell's native argument rules.
+  foreach ($argument in $Arguments) { $info.ArgumentList.Add($argument) }
+  return $info
+}
+
+$executable = Resolve-NativeTestExecutable $TestExecutable $env:GITHUB_WORKSPACE
+$manifestTool = (Get-Command mt.exe -ErrorAction Stop).Source
+$output = Join-Path $env:RUNNER_TEMP ('opencore-rust-test-manifest-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $output | Out-Null
 $original = Join-Path $output 'original.manifest'
 $extractOutput = @(& $manifestTool -nologo "-inputresource:$executable;#1" "-out:$original" 2>&1)
 $extractExit = $LASTEXITCODE
@@ -130,7 +166,17 @@ foreach ($attribute in $expectedDefinition.Attributes) {
 }
 $control = $activation.SelectSingleNode("//*[local-name()='assemblyIdentity' and @name='Microsoft.Windows.Common-Controls' and @version='6.0.0.0' and @publicKeyToken='6595b64144ccf1df']")
 if ($null -eq $control) { throw 'The embedded test manifest does not activate Common Controls v6.' }
-# Check the same executable's loader before cargo runs every library test.
-$listing = @(& $executable --list 2>&1)
-if ($LASTEXITCODE -ne 0) { throw "The manifested test executable cannot load: $($listing -join "`n")" }
-Write-Host "Common Controls v6 embedded and test loader verified: $executable"
+Write-Host "Common Controls v6 embedded for Cargo-selected native tests: $executable"
+# This is Cargo's actual invocation, including filters, ignored-test switches and
+# all future libtest arguments. Output is inherited and the exact exit code is
+# returned. No Cargo command can relink between manifest activation and execution.
+$test = [System.Diagnostics.Process]::new()
+$test.StartInfo = New-NativeTestProcessStartInfo $executable $TestArguments (Get-Location).ProviderPath
+try {
+  if (-not $test.Start()) { throw 'Could not start the Cargo-selected native library tests.' }
+  $test.WaitForExit()
+  $testExitCode = $test.ExitCode
+} finally {
+  $test.Dispose()
+}
+exit $testExitCode
