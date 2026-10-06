@@ -33,7 +33,7 @@
 - [x] Inspect actual shortcuts, version, native windows and Windows errors.
 - [x] Verify v0.2.110 release/installer hash and back up executable/chat database.
 - [x] Upgrade the existing directory without deleting app data.
-- [ ] Verify actual Explorer desktop and Start menu launches after repairing redirected app data.
+- [x] Verify actual Explorer desktop and Start menu launches after repairing redirected app data.
 - [ ] Repeat the same launch verification after the final feature release.
 
 ## Task 2: Durable schedules, events and workers
@@ -82,7 +82,7 @@ Root files: lib.rs, codex_harness.rs, gateway.rs, store.rs as necessary, focused
 
 ## Verification record before native CI
 
-- Terminal shortcut launches of installed v0.2.110 succeeded, but actual Explorer double-click reproduced the startup failure. The selected database and supporting runtimes had been redirected into Codex LocalCache; Explorer could not see them. A read-only Windows file-handle probe confirmed the redirected physical path, and a child launched with the desktop shell parent saw the ordinary folder. Physical recovery and final feature-release shortcut checks are required.
+- Terminal shortcut launches of installed v0.2.110 succeeded, but actual Explorer double-click reproduced the startup failure. The selected database and supporting runtimes had been redirected into Codex LocalCache; Explorer could not see them. A read-only Windows file-handle probe confirmed the redirected physical path, and a child launched with the desktop shell parent saw the ordinary folder. Missing files were moved without overwriting conflicts; the signed installer repaired the ordinary installation. Actual Explorer desktop launches at 02:39 and 02:40 UTC and the Start menu shortcut at 02:43 UTC reached ready and showed all 188 chats. The manual Update check responded correctly. Final feature-release shortcut checks remain required.
 - Unified frontend passed 246 Vitest tests, 44 Node tests and the TypeScript/Vite production build. Mocked shell preview covered 800-pixel and 1600-pixel desktop widths, receipts/snapshots, Browser/Computer tabs, isolated branch replies and Effort/Approval persistence on full-chat navigation.
 - The installed pinned Codex app-server passed real stdio initialize/inference/MCP/cancellation/resume with local deterministic Responses fixtures. A fresh second app-server using the same isolated CODEX_HOME forked actual durable context through a saved turn, excluded later work and left the source unchanged.
 - Review fixes retain a queued schedule when foreground work wins admission, restrict branch ECHO to the copied context, use direct old-chat identity/project lookups, validate artifact handles before reads, recheck speech admission under GPU ownership and retain cancellation across runtime startup.
