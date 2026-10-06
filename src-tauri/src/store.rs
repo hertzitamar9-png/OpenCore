@@ -825,7 +825,9 @@ impl EventStore {
                    ('vllm','vLLM','openai','http://127.0.0.1:8000/v1','vllm',0),
                    ('localai','LocalAI','openai','http://127.0.0.1:8080/v1','localai',0),
                    ('claude-code','Claude Code','history','local://claude-code','claude',0),
-                   ('codex','Codex','history','local://codex','codex',0);",
+                   ('codex','Codex','history','local://codex','codex',0),
+                   ('opencode','OpenCode','history','local://opencode','opencode',0),
+                   ('hermes','Hermes Agent','history','local://hermes','hermes',0);",
             )
             .map_err(|e| e.to_string())?;
         let project_columns = {
@@ -1070,9 +1072,16 @@ impl EventStore {
     }
 
     pub fn ensure_project_for_directory(&self, folder: &Path) -> Result<ProjectSummary, String> {
+        self.ensure_imported_project_for_directory(folder, None)
+    }
+
+    pub fn ensure_imported_project_for_directory(&self, folder: &Path, source_name: Option<&str>) -> Result<ProjectSummary, String> {
         let (folder_path, folder_key) = canonical_existing_directory(folder)?;
-        let name = Path::new(&folder_path).file_name().and_then(|part| part.to_str())
-            .filter(|part| !part.is_empty()).unwrap_or(&folder_path).to_string();
+        let name = source_name.map(redact_text).map(|name| name.trim().chars().take(160).collect::<String>())
+            .filter(|name| !name.is_empty()).unwrap_or_else(|| {
+                Path::new(&folder_path).file_name().and_then(|part| part.to_str())
+                    .filter(|part| !part.is_empty()).unwrap_or(&folder_path).to_string()
+            });
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
         let connection = self.connection.lock().map_err(|e| e.to_string())?;
@@ -1090,6 +1099,11 @@ impl EventStore {
     }
 
     pub fn record_imported_directory(&self, conversation_id: &str, cwd: Option<&Path>) -> Result<(), String> {
+        self.record_imported_project(conversation_id, cwd, cwd, None)
+    }
+
+    /// Retain the exact source cwd and link an existing original project folder.
+    pub fn record_imported_project(&self, conversation_id: &str, cwd: Option<&Path>, folder: Option<&Path>, source_name: Option<&str>) -> Result<(), String> {
         let raw = cwd.map(|path| path.to_string_lossy().to_string());
         let (assignment, current_project): (String, Option<String>) = {
             let connection = self.connection.lock().map_err(|e| e.to_string())?;
@@ -1101,13 +1115,13 @@ impl EventStore {
                 .map_err(|e| e.to_string())?;
             state
         };
-        let Some(folder) = cwd else { return Ok(()); };
+        let Some(folder) = folder else { return Ok(()); };
         // Validate even for a manually assigned chat so sync can report a stale source folder.
         canonical_existing_directory(folder)?;
         if assignment == "manual" || (assignment == "legacy" && current_project.is_some()) {
             return Ok(());
         }
-        let project = self.ensure_project_for_directory(folder)?;
+        let project = self.ensure_imported_project_for_directory(folder, source_name)?;
         self.assign_imported_project_if_automatic(conversation_id, &project.id).map(|_| ())
     }
 
@@ -1487,6 +1501,7 @@ impl EventStore {
         let expected_client = match format {
             "opencore" => "Imported OpenCore",
             "hermes" => "Imported Hermes",
+            "opencode" => "Imported OpenCode",
             "codex" => "Imported Codex",
             "claude" => "Imported Claude Code",
             "generic" => "Imported JSON",
@@ -1751,7 +1766,7 @@ impl EventStore {
         let connection = self.connection.lock().map_err(|error| error.to_string())?;
         connection.query_row(
             "SELECT COUNT(*) FROM timeline WHERE conversation_id=?1 AND kind<>'echo_import' \
-             AND source IN ('Codex','Claude Code')",
+             AND source IN ('Codex','Claude Code','Imported OpenCode','Imported Hermes')",
             [conversation_id], |row| row.get::<_, i64>(0),
         ).map(|count| count as u64).map_err(|error| error.to_string())
     }
@@ -1759,7 +1774,7 @@ impl EventStore {
     pub fn imported_conversation_ids(&self) -> Result<Vec<String>, String> {
         let connection = self.connection.lock().map_err(|error| error.to_string())?;
         let mut statement = connection.prepare(
-            "SELECT DISTINCT conversation_id FROM timeline WHERE kind<>'echo_import' AND source IN ('Codex','Claude Code') ORDER BY conversation_id"
+            "SELECT DISTINCT conversation_id FROM timeline WHERE kind<>'echo_import' AND source IN ('Codex','Claude Code','Imported OpenCode','Imported Hermes') ORDER BY conversation_id"
         ).map_err(|error| error.to_string())?;
         let ids = statement.query_map([], |row| row.get::<_, String>(0))
             .map_err(|error| error.to_string())?
@@ -1771,6 +1786,8 @@ impl EventStore {
         let (client_name, prefix) = match client {
             "codex" => ("Codex", "codex:%"),
             "claude-code" => ("Claude Code", "claude:%"),
+            "opencode" => ("Imported OpenCode", "import:opencode:%"),
+            "hermes" => ("Imported Hermes", "import:hermes:%"),
             _ => return Err(format!("Unsupported imported history source: {client}")),
         };
         let connection = self.connection.lock().map_err(|error| error.to_string())?;
@@ -1789,6 +1806,8 @@ impl EventStore {
         let (client_name, prefix) = match client {
             "codex" => ("Codex", "codex:%"),
             "claude-code" => ("Claude Code", "claude:%"),
+            "opencode" => ("Imported OpenCode", "import:opencode:%"),
+            "hermes" => ("Imported Hermes", "import:hermes:%"),
             _ => return Err(format!("Unsupported imported history source: {client}")),
         };
         let mut connection = self.connection.lock().map_err(|error| error.to_string())?;
@@ -1819,7 +1838,7 @@ impl EventStore {
         let mut statement = connection.prepare(
             "SELECT id,conversation_id,timestamp,kind,role,source,title,content,metadata FROM timeline \
              WHERE conversation_id=?1 AND id>?2 AND kind<>'echo_import' \
-             AND source IN ('Codex','Claude Code') \
+             AND source IN ('Codex','Claude Code','Imported OpenCode','Imported Hermes') \
              ORDER BY id LIMIT ?3",
         ).map_err(|error| error.to_string())?;
         let rows = statement.query_map(params![conversation_id, after_id, limit.min(128)], |row| {

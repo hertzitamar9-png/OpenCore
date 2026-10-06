@@ -14,6 +14,83 @@ const candidate = (category: string): api.InstalledModel => ({
 });
 function history() { vi.spyOn(api, 'listStudioJobs').mockResolvedValue([]); }
 
+it('defaults to LTX 2.5 BF16 and its distilled controls when older video models appear first', () => {
+  history(); vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  const old = {...candidate('video'), id: 'wan22-ti2v-5b', label: 'Wan 2.2'};
+  const latest = {...candidate('video'), id: 'ltx-25-distilled-bf16', label: 'LTX 2.5 distilled BF16', precision: 'BF16'};
+  const {rerender} = render(<MediaStudio category="video" models={[old, latest]} />);
+  expect(screen.getByLabelText('Model')).toHaveValue(latest.id);
+  expect(screen.getByLabelText('Inference steps')).toHaveValue(8);
+  expect(screen.getByLabelText('Guidance scale')).toHaveValue(1);
+  expect(screen.getByLabelText('Frame count')).toHaveValue(121);
+  expect(screen.getByText('BF16 · Apache-2.0')).toBeVisible();
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Model'), {target: {value: old.id}});
+  rerender(<MediaStudio category="video" models={[latest, {...old}]} />);
+  expect(screen.getByLabelText('Model')).toHaveValue(old.id);
+});
+
+it('offers an explicit pinned weight download for an installable media model', async () => {
+  history();
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  const model = {...candidate('tts'), installable: true, downloadBytes: 2000000000, totalBytes: 2000000000};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  const install = vi.spyOn(api, 'installModel').mockResolvedValue();
+  render(<MediaStudio category="tts" models={[model]} onNotice={vi.fn()} />);
+  expect(screen.getByLabelText('Speech speed')).toBeVisible();
+  expect(install).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', {name: /Install weights/}));
+  await waitFor(() => expect(install).toHaveBeenCalledWith('tts-candidate'));
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+});
+
+it('reports a failed background weight transfer after the install command accepts it', async () => {
+  history();
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  const model = {...candidate('tts'), installable: true, downloadBytes: 2000000000};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: {modelId: model.id, phase: 'failed', downloadedBytes: 0, totalBytes: 2000000000, currentFile: '', error: 'Download failed SHA-256 verification'}, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'installModel').mockResolvedValue();
+  const notice = vi.fn();
+  render(<MediaStudio category="tts" models={[model]} onNotice={notice} />);
+  fireEvent.click(screen.getByRole('button', {name: /Install weights/}));
+  expect(await screen.findByRole('alert')).toHaveTextContent('SHA-256 verification');
+  expect(notice).not.toHaveBeenCalledWith(expect.stringContaining('weights are verified'));
+  expect(screen.getByRole('button', {name: /Install weights/})).toBeEnabled();
+});
+
+it('applies LTX 2.5 distilled defaults and rejects an incompatible frame count', async () => {
+  history();
+  const model = {...candidate('video'), id: 'ltx-25-distilled-bf16', label: 'LTX 2.5 distilled'};
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue({modelId: model.id, python: 'python.exe', sourceDir: 'C:\\models', runner: 'worker.py'});
+  const submit = vi.spyOn(api, 'submitStudioJob');
+  render(<MediaStudio category="video" models={[model]} onNotice={vi.fn()} />);
+  await screen.findByText('Connected runtime · external weights');
+  expect(screen.getByLabelText('Inference steps')).toHaveValue(8);
+  expect(screen.getByLabelText('Guidance scale')).toHaveValue(1);
+  expect(screen.getByLabelText('Frame count')).toHaveValue(121);
+  fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'A character opens a door'}});
+  fireEvent.change(screen.getByLabelText('Frame count'), {target: {value: '120'}});
+  fireEvent.click(screen.getByRole('button', {name: 'Generate'}));
+  expect(await screen.findByRole('alert')).toHaveTextContent('8n + 1');
+  expect(submit).not.toHaveBeenCalled();
+});
+it('exposes publisher speakers and style instructions for Qwen3 CustomVoice before installation', async () => {
+  history();
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  render(<MediaStudio category="tts" models={[{...candidate('tts'), id: 'tts-qwen3-customvoice-1-7b'}]} />);
+  expect(screen.getByRole('option', {name: 'Ryan'})).toBeVisible();
+  expect(screen.getByLabelText('Voice style instruction')).toBeVisible();
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+});
+it('limits Voxtral Realtime output controls to transcription text', async () => {
+  history();
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  render(<MediaStudio category="omni" models={[{...candidate('omni'), id: 'omni-voxtral-mini-4b-realtime-2602'}]} />);
+  expect(screen.getByLabelText('Response mode')).toHaveValue('text');
+  expect(screen.queryByRole('option', {name: 'speech'})).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', {name: 'wav'})).not.toBeInTheDocument();
+});
+
 it('connects an explicit worker and source folder for a setup-only catalog entry', async () => {
   history();
   vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);

@@ -63,6 +63,28 @@ pub struct FileRecord {
     pub status: String,
 }
 
+pub(crate) struct BrowserFile {
+    pub name: String,
+    pub mime: String,
+    pub bytes: Vec<u8>,
+    pub sha256: String,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub(crate) enum BrowserAsset {
+    Snapshot {
+        name: String,
+        hash: String,
+        mime: String,
+        size: u64,
+    },
+    Record {
+        id: String,
+        version: String,
+    },
+}
+pub(crate) type BrowserManifest = BTreeMap<String, BrowserAsset>;
+
 #[derive(Clone, Serialize, Deserialize)]
 struct CapturedFile {
     hash: String,
@@ -182,7 +204,10 @@ impl WorkspaceLedger {
                 path TEXT NOT NULL, before_hash TEXT, after_hash TEXT, record TEXT NOT NULL,
                 reference_root TEXT);
             CREATE INDEX IF NOT EXISTS files_capture ON files(capture_id);
-            CREATE INDEX IF NOT EXISTS files_path ON files(path);",
+            CREATE INDEX IF NOT EXISTS files_path ON files(path);
+            CREATE TABLE IF NOT EXISTS capture_assets (
+                capture_id TEXT PRIMARY KEY REFERENCES turns(capture_id),
+                before_assets TEXT NOT NULL, after_assets TEXT NOT NULL);",
         )
         .map_err(err)?;
         let ledger = Arc::new(Self {
@@ -321,6 +346,7 @@ impl WorkspaceLedger {
             &files,
             &coverage,
             None,
+            Some((&capture.before.files, &after.files)),
         )?;
         self.latest_changes(&json!({"conversationId":capture.conversation,"turnId":capture.turn}))
     }
@@ -456,6 +482,7 @@ impl WorkspaceLedger {
             &files,
             &coverage,
             Some(&references),
+            None,
         )?;
         Ok(json!({"files":files,"coverage":coverage,"turnId":job}))
     }
@@ -469,6 +496,136 @@ impl WorkspaceLedger {
             "index" => self.index(&args),
             _ => Err("Unknown workspace file action".into()),
         }
+    }
+
+    /// A browser session can read only versions recorded in this exact capture.
+    pub(crate) fn browser_manifest(
+        &self,
+        id: &str,
+        version: Option<&str>,
+    ) -> Result<(String, BrowserManifest), String> {
+        let (selected, _) = self.get_record(id)?;
+        let version = version.unwrap_or(if selected.change == "deleted" {
+            "before"
+        } else {
+            "after"
+        });
+        if !matches!(version, "before" | "after") {
+            return Err("File version must be before or after".into());
+        }
+        let (records, captured): (Vec<FileRecord>, Option<BTreeMap<String, CapturedFile>>) = {
+            let db = self.database()?;
+            let mut statement = db.prepare("SELECT record FROM files WHERE capture_id=(SELECT capture_id FROM files WHERE id=?1)").map_err(err)?;
+            let rows = statement
+                .query_map(params![id], |row| row.get::<_, String>(0))
+                .map_err(err)?
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(err)?;
+            let records = rows
+                .iter()
+                .map(|row| serde_json::from_str(row).map_err(err))
+                .collect::<Result<_, _>>()?;
+            let assets = db.query_row(
+                "SELECT a.before_assets,a.after_assets FROM capture_assets a JOIN files f ON f.capture_id=a.capture_id WHERE f.id=?1",
+                params![id], |row| row.get::<_, String>(if version == "before" { 0 } else { 1 }),
+            ).optional().map_err(err)?;
+            let captured = assets
+                .as_deref()
+                .map(serde_json::from_str)
+                .transpose()
+                .map_err(err)?;
+            (records, captured)
+        };
+        let mut manifest = BTreeMap::new();
+        // These metadata entries reuse already saved objects. They include unchanged assets
+        // omitted from the visible delta, without consulting any current workspace files.
+        if let Some(captured) = captured {
+            for (path, file) in captured {
+                let path = browser_record_path(&path)?;
+                let name = path.rsplit('/').next().unwrap_or("file").to_owned();
+                manifest.insert(
+                    path,
+                    BrowserAsset::Snapshot {
+                        name,
+                        hash: file.hash,
+                        mime: file.mime,
+                        size: file.size,
+                    },
+                );
+            }
+        }
+        let output_root = browser_output_root(&records);
+        for record in &records {
+            let available = if version == "before" {
+                record.before_hash.is_some()
+            } else {
+                record.after_hash.is_some()
+            };
+            if available {
+                manifest.insert(
+                    browser_file_path(record, output_root.as_deref())?,
+                    BrowserAsset::Record {
+                        id: record.id.clone(),
+                        version: version.to_owned(),
+                    },
+                );
+            }
+        }
+        let target = browser_file_path(&selected, output_root.as_deref())?;
+        // Eagerly verify the chosen file before opening the browser; every asset is verified again when read.
+        self.browser_file(id, version)?;
+        manifest.insert(
+            target.clone(),
+            BrowserAsset::Record {
+                id: id.to_owned(),
+                version: version.to_owned(),
+            },
+        );
+        Ok((target, manifest))
+    }
+
+    pub(crate) fn browser_asset(&self, asset: &BrowserAsset) -> Result<BrowserFile, String> {
+        match asset {
+            BrowserAsset::Record { id, version } => self.browser_file(id, version),
+            BrowserAsset::Snapshot {
+                name,
+                hash,
+                mime,
+                size,
+            } => {
+                let bytes = self.read_snapshot(hash)?;
+                if bytes.len() as u64 != *size {
+                    return Err("Captured asset size verification failed".into());
+                }
+                Ok(BrowserFile {
+                    name: name.clone(),
+                    mime: mime.clone(),
+                    bytes,
+                    sha256: hash.clone(),
+                })
+            }
+        }
+    }
+
+    pub(crate) fn browser_file(&self, id: &str, version: &str) -> Result<BrowserFile, String> {
+        if !matches!(version, "before" | "after") {
+            return Err("File version must be before or after".into());
+        }
+        let (record, reference) = self.get_record(id)?;
+        let (bytes, sha256, _) =
+            self.version_bytes(&record, reference.as_deref(), version == "before")?;
+        let name = record
+            .path
+            .rsplit(['/', '\\'])
+            .next()
+            .unwrap_or("file")
+            .to_owned();
+        Ok(BrowserFile {
+            name,
+            mime: record.mime,
+            bytes,
+            sha256,
+        })
     }
 
     fn scan(&self, workspace: &Path) -> Result<Scan, String> {
@@ -714,6 +871,10 @@ impl WorkspaceLedger {
         files: &[FileRecord],
         coverage: &[String],
         references: Option<&BTreeMap<String, PathBuf>>,
+        assets: Option<(
+            &BTreeMap<String, CapturedFile>,
+            &BTreeMap<String, CapturedFile>,
+        )>,
     ) -> Result<(), String> {
         let mut db = self.database()?;
         let transaction = db.transaction().map_err(err)?;
@@ -725,6 +886,10 @@ impl WorkspaceLedger {
             transaction.execute("INSERT OR IGNORE INTO files(id,capture_id,path,before_hash,after_hash,record,reference_root) VALUES(?1,?2,?3,?4,?5,?6,?7)", params![file.id, capture_id, file.path, file.before_hash, file.after_hash, serde_json::to_string(file).map_err(err)?, reference]).map_err(err)?;
             // A completed job may strengthen an earlier indexed observation of that exact same output.
             transaction.execute("UPDATE files SET capture_id=?1,record=?2,reference_root=?3 WHERE id=?4 AND ?5='completed' AND capture_id IN(SELECT capture_id FROM turns WHERE kind='index')", params![capture_id, serde_json::to_string(file).map_err(err)?, reference, file.id, status]).map_err(err)?;
+        }
+        if let Some((before, after)) = assets {
+            transaction.execute("INSERT INTO capture_assets(capture_id,before_assets,after_assets) VALUES(?1,?2,?3) ON CONFLICT(capture_id) DO UPDATE SET before_assets=excluded.before_assets,after_assets=excluded.after_assets",
+                params![capture_id, serde_json::to_string(before).map_err(err)?, serde_json::to_string(after).map_err(err)?]).map_err(err)?;
         }
         transaction.execute("UPDATE turns SET status=?2,finished_at=?3,baseline=NULL,coverage=?4 WHERE capture_id=?1", params![capture_id, status, timestamp, serde_json::to_string(coverage).map_err(err)?]).map_err(err)?;
         transaction.commit().map_err(err)
@@ -995,6 +1160,7 @@ impl WorkspaceLedger {
             .unwrap_or_else(|| format!("index:{}", uuid::Uuid::new_v4()));
         valid_label(&turn, "turn", false)?;
         let scan = self.scan(&workspace)?;
+        let captured_assets = scan.files.clone();
         let timestamp = now();
         let capture_id = uuid::Uuid::new_v4().to_string();
         self.database()?.execute("INSERT INTO turns(capture_id,conversation_id,turn_id,kind,status,workspace,started_at,finished_at,coverage) VALUES(?1,?2,?3,'index','indexed',?4,?5,?5,?6)", params![capture_id, conversation, turn, path_text(&workspace)?, timestamp, serde_json::to_string(&scan.coverage).map_err(err)?]).map_err(err)?;
@@ -1029,6 +1195,7 @@ impl WorkspaceLedger {
             &files,
             &scan.coverage,
             None,
+            Some((&BTreeMap::new(), &captured_assets)),
         )?;
         Ok(json!({"files":files,"coverage":scan.coverage}))
     }
@@ -1074,11 +1241,59 @@ impl WorkspaceLedger {
                         "Interrupted capture could not be recovered: {cause}"
                     )],
                     None,
+                    None,
                 )?,
             }
         }
         Ok(())
     }
+}
+
+fn browser_record_path(path: &str) -> Result<String, String> {
+    let path = path.replace('\\', "/");
+    if path.is_empty()
+        || path.starts_with('/')
+        || path.contains(':')
+        || path.chars().any(char::is_control)
+        || path.split('/').any(|part| matches!(part, "" | "." | ".."))
+    {
+        return Err("Invalid recorded browser file path".into());
+    }
+    Ok(path)
+}
+
+/// Legacy studio records displayed their absolute source path. Derive their URL layout
+/// from the recorded source strings alone; this never resolves or reads a current file.
+fn browser_output_root(records: &[FileRecord]) -> Option<PathBuf> {
+    let mut parents = records
+        .iter()
+        .filter(|record| record.origin != "workspace")
+        .filter_map(|record| Path::new(&record.source).parent());
+    let mut root = parents.next()?.to_owned();
+    for parent in parents {
+        while !parent.starts_with(&root) {
+            if !root.pop() {
+                return None;
+            }
+        }
+    }
+    Some(root)
+}
+
+fn browser_file_path(record: &FileRecord, output_root: Option<&Path>) -> Result<String, String> {
+    if let Ok(path) = browser_record_path(&record.path) {
+        return Ok(path);
+    }
+    if record.origin == "workspace" {
+        return Err("Invalid recorded browser file path".into());
+    }
+    let source = Path::new(&record.source);
+    let relative = output_root
+        .and_then(|root| source.strip_prefix(root).ok())
+        .and_then(Path::to_str)
+        .or_else(|| source.file_name().and_then(|name| name.to_str()))
+        .ok_or("Recorded output has no browser-safe name")?;
+    browser_record_path(relative)
 }
 
 fn now() -> String {

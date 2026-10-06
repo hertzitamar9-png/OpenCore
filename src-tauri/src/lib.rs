@@ -29,6 +29,7 @@ mod desktop_capture;
 mod desktop_policy;
 mod connector_config;
 mod gateway;
+mod file_browser;
 mod history;
 mod models;
 mod model_catalog;
@@ -66,12 +67,14 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio_util::sync::CancellationToken;
 use tauri::{Emitter, Manager};
+use tauri_plugin_opener::OpenerExt;
 
 pub struct AppCore {
     claude_bridge: claude_bridge::BridgeState,
     studios: Arc<studio_jobs::StudioManager>,
     background: Arc<scheduler::BackgroundManager>,
     files: Arc<workspace_ledger::WorkspaceLedger>,
+    file_browser: Arc<file_browser::FileBrowser>,
     speech: speech::SpeechManager,
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
@@ -354,6 +357,14 @@ async fn workspace_files(core: tauri::State<'_, Arc<AppCore>>, app:tauri::AppHan
         let _=app.emit("opencore-file-changes",&result);
         Ok(result)
     }).await.map_err(|e|e.to_string())?
+}
+
+#[tauri::command]
+async fn open_workspace_file(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id: String, version: Option<String>) -> Result<file_browser::BrowserOpen, String> {
+    core.ensure_not_updating()?;
+    let file = core.file_browser.open(id, version).await?;
+    app.opener().open_url(&file.url, None::<&str>).map_err(|error| format!("Could not open the external browser: {error}"))?;
+    Ok(file)
 }
 
 #[tauri::command]
@@ -1014,7 +1025,7 @@ fn list_operations(core: tauri::State<'_, Arc<AppCore>>) -> Result<Vec<Operation
 
 #[tauri::command]
 fn start_history_sync(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<OperationRecord, String> {
-    if !matches!(id.as_str(), "claude-code" | "codex") {
+    if !matches!(id.as_str(), "claude-code" | "codex" | "opencode" | "hermes") {
         return Err(format!("History sync is not supported for {id}"));
     }
     let operation = core.store.start_operation("history_sync", &id)?;
@@ -1156,14 +1167,15 @@ fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: St
                 Ok((imported, skipped, failed)) => format!(" · ECHO indexed {imported}, already present {skipped}, invalid records {failed}"),
                 Err(error) => format!(" · ECHO indexing failed: {error}"),
             };
-            let summary = format!("Imported {} · Updated {} · Skipped {} · Source folders found {} · Unresolved {}{}",
-                report.imported, report.updated, report.skipped, report.folders_found, report.folders_unresolved, echo_note);
-            let _ = store.finish_operation(&operation_id, &summary, echo_result.err().as_deref(),
+            let summary = format!("Imported {} · Updated {} · Skipped {} · Failed {} · Source folders found {} · Unresolved {}{}",
+                report.imported, report.updated, report.skipped, report.failed, report.folders_found, report.folders_unresolved, echo_note);
+            let failure = echo_result.err().or_else(|| (report.failed > 0).then(|| format!("{} source conversations could not be imported; successful copies were preserved", report.failed)));
+            let _ = store.finish_operation(&operation_id, &summary, failure.as_deref(),
                 report.current as u64, report.total as u64,
                 report.imported as u64, report.updated as u64, report.skipped as u64);
-            if let Err(error) = store.set_setting(&format!("folder_project_backfill_v1_{id}"), "complete") {
+            if failure.is_none() { if let Err(error) = store.set_setting(&format!("folder_project_backfill_v1_{id}"), "complete") {
                 store.log("warn", "history", &format!("Could not mark {id} folder backfill complete: {error}"));
-            }
+            } }
             store.log("info", "connector", &format!("{id} history sync: {summary}"));
         }
         Err(error) if error == history::SYNC_CANCELLED => {
@@ -1220,7 +1232,7 @@ fn purge_imported_history_from_echo(runtime: &RuntimeManager, ids: &[String]) ->
 
 #[tauri::command]
 async fn clear_imported_history(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<String, String> {
-    if !matches!(id.as_str(), "claude-code" | "codex") { return Err(format!("History cleanup is not supported for {id}")); }
+    if !matches!(id.as_str(), "claude-code" | "codex" | "opencode" | "hermes") { return Err(format!("History cleanup is not supported for {id}")); }
     if core.store.has_active_operation("history_sync", &id)? { return Err("Cancel or wait for this import before clearing its history".into()); }
     let store = core.store.clone();
     let runtime = core.runtime.clone();
@@ -1248,15 +1260,12 @@ async fn index_echo_history(core: tauri::State<'_, Arc<AppCore>>) -> Result<Stri
 async fn configure_agent_connector(
     core: tauri::State<'_, Arc<AppCore>>,
     id: String,
+    profile_folder: Option<String>,
 ) -> Result<String, String> {
     let store = core.store.clone();
     let runtime = core.runtime.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let result = match id.as_str() {
-            "claude-code" => connector_config::configure_claude_code(),
-            "codex" => connector_config::configure_codex(),
-            _ => Err(format!("Unsupported agent connector: {id}")),
-        }?;
+        let result = runtime.configure_agent_connector(&id, profile_folder.as_deref().map(Path::new))?;
         store.log("info", "connector", &result);
         runtime.invalidate_connectors_cache();
         Ok(result)
@@ -1989,6 +1998,13 @@ pub(crate) fn resume_background_job(core: Arc<AppCore>, app: tauri::AppHandle, m
     Box::pin(send_chat_turn(core, app, request, Some(job.id), None))
 }
 
+#[tauri::command]
+async fn set_agent_connector_folder(core: tauri::State<'_, Arc<AppCore>>, id: String, folder: String) -> Result<String, String> {
+    let runtime = core.runtime.clone();
+    tauri::async_runtime::spawn_blocking(move || runtime.set_agent_connector_folder(&id, Path::new(&folder)))
+        .await.map_err(|error| error.to_string())?
+}
+
 pub(crate) fn resume_scheduled_job(core: Arc<AppCore>, app: tauri::AppHandle, mut request: ChatSendRequest,
     run_id: String, evidence: Value) -> std::pin::Pin<Box<dyn std::future::Future<Output=Result<ChatSendResult,String>> + Send>> {
     request.files.clear(); request.submission_id=Some(format!("background:{run_id}"));
@@ -2404,11 +2420,13 @@ pub fn run() {
             }
             let runtime = Arc::new(RuntimeManager::new_with_resources(store.clone(), app.path().resource_dir().ok()));
             let update_in_progress = Arc::new(AtomicBool::new(false));
+            let files = workspace_ledger::WorkspaceLedger::new(app.path().app_data_dir()?.join("workspace-history"))?;
             let core = Arc::new(AppCore {
                 claude_bridge: claude_bridge::BridgeState::default(),
                 studios: studio_jobs::StudioManager::new(app.path().app_data_dir()?.join("studio"))?,
                 background: scheduler::BackgroundManager::new(app.path().app_data_dir()?.join("background"))?,
-                files: workspace_ledger::WorkspaceLedger::new(app.path().app_data_dir()?.join("workspace-history"))?,
+                files: files.clone(),
+                file_browser: file_browser::FileBrowser::new(files),
                 speech: speech::SpeechManager::new_with_update_gate(runtime.install_root().to_path_buf(), app.path().resource_dir()?, update_in_progress.clone()),
                 store: store.clone(),
                 runtime: runtime.clone(),
@@ -2568,6 +2586,7 @@ pub fn run() {
             cancel_chat_file_import,
             archive_path
             ,open_local_path
+            ,open_workspace_file
             ,save_connector
             ,delete_connector
             ,test_connector
@@ -2577,6 +2596,7 @@ pub fn run() {
             ,cancel_history_sync
             ,clear_imported_history
             ,configure_agent_connector
+            ,set_agent_connector_folder
             ,search_archive
             ,archive_overview
             ,echo_working_set

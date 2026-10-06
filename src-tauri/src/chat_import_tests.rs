@@ -50,6 +50,158 @@ fn copied_id(report: &ImportReport) -> &str {
     &report.conversations[0].conversation_id
 }
 
+fn opencode_export(folder: &Path) -> Value {
+    json!({"info":{"id":"oc-session","title":"OpenCode work","directory":folder,"projectID":"project-1",
+        "parentID":"parent-session","time":{"created":1760000000000_i64},"permission":[{"action":"allow","pattern":"*"}]},
+        "project":{"id":"project-1","name":"Original project name","worktree":folder,"custom":{"kept":42}},
+        "messages":[
+            {"info":{"id":"user-1","sessionID":"oc-session","role":"user","time":{"created":1760000001000_i64},"model":{"modelID":"original","providerID":"source"}},
+                "parts":[{"id":"text-1","type":"text","text":"Read the existing file"}]},
+            {"info":{"id":"assistant-1","sessionID":"oc-session","role":"assistant","time":{"created":1760000002000_i64},"tokens":{"input":23,"output":7}},
+                "parts":[{"id":"thinking-1","type":"reasoning","text":"Check it first"},
+                    {"id":"call-1","type":"tool","callID":"source-call","tool":"read_file","state":{"status":"completed",
+                        "input":{"path":"source.txt"},"output":"Original file","time":{"start":1760000002000_i64,"end":1760000003000_i64}}},
+                    {"id":"answer-1","type":"text","text":"Read successfully"}]}
+        ]})
+}
+
+#[test]
+fn opencode_native_export_imports_real_project_and_inert_tools_without_changing_sources() {
+    let fixture = Fixture::new();
+    let folder = fixture.root.join("original-project");
+    fs::create_dir(&folder).unwrap(); fs::write(folder.join("source.txt"), "Original file").unwrap();
+    let export = opencode_export(&folder);
+    let path = fixture.json("opencode.json", &export);
+    let source = fs::read(&path).unwrap();
+    let preview = preview_file(&path, "auto").unwrap();
+    assert_eq!(preview.source_format, "opencode");
+    assert_eq!(preview.samples[0].folder_status, "available");
+    let report = import_file(fixture.store(), &path, "auto").unwrap();
+    assert_eq!(report.imported, 1); assert_eq!(report.conversations[0].folder_status, "linked");
+    let project = fixture.store().list_projects().unwrap().remove(0);
+    assert_eq!(project.name, "Original project name");
+    assert_eq!(fs::canonicalize(project.folder_path.unwrap()).unwrap(), fs::canonicalize(&folder).unwrap());
+    assert_eq!(report.conversations[0].project_id.as_deref(), Some(project.id.as_str()));
+    let rows = fixture.store().conversation(copied_id(&report)).unwrap();
+    assert_eq!(rows.len(), 5);
+    assert!(rows.iter().all(|row| row.source == "Imported OpenCode" && row.metadata["portableImport"]["inert"] == true));
+    assert!(rows.iter().any(|row| row.kind == "tool_call" && row.title == "read_file"));
+    assert!(rows.iter().any(|row| row.kind == "tool_result" && row.content == "Original file"));
+    assert_eq!(rows[0].metadata["portableImport"]["sourceConversation"]["sourceProject"]["custom"]["kept"], 42);
+    assert_eq!(rows[0].metadata["sourceMessage"]["model"]["modelID"], "original");
+    assert_eq!(rows[0].metadata["portableImport"]["sourceConversation"]["parentID"], "parent-session");
+    assert_eq!(import_file(fixture.store(), &path, "opencode").unwrap().skipped, 1);
+    assert_eq!(fs::read(&path).unwrap(), source);
+    assert_eq!(fs::read_to_string(folder.join("source.txt")).unwrap(), "Original file");
+    assert_eq!(fs::read_dir(&folder).unwrap().count(), 1);
+}
+
+#[test]
+fn opencode_updates_keep_manual_titles_pins_and_project_moves() {
+    let fixture = Fixture::new();
+    let folder = fixture.root.join("source"); fs::create_dir(&folder).unwrap();
+    let mut export = opencode_export(&folder);
+    let path = fixture.json("opencode.json", &export);
+    let report = import_file(fixture.store(), &path, "opencode").unwrap();
+    let id = copied_id(&report);
+    let manual_folder = fixture.root.join("chosen"); fs::create_dir(&manual_folder).unwrap();
+    let project = fixture.store().create_project("Manually chosen", &manual_folder).unwrap();
+    fixture.store().set_project_by_id(id, Some(&project.id), crate::store::ProjectAssignment::Manual).unwrap();
+    fixture.store().rename_conversation(id, "My title").unwrap();
+    fixture.store().set_conversation_pinned(id, true).unwrap();
+    export["messages"].as_array_mut().unwrap().push(json!({"id":"new-message","type":"user","text":"A follow-up", "time":{"created":1760000004000_i64}}));
+    fs::write(&path, serde_json::to_vec(&export).unwrap()).unwrap();
+    let updated = import_file(fixture.store(), &path, "opencode").unwrap();
+    assert_eq!(updated.updated, 1); assert_eq!(updated.conversations[0].folder_status, "available");
+    let chat = fixture.store().list_conversations(None).unwrap().into_iter().find(|chat| chat.id == id).unwrap();
+    assert_eq!(chat.title, "My title"); assert!(chat.pinned); assert_eq!(chat.project_id.as_deref(), Some(project.id.as_str()));
+}
+
+#[test]
+fn source_project_roots_link_nested_sessions_without_rewriting_their_exact_cwd() {
+    let fixture = Fixture::new();
+    let folder = fixture.root.join("source-repository");
+    let cwd = folder.join("nested"); fs::create_dir_all(&cwd).unwrap();
+    let mut export = opencode_export(&folder);
+    export["info"]["directory"] = json!(cwd);
+    let opencode = fixture.json("nested-opencode.json", &export);
+    let report = import_file(fixture.store(), &opencode, "opencode").unwrap();
+    assert_eq!(report.conversations[0].folder_status, "linked");
+    let project = fixture.store().list_projects().unwrap().remove(0);
+    assert_eq!(fs::canonicalize(project.folder_path.unwrap()).unwrap(), fs::canonicalize(&folder).unwrap());
+    let hermes = fixture.json("nested-hermes.json", &json!({"id":"nested-hermes","cwd":cwd,
+        "git_repo_root":folder,"started_at":1760000000,"source":"cli","messages":[{"role":"user","content":"A nested task"}]}));
+    let hermes_report = import_file(fixture.store(), &hermes, "hermes").unwrap();
+    assert_eq!(fixture.store().list_projects().unwrap().len(), 1);
+    assert_eq!(report.conversations[0].project_id, hermes_report.conversations[0].project_id);
+    let db = Connection::open(fixture.root.join("opencore.sqlite3")).unwrap();
+    for id in [copied_id(&report), copied_id(&hermes_report)] {
+        let exact: String = db.query_row("SELECT source_cwd FROM conversations WHERE id=?1", [id], |row| row.get(0)).unwrap();
+        assert_eq!(exact, cwd.to_string_lossy());
+    }
+    drop(db);
+    let mut other_checkout = json!({"directory":fixture.root.join("other-checkout")});
+    projects::attach_opencode_project(&mut other_checkout, &json!({"worktree":folder}));
+    assert!(other_checkout.get("sourceProjectFolder").is_none());
+    let mut global = json!({"directory":fixture.root});
+    projects::attach_opencode_project(&mut global, &json!({"worktree":"/"}));
+    assert!(global.get("sourceProjectFolder").is_none());
+}
+
+#[test]
+fn missing_or_relative_source_folders_are_preserved_without_creating_substitutes() {
+    let fixture = Fixture::new();
+    let missing = fixture.root.join("deleted-original-folder");
+    let first = fixture.json("missing.json", &opencode_export(&missing));
+    let report = import_file(fixture.store(), &first, "auto").unwrap();
+    assert_eq!(report.imported, 1); assert_eq!(report.conversations[0].folder_status, "missing");
+    assert!(report.conversations[0].project_id.is_none()); assert!(!missing.exists());
+    assert!(!report.conversations[0].warnings.is_empty());
+    let relative = fixture.json("relative.json", &json!({"id":"relative-hermes", "cwd":"relative/source",
+        "source":"cli","started_at":1760000000,"messages":[{"role":"user","content":"Keep this chat"}]}));
+    let report = import_file(fixture.store(), &relative, "hermes").unwrap();
+    assert_eq!(report.imported, 1); assert_eq!(report.conversations[0].folder_status, "nonlocal");
+    assert_eq!(report.conversations[0].source_folder.as_deref(), Some("relative/source"));
+    assert!(fixture.store().list_projects().unwrap().is_empty());
+    let db = Connection::open(fixture.root.join("opencore.sqlite3")).unwrap();
+    let raw: String = db.query_row("SELECT source_cwd FROM conversations WHERE id=?1", [copied_id(&report)], |row| row.get(0)).unwrap();
+    assert_eq!(raw, "relative/source");
+}
+
+#[test]
+fn opencode_native_typed_messages_preserve_shell_and_compaction_as_history() {
+    let fixture = Fixture::new();
+    let path = fixture.json("typed.json", &json!({"info":{"id":"new-format","directory":fixture.root,"title":"Typed history"},"messages":[
+        {"id":"u","type":"user","text":"Inspect","time":{"created":1760000000000_i64}},
+        {"id":"a","type":"assistant","content":[{"id":"r","type":"reasoning","text":"Reasoning"},
+            {"id":"t","type":"tool","name":"read","state":{"status":"completed","input":{"path":"file"},"content":[{"type":"text","text":"Output"}],"structured":{},"result":{"ok":true}}}],"time":{"created":1760000001000_i64}},
+        {"id":"s","type":"shell","command":"never-execute-imported-command","output":"Historical output","time":{"created":1760000002000_i64,"completed":1760000003000_i64}},
+        {"id":"c","type":"compaction","summary":"Historical summary","recent":"Recent", "time":{"created":1760000004000_i64}}
+    ]}));
+    let report = import_file(fixture.store(), &path, "auto").unwrap();
+    assert_eq!(report.imported, 1);
+    let rows = fixture.store().conversation(copied_id(&report)).unwrap();
+    assert!(rows.iter().any(|row| row.kind == "tool_call" && row.content == "never-execute-imported-command"));
+    assert!(rows.iter().any(|row| row.kind == "tool_result" && row.content == "Historical output"));
+    assert!(rows.iter().any(|row| row.title == "compaction" && row.metadata["sourceRecord"]["summary"] == "Historical summary"));
+    assert!(rows.iter().all(|row| row.metadata["portableImport"]["inert"] == true));
+}
+
+#[test]
+fn opencode_conflicting_parts_are_atomic_and_cancellation_is_not_a_failed_chat() {
+    let fixture = Fixture::new();
+    let mut export = opencode_export(&fixture.root);
+    export["messages"][0]["parts"].as_array_mut().unwrap().push(json!({"id":"text-1","type":"text","text":"Conflicting content"}));
+    let path = fixture.json("conflict.json", &export);
+    let report = import_file(fixture.store(), &path, "opencode").unwrap();
+    assert_eq!(report.failed, 1); assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+    let calls = Cell::new(0);
+    let cancelled = opencode::prepare_documents(vec![(1,Ok(opencode_export(&fixture.root)))], &|| {
+        let count = calls.get()+1; calls.set(count); count >= 5
+    });
+    assert_eq!(cancelled.err().as_deref(), Some(IMPORT_CANCELLED));
+}
+
 #[test]
 fn generic_json_keeps_messages_reasoning_tools_metadata_and_source_bytes() {
     let fixture = Fixture::new();
@@ -760,6 +912,105 @@ fn make_hermes_database(path: &Path) {
         INSERT INTO messages VALUES(1,'db-session','user','Question',NULL,NULL,NULL,1760000001.0,NULL,1);
         INSERT INTO messages VALUES(2,'db-session','assistant','Answer','[{\"id\":\"c\",\"function\":{\"name\":\"read\",\"arguments\":\"{\\\"path\\\":\\\"file.txt\\\"}\"}}]',NULL,NULL,1760000002.0,'Think first',1);
         INSERT INTO messages VALUES(3,'db-session','tool','Contents',NULL,'c','read',1760000003.0,NULL,0);").unwrap();
+}
+
+#[test]
+#[cfg(windows)]
+fn hermes_project_registry_links_original_parent_folder_and_keeps_exact_session_cwd() {
+    let fixture = Fixture::new();
+    let folder = fixture.root.join("original-repo");
+    let cwd = folder.join("nested"); fs::create_dir_all(&cwd).unwrap();
+    fs::write(folder.join("existing.txt"), "Original content").unwrap();
+    let path = fixture.root.join("state.db"); make_hermes_database(&path);
+    let db = Connection::open(&path).unwrap();
+    db.execute_batch("ALTER TABLE sessions ADD COLUMN cwd TEXT; ALTER TABLE sessions ADD COLUMN git_repo_root TEXT;").unwrap();
+    db.execute("UPDATE sessions SET cwd=?1,git_repo_root=?2", rusqlite::params![cwd.to_string_lossy(),folder.to_string_lossy()]).unwrap();
+    drop(db);
+    let registry_path = fixture.root.join("projects.db");
+    let registry = Connection::open(&registry_path).unwrap();
+    registry.execute_batch("CREATE TABLE projects(id TEXT PRIMARY KEY,name TEXT,primary_path TEXT,description TEXT,archived INTEGER);
+        CREATE TABLE project_folders(project_id TEXT,path TEXT,label TEXT,is_primary INTEGER);").unwrap();
+    registry.execute("INSERT INTO projects VALUES('hermes-project','Original Hermes project',?1,'Keep project metadata',0)", [folder.to_string_lossy().as_ref()]).unwrap();
+    registry.execute("INSERT INTO project_folders VALUES('hermes-project',?1,'Repository',1)", [folder.to_string_lossy().as_ref()]).unwrap();
+    drop(registry);
+    let before = fs::read(&path).unwrap(); let registry_before = fs::read(&registry_path).unwrap();
+    let report = import_file(fixture.store(), &path, "auto").unwrap();
+    assert_eq!(report.imported, 1); assert_eq!(report.conversations[0].folder_status, "linked");
+    let project = fixture.store().list_projects().unwrap().remove(0);
+    assert_eq!(project.name, "Original Hermes project");
+    assert_eq!(fs::canonicalize(project.folder_path.unwrap()).unwrap(), fs::canonicalize(&folder).unwrap());
+    let rows = fixture.store().conversation(copied_id(&report)).unwrap();
+    let header = &rows[0].metadata["portableImport"]["sourceConversation"];
+    assert_eq!(header["cwd"], cwd.to_string_lossy().as_ref());
+    assert_eq!(header["sourceProject"]["description"], "Keep project metadata");
+    assert_eq!(header["sourceProject"]["folders"][0]["label"], "Repository");
+    let app_db = Connection::open(fixture.root.join("opencore.sqlite3")).unwrap();
+    let exact: String = app_db.query_row("SELECT source_cwd FROM conversations WHERE id=?1", [copied_id(&report)], |row| row.get(0)).unwrap();
+    assert_eq!(exact, cwd.to_string_lossy()); drop(app_db);
+    assert_eq!(fs::read(&path).unwrap(), before); assert_eq!(fs::read(&registry_path).unwrap(), registry_before);
+    assert_eq!(fs::read_to_string(folder.join("existing.txt")).unwrap(), "Original content");
+}
+
+#[test]
+#[cfg(windows)]
+fn opencode_database_combines_message_families_deduplicates_migrated_ids_and_preserves_project() {
+    let fixture = Fixture::new();
+    let folder = fixture.root.join("original-open-code"); fs::create_dir(&folder).unwrap();
+    let path = fixture.root.join("opencode.db");
+    let db = Connection::open(&path).unwrap();
+    db.execute_batch("CREATE TABLE session(id TEXT PRIMARY KEY,project_id TEXT,title TEXT,directory TEXT,time_created INTEGER,time_updated INTEGER,parent_id TEXT);
+        CREATE TABLE project(id TEXT PRIMARY KEY,worktree TEXT,name TEXT,commands TEXT);
+        CREATE TABLE message(id TEXT PRIMARY KEY,session_id TEXT,time_created INTEGER,time_updated INTEGER,data TEXT);
+        CREATE TABLE part(id TEXT PRIMARY KEY,message_id TEXT,session_id TEXT,time_created INTEGER,time_updated INTEGER,data TEXT);
+        CREATE TABLE session_message(id TEXT PRIMARY KEY,session_id TEXT,type TEXT,seq INTEGER,time_created INTEGER,time_updated INTEGER,data TEXT);").unwrap();
+    db.execute("INSERT INTO project VALUES('p',?1,'Real OpenCode project','{\"start\":\"do-not-execute\"}')", [folder.to_string_lossy().as_ref()]).unwrap();
+    db.execute("INSERT INTO session VALUES('session','p','Mixed source',?1,1760000000000,1760000004000,'parent')", [folder.to_string_lossy().as_ref()]).unwrap();
+    db.execute("INSERT INTO message VALUES('u','session',1760000001000,1760000001000,?1)", [json!({"role":"user","time":{"created":1760000001000_i64}}).to_string()]).unwrap();
+    db.execute("INSERT INTO part VALUES('up','u','session',1760000001000,1760000001000,?1)", [json!({"type":"text","text":"Legacy question"}).to_string()]).unwrap();
+    db.execute("INSERT INTO message VALUES('a','session',1760000002000,1760000002000,?1)", [json!({"role":"assistant","time":{"created":1760000002000_i64}}).to_string()]).unwrap();
+    db.execute("INSERT INTO part VALUES('ap','a','session',1760000002000,1760000002000,?1)", [json!({"type":"text","text":"Older projection"}).to_string()]).unwrap();
+    db.execute("INSERT INTO session_message VALUES('a','session','assistant',1,1760000002000,1760000002000,?1)", [json!({"content":[{"id":"modern","type":"text","text":"Current answer"}],"time":{"created":1760000002000_i64}}).to_string()]).unwrap();
+    db.execute("INSERT INTO session_message VALUES('follow','session','user',2,1760000003000,1760000003000,?1)", [json!({"text":"Modern follow-up","time":{"created":1760000003000_i64}}).to_string()]).unwrap();
+    drop(db);
+    let before = fs::read(&path).unwrap();
+    let report = import_file(fixture.store(), &path, "auto").unwrap();
+    assert_eq!(report.source_format, "opencode"); assert_eq!(report.imported, 1);
+    let rows = fixture.store().conversation(copied_id(&report)).unwrap();
+    assert_eq!(rows.len(), 3);
+    assert_eq!(rows.iter().map(|row|row.content.as_str()).collect::<Vec<_>>(), vec!["Legacy question","Current answer","Modern follow-up"]);
+    assert_eq!(rows[0].metadata["sourceRecord"]["sourceDatabaseMetadata"]["time_created"], 1760000001000_i64);
+    assert_eq!(rows[0].metadata["portableImport"]["sourceConversation"]["sourceProject"]["name"], "Real OpenCode project");
+    assert_eq!(rows[1].metadata["sourceMessage"]["sourceDatabaseMetadata"]["seq"], 1);
+    assert_eq!(fixture.store().list_projects().unwrap()[0].name, "Real OpenCode project");
+    assert_eq!(fixture.store().imported_conversation_ids_for_client("opencode").unwrap(), vec![copied_id(&report)]);
+    assert_eq!(fixture.store().imported_message_count(copied_id(&report)).unwrap(), 3);
+    assert_eq!(fixture.store().imported_messages_batch(copied_id(&report), 0, 100).unwrap().len(), 3);
+    assert_eq!(import_file(fixture.store(), &path, "opencode").unwrap().skipped, 1);
+    assert_eq!(fs::read(&path).unwrap(), before);
+}
+
+#[test]
+fn first_class_agent_connectors_are_observable_and_copy_cleanup_does_not_remove_sources() {
+    let fixture = Fixture::new();
+    let connectors = fixture.store().connectors().unwrap();
+    for id in ["opencode", "hermes"] {
+        let connector = connectors.iter().find(|connector| connector.id == id).unwrap();
+        assert!(!connector.custom); assert_eq!(connector.kind, "history");
+    }
+    fixture.store().observe_client("Hermes Agent"); fixture.store().observe_client("OpenCode");
+    assert!(fixture.store().connectors().unwrap().iter().filter(|connector| matches!(connector.id.as_str(), "hermes"|"opencode")).all(|connector|connector.observable));
+    let folder = fixture.root.join("project"); fs::create_dir(&folder).unwrap();
+    fs::write(folder.join("keep.txt"), "source").unwrap();
+    let opencode = fixture.json("oc.json", &opencode_export(&folder));
+    let hermes = fixture.json("hermes.json", &json!({"id":"hermes","source":"cli","cwd":folder,"started_at":1760000000,"messages":[{"role":"user","content":"Keep Hermes"}]}));
+    let oc = import_file(fixture.store(), &opencode, "opencode").unwrap();
+    let hermes_report = import_file(fixture.store(), &hermes, "hermes").unwrap();
+    assert_eq!(fixture.store().list_projects().unwrap().len(), 1);
+    let oc_bytes = fs::read(&opencode).unwrap(); let hermes_bytes = fs::read(&hermes).unwrap();
+    assert_eq!(fixture.store().clear_imported_history("opencode").unwrap(), vec![copied_id(&oc)]);
+    assert!(fixture.store().conversation(copied_id(&hermes_report)).unwrap().iter().any(|row| row.content == "Keep Hermes"));
+    assert_eq!(fs::read(opencode).unwrap(), oc_bytes); assert_eq!(fs::read(hermes).unwrap(), hermes_bytes);
+    assert_eq!(fs::read_to_string(folder.join("keep.txt")).unwrap(), "source");
 }
 
 #[test]

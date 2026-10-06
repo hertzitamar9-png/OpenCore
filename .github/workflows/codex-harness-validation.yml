@@ -64,6 +64,13 @@ jobs:
         if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
         shell: powershell
         run: ./scripts/windows-loader-diagnostics.ps1
+      - name: Preserve resolved native dependency lock
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-cargo-lock
+          path: src-tauri/Cargo.lock
+          retention-days: 7
       - name: Preserve Windows loader diagnostics
         if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v4

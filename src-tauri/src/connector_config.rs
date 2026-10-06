@@ -3,6 +3,13 @@ use serde_json::{Map, Value};
 use std::path::{Path, PathBuf};
 use toml_edit::{value, DocumentMut, Item, Table};
 
+#[path = "agent_connector_config.rs"]
+mod agent_connector_config;
+pub use agent_connector_config::{
+    configure_hermes, configure_opencode, hermes_configured, hermes_configured_in, hermes_history_root,
+    hermes_profile_root, opencode_configured, opencode_history_root,
+};
+
 const GATEWAY: &str = "http://127.0.0.1:8812";
 const CLAUDE_OPENCORE_SETTINGS: &str = "opencore-settings.json";
 const CLAUDE_OPENCORE_ENV: [(&str, &str); 6] = [
@@ -24,13 +31,18 @@ fn backup(path: &Path) -> Result<(), String> {
     if !path.is_file() {
         return Ok(());
     }
-    let stamp = Utc::now().format("%Y%m%d-%H%M%S");
+    let stamp = Utc::now().format("%Y%m%d-%H%M%S-%f");
     let name = path
         .file_name()
         .and_then(|v| v.to_str())
         .unwrap_or("config");
-    let backup = path.with_file_name(format!("{name}.opencore-backup-{stamp}"));
-    std::fs::copy(path, backup).map_err(|e| e.to_string())?;
+    let backup = path.with_file_name(format!(
+        "{name}.opencore-backup-{stamp}-{}", uuid::Uuid::new_v4()
+    ));
+    let mut destination = std::fs::File::create_new(backup).map_err(|e| e.to_string())?;
+    let mut source = std::fs::File::open(path).map_err(|e| e.to_string())?;
+    std::io::copy(&mut source, &mut destination).map_err(|e| e.to_string())?;
+    destination.sync_all().map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -62,6 +74,7 @@ pub fn configure_claude_code() -> Result<String, String> {
     let path = claude_root.join(CLAUDE_OPENCORE_SETTINGS);
     ensure_parent(&path)?;
     let root = opencore_claude_settings();
+    backup(&path)?;
     std::fs::write(
         &path,
         serde_json::to_vec_pretty(&root).map_err(|e| e.to_string())?,

@@ -55,6 +55,9 @@ export function subscribeWorkspaceFiles(refresh: () => void): () => void {
 }
 
 export const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
+export async function openWorkspaceFileExternal(id: string, version?: 'before' | 'after'): Promise<{ url: string; name: string; sha256: string }> {
+  return invoke('open_workspace_file', { id, version });
+}
 export function fileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

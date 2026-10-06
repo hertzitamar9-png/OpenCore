@@ -27,6 +27,12 @@ beforeEach(() => {
     if (command === "testing_lab_profiles") return [];
     if (command === "agent_platform_action") {
       const action = args?.args as Record<string, unknown>;
+      if (args?.name === "app_control" && action.action === "set") {
+        const patch = action.settings as Partial<PlatformConfig>;
+        stored = { ...stored, ...patch, appearance: { ...stored.appearance, ...patch.appearance } };
+        saved = stored;
+        return { persisted: true, configuration: stored };
+      }
       if (args?.name === "skill_library" && action.action === "read") return { skill: { id: "builtin:review" }, content: "Read changed files and report evidence." };
       if (args?.name === "agent_memory" && action.action === "delete") { memoryDeleted = action.id as string; return { deleted: true }; }
       if (args?.name === "agent_memory" && action.action === "record") return { recorded: true };
@@ -53,8 +59,8 @@ describe("AgentPlatformSettings", () => {
     fireEvent.change(screen.getByLabelText("Additional system instructions"), { target: { value: "Keep useful evidence with every change." } });
     fireEvent.click(screen.getByRole("radio", { name: "Max" }));
     fireEvent.change(screen.getByLabelText("Repair attempts"), { target: { value: "5" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
-    expect(await screen.findByText("Settings saved on this computer.")).toBeVisible();
+    await waitFor(() => expect(saved?.systemPrompt).toBe("Keep useful evidence with every change."));
+    expect(screen.getByRole("status", { name: "Agent settings save status" })).toHaveTextContent("Saved");
     expect(saved?.verification).toBe("max");
     expect(saved?.repairAttempts).toBe(5);
     expect(saved?.systemPrompt).toBe("Keep useful evidence with every change.");
@@ -65,14 +71,13 @@ describe("AgentPlatformSettings", () => {
     await screen.findByLabelText("Additional system instructions");
     const original = bridge.invoke.getMockImplementation()!;
     bridge.invoke.mockImplementation(async (command, args) => {
-      if (command === "agent_platform_save_configuration") throw new Error("Disk is full");
+      if (command === "agent_platform_save_configuration" || (command === "agent_platform_action" && args?.name === "app_control" && args?.args?.action === "set")) throw new Error("Disk is full");
       return original(command, args);
     });
     fireEvent.change(screen.getByLabelText("Additional system instructions"), { target: { value: "Useful instruction" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Disk is full");
     expect(screen.getByLabelText("Additional system instructions")).toHaveValue("Useful instruction");
-    expect(screen.getByRole("button", { name: "Save settings" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Retry saving settings" })).toBeEnabled();
   });
 
   it("loads skill instructions on demand and persists disabled skills and plugins", async () => {
@@ -83,8 +88,7 @@ describe("AgentPlatformSettings", () => {
     expect(await screen.findByText("Read changed files and report evidence.")).toBeVisible();
     fireEvent.click(screen.getByLabelText("Enable Review"));
     fireEvent.click(screen.getByLabelText("Enable Portable demo"));
-    fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
-    await screen.findByText("Settings saved on this computer.");
+    await waitFor(() => expect(saved?.disabledPlugins).toEqual(["portable-demo"]));
     expect(saved?.disabledSkills).toEqual(["builtin:review"]);
     expect(saved?.disabledPlugins).toEqual(["portable-demo"]);
   });
@@ -94,8 +98,11 @@ describe("AgentPlatformSettings", () => {
     const editor = await screen.findByLabelText("MCP profiles JSON");
     fireEvent.change(editor, { target: { value: '{"command":"node"}' } });
     expect(await screen.findByText(/MCP profiles must be a JSON array/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "Save settings" })).toBeDisabled();
     expect(saved).toBeUndefined();
+    fireEvent.click(screen.getByRole("radio", { name: "Max" }));
+    await waitFor(() => expect(saved?.verification).toBe("max"));
+    expect(editor).toHaveValue('{"command":"node"}');
+    expect(saved?.mcpServers).toEqual([]);
   });
 
   it("accepts native settings changes and updates visible verification controls", async () => {
@@ -103,6 +110,56 @@ describe("AgentPlatformSettings", () => {
     await screen.findByRole("radio", { name: "Default" });
     act(() => bridge.handlers.get("opencore-agent-settings-changed")?.({ payload: { ...stored, verification: "no" } }));
     await waitFor(() => expect(screen.getByRole("radio", { name: "No checks" })).toBeChecked());
+  });
+
+  it("preserves newer instructions and invalid MCP drafts when an older save and tool update arrive", async () => {
+    const original = bridge.invoke.getMockImplementation()!;
+    let release!: () => void;
+    let started = false;
+    bridge.invoke.mockImplementation(async (command, args) => {
+      if (command === "agent_platform_action" && args?.name === "app_control" && !started) {
+        started = true;
+        await new Promise<void>(resolve => { release = resolve; });
+      }
+      return original(command, args);
+    });
+    render(<AgentPlatformSettings />);
+    const prompt = await screen.findByLabelText("Additional system instructions");
+    fireEvent.change(prompt, { target: { value: "First instruction" } });
+    await waitFor(() => expect(started).toBe(true));
+    expect(prompt).toBeEnabled();
+    fireEvent.change(prompt, { target: { value: "Newest instruction" } });
+    fireEvent.change(screen.getByLabelText("MCP profiles JSON"), { target: { value: "[invalid draft" } });
+    stored = { ...stored, verification: "long" };
+    act(() => bridge.handlers.get("opencore-agent-settings-changed")?.({ payload: stored }));
+    expect(prompt).toHaveValue("Newest instruction");
+    expect(screen.getByRole("radio", { name: "Long" })).toBeChecked();
+    release();
+    await waitFor(() => expect(saved?.systemPrompt).toBe("Newest instruction"));
+    expect(saved?.verification).toBe("long");
+    expect(screen.getByLabelText("MCP profiles JSON")).toHaveValue("[invalid draft");
+  });
+
+  it("keeps an empty numeric draft while another valid setting saves", async () => {
+    render(<AgentPlatformSettings />);
+    const repairs = await screen.findByLabelText("Repair attempts");
+    fireEvent.change(repairs, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Max" }));
+    await waitFor(() => expect(saved?.verification).toBe("max"));
+    expect(saved?.repairAttempts).toBe(3);
+    expect(repairs).toHaveValue(null);
+    expect(repairs).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("applies a valid theme immediately while preserving an invalid font draft", async () => {
+    render(<AgentPlatformSettings />);
+    const font = await screen.findByLabelText("Font family");
+    fireEvent.change(font, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Light" }));
+    expect(document.documentElement.dataset.platformTheme).toBe("light");
+    expect(font).toHaveValue("");
+    await waitFor(() => expect(saved?.appearance.theme).toBe("light"));
+    expect(saved?.appearance.fontFamily).toBe("system");
   });
 
   it("searches sourced memories and deletes only the selected record after its inline confirmation", async () => {
@@ -147,8 +204,8 @@ describe("AgentPlatformSettings", () => {
     expect(status).toBeEnabled();
     fireEvent.change(within(labPanel).getByLabelText("Testing profiles JSON"), { target: { value: '[{"id":"pixel","label":"Android test","kind":"android","enabled":true,"executable":"adb","deviceSerial":"emulator-5556"}]' } });
     expect(status).toBeDisabled();
-    fireEvent.click(within(labPanel).getByRole("button", { name: "Save testing profiles" }));
-    await within(labPanel).findByText("Testing profiles saved on this computer.");
+    await waitFor(() => expect(profiles[0].deviceSerial).toBe("emulator-5556"));
+    await waitFor(() => expect(status).toBeEnabled());
     expect(profiles[0].deviceSerial).toBe("emulator-5556");
     expect(saved).toBeUndefined();
     fireEvent.click(status);
@@ -175,8 +232,8 @@ describe("AgentPlatformSettings", () => {
     Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
     render(<AgentPlatformSettings />);
     expect(await screen.findByText(/Browser preview.*not persisted/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "Save settings" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Save testing profiles" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("radio", { name: "Light" }));
+    expect(screen.getByRole("status", { name: "Agent settings save status" })).toHaveTextContent("Preview");
     expect(bridge.invoke).not.toHaveBeenCalled();
   });
 });

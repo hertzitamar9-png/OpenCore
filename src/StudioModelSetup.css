@@ -1,0 +1,10 @@
+.studio-model-setup { min-width:0; display:grid; gap:12px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); color:var(--text); overflow-wrap:anywhere; }
+.studio-model-setup-heading { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 16px; }
+.studio-model-setup-heading>span,.studio-model-setup>span,.studio-model-setup>small { color:var(--muted); font-size:12px; }
+.studio-model-setup p { margin:0; line-height:1.6; }
+.studio-model-setup-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; min-width:0; }
+.studio-model-setup-actions>a,.studio-model-setup-actions>button { display:inline-flex; align-items:center; gap:7px; max-width:100%; }
+.studio-model-setup-actions>a { color:var(--platform-accent); }
+.studio-model-setup details>p { padding-top:10px; color:var(--muted); }
+.studio-weight-progress { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.studio-weight-progress progress { width:200px; max-width:100%; }

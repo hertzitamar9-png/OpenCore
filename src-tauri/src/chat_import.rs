@@ -14,6 +14,12 @@ use std::fs::{self, File, Metadata};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
+#[path = "chat_import_projects.rs"]
+mod projects;
+#[path = "chat_import_opencode.rs"]
+mod opencode;
+use projects::SourceProject;
+
 const MAX_TEXT_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_DATABASE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_ITEM_BYTES: usize = 8 * 1024 * 1024;
@@ -22,7 +28,7 @@ const MAX_ENTRIES: usize = 50_000;
 const MAX_COLUMNS: usize = 256;
 pub const IMPORT_CANCELLED: &str = "__CHAT_IMPORT_CANCELLED__";
 const CLOSE_HERMES_DATABASE: &str =
-    "Close Hermes before importing its database, or use a JSON/JSONL export.";
+    "Close Hermes/OpenCode before importing its database, or use a JSON/JSONL export.";
 type ImportedRow = (String, String, String, String, String, Value);
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -51,6 +57,9 @@ pub struct ImportConversationResult {
     pub entries: usize,
     pub warnings: Vec<String>,
     pub error: Option<String>,
+    pub source_folder: Option<String>,
+    pub folder_status: String,
+    pub project_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +81,8 @@ pub struct ImportPreviewConversation {
     pub entries: usize,
     pub warnings: Vec<String>,
     pub error: Option<String>,
+    pub source_folder: Option<String>,
+    pub folder_status: String,
 }
 
 #[derive(Debug)]
@@ -82,6 +93,7 @@ struct Candidate {
     rows: Vec<ImportedRow>,
     warnings: Vec<String>,
     error: Option<String>,
+    project: SourceProject,
 }
 
 struct PreparedFile {
@@ -117,6 +129,8 @@ pub fn preview_file(path: &Path, format: &str) -> Result<ImportPreview, String> 
             .into_iter()
             .take(10)
             .map(|item| ImportPreviewConversation {
+                source_folder: item.project.display_folder(),
+                folder_status: item.project.status().into(),
                 source_conversation_id: item.source_id,
                 title: item.title,
                 entries: item.rows.len(),
@@ -161,6 +175,9 @@ pub fn import_file_with_cancellation(
             break;
         }
         let mut item = ImportConversationResult {
+            source_folder: candidate.project.display_folder(),
+            folder_status: candidate.project.status().into(),
+            project_id: None,
             conversation_id: candidate.conversation_id.clone(),
             source_conversation_id: candidate.source_id,
             title: candidate.title.clone(),
@@ -177,7 +194,10 @@ pub fn import_file_with_cancellation(
                 &candidate.title,
                 &candidate.rows,
             ) {
-                Ok(status) => item.status = status,
+                Ok(status) => {
+                    item.status = status;
+                    candidate.project.persist(store, &candidate.conversation_id, &mut item);
+                }
                 Err(error) => item.error = Some(error),
             }
         }
@@ -208,6 +228,7 @@ fn import_client(format: &str) -> &'static str {
     match format {
         "opencore" => "Imported OpenCore",
         "hermes" => "Imported Hermes",
+        "opencode" => "Imported OpenCode",
         "codex" => "Imported Codex",
         "claude" => "Imported Claude Code",
         _ => "Imported JSON",
@@ -250,8 +271,8 @@ fn check_cancelled(cancelled: &dyn Fn() -> bool) -> Result<(), String> {
 }
 fn format_name(format: &str) -> Result<&str, String> {
     match format {
-        "auto" | "opencore" | "hermes" | "codex" | "claude" | "generic" => Ok(format),
-        _ => Err("Choose Auto, OpenCore, Hermes, Codex, Claude Code or Generic JSON.".into()),
+        "auto" | "opencore" | "hermes" | "opencode" | "codex" | "claude" | "generic" => Ok(format),
+        _ => Err("Choose Auto, OpenCore, OpenCode, Hermes, Codex, Claude Code or Generic JSON.".into()),
     }
 }
 
@@ -280,11 +301,11 @@ fn prepare_file(
         .seek(SeekFrom::Start(0))
         .map_err(|error| error.to_string())?;
     if read == 16 && &header == b"SQLite format 3\0" {
-        if !matches!(requested, "auto" | "hermes") {
-            return Err("SQLite chat import supports Hermes Agent sessions only.".into());
+        if !matches!(requested, "auto" | "hermes" | "opencode") {
+            return Err("SQLite chat import supports Hermes Agent and OpenCode sessions.".into());
         }
         drop(source);
-        return prepare_hermes_database(path, cancelled);
+        return prepare_database(path, requested, cancelled);
     }
     if before.len() > MAX_TEXT_BYTES {
         return Err(
@@ -355,6 +376,7 @@ fn prepare_file(
     };
     let prepared = match detected {
         "codex" | "claude" => prepare_rollout(records, detected, cancelled)?,
+        "opencode" => opencode::prepare_documents(records, cancelled)?,
         _ => prepare_documents(records, detected, is_jsonl, cancelled)?,
     };
     validate_prepared(&prepared)?;
@@ -370,6 +392,11 @@ fn detect_format(records: &[(usize, Result<Value, String>)]) -> Result<&'static 
             .as_array()
             .and_then(|values| values.first())
             .unwrap_or(value);
+        if head.pointer("/info/id").is_some()
+            && head.get("messages").and_then(Value::as_array).is_some()
+        {
+            return Ok("opencode");
+        }
         if head.get("entries").is_some()
             || head.get("format").and_then(Value::as_str) == Some("opencore-chat")
         {
@@ -634,6 +661,7 @@ fn failed_candidate(format: &str, id: &str, title: &str, error: String) -> Candi
         rows: vec![],
         warnings: vec![],
         error: Some(redact_text(&error)),
+        project: SourceProject::default(),
     }
 }
 
@@ -737,6 +765,9 @@ fn parse_conversation_with_content_projection(
         .map(short_title)
         .unwrap_or_default();
     let mut builder = Builder::new(format, &id, &title, conversation_header(&value));
+    if value.get("sourceProjectConflict").is_some() {
+        builder.warn("Multiple source projects share this folder. The exact session folder is retained; select the intended project in Projects.");
+    }
     if source_id(&value).is_none() {
         builder.warn("This export has no conversation ID. Identical copies are deduplicated; changed exports create another copy.");
     }
@@ -842,10 +873,12 @@ struct Builder {
     anonymous: HashMap<String, usize>,
     last_time: String,
     bytes: usize,
+    project: SourceProject,
 }
 
 impl Builder {
     fn new(format: &str, id: &str, title: &str, header: Value) -> Self {
+        let project = SourceProject::from_header(&header);
         Self {
             format: format.into(),
             source_id: id.into(),
@@ -857,6 +890,7 @@ impl Builder {
             anonymous: HashMap::new(),
             last_time: "1970-01-01T00:00:00.000000000Z".into(),
             bytes: 0,
+            project,
         }
     }
     fn warn(&mut self, warning: &str) {
@@ -918,7 +952,7 @@ impl Builder {
             "copyId":copy_id(&self.format,&self.source_id),
             "eventId":digest(format!("{}\0{}\0{identity}",self.format,self.source_id).as_bytes()),
             "originalTimestamp":timestamp.cloned().unwrap_or(Value::Null),"originalSource":original_source,
-            "sourceConversation":self.header})
+            "sourceConversation":self.header,"inert":true})
     }
     fn push(&mut self, row: ImportedRow) -> Result<(), String> {
         self.bytes = self.bytes.saturating_add(row_cost(&row));
@@ -989,6 +1023,7 @@ impl Builder {
             rows: vec![],
             warnings: self.warnings,
             error: Some(redact_text(&error)),
+            project: self.project,
         }
     }
     fn finish(mut self) -> Candidate {
@@ -1007,6 +1042,7 @@ impl Builder {
             rows: self.rows,
             warnings: self.warnings,
             error: None,
+            project: self.project,
         }
     }
 }
@@ -1525,10 +1561,10 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()
-        .map_err(|error| format!("Cannot read the Hermes database schema: {error}"))?;
+        .map_err(|error| format!("Cannot read the Hermes/OpenCode database schema: {error}"))?;
     let Some((kind, sql)) = definition else {
         return Err(format!(
-            "This is not a Hermes sessions database: missing {table}."
+            "This is not a supported Hermes/OpenCode database: missing {table}."
         ));
     };
     if kind != "table"
@@ -1537,7 +1573,7 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             .to_ascii_uppercase()
             .contains("VIRTUAL TABLE")
     {
-        return Err("Hermes import requires ordinary sessions and messages tables.".into());
+        return Err("Hermes/OpenCode import requires ordinary source tables.".into());
     }
     let mut statement = db
         .prepare(&format!("PRAGMA table_info(\"{table}\")"))
@@ -1553,7 +1589,7 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             .any(|required| !columns.iter().any(|column| column == required))
     {
         return Err(format!(
-            "The Hermes {table} schema is missing required columns or is not supported."
+            "The Hermes/OpenCode {table} schema is missing required columns or is not supported."
         ));
     }
     Ok(columns)
@@ -1687,8 +1723,9 @@ fn sql_record(row: &Row<'_>, columns: &[String], budget: &mut usize) -> Result<V
     Ok(Value::Object(value))
 }
 
-fn prepare_hermes_database(
+fn prepare_database(
     path: &Path,
+    requested: &str,
     cancelled: &dyn Fn() -> bool,
 ) -> Result<PreparedFile, String> {
     let snapshot = snapshot_database(path, cancelled)?;
@@ -1701,6 +1738,18 @@ fn prepare_hermes_database(
         .map_err(|error| error.to_string())?;
     db.execute_batch("PRAGMA query_only=ON; PRAGMA trusted_schema=OFF;")
         .map_err(|error| error.to_string())?;
+    let has_table = |name: &str| -> bool {
+        db.query_row("SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE name=?1)", [name], |row| row.get(0)).unwrap_or(false)
+    };
+    if requested == "auto" && has_table("sessions") && has_table("session") {
+        return Err("This database contains multiple source schemas. Choose Hermes or OpenCode explicitly.".into());
+    }
+    if requested == "opencode" || (requested == "auto" && !has_table("sessions") && (has_table("session") || has_table("session_v2"))) {
+        let prepared = opencode::prepare_database(&db, cancelled)?;
+        validate_prepared(&prepared)?;
+        return Ok(prepared);
+    }
+    let (project_registry, project_warning) = projects::hermes_registry(path, cancelled)?;
     let session_columns = table_columns(&db, "sessions", &["id", "source", "started_at"])?;
     let message_columns = table_columns(
         &db,
@@ -1731,6 +1780,7 @@ fn prepare_hermes_database(
     let (mut message_count, mut entry_count, mut normalized_bytes) = (0usize, 0usize, 0usize);
     for mut session in sessions {
         check_cancelled(cancelled)?;
+        projects::attach_hermes_project(&mut session, &project_registry);
         let id = scalar_id(session.get("id")).ok_or("A Hermes session has no ID.")?;
         let mut rows = statement.query([&id]).map_err(|error| error.to_string())?;
         let mut messages = Vec::new();
@@ -1769,11 +1819,13 @@ fn prepare_hermes_database(
                 .as_object_mut()
                 .ok_or("Invalid Hermes session")?
                 .insert("messages".into(), Value::Array(messages));
+            let mut candidate = parse_conversation_with_content_projection(session, "hermes", cancelled, true)?;
+            if let Some(warning) = &project_warning { candidate.warnings.push(warning.clone()); }
             append_candidate(
                 &mut conversations,
                 &mut entry_count,
                 &mut normalized_bytes,
-                parse_conversation_with_content_projection(session, "hermes", cancelled, true)?,
+                candidate,
             )?;
         }
     }

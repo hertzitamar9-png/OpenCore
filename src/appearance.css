@@ -1,0 +1,82 @@
+/* Legacy components keep their original dark material colors as fallbacks.
+   This palette replaces those colors in light mode without changing geometry,
+   gradients, component hierarchy, or the colors of displayed media. */
+html[data-platform-theme] {
+  --panel: var(--surface);
+  --border: var(--line);
+  --accent: var(--platform-accent);
+  --accent-soft: var(--blue-soft);
+  --model-muted: var(--muted);
+  color: var(--text);
+  background: var(--bg);
+}
+html[data-platform-theme="light"], html[data-platform-high-contrast="true"] {
+  --theme-canvas: var(--bg);
+  --theme-panel: var(--surface);
+  --theme-raised: var(--surface-2);
+  --theme-edge: var(--surface-3);
+  --theme-ink: var(--text);
+  --theme-muted: var(--muted);
+  --theme-border: var(--line);
+  --theme-border-soft: var(--line-soft);
+  --theme-accent-ink: var(--platform-link);
+  --theme-accent-surface: var(--blue-soft);
+  --theme-accent-border: var(--platform-link);
+  --theme-success-ink: var(--green);
+  --theme-error-ink: var(--red);
+  --theme-warning-ink: var(--amber);
+  --theme-success-surface: color-mix(in srgb, var(--green) 8%, var(--surface));
+  --theme-error-surface: color-mix(in srgb, var(--red) 7%, var(--surface));
+  --theme-warning-surface: color-mix(in srgb, var(--amber) 8%, var(--surface));
+  --theme-success-border: color-mix(in srgb, var(--green) 45%, var(--line));
+  --theme-error-border: color-mix(in srgb, var(--red) 45%, var(--line));
+  --theme-warning-border: color-mix(in srgb, var(--amber) 45%, var(--line));
+  --theme-text-shadow: transparent;
+}
+html[data-platform-theme="light"] {
+  --theme-highlight: #ffffffb3;
+  --theme-shadow-soft: #1822360a;
+  --theme-shadow: #18223614;
+  --theme-shadow-strong: #18223626;
+  --theme-backdrop: #18223645;
+  --theme-overlay: #ffffffdd;
+}
+html[data-platform-theme="light"] :is(.opencore-shell, .section-main, .support-page, .workspace, .conversation-workspace) {
+  color: var(--text);
+  background-color: var(--bg);
+}
+html[data-platform-theme="light"] :is(.page-heading h1, .section-heading strong, .window-titlebrand, .floating-window-title strong) {
+  color: var(--text);
+  text-shadow: none;
+}
+html[data-platform-theme="light"] :is(button.primary, .platform-primary, .send-button, .jobs-primary) {
+  color: var(--platform-accent-text);
+  background: var(--platform-accent);
+  border-color: var(--platform-link);
+}
+html[data-platform-theme="light"] :is(button.primary, .platform-primary, .send-button, .jobs-primary):hover:not(:disabled) {
+  color: var(--platform-accent-text);
+  background: var(--platform-accent);
+  filter: brightness(.95);
+}
+html[data-platform-theme="light"] :is(.appearance-choices button.active, .platform-choices label.selected) {
+  color: var(--text);
+  background: var(--blue-soft);
+  border-color: var(--platform-link);
+}
+html[data-platform-theme] .aui-md a, html[data-platform-theme] .model-setup-link { color: var(--platform-link); }
+html[data-platform-theme="light"] :is(.platform-error, .chat-import-error, .workspace-inline-error, .jobs-error) {
+  color: var(--red);
+  border-color: var(--theme-error-border);
+  background: var(--theme-error-surface);
+}
+html[data-platform-theme="light"] .platform-success { color: var(--green); background: var(--theme-success-surface); border-color: var(--theme-success-border); }
+html[data-platform-high-contrast="true"] {
+  --theme-shadow-soft: transparent;
+  --theme-shadow: transparent;
+  --theme-shadow-strong: transparent;
+  --theme-highlight: transparent;
+  --theme-success-border: var(--line);
+  --theme-error-border: var(--line);
+  --theme-warning-border: var(--line);
+}

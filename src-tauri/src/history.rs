@@ -4,6 +4,9 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
+#[path = "agent_connector_history.rs"]
+mod agent_connector_history;
+
 pub const SYNC_CANCELLED: &str = "__HISTORY_SYNC_CANCELLED__";
 
 #[derive(Debug, Clone, Default)]
@@ -13,6 +16,7 @@ pub struct SyncReport {
     pub imported: usize,
     pub updated: usize,
     pub skipped: usize,
+    pub failed: usize,
     pub folders_found: usize,
     pub folders_unresolved: usize,
 }
@@ -307,6 +311,9 @@ pub fn sync_with_progress(store: &EventStore, id: &str,
 pub fn sync_with_cancellation(store: &EventStore, id: &str,
     mut progress: impl FnMut(&SyncReport), cancelled: &dyn Fn() -> bool) -> Result<SyncReport, String> {
     if cancelled() { return Err(SYNC_CANCELLED.into()); }
+    if matches!(id, "opencode" | "hermes") {
+        return agent_connector_history::sync_with_cancellation(store, id, &mut progress, cancelled);
+    }
     let profile = history_profile_root()?;
     match id {
         "claude-code" => sync_claude_with_cancellation(store, &profile, &mut progress, cancelled),
@@ -315,6 +322,11 @@ pub fn sync_with_cancellation(store: &EventStore, id: &str,
     }
 }
 pub fn sync(store: &EventStore, id: &str) -> Result<String, String> {
+    if matches!(id, "opencode" | "hermes") {
+        let report = sync_with_cancellation(store, id, |_| {}, &|| false)?;
+        return Ok(format!("Imported {} · Updated {} · Skipped {} · Failed {} · Linked {} folders · {} folders unavailable or unrecorded",
+            report.imported, report.updated, report.skipped, report.failed, report.folders_found, report.folders_unresolved));
+    }
     let profile = history_profile_root()?;
     let count = match id {
         "claude-code" => sync_claude(store, &profile)?,

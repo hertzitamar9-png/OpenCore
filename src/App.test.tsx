@@ -6,6 +6,7 @@ import opencoreLogo from "./assets/opencore-logo.png";
 import type { OperationRecord } from "./types";
 import * as dialog from "@tauri-apps/plugin-dialog";
 import { installExternalLinkGuard } from "./external-links";
+import * as platform from './agent-platform';
 
 const stageClipboardAttachment = vi.hoisted(() => vi.fn());
 vi.mock("./api", async (importOriginal) => ({
@@ -540,7 +541,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
       fireEvent.click(screen.getByRole("button", { name: "Chrome" }));
       expect(screen.getByRole("button", { name: "Chrome" })).toHaveAttribute("aria-pressed", "true");
-      fireEvent.change(screen.getByLabelText(/Requested native-model auto-compaction trigger/), { target: { value: "200000" } });
+      expect(screen.getByLabelText('Auto-compaction trigger (tokens)')).toHaveValue(200000);
       expect(screen.queryByLabelText("Maximum answer length")).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
       expect(screen.queryByRole("button", { name: /Prompt tools/ })).not.toBeInTheDocument();
@@ -1012,7 +1013,7 @@ describe("OpenCore", () => {
     expect(screen.getByRole("menuitem", { name: "Remove from OpenCore" })).toBeDisabled();
   });
 
-  it("saves and applies real conversation appearance settings", async () => {
+  it("applies the shared appearance source and autosaves local terminal preferences", async () => {
     const originalStorage = Object.getOwnPropertyDescriptor(window, "localStorage");
     const values = new Map<string, string>();
     Object.defineProperty(window, "localStorage", { configurable: true, value: {
@@ -1020,19 +1021,25 @@ describe("OpenCore", () => {
       setItem: (key: string, value: string) => { values.set(key, value); },
       removeItem: (key: string) => { values.delete(key); },
     } });
-    render(<App />);
+    const source = platform.defaultPlatformConfiguration();
+    const state = { configuration: source, loading: false, error: '', preview: true, reload: vi.fn(async () => {}), save: vi.fn(async () => source), savePatch: vi.fn(async () => source) };
+    const sourceHook = vi.spyOn(platform, 'usePlatformConfiguration').mockReturnValue(state);
+    const view = render(<App />);
+    try {
     await screen.findByText("Build a data analysis script", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    fireEvent.change(screen.getByLabelText(/Message text size/), { target: { value: "17" } });
-    fireEvent.click(screen.getByRole("button", { name: "Compact" }));
+    expect(screen.queryByLabelText(/Message text size/)).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText('Text size (pixels)')).toHaveLength(1);
+    fireEvent.change(screen.getByLabelText(/Terminal\/log text/), { target: { value: '16' } });
     fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
-    fireEvent.change(screen.getByLabelText(/Requested native-model auto-compaction trigger/), { target: { value: "250000" } });
-    expect(screen.getByText(/Effective trigger for the configured .* model window:/)).toHaveTextContent("209,716 tokens");
+    sourceHook.mockReturnValue({ ...state, configuration: { ...source, compactAtTokens: 250000, appearance: { ...source.appearance, fontSize: 17, density: 'compact' } } });
+    view.rerender(<App />);
+    await waitFor(() => expect(screen.getByText(/Effective trigger for the configured .* model window:/)).toHaveTextContent('209,716 tokens'));
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
     await waitFor(() => expect(document.querySelector(".app-window-frame")).toHaveClass("compact-messages"));
     expect((document.querySelector(".app-window-frame") as HTMLElement).style.getPropertyValue("--chat-font-size")).toBe("17px");
-    expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v2") || "{}")).toMatchObject({ chatFontSize: 17, compactMessages: true, projectSkillsEnabled: false, compactAtTokens: 250000 });
-    if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
+    expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v2") || "{}")).toMatchObject({ chatFontSize: 17, terminalFontSize: 16, compactMessages: true, projectSkillsEnabled: false, compactAtTokens: 250000 });
+    } finally { view.unmount(); sourceHook.mockRestore(); if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage); }
   });
 
   it("shows persisted history-sync file progress in its connector status", async () => {
@@ -1048,6 +1055,34 @@ describe("OpenCore", () => {
       expect(await screen.findByRole("button", { name: "Importing transcripts · 3/10 files" })).toBeDisabled();
       expect(screen.getByText("Importing transcripts · 3/10 files · updating")).toBeInTheDocument();
     } finally { operations.mockRestore(); }
+  });
+
+  it("keeps native connector failures and cancelled clearing distinct from success", async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, "snapshot").mockResolvedValue({ ...initial, connectors: [{
+      id: "opencode", name: "OpenCode", kind: "history", status: "not configured", endpoint: "",
+      observable: true, details: "Connect the local model and import projects", custom: false,
+    }] });
+    const configure = vi.spyOn(api, "configureAgentConnector").mockRejectedValue(new Error("OpenCode config is not writable"));
+    const sync = vi.spyOn(api, "startHistorySync").mockRejectedValue(new Error("Close OpenCode before importing"));
+    const clear = vi.spyOn(api, "clearImportedHistory").mockResolvedValue("History cleared");
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
+      const card = screen.getByRole("heading", { name: "OpenCode" }).closest("article") as HTMLElement;
+      fireEvent.click(within(card).getByRole("button", { name: "Connect OpenCore" }));
+      expect(await within(card).findByRole("alert")).toHaveTextContent("OpenCode config is not writable");
+      expect(screen.queryByText("OpenCode connected to OpenCore")).not.toBeInTheDocument();
+      fireEvent.click(within(card).getByRole("button", { name: "Sync chats and projects" }));
+      await waitFor(() => expect(within(card).getByRole("alert")).toHaveTextContent("Close OpenCode before importing"));
+      expect(screen.queryByText("OpenCode history import started")).not.toBeInTheDocument();
+      fireEvent.click(within(card).getByRole("button", { name: "Clear imported" }));
+      await waitFor(() => expect(confirm).toHaveBeenCalled());
+      expect(clear).not.toHaveBeenCalled();
+      expect(screen.queryByText("OpenCode copied history cleared")).not.toBeInTheDocument();
+    } finally { snapshot.mockRestore(); configure.mockRestore(); sync.mockRestore(); clear.mockRestore(); confirm.mockRestore(); }
   });
 
   it("opens the actual Windows model directory and reports Explorer failures", async () => {

@@ -4,6 +4,82 @@ import { GenerationForm, StudioJobs } from './StudioJobs';
 import * as api from './api';
 afterEach(()=>vi.restoreAllMocks());
 const music: api.InstalledModel={id:'yue2',label:'YuE2',category:'music',precision:'BF16',installed:true,selectable:false,externalManaged:true,description:'Music',license:'CC-BY-NC',experimental:true,note:'',contextTokens:0,downloadBytes:0,totalBytes:1};
+it('defaults to FLUX.2 Klein 4B and its controls when older uninstalled image models appear first', async () => {
+  const old = {...music, id: 'sana-16', label: 'Sana', category: 'image', installed: false};
+  const latest = {...old, id: 'flux-2-klein-4b', label: 'FLUX.2 Klein 4B', backend: 'external'};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [old, latest], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  render(<GenerationForm category="image" onNotice={vi.fn()} />);
+  await waitFor(() => expect(screen.getByLabelText('Model')).toHaveValue(latest.id));
+  await waitFor(() => expect(screen.getByLabelText('Inference steps')).toHaveValue(4));
+  expect(screen.getByLabelText('Guidance scale')).toHaveValue(1);
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+});
+it.each([
+  ['image', 'Inference steps'], ['3d', 'Mesh resolution'],
+  ['3d-animation', 'Motion description'], ['2d-animation', 'Frame count'],
+])('shows editable %s controls before downloading a model', async (category, control) => {
+  const model: api.InstalledModel = {...music, id: `${category}-model`, label: 'Publisher model', category, installed: false, externalManaged: false, installable: true, backend: 'external', downloadBytes: 2000000000, totalBytes: 2000000000};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  const install = vi.spyOn(api, 'installModel').mockResolvedValue();
+  render(<GenerationForm category={category} onNotice={vi.fn()} />);
+  await screen.findByRole('option', {name: 'Publisher model'});
+  expect(screen.getByLabelText(control)).toBeVisible();
+  expect(screen.getByLabelText('Preset name')).toBeVisible();
+  fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'A game character'}});
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+  expect(install).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', {name: /Install weights/}));
+  await waitFor(() => expect(install).toHaveBeenCalledWith(`${category}-model`));
+});
+it('keeps generation controls editable when a category has no catalog entries', async () => {
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  render(<GenerationForm category="image" onNotice={vi.fn()} />);
+  expect(screen.getByLabelText('Width')).toBeVisible();
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+});
+it('requires the matching runtime before generating with installed image weights', async () => {
+  const model: api.InstalledModel = {...music, id: 'sana-16', label: 'Sana', category: 'image', installed: true, backend: 'diffusers'};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  render(<GenerationForm category="image" onNotice={vi.fn()} />);
+  await screen.findByRole('option', {name: 'Sana'});
+  fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'A game environment'}});
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+});
+it('shows TRELLIS 2 supported resolution controls before installation', async () => {
+  const model: api.InstalledModel = {...music, id: 'trellis-2-4b', label: 'TRELLIS.2', category: '3d', installed: false, backend: 'external'};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue(null);
+  render(<GenerationForm category="3d" onNotice={vi.fn()} />);
+  await screen.findByRole('option', {name: 'TRELLIS.2'});
+  await waitFor(() => expect(screen.getByLabelText('Mesh resolution')).toHaveValue(512));
+  expect(screen.getByLabelText('Mesh resolution')).toHaveAttribute('max', '1536');
+  expect(screen.queryByLabelText('Render chunk size')).not.toBeInTheDocument();
+});
+it('requires a driving video and reference image for Wan Animate 2 and sends their exact paths', async () => {
+  const model: api.InstalledModel = {...music, id: 'wan-animate-2-distilled', label: 'Wan Animate 2 distilled', category: '2d-animation', installed: true, backend: 'external'};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  vi.spyOn(api, 'studioRuntime').mockResolvedValue({modelId: model.id, python: 'python.exe', runner: 'worker.py', sourceDir: 'C:\\wan'});
+  vi.spyOn(api, 'pickStudioFile').mockResolvedValueOnce('C:\\assets\\character.png').mockResolvedValueOnce('C:\\assets\\driving.mp4');
+  const submit = vi.spyOn(api, 'submitStudioJob').mockResolvedValue({} as api.StudioJob);
+  render(<GenerationForm category="2d-animation" onNotice={vi.fn()} />);
+  await screen.findByRole('option', {name: 'Wan Animate 2 distilled'});
+  fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'A silver cartoon cat wearing a school uniform'}});
+  await waitFor(() => expect(screen.getByLabelText('Inference steps')).toHaveValue(10));
+  expect(screen.getByLabelText('Height')).toBeValid();
+  expect(screen.getByLabelText('Output format')).toHaveValue('mp4');
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', {name: 'Choose image or asset'}));
+  await screen.findByText('C:\\assets\\character.png');
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', {name: 'Choose driving video'}));
+  await waitFor(() => expect(screen.getByLabelText('Driving video path')).toHaveValue('C:\\assets\\driving.mp4'));
+  fireEvent.click(screen.getByRole('button', {name: 'Generate'}));
+  await waitFor(() => expect(submit).toHaveBeenCalledWith({modelId: model.id, prompt: 'A silver cartoon cat wearing a school uniform', settings: {seed: 831001, steps: 10, width: 640, height: 800, frameCount: 81, fps: 24, loop: false, outputFormat: 'mp4', guidanceScale: 1, flowSolver: 'euler', drivingVideoPath: 'C:\\assets\\driving.mp4', inputPath: 'C:\\assets\\character.png'}}));
+});
 it('submits exact music settings through the same durable job API used by chat',async()=>{
   vi.spyOn(api,'modelLibrary').mockResolvedValue({models:[music],progress:null,diskFreeBytes:88e9,minimumFreeBytes:64e6});
   vi.spyOn(api,'studioRuntime').mockResolvedValue(null);
