@@ -30,6 +30,78 @@ function imageBounds(image: HTMLElement) {
 }
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
+it("retains the selected app and draft when the window list temporarily omits a live capture", async () => {
+  const command = desktop();
+  let omitted = false;
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows: omitted ? windows.filter(item => item.windowId !== 10) : windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { editable: true, value: "Existing note", inputMode: "accessibility" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const input = screen.getByLabelText("Type in selected window");
+  await waitFor(() => expect(input).toBeEnabled());
+  vi.useFakeTimers();
+  fireEvent.change(input, { target: { value: "Keep my unfinished draft" } });
+  omitted = true;
+  fireEvent.click(screen.getByRole("button", { name: "Refresh capture" }));
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByLabelText("Window")).toHaveValue("10");
+  expect(screen.getByRole("option", { name: "Notes" })).toBeInTheDocument();
+  expect(input).toHaveValue("Keep my unfinished draft");
+  expect(screen.getByAltText("Selected Windows app")).toBeVisible();
+  expect(screen.queryByText(/selected window closed/i)).toBeNull();
+});
+
+it("blocks background controls during capture failure and recovers without losing the local draft", async () => {
+  const command = desktop();
+  let unavailable = false;
+  let targetValue = "Existing note";
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") {
+      if (unavailable) throw new Error("Window capture is temporarily unavailable");
+      return screenshot(Number(args.windowId)) as never;
+    }
+    if (action === "interact") return { editable: true, value: targetValue, inputMode: "accessibility" } as never;
+    targetValue = String(args.text);
+    return { updated: true, submitted: false, inputMode: "accessibility" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const input = screen.getByLabelText("Type in selected window");
+  await waitFor(() => expect(input).toBeEnabled());
+  vi.useFakeTimers();
+  fireEvent.change(input, { target: { value: "Draft before capture failure" } });
+  unavailable = true;
+  fireEvent.click(screen.getByRole("button", { name: "Refresh capture" }));
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByRole("alert")).toHaveTextContent(/temporarily unavailable/);
+  expect(screen.getByLabelText("Window")).toHaveValue("10");
+  expect(input).toHaveValue("Draft before capture failure");
+  expect(screen.getByAltText("Selected Windows app")).toHaveAttribute("aria-disabled", "true");
+  expect(screen.getByRole("button", { name: "Apply text to selected window" })).toBeDisabled();
+  fireEvent.change(input, { target: { value: "Draft while capture is unavailable" } });
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await act(async () => { await vi.advanceTimersByTimeAsync(200); });
+  expect(targetValue).toBe("Existing note");
+  expect(input).toHaveValue("Draft while capture is unavailable");
+  unavailable = false;
+  fireEvent.click(screen.getByRole("button", { name: "Refresh capture" }));
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.getByRole("button", { name: "Apply text to selected window" })).toBeEnabled();
+  expect(input).toHaveValue("Draft while capture is unavailable");
+  fireEvent.click(screen.getByRole("button", { name: "Apply text to selected window" }));
+  await act(async () => { await Promise.resolve(); });
+  expect(targetValue).toBe("Draft while capture is unavailable");
+});
+
 it("maps screenshot clicks to the selected window and requires background control for every text update", async () => {
   const command = desktop();
   render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
