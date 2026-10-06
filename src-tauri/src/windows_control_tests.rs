@@ -586,6 +586,15 @@ impl Fixture {
         self.phase("deliberate cover restoration");
         assert!(unsafe { SetForegroundWindow(hwnd(self.cover)) }.as_bool());
         wait_for("foreground cover restore", || unsafe { GetForegroundWindow() } == hwnd(self.cover));
+        // A successful target probe grants activation to the parent, replacing
+        // the previous target grant. Refresh eligibility for the exact owned
+        // target before the next protected or released probe. This does not
+        // unlock foreground protection or bypass the activation veto.
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-allowsetforegroundwindow
+        let mut target_process = 0;
+        unsafe { GetWindowThreadProcessId(hwnd(self.target), Some(&mut target_process)); }
+        assert_eq!(target_process, self.process.child.id(), "only the exact owned target may receive fixture activation eligibility");
+        unsafe { AllowSetForegroundWindow(target_process).expect("the foreground cover must refresh the owned target's activation eligibility"); }
         self.flush_desktop();
         // Only deliberate test activation/restoration creates a new baseline.
         // Never rebase after a background action or discovery phase.
@@ -885,7 +894,9 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     assert!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationLease.v1")) }.0.is_null());
     assert!(unsafe { GetPropW(hwnd(fixture.target), w!("OpenCore.ManualActivationAck.v1")) }.0.is_null());
     fixture.phase("deliberate failed-preflight activation probe");
-    assert!(fixture.attempt_activation(), "failed preflight must release its hook and foreground lock");
+    assert!(fixture.attempt_activation(),
+        "failed preflight must release its hook and foreground lock; foreground={}; target={:?}",
+        window_description(unsafe { GetForegroundWindow() }), fixture.state());
     fixture.restore_cover();
 
     // Retain the actual hook and stale properties while its monotonic lease
