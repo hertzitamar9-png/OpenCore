@@ -4,11 +4,11 @@ import * as api from "./api";
 import { browserPoint } from "./browser-coordinates";
 import { FloatingWindow } from "./FloatingWindow";
 
-type Props = { onClose: () => void; onNotice: (message: string) => void };
+type Props = { onClose: () => void; onNotice: (message: string) => void; embedded?: boolean; active?: boolean };
 type Point = { x: number; y: number };
 type Interaction = { editable?: boolean; value?: string; activated?: boolean; inputMode?: string };
 
-export function DesktopPanel({ onClose, onNotice }: Props) {
+export function DesktopPanel({ onClose, onNotice, embedded = false, active = true }: Props) {
   const [windows, setWindows] = useState<api.DesktopWindow[]>([]);
   const [windowId, setWindowId] = useState<number | null>(null);
   const [shot, setShot] = useState<api.DesktopShot | null>(null);
@@ -41,10 +41,11 @@ export function DesktopPanel({ onClose, onNotice }: Props) {
   }, [windowId, onNotice]);
 
   useEffect(() => {
+    if (!active) return;
     void refresh();
     const timer = window.setInterval(() => void refresh(), 450);
     return () => window.clearInterval(timer);
-  }, [refresh]);
+  }, [refresh, active]);
   useEffect(() => () => { if (pending.current != null) window.clearTimeout(pending.current); }, []);
 
   const interact = async (at: Point) => {
@@ -112,9 +113,10 @@ export function DesktopPanel({ onClose, onNotice }: Props) {
     return browserPoint(event.clientX, event.clientY, rect.left, rect.top, rect.width, rect.height, shot.bounds.width, shot.bounds.height);
   };
 
-  return <FloatingWindow id="desktop" title="Desktop" icon={<AppWindow size={17} />} status={<span className="connected">Windows</span>} onClose={onClose} className="desktop-panel" ariaLabel="Windows desktop" initialWidth={790} initialHeight={720} minWidth={440} minHeight={320}>
+  const content = <>
     <div className="browser-subbar"><select aria-label="Window" value={windowId ?? ""} onChange={(event) => { const value = event.target.value; const id = value === "" ? null : Number(value); setWindowId(id); setInputAt(null); setNativeInput(false); setShot(null); if (id != null) void refresh(id); }}><option value="">Select a window</option>{windows.map((item) => <option key={item.windowId} value={item.windowId}>{item.title}</option>)}</select><button title="Refresh window" onClick={() => void refresh()} disabled={busy}><RefreshCw size={15} /></button></div>
     <div className="browser-stage">{shot ? <div className="browser-screen"><img src={shot.dataUrl} alt="Selected Windows app" draggable={false} onClick={(event) => { const at = point(event); if (at) void interact(at); }} /></div> : <div className="browser-empty">Select a window to view and control it</div>}</div>
     <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={inputAt ? "Type here; Enter opens the app" : "Select a text field in the window"} value={typing} onChange={(event) => edit(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void submit(); } }} disabled={!inputAt} /><button title="Enter in selected app" disabled={!inputAt || busy} onClick={() => void submit()}><CornerDownLeft size={15} /><span>Enter</span></button></div>
-  </FloatingWindow>;
+  </>;
+  return embedded ? <section className="desktop-panel desktop-panel-embedded" aria-label="Windows desktop">{content}</section> : <FloatingWindow id="desktop" title="Desktop" icon={<AppWindow size={17} />} status={<span className="connected">Windows</span>} onClose={onClose} className="desktop-panel" ariaLabel="Windows desktop" initialWidth={790} initialHeight={720} minWidth={440} minHeight={320}>{content}</FloatingWindow>;
 }

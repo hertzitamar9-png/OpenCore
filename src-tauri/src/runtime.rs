@@ -489,6 +489,14 @@ impl RuntimeManager {
         self.start_inner(profile, attach_url, generation)
     }
 
+    /// A native Start/Restart command already owns this reservation. Checking
+    /// the global flag again would reject the command's own GPU claim.
+    pub(crate) fn start_reserved(&self, profile: &str, attach_url: Option<String>, _reservation: &crate::studio_jobs::GpuReservation) -> Result<RuntimeSnapshot, String> {
+        let generation=self.stop_generation.load(Ordering::SeqCst);
+        let _gate=self.start_gate.lock().map_err(|e|e.to_string())?;
+        self.start_inner(profile,attach_url,generation)
+    }
+
     fn start_doucode(&self, profile: &str, generation: u64) -> Result<RuntimeSnapshot, String> {
         let release = self.doucode_release_dir();
         let config_path = self.doucode_config_path(&release);

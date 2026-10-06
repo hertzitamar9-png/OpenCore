@@ -16,6 +16,10 @@ pub struct EventStore {
     connection: Mutex<Connection>,
 }
 
+#[cfg(test)]
+#[path = "side_chat_tests.rs"]
+mod side_chat_tests;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProjectAssignment { Legacy, Automatic, Manual }
 
@@ -571,6 +575,54 @@ mod tests {
 }
 
 impl EventStore {
+    /// Branch persisted context atomically, without reusing external thread IDs.
+    pub fn create_side_chat(&self, parent: &str, id: &str, profile: &str, context_tokens: u64) -> Result<Value, String> {
+        if parent.is_empty() || id.is_empty() || parent == id || context_tokens < 8_192 {
+            return Err("Invalid side chat or model context window".into());
+        }
+        let mut connection = self.connection.lock().map_err(|e| e.to_string())?;
+        let transaction = connection.transaction().map_err(|e| e.to_string())?;
+        let parent_title: String = transaction.query_row("SELECT title FROM conversations WHERE id=?1", [parent], |row| row.get(0))
+            .optional().map_err(|e| e.to_string())?.ok_or("The main chat no longer exists")?;
+        let workspace_origin: String = transaction.query_row("SELECT workspace_origin FROM conversation_branches WHERE id=?1", [parent], |row| row.get(0))
+            .optional().map_err(|e| e.to_string())?.unwrap_or_else(|| parent.to_string());
+        let copied_through: i64 = transaction.query_row("SELECT coalesce(max(id),0) FROM timeline WHERE conversation_id=?1", [parent], |row| row.get(0))
+            .map_err(|e| e.to_string())?;
+        let now = Utc::now().to_rfc3339();
+        let title = format!("Side chat · {}", parent_title.chars().take(120).collect::<String>());
+        transaction.execute("INSERT INTO conversations(id,title,client,profile,status,created_at,updated_at,project,project_id,project_assignment,pinned)
+            SELECT ?2,?3,'OpenCore',?4,'idle',?5,?5,project,project_id,'manual',0 FROM conversations WHERE id=?1",
+            params![parent,id,title,profile,now]).map_err(|e| e.to_string())?;
+        let inherited = transaction.execute("INSERT INTO timeline(conversation_id,timestamp,kind,role,source,title,content,metadata)
+            SELECT ?2,timestamp,kind,role,source,title,content,
+              json_set(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,
+                '$.sideChatInherited',json('true'),'$.sideChatParent',?1,'$.sideChatSourceEntry',id)
+            FROM timeline WHERE conversation_id=?1 AND id<=?3 ORDER BY timestamp,id",
+            params![parent,id,copied_through]).map_err(|e| e.to_string())?;
+        transaction.execute("INSERT INTO conversation_branches(id,parent_id,workspace_origin,copied_through,inherited_entries,context_tokens,created_at)
+            VALUES(?1,?2,?3,?4,?5,?6,?7)", params![id,parent,workspace_origin,copied_through,inherited as i64,context_tokens as i64,now])
+            .map_err(|e| e.to_string())?;
+        transaction.commit().map_err(|e| e.to_string())?;
+        Ok(json!({"conversationId":id,"parentId":parent,"title":title,"contextTokens":context_tokens,
+            "sharedWorkspace":true,"inheritedEntries":inherited,"contextSource":"timeline-branch","copiedThrough":copied_through}))
+    }
+
+    pub fn side_chat_info(&self, id: &str) -> Result<Option<Value>, String> {
+        let connection = self.connection.lock().map_err(|e| e.to_string())?;
+        connection.query_row("SELECT b.parent_id,b.workspace_origin,b.copied_through,b.inherited_entries,b.context_tokens,c.title
+            FROM conversation_branches b JOIN conversations c ON c.id=b.id WHERE b.id=?1", [id], |row| {
+            Ok(json!({"conversationId":id,"parentId":row.get::<_,String>(0)?,"workspaceOrigin":row.get::<_,String>(1)?,
+                "copiedThrough":row.get::<_,i64>(2)?,"inheritedEntries":row.get::<_,i64>(3)?,
+                "contextTokens":row.get::<_,i64>(4)?,"title":row.get::<_,String>(5)?,"sharedWorkspace":true}))
+        }).optional().map_err(|e| e.to_string())
+    }
+
+    pub fn workspace_conversation_id(&self, id: &str) -> Result<String, String> {
+        self.connection.lock().map_err(|e| e.to_string())?.query_row(
+            "SELECT workspace_origin FROM conversation_branches WHERE id=?1", [id], |row| row.get(0)
+        ).optional().map(|origin| origin.unwrap_or_else(|| id.to_string())).map_err(|e| e.to_string())
+    }
+
     pub fn get_setting(&self, key: &str) -> Result<Option<String>, String> {
         self.connection.lock().map_err(|e| e.to_string())?.query_row(
             "SELECT value FROM settings WHERE key=?1", [key], |row| row.get(0)
@@ -690,6 +742,15 @@ impl EventStore {
                    ON timeline(conversation_id, timestamp, id);
                  CREATE INDEX IF NOT EXISTS timeline_conversation_kind_id
                    ON timeline(conversation_id, kind, id);
+                 CREATE TABLE IF NOT EXISTS conversation_branches (
+                   id TEXT PRIMARY KEY,
+                   parent_id TEXT NOT NULL,
+                   workspace_origin TEXT NOT NULL,
+                   copied_through INTEGER NOT NULL,
+                   inherited_entries INTEGER NOT NULL,
+                   context_tokens INTEGER NOT NULL,
+                   created_at TEXT NOT NULL
+                 );
                  CREATE TABLE IF NOT EXISTS codex_app_server_items (
                    conversation_id TEXT NOT NULL,
                    thread_id TEXT NOT NULL,
@@ -1729,13 +1790,20 @@ impl EventStore {
         let project_id: Option<String> = connection.query_row(
             "SELECT project_id FROM conversations WHERE id=?1", [conversation_id], |row| row.get(0),
         ).optional().map_err(|error| error.to_string())?.flatten();
-        let Some(project_id) = project_id else { return Ok(vec![conversation_id.to_string()]); };
-        let mut statement = connection.prepare("SELECT id FROM conversations WHERE project_id=?1 ORDER BY id")
-            .map_err(|error| error.to_string())?;
-        let rows = statement.query_map([project_id], |row| row.get::<_, String>(0))
-            .map_err(|error| error.to_string())?;
-        let mut ids = rows.collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+        let mut ids = if let Some(project_id) = project_id {
+            // Project memory may read other main chats. Branch messages stay
+            // private to their branch until the user explicitly shares them.
+            let mut statement = connection.prepare("SELECT id FROM conversations WHERE project_id=?1
+                AND (id=?2 OR NOT EXISTS (SELECT 1 FROM conversation_branches WHERE conversation_branches.id=conversations.id)) ORDER BY id")
+                .map_err(|error| error.to_string())?;
+            let rows = statement.query_map(params![project_id,conversation_id], |row| row.get::<_, String>(0))
+                .map_err(|error| error.to_string())?;
+            rows.collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?
+        } else { vec![conversation_id.to_string()] };
         if !ids.iter().any(|id| id == conversation_id) { ids.push(conversation_id.to_string()); }
+        let parent: Option<String> = connection.query_row("SELECT parent_id FROM conversation_branches WHERE id=?1", [conversation_id], |row| row.get(0))
+            .optional().map_err(|e| e.to_string())?;
+        if let Some(parent) = parent { if !ids.contains(&parent) { ids.push(parent); } }
         Ok(ids)
     }
 
@@ -1793,6 +1861,24 @@ impl EventStore {
             }
         }
         Ok(files)
+    }
+
+    pub fn published_artifacts(&self, conversation:Option<&str>)->Result<Vec<Value>,String> {
+        let connection=self.connection.lock().map_err(|e|e.to_string())?;
+        let mut statement=connection.prepare("SELECT conversation_id,metadata FROM timeline
+            WHERE kind='file' AND role='assistant' AND source='OpenCore'
+            AND (?1 IS NULL OR conversation_id=?1) ORDER BY id").map_err(|e|e.to_string())?;
+        let rows=statement.query_map([conversation],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?))).map_err(|e|e.to_string())?;
+        let mut artifacts=Vec::new(); let mut seen=std::collections::HashSet::new();
+        for row in rows {
+            let (conversation,raw)=row.map_err(|e|e.to_string())?;
+            let Ok(metadata)=serde_json::from_str::<Value>(&raw) else {continue;};
+            if metadata["sideChatInherited"]==true {continue;}
+            if let Some(id)=metadata["id"].as_str().filter(|id|seen.insert(id.to_string())) {
+                artifacts.push(json!({"conversationId":conversation,"id":id}));
+            }
+        }
+        Ok(artifacts)
     }
 
     pub fn conversation_activity(&self, id: &str) -> Result<Vec<TimelineEntry>, String> {
@@ -1897,6 +1983,7 @@ impl EventStore {
         transaction
             .execute("DELETE FROM conversations WHERE id=?1", [id])
             .map_err(|e| e.to_string())?;
+        transaction.execute("DELETE FROM conversation_branches WHERE id=?1", [id]).map_err(|e|e.to_string())?;
         transaction.commit().map_err(|e| e.to_string())
     }
 

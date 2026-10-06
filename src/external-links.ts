@@ -28,6 +28,7 @@ export function installExternalLinkGuard(openExternal: ExternalUrlOpener): () =>
     if (!url && !isImportedLocalFileLink(event.target)) return;
 
     event.preventDefault();
+    if (event.target instanceof Element && event.target.closest("a[data-opencore-workspace-link]")) return;
     // React's message handler opens a read-only file tab in the originating chat.
     if (!url && event.target instanceof Element && event.target.closest("a[data-opencore-file-link]")) return;
     event.stopPropagation();

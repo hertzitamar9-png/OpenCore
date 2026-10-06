@@ -72,7 +72,7 @@ describe("OpenCore", () => {
       await screen.findByRole("heading", { name: older.title, level: 2 });
       const link = await screen.findByRole("link", { name: "Frozen research record" });
       fireEvent.click(link);
-      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      const browser = await screen.findByRole("complementary", { name: "Workspace" });
       expect(await within(browser).findByText("Original research source")).toBeVisible();
       expect(preview).toHaveBeenCalledWith(path);
       expect(screen.getByRole("heading", { name: older.title, level: 2 })).toBeVisible();
@@ -245,7 +245,7 @@ describe("OpenCore", () => {
     expect(stageClipboardAttachment).toHaveBeenCalledOnce();
   });
 
-  it("opens a selected text attachment in the in-app browser before sending", async () => {
+  it("opens a selected text attachment in workspace Files before sending", async () => {
     const path = "C:\\Temp\\notes.txt";
     const picker = vi.mocked(dialog.open).mockResolvedValueOnce(path);
     const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "notes.txt", mime: "text/plain", size: 18, dataUrl: "data:text/plain;base64,cHJldmlldyB0ZXh0", text: "preview text" });
@@ -256,13 +256,13 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
       await screen.findByText("notes.txt");
       fireEvent.click(screen.getByRole("button", { name: "Preview notes.txt" }));
-      expect(await screen.findByRole("region", { name: "OpenCore Browser" })).toBeInTheDocument();
+      expect(await screen.findByRole("complementary", { name: "Workspace" })).toBeInTheDocument();
       expect(await screen.findByText("preview text")).toBeInTheDocument();
       expect(preview).toHaveBeenCalledWith(path);
     } finally { picker.mockReset(); preview.mockRestore(); }
   });
 
-  it("previews attached HTML in the in-app browser", async () => {
+  it("previews attached HTML in workspace Files", async () => {
     const path = "C:\\Temp\\game.html";
     const picker = vi.mocked(dialog.open).mockResolvedValueOnce(path);
     const preview = vi.spyOn(api, "previewComposerAttachment").mockResolvedValue({ name: "game.html", mime: "text/html", size: 16, dataUrl: "data:text/html;base64,PGgxPlBsYXk8L2gxPg==", text: "<h1>Play</h1>" });
@@ -273,7 +273,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole("menuitem", { name: "Upload files or images" }));
       await screen.findByText("game.html");
       fireEvent.click(screen.getByRole("button", { name: "Preview game.html" }));
-      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      const browser = await screen.findByRole("complementary", { name: "Workspace" });
       await waitFor(() => expect(browser.querySelector("iframe")).toHaveAttribute("srcdoc", "<h1>Play</h1>"));
       expect(preview).toHaveBeenCalledWith(path);
     } finally { picker.mockReset(); preview.mockRestore(); }
@@ -385,7 +385,7 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      fireEvent.click(screen.getByRole("button", { name: "Overview" }));
+      fireEvent.click(screen.getByRole("button", { name: "Runtime & Logs" }));
       fireEvent.click(screen.getByRole("button", { name: "Start" }));
       const stopButton = screen.getByRole("button", { name: "Stop" });
       expect(stopButton).toBeEnabled();
@@ -563,7 +563,7 @@ describe("OpenCore", () => {
       render(<App />);
       expect(await screen.findByText("game.html")).toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Preview" }));
-      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      const browser = await screen.findByRole("complementary", { name: "Workspace" });
       await waitFor(() => expect(browser.querySelector("iframe")).toHaveAttribute("srcdoc", "<h1>Play</h1>"));
       fireEvent.click(browser.querySelector(".workspace-file-toolbar button")!);
       await waitFor(() => expect(download).toHaveBeenCalledWith(id));
@@ -583,7 +583,7 @@ describe("OpenCore", () => {
       const image = await screen.findByRole("img", { name: "Generated chart" });
       expect(image).toHaveAttribute("src", "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=");
       fireEvent.click(screen.getByRole("button", { name: "Preview Generated chart" }));
-      expect(await screen.findByRole("region", { name: "OpenCore Browser" })).toBeInTheDocument();
+      expect(await screen.findByRole("complementary", { name: "Workspace" })).toBeInTheDocument();
     } finally { history.mockRestore(); preview.mockRestore(); }
   });
 
@@ -621,10 +621,10 @@ describe("OpenCore", () => {
       expect(await screen.findByRole("img", { name: "draft.png" })).toHaveAttribute("src", dataUrl);
       expect(preview).toHaveBeenCalledWith(path);
       fireEvent.click(screen.getByRole("button", { name: "Preview draft.png" }));
-      const browser = await screen.findByRole("region", { name: "OpenCore Browser" });
+      const browser = await screen.findByRole("complementary", { name: "Workspace" });
       await waitFor(() => expect(browser.querySelector(".workspace-file-view img")).toHaveAttribute("src", dataUrl));
       expect(openPreview).toHaveBeenCalledWith(path);
-      fireEvent.click(screen.getByRole("button", { name: "Close browser" }));
+      fireEvent.click(screen.getByRole("button", { name: "Close workspace" }));
       fireEvent.click(screen.getByRole("button", { name: "Remove draft.png" }));
       expect(screen.queryByRole("img", { name: "draft.png" })).not.toBeInTheDocument();
     } finally { picker.mockReset(); preview.mockRestore(); openPreview.mockRestore(); }
@@ -769,7 +769,7 @@ describe("OpenCore", () => {
     render(<App />);
     await screen.findByText("Conversations", { selector: "h2" });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
-    const topbar = within(document.querySelector(".topbar") as HTMLElement);
+    const topbar = within(document.querySelector(".statusbar") as HTMLElement);
     const picker = topbar.getByRole("button", { name: /Choose model profile, currently DuoCore · ECHO/ });
     fireEvent.click(picker);
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
@@ -800,7 +800,7 @@ describe("OpenCore", () => {
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(await screen.findByRole("button", { name: /1M extended · ECHO.*1,000,000-token YaRN window.*ECHO archive.*trained context 262,144/ }));
 
-    const footer = document.querySelector(".conversation-statusbar");
+    const footer = document.querySelector(".statusbar");
     expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
@@ -831,7 +831,7 @@ describe("OpenCore", () => {
     try {
       const { unmount } = render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      const extendedStatusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
+      const extendedStatusbar = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(extendedStatusbar).findByText(/3T archive goal/)).toBeVisible();
       await waitFor(() => expect(within(extendedStatusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072"));
 
@@ -839,7 +839,7 @@ describe("OpenCore", () => {
       values.set("opencore.model-profile", "echo");
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      const statusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
+      const statusbar = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
       expect(await within(statusbar).findByLabelText("ECHO archived messages")).toHaveTextContent("7 archived");
       expect(within(statusbar).getByRole("progressbar", { name: "ECHO model context usage" })).toHaveAttribute("value", "131072");
@@ -882,7 +882,7 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Conversations", { selector: "h2" });
-      const footer = document.querySelector(".conversation-statusbar") as HTMLElement;
+      const footer = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(footer).findByLabelText("ECHO context and archive")).toBeVisible();
       expect(await within(footer).findByText(/4 archived/)).toBeVisible();
       expect(within(footer).getByRole("button", { name: /Nanbeige BF16 ECHO/ })).toBeVisible();
@@ -909,7 +909,7 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Conversations", { selector: "h2" });
-      const footer = document.querySelector(".conversation-statusbar") as HTMLElement;
+      const footer = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(footer).findByText(/Auto compact · 200,000/)).toBeVisible();
       expect(within(footer).getByText(/2 compactions/)).toBeVisible();
       expect(within(footer).getByRole("button", { name: /Nanbeige BF16/ })).toBeVisible();
@@ -940,7 +940,7 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
-      const statusbar = document.querySelector(".conversation-statusbar") as HTMLElement;
+      const statusbar = document.querySelector(".statusbar") as HTMLElement;
       expect(await within(statusbar).findByText(/3T archive goal/)).toBeVisible();
       // The static archive label renders before the asynchronous usage snapshot arrives.
       expect(await within(statusbar).findByText(/8.2K \/ 32.8K last/)).toBeVisible();
@@ -1029,8 +1029,8 @@ describe("OpenCore", () => {
     fireEvent.change(screen.getByLabelText(/Requested native-model auto-compaction trigger/), { target: { value: "250000" } });
     expect(screen.getByText(/Effective trigger for the configured .* model window:/)).toHaveTextContent("209,716 tokens");
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
-    await waitFor(() => expect(document.querySelector(".conversation-focus-shell")).toHaveClass("compact-messages"));
-    expect((document.querySelector(".conversation-focus-shell") as HTMLElement).style.getPropertyValue("--chat-font-size")).toBe("17px");
+    await waitFor(() => expect(document.querySelector(".app-window-frame")).toHaveClass("compact-messages"));
+    expect((document.querySelector(".app-window-frame") as HTMLElement).style.getPropertyValue("--chat-font-size")).toBe("17px");
     expect(JSON.parse(window.localStorage.getItem("opencore.appearance.v2") || "{}")).toMatchObject({ chatFontSize: 17, compactMessages: true, projectSkillsEnabled: false, compactAtTokens: 250000 });
     if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage);
   });

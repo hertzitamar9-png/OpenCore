@@ -10,13 +10,13 @@ import { assertAppServerSchemaMatches, codexRuntimeManifest } from './codex-pack
 
 const PINNED_CODEX_VERSION = '0.160.0';
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
-const resourcesDir = path.join(appRoot, 'src-tauri/resources/codex');
+const resourcesDir = process.env.OPENCORE_CODEX_TEST_RESOURCES || path.join(appRoot, 'src-tauri/resources/codex');
 const manifest = codexRuntimeManifest();
 assert.equal(manifest.cliVersion, PINNED_CODEX_VERSION);
 assertAppServerSchemaMatches(manifest.schemaSha256, manifest.schemaSha256);
 assert.throws(() => assertAppServerSchemaMatches('0'.repeat(64), manifest.schemaSha256), /schema hash mismatch/);
 
-const nodeExecutable = path.join(appRoot, 'src-tauri/resources/claude', process.platform === 'win32' ? 'node.exe' : 'node');
+const nodeExecutable = process.env.OPENCORE_CODEX_TEST_NODE || path.join(appRoot, 'src-tauri/resources/claude', process.platform === 'win32' ? 'node.exe' : 'node');
 assert.ok(existsSync(nodeExecutable), `packaged Node runtime is missing: ${nodeExecutable}; run scripts/prepare-claude-connector.mjs first`);
 
 const root = mkdtempSync(path.join(tmpdir(), 'opencore-codex-app-server-e2e-'));
@@ -377,6 +377,28 @@ try {
     'resume must reuse the same scoped app-server process rather than starting another one');
   assert.ok(assistantText.includes('Resumed on the same local Codex thread.'), assistantText);
 
+  // A side chat must fork the actual persisted context, not start an empty
+  // thread or silently seed a short summary. Freeze at one completed turn.
+  const forked = await client.send('thread/fork', {
+    threadId, lastTurnId: localTurn.turn.id, cwd: workspace, excludeTurns: true,
+  });
+  const branchId = forked?.thread?.id;
+  assert.equal(typeof branchId, 'string', `thread/fork returned no branch: ${JSON.stringify(forked)}`);
+  assert.notEqual(branchId, threadId, 'side chat must have its own durable thread ID');
+  const branchTurns = await client.send('thread/turns/list', {
+    threadId: branchId, limit: 20, sortDirection: 'asc', itemsView: 'full',
+  });
+  assert.ok(JSON.stringify(branchTurns).includes('Local OpenCore response passed.'),
+    'fork must retain the actual completed parent context');
+  assert.ok(!JSON.stringify(branchTurns).includes('OpenCore MCP tool loop passed.'),
+    'fork through a saved turn must exclude later parent work');
+  const parentTurns = await client.send('thread/turns/list', {
+    threadId, limit: 20, sortDirection: 'asc', itemsView: 'full',
+  });
+  assert.ok(JSON.stringify(parentTurns).includes('OpenCore MCP tool loop passed.'),
+    'fork must not truncate or replace the original chat');
+  events.push({ kind: 'side_context_fork_verified', parentId: threadId, branchId, through: localTurn.turn.id });
+
   const closed = await closeAppServer();
   assert.equal(closed?.code, 0, `app-server did not exit cleanly: ${JSON.stringify(closed)}\n${diagnostics}`);
   const mcpPid = Number(readFileSync(mcpStartedFile, 'utf8'));
@@ -394,7 +416,7 @@ try {
   testPassed = true;
   console.log(JSON.stringify({ codexAppServer: manifest.cliVersion, schemaSha256: manifest.schemaSha256,
     sameThreadResumed: true, sameAppServerProcess: true, mcpToolCalls: bridgeRequests,
-    savedTurnReplay: true, perTurnSandboxOverride: true,
+    savedTurnReplay: true, perTurnSandboxOverride: true, sideContextFork: true,
     cancelledInferenceRequests: events.filter(event => event.kind === 'model_request_aborted').length,
     mcpChildExited: true, hostedInference: false, passed: true }));
 } finally {

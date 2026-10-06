@@ -20,6 +20,9 @@ type Props = {
   snapPx: number;
   onSnapChange: (snap: number) => void;
   obscured?: boolean;
+  embedded?: boolean;
+  active?: boolean;
+  navigateTo?: { url: string; requestId: string } | null;
 };
 
 const DEFAULT_WEB_URL = "https://www.google.com";
@@ -30,12 +33,15 @@ function browserCommand<T>(action: string, id: string, args: Record<string, unkn
 }
 const fileTitle = (preview: LoadedPreview) => "remoteImage" in preview ? "Image" : preview.name;
 
-export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, width, onWidthChange, side, onSideChange, snapPx, onSnapChange, obscured = false }: Props) {
+export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, width, onWidthChange, side, onSideChange, snapPx, onSnapChange, obscured = false, embedded = false, active: visible = true, navigateTo }: Props) {
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; width: number } | null>(null);
   const headDrag = useRef<number | null>(null);
   const nextWebTabNumber = useRef(2);
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible && !obscured;
+  const navigatedRequest = useRef<string | null>(null);
   const webTabsRef = useRef<WebTab[]>([]);
   const [source, setSource] = useState<"web" | "files" | "chrome">("web");
   const [webTabs, setWebTabs] = useState<WebTab[]>([{ id: "default", title: "Web 1", url: DEFAULT_WEB_URL }]);
@@ -52,12 +58,13 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
 
   useEffect(() => {
     let active = true;
-    if (source !== "web" || !activeWebTab) return;
+    if (!visible || source !== "web" || !activeWebTab) return;
     setLoading(true);
     setError("");
     void browserCommand<{ open: boolean; url?: string }>("status", activeWebTab.id).then((status) =>
       status.open ? status : browserCommand<{ open: boolean; url?: string }>("open", activeWebTab.id, { url: activeWebTab.url })
     ).then((result) => {
+      if (!visibleRef.current) void browserCommand("hide", activeWebTab.id).catch(() => {});
       if (active) {
         const url = result.url || activeWebTab.url;
         setAddress(url);
@@ -66,7 +73,7 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
       }
     }).catch((reason) => { if (active) { setError(String(reason)); setLoading(false); } });
     return () => { active = false; };
-  }, [activeWebTabId, source]);
+  }, [activeWebTabId, source, visible]);
 
   useEffect(() => {
     if (!preview) return;
@@ -81,21 +88,31 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
   }, []);
 
   useEffect(() => {
-    if (!activeWebTab || loading || error) return;
     for (const tab of webTabs) {
-      const action = source === "web" && !obscured && tab.id === activeWebTab.id ? "show" : "hide";
+      const action = visible && source === "web" && !obscured && !loading && !error && tab.id === activeWebTab?.id ? "show" : "hide";
       void browserCommand(action, tab.id).catch(() => {});
     }
-  }, [activeWebTabId, webTabs, source, loading, error, obscured]);
+  }, [activeWebTabId, webTabs, source, loading, error, obscured, visible]);
 
   useEffect(() => {
-    if (loading || error || source !== "web" || !activeWebTab) return;
+    if (!visible || !navigateTo || navigatedRequest.current === navigateTo.requestId || !activeWebTab || loading) return;
+    navigatedRequest.current = navigateTo.requestId;
+    setSource("web");
+    void browserCommand<{ url?: string }>("navigate", activeWebTab.id, { url: navigateTo.url }).then(result => {
+      const url = result.url || navigateTo.url;
+      setAddress(url);
+      setWebTabs(tabs => tabs.map(tab => tab.id === activeWebTab.id ? { ...tab, url } : tab));
+    }).catch(reason => onNotice(`Browser: ${String(reason)}`));
+  }, [visible, navigateTo, activeWebTabId, loading, onNotice]);
+
+  useEffect(() => {
+    if (!visible || obscured || loading || error || source !== "web" || !activeWebTab) return;
     let animation = 0;
     let last = "";
     let pending = false;
     const position = () => {
       const rect = stage.current?.getBoundingClientRect();
-      if (rect) {
+      if (rect && rect.width > 0 && rect.height > 0) {
         const bounds = { x: Math.max(0, rect.left), y: Math.max(0, rect.top), width: Math.max(1, rect.width), height: Math.max(1, rect.height) };
         const key = Object.values(bounds).map((value) => Math.round(value)).join(",");
         if (key !== last && !pending) {
@@ -108,10 +125,10 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
     };
     animation = requestAnimationFrame(position);
     return () => cancelAnimationFrame(animation);
-  }, [activeWebTabId, loading, error, source, onNotice]);
+  }, [activeWebTabId, loading, error, source, onNotice, visible, obscured]);
 
   useEffect(() => {
-    if (loading || error || source !== "web" || !activeWebTab) return;
+    if (!visible || loading || error || source !== "web" || !activeWebTab) return;
     const timer = window.setInterval(() => {
       void browserCommand<{ url: string }>("status", activeWebTab.id).then((result) => {
         if (result.url && document.activeElement?.getAttribute("aria-label") !== "Browser address") {
@@ -121,7 +138,7 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
       }).catch(() => {});
     }, 1300);
     return () => window.clearInterval(timer);
-  }, [activeWebTabId, loading, error, source]);
+  }, [activeWebTabId, loading, error, source, visible]);
 
   const act = async (action: string, args: Record<string, unknown> = {}) => {
     if (!activeWebTab) return;
@@ -181,15 +198,15 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
 
   const downloadableId = activeFileTab?.preview && "id" in activeFileTab.preview ? activeFileTab.preview.id : null;
 
-  return <section ref={root} className={`workspace-browser browser-split browser-${side}`} aria-label="OpenCore Browser">
-    <div className="workspace-browser-resizer" role="separator" aria-label="Resize OpenCore Browser" onPointerDown={(event) => { drag.current = { x: event.clientX, width }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (drag.current) onWidthChange(Math.max(420, Math.min(window.innerWidth - 420, drag.current.width + (side === "right" ? drag.current.x - event.clientX : event.clientX - drag.current.x)))); }} onPointerUp={(event) => { resizeEnd(); event.currentTarget.releasePointerCapture(event.pointerId); }} />
+  return <section ref={root} className={`workspace-browser ${embedded ? "workspace-browser-embedded" : `browser-split browser-${side}`}`} aria-label="OpenCore Browser">
+    {!embedded ? <><div className="workspace-browser-resizer" role="separator" aria-label="Resize OpenCore Browser" onPointerDown={(event) => { drag.current = { x: event.clientX, width }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (drag.current) onWidthChange(Math.max(420, Math.min(window.innerWidth - 420, drag.current.width + (side === "right" ? drag.current.x - event.clientX : event.clientX - drag.current.x)))); }} onPointerUp={(event) => { resizeEnd(); event.currentTarget.releasePointerCapture(event.pointerId); }} />
     <header className="workspace-browser-head" onPointerDown={(event) => { if (!(event.target as HTMLElement).closest("button,input")) { headDrag.current = event.clientX; event.currentTarget.setPointerCapture(event.pointerId); } }} onPointerUp={(event) => { if (headDrag.current != null && Math.abs(event.clientX - headDrag.current) > 60) { onSideChange(event.clientX < window.innerWidth / 2 ? "left" : "right"); } headDrag.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }}>
       <span className="workspace-browser-logo"><Globe2 size={16} /></span><strong>OpenCore Browser</strong><Grip size={15} className="workspace-browser-grip" />
       <button aria-label="Snap settings" title="Snap settings" onClick={() => setSnapOpen((open) => !open)}><span className="snap-symbol">◈</span></button>
       <button aria-label="Close browser" title="Close browser" onClick={onClose}><X size={17} /></button>
     </header>
-    {snapOpen ? <div className="workspace-snap-control"><span>Snap</span><input type="range" aria-label="Snap strength" min="0" max="80" value={snapPx} onChange={(event) => onSnapChange(Number(event.target.value))} /><strong>{snapPx}</strong></div> : null}
-    <nav className="workspace-browser-tabs" aria-label="Browser views"><button className={source === "web" ? "active" : ""} onClick={() => setSource("web")}>Web</button><button className={source === "files" ? "active" : ""} onClick={() => setSource("files")}>Files</button><button className={source === "chrome" ? "active" : ""} onClick={() => setSource("chrome")}>Chrome tabs <ExternalLink size={12} /></button></nav>
+    {snapOpen ? <div className="workspace-snap-control"><span>Snap</span><input type="range" aria-label="Snap strength" min="0" max="80" value={snapPx} onChange={(event) => onSnapChange(Number(event.target.value))} /><strong>{snapPx}</strong></div> : null}</> : null}
+    <nav className="workspace-browser-tabs" aria-label="Browser views"><button className={source === "web" ? "active" : ""} onClick={() => setSource("web")}>Web</button>{!embedded ? <button className={source === "files" ? "active" : ""} onClick={() => setSource("files")}>Files</button> : null}<button className={source === "chrome" ? "active" : ""} onClick={() => setSource("chrome")}>Chrome tabs <ExternalLink size={12} /></button></nav>
     {source === "web" ? <>
       <div className="workspace-browser-pages" role="tablist" aria-label="Web tabs">
         {webTabs.map((tab) => <div className="workspace-browser-page-tab" key={tab.id}>

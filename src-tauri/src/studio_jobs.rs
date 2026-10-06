@@ -165,6 +165,20 @@ impl StudioManager {
                 let _ = app.emit("opencore-studio-job", job);
                 if matches!(job.status.as_str(),"completed"|"failed"|"cancelled") || (job.status=="queued"&&job.created_at==job.updated_at) {
                     if let (Ok(data),Some(core))=(app.path().app_data_dir(),app.try_state::<Arc<AppCore>>()) {
+                        if matches!(job.status.as_str(),"completed"|"failed"|"cancelled") {
+                            let event=json!({"id":format!("studio:{}:{}",job.id,job.status),"name":format!("studio.{}",job.status),
+                                "data":{"jobId":job.id,"category":job.category,"modelId":job.request.model_id,"conversationId":job.request.conversation_id,"status":job.status,"outputs":job.outputs,"error":job.error}});
+                            if let Err(error)=core.background.emit(event) { core.store.log("warn","background-events",&error); }
+                            if job.status=="completed" && !job.outputs.is_empty() {
+                                let files=core.files.clone(); let log=core.store.clone(); let notice=app.clone();
+                                let conversation=job.request.conversation_id.clone().unwrap_or_else(||format!("studio:{}",job.category));
+                                let job_id=job.id.clone(); let paths:Vec<PathBuf>=job.outputs.iter().map(PathBuf::from).collect();
+                                tauri::async_runtime::spawn_blocking(move || match files.register_outputs(&conversation,&job_id,&paths) {
+                                    Ok(records)=>{let _=notice.emit("opencore-file-changes",records);},
+                                    Err(error)=>log.log("warn","file-history",&format!("Could not index studio outputs: {error}")),
+                                });
+                            }
+                        }
                         if crate::agent_platform::configuration(&core.store).is_ok_and(|config|config.activity_enabled) {
                             let summary=format!("{} generation {}: {}",job.category,job.status,job.request.prompt.chars().take(220).collect::<String>());
                             let settings=if job.request.settings.to_string().len()<=32768 {job.request.settings.clone()} else {json!({"sha256":crate::dev_tool::sha256(job.request.settings.to_string().as_bytes()),"note":"Full settings are preserved in the studio job record; inspect the job by jobId."})};

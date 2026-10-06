@@ -28,8 +28,9 @@ import { removePersistedOptimisticDuplicates } from "./visible-entries";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
 import { buildResponseSegments, visibleEchoReceiptGroups, type ResponseSegment, type ToolStep } from "./response-segments";
 import { ProjectPicker } from "./ProjectPicker";
-import { NativeBrowserPanel } from "./NativeBrowserPanel";
-import { DesktopPanel } from "./DesktopPanel";
+import { FileChangesReceipt } from "./FileChangesReceipt";
+import type { FileRecord } from "./workspaces";
+import type { WorkspacePreview, WorkspaceTab } from "./WorkspacePanel";
 import { FloatingWindow } from "./FloatingWindow";
 import { SpeechButton } from "./SpeechButton";
 import { ModelProfileOptions, profileLabel } from "./ModelProfiles";
@@ -69,6 +70,11 @@ function savedReasoningEffort(): ReasoningEffort {
 }
 
 export type ComposerDraft = { text: string; files: string[] };
+export type ConversationSettings = {
+  approvalMode: ApprovalMode; reasoningEffort: ReasoningEffort;
+  subagentsEnabled: boolean; maxSubagents: number; projectSkillsEnabled: boolean;
+  compactAtTokens: number;
+};
 type Props = {
   conversationId?: string;
   initialDraft?: ComposerDraft;
@@ -103,6 +109,17 @@ type Props = {
   maxSubagents: number;
   projectSkillsEnabled: boolean;
   compactAtTokens: number;
+  onOpenWorkspace?: (tab: WorkspaceTab) => void;
+  onOpenPreview?: (preview: WorkspacePreview) => void;
+  onOpenBrowserLink?: (url: string) => void;
+  onOpenFileRecord?: (file: FileRecord) => void;
+  onSettingsChange?: (settings: ConversationSettings) => void;
+  onActivityChange?: (conversationId: string, active: boolean) => void;
+  onWorkspaceObscuredChange?: (obscured: boolean) => void;
+  initialSettings?: Pick<ConversationSettings, 'approvalMode' | 'reasoningEffort'>;
+  embedded?: boolean;
+  inferenceBlocked?: string;
+  sendMessage?: typeof api.sendChatMessage;
 };
 
 function displayText(value: string) {
@@ -128,7 +145,7 @@ function convertTurn(turn: ConversationTurn, active: boolean): ThreadMessageLike
   };
 }
 
-type ArtifactActions = { preview: (id: string) => void; previewAttachment: (path: string) => void; download: (id: string) => void; remoteImage: (url: string) => void };
+type ArtifactActions = { preview: (id: string) => void; previewAttachment: (path: string) => void; download: (id: string) => void; remoteImage: (url: string) => void; browserLink: (url: string) => void };
 const ArtifactActionsContext = createContext<ArtifactActions | null>(null);
 
 function MessageImage({ src, alt }: { src?: string; alt?: string }) {
@@ -226,6 +243,7 @@ function MessageLink({ href, children }: { href?: string; children?: React.React
     };
     return <a href={href} data-opencore-file-link={path ? "" : undefined} onClick={open} onAuxClick={open}>{children}</a>;
   }
+  if (href && /^https?:\/\//i.test(href) && actions) return <a href={href} data-opencore-workspace-link="" onClick={event => { event.preventDefault(); event.stopPropagation(); actions.browserLink(href); }} onAuxClick={event => { event.preventDefault(); event.stopPropagation(); actions.browserLink(href); }}>{children}</a>;
   // A filtered URL must not become href="": that reloads the app and loses chat selection.
   return href ? <a href={href}>{children}</a> : <span>{children}</span>;
 }
@@ -454,6 +472,8 @@ export const AssistantConversation = memo(function AssistantConversation({
   onConversationId, onRefresh, onNotice, onExport, onRename, onDelete,
   pinned, project, projectId, projects, onPin, onMoveProject, onCreateProject,
   defaultSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, updateControl,
+  onOpenWorkspace, onOpenPreview, onOpenBrowserLink, onOpenFileRecord, onSettingsChange, onActivityChange, onWorkspaceObscuredChange,
+  initialSettings, embedded = false, inferenceBlocked, sendMessage = api.sendChatMessage,
 }: Props) {
   const [draft, setDraft] = useState(initialDraft?.text || "");
   const draftInput = useRef<HTMLTextAreaElement>(null);
@@ -490,32 +510,20 @@ export const AssistantConversation = memo(function AssistantConversation({
   const [active, setActive] = useState<ChatQueueItem | null>(null);
   const [optimistic, setOptimistic] = useState<TimelineEntry[]>([]);
   const [liveEntries, setLiveEntries] = useState<TimelineEntry[]>([]);
-  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>(savedReasoningEffort);
-  const [approvalMode, setApprovalMode] = useState<ApprovalMode>(() => savedApprovalMode(conversationId));
+  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>(() => initialSettings?.reasoningEffort ?? savedReasoningEffort());
+  const [approvalMode, setApprovalMode] = useState<ApprovalMode>(() => initialSettings?.approvalMode ?? savedApprovalMode(conversationId));
   const [controlOpen, setControlOpen] = useState<"effort" | "approval" | null>(null);
   const [approvalPreviewIndex, setApprovalPreviewIndex] = useState<number | null>(null);
   const approvalPreviewRef = useRef<number | null>(null);
   const [confirmApproval, setConfirmApproval] = useState<ApprovalMode | null>(null);
   const [pendingTool, setPendingTool] = useState<ToolApprovalRequest | null>(null);
-  const [artifactPreview, setArtifactPreview] = useState<api.ArtifactPreview | api.ComposerAttachmentPreview | { remoteImage: string } | null>(null);
   const [artifactLoading, setArtifactLoading] = useState(false);
-  const [nativeBrowserOpen, setNativeBrowserOpen] = useState(false);
-  const [browserWidth, setBrowserWidth] = useState(() => { try { return Number(window.localStorage.getItem("opencore.browser.width")) || 580; } catch { return 580; } });
-  const [browserSide, setBrowserSide] = useState<"left" | "right">(() => { try { return window.localStorage.getItem("opencore.browser.side") === "left" ? "left" : "right"; } catch { return "right"; } });
-  const [browserSnap, setBrowserSnap] = useState(() => { try { return Number(window.localStorage.getItem("opencore.browser.snap")) || 24; } catch { return 24; } });
-  const [desktopOpen, setDesktopOpen] = useState(false);
   const generationActive = sending || backendActive;
   const pendingToolRef = useRef<ToolApprovalRequest | null>(null);
   const composerMenuRef = useRef<HTMLDivElement>(null);
   const composerMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    let dispose: (() => void) | undefined;
-    if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
-      void listen("opencore-open-native-browser", () => setNativeBrowserOpen(true)).then((unlisten) => { dispose = unlisten; }).catch(() => {});
-    }
-    return () => dispose?.();
-  }, []);
-  useEffect(() => { try { window.localStorage.setItem("opencore.browser.width", String(browserWidth)); window.localStorage.setItem("opencore.browser.side", browserSide); window.localStorage.setItem("opencore.browser.snap", String(browserSnap)); } catch { /* Layout works for this session. */ } }, [browserWidth, browserSide, browserSnap]);
+  useEffect(() => { onSettingsChange?.({approvalMode, reasoningEffort, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens}); }, [approvalMode, reasoningEffort, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, onSettingsChange]);
+  useEffect(() => { onWorkspaceObscuredChange?.(controlOpen !== null || confirmApproval !== null || pendingTool !== null); return () => onWorkspaceObscuredChange?.(false); }, [controlOpen, confirmApproval, pendingTool, onWorkspaceObscuredChange]);
   const controlsRef = useRef<HTMLDivElement>(null);
   const effortIndex = REASONING_MODES.findIndex((mode) => mode.value === reasoningEffort);
   const effortLabel = REASONING_MODES[effortIndex].label;
@@ -529,14 +537,15 @@ export const AssistantConversation = memo(function AssistantConversation({
   const artifactActions: ArtifactActions = {
     preview: (id) => {
       setArtifactLoading(true);
-      void api.previewArtifact(id).then((item) => { setArtifactPreview(item); setNativeBrowserOpen(true); }).catch((error: unknown) => onNotice(`Could not preview file: ${String(error)}`)).finally(() => setArtifactLoading(false));
+      void api.previewArtifact(id).then((item) => onOpenPreview?.(item)).catch((error: unknown) => onNotice(`Could not preview file: ${String(error)}`)).finally(() => setArtifactLoading(false));
     },
     previewAttachment: (path) => {
       setArtifactLoading(true);
-      void api.previewComposerAttachment(path).then((item) => { setArtifactPreview(item); setNativeBrowserOpen(true); }).catch((error: unknown) => onNotice(`Could not preview file: ${String(error)}`)).finally(() => setArtifactLoading(false));
+      void api.previewComposerAttachment(path).then((item) => onOpenPreview?.(item)).catch((error: unknown) => onNotice(`Could not preview file: ${String(error)}`)).finally(() => setArtifactLoading(false));
     },
     download: (id) => { void api.downloadArtifact(id).then((path) => onNotice(`Downloaded to ${path}`)).catch((error: unknown) => onNotice(`Could not download file: ${String(error)}`)); },
-    remoteImage: (url) => { setArtifactPreview({ remoteImage: url }); setNativeBrowserOpen(true); },
+    remoteImage: (url) => onOpenPreview?.({ remoteImage: url }),
+    browserLink: (url) => onOpenBrowserLink?.(url),
   };
 
   const chooseEffort = (index: number) => {
@@ -675,6 +684,7 @@ export const AssistantConversation = memo(function AssistantConversation({
 
   const runPrompt = async (item: ChatQueueItem) => {
     if (sendingRef.current) return;
+    if (inferenceBlocked) { onNotice(inferenceBlocked); return; }
     stopRequestedRef.current = false;
     let id = conversationRef.current;
     if (!id) {
@@ -687,6 +697,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     }
 
     sendingRef.current = true;
+    onActivityChange?.(id, true);
     setSending(true);
     setLiveEntries([]);
     setActive(item);
@@ -707,7 +718,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     let interrupted = false;
 
     try {
-      await api.sendChatMessage(id, item.text, item.files, item.reasoningEffort, item.approvalMode, item.skills, item.subagentsEnabled, item.maxSubagents, item.projectSkillsEnabled, item.compactAtTokens, submissionId);
+      await sendMessage(id, item.text, item.files, item.reasoningEffort, item.approvalMode, item.skills, item.subagentsEnabled, item.maxSubagents, item.projectSkillsEnabled, item.compactAtTokens, submissionId);
       await onRefresh();
       setLiveEntries([]);
     } catch (error) {
@@ -731,6 +742,7 @@ export const AssistantConversation = memo(function AssistantConversation({
       setOptimistic([]);
       setActive(null);
       sendingRef.current = false;
+      onActivityChange?.(id, false);
       setSending(false);
 
       let next = steerNextRef.current;
@@ -754,6 +766,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   }, [backendActive]);
 
   const submit = () => {
+    if (inferenceBlocked && !sendingRef.current) { onNotice(inferenceBlocked); return; }
     if (backendActive && !sendingRef.current) return;
     let text = draft.trim();
     const available=availableComposerSkills(skillModels).map(skill=>skill.id);
@@ -850,15 +863,15 @@ export const AssistantConversation = memo(function AssistantConversation({
     setDraft((current) => resolveSlashSkill(current, id));
     setSkillPickerOpen(false);
   };
-  return <ArtifactActionsContext.Provider value={artifactActions}><main className={`assistant-thread-panel chat-mode ${nativeBrowserOpen ? "browser-open" : ""} ${browserSide === "left" ? "browser-left" : ""}`} style={nativeBrowserOpen ? { "--browser-width": `${browserWidth}px` } as React.CSSProperties : undefined}>
+  return <ArtifactActionsContext.Provider value={artifactActions}><main className={`assistant-thread-panel chat-mode ${embedded ? "side-chat-thread" : ""}`}>
     <div className="timeline-heading compact">
       <div className="chat-title">
         <h2>{title || "New conversation"}</h2>
         <span>{client || "OpenCore"} · {chatTurnCount} messages{activityCount ? ` · ${activityCount} activities` : ""}</span>
       </div>
       <div className="conversation-actions">
-        <button className="workspace-open-button" onClick={() => setNativeBrowserOpen((open) => !open)} title="OpenCore Browser" aria-label="OpenCore Browser"><Globe2 size={16} /><span>Browse</span></button>
-        <button className="workspace-open-button" onClick={() => setDesktopOpen((open) => !open)} title="Computer use" aria-label="Computer use"><AppWindow size={16} /><span>Computer</span></button>
+        <button className="workspace-open-button" onClick={() => onOpenWorkspace?.("browser")} title="OpenCore Browser" aria-label="OpenCore Browser"><Globe2 size={16} /><span>Browse</span></button>
+        <button className="workspace-open-button" onClick={() => onOpenWorkspace?.("computer")} title="Computer use" aria-label="Computer use"><AppWindow size={16} /><span>Computer</span></button>
         {conversationId ? /claude|codex/i.test(client) ? <span className="source-project-locked" title="Linked to the source project folder"><FolderOpen size={15} /> {projects.find((item) => item.id === projectId)?.name || project || client}</span> : <ProjectPicker value={projectId} legacyName={project && !projectId ? project : undefined} projects={projects} onChange={onMoveProject} onCreate={onCreateProject} /> : null}
         {updateControl}
         {conversationId ? <button onClick={onPin} title={pinned ? "Unpin conversation" : "Pin conversation"} aria-label={pinned ? "Unpin conversation" : "Pin conversation"}>{pinned ? <PinOff size={16} /> : <Pin size={16} />}</button> : null}
@@ -867,9 +880,6 @@ export const AssistantConversation = memo(function AssistantConversation({
         <button className="danger-action" onClick={onDelete} title="Delete" aria-label="Delete conversation"><Trash2 size={16} /></button>
       </div>
     </div>
-
-    {nativeBrowserOpen ? <NativeBrowserPanel onClose={() => setNativeBrowserOpen(false)} onNotice={onNotice} preview={artifactPreview} onDownload={artifactActions.download} width={browserWidth} onWidthChange={setBrowserWidth} side={browserSide} onSideChange={setBrowserSide} snapPx={browserSnap} onSnapChange={setBrowserSnap} obscured={controlOpen !== null} /> : null}
-    {desktopOpen ? <DesktopPanel onClose={() => setDesktopOpen(false)} onNotice={onNotice} /> : null}
 
     <AssistantRuntimeProvider runtime={runtime}>
       <ThreadPrimitive.Root className="aui-thread-root">
@@ -882,6 +892,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             </div>
           </ThreadPrimitive.Empty>
           <ThreadPrimitive.Messages components={{ Message: ChatMessage }} />
+          {conversationId && onOpenFileRecord ? <FileChangesReceipt conversationId={conversationId} active={generationActive} onOpen={onOpenFileRecord} /> : null}
           {generationActive && <div className="generation-state">
             <span className="generation-pulse" />
             <span>{runtimeSnapshot.status === "starting" ? `${runtimeSnapshot.loadingPhase || "Loading model and ECHO"} · ${((runtimeSnapshot.loadingElapsedMs || 0) / 1000).toFixed(1)}s` : promptProgress?.label || (runtimeRunning ? "OpenCore is working" : "Preparing model and ECHO…")}{active?.files.length ? ` · ${active.files.length} attachment(s)` : ""}</span>
@@ -947,7 +958,7 @@ export const AssistantConversation = memo(function AssistantConversation({
         <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />
         <textarea
           ref={draftInput}
-          aria-label="Message OpenCore"
+          aria-label={embedded ? "Message side chat" : "Message OpenCore"}
           onPointerDown={() => { void focusDraft(); }}
           value={draft}
           onChange={(event) => { setDraft(event.target.value); setSkillPickerOpen(event.target.value.startsWith("/")); }}
@@ -977,7 +988,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             if (!event.clipboardData.getData("text/plain")) event.preventDefault();
             void attachTransferredFiles(event.clipboardData);
           }}
-          placeholder="Message OpenCore…"
+          placeholder={embedded ? "Message this branch…" : "Message OpenCore…"}
           rows={2}
         />
         {draggingFiles ? <div className="composer-drop-overlay" role="status" aria-live="polite">Drop files to attach</div> : null}
@@ -1002,11 +1013,11 @@ export const AssistantConversation = memo(function AssistantConversation({
             <div className="approval-bar" role="group" aria-label="Approval mode"><div className="approval-rail"><div className="approval-segments" aria-hidden="true">{APPROVAL_MODES.map((mode, index) => <span key={mode.value} className={index <= shownApprovalIndex ? "lit" : ""} />)}</div><input className="approval-range" type="range" min="0" max="3" step="1" value={shownApprovalIndex} aria-label="Approval level" aria-valuetext={APPROVAL_MODES[shownApprovalIndex].label} onChange={(event) => { const index = Number(event.target.value); approvalPreviewRef.current = index; setApprovalPreviewIndex(index); }} onPointerUp={commitApprovalRange} onKeyUp={commitApprovalRange} onBlur={commitApprovalRange} onPointerCancel={() => { approvalPreviewRef.current = null; setApprovalPreviewIndex(null); }} /></div><div className="approval-labels">{APPROVAL_MODES.map((mode) => <button type="button" key={mode.value} aria-pressed={mode.value === approvalMode} onClick={() => chooseApprovalMode(mode.value)}>{mode.label}</button>)}</div></div>
           </FloatingWindow> : null}
         </div>
-        <button className={`send-button ${generationActive ? "is-stop" : ""}`} onClick={generationActive ? () => void stop() : submit} disabled={!generationActive && !draft.trim() && files.length === 0} title={generationActive ? "Stop" : "Send"} aria-label={generationActive ? "Stop generation" : "Send message"}>
+        <button className={`send-button ${generationActive ? "is-stop" : ""}`} onClick={generationActive ? () => void stop() : submit} disabled={!generationActive && (Boolean(inferenceBlocked) || (!draft.trim() && files.length === 0))} title={generationActive ? "Stop" : inferenceBlocked || "Send"} aria-label={generationActive ? "Stop generation" : "Send message"}>
           {generationActive ? <Square size={17} fill="currentColor" /> : <Send size={18} />}
         </button>
       </div>
-      <div className="composer-hint"><span>{generationActive ? "OpenCore is working · press Stop to cancel" : "Enter to send · Shift+Enter for a new line · paste or drop files"}</span><span>OpenCore can make mistakes. Check important results.</span><span className="composer-token-speed">{generationActive && promptProgress?.speed ? `${promptProgress.speed.toFixed(1)} input tokens/s` : (liveTokenSpeed ?? telemetry.tokensPerSecond) > 0 ? `${(liveTokenSpeed ?? telemetry.tokensPerSecond).toFixed(1)} output tokens/s` : "Waiting for token metrics"} · {(telemetry.totalCompletionTokens ?? telemetry.completionTokens).toLocaleString()} output tokens</span></div>
+      <div className="composer-hint"><span>{generationActive ? "OpenCore is working · press Stop to cancel" : inferenceBlocked || "Enter to send · Shift+Enter for a new line · paste or drop files"}</span><span>OpenCore can make mistakes. Check important results.</span><span className="composer-token-speed">{generationActive && promptProgress?.speed ? `${promptProgress.speed.toFixed(1)} input tokens/s` : (liveTokenSpeed ?? telemetry.tokensPerSecond) > 0 ? `${(liveTokenSpeed ?? telemetry.tokensPerSecond).toFixed(1)} output tokens/s` : "Waiting for token metrics"} · {(telemetry.totalCompletionTokens ?? telemetry.completionTokens).toLocaleString()} output tokens</span></div>
     </div>
     {confirmApproval ? <><div className="modal-backdrop" /><FloatingWindow id="approval-confirm" title="Approval" ariaLabel={`${APPROVAL_MODES.find((mode) => mode.value === confirmApproval)?.label}?`} icon={<ShieldCheck size={17} />} onClose={() => setConfirmApproval(null)} place="center" modal className="opencore-modal dialog-floating approval-confirm" initialWidth={490} initialHeight={290} minWidth={350} minHeight={220}>
       <h2 id="approval-confirm-title">{APPROVAL_MODES.find((mode) => mode.value === confirmApproval)?.label}?</h2>

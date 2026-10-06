@@ -237,6 +237,13 @@ pub(crate) fn preview(root: &Path, id: &str) -> Result<ArtifactPreview, String> 
     Ok(ArtifactPreview { info, data_url, text })
 }
 
+/// Resolve only an existing validated artifact. The file ledger retains its
+/// original display name/MIME while snapshotting the confined .bin source.
+pub(crate) fn snapshot_source(root: &Path, id: &str) -> Result<(ArtifactInfo,PathBuf),String> {
+    let (info,_)=load(root,id)?;
+    Ok((info,stored_path(root,id,"bin")?))
+}
+
 pub(crate) fn download(root: &Path, downloads: &Path, id: &str) -> Result<PathBuf, String> {
     let (info, bytes) = load(root, id)?;
     std::fs::create_dir_all(downloads).map_err(|e| e.to_string())?;

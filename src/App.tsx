@@ -13,11 +13,13 @@ import {
   ChevronDown,
   CircleAlert,
   CircleStop,
+  Clock3,
   Copy,
   Database,
   Download,
   ExternalLink,
   FileDown,
+  Files,
   FolderOpen,
   Gauge,
   HardDrive,
@@ -29,6 +31,7 @@ import {
   MoreHorizontal,
   Network,
   Play,
+  PanelLeft,
   Pin,
   PinOff,
   RefreshCw,
@@ -46,7 +49,12 @@ import {
 } from "lucide-react";
 import * as api from "./api";
 import opencoreLogo from "./assets/opencore-logo.png";
-import { AssistantConversation, type ComposerDraft } from "./AssistantConversation";
+import { AssistantConversation, type ComposerDraft, type ConversationSettings } from "./AssistantConversation";
+import { WorkspacePanel, type WorkspacePreview, type WorkspaceTab } from "./WorkspacePanel";
+import { SideChat } from "./SideChat";
+import { BackgroundJobs } from "./BackgroundJobs";
+import { SpacesView } from "./SpacesView";
+import type { FileRecord } from "./workspaces";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
@@ -61,7 +69,7 @@ import { usePlatformConfiguration, executePlatformAction, platformNativeAvailabl
 import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
-type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "media" | "connectors" | "settings" | "troubleshooting";
+type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "media" | "connectors" | "settings" | "troubleshooting" | "jobs" | "spaces";
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
 type Appearance = {
@@ -113,6 +121,8 @@ function savedAppearance(): Appearance {
 const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }> = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "conversations", label: "Conversations", icon: MessageSquare },
+  { id: "jobs", label: "Jobs", icon: Clock3 },
+  { id: "spaces", label: "Spaces", icon: Files },
   { id: "context", label: "Live Context", icon: BrainCircuit },
   { id: "memory", label: "Memory", icon: Database },
   { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
@@ -207,7 +217,7 @@ function Navigation({ active, onChange, running, compact = false }: { active: Vi
   }, []);
   return <aside className={`nav-rail ${compact ? "conversation-app-rail" : ""}`}>
     <button className="brand-mini" onClick={() => onChange("overview")} title="OpenCore overview"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><span>OpenCore</span></button>
-    <nav>
+    <nav aria-label="OpenCore sections">
       {nav.map((item) => <div key={item.id} className={item.group ? "nav-group-start" : ""}>
         <button title={item.label} aria-label={item.label} className={`nav-item ${active === item.id ? "active" : ""}`} onClick={() => onChange(item.id)}>
           <item.icon size={17} /><span>{item.label}</span>
@@ -1173,12 +1183,48 @@ export default function App() {
   const [liveGeneration, setLiveGeneration] = useState<{ conversationId: string; runId: string; content?: string; reasoning?: string; segments?: { kind: "thinking" | "text"; content: string }[]; phase?: string }>();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string>();
+  const [inferenceOwner, setInferenceOwner] = useState<string>();
+  const [studioActive, setStudioActive] = useState(false);
+  const studioJobs = useRef(new Map<string, string>());
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>('files');
+  const [workspacePreview, setWorkspacePreview] = useState<WorkspacePreview | null>(null);
+  const [workspaceFile, setWorkspaceFile] = useState<FileRecord | null>(null);
+  const [browserLocation, setBrowserLocation] = useState<{url: string; requestId: string} | null>(null);
+  const [workspaceWidth, setWorkspaceWidth] = useState(() => { try { const stored = Number(window.localStorage.getItem('opencore.workspace.width') || window.localStorage.getItem('opencore.browser.width')); return stored >= 320 && stored <= 1600 ? stored : 520; } catch { return 520; } });
+  const [workspaceSnap, setWorkspaceSnap] = useState(() => { try { const stored = window.localStorage.getItem('opencore.workspace.snap') ?? window.localStorage.getItem('opencore.browser.snap'); return stored === null ? 24 : Math.max(0, Math.min(80, Number(stored) || 0)); } catch { return 24; } });
+  const [mainWorkspaceObscured, setMainWorkspaceObscured] = useState(false);
+  const [sideWorkspaceObscured, setSideWorkspaceObscured] = useState(false);
+  const [conversationsCollapsed, setConversationsCollapsed] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+  const settingsByConversation = useRef(new Map<string, ConversationSettings>());
+  const [parentSettings, setParentSettings] = useState<ConversationSettings>({approvalMode: 'ask-every-time', reasoningEffort: 'off', subagentsEnabled: true, maxSubagents: 3, projectSkillsEnabled: true, compactAtTokens: defaultAppearance.compactAtTokens});
+  const rememberSettings = useCallback((settings: ConversationSettings) => {
+    settingsByConversation.current.set(draftKey, settings);
+    setParentSettings(current => JSON.stringify(current) === JSON.stringify(settings) ? current : settings);
+  }, [draftKey]);
+  const recordChatActivity = useCallback((id: string, active: boolean) => setInferenceOwner(current => active ? id : current === id ? undefined : current), []);
+  const openWorkspace = useCallback((tab: WorkspaceTab) => { setWorkspaceTab(tab); setWorkspaceOpen(true); }, []);
+  const openWorkspacePreview = useCallback((preview: WorkspacePreview) => { setWorkspacePreview(preview); setWorkspaceTab('files'); setWorkspaceOpen(true); }, []);
+  const openWorkspaceFile = useCallback((file: FileRecord) => { setWorkspaceFile(file); setWorkspaceTab('files'); setWorkspaceOpen(true); }, []);
+  const openBrowserLink = useCallback((url: string) => { setBrowserLocation({url, requestId: crypto.randomUUID()}); setWorkspaceTab('browser'); setWorkspaceOpen(true); }, []);
+  useEffect(() => { const update = () => setViewportWidth(window.innerWidth); window.addEventListener('resize', update); return () => window.removeEventListener('resize', update); }, []);
+  useEffect(() => { try { window.localStorage.setItem('opencore.workspace.width', String(workspaceWidth)); window.localStorage.setItem('opencore.workspace.snap', String(workspaceSnap)); } catch { /* Session layout still works. */ } }, [workspaceWidth, workspaceSnap]);
+  useEffect(() => {
+    let disposed = false; let stop: (() => void) | undefined;
+    void listen('opencore-open-native-browser', () => { if (!disposed) openWorkspace('browser'); }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
+    return () => { disposed = true; stop?.(); };
+  }, [openWorkspace]);
+  useEffect(() => { void api.listStudioJobs().then(jobs => { for (const job of jobs) studioJobs.current.set(job.id, job.status); setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status))); }).catch(() => {}); }, []);
   useEffect(() => {
     let disposed = false;
     let stop: (() => void) | undefined;
     const announced = new Set<string>();
     void listen<api.StudioJob>("opencore-studio-job", ({payload}) => {
-      if (disposed || !['completed','failed','cancelled'].includes(payload.status)) return;
+      if (disposed) return;
+      studioJobs.current.set(payload.id, payload.status);
+      setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status)));
+      if (!['completed','failed','cancelled'].includes(payload.status)) return;
       const conversation = payload.request?.conversationId;
       if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
       if (announced.has(payload.id)) return;
@@ -1262,7 +1308,11 @@ export default function App() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => { stopped = true; window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibility); };
   }, [refresh, view, snapshot?.runtime.status]);
-  useEffect(() => { if (selectedConversation) api.conversation(selectedConversation).then(setTimeline).catch((error) => setNotice(String(error))); }, [selectedConversation]);
+  useEffect(() => {
+    let current = true;
+    if (selectedConversation) void api.conversation(selectedConversation).then(entries => { if (current && selectedConversationRef.current === selectedConversation) setTimeline(entries); }).catch(error => { if (current) setNotice(String(error)); });
+    return () => { current = false; };
+  }, [selectedConversation]);
   useEffect(() => {
     let disposed = false;
     let stop: (() => void) | undefined;
@@ -1405,6 +1455,12 @@ export default function App() {
     selectedConversationRef.current = id;
     setSelectedConversation(id);
     setConversationEpoch((value) => value + 1);
+    if (workspaceOpen && viewportWidth < 1440) setConversationsCollapsed(true);
+  };
+
+  const openConversationFromWorkspace = (id: string, settings?: ConversationSettings) => {
+    if (settings) settingsByConversation.current.set(id, settings);
+    selectConversation(id); setView('conversations'); setWorkspaceOpen(false);
   };
 
   const acceptConversationId = (id: string) => {
@@ -1438,12 +1494,12 @@ export default function App() {
     appearance.defaultChromeControl ? "chrome-control" : null,
   ].filter(Boolean) as ("computer-use" | "browser-use" | "chrome-control")[];
 
-  if (view === "conversations") {
-    const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} />;
-    return <div className="app-window-frame"><AgentQuestions /><WindowTitleBar /><div className={`conversation-focus-shell ${appearance.compactMessages ? "compact-messages" : ""}`} style={{ ...appearanceStyle, gridTemplateColumns: `58px ${sidebarWidth}px 7px minmax(0,1fr)`, gridTemplateRows: "minmax(0,1fr) 36px" }}>
-      <Navigation active={view} onChange={setView} running={running} compact />
-      {conversationList}<div className="conversation-resizer" role="separator" aria-label="Resize conversations" aria-orientation="vertical" onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
-      <AssistantConversation
+  const hideConversationList = conversationsCollapsed || (workspaceOpen && viewportWidth < 1440);
+  const mainBlocked = studioActive ? 'Wait for the active studio task to finish.' : (snapshot.activeConversationIds || []).some(id => id !== selectedConversation) || Boolean(inferenceOwner && inferenceOwner !== selectedConversation) ? 'Another chat is working. Wait for it to finish before sending.' : undefined;
+  const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} />;
+  const conversationContent = <div className={`conversation-content-grid ${hideConversationList ? 'conversation-list-collapsed' : ''}`} style={{'--conversation-list-width': `${sidebarWidth}px`} as CSSProperties}>
+      {conversationList}<div className="conversation-resizer" role="separator" tabIndex={0} aria-label="Resize conversations" aria-orientation="vertical" aria-valuemin={230} aria-valuemax={600} aria-valuenow={sidebarWidth} onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setSidebarWidth(current => Math.min(600, Math.max(230, current + (event.key === 'ArrowRight' ? 24 : -24)))); } }} onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
+      <div className="conversation-chat-content"><AssistantConversation
         key={`chat-${conversationEpoch}`}
         conversationId={selectedConversation}
         initialDraft={composerDrafts.current.get(draftKey)}
@@ -1462,7 +1518,15 @@ export default function App() {
         onConversationId={acceptConversationId}
         onRefresh={refreshConversation}
         onNotice={setNotice}
-        updateControl={<UpdateButton />}
+        initialSettings={settingsByConversation.current.get(draftKey)}
+        onSettingsChange={rememberSettings}
+        onActivityChange={recordChatActivity}
+        onOpenWorkspace={openWorkspace}
+        onOpenPreview={openWorkspacePreview}
+        onOpenBrowserLink={openBrowserLink}
+        onOpenFileRecord={openWorkspaceFile}
+        onWorkspaceObscuredChange={setMainWorkspaceObscured}
+        inferenceBlocked={mainBlocked}
         onExport={exportCurrent}
         onRename={renameCurrent}
         onDelete={deleteCurrent}
@@ -1478,24 +1542,26 @@ export default function App() {
         maxSubagents={appearance.maxSubagents}
         projectSkillsEnabled={appearance.projectSkillsEnabled}
         compactAtTokens={appearance.compactAtTokens}
-      />
-      <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} className="conversation-statusbar" />
-      {notice && <div className="toast conversation-toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
-      {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
-      {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
-    </div></div>;
-  }
-
-  return <div className="app-window-frame" style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="app-shell">
-    <Header snapshot={snapshot} busy={busy} runtimeAction={runtimeAction} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} onStart={start} onStop={stop} onRestart={restart} onExport={exportCurrent} />
-    <Navigation active={view} onChange={setView} running={running} />
-    {view === "runtime"
+      /></div>
+    </div>;
+  const sectionContent = view === 'conversations' ? conversationContent : view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
       : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
       : view === 'media' ? <MediaStudio category={mediaCategory} onCategoryChange={setMediaCategory} onNotice={setNotice} />
-      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={changeAppearance} />}
+      : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} onNotice={setNotice} />
+      : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} />
+      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} onAppearanceChange={changeAppearance} />;
+
+  return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
+    <Navigation active={view} onChange={setView} running={running} compact />
+    <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
+      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton /><button className="workspace-access" aria-label="Workspace" aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><Files size={16} /><span>Workspace</span></button></div></header>
+      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
+    </div>
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
+    {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
+    {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}
   </div></div>;
 }

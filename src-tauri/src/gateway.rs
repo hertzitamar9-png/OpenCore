@@ -299,6 +299,16 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
         let headers = request.headers().clone();
         return codex_tool_bridge(&state, &method, &headers, token, request).await;
     }
+    if path == "/background/events" {
+        if method != axum::http::Method::POST { return json_response(StatusCode::METHOD_NOT_ALLOWED,json!({"error":"POST required"})); }
+        use tauri::Manager;
+        let Some(core)=state.app.try_state::<Arc<crate::AppCore>>() else { return json_response(StatusCode::SERVICE_UNAVAILABLE,json!({"error":"Background scheduler not ready"})); };
+        let bearer=request.headers().get(axum::http::header::AUTHORIZATION).and_then(|v|v.to_str().ok()).and_then(|v|v.strip_prefix("Bearer ")).unwrap_or("");
+        if !core.background.authenticate_webhook(bearer) { return json_response(StatusCode::UNAUTHORIZED,json!({"error":"Invalid background event token"})); }
+        let body=match axum::body::to_bytes(request.into_body(),64*1024).await { Ok(body)=>body,Err(_)=>return json_response(StatusCode::PAYLOAD_TOO_LARGE,json!({"error":"Event exceeds 64 KiB"})) };
+        let event=match serde_json::from_slice::<Value>(&body) { Ok(event)=>event,Err(_)=>return json_response(StatusCode::BAD_REQUEST,json!({"error":"Event must be JSON"})) };
+        return match core.background.emit(event) { Ok(value)=>json_response(StatusCode::ACCEPTED,value),Err(error)=>json_response(StatusCode::BAD_REQUEST,json!({"error":error})) };
+    }
     let headers = request.headers().clone();
     let bridge = path == "/opencore/claude-bridge";
     let body = match axum::body::to_bytes(request.into_body(), if bridge { 1024 * 1024 } else { 64 * 1024 * 1024 }).await {

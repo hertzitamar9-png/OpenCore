@@ -212,6 +212,7 @@ async fn stop_active_work_for_update(core: &AppCore) -> Result<(), String> {
     } else {
         None
     };
+    let background_error=core.background.cancel_active().await.err();
 
     // Cancel dictation and stop the verified YuE model before replacing
     // the installed files. Keep going if YuE reports an error so the text model
@@ -245,6 +246,9 @@ async fn stop_active_work_for_update(core: &AppCore) -> Result<(), String> {
     }
     if !chats_stopped {
         return Err("A chat did not stop after cancellation. OpenCore stopped its model, but the update was not installed.".into());
+    }
+    if let Some(error)=background_error {
+        return Err(format!("Background work did not finish stopping: {error}. The update was not installed."));
     }
     if let Some(error) = studio_error {
         return Err(error);
