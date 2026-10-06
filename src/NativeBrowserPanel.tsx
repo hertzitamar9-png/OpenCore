@@ -40,13 +40,15 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
   const headDrag = useRef<number | null>(null);
   const nextWebTabNumber = useRef(2);
   const visibleRef = useRef(visible);
-  visibleRef.current = visible && !obscured;
   const navigatedRequest = useRef<string | null>(null);
   const openingRequest = useRef<string | null>(null);
   const webTabsRef = useRef<WebTab[]>([]);
   const [source, setSource] = useState<"web" | "files" | "chrome">("web");
   const [webTabs, setWebTabs] = useState<WebTab[]>([{ id: "default", title: "Web 1", url: DEFAULT_WEB_URL }]);
   const [activeWebTabId, setActiveWebTabId] = useState<string | null>("default");
+  const selectedWebTabRef = useRef(activeWebTabId);
+  selectedWebTabRef.current = activeWebTabId;
+  visibleRef.current = visible && !obscured && source === "web";
   const [fileTabs, setFileTabs] = useState<FileTab[]>([]);
   const [activeFileTabId, setActiveFileTabId] = useState<string | null>(null);
   const [address, setAddress] = useState(DEFAULT_WEB_URL);
@@ -59,13 +61,14 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
 
   useEffect(() => {
     let active = true;
-    if (!visible || source !== "web" || !activeWebTab) return;
+    if (!visible || obscured || source !== "web" || !activeWebTab) return;
     setLoading(true);
     setError("");
     void browserCommand<{ open: boolean; url?: string }>("status", activeWebTab.id).then((status) =>
-      status.open ? status : browserCommand<{ open: boolean; url?: string }>("open", activeWebTab.id, { url: activeWebTab.url })
+      status.open || !active || !visibleRef.current || selectedWebTabRef.current !== activeWebTab.id
+        ? status : browserCommand<{ open: boolean; url?: string }>("open", activeWebTab.id, { url: activeWebTab.url })
     ).then((result) => {
-      if (!visibleRef.current) void browserCommand("hide", activeWebTab.id).catch(() => {});
+      if (!visibleRef.current || selectedWebTabRef.current !== activeWebTab.id) void browserCommand("hide", activeWebTab.id).catch(() => {});
       if (active) {
         const url = result.url || activeWebTab.url;
         setAddress(url);
@@ -74,7 +77,7 @@ export function NativeBrowserPanel({ onClose, onNotice, preview, onDownload, wid
       }
     }).catch((reason) => { if (active) { setError(String(reason)); setLoading(false); } });
     return () => { active = false; };
-  }, [activeWebTabId, source, visible]);
+  }, [activeWebTabId, source, visible, obscured]);
 
   useEffect(() => {
     if (!preview) return;

@@ -20,6 +20,7 @@ it("keeps the Computer selection and draft through expansion, restoration, and w
   });
   const { rerender } = render(<WorkspacePanel {...props} />);
   await waitFor(() => expect(screen.getByLabelText("Browser address")).toHaveValue("https://example.com"));
+  await waitFor(() => expect(browser).toHaveBeenCalledWith("show"));
   browser.mockClear();
   rerender(<WorkspacePanel {...props} tab="computer" />);
   const picker = await screen.findByLabelText("Window");
