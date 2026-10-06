@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import * as api from './api';
 import * as sideChat from './side-chat';
@@ -10,7 +10,11 @@ const handlers = vi.hoisted(() => new Map<string, Set<(event: {payload: unknown}
 vi.mock('@tauri-apps/api/event', () => ({listen: vi.fn(async (name: string, callback: (event: {payload: unknown}) => void) => {
   const listeners = handlers.get(name) ?? new Set(); listeners.add(callback); handlers.set(name, listeners); return () => listeners.delete(callback);
 })}));
-afterEach(() => { vi.restoreAllMocks(); handlers.clear(); });
+beforeEach(() => {
+  const values = new Map<string, string>();
+  vi.stubGlobal('localStorage', {getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key)});
+});
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); handlers.clear(); });
 
 describe('Side chat branch', () => {
   it('keeps changed branch effort and approval when opening it as a full chat', async () => {
@@ -76,17 +80,28 @@ describe('Side chat branch', () => {
     const create = vi.spyOn(sideChat, 'createSideChat').mockImplementation(async () => {created = true; return branch;});
     const send = vi.spyOn(sideChat, 'sendSideChatMessage').mockResolvedValue({conversationId: branch.conversationId, title: branch.title});
     const mainSend = vi.spyOn(api, 'sendChatMessage').mockResolvedValue({conversationId: parent.id, title: parent.title});
-    render(<App />); await screen.findByLabelText('Message OpenCore');
+    window.localStorage.setItem('opencore.reasoning-effort.v1', 'high');
+    render(<App />); const parentInput = await screen.findByLabelText('Message OpenCore');
+    const main = parentInput.closest('main')!;
+    fireEvent.click(within(main).getByRole('button', {name: 'Effort: High'}));
+    fireEvent.change(screen.getByRole('slider', {name: 'Reasoning effort'}), {target: {value: '1'}});
+    fireEvent.click(screen.getByRole('button', {name: 'Close Effort'}));
+    expect(within(main).getByRole('button', {name: 'Effort: Low'})).toBeVisible();
     fireEvent.click(screen.getByRole('button', {name: 'Approval: Ask every time'}));
     fireEvent.click(screen.getByRole('button', {name: 'Approve for me'}));
     fireEvent.click(screen.getByRole('button', {name: 'Workspace'}));
     fireEvent.click(screen.getByRole('tab', {name: 'Side chat'}));
     fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
     const input = await screen.findByLabelText('Message side chat');
-    expect(create).toHaveBeenCalledWith(parent.id, expect.any(String), expect.objectContaining({approvalMode: 'approve-for-me'}));
+    expect(create).toHaveBeenCalledWith(parent.id, expect.any(String), expect.objectContaining({approvalMode: 'approve-for-me', reasoningEffort: 'low'}));
     expect(screen.getByText(/32,768-token context/)).toBeVisible();
+    expect(within(input.closest('main')!).getByRole('button', {name: 'Effort: Low'})).toBeVisible();
+    fireEvent.click(within(main).getByRole('button', {name: 'Effort: Low'}));
+    fireEvent.change(screen.getByRole('slider', {name: 'Reasoning effort'}), {target: {value: '3'}});
+    fireEvent.click(screen.getByRole('button', {name: 'Close Effort'}));
+    expect(within(main).getByRole('button', {name: 'Effort: High'})).toBeVisible();
     fireEvent.change(input, {target: {value: 'Only the branch receives this'}}); fireEvent.keyDown(input, {key: 'Enter'});
-    await waitFor(() => expect(send).toHaveBeenCalledWith(branch.conversationId, 'Only the branch receives this', [], 'off', 'approve-for-me', expect.any(Array), expect.any(Boolean), 3, true, expect.any(Number), expect.any(String)));
+    await waitFor(() => expect(send).toHaveBeenCalledWith(branch.conversationId, 'Only the branch receives this', [], 'low', 'approve-for-me', expect.any(Array), expect.any(Boolean), 3, true, expect.any(Number), expect.any(String)));
     expect(mainSend).not.toHaveBeenCalled();
     expect(screen.getByText('Main context stays here')).toBeVisible();
     fireEvent.click(screen.getByRole('button', {name: 'Open as full chat'}));
