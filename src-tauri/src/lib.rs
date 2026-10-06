@@ -33,6 +33,7 @@ mod model_catalog;
 mod music_studio;
 mod music_weights;
 mod startup_diagnostics;
+pub mod startup_desktop;
 mod studio_jobs;
 mod process_watch;
 mod native_browser;

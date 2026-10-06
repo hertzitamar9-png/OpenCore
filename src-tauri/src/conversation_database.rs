@@ -22,8 +22,12 @@ pub(crate) fn select_database(primary: &Path, recovered: &Path) -> Result<PathBu
                 "recovered" => recovered,
                 _ => return Err("The saved conversation database choice is invalid; both databases have been preserved.".into()),
             };
-            return if selected.is_file() { Ok(selected.to_path_buf()) }
-                else { Err(format!("The selected conversation database is missing: {}. Restore it before restarting; another copy has not been opened automatically.",selected.display())) };
+            return match std::fs::metadata(selected) {
+                Ok(metadata) if metadata.is_file() => Ok(selected.to_path_buf()),
+                Ok(_) => Err(format!("The selected conversation database is not a regular file: {}. Both database locations have been preserved.", selected.display())),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(format!("The selected conversation database is missing: {}. Restore it before restarting; another copy has not been opened automatically.", selected.display())),
+                Err(error) => Err(format!("Could not inspect the selected conversation database {}: {error} (kind={:?}, Windows error={:?}). Another copy has not been opened automatically.", selected.display(), error.kind(), error.raw_os_error())),
+            };
         },
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
         Err(error) => return Err(format!("Could not read the conversation database choice: {error}")),
@@ -108,6 +112,30 @@ mod tests {
         write_database(&primary, "2026-09-25T18:00:00Z");
         write_database(&recovered, "2026-09-25T18:00:00Z");
         assert_eq!(select_database(&primary, &recovered).unwrap(), primary);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn missing_selected_database_does_not_open_an_older_copy() {
+        let (root, primary, recovered) = test_databases();
+        write_database(&recovered, "2026-09-25T18:00:00Z");
+        std::fs::write(primary.with_extension("database-choice"), "primary\n").unwrap();
+        let error = select_database(&primary, &recovered).unwrap_err();
+        assert!(error.contains("is missing"));
+        assert!(error.contains("another copy has not been opened"));
+        assert_eq!(std::fs::read_to_string(primary.with_extension("database-choice")).unwrap(), "primary\n");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn directory_at_selected_database_path_is_reported_accurately() {
+        let (root, primary, recovered) = test_databases();
+        std::fs::create_dir(&primary).unwrap();
+        std::fs::write(primary.with_extension("database-choice"), "primary\n").unwrap();
+        let error = select_database(&primary, &recovered).unwrap_err();
+        assert!(error.contains("not a regular file"));
+        assert!(!error.contains("is missing"));
+        assert!(primary.is_dir());
         std::fs::remove_dir_all(root).unwrap();
     }
 }

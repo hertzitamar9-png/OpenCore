@@ -53,7 +53,10 @@ jobs:
       - name: Test Rust libraries with MSVC
         id: rust-tests
         working-directory: src-tauri
-        run: cargo test --lib
+        shell: pwsh
+        run: |
+          & ../scripts/prepare-windows-rust-test-manifest.ps1
+          cargo test --lib
       - name: Diagnose a failed Windows test executable
         if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
         shell: powershell

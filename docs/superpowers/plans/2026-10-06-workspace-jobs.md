@@ -33,7 +33,7 @@
 - [x] Inspect actual shortcuts, version, native windows and Windows errors.
 - [x] Verify v0.2.110 release/installer hash and back up executable/chat database.
 - [x] Upgrade the existing directory without deleting app data.
-- [x] Observe desktop launch and Start menu close/reopen; record startup readiness.
+- [ ] Verify actual Explorer desktop and Start menu launches after repairing redirected app data.
 - [ ] Repeat the same launch verification after the final feature release.
 
 ## Task 2: Durable schedules, events and workers
@@ -82,7 +82,7 @@ Root files: lib.rs, codex_harness.rs, gateway.rs, store.rs as necessary, focused
 
 ## Verification record before native CI
 
-- Installed v0.2.110 was recovered in place and launched from both actual desktop and Start menu shortcuts; the original intermittent white-flash exit was not reproduced on demand. The app remained responsive through feature implementation. Final feature release still requires the same installed checks.
+- Terminal shortcut launches of installed v0.2.110 succeeded, but actual Explorer double-click reproduced the startup failure. The selected database and supporting runtimes had been redirected into Codex LocalCache; Explorer could not see them. A read-only Windows file-handle probe confirmed the redirected physical path, and a child launched with the desktop shell parent saw the ordinary folder. Physical recovery and final feature-release shortcut checks are required.
 - Unified frontend passed 246 Vitest tests, 44 Node tests and the TypeScript/Vite production build. Mocked shell preview covered 800-pixel and 1600-pixel desktop widths, receipts/snapshots, Browser/Computer tabs, isolated branch replies and Effort/Approval persistence on full-chat navigation.
 - The installed pinned Codex app-server passed real stdio initialize/inference/MCP/cancellation/resume with local deterministic Responses fixtures. A fresh second app-server using the same isolated CODEX_HOME forked actual durable context through a saved turn, excluded later work and left the source unchanged.
 - Review fixes retain a queued schedule when foreground work wins admission, restrict branch ECHO to the copied context, use direct old-chat identity/project lookups, validate artifact handles before reads, recheck speech admission under GPU ownership and retain cancellation across runtime startup.
