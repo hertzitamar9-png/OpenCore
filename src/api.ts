@@ -65,6 +65,7 @@ export const speechCancel = (sessionId: string) => invoke<void>("speech_cancel",
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AppSnapshot, ArchiveEvent, ArchiveOverview, ArchivePageRef, ArchiveSearchHit, ApprovalMode, ChatSendResult, ConnectorInput, ConnectorStatus, OperationRecord, ProjectSummary, ReasoningEffort, RuntimeProfile, TimelineEntry } from "./types";
 import { previewSnapshot, previewTimeline } from "./mock";
+import type { ImportFormat, ImportPreview, ImportReport } from "./chat-import-types";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
 const desktop = () => "__TAURI_INTERNALS__" in window;
@@ -120,7 +121,7 @@ export type BrowserStatus = { port: number; token: string; connected: boolean; e
 export type BrowserTab = { tabId: number; title: string; url: string; active: boolean };
 export type BrowserShot = { tabId: number; dataUrl: string; viewport: { width: number; height: number } };
 export type DesktopWindow = { windowId: number; title: string; bounds: { left: number; top: number; width: number; height: number } };
-export type DesktopShot = { windowId: number; bounds: DesktopWindow["bounds"]; dataUrl: string };
+export type DesktopShot = { windowId: number; bounds: DesktopWindow["bounds"]; origin?: { x: number; y: number }; dataUrl: string };
 
 export async function desktopCommand<T>(action: string, args: Record<string, unknown> = {}): Promise<T> {
   if (!desktop()) throw new Error("Windows control requires the desktop application.");
@@ -225,6 +226,38 @@ export async function exportConversation(id: string, format: "json" | "markdown"
   if (!desktop()) throw new Error("Export requires the desktop application.");
   const result = await invoke<{ path: string }>("export_conversation", { id, format });
   return result.path;
+}
+
+export interface ImportedConversationPage {
+  conversations: import("./types").ConversationSummary[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+export async function listImportedConversations(query = "", offset = 0, limit = 100): Promise<ImportedConversationPage> {
+  if (!desktop()) return { conversations: [], total: 0, offset, limit };
+  return invoke<ImportedConversationPage>("list_imported_conversations", { query, offset, limit });
+}
+
+export async function importedConversationSummary(id: string): Promise<import("./types").ConversationSummary | null> {
+  if (!desktop()) return null;
+  return invoke<import("./types").ConversationSummary | null>("get_imported_conversation_summary", { id });
+}
+
+export async function previewChatFile(path: string, format: ImportFormat): Promise<ImportPreview> {
+  if (!desktop()) throw new Error("Chat imports require the OpenCore desktop application.");
+  return invoke<ImportPreview>("preview_chat_file", {path, format});
+}
+
+export async function importChatFile(path: string, format: ImportFormat, requestId: string): Promise<ImportReport> {
+  if (!desktop()) throw new Error("Chat imports require the OpenCore desktop application.");
+  return invoke<ImportReport>("import_chat_file", {path, format, requestId});
+}
+
+export async function cancelChatFileImport(requestId: string): Promise<boolean> {
+  if (!desktop()) return false;
+  return invoke<boolean>("cancel_chat_file_import", {requestId});
 }
 
 export async function renameConversation(id: string, title: string): Promise<void> {

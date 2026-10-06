@@ -14,6 +14,7 @@ mod claude_bridge_install;
 mod artifacts;
 mod app_update;
 mod chat_stream;
+mod chat_import;
 mod composer_attachments;
 mod conversation_database;
 mod speech;
@@ -25,6 +26,7 @@ mod compat;
 mod computer_ops;
 #[cfg(windows)]
 mod desktop_capture;
+mod desktop_policy;
 mod connector_config;
 mod gateway;
 mod history;
@@ -187,10 +189,14 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             }
             if action != "see" { result["coordinate_space"] = json!("window_relative"); }
             if action == "ground_click" && result.get("found").and_then(Value::as_bool) == Some(true) {
-                let clicked = desktop_action(app, "click".into(),
-                    json!({"windowId":window_id,"x":result["x"],"y":result["y"]})).await?;
+                let background_only = KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst) || args["backgroundOnly"].as_bool().unwrap_or(false);
+                let mut click_args = json!({"windowId":window_id,"x":result["x"],"y":result["y"]});
+                for key in ["backgroundOnly", "allowForegroundFallback", "holdActivityUntilComplete"] {
+                    if let Some(value) = args.get(key) { click_args[key] = value.clone(); }
+                }
+                let clicked = desktop_action(app, if background_only { "interact" } else { "click" }.into(), click_args).await?;
+                result["clicked"] = json!(clicked["activated"].as_bool().unwrap_or(false));
                 result["click"] = clicked;
-                result["clicked"] = json!(true);
             }
             Ok(result)
         }
@@ -212,6 +218,9 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
             Ok(picked)
         }
         "play_snake" => {
+            if KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst) || args["backgroundOnly"].as_bool().unwrap_or(false) {
+                return Err("Real-time keyboard play requires foreground input. Keep-window mode is enabled, so OpenCore will not switch windows.".into());
+            }
             core.reflex.ensure_running().await?;
             let seconds = args.get("seconds").and_then(|v| v.as_f64()).unwrap_or(90.0).clamp(5.0, 600.0);
             #[cfg(windows)]
@@ -226,18 +235,12 @@ async fn reflex_action(app: &tauri::AppHandle, core: &Arc<AppCore>, action: &str
 }
 
 async fn desktop_action(app: &tauri::AppHandle, action: String, mut args: serde_json::Value) -> Result<serde_json::Value, String> {
-    if KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst) && matches!(action.as_str(), "move" | "click" | "drag" | "type" | "key" | "scroll" | "commit_text") {
-        return Err("Keep my window in front is on. Use inspect with invoke or set_value for controls that support background automation, or switch to foreground control for pointer and keyboard actions".into());
-    }
-    if action == "interact" { args["allowForegroundFallback"] = json!(!KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst)); }
+    desktop_policy::apply(&action, &mut args, KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst))?;
     #[cfg(windows)]
-    let _activity = desktop_activity::begin(app, args["windowId"].as_i64().unwrap_or(0), &args);
+    let _activity = desktop_policy::shows_activity(&action).then(|| desktop_activity::begin(app, args["windowId"].as_i64().unwrap_or(0), &args));
     #[cfg(not(windows))]
     let _ = app;
-    let result = windows_control::command(action, args).await;
-    // Keep brief pointer actions visible long enough to identify their target.
-    tokio::time::sleep(std::time::Duration::from_millis(180)).await;
-    result
+    windows_control::command(action, args).await
 }
 
 struct PendingApprovalGuard<'a> {
@@ -553,6 +556,20 @@ fn list_conversations(
 }
 
 #[tauri::command]
+async fn list_imported_conversations(core: tauri::State<'_, Arc<AppCore>>, query: String, offset: usize, limit: usize) -> Result<store::ImportedConversationPage, String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || core.store.list_imported_conversations(&query, offset, limit))
+        .await.map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn get_imported_conversation_summary(core: tauri::State<'_, Arc<AppCore>>, id: String) -> Result<Option<models::ConversationSummary>, String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || core.store.imported_conversation_summary(&id))
+        .await.map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
 fn get_conversation(
     core: tauri::State<'_, Arc<AppCore>>,
     id: String,
@@ -859,13 +876,13 @@ fn delete_project(
 }
 
 #[tauri::command]
-fn export_conversation(
+async fn export_conversation(
     app: tauri::AppHandle,
     core: tauri::State<'_, Arc<AppCore>>,
     id: String,
     format: String,
 ) -> Result<ExportResult, String> {
-    let entries = core.store.conversation(&id)?;
+    if !matches!(format.as_str(), "markdown" | "json") { return Err("Export format must be json or markdown".into()); }
     let export_root = app
         .path()
         .document_dir()
@@ -877,28 +894,67 @@ fn export_conversation(
         .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_'))
         .take(64)
         .collect();
-    let (extension, bytes) = if format == "markdown" {
-        let mut text = format!("# OpenCore conversation {id}\n\n");
-        for entry in &entries {
-            text.push_str(&format!(
-                "## {} · {} · {}\n\n{}\n\n",
-                entry.timestamp, entry.source, entry.title, entry.content
-            ));
-        }
-        ("md", text.into_bytes())
-    } else {
-        (
-            "json",
-            serde_json::to_vec_pretty(&json!({"conversation_id":id,"entries":entries}))
-                .map_err(|e| e.to_string())?,
-        )
-    };
-    let path = export_root.join(format!("{}-{}.{}", safe_id, chrono::Utc::now().format("%Y%m%d-%H%M%S"), extension));
-    std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
-    core.store.log("info", "export", &format!("Exported conversation to {}", path.display()));
-    Ok(ExportResult {
-        path: path.display().to_string(),
-    })
+    let extension = if format == "markdown" { "md" } else { "json" };
+    let path = export_root.join(format!("{}-{}-{}.{}", safe_id, chrono::Utc::now().format("%Y%m%d-%H%M%S"), &uuid::Uuid::new_v4().to_string()[..8], extension));
+    let store = core.store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let temporary = path.with_extension(format!("{extension}.partial"));
+        let file = std::fs::OpenOptions::new().create_new(true).write(true).open(&temporary).map_err(|error|error.to_string())?;
+        let result = (|| -> Result<(), String> {
+            let mut writer = std::io::BufWriter::new(file);
+            store.write_conversation_export(&id, &format, &mut writer)?;
+            writer.get_ref().sync_all().map_err(|error|error.to_string())?;
+            drop(writer);
+            std::fs::rename(&temporary, &path).map_err(|error|error.to_string())
+        })();
+        if result.is_err() { let _ = std::fs::remove_file(&temporary); }
+        result?;
+        store.log("info", "export", &format!("Exported conversation to {}", path.display()));
+        Ok(ExportResult { path:path.display().to_string() })
+    }).await.map_err(|error|error.to_string())?
+}
+
+#[tauri::command]
+async fn preview_chat_file(path: String, format: String) -> Result<chat_import::ImportPreview, String> {
+    tauri::async_runtime::spawn_blocking(move || chat_import::preview_file(Path::new(&path), &format))
+        .await.map_err(|error|error.to_string())?
+}
+
+struct ChatImportCancellationGuard {
+    key: String,
+    cancellations: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
+}
+impl Drop for ChatImportCancellationGuard {
+    fn drop(&mut self) { if let Ok(mut active) = self.cancellations.lock() { active.remove(&self.key); } }
+}
+
+#[tauri::command]
+async fn import_chat_file(app: tauri::AppHandle, core: tauri::State<'_, Arc<AppCore>>, path: String, format: String, request_id: String) -> Result<chat_import::ImportReport, String> {
+    let request_id = uuid::Uuid::parse_str(&request_id).map_err(|_| "Invalid import request ID")?.to_string();
+    let key = format!("chat-file-import:{request_id}");
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let cancellations = core.history_sync_cancellations.clone();
+    {
+        let mut active = cancellations.lock().map_err(|error|error.to_string())?;
+        if active.contains_key(&key) { return Err("This import request is already running".into()); }
+        active.insert(key.clone(), cancelled.clone());
+    }
+    let store = core.store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = ChatImportCancellationGuard { key, cancellations };
+        let mut progress = |report: &chat_import::ImportReport| { let _ = app.emit("opencore-chat-import-progress", json!({"requestId":request_id,"report":report})); };
+        let report = chat_import::import_file_with_cancellation(&store, Path::new(&path), &format, &|| cancelled.load(Ordering::SeqCst), &mut progress)?;
+        store.log("info", "chat-import", &format!("{} chats imported, {} updated, {} already copied{}", report.imported, report.updated, report.skipped, if report.cancelled { "; cancelled" } else { "" }));
+        Ok(report)
+    }).await.map_err(|error|error.to_string())?
+}
+
+#[tauri::command]
+fn cancel_chat_file_import(core: tauri::State<'_, Arc<AppCore>>, request_id: String) -> Result<bool, String> {
+    let id = uuid::Uuid::parse_str(&request_id).map_err(|_| "Invalid import request ID")?;
+    let active = core.history_sync_cancellations.lock().map_err(|error|error.to_string())?;
+    if let Some(cancelled) = active.get(&format!("chat-file-import:{id}")) { cancelled.store(true, Ordering::SeqCst); return Ok(true); }
+    Ok(false)
 }
 
 #[tauri::command]
@@ -2084,11 +2140,11 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, mut request: 
     core.store.set_setting(&format!("chat_model_{id}"),&runtime_snapshot.profile)?;
     let mut available_tools = vec![dev_tool::tool_spec(), artifacts::tool_spec(),
         json!({"type":"function","function":{
-            "name":"desktop_use","description":"Control a running Windows window. Start with action=list (no windowId) for window IDs. For a Google Chrome window, navigate_url with windowId and an HTTP(S) url uses its address bar; then inspect or read_screen to verify the loaded page. To search for a game, use a Google search URL instead of guessing an unverified game URL. Inspect accessible controls once; if the target text is absent, immediately use read_screen with windowId for Windows OCR text and x,y coordinates on a canvas. Repeating inspect on panes will not reveal canvas text. For a named target, copy the exact x,y center of its matching read_screen line; do not estimate from the layout or nearby targets. Screenshots include actual image content for visual analysis; read_screen adds OCR text coordinates. For icons, images, canvas content or on-screen state, use reflex_use see (ask what is visible) and reflex_use ground (locate a described target). interact activates a control at x,y and falls back to a foreground click. drag draws one line from x,y to toX,toY within the selected window; inspect the canvas after a stroke. Coordinates are physical pixels relative to the selected window. Use inspect element x,y directly; do not copy absolute screenBounds. After an out-of-bounds error, inspect again and choose a fresh in-window target before retrying. Desktop input shares the user's Windows pointer and focus.",
+            "name":"desktop_use","description":"Control a running Windows window. Start with action=list (no windowId) for window IDs. For a Google Chrome window, navigate_url with windowId and an HTTP(S) url uses its address bar; then inspect or read_screen to verify the loaded page. To search for a game, use a Google search URL instead of guessing an unverified game URL. Inspect accessible controls once; if the target text is absent, immediately use read_screen with windowId for Windows OCR text and x,y coordinates on a canvas. Repeating inspect on panes will not reveal canvas text. For a named target, copy the exact x,y center of its matching read_screen line; do not estimate from the layout or nearby targets. Screenshots include actual image content for visual analysis; read_screen adds OCR text coordinates. For icons, images, canvas content or on-screen state, use reflex_use see (ask what is visible) and reflex_use ground (locate a described target). interact activates an accessible control at x,y. Set backgroundOnly=true and allowForegroundFallback=false to keep OpenCore in front; unsupported controls return an error. commit_text updates an accessible text field and may report submitted=false: click its submit button with interact to submit. scroll_at scrolls an accessible area at x,y in the background. Foreground pointer or keyboard fallback is available only when explicitly permitted by the focus policy. drag draws one line from x,y to toX,toY within the selected window; inspect the canvas after a stroke. Coordinates are physical pixels relative to the selected window. Use inspect element x,y directly; do not copy absolute screenBounds. After an out-of-bounds error, inspect again and choose a fresh in-window target before retrying. Desktop input shares the user's Windows pointer and focus.",
             "parameters":{"type":"object","properties":{
-                "action":{"type":"string","enum":["list","inspect","read_screen","invoke","set_value","interact","set_at","commit_enter","commit_text","move","click","drag","type","scroll","key","navigate_url"]},
+                "action":{"type":"string","enum":["list","inspect","screenshot","read_screen","invoke","set_value","interact","set_at","commit_enter","commit_text","scroll_at","move","click","drag","type","scroll","key","navigate_url"]},
                 "windowId":{"type":"integer"},"elementId":{"type":"integer"},"x":{"type":"number"},"y":{"type":"number"},"toX":{"type":"number"},"toY":{"type":"number"},"text":{"type":"string"},
-                "key":{"type":"string"},"direction":{"type":"string","enum":["up","down"]},"url":{"type":"string"}
+                "key":{"type":"string"},"direction":{"type":"string","enum":["up","down"]},"url":{"type":"string"},"backgroundOnly":{"type":"boolean"},"allowForegroundFallback":{"type":"boolean"}
             },"required":["action"],"additionalProperties":false}
         }}),
         json!({"type":"function","function":{
@@ -2309,7 +2365,7 @@ pub fn run() {
             #[cfg(windows)]
             {
                 let overlay_result = tauri::WebviewWindowBuilder::new(app, "desktop-activity", tauri::WebviewUrl::App("index.html?desktop-activity".into()))
-                    .title("OpenCore is using your computer")
+            .title("OpenCore activity")
                     .decorations(false)
                     .transparent(true)
                     .always_on_top(true)
@@ -2475,6 +2531,8 @@ pub fn run() {
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
+            list_imported_conversations,
+            get_imported_conversation_summary,
             get_conversation,
             select_profile,
             start_profile,
@@ -2505,6 +2563,9 @@ pub fn run() {
             rename_project,
             delete_project,
             export_conversation,
+            preview_chat_file,
+            import_chat_file,
+            cancel_chat_file_import,
             archive_path
             ,open_local_path
             ,save_connector

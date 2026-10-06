@@ -1,14 +1,56 @@
 use base64::Engine;
 use serde_json::{json, Value};
 
+fn foreground_fallback_allowed(args: &Value) -> bool {
+    args["backgroundOnly"].as_bool() != Some(true)
+        && args["allowForegroundFallback"].as_bool().unwrap_or(true)
+}
+
+fn annotate_background_result(
+    result: Result<Value, String>,
+    foreground_changed: bool,
+    cursor_changed: bool,
+) -> Result<Value, String> {
+    // The native operation has already finished. Concurrent user input or a
+    // provider may change the desktop, but neither observation proves a failed
+    // activation or submission. Preserve the outcome and every original error.
+    result.map(|mut output| {
+        output["backgroundVerified"] = json!(!foreground_changed && !cursor_changed);
+        if foreground_changed || cursor_changed {
+            let message = "Desktop focus or cursor changed during this completed action. The cause is unknown. Verify the outcome before retrying.";
+            output["warning"] = json!({"code":"desktop_state_changed","cause":"unknown",
+                "foregroundChanged":foreground_changed,"cursorChanged":cursor_changed,
+                "verifyOutcomeBeforeRetry":true,"message":message});
+            output["message"] = match output["message"].as_str().filter(|existing| !existing.is_empty()) {
+                Some(existing) => json!(format!("{existing} {message}")),
+                None => json!(message),
+            };
+        }
+        output
+    })
+}
+
 pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> {
-    if !matches!(action, "list" | "inspect" | "screenshot" | "read_screen" | "invoke" | "set_value" | "move" | "click" | "drag" | "type" | "key" | "scroll" | "interact" | "set_at" | "commit_enter" | "commit_text" | "navigate_url") {
+    if !matches!(action, "list" | "inspect" | "screenshot" | "read_screen" | "invoke" | "set_value" | "move" | "click" | "drag" | "type" | "key" | "scroll" | "scroll_at" | "interact" | "set_at" | "commit_enter" | "commit_text" | "navigate_url") {
         return Err("Unsupported desktop action".into());
+    }
+    for flag in ["backgroundOnly", "allowForegroundFallback", "holdActivityUntilComplete"] {
+        if args.get(flag).is_some_and(|value| !value.is_boolean()) {
+            return Err(format!("{flag} must be true or false"));
+        }
+    }
+    if args["backgroundOnly"].as_bool() == Some(true) {
+        if matches!(action, "move" | "click" | "drag" | "type" | "key" | "scroll" | "navigate_url") {
+            return Err("Background interaction does not support foreground pointer or keyboard input. Use an accessible control with interact, set_at or scroll_at.".into());
+        }
+        if matches!(action, "invoke" | "set_value") && args["windowId"].as_i64() == Some(0) {
+            return Err("Choose an application window for background interaction".into());
+        }
     }
     if action != "list" && args.get("windowId").and_then(Value::as_i64).is_none_or(|id| id < 0) {
         return Err("Select a window, or use windowId 0 for the whole desktop".into());
     }
-    if matches!(action, "move" | "click" | "drag" | "interact" | "set_at" | "commit_enter" | "commit_text") {
+    if matches!(action, "move" | "click" | "drag" | "interact" | "set_at" | "commit_enter" | "commit_text" | "scroll_at") {
         for field in ["x", "y"] {
             if args.get(field).and_then(Value::as_f64).is_none_or(|n| !n.is_finite() || !(0.0..=10000.0).contains(&n)) {
                 return Err("Desktop coordinates are out of bounds".into());
@@ -28,7 +70,7 @@ pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> 
     if matches!(action, "type" | "set_at" | "commit_text") && args.get("text").and_then(Value::as_str).is_none_or(|s| s.len() > 4000) {
         return Err("Text must be at most 4000 characters".into());
     }
-    if matches!(action, "interact" | "set_at" | "commit_enter" | "commit_text") && args["windowId"].as_i64() == Some(0) {
+    if matches!(action, "interact" | "set_at" | "commit_enter" | "commit_text" | "scroll_at") && args["windowId"].as_i64() == Some(0) {
         return Err("Choose an application window for background interaction".into());
     }
     if matches!(action, "invoke" | "set_value") && args.get("elementId").and_then(Value::as_u64).is_none_or(|id| id >= 160) {
@@ -46,7 +88,7 @@ pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> 
             return Err("Enter a valid HTTP or HTTPS URL".into());
         }
     }
-    if action == "scroll" && !matches!(args.get("direction").and_then(Value::as_str), Some("up" | "down")) {
+    if matches!(action, "scroll" | "scroll_at") && !matches!(args.get("direction").and_then(Value::as_str), Some("up" | "down")) {
         return Err("Unsupported scroll direction".into());
     }
     Ok(())
@@ -58,6 +100,66 @@ mod platform {
     use uiautomation::inputs::{Keyboard, Mouse, MouseButton};
     use uiautomation::types::Point;
     use uiautomation::{UIAutomation, UIElement};
+
+    struct ComApartment;
+
+    impl Drop for ComApartment {
+        fn drop(&mut self) {
+            unsafe { windows_uia::Win32::System::Com::CoUninitialize() };
+        }
+    }
+
+    struct AutomationSession {
+        // Release the client before balancing this thread's COM initialization.
+        automation: UIAutomation,
+        _apartment: ComApartment,
+    }
+
+    fn automation_session(background_only: bool) -> Result<AutomationSession, String> {
+        use windows_uia::core::Interface;
+        use windows_uia::Win32::System::Com::{
+            CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED,
+        };
+        use windows_uia::Win32::UI::Accessibility::{CUIAutomation8, IUIAutomation, IUIAutomation2};
+
+        unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.ok()
+            .map_err(|error| format!("Cannot initialize desktop accessibility: {error}"))?;
+        let apartment = ComApartment;
+        let automation = if background_only {
+            // UI Automation defaults to focusing controls before pattern actions.
+            // Configure and verify the client before obtaining any target elements
+            // or patterns; a legacy client cannot provide this background policy.
+            let client: IUIAutomation2 = unsafe {
+                CoCreateInstance(&CUIAutomation8, None, CLSCTX_INPROC_SERVER)
+            }.map_err(|error| format!("Background accessibility is unavailable: cannot create a client with automatic focus control: {error}"))?;
+            unsafe { client.SetAutoSetFocus(false) }
+                .map_err(|error| format!("Background accessibility is unavailable: cannot disable automatic focus: {error}"))?;
+            if unsafe { client.AutoSetFocus() }
+                .map_err(|error| format!("Background accessibility is unavailable: cannot verify automatic focus is disabled: {error}"))?
+                .as_bool()
+            {
+                return Err("Background accessibility is unavailable: automatic focus remains enabled".into());
+            }
+            let configured: IUIAutomation = client.cast()
+                .map_err(|error| format!("Background accessibility is unavailable: cannot use the configured client: {error}"))?;
+            UIAutomation::from(configured)
+        } else {
+            UIAutomation::new_direct().map_err(|error| error.to_string())?
+        };
+        Ok(AutomationSession { automation, _apartment: apartment })
+    }
+
+    #[cfg(test)]
+    pub(super) fn background_auto_set_focus_for_test() -> Result<bool, String> {
+        use windows_uia::core::Interface;
+        use windows_uia::Win32::UI::Accessibility::{IUIAutomation, IUIAutomation2};
+
+        let session = automation_session(true)?;
+        let configured: &IUIAutomation = session.automation.as_ref();
+        let client: IUIAutomation2 = configured.cast().map_err(|error| error.to_string())?;
+        unsafe { client.AutoSetFocus() }.map(|enabled| enabled.as_bool())
+            .map_err(|error| error.to_string())
+    }
 
     fn windows(automation: &UIAutomation) -> Result<Vec<UIElement>, String> {
         let root = automation.get_root_element().map_err(|e| e.to_string())?;
@@ -167,6 +269,203 @@ mod platform {
             }
         }
         best.ok_or("No accessible control at this point. Use the app directly for this control.".into())
+    }
+
+    fn scrollable_at(automation: &UIAutomation, window: &UIElement, point: &Point) -> Result<UIElement, String> {
+        use uiautomation::patterns::UIScrollPattern;
+        let walker = automation.get_control_view_walker().map_err(|e| e.to_string())?;
+        let mut best = None;
+        let mut best_depth = 0;
+        let mut queue = std::collections::VecDeque::from([(window.clone(), 0usize)]);
+        let mut seen = 0;
+        while let Some((element, depth)) = queue.pop_front() {
+            seen += 1;
+            if seen > 600 { break; }
+            let within = element.get_bounding_rectangle().is_ok_and(|rect| {
+                point.get_x() >= rect.get_left() && point.get_y() >= rect.get_top()
+                    && point.get_x() < rect.get_left() + rect.get_width()
+                    && point.get_y() < rect.get_top() + rect.get_height()
+            });
+            if !within { continue; }
+            if depth >= best_depth && element.get_pattern::<UIScrollPattern>()
+                .is_ok_and(|pattern| pattern.is_vertically_scrollable().unwrap_or(false)) {
+                best = Some(element.clone());
+                best_depth = depth;
+            }
+            if depth < 12 {
+                for child in walker.get_children(&element).unwrap_or_default().into_iter().take(80) {
+                    queue.push_back((child, depth + 1));
+                }
+            }
+        }
+        best.ok_or("This control does not expose background scrolling. Use scrolling in the application.".into())
+    }
+
+    fn native_background_button(window_id: isize, element: &UIElement) -> Result<Option<Value>, String> {
+        use uiautomation::patterns::UIInvokePattern;
+        use windows::Win32::Foundation::{GetLastError, SetLastError, HWND, LPARAM, WPARAM, ERROR_ACCESS_DENIED, ERROR_SUCCESS};
+        use windows::Win32::System::Threading::GetCurrentThreadId;
+        use windows::Win32::UI::Input::KeyboardAndMouse::IsWindowEnabled;
+        use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetClassNameW, GetDlgCtrlID,
+            GetParent, GetWindowLongW, GetWindowThreadProcessId, IsChild, IsWindow, IsWindowVisible,
+            SendMessageTimeoutW, BN_CLICKED, BS_DEFPUSHBUTTON, BS_PUSHBUTTON, GA_ROOT, GWL_STYLE,
+            SMTO_ABORTIFHUNG, SMTO_BLOCK, SMTO_ERRORONEXIT, WM_COMMAND};
+
+        let handle = element.get_native_window_handle().ok().map(Into::<isize>::into).filter(|id| *id > 0);
+        let Some(handle) = handle else {
+            if element.get_classname().is_ok_and(|class| class.eq_ignore_ascii_case("Button")
+                || class.starts_with("WindowsForms10.BUTTON")) {
+                return Err("This native button cannot be verified for background interaction.".into());
+            }
+            return Ok(None);
+        };
+        let button = HWND(handle as *mut std::ffi::c_void);
+        let target = HWND(window_id as *mut std::ffi::c_void);
+        let mut class = [0u16; 256];
+        let length = unsafe { GetClassNameW(button, &mut class) };
+        if length <= 0 {
+            return Err("The native control is no longer available for verified background interaction.".into());
+        }
+        let class = String::from_utf16_lossy(&class[..length.max(0) as usize]);
+        if class.starts_with("WindowsForms10.BUTTON") {
+            return Err("This native button provider requires foreground focus and does not expose verified background interaction.".into());
+        }
+        if !class.eq_ignore_ascii_case("Button") { return Ok(None); }
+        unsafe {
+            if !IsWindow(button).as_bool() || !IsWindow(target).as_bool()
+                || !IsChild(target, button).as_bool() || GetAncestor(button, GA_ROOT) != target {
+                return Err("The native button no longer belongs to the selected window.".into());
+            }
+            let parent = GetParent(button).map_err(|error| format!("Native background button has no parent: {error}"))?;
+            if !IsWindowEnabled(button).as_bool() || !IsWindowEnabled(parent).as_bool()
+                || !IsWindowEnabled(target).as_bool() || !IsWindowVisible(button).as_bool() {
+                return Err("The native background button is disabled or unavailable.".into());
+            }
+            // Win32's accessibility Button proxy calls SetFocus for Invoke,
+            // Toggle and Select. Only verified stateless push buttons can use
+            // their parent notification directly; checkbox/radio state needs
+            // a different implementation, so those controls fail explicitly.
+            let kind = GetWindowLongW(button, GWL_STYLE) as u32 & 0x0f;
+            if kind != BS_PUSHBUTTON as u32 && kind != BS_DEFPUSHBUTTON as u32 {
+                return Err("This native button kind requires foreground interaction; background toggle or selection is unavailable.".into());
+            }
+            element.get_pattern::<UIInvokePattern>().map_err(|_| "This native push button does not expose background activation.".to_string())?;
+            let control_id = GetDlgCtrlID(button);
+            if !(0..=u16::MAX as i32).contains(&control_id) {
+                return Err("The native button has no supported notification identifier.".into());
+            }
+            // A same-queue SendMessageTimeout ignores its timeout. Native
+            // commands use a blocking worker; refuse a direct UI-thread call.
+            if GetWindowThreadProcessId(parent, None) == GetCurrentThreadId() {
+                return Err("Background button actions must run outside the target UI thread.".into());
+            }
+            // BN_CLICKED: LOWORD = control ID, HIWORD = notification code,
+            // LPARAM = button HWND. This sends no mouse/keyboard input, no
+            // BM_CLICK and no SetFocus. UIPI restrictions remain enforced.
+            SetLastError(ERROR_SUCCESS);
+            let sent = SendMessageTimeoutW(parent, WM_COMMAND,
+                WPARAM(control_id as usize | (BN_CLICKED as usize) << 16), LPARAM(handle),
+                SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT, 1000, None);
+            if sent.0 == 0 {
+                let error = GetLastError();
+                if error == ERROR_ACCESS_DENIED {
+                    return Err("Windows blocked the background button notification (access denied; the target may require a higher privilege level).".into());
+                }
+                return Err(format!("The background button notification timed out or failed (Windows error {}).", error.0));
+            }
+        }
+        Ok(Some(json!({"activated":true,"inputMode":"window-message","notification":"BN_CLICKED",
+            "name":element.get_name().unwrap_or_default()})))
+    }
+
+    fn native_background_edit_set_value(window_id: isize, element: &UIElement, text: &str) -> Result<bool, String> {
+        use windows::Win32::Foundation::{GetLastError, SetLastError, HWND, LPARAM, WPARAM, ERROR_ACCESS_DENIED, ERROR_SUCCESS};
+        use windows::Win32::System::Threading::GetCurrentThreadId;
+        use windows::Win32::UI::Input::KeyboardAndMouse::IsWindowEnabled;
+        use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetClassNameW, GetParent,
+            GetWindowLongW, GetWindowThreadProcessId, IsChild, IsWindow, IsWindowUnicode,
+            IsWindowVisible, SendMessageTimeoutW, ES_NUMBER, ES_PASSWORD, ES_READONLY,
+            GA_ROOT, GWL_STYLE, SMTO_ABORTIFHUNG, SMTO_BLOCK, SMTO_ERRORONEXIT, WM_SETTEXT};
+
+        let handle = element.get_native_window_handle().ok().map(Into::<isize>::into).filter(|id| *id > 0);
+        let Some(handle) = handle else {
+            if element.get_classname().is_ok_and(|class| class.eq_ignore_ascii_case("Edit")
+                || class.starts_with("WindowsForms10.EDIT")) {
+                return Err("This native edit cannot be verified for background text updates.".into());
+            }
+            return Ok(false);
+        };
+        let edit = HWND(handle as *mut std::ffi::c_void);
+        let target = HWND(window_id as *mut std::ffi::c_void);
+        let mut class = [0u16; 256];
+        let length = unsafe { GetClassNameW(edit, &mut class) };
+        if length <= 0 { return Err("The native edit is no longer available for background text updates.".into()); }
+        let class = String::from_utf16_lossy(&class[..length as usize]);
+        if class.starts_with("WindowsForms10.EDIT") {
+            return Err("This native edit class has no verified background text operation. Use the application.".into());
+        }
+        if !class.eq_ignore_ascii_case("Edit") { return Ok(false); }
+        unsafe {
+            if !IsWindow(edit).as_bool() || !IsWindow(target).as_bool()
+                || !IsChild(target, edit).as_bool() || GetAncestor(edit, GA_ROOT) != target {
+                return Err("The native edit no longer belongs to the selected window.".into());
+            }
+            if !IsWindowVisible(edit).as_bool() || !IsWindowUnicode(edit).as_bool() {
+                return Err("This native edit is unavailable or has no verified Unicode background text operation.".into());
+            }
+            // Validate every ancestor, since a disabled containing pane also
+            // makes a nominally enabled child unavailable to the user.
+            let mut ancestor = edit;
+            let mut reached_target = false;
+            for _ in 0..64 {
+                if !IsWindowEnabled(ancestor).as_bool() {
+                    return Err("The native edit or its containing window is disabled.".into());
+                }
+                if ancestor == target { reached_target = true; break; }
+                ancestor = GetParent(ancestor).map_err(|error| format!("Cannot verify the native edit parent: {error}"))?;
+            }
+            if !reached_target { return Err("Cannot verify the native edit's containing window.".into()); }
+            let style = GetWindowLongW(edit, GWL_STYLE) as u32;
+            if style & ES_READONLY as u32 != 0 { return Err("This native edit is read-only; no text was changed.".into()); }
+            if style & ES_PASSWORD as u32 != 0 { return Err("Password controls require direct interaction in the application".into()); }
+            if text.contains('\0') { return Err("Native background text cannot contain a null character.".into()); }
+            if style & ES_NUMBER as u32 != 0 && !text.chars().all(|ch| ch.is_ascii_digit()) {
+                return Err("This native edit accepts only digits; no text was changed.".into());
+            }
+            if GetWindowThreadProcessId(edit, None) == GetCurrentThreadId() {
+                return Err("Background text updates must run outside the target UI thread.".into());
+            }
+        }
+        let send = |message: u32, wparam: WPARAM, lparam: LPARAM| -> Result<usize, String> {
+            let mut result = 0usize;
+            unsafe {
+                SetLastError(ERROR_SUCCESS);
+                let sent = SendMessageTimeoutW(edit, message, wparam, lparam,
+                    SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT, 1000, Some(&mut result));
+                if sent.0 == 0 {
+                    let error = GetLastError();
+                    if error == ERROR_ACCESS_DENIED {
+                        return Err("Windows blocked the background text update (access denied; the target may require a higher privilege level).".into());
+                    }
+                    return Err(format!("The background text operation timed out or failed (Windows error {}). Verify the text before retrying.", error.0));
+                }
+            }
+            Ok(result)
+        };
+        // EM_GETLIMITTEXT is the Winuser.h system message 0x00d5. Keep the
+        // user's native text limit even though WM_SETTEXT itself bypasses it.
+        const EM_GETLIMITTEXT: u32 = 0x00d5;
+        let limit = send(EM_GETLIMITTEXT, WPARAM(0), LPARAM(0))?;
+        let mut wide: Vec<u16> = text.encode_utf16().collect();
+        if wide.len() > limit { return Err("Text exceeds this native edit's length limit; no text was changed.".into()); }
+        wide.push(0);
+        // WM_SETTEXT is a marshalled system message. Its handler result must
+        // confirm the text was set; no provider SetValue, focus or keyboard call
+        // is made. A timeout does not prove the handler had no side effect.
+        if send(WM_SETTEXT, WPARAM(0), LPARAM(wide.as_ptr() as isize))? == 0 {
+            return Err("The native edit rejected the background text update. Verify the text before retrying.".into());
+        }
+        Ok(true)
     }
 
     fn foreground_click(window_id: isize, point: &Point, allowed: bool) -> Result<Value, String> {
@@ -356,10 +655,33 @@ mod platform {
     }
 
     pub(super) fn run(action: &str, args: &Value) -> Result<Value, String> {
-        let automation = UIAutomation::new().map_err(|e| e.to_string())?;
+        // Keep the policy at the native boundary too, including callers that do
+        // not enter through the asynchronous Tauri command.
+        validate_action(action, args)?;
+        let check_background = !foreground_fallback_allowed(args)
+            && matches!(action, "interact" | "invoke" | "set_value" | "set_at" | "commit_text" | "commit_enter" | "scroll_at");
+        let original = if check_background {
+            Some((unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() },
+                super::cursor_position().ok_or("Cannot verify the desktop cursor for background interaction")?))
+        } else { None };
+        let result = run_action(action, args);
+        // Desktop changes can come from the user or the provider. A successful
+        // side effect must stay successful so it is not accidentally repeated.
+        // Annotate the uncertainty without restoring focus or cursor position.
+        if let Some((foreground, cursor)) = original {
+            let current = unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() };
+            return annotate_background_result(result, current != foreground,
+                super::cursor_position() != Some(cursor));
+        }
+        result
+    }
+
+    fn run_action(action: &str, args: &Value) -> Result<Value, String> {
+        let session = automation_session(!foreground_fallback_allowed(args))?;
+        let automation = &session.automation;
         if action == "list" {
             let mut rows = vec![json!({"windowId":0,"title":"Whole desktop","bounds":rect_json(&automation.get_root_element().map_err(|e| e.to_string())?)})];
-            rows.extend(windows(&automation)?.into_iter().filter_map(|element| {
+            rows.extend(windows(automation)?.into_iter().filter_map(|element| {
                 let id: isize = element.get_native_window_handle().ok()?.into();
                 if id <= 0 { return None; }
                 Some(json!({"windowId":id,"title":element.get_name().unwrap_or_default(),"bounds":rect_json(&element)}))
@@ -367,20 +689,38 @@ mod platform {
             return Ok(json!({"windows":rows}));
         }
         let id = args["windowId"].as_i64().ok_or("Select a window first")? as isize;
-        let window = if id == 0 { automation.get_root_element().map_err(|e| e.to_string())? } else { window_by_id(&automation, id)? };
+        let window = if id == 0 { automation.get_root_element().map_err(|e| e.to_string())? } else { window_by_id(automation, id)? };
         match action {
             "read_screen" => read_screen(args),
-            "inspect" => Ok(json!({"windowId":id,"title":window.get_name().unwrap_or_default(),"bounds":rect_json(&window),"coordinateSpace":"window","elements":inspect_tree(&automation, &window)})),
+            "inspect" => Ok(json!({"windowId":id,"title":window.get_name().unwrap_or_default(),"bounds":rect_json(&window),"coordinateSpace":"window","elements":inspect_tree(automation, &window)})),
             "invoke" | "set_value" => {
                 use uiautomation::patterns::{UIInvokePattern, UIValuePattern};
                 let element_id = args["elementId"].as_u64().unwrap_or(160) as usize;
-                let element = element_by_index(&automation, &window, element_id)?;
+                let element = element_by_index(automation, &window, element_id)?;
                 if action == "invoke" {
-                    element.get_pattern::<UIInvokePattern>().map_err(|_| "This control cannot be invoked without foreground pointer input".to_string())?
-                        .invoke().map_err(|e| e.to_string())?;
+                    let pattern = element.get_pattern::<UIInvokePattern>()
+                        .map_err(|_| "This control cannot be invoked without foreground pointer input".to_string())?;
+                    if !foreground_fallback_allowed(args) {
+                        if let Some(mut result) = native_background_button(id, &element)? {
+                            result["windowId"] = json!(id);
+                            result["elementId"] = json!(element_id);
+                            result["action"] = json!(action);
+                            return Ok(result);
+                        }
+                    }
+                    pattern.invoke().map_err(|e| e.to_string())?;
                 } else {
-                    element.get_pattern::<UIValuePattern>().map_err(|_| "This control cannot accept a value without foreground keyboard input".to_string())?
-                        .set_value(args["text"].as_str().unwrap_or_default()).map_err(|e| e.to_string())?;
+                    let pattern = element.get_pattern::<UIValuePattern>()
+                        .map_err(|_| "This control cannot accept a value without foreground keyboard input".to_string())?;
+                    let text = args["text"].as_str().unwrap_or_default();
+                    let input_mode = if !foreground_fallback_allowed(args) && native_background_edit_set_value(id, &element, text)? {
+                        "window-message"
+                    } else {
+                        pattern.set_value(text).map_err(|e| e.to_string())?;
+                        "accessibility"
+                    };
+                    return Ok(json!({"windowId":id,"elementId":element_id,"action":action,
+                        "editable":true,"updated":true,"inputMode":input_mode}));
                 }
                 Ok(json!({"windowId":id,"elementId":element_id,"action":action}))
             }
@@ -400,12 +740,29 @@ mod platform {
                 if bytes.len() > 12 * 1024 * 1024 { return Err("Window image is too large".into()); }
                 Ok(json!({"windowId":id,"bounds":rect_json(&window),"dataUrl":format!("data:image/png;base64,{}",base64::engine::general_purpose::STANDARD.encode(bytes))}))
             }
-            "interact" | "set_at" | "commit_enter" => {
+            "scroll_at" => {
+                use uiautomation::patterns::UIScrollPattern;
+                use uiautomation::types::ScrollAmount;
+                let point = window_point(&window, args)?;
+                let element = scrollable_at(automation, &window, &point)?;
+                let amount = if args["direction"] == "up" { ScrollAmount::SmallDecrement }
+                             else { ScrollAmount::SmallIncrement };
+                element.get_pattern::<UIScrollPattern>().map_err(|e| e.to_string())?
+                    .scroll(ScrollAmount::NoAmount, amount).map_err(|e| e.to_string())?;
+                Ok(json!({"scrolled":true,"inputMode":"accessibility","direction":args["direction"],
+                    "name":element.get_name().unwrap_or_default()}))
+            }
+            "commit_text" if foreground_fallback_allowed(args) => {
+                let point = window_point(&window, args)?;
+                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), true)
+            }
+            "interact" | "set_at" | "commit_enter" | "commit_text" => {
                 use uiautomation::patterns::{UIExpandCollapsePattern, UIInvokePattern, UISelectionItemPattern, UITogglePattern, UIValuePattern};
                 let point = window_point(&window, args)?;
-                let element = match element_at(&automation, &window, &point) {
+                let element = match element_at(automation, &window, &point) {
                     Ok(element) => element,
-                    Err(_) if action == "interact" => return foreground_click(id, &point, args["allowForegroundFallback"].as_bool().unwrap_or(true)),
+                    Err(_) if action == "interact" && foreground_fallback_allowed(args) => return foreground_click(id, &point, true),
+                    Err(_) if !foreground_fallback_allowed(args) => return Err("This control does not expose background interaction. Foreground pointer and keyboard input are disabled; use the control in the application.".into()),
                     Err(error) => return Err(error),
                 };
                 if element.is_password().unwrap_or(false) {
@@ -414,11 +771,27 @@ mod platform {
                 if let Ok(value) = element.get_pattern::<UIValuePattern>() {
                     if !value.is_readonly().unwrap_or(true) {
                         if action == "interact" {
-                            return Ok(json!({"editable":true,"value":value.get_value().unwrap_or_default(),"name":element.get_name().unwrap_or_default()}));
+                            return Ok(json!({"editable":true,"value":value.get_value().unwrap_or_default(),
+                                "name":element.get_name().unwrap_or_default(),"inputMode":"accessibility"}));
                         }
-                        if action == "set_at" {
-                            value.set_value(args["text"].as_str().unwrap_or_default()).map_err(|e| e.to_string())?;
-                            return Ok(json!({"editable":true,"updated":true}));
+                        if matches!(action, "set_at" | "commit_text") {
+                            let text = args["text"].as_str().unwrap_or_default();
+                            let input_mode = if !foreground_fallback_allowed(args) && native_background_edit_set_value(id, &element, text)? {
+                                "window-message"
+                            } else {
+                                value.set_value(text).map_err(|e| e.to_string())?;
+                                "accessibility"
+                            };
+                            if action == "commit_text" {
+                                // ValuePattern sets text, but supplies no submit or
+                                // Enter operation. Never claim a message was sent.
+                                return Ok(json!({"editable":true,"updated":true,"submitted":false,
+                                    "inputMode":input_mode,"message":"Text updated. This control does not expose background submission. Activate a supported submit button or press Enter in the application."}));
+                            }
+                            return Ok(json!({"editable":true,"updated":true,"inputMode":input_mode}));
+                        }
+                        if !foreground_fallback_allowed(args) {
+                            return Err("This control does not expose background submission. Activate a supported submit button or press Enter in the application.".into());
                         }
                         let hwnd = windows::Win32::Foundation::HWND(id as *mut std::ffi::c_void);
                         unsafe {
@@ -435,6 +808,9 @@ mod platform {
                 if action != "interact" {
                     return Err("This point is not an editable control".into());
                 }
+                if !foreground_fallback_allowed(args) {
+                    if let Some(result) = native_background_button(id, &element)? { return Ok(result); }
+                }
                 if let Ok(pattern) = element.get_pattern::<UIInvokePattern>() {
                     pattern.invoke().map_err(|e| e.to_string())?;
                 } else if let Ok(pattern) = element.get_pattern::<UITogglePattern>() {
@@ -444,13 +820,9 @@ mod platform {
                 } else if let Ok(pattern) = element.get_pattern::<UIExpandCollapsePattern>() {
                     pattern.expand().map_err(|e| e.to_string())?;
                 } else {
-                    return foreground_click(id, &point, args["allowForegroundFallback"].as_bool().unwrap_or(true));
+                    return foreground_click(id, &point, foreground_fallback_allowed(args));
                 }
-                Ok(json!({"activated":true,"name":element.get_name().unwrap_or_default()}))
-            }
-            "commit_text" => {
-                let point = window_point(&window, args)?;
-                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), args["allowForegroundFallback"].as_bool().unwrap_or(true))
+                Ok(json!({"activated":true,"name":element.get_name().unwrap_or_default(),"inputMode":"accessibility"}))
             }
             "drag" => {
                 let start = window_point(&window, args)?;
@@ -464,7 +836,7 @@ mod platform {
             "move" | "click" => {
                 let point = window_point(&window, args)?;
                 if action == "click" && id != 0 {
-                    let result = foreground_click(id, &point, args["allowForegroundFallback"].as_bool().unwrap_or(true))?;
+                    let result = foreground_click(id, &point, foreground_fallback_allowed(args))?;
                     return Ok(json!({"windowId":id,"x":args["x"],"y":args["y"],"action":action,
                         "activated":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}));
                 }
@@ -528,6 +900,88 @@ pub(crate) fn restore_cursor_if_unchanged(expected: (i32, i32), original: (i32, 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn completed_background_actions_keep_their_outcome_when_desktop_state_changes() {
+        for original in [
+            json!({"activated":true,"inputMode":"window-message","notification":"BN_CLICKED"}),
+            json!({"editable":true,"updated":true,"submitted":false,"message":"Text updated; submission is unavailable."}),
+            json!({"scrolled":true,"direction":"down"}),
+        ] {
+            let annotated = annotate_background_result(Ok(original.clone()), true, true).unwrap();
+            assert_eq!(annotated["backgroundVerified"], false);
+            assert_eq!(annotated["warning"]["code"], "desktop_state_changed");
+            assert_eq!(annotated["warning"]["cause"], "unknown");
+            assert_eq!(annotated["warning"]["foregroundChanged"], true);
+            assert_eq!(annotated["warning"]["cursorChanged"], true);
+            assert_eq!(annotated["warning"]["verifyOutcomeBeforeRetry"], true);
+            assert!(annotated["warning"]["message"].as_str().unwrap().contains("Verify the outcome before retrying"));
+            for (key, value) in original.as_object().unwrap() {
+                if key == "message" {
+                    assert!(annotated[key].as_str().unwrap().starts_with(value.as_str().unwrap()),
+                        "existing submission guidance must remain available");
+                } else {
+                    assert_eq!(&annotated[key], value,
+                        "desktop changes must not discard the completed {key} outcome");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn background_annotation_preserves_errors_and_marks_unchanged_success() {
+        let original = json!({"activated":true,"inputMode":"window-message"});
+        let mut unchanged = annotate_background_result(Ok(original.clone()), false, false).unwrap();
+        assert_eq!(unchanged["backgroundVerified"], true);
+        assert!(unchanged.get("warning").is_none());
+        unchanged.as_object_mut().unwrap().remove("backgroundVerified");
+        assert_eq!(unchanged, original);
+        for changed in [false, true] {
+            assert_eq!(annotate_background_result(Err("Exact provider failure".into()), changed, changed),
+                Err("Exact provider failure".into()), "native errors must remain unchanged");
+        }
+    }
+
+    #[test]
+    fn background_only_rejects_pointer_and_keyboard_actions() {
+        let args = json!({"windowId":1,"x":40,"y":20,"toX":90,"toY":80,
+            "text":"hello","key":"Enter","direction":"down","url":"https://example.com",
+            "backgroundOnly":true,"allowForegroundFallback":true});
+        for action in ["move", "click", "drag", "type", "key", "scroll", "navigate_url"] {
+            assert!(validate_action(action, &args).is_err(), "{action} must not inject foreground input in background mode");
+        }
+    }
+
+    #[test]
+    fn background_only_requires_a_real_window_for_controls() {
+        let args = json!({"windowId":0,"x":40,"y":20,"elementId":1,"text":"hello",
+            "direction":"down","backgroundOnly":true});
+        for action in ["interact", "set_at", "commit_text", "commit_enter", "scroll_at", "invoke", "set_value"] {
+            assert!(validate_action(action, &args).is_err(), "{action} must not target the entire desktop");
+        }
+    }
+
+    #[test]
+    fn background_flags_must_be_boolean() {
+        for flag in ["backgroundOnly", "allowForegroundFallback", "holdActivityUntilComplete"] {
+            let mut args = json!({"windowId":1,"x":40,"y":20});
+            args[flag] = json!("false");
+            assert!(validate_action("interact", &args).is_err(), "{flag} must not silently enable a fallback");
+        }
+    }
+
+    #[test]
+    fn background_scroll_requires_a_window_point_and_supported_direction() {
+        assert!(validate_action("scroll_at", &json!({"windowId":1,"x":40,"y":20,
+            "direction":"down","backgroundOnly":true})).is_ok());
+        for args in [
+            json!({"windowId":1,"direction":"down","backgroundOnly":true}),
+            json!({"windowId":1,"x":-1,"y":20,"direction":"down","backgroundOnly":true}),
+            json!({"windowId":1,"x":40,"y":20,"direction":"left","backgroundOnly":true}),
+        ] {
+            assert!(validate_action("scroll_at", &args).is_err());
+        }
+    }
+
     #[test]
     fn desktop_commands_are_bounded() {
         assert!(validate_action("execute", &json!({})).is_err());
@@ -650,3 +1104,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(all(windows, test))]
+#[path = "windows_control_tests.rs"]
+mod native_tests;

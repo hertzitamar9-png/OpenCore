@@ -1144,12 +1144,14 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 @media (max-width:700px) { .prompt-tools-trigger { width:42px; } .prompt-tools-trigger span { display:none; } }
 
 html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.desktop-activity-frame) #root { background:transparent; overflow:hidden; pointer-events:none; }
-.desktop-activity-frame { position:fixed; inset:0; pointer-events:none; border:3px solid transparent; border-image:repeating-linear-gradient(var(--edge-angle),#02040a 0deg,#081a42 30deg,#17418b 55deg,#02040a 85deg) 1; animation:desktop-edge-flow 3s linear infinite; box-shadow:inset 0 0 9px #12397f99; }
-@property --edge-angle { syntax:'<angle>'; initial-value:0deg; inherits:false; }
-@keyframes desktop-edge-flow { to { --edge-angle:360deg; } }
-.desktop-activity-label { position:absolute; top:5px; left:50%; transform:translateX(-50%); padding:4px 12px; background:#061127ed; border:1px solid #17396c; border-radius:8px; color:#c3d8ff; font-size:11px; }
-.desktop-ai-pointer { position:absolute; width:32px; height:32px; max-width:none; filter:drop-shadow(0 0 4px #103dbd); }
-@media (prefers-reduced-motion:reduce) { .desktop-activity-frame { animation:none; } }
+.desktop-activity-frame { position:fixed; inset:0; pointer-events:none; border:3px solid transparent; border-image:linear-gradient(135deg,#02040a,#17418b 35%,#081a42 70%,#02040a) 1; box-shadow:inset 0 0 5px #12397f66; }
+.chat-export-options { display:grid; gap:10px; }
+.chat-export-options > button { display:flex; gap:12px; padding:12px; text-align:left; border:1px solid var(--border); border-radius:9px; background:var(--surface-2); }
+.chat-export-options > button > span { display:grid; gap:4px; }
+.chat-export-options small,.chat-export-dialog > p { color:var(--muted); }
+.chat-export-options > button:hover:not(:disabled) { border-color:#4ca1d6; background:#122639; }
+.chat-import-access { gap:7px; }
+.desktop-screen { border:2px solid transparent; border-image:linear-gradient(135deg,#02040a,#17418b 35%,#081a42 70%,#02040a) 1; }
 
 /* User-adjustable terminal/log typography. */
 .runtime-console, .runtime-console pre, .log-list, .log-row, .tool-step pre, .archive-reader pre { font-size: var(--terminal-font-size, 13px); }
@@ -1379,3 +1381,8 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .claude-bridge-actions { flex-wrap: wrap; }
 .claude-bridge-command { margin-top: 12px; padding: 10px; border: 1px solid var(--border, #2b4153); border-radius: 8px; }
 .claude-bridge-command code { flex: 1; overflow-wrap: anywhere; min-width: 0; white-space: pre-wrap; }
+.imported-chat-count,.imported-chat-status { margin: 8px 12px; color: var(--muted); font-size: 12px; }
+.imported-chat-more { display: block; width: calc(100% - 24px); margin: 10px 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--blue); }
+.imported-chat-error { margin: 10px 12px; color: var(--red); font-size: 12px; overflow-wrap: anywhere; }
+.imported-chat-error button { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; background: var(--surface); color: var(--text); }
+.imported-chat-group>.conversation-group-heading[aria-expanded="false"]>svg { transform: rotate(-90deg); }

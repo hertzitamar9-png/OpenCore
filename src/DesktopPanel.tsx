@@ -1,122 +1,281 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppWindow, CornerDownLeft, RefreshCw } from "lucide-react";
+import type { MouseEvent, WheelEvent } from "react";
+import { AppWindow, Check, Maximize2, Minimize2, RefreshCw, ShieldCheck } from "lucide-react";
 import * as api from "./api";
 import { browserPoint } from "./browser-coordinates";
 import { FloatingWindow } from "./FloatingWindow";
 
-type Props = { onClose: () => void; onNotice: (message: string) => void; embedded?: boolean; active?: boolean };
+type Props = {
+  onClose: () => void;
+  onNotice: (message: string) => void;
+  embedded?: boolean;
+  active?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+};
 type Point = { x: number; y: number };
-type Interaction = { editable?: boolean; value?: string; activated?: boolean; inputMode?: string };
+type Context = { windowId: number | null; revision: number; activity: number };
+type Editor = { windowId: number; at: Point };
+type BackgroundResult = { message?: string; backgroundVerified?: boolean; warning?: { message?: string } };
+type Interaction = BackgroundResult & { editable?: boolean; value?: string; activated?: boolean; inputMode?: string };
+type TextResult = BackgroundResult & { updated?: boolean; submitted?: boolean };
+type Feedback = { error: boolean; warning?: boolean; message: string };
+type PendingEdit = { context: Context; at: Point; text: string };
+const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false };
+const DESKTOP_VIEW_ONLY = "Entire desktop is view only. Select an app window to use background controls.";
 
-export function DesktopPanel({ onClose, onNotice, embedded = false, active = true }: Props) {
+export function DesktopPanel({ onClose, onNotice, embedded = false, active = true, onExpandedChange }: Props) {
   const [windows, setWindows] = useState<api.DesktopWindow[]>([]);
   const [windowId, setWindowId] = useState<number | null>(null);
   const [shot, setShot] = useState<api.DesktopShot | null>(null);
-  const [inputAt, setInputAt] = useState<Point | null>(null);
-  const [nativeInput, setNativeInput] = useState(false);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const [typing, setTyping] = useState("");
   const [busy, setBusy] = useState(false);
-  const refreshing = useRef(false);
-  const errorShown = useRef("");
-  const typingRef = useRef<HTMLInputElement>(null);
-  const pending = useRef<number | null>(null);
+  const [capturing, setCapturing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [size, setSize] = useState<"fit" | "actual">("fit");
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const mounted = useRef(true);
+  const activeRef = useRef(active);
+  const noticeRef = useRef(onNotice);
+  const selection = useRef({ windowId: null as number | null, revision: 0 });
+  const activity = useRef(0);
+  const captureSequence = useRef(0);
+  const capturePending = useRef<{ revision: number; sequence: number } | null>(null);
+  const captureError = useRef("");
+  const controlBusy = useRef(false);
+  const pending = useRef<{ timer: number; edit: PendingEdit } | null>(null);
+  const localDraft = useRef<{ windowId: number; at: Point; text: string } | null>(null);
   const updates = useRef<Promise<void>>(Promise.resolve());
+  const shotRef = useRef(shot);
+  const typingRef = useRef<HTMLInputElement>(null);
+  const expandButton = useRef<HTMLButtonElement>(null);
+  activeRef.current = active;
+  noticeRef.current = onNotice;
+  shotRef.current = shot;
 
-  const refresh = useCallback(async (preferred?: number) => {
-    if (refreshing.current) return;
-    refreshing.current = true;
+  const context = useCallback((): Context => ({ ...selection.current, activity: activity.current }), []);
+  const current = useCallback((target: Context) => mounted.current && activeRef.current &&
+    target.windowId === selection.current.windowId && target.revision === selection.current.revision && target.activity === activity.current, []);
+  const cancelPending = useCallback(() => {
+    const edit = pending.current?.edit;
+    if (pending.current) window.clearTimeout(pending.current.timer);
+    pending.current = null;
+    return edit;
+  }, []);
+  const report = useCallback((error: unknown) => {
+    const message = String(error);
+    setFeedback({ error: true, message });
+    noticeRef.current(`Computer: ${message}`);
+  }, []);
+  const completed = (result: BackgroundResult, fallback: string) => {
+    const warning = result.warning?.message || (result.backgroundVerified === false
+      ? "Desktop state changed during this action. Check the completed result before retrying." : "");
+    const message = result.message || fallback;
+    setFeedback({ error: false, warning: Boolean(warning), message: warning && !message.includes(warning) ? `${message} ${warning}` : message });
+  };
+  const select = useCallback((id: number | null) => {
+    cancelPending();
+    selection.current = { windowId: id, revision: selection.current.revision + 1 };
+    captureSequence.current += 1;
+    controlBusy.current = false;
+    captureError.current = "";
+    shotRef.current = null;
+    localDraft.current = null;
+    setWindowId(id);
+    setShot(null);
+    setEditor(null);
+    setTyping("");
+    setBusy(false);
+    setCapturing(false);
+    setFeedback(id === 0 ? { error: false, message: DESKTOP_VIEW_ONLY } : null);
+  }, [cancelPending]);
+
+  const refresh = useCallback(async (force = false, manual = false) => {
+    const target = context();
+    if (!current(target) || (!force && capturePending.current?.revision === target.revision)) return;
+    const sequence = ++captureSequence.current;
+    capturePending.current = { revision: target.revision, sequence };
+    const latest = () => current(target) && sequence === captureSequence.current;
+    if (manual) setCapturing(true);
     try {
       const listed = await api.desktopCommand<{ windows: api.DesktopWindow[] }>("list");
+      if (!latest()) return;
       setWindows(listed.windows);
-      const selected = preferred ?? windowId;
-      if (selected == null) { setShot(null); return; }
-      if (!listed.windows.some((item) => item.windowId === selected)) { setWindowId(null); setShot(null); return; }
-      setWindowId(selected);
-      setShot(await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: selected }));
-      errorShown.current = "";
+      if (target.windowId == null) return;
+      if (!listed.windows.some(item => item.windowId === target.windowId)) {
+        select(null);
+        setFeedback({ error: false, message: "The selected window closed. Choose another window." });
+        return;
+      }
+      const captured = await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: target.windowId });
+      if (!latest()) return;
+      if (captured.windowId !== target.windowId || captured.bounds.width <= 0 || captured.bounds.height <= 0) {
+        throw new Error("The selected window capture is unavailable. Refresh the capture or choose another window.");
+      }
+      setShot(previous => previous?.windowId === captured.windowId && previous.dataUrl === captured.dataUrl &&
+        previous.bounds.width === captured.bounds.width && previous.bounds.height === captured.bounds.height &&
+        previous.bounds.left === captured.bounds.left && previous.bounds.top === captured.bounds.top &&
+        (previous.origin?.x ?? 0) === (captured.origin?.x ?? 0) &&
+        (previous.origin?.y ?? 0) === (captured.origin?.y ?? 0) ? previous : captured);
+      captureError.current = "";
     } catch (error) {
+      if (!latest()) return;
       const message = String(error);
-      if (errorShown.current !== message) { onNotice(`Desktop: ${message}`); errorShown.current = message; }
-    } finally { refreshing.current = false; }
-  }, [windowId, onNotice]);
+      if (captureError.current !== message) { report(error); captureError.current = message; }
+    } finally {
+      if (capturePending.current?.sequence === sequence) capturePending.current = null;
+      if (latest()) setCapturing(false);
+    }
+  }, [context, current, report, select]);
 
   useEffect(() => {
-    if (!active) return;
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), 450);
-    return () => window.clearInterval(timer);
-  }, [refresh, active]);
-  useEffect(() => () => { if (pending.current != null) window.clearTimeout(pending.current); }, []);
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    if (!active) { setExpanded(false); setBusy(false); setCapturing(false); return; }
+    void refresh(true);
+    const timer = window.setInterval(() => void refresh(), 1200);
+    return () => {
+      window.clearInterval(timer);
+      cancelPending();
+      activity.current += 1;
+      captureSequence.current += 1;
+      capturePending.current = null;
+      controlBusy.current = false;
+    };
+  }, [active, refresh, cancelPending]);
+  useEffect(() => { onExpandedChange?.(expanded && active); }, [expanded, active, onExpandedChange]);
+  useEffect(() => {
+    if (!expanded || !active) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setExpanded(false);
+      expandButton.current?.focus();
+    };
+    document.addEventListener("keydown", escape, true);
+    return () => document.removeEventListener("keydown", escape, true);
+  }, [expanded, active]);
+  useEffect(() => { if (editor && active) typingRef.current?.focus(); }, [editor, active]);
 
-  const interact = async (at: Point) => {
-    if (windowId == null) return;
-    if (pending.current != null) window.clearTimeout(pending.current);
-    pending.current = null;
-    setBusy(true);
-    try {
-      if (windowId === 0) {
-        await api.desktopCommand("click", { windowId, ...at });
-      } else {
-        const result = await api.desktopCommand<Interaction>("interact", { windowId, ...at });
-        if (result.editable) {
-          setInputAt(at);
-          setNativeInput(false);
-          setTyping(result.value ?? "");
-          window.setTimeout(() => typingRef.current?.focus(), 0);
-        } else if (result.inputMode === "pointer") {
-          setInputAt(at);
-          setNativeInput(true);
-          setTyping("");
-          window.setTimeout(() => typingRef.current?.focus(), 0);
-        } else { setInputAt(null); setNativeInput(false); }
-      }
-      void refresh(windowId);
-    } catch (error) { onNotice(`Desktop: ${String(error)}`); }
-    finally { setBusy(false); }
+  const queueEdit = (edit: PendingEdit) => {
+    updates.current = updates.current.catch(() => {}).then(async () => {
+      if (!current(edit.context)) return;
+      const result = await api.desktopCommand<TextResult>("set_at", { windowId: edit.context.windowId, ...edit.at, text: edit.text, ...BACKGROUND_CONTROL });
+      if (current(edit.context) && (result.warning || result.backgroundVerified === false)) completed(result, "Text updated.");
+      if (current(edit.context) && localDraft.current?.windowId === edit.context.windowId &&
+        localDraft.current.at.x === edit.at.x && localDraft.current.at.y === edit.at.y && localDraft.current.text === edit.text) localDraft.current = null;
+    });
+    void updates.current.catch(error => { if (current(edit.context)) report(error); });
   };
-
   const edit = (text: string) => {
     setTyping(text);
-    if (pending.current != null) window.clearTimeout(pending.current);
-    if (windowId == null || !inputAt || nativeInput) return;
-    pending.current = window.setTimeout(() => {
-      updates.current = updates.current.catch(() => {}).then(async () => {
-        await api.desktopCommand("set_at", { windowId, ...inputAt, text });
-      });
-      void updates.current.catch((error) => onNotice(`Desktop: ${String(error)}`));
-    }, 130);
+    cancelPending();
+    if (!editor || !active || editor.windowId !== selection.current.windowId) return;
+    localDraft.current = { windowId: editor.windowId, at: editor.at, text };
+    const update = { context: context(), at: editor.at, text };
+    const timer = window.setTimeout(() => { pending.current = null; queueEdit(update); }, 180);
+    pending.current = { timer, edit: update };
   };
-
-  const submit = async () => {
-    if (windowId == null || !inputAt || busy) return;
-    if (pending.current != null) window.clearTimeout(pending.current);
-    pending.current = null;
+  const control = async <T,>(action: string, args: Record<string, unknown>, done: (result: T, target: Context) => void) => {
+    const target = context();
+    if (!current(target) || target.windowId == null || controlBusy.current) return;
+    if (target.windowId === 0) { setFeedback({ error: false, message: DESKTOP_VIEW_ONLY }); return; }
+    if (shotRef.current?.windowId !== target.windowId) return;
+    cancelPending();
+    const draft = localDraft.current;
+    if (draft?.windowId === target.windowId && action !== "commit_text") queueEdit({ context: target, at: draft.at, text: draft.text });
+    controlBusy.current = true;
     setBusy(true);
     try {
-      if (nativeInput) {
-        await api.desktopCommand("commit_text", { windowId, ...inputAt, text: typing });
-      } else {
-        await updates.current;
-        await api.desktopCommand("set_at", { windowId, ...inputAt, text: typing });
-        await api.desktopCommand("commit_enter", { windowId, ...inputAt });
+      const queued = updates.current;
+      try { await queued; }
+      catch (error) {
+        if (updates.current === queued) updates.current = Promise.resolve();
+        throw error;
       }
-      setInputAt(null);
-      setNativeInput(false);
-      void refresh(windowId);
-    } catch (error) { onNotice(`Desktop: ${String(error)}`); }
-    finally { setBusy(false); }
+      if (!current(target)) return;
+      const result = await api.desktopCommand<T>(action, { windowId: target.windowId, ...args, ...BACKGROUND_CONTROL });
+      if (!current(target)) return;
+      done(result, target);
+      void refresh(true);
+    } catch (error) { if (current(target)) report(error); }
+    finally { if (current(target)) { controlBusy.current = false; setBusy(false); } }
   };
-
-  const point = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!shot) return null;
+  const interact = (at: Point) => control<Interaction>("interact", at, (result, target) => {
+    if (result.editable) {
+      localDraft.current = null;
+      setEditor({ windowId: target.windowId!, at });
+      setTyping(result.value ?? "");
+      completed(result, "Text field selected. Apply text below, then click the app's submit button to submit.");
+    } else if (result.activated) {
+      setEditor(null);
+      completed(result, result.backgroundVerified === false ? "App control activated." : "App control activated in the background.");
+    } else {
+      setEditor(null);
+      throw new Error(result.message || "This control does not support background interaction. Select a supported app control.");
+    }
+  });
+  const applyText = () => {
+    if (!editor || editor.windowId !== selection.current.windowId) return;
+    const appliedText = typing;
+    return control<TextResult>("commit_text", { ...editor.at, text: appliedText }, result => {
+      if (!result.updated && !result.submitted) throw new Error(result.message || "Background text application could not be confirmed. Refresh the capture and try a supported text field.");
+      if (localDraft.current?.windowId === editor.windowId && localDraft.current.text === appliedText) localDraft.current = null;
+      completed(result, result.submitted ? "Text submitted." : "Text updated. Click the app's supported submit button to submit.");
+      if (result.submitted) setEditor(null);
+    });
+  };
+  const discardDraft = () => {
+    cancelPending();
+    selection.current = { ...selection.current, revision: selection.current.revision + 1 };
+    captureSequence.current += 1;
+    updates.current = Promise.resolve();
+    localDraft.current = null;
+    setEditor(null);
+    setTyping("");
+    setFeedback({ error: false, message: "Local draft discarded. Select a supported app control." });
+    void refresh(true);
+  };
+  const point = (event: MouseEvent<HTMLImageElement> | WheelEvent<HTMLImageElement>) => {
+    if (!shot || shot.windowId !== selection.current.windowId) return null;
     const rect = event.currentTarget.getBoundingClientRect();
-    return browserPoint(event.clientX, event.clientY, rect.left, rect.top, rect.width, rect.height, shot.bounds.width, shot.bounds.height);
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    const captured = browserPoint(event.clientX, event.clientY, rect.left, rect.top, rect.width, rect.height, shot.bounds.width, shot.bounds.height);
+    return { x: captured.x + (shot.origin?.x ?? 0), y: captured.y + (shot.origin?.y ?? 0) };
+  };
+  const scroll = (event: WheelEvent<HTMLImageElement>) => {
+    if (size === "actual" || event.deltaY === 0) return;
+    event.preventDefault();
+    const at = point(event);
+    if (!at) return;
+    void control<BackgroundResult & { scrolled?: boolean }>("scroll_at", { ...at, direction: event.deltaY < 0 ? "up" : "down" }, result => {
+      if (!result.scrolled) throw new Error(result.message || "This control does not expose background scrolling. Select a supported scroll area.");
+      completed(result, result.backgroundVerified === false ? "App scrolled." : "App scrolled in the background.");
+    });
   };
 
   const content = <>
-    <div className="browser-subbar"><select aria-label="Window" value={windowId ?? ""} onChange={(event) => { const value = event.target.value; const id = value === "" ? null : Number(value); setWindowId(id); setInputAt(null); setNativeInput(false); setShot(null); if (id != null) void refresh(id); }}><option value="">Select a window</option>{windows.map((item) => <option key={item.windowId} value={item.windowId}>{item.title}</option>)}</select><button title="Refresh window" onClick={() => void refresh()} disabled={busy}><RefreshCw size={15} /></button></div>
-    <div className="browser-stage">{shot ? <div className="browser-screen"><img src={shot.dataUrl} alt="Selected Windows app" draggable={false} onClick={(event) => { const at = point(event); if (at) void interact(at); }} /></div> : <div className="browser-empty">Select a window to view and control it</div>}</div>
-    <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={inputAt ? "Type here; Enter opens the app" : "Select a text field in the window"} value={typing} onChange={(event) => edit(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void submit(); } }} disabled={!inputAt} /><button title="Enter in selected app" disabled={!inputAt || busy} onClick={() => void submit()}><CornerDownLeft size={15} /><span>Enter</span></button></div>
+    <div className="desktop-toolbar" role="toolbar" aria-label="Computer view controls">
+      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><select aria-label="Window" value={windowId ?? ""} onChange={event => {
+        const id = event.target.value === "" ? null : Number(event.target.value);
+        select(id);
+        void refresh(true);
+      }}><option value="">Select a window</option>{windows.map(item => <option key={item.windowId} value={item.windowId}>{item.windowId === 0 ? `${item.title} (view only)` : item.title}</option>)}</select></div>
+      <button type="button" title="Refresh capture" aria-label="Refresh capture" disabled={capturing || !active} onClick={() => void refresh(true, true)}><RefreshCw size={15} className={capturing ? "desktop-refreshing" : undefined} aria-hidden="true" /></button>
+      <div className="desktop-size-controls" role="group" aria-label="Capture size">
+        <button type="button" title="Fit capture; the wheel scrolls supported app controls" aria-pressed={size === "fit"} onClick={() => setSize("fit")}>Fit</button>
+        <button type="button" title="Show actual size; scroll to pan the capture" aria-pressed={size === "actual"} onClick={() => setSize("actual")}>Actual size</button>
+      </div>
+      <button ref={expandButton} type="button" className="desktop-expand" title={expanded ? "Restore computer view (Escape)" : "Fill the OpenCore window"} aria-label={expanded ? "Restore computer view" : "Expand computer view"} aria-expanded={expanded} disabled={!active} onClick={() => setExpanded(value => !value)}>{expanded ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}<span>{expanded ? "Restore" : "Expand"}</span></button>
+    </div>
+    <div className="desktop-control-status"><ShieldCheck size={14} aria-hidden="true" /><strong>{windowId === 0 ? "View only" : "Background only"}</strong><span>{busy ? "Applying to app…" : expanded ? "Escape restores the panel" : "OpenCore stays in front"}</span></div>
+    <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img src={shot.dataUrl} alt="Selected Windows app" width={shot.bounds.width} height={shot.bounds.height} draggable={false} onClick={event => { const at = point(event); if (at) void interact(at); }} onWheel={scroll} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{windowId == null ? "Choose a window" : "Capturing selected window…"}</strong><p>View an app and use its supported controls in the background.</p></div>}</div>
+    {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : feedback.warning ? " desktop-feedback-warning" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}</div> : null}
+    <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || !active} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button></div>
   </>;
-  return embedded ? <section className="desktop-panel desktop-panel-embedded" aria-label="Windows desktop">{content}</section> : <FloatingWindow id="desktop" title="Desktop" icon={<AppWindow size={17} />} status={<span className="connected">Windows</span>} onClose={onClose} className="desktop-panel" ariaLabel="Windows desktop" initialWidth={790} initialHeight={720} minWidth={440} minHeight={320}>{content}</FloatingWindow>;
+  const className = `desktop-panel${expanded ? " desktop-panel-expanded" : ""}`;
+  return embedded ? <section className={`${className} desktop-panel-embedded`} aria-label="Windows desktop">{content}</section> : <FloatingWindow id="desktop" title="Computer" icon={<AppWindow size={17} />} status={<span className="connected">Background only</span>} onClose={onClose} className={className} ariaLabel="Windows desktop" initialWidth={790} initialHeight={720} minWidth={440} minHeight={320}>{content}</FloatingWindow>;
 }

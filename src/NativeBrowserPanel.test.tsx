@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 const { openFileDialog } = vi.hoisted(() => ({ openFileDialog: vi.fn() }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: openFileDialog }));
@@ -35,6 +35,46 @@ it("keeps a page opened by the model when the browser panel mounts", async () =>
   expect(command.mock.calls.some(([action]) => action === "open" || action === "navigate")).toBe(false);
 });
 
+it("does not open a browser from a stale status reply after the panel is hidden", async () => {
+  let resolveStatus!: (result: { open: boolean; url?: string }) => void;
+  const status = new Promise<{ open: boolean; url?: string }>(resolve => { resolveStatus = resolve; });
+  const command = vi.spyOn(api, "nativeBrowserCommand").mockImplementation(async action =>
+    (action === "status" ? status : { open: true, url: "https://example.com" }) as never);
+  const props = { onClose: () => {}, onNotice: () => {}, preview: null, onDownload: () => {},
+    width: 520, onWidthChange: () => {}, side: "right" as const, onSideChange: () => {},
+    snapPx: 0, onSnapChange: () => {}, embedded: true };
+  const { rerender } = render(<NativeBrowserPanel {...props} />);
+  await waitFor(() => expect(command).toHaveBeenCalledWith("status"));
+  rerender(<NativeBrowserPanel {...props} active={false} />);
+  command.mockClear();
+  await act(async () => { resolveStatus({ open: false }); await status; });
+  expect(command.mock.calls.some(([action]) => action === "open" || action === "show")).toBe(false);
+  expect(command).toHaveBeenCalledWith("hide");
+});
+
+it("hides an old browser whose opening finishes after another tab is selected", async () => {
+  let resolveOpen!: (result: { open: boolean; url: string }) => void;
+  const opened = new Promise<{ open: boolean; url: string }>(resolve => { resolveOpen = resolve; });
+  const command = vi.spyOn(api, "nativeBrowserCommand").mockImplementation(async (action, args = {}) => {
+    if (action === "status") return { open: Boolean(args.tabId), url: "https://example.com/current" } as never;
+    if (action === "open" && !args.tabId) return opened as never;
+    return { open: true, url: "https://example.com/current" } as never;
+  });
+  vi.stubGlobal("crypto", { randomUUID: () => "current-tab" });
+  render(<NativeBrowserPanel onClose={() => {}} onNotice={() => {}} preview={null}
+    onDownload={() => {}} width={520} onWidthChange={() => {}} side="right" onSideChange={() => {}}
+    snapPx={0} onSnapChange={() => {}} embedded />);
+  await waitFor(() => expect(command).toHaveBeenCalledWith("open", expect.any(Object)));
+  fireEvent.click(screen.getByRole("button", { name: "New web tab" }));
+  await waitFor(() => expect(screen.getByLabelText("Browser address")).toHaveValue("https://example.com/current"));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("show", { tabId: "current-tab" }));
+  command.mockClear();
+  await act(async () => { resolveOpen({ open: true, url: "https://example.com/stale" }); await opened; });
+  expect(command).toHaveBeenCalledWith("hide");
+  expect(command.mock.calls.some(([action, args]) => action === "show" && !args?.tabId)).toBe(false);
+  expect(screen.getByLabelText("Browser address")).toHaveValue("https://example.com/current");
+});
+
 it("opens and closes web tabs without replacing the other tab", async () => {
   const command = vi.spyOn(api, "nativeBrowserCommand").mockImplementation(async (action, args = {}) => {
     if (action === "status") return { open: !args.tabId, url: args.tabId ? undefined : "https://example.com" } as never;
@@ -54,6 +94,35 @@ it("opens and closes web tabs without replacing the other tab", async () => {
   expect(screen.queryByRole("tab", { name: "Web 2" })).not.toBeInTheDocument();
   expect(screen.getByRole("tab", { name: "Web 1" })).toBeInTheDocument();
   vi.unstubAllGlobals();
+});
+
+it.each(['poll', 'navigate'])("ignores a delayed old-tab %s URL after switching tabs", async (operation) => {
+  let resolveOld!: (result: {open: boolean; url: string}) => void;
+  const oldReply = new Promise<{open: boolean; url: string}>(resolve => { resolveOld = resolve; });
+  let polling = false;
+  let poll!: () => void;
+  const setInterval = window.setInterval.bind(window);
+  vi.spyOn(window, 'setInterval').mockImplementation((handler, delay, ...args) => {
+    if (delay === 1300 && typeof handler === 'function') poll = () => handler(...args);
+    return setInterval(handler, delay, ...args);
+  });
+  const command = vi.spyOn(api, 'nativeBrowserCommand').mockImplementation(async (action, args = {}) => {
+    if (!args.tabId && ((action === 'status' && polling) || action === 'navigate')) return oldReply as never;
+    return {open: true, url: args.tabId ? 'https://example.com/current' : 'https://example.com/original'} as never;
+  });
+  vi.stubGlobal('crypto', {randomUUID: () => 'new-tab'});
+  render(<NativeBrowserPanel onClose={() => {}} onNotice={() => {}} preview={null}
+    onDownload={() => {}} width={520} onWidthChange={() => {}} side="right" onSideChange={() => {}}
+    snapPx={0} onSnapChange={() => {}} embedded />);
+  await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/original'));
+  if (operation === 'poll') { polling = true; act(() => poll()); }
+  else fireEvent.click(screen.getByRole('button', {name: 'Go'}));
+  fireEvent.click(screen.getByRole('button', {name: 'New web tab'}));
+  await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/current'));
+  await act(async () => { resolveOld({open: true, url: 'https://example.com/stale'}); await oldReply; });
+  expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/current');
+  fireEvent.click(screen.getByRole('button', {name: 'Go'}));
+  expect(command).toHaveBeenCalledWith('navigate', {tabId: 'new-tab', url: 'https://example.com/current'});
 });
 
 it("opens selected files in their own closable tabs", async () => {
