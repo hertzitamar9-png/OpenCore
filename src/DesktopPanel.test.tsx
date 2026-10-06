@@ -89,6 +89,52 @@ it("reports unsupported background controls without retrying through a foregroun
   expect(command.mock.calls.filter(([action]) => action !== "list" && action !== "screenshot").map(([action]) => action)).toEqual(["interact"]);
 });
 
+it("preserves a completed activation and surfaces desktop-change warnings without inviting a retry", async () => {
+  const command = desktop();
+  const warning = "Desktop focus changed during this action. Check the completed result before retrying.";
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { activated: true, scrolled: true, backgroundVerified: false, warning: { message: warning } } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  expect((await screen.findByText(new RegExp(warning))).closest(".desktop-feedback")).toHaveClass("desktop-feedback-warning");
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(command.mock.calls.filter(([action]) => action === "interact")).toHaveLength(1);
+  fireEvent.wheel(image, { clientX: 220, clientY: 107.5, deltaY: -120 });
+  await waitFor(() => expect(command.mock.calls.filter(([action]) => action === "scroll_at")).toHaveLength(1));
+  expect(screen.getByText(new RegExp(warning))).toBeVisible();
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("shows successful text-application verification warnings while keeping the applied draft", async () => {
+  const command = desktop();
+  const warning = "Desktop cursor changed during this action. Check the completed result before retrying.";
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "interact") return { editable: true, value: "Existing note" } as never;
+    return { updated: true, submitted: false, backgroundVerified: false, warning: { message: warning } } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const input = screen.getByLabelText("Type in selected window");
+  await waitFor(() => expect(input).toBeEnabled());
+  fireEvent.change(input, { target: { value: "Applied note" } });
+  expect(await screen.findByText(new RegExp(warning))).toBeVisible();
+  expect(command.mock.calls.filter(([action]) => action === "set_at")).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "Apply text to selected window" }));
+  await waitFor(() => expect(command.mock.calls.filter(([action]) => action === "commit_text")).toHaveLength(1));
+  expect(screen.getByText(new RegExp(warning))).toBeVisible();
+  expect(input).toHaveValue("Applied note");
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
 it("does not replace the selected window with an older screenshot that finishes late", async () => {
   const command = desktop();
   let resolveOld!: (value: api.DesktopShot) => void;

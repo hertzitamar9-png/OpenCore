@@ -1,7 +1,7 @@
 //! Disposable native controls. These tests never operate installed applications.
 use super::{cursor_position, platform};
 use serde_json::{json, Value};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -14,6 +14,10 @@ static BUTTON_NOTIFICATION_SOURCE: AtomicUsize = AtomicUsize::new(0);
 static CANVAS_CLICKS: AtomicUsize = AtomicUsize::new(0);
 static TARGET_ACTIVATIONS: AtomicUsize = AtomicUsize::new(0);
 static TARGET_Z_CHANGES: AtomicUsize = AtomicUsize::new(0);
+static DELAY_BUTTON_HANDLER: AtomicBool = AtomicBool::new(false);
+static BUTTON_HANDLER_ENTERED: AtomicBool = AtomicBool::new(false);
+static INDEPENDENT_INPUT_COMPLETE: AtomicBool = AtomicBool::new(false);
+static BUTTON_HANDLER_SAW_INPUT: AtomicBool = AtomicBool::new(false);
 
 unsafe extern "system" fn target_proc(
     hwnd: HWND,
@@ -24,6 +28,19 @@ unsafe extern "system" fn target_proc(
     match message {
         WM_COMMAND if wparam.0 & 0xffff == 101 && wparam.0 >> 16 == 0 => {
             BUTTON_NOTIFICATION_SOURCE.store(lparam.0 as usize, Ordering::SeqCst);
+            if DELAY_BUTTON_HANDLER.swap(false, Ordering::SeqCst) {
+                BUTTON_HANDLER_ENTERED.store(true, Ordering::SeqCst);
+                let deadline = Instant::now() + Duration::from_millis(750);
+                while !INDEPENDENT_INPUT_COMPLETE.load(Ordering::SeqCst)
+                    && Instant::now() < deadline
+                {
+                    thread::sleep(Duration::from_millis(1));
+                }
+                BUTTON_HANDLER_SAW_INPUT.store(
+                    INDEPENDENT_INPUT_COMPLETE.load(Ordering::SeqCst),
+                    Ordering::SeqCst,
+                );
+            }
             BUTTON_CLICKS.fetch_add(1, Ordering::SeqCst);
             LRESULT(0)
         }
@@ -98,6 +115,10 @@ impl Fixture {
         CANVAS_CLICKS.store(0, Ordering::SeqCst);
         TARGET_ACTIVATIONS.store(0, Ordering::SeqCst);
         TARGET_Z_CHANGES.store(0, Ordering::SeqCst);
+        DELAY_BUTTON_HANDLER.store(false, Ordering::SeqCst);
+        BUTTON_HANDLER_ENTERED.store(false, Ordering::SeqCst);
+        INDEPENDENT_INPUT_COMPLETE.store(false, Ordering::SeqCst);
+        BUTTON_HANDLER_SAW_INPUT.store(false, Ordering::SeqCst);
         let (sender, receiver) = mpsc::sync_channel(1);
         let thread = thread::spawn(move || unsafe {
             let target = CreateWindowExW(
@@ -407,9 +428,37 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     edit["text"] = json!("background edit fixture result");
     let updated = platform::run("set_at", &edit).expect("background SetValue");
     assert_eq!(updated["updated"], true);
+    assert_eq!(updated["inputMode"], "window-message");
     assert_eq!(fixture.edit_text(), "background edit fixture result");
     fixture.assert_desktop_unchanged(
         "ValuePattern edit update",
+        foreground,
+        cursor,
+        activations,
+        z_changes,
+    );
+    fixture.assert_covered(&edit);
+
+    let edit_element_id = tree["elements"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|element| element["controlType"] == "Edit")
+        .expect("fixture edit must have an inspect elementId")["elementId"]
+        .clone();
+    let mut direct_edit = edit.clone();
+    direct_edit["elementId"] = edit_element_id;
+    direct_edit["text"] = json!("background direct value fixture result");
+    let direct_updated =
+        platform::run("set_value", &direct_edit).expect("occluded native edit direct set_value");
+    assert_eq!(direct_updated["updated"], true);
+    assert_eq!(direct_updated["inputMode"], "window-message");
+    assert_eq!(
+        fixture.edit_text(),
+        "background direct value fixture result"
+    );
+    fixture.assert_desktop_unchanged(
+        "direct native edit update",
         foreground,
         cursor,
         activations,
@@ -421,6 +470,7 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     let applied = platform::run("commit_text", &edit)
         .expect("background value apply without unsupported submission");
     assert_eq!(applied["updated"], true);
+    assert_eq!(applied["inputMode"], "window-message");
     assert_eq!(
         applied["submitted"], false,
         "ValuePattern does not prove submission"
@@ -440,6 +490,44 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
         activations,
         z_changes,
     );
+    fixture.assert_covered(&edit);
+
+    // WM_SETTEXT itself can replace read-only text, so the native path must
+    // enforce the control's state before sending the update notification.
+    const EM_SETREADONLY: u32 = 0x00cf;
+    assert_ne!(
+        unsafe { SendMessageW(hwnd(fixture.edit), EM_SETREADONLY, WPARAM(1), LPARAM(0)).0 },
+        0
+    );
+    direct_edit["text"] = json!("must not replace read-only fixture text");
+    assert!(platform::run("set_value", &direct_edit).is_err());
+    assert!(platform::run("set_at", &direct_edit).is_err());
+    assert!(platform::run("commit_text", &direct_edit).is_err());
+    assert_eq!(fixture.edit_text(), "background apply fixture result");
+    fixture.assert_desktop_unchanged(
+        "read-only native edit rejection",
+        foreground,
+        cursor,
+        activations,
+        z_changes,
+    );
+    unsafe {
+        SendMessageW(hwnd(fixture.edit), EM_SETREADONLY, WPARAM(0), LPARAM(0));
+        let _ =
+            windows::Win32::UI::Input::KeyboardAndMouse::EnableWindow(hwnd(fixture.edit), false);
+    }
+    assert!(platform::run("set_value", &direct_edit).is_err());
+    assert_eq!(fixture.edit_text(), "background apply fixture result");
+    fixture.assert_desktop_unchanged(
+        "disabled native edit rejection",
+        foreground,
+        cursor,
+        activations,
+        z_changes,
+    );
+    unsafe {
+        let _ = windows::Win32::UI::Input::KeyboardAndMouse::EnableWindow(hwnd(fixture.edit), true);
+    }
     fixture.assert_covered(&edit);
 
     let mut scroll = fixture.args(fixture.list);
@@ -498,4 +586,72 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
         "target must not be temporarily exposed or reordered"
     );
     println!("background native fixture: button invoked, text updated, list scrolled {}->{}, unsupported canvas/Enter rejected; foreground={:#x}, cursor=({}, {}), no target activation or z changes", before_scroll, after_scroll, foreground.0 as usize, cursor.0, cursor.1);
+
+    // Change desktop input from another thread only after the real notification
+    // handler begins. Its completed button outcome must survive the warning,
+    // and the background action must not restore the independent cursor input.
+    let cursor_before_delay = cursor_position().unwrap();
+    let (left, width) = unsafe {
+        (
+            GetSystemMetrics(SM_XVIRTUALSCREEN),
+            GetSystemMetrics(SM_CXVIRTUALSCREEN),
+        )
+    };
+    assert!(
+        width > 1,
+        "fixture needs a desktop wide enough for independent input"
+    );
+    let independent_cursor = (
+        if cursor_before_delay.0 < left + width - 1 {
+            cursor_before_delay.0 + 1
+        } else {
+            cursor_before_delay.0 - 1
+        },
+        cursor_before_delay.1,
+    );
+    DELAY_BUTTON_HANDLER.store(true, Ordering::SeqCst);
+    let independent_input = thread::spawn(move || {
+        wait_for("delayed button handler entry", || {
+            BUTTON_HANDLER_ENTERED.load(Ordering::SeqCst)
+        });
+        unsafe { SetCursorPos(independent_cursor.0, independent_cursor.1) }
+            .expect("independent fixture cursor input");
+        assert_eq!(cursor_position(), Some(independent_cursor));
+        INDEPENDENT_INPUT_COMPLETE.store(true, Ordering::SeqCst);
+    });
+    let completed = platform::run("interact", &button);
+    independent_input
+        .join()
+        .expect("independent fixture input thread");
+    let completed = completed
+        .expect("completed button activation must not become an error after independent input");
+    assert!(
+        BUTTON_HANDLER_SAW_INPUT.load(Ordering::SeqCst),
+        "independent input must occur before the successful handler returns"
+    );
+    assert_eq!(
+        BUTTON_CLICKS.load(Ordering::SeqCst),
+        3,
+        "the notification must execute once; a warning must not invite duplicate activation"
+    );
+    assert_eq!(completed["activated"], true);
+    assert_eq!(completed["inputMode"], "window-message");
+    assert_eq!(completed["backgroundVerified"], false);
+    assert_eq!(completed["warning"]["code"], "desktop_state_changed");
+    assert_eq!(completed["warning"]["cause"], "unknown");
+    assert_eq!(completed["warning"]["foregroundChanged"], false);
+    assert_eq!(completed["warning"]["cursorChanged"], true);
+    assert_eq!(completed["warning"]["verifyOutcomeBeforeRetry"], true);
+    assert!(completed["message"]
+        .as_str()
+        .unwrap()
+        .contains("Verify the outcome before retrying"));
+    fixture.assert_desktop_unchanged(
+        "completed action with independent input",
+        foreground,
+        independent_cursor,
+        activations,
+        z_changes,
+    );
+    fixture.assert_covered(&button);
 }

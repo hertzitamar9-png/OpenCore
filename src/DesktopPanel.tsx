@@ -15,9 +15,10 @@ type Props = {
 type Point = { x: number; y: number };
 type Context = { windowId: number | null; revision: number; activity: number };
 type Editor = { windowId: number; at: Point };
-type Interaction = { editable?: boolean; value?: string; activated?: boolean; inputMode?: string; message?: string };
-type TextResult = { updated?: boolean; submitted?: boolean; message?: string };
-type Feedback = { error: boolean; message: string };
+type BackgroundResult = { message?: string; backgroundVerified?: boolean; warning?: { message?: string } };
+type Interaction = BackgroundResult & { editable?: boolean; value?: string; activated?: boolean; inputMode?: string };
+type TextResult = BackgroundResult & { updated?: boolean; submitted?: boolean };
+type Feedback = { error: boolean; warning?: boolean; message: string };
 type PendingEdit = { context: Context; at: Point; text: string };
 const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false };
 const DESKTOP_VIEW_ONLY = "Entire desktop is view only. Select an app window to use background controls.";
@@ -66,6 +67,12 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     setFeedback({ error: true, message });
     noticeRef.current(`Computer: ${message}`);
   }, []);
+  const completed = (result: BackgroundResult, fallback: string) => {
+    const warning = result.warning?.message || (result.backgroundVerified === false
+      ? "Desktop state changed during this action. Check the completed result before retrying." : "");
+    const message = result.message || fallback;
+    setFeedback({ error: false, warning: Boolean(warning), message: warning && !message.includes(warning) ? `${message} ${warning}` : message });
+  };
   const select = useCallback((id: number | null) => {
     cancelPending();
     selection.current = { windowId: id, revision: selection.current.revision + 1 };
@@ -156,7 +163,8 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
   const queueEdit = (edit: PendingEdit) => {
     updates.current = updates.current.catch(() => {}).then(async () => {
       if (!current(edit.context)) return;
-      await api.desktopCommand("set_at", { windowId: edit.context.windowId, ...edit.at, text: edit.text, ...BACKGROUND_CONTROL });
+      const result = await api.desktopCommand<TextResult>("set_at", { windowId: edit.context.windowId, ...edit.at, text: edit.text, ...BACKGROUND_CONTROL });
+      if (current(edit.context) && (result.warning || result.backgroundVerified === false)) completed(result, "Text updated.");
       if (current(edit.context) && localDraft.current?.windowId === edit.context.windowId &&
         localDraft.current.at.x === edit.at.x && localDraft.current.at.y === edit.at.y && localDraft.current.text === edit.text) localDraft.current = null;
     });
@@ -201,10 +209,10 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
       localDraft.current = null;
       setEditor({ windowId: target.windowId!, at });
       setTyping(result.value ?? "");
-      setFeedback({ error: false, message: "Text field selected. Apply text below, then click the app's submit button to submit." });
+      completed(result, "Text field selected. Apply text below, then click the app's submit button to submit.");
     } else if (result.activated) {
       setEditor(null);
-      setFeedback({ error: false, message: result.message || "App control activated in the background." });
+      completed(result, result.backgroundVerified === false ? "App control activated." : "App control activated in the background.");
     } else {
       setEditor(null);
       throw new Error(result.message || "This control does not support background interaction. Select a supported app control.");
@@ -216,7 +224,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     return control<TextResult>("commit_text", { ...editor.at, text: appliedText }, result => {
       if (!result.updated && !result.submitted) throw new Error(result.message || "Background text application could not be confirmed. Refresh the capture and try a supported text field.");
       if (localDraft.current?.windowId === editor.windowId && localDraft.current.text === appliedText) localDraft.current = null;
-      setFeedback({ error: false, message: result.message || (result.submitted ? "Text submitted in the background." : "Text updated. Click the app's supported submit button to submit.") });
+      completed(result, result.submitted ? "Text submitted." : "Text updated. Click the app's supported submit button to submit.");
       if (result.submitted) setEditor(null);
     });
   };
@@ -243,9 +251,9 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     event.preventDefault();
     const at = point(event);
     if (!at) return;
-    void control<{ scrolled?: boolean; message?: string }>("scroll_at", { ...at, direction: event.deltaY < 0 ? "up" : "down" }, result => {
+    void control<BackgroundResult & { scrolled?: boolean }>("scroll_at", { ...at, direction: event.deltaY < 0 ? "up" : "down" }, result => {
       if (!result.scrolled) throw new Error(result.message || "This control does not expose background scrolling. Select a supported scroll area.");
-      setFeedback({ error: false, message: "App scrolled in the background." });
+      completed(result, result.backgroundVerified === false ? "App scrolled." : "App scrolled in the background.");
     });
   };
 
@@ -265,7 +273,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     </div>
     <div className="desktop-control-status"><ShieldCheck size={14} aria-hidden="true" /><strong>{windowId === 0 ? "View only" : "Background only"}</strong><span>{busy ? "Applying to app…" : expanded ? "Escape restores the panel" : "OpenCore stays in front"}</span></div>
     <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img src={shot.dataUrl} alt="Selected Windows app" width={shot.bounds.width} height={shot.bounds.height} draggable={false} onClick={event => { const at = point(event); if (at) void interact(at); }} onWheel={scroll} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{windowId == null ? "Choose a window" : "Capturing selected window…"}</strong><p>View an app and use its supported controls in the background.</p></div>}</div>
-    {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}</div> : null}
+    {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : feedback.warning ? " desktop-feedback-warning" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}</div> : null}
     <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || !active} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button></div>
   </>;
   const className = `desktop-panel${expanded ? " desktop-panel-expanded" : ""}`;

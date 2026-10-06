@@ -69,6 +69,7 @@
 .desktop-feedback button { min-height:27px; flex:none; padding:0 8px; border:1px solid #a46f5d; border-radius:5px; background:#3b2823; color:#f0cec0; font-size:10px; }
 .desktop-feedback button:focus-visible { outline:2px solid #edbfa9; outline-offset:2px; }
 .desktop-feedback-error { border-color:#875446; background:#281b19; color:#f0c5b8; }
+.desktop-feedback-warning { border-color:#806b3a; background:#242116; color:#e8d9ad; }
 .desktop-panel-embedded .desktop-inputbar { padding:9px; }
 .desktop-panel-embedded .desktop-inputbar input { min-width:0; }
 .desktop-panel .desktop-inputbar { flex:none; }
