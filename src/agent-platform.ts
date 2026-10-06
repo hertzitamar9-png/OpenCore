@@ -40,6 +40,12 @@ export interface PlatformConfig {
   appearance: AppearanceConfig;
 }
 export type PlatformConfigurationPatch = Omit<Partial<PlatformConfig>, "appearance"> & { appearance?: Partial<AppearanceConfig> };
+export type PlatformDraftField = Exclude<keyof PlatformConfig, "appearance"> | `appearance.${keyof AppearanceConfig}`;
+
+export function platformDraftField(configuration: PlatformConfig, field: PlatformDraftField): unknown {
+  return field.startsWith("appearance.") ? configuration.appearance[field.slice(11) as keyof AppearanceConfig]
+    : configuration[field as Exclude<keyof PlatformConfig, "appearance">];
+}
 
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 export function platformConfigurationChanges(before: PlatformConfig, after: PlatformConfig): PlatformConfigurationPatch {
@@ -57,8 +63,14 @@ export function platformConfigurationChanges(before: PlatformConfig, after: Plat
 
 // Source updates replace untouched fields while edits, including invalid drafts,
 // survive older acknowledgments and changes made by the agent's settings tools.
-export function reconcilePlatformDraft(draft: PlatformConfig, before: PlatformConfig, incoming: PlatformConfig): PlatformConfig {
+export function reconcilePlatformDraft(draft: PlatformConfig, before: PlatformConfig, incoming: PlatformConfig, edited?: ReadonlySet<PlatformDraftField>): PlatformConfig {
   const changes = platformConfigurationChanges(before, draft);
+  // An A -> B -> A edit can equal an older acknowledged source while its latest
+  // write is still queued. Explicit edit ownership outlives that coincidence.
+  for (const field of edited ?? []) {
+    if (field.startsWith("appearance.")) Object.assign(changes.appearance ??= {}, { [field.slice(11)]: platformDraftField(draft, field) });
+    else Object.assign(changes, { [field]: platformDraftField(draft, field) });
+  }
   return { ...incoming, ...changes, appearance: { ...incoming.appearance, ...changes.appearance } };
 }
 
@@ -311,8 +323,10 @@ export async function saveTestingLabProfiles(profiles: TestingLabProfile[]): Pro
   requireNative();
   const validated = parseTestingLabProfiles(JSON.stringify(profiles));
   return serializeSettingsSave("testing-lab", async () => {
-    const saved = await invoke("testing_lab_save_profiles", { profiles: validated });
-    return parseTestingLabProfiles(JSON.stringify(saved));
+    await invoke("testing_lab_save_profiles", { profiles: validated });
+    // A tool can update the target before the UI receives the save receipt.
+    // Read the current source under this queue, rather than normalize to an old receipt.
+    return parseTestingLabProfiles(JSON.stringify(await invoke("testing_lab_profiles")));
   });
 }
 export function executeTestingLabAction(args: TestingLabAction): Promise<unknown> {
@@ -421,5 +435,6 @@ export function usePlatformConfiguration() {
   // same result again after await could replace a newer native tool event.
   const save = useCallback(savePlatformConfiguration, []);
   const savePatch = useCallback(savePlatformConfigurationPatch, []);
-  return { configuration, loading, error, preview, reload, save, savePatch };
+  const getCurrentConfiguration = useCallback(() => current.current, []);
+  return { configuration, loading, error, preview, reload, save, savePatch, getCurrentConfiguration };
 }

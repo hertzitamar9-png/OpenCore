@@ -112,6 +112,33 @@ describe("AgentPlatformSettings", () => {
     await waitFor(() => expect(screen.getByRole("radio", { name: "No checks" })).toBeChecked());
   });
 
+  it("adopts a newer tool value when the latest submitted edit is acknowledged", async () => {
+    const original = bridge.invoke.getMockImplementation()!;
+    bridge.invoke.mockImplementation(async (command, args) => {
+      const result = await original(command, args);
+      if (command === "agent_platform_action" && args?.name === "app_control" && args?.args?.action === "set") {
+        stored = { ...stored, systemPrompt: "Newer instruction from the tool" };
+        bridge.handlers.get("opencore-agent-settings-changed")?.({ payload: stored });
+      }
+      return result;
+    });
+    render(<AgentPlatformSettings />);
+    const prompt = await screen.findByLabelText("Additional system instructions");
+    fireEvent.change(prompt, { target: { value: "Instruction from the settings panel" } });
+    await waitFor(() => expect(prompt).toHaveValue("Newer instruction from the tool"));
+    expect(screen.getByRole("status", { name: "Agent settings save status" })).toHaveTextContent("Saved");
+  });
+
+  it("releases a canceled draft so a later tool update remains visible", async () => {
+    render(<AgentPlatformSettings />);
+    const prompt = await screen.findByLabelText("Additional system instructions");
+    fireEvent.change(prompt, { target: { value: "Canceled instruction" } });
+    fireEvent.change(prompt, { target: { value: "" } });
+    stored = { ...stored, systemPrompt: "Instruction from the tool" };
+    act(() => bridge.handlers.get("opencore-agent-settings-changed")?.({ payload: stored }));
+    await waitFor(() => expect(prompt).toHaveValue("Instruction from the tool"));
+  });
+
   it("preserves newer instructions and invalid MCP drafts when an older save and tool update arrive", async () => {
     const original = bridge.invoke.getMockImplementation()!;
     let release!: () => void;
@@ -149,6 +176,39 @@ describe("AgentPlatformSettings", () => {
     expect(saved?.repairAttempts).toBe(3);
     expect(repairs).toHaveValue(null);
     expect(repairs).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("retains a newer revisited draft through older source acknowledgments and a final save failure", async () => {
+    const original = bridge.invoke.getMockImplementation()!;
+    const pending: { resolve: () => void; reject: (error: Error) => void }[] = [];
+    bridge.invoke.mockImplementation(async (command, args) => {
+      if (command === "agent_platform_action" && args?.name === "app_control" && args?.args?.action === "set") {
+        await new Promise<void>((resolve, reject) => pending.push({ resolve, reject }));
+      }
+      return original(command, args);
+    });
+    const { unmount } = render(<AgentPlatformSettings />);
+    const prompt = await screen.findByLabelText("Additional system instructions");
+    vi.useFakeTimers();
+    try {
+      for (const value of ["First instruction", "Middle instruction", "First instruction"]) {
+        fireEvent.change(prompt, { target: { value } });
+        await act(() => vi.advanceTimersByTimeAsync(450));
+      }
+      await act(async () => { pending[0].resolve(); await vi.advanceTimersByTimeAsync(0); });
+      await act(async () => { pending[1].resolve(); await vi.advanceTimersByTimeAsync(0); });
+      expect(stored.systemPrompt).toBe("Middle instruction");
+      expect(prompt).toHaveValue("First instruction");
+      expect(screen.getByRole("status", { name: "Agent settings save status" })).toHaveTextContent("Saving");
+      await act(async () => { pending[2].reject(new Error("Newest settings write failed")); await vi.advanceTimersByTimeAsync(0); });
+      expect(prompt).toHaveValue("First instruction");
+      expect(screen.getByRole("alert")).toHaveTextContent("Newest settings write failed");
+      expect(screen.getByRole("button", { name: "Retry saving settings" })).toBeEnabled();
+    } finally {
+      unmount();
+      for (let index = 0; index < pending.length; ++index) { pending[index].resolve(); await vi.advanceTimersByTimeAsync(0); }
+      vi.useRealTimers();
+    }
   });
 
   it("applies a valid theme immediately while preserving an invalid font draft", async () => {
@@ -211,6 +271,26 @@ describe("AgentPlatformSettings", () => {
     fireEvent.click(status);
     expect(await within(labPanel).findByText(/"deviceSerial": "emulator-5556"/, { selector: "pre" })).toBeVisible();
     expect(bridge.invoke).toHaveBeenCalledWith("testing_lab_action", { args: { action: "status", profileId: "pixel" } });
+  });
+
+  it("keeps a newer tool target when a testing-profile save returns an older receipt", async () => {
+    const original = bridge.invoke.getMockImplementation()!;
+    let profiles = [{ id: "pixel", label: "Android test", kind: "android", enabled: true, executable: "adb", deviceSerial: "emulator-5554" }];
+    bridge.invoke.mockImplementation(async (command, args) => {
+      if (command === "testing_lab_profiles") return profiles;
+      if (command === "testing_lab_save_profiles") {
+        const receipt = args.profiles;
+        profiles = [{ ...receipt[0], deviceSerial: "emulator-5558" }];
+        bridge.handlers.get("opencore-testing-profiles-changed")?.({ payload: profiles });
+        return receipt;
+      }
+      return original(command, args);
+    });
+    render(<AgentPlatformSettings />);
+    const editor = await screen.findByLabelText("Testing profiles JSON");
+    fireEvent.change(editor, { target: { value: JSON.stringify([{ ...profiles[0], deviceSerial: "emulator-5556" }]) } });
+    await waitFor(() => expect((editor as HTMLTextAreaElement).value).toContain("emulator-5558"));
+    expect(screen.getByRole("status", { name: "Testing profiles save status" })).toHaveTextContent("Saved");
   });
 
   it("lets the user open an actual captured screenshot from its device receipt", async () => {

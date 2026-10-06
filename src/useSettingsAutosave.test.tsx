@@ -67,6 +67,71 @@ it("keeps Saving visible until the newest queued edit is persisted", async () =>
   unmount();
 });
 
+it("acknowledges only the newest submitted write when edits revisit the same value", async () => {
+  vi.useFakeTimers();
+  const releases: (() => void)[] = [], normalized = vi.fn();
+  let persisted = 1;
+  const { result, rerender, unmount } = renderHook(({ value }) => useSettingsAutosave({
+    value, savedValue: 1, onSaved: normalized,
+    save: next => serializeSettingsSave("revisited-value-test", async () => {
+      await new Promise<void>(resolve => releases.push(resolve));
+      persisted = next;
+      return next;
+    }),
+  }), { initialProps: { value: 1 } });
+  try {
+    for (const value of [2, 3, 2]) {
+      rerender({ value });
+      await act(() => vi.advanceTimersByTimeAsync(450));
+    }
+    await act(async () => { releases[0](); await vi.advanceTimersByTimeAsync(0); });
+    expect(result.current.status).toBe("saving");
+    expect(normalized).not.toHaveBeenCalled();
+    await act(async () => { releases[1](); await vi.advanceTimersByTimeAsync(0); });
+    expect(persisted).toBe(3);
+    expect(result.current.status).toBe("saving");
+    expect(normalized).not.toHaveBeenCalled();
+    await act(async () => { releases[2](); await vi.advanceTimersByTimeAsync(0); });
+    expect(persisted).toBe(2);
+    expect(result.current.status).toBe("saved");
+    expect(normalized).toHaveBeenCalledOnce();
+    expect(normalized).toHaveBeenCalledWith(2, 2);
+  } finally {
+    unmount();
+    for (let index = 0; index < releases.length; ++index) { releases[index](); await vi.advanceTimersByTimeAsync(0); }
+  }
+});
+
+it("reports only the newest revisited-value failure after navigation", async () => {
+  vi.useFakeTimers();
+  const pending: { resolve: () => void; reject: (error: Error) => void }[] = [], reported = vi.fn();
+  window.addEventListener(SETTINGS_SAVE_ERROR_EVENT, reported);
+  const { rerender, unmount } = renderHook(({ value }) => useSettingsAutosave({
+    value, savedValue: 1,
+    save: next => serializeSettingsSave("revisited-navigation-failure-test", async () => {
+      await new Promise<void>((resolve, reject) => pending.push({ resolve, reject }));
+      return next;
+    }),
+  }), { initialProps: { value: 1 } });
+  try {
+    for (const value of [2, 3, 2]) {
+      rerender({ value });
+      await act(() => vi.advanceTimersByTimeAsync(450));
+    }
+    unmount();
+    await act(async () => { pending[0].reject(new Error("Old write failed")); await vi.advanceTimersByTimeAsync(0); });
+    expect(reported).not.toHaveBeenCalled();
+    await act(async () => { pending[1].resolve(); await vi.advanceTimersByTimeAsync(0); });
+    await act(async () => { pending[2].reject(new Error("Newest write failed")); await vi.advanceTimersByTimeAsync(0); });
+    expect(reported).toHaveBeenCalledOnce();
+    expect((reported.mock.calls[0][0] as CustomEvent).detail).toEqual({ error: "Newest write failed" });
+  } finally {
+    unmount();
+    for (let index = 0; index < pending.length; ++index) { pending[index].resolve(); await vi.advanceTimersByTimeAsync(0); }
+    window.removeEventListener(SETTINGS_SAVE_ERROR_EVENT, reported);
+  }
+});
+
 it("saves a return to the original value after an earlier write started", async () => {
   vi.useFakeTimers();
   let persisted = 1;

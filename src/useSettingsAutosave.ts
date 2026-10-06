@@ -42,6 +42,7 @@ export function useSettingsAutosave<T>({ value, savedValue, enabled = true, save
   const attempted = useRef<string | null>(null);
   const failed = useRef<string | null>(null);
   const writes = useRef(0);
+  const newestWrite = useRef(0);
   const latest = useRef({ value, key, savedKey, enabled, save, onSaved });
   latest.current = { value, key, savedKey, enabled, save, onSaved };
 
@@ -54,6 +55,7 @@ export function useSettingsAutosave<T>({ value, savedValue, enabled = true, save
     if (!current.enabled || current.value === null || current.key === attempted.current || current.key === failed.current
       || (current.key === current.savedKey && writes.current === 0)) return;
     const submitted = current.value, submittedKey = current.key;
+    const write = ++newestWrite.current;
     attempted.current = submittedKey;
     ++writes.current;
     if (mounted.current) setState({ status: "saving", error: "" });
@@ -63,12 +65,12 @@ export function useSettingsAutosave<T>({ value, savedValue, enabled = true, save
     try { operation = current.save(submitted); }
     catch (cause) { operation = Promise.reject(cause); }
     void operation.then(result => {
-      if (mounted.current) {
+      if (mounted.current && write === newestWrite.current) {
         latest.current.onSaved?.(result, submitted);
         if (latest.current.key === submittedKey) setState({ status: "saved", error: "" });
       }
     }).catch(cause => {
-      if (latest.current.key === submittedKey) {
+      if (write === newestWrite.current && latest.current.key === submittedKey) {
         failed.current = submittedKey;
         const error = cause instanceof Error ? cause.message : String(cause);
         if (mounted.current) setState({ status: "error", error });
@@ -103,5 +105,6 @@ export function useSettingsAutosave<T>({ value, savedValue, enabled = true, save
   }, [key, savedKey, enabled, delayMs, clearTimer, flush]);
 
   const retry = useCallback(() => { failed.current = null; attempted.current = null; flush(); }, [flush]);
-  return { ...state, retry, flush };
+  const hasPendingWrites = useCallback(() => writes.current > 0, []);
+  return { ...state, retry, flush, hasPendingWrites };
 }

@@ -227,13 +227,13 @@ async fn dropping_the_browser_releases_its_session_listener() {
         client.get(&opened.url).send().await.unwrap().status(),
         StatusCode::OK
     );
-    let port = reqwest::Url::parse(&opened.url).unwrap().port().unwrap();
+    let session = Arc::downgrade(browser.sessions.lock().await.values().next().unwrap());
     drop(browser);
+    // Axum holds the router's session until it drops the listener and drains connections.
+    // Windows can take over two seconds to report a refused TCP connect, so observe
+    // release of the serving owner directly instead of waiting for a network retry.
     tokio::time::timeout(std::time::Duration::from_secs(2), async {
-        while tokio::net::TcpStream::connect(("127.0.0.1", port))
-            .await
-            .is_ok()
-        {
+        while session.strong_count() != 0 {
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
     })

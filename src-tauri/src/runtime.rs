@@ -1253,7 +1253,7 @@ impl RuntimeManager {
                     } else if connector.id == "opencode" {
                         "OpenCore is available in OpenCode's /models picker. Launch opencode --model opencore/opencore; sync imports conversation history with original project folders.".into()
                     } else if connector.id == "hermes" {
-                        "OpenCore Local profile is installed. Launch hermes --profile opencore; sync imports the selected Hermes profile's history and original project folders.".into()
+                        format!("OpenCore Local profile is installed. {} Sync imports the selected Hermes profile's history and original project folders.", connector_config::hermes_launch_guidance(&root))
                     } else {
                         "Connected to OpenCore. Load ECHO 3T or the 1M extended profile and this client will use it.".into()
                     };
@@ -1303,6 +1303,33 @@ impl Drop for RuntimeManager {
 mod tests {
     use super::*;
     use std::net::TcpListener;
+
+    #[test]
+    fn hermes_connector_guidance_uses_selected_custom_home_after_observed_requests() {
+        let fixture = std::env::temp_dir().join(format!("opencore-hermes-guidance-{}", uuid::Uuid::new_v4()));
+        let root = fixture.join("Custom Hermes home");
+        let profile = root.join("profiles").join("coder");
+        std::fs::create_dir_all(&profile).unwrap();
+        let original = b"model:\n  default: original\n  provider: nous\n";
+        std::fs::write(profile.join("config.yaml"), original).unwrap();
+        let store = Arc::new(EventStore::open(&fixture.join("events.sqlite3")).unwrap());
+        let manager = RuntimeManager::new(store.clone());
+        manager.set_agent_connector_folder("hermes", &profile).unwrap();
+        let result = manager.configure_agent_connector("hermes", None).unwrap();
+        let guidance = connector_config::hermes_launch_guidance(&root);
+        assert!(result.contains(&guidance));
+        assert!(root.join("profiles").join("opencore").join("config.yaml").is_file());
+        for observed in [false, true] {
+            if observed { store.observe_client("Hermes Agent"); manager.invalidate_connectors_cache(); }
+            let connector = manager.connectors().into_iter().find(|connector| connector.id == "hermes").unwrap();
+            assert_eq!(connector.status, if observed { "observed" } else { "configured" });
+            assert!(connector.details.contains(&guidance));
+        }
+        assert_eq!(std::fs::read(profile.join("config.yaml")).unwrap(), original);
+        assert!(!root.join("active_profile").exists());
+        drop(manager); drop(store);
+        std::fs::remove_dir_all(fixture).unwrap();
+    }
 
     #[test]
     fn readiness_requires_http_200_not_just_an_open_port() {

@@ -1022,7 +1022,8 @@ describe("OpenCore", () => {
       removeItem: (key: string) => { values.delete(key); },
     } });
     const source = platform.defaultPlatformConfiguration();
-    const state = { configuration: source, loading: false, error: '', preview: true, reload: vi.fn(async () => {}), save: vi.fn(async () => source), savePatch: vi.fn(async () => source) };
+    let currentConfiguration = source;
+    const state = { configuration: source, loading: false, error: '', preview: true, reload: vi.fn(async () => {}), save: vi.fn(async () => source), savePatch: vi.fn(async () => source), getCurrentConfiguration: () => currentConfiguration };
     const sourceHook = vi.spyOn(platform, 'usePlatformConfiguration').mockReturnValue(state);
     const view = render(<App />);
     try {
@@ -1032,7 +1033,8 @@ describe("OpenCore", () => {
     expect(screen.getAllByLabelText('Text size (pixels)')).toHaveLength(1);
     fireEvent.change(screen.getByLabelText(/Terminal\/log text/), { target: { value: '16' } });
     fireEvent.click(screen.getByRole("button", { name: "Project skills enabled" }));
-    sourceHook.mockReturnValue({ ...state, configuration: { ...source, compactAtTokens: 250000, appearance: { ...source.appearance, fontSize: 17, density: 'compact' } } });
+    currentConfiguration = { ...source, compactAtTokens: 250000, appearance: { ...source.appearance, fontSize: 17, density: 'compact' } };
+    sourceHook.mockReturnValue({ ...state, configuration: currentConfiguration });
     view.rerender(<App />);
     await waitFor(() => expect(screen.getByText(/Effective trigger for the configured .* model window:/)).toHaveTextContent('209,716 tokens'));
     fireEvent.click(screen.getByRole("button", { name: "Conversations" }));
@@ -1083,6 +1085,34 @@ describe("OpenCore", () => {
       expect(clear).not.toHaveBeenCalled();
       expect(screen.queryByText("OpenCode copied history cleared")).not.toBeInTheDocument();
     } finally { snapshot.mockRestore(); configure.mockRestore(); sync.mockRestore(); clear.mockRestore(); confirm.mockRestore(); }
+  });
+
+  it("reports observed connector activity without claiming its profile is missing", async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, "snapshot").mockResolvedValue({ ...initial, connectors: [{
+      id: "hermes", name: "Hermes Agent", kind: "history", status: "observed", endpoint: "",
+      observable: true, details: "OpenCore profile is installed. Requests observed.", custom: false,
+    }] });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
+      const card = screen.getByRole("heading", { name: "Hermes Agent" }).closest("article") as HTMLElement;
+      expect(within(card).getByText("Local requests observed")).toBeVisible();
+      expect(within(card).queryByText("Profile not added")).not.toBeInTheDocument();
+    } finally { snapshot.mockRestore(); }
+  });
+
+  it("handles a failed Settings history sync without an unhandled action promise", async () => {
+    const sync = vi.spyOn(api, "startHistorySync").mockRejectedValue(new Error("Source history is unavailable"));
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Sync local histories" }));
+      await waitFor(() => expect(sync).toHaveBeenCalledWith("codex"));
+      expect(await screen.findByText("Error: Source history is unavailable")).toBeVisible();
+    } finally { sync.mockRestore(); }
   });
 
   it("opens the actual Windows model directory and reports Explorer failures", async () => {

@@ -63,6 +63,14 @@ fn hermes_root_for(home: &Path) -> PathBuf {
     home.to_path_buf()
 }
 
+/// The CLI resolves named profiles under its process's Hermes home, which may be custom.
+pub fn hermes_launch_guidance(source_profile: &Path) -> String {
+    format!(
+        "Launch hermes --profile opencore with HERMES_HOME set to \"{}\" for that process.",
+        hermes_root_for(source_profile).display()
+    )
+}
+
 /// Resolve the actual current profile without importing Hermes or initializing its home.
 pub fn hermes_profile_root() -> Result<PathBuf, String> {
     let home = env_path("HERMES_HOME").unwrap_or(default_hermes_root()?);
@@ -421,7 +429,7 @@ pub fn configure_hermes(
     let bytes =
         serde_yaml::to_string(&config).map_err(|_| "Cannot encode Hermes config".to_string())?;
     write_config(&destination, bytes.as_bytes())?;
-    Ok(format!("Hermes' OpenCore profile is installed at {}. Launch hermes --profile opencore to use OpenCore. Existing profiles and credentials are preserved; an existing OpenCore config is backed up.", destination.display()))
+    Ok(format!("Hermes' OpenCore profile is installed at {}. {} Existing profiles and credentials are preserved; an existing OpenCore config is backed up.", destination.display(), hermes_launch_guidance(&base)))
 }
 
 fn opencode_provider_enabled(config: &Value) -> bool {
@@ -598,6 +606,24 @@ mod tests {
         assert_eq!(super::super::GATEWAY, "http://127.0.0.1:8812");
     }
 
+    #[test]
+    fn hermes_launch_guidance_names_the_custom_root_for_root_and_named_profiles() {
+        let root = PathBuf::from("D:/Hermes homes/custom home");
+        let guidance = hermes_launch_guidance(&root);
+        assert!(guidance.contains(&root.display().to_string()));
+        assert!(guidance.contains("hermes --profile opencore"));
+        assert!(guidance.contains("HERMES_HOME"));
+        assert!(guidance.contains("for that process"));
+        for name in ["coder", "opencore"] {
+            assert_eq!(
+                hermes_launch_guidance(&root.join("profiles").join(name)),
+                guidance
+            );
+        }
+        assert!(!guidance.contains("HERMES_HOME="));
+        assert!(!guidance.contains("export "));
+    }
+
     struct ConfigFixture(PathBuf);
     impl ConfigFixture {
         fn new() -> Self {
@@ -625,7 +651,8 @@ mod tests {
         std::fs::write(fixture.0.join(".env"), b"source-credentials").unwrap();
         assert!(configure_hermes(32_768, Some(&fixture.0)).is_err());
         assert!(!fixture.0.join("profiles").exists());
-        configure_hermes(65_536, Some(&fixture.0)).unwrap();
+        let result = configure_hermes(65_536, Some(&fixture.0)).unwrap();
+        assert!(result.contains(&hermes_launch_guidance(&fixture.0)));
         let managed = fixture.0.join("profiles").join("opencore");
         let destination = managed.join("config.yaml");
         let first = std::fs::read(&destination).unwrap();

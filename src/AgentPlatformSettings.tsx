@@ -7,10 +7,10 @@ import {
   executePlatformAction, executeTestingLabAction, listPlatformPlugins, listPlatformSkills,
   loadTestingLabProfiles, parseMcpServers, parseTestingLabProfiles, saveTestingLabProfiles,
   searchPlatformActivity, searchPlatformMemories, usePlatformConfiguration,
-  platformConfigurationChanges, reconcilePlatformDraft, validPlatformDraft,
+  platformConfigurationChanges, platformDraftField, reconcilePlatformDraft, validPlatformDraft,
   validatePlatformConfiguration, VERIFICATION_OPTIONS,
   type AppearanceConfig, type McpServer, type PlatformActivity, type PlatformConfig,
-  type PlatformMemory, type PlatformPlugin, type PlatformSkill, type TestingLabAction, type TestingLabProfile,
+  type PlatformDraftField, type PlatformMemory, type PlatformPlugin, type PlatformSkill, type TestingLabAction, type TestingLabProfile,
 } from "./agent-platform";
 import { useSettingsAutosave } from "./useSettingsAutosave";
 import "./agent-platform.css";
@@ -50,6 +50,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
   callback.current = onConfigurationChange;
   const source = useRef<PlatformConfig | null>(null);
   const lastSubmitted = useRef<PlatformConfig | null>(null);
+  const edited = useRef(new Set<PlatformDraftField>());
 
   const [skills, setSkills] = useState<PlatformSkill[]>([]);
   const [plugins, setPlugins] = useState<PlatformPlugin[]>([]);
@@ -86,23 +87,25 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
   const [labBusy, setLabBusy] = useState<string | null>(null);
   const [labReceipts, setLabReceipts] = useState<Record<string, unknown>>({});
   const labSource = useRef(labProfiles);
+  const labEdited = useRef(false);
   labSource.current = labProfiles;
 
   useEffect(() => {
     if (!platform.configuration) return;
     const incoming = platform.configuration, before = source.current;
-    setDraft(current => current && before ? reconcilePlatformDraft(current, before, incoming) : incoming);
-    setSkillDirectoryText(text => !before || pretty(directoryLines(text)) === pretty(before.skillDirectories) ? incoming.skillDirectories.join("\n") : text);
-    setPluginDirectoryText(text => !before || pretty(directoryLines(text)) === pretty(before.pluginDirectories) ? incoming.pluginDirectories.join("\n") : text);
+    setDraft(current => current && before ? { ...reconcilePlatformDraft(current, before, incoming, edited.current), mcpServers: incoming.mcpServers } : incoming);
+    setSkillDirectoryText(text => !edited.current.has("skillDirectories") && (!before || pretty(directoryLines(text)) === pretty(before.skillDirectories)) ? incoming.skillDirectories.join("\n") : text);
+    setPluginDirectoryText(text => !edited.current.has("pluginDirectories") && (!before || pretty(directoryLines(text)) === pretty(before.pluginDirectories)) ? incoming.pluginDirectories.join("\n") : text);
     setMcpText(text => {
+      if (edited.current.has("mcpServers")) return text;
       if (!before) return pretty(incoming.mcpServers);
       try { return pretty(parseMcpServers(text)) === pretty(before.mcpServers) ? pretty(incoming.mcpServers) : text; }
       catch { return text; }
     });
     setNumberText(text => ({
-      repairAttempts: !before || (text.repairAttempts !== "" && Number(text.repairAttempts) === before.repairAttempts) ? String(incoming.repairAttempts) : text.repairAttempts,
-      compactAtTokens: !before || (text.compactAtTokens !== "" && Number(text.compactAtTokens) === before.compactAtTokens) ? String(incoming.compactAtTokens) : text.compactAtTokens,
-      fontSize: !before || (text.fontSize !== "" && Number(text.fontSize) === before.appearance.fontSize) ? String(incoming.appearance.fontSize) : text.fontSize,
+      repairAttempts: !edited.current.has("repairAttempts") && (!before || (text.repairAttempts !== "" && Number(text.repairAttempts) === before.repairAttempts)) ? String(incoming.repairAttempts) : text.repairAttempts,
+      compactAtTokens: !edited.current.has("compactAtTokens") && (!before || (text.compactAtTokens !== "" && Number(text.compactAtTokens) === before.compactAtTokens)) ? String(incoming.compactAtTokens) : text.compactAtTokens,
+      fontSize: !edited.current.has("appearance.fontSize") && (!before || (text.fontSize !== "" && Number(text.fontSize) === before.appearance.fontSize)) ? String(incoming.appearance.fontSize) : text.fontSize,
     }));
     source.current = incoming;
     callback.current?.(incoming);
@@ -152,6 +155,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
       try {
         const profiles = parseTestingLabProfiles(pretty(payload));
         setLabText(text => {
+          if (labEdited.current) return text;
           try { return pretty(parseTestingLabProfiles(text)) === pretty(labSource.current) ? pretty(profiles) : text; }
           catch { return text; }
         });
@@ -187,6 +191,30 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
       lastSubmitted.current = value;
       return platform.savePatch({ ...reverted, ...changed, appearance: { ...reverted.appearance, ...changed.appearance } });
     },
+    onSaved: (configuration, submitted) => {
+      const incoming = platform.getCurrentConfiguration() ?? configuration;
+      setDraft(current => {
+        if (!current) return incoming;
+        for (const field of edited.current) {
+          if (field !== "mcpServers" && pretty(platformDraftField(current, field)) === pretty(platformDraftField(submitted, field))) edited.current.delete(field);
+        }
+        return { ...reconcilePlatformDraft(current, submitted, incoming), mcpServers: incoming.mcpServers };
+      });
+      setSkillDirectoryText(text => pretty(directoryLines(text)) === pretty(submitted.skillDirectories) ? incoming.skillDirectories.join("\n") : text);
+      setPluginDirectoryText(text => pretty(directoryLines(text)) === pretty(submitted.pluginDirectories) ? incoming.pluginDirectories.join("\n") : text);
+      setMcpText(text => {
+        try {
+          if (pretty(parseMcpServers(text)) !== pretty(submitted.mcpServers)) return text;
+          edited.current.delete("mcpServers");
+          return pretty(incoming.mcpServers);
+        } catch { return text; }
+      });
+      setNumberText(text => ({
+        repairAttempts: text.repairAttempts !== "" && Number(text.repairAttempts) === submitted.repairAttempts ? String(incoming.repairAttempts) : text.repairAttempts,
+        compactAtTokens: text.compactAtTokens !== "" && Number(text.compactAtTokens) === submitted.compactAtTokens ? String(incoming.compactAtTokens) : text.compactAtTokens,
+        fontSize: text.fontSize !== "" && Number(text.fontSize) === submitted.appearance.fontSize ? String(incoming.appearance.fontSize) : text.fontSize,
+      }));
+    },
   });
   const labAutosave = useSettingsAutosave({
     value: lab.profiles, savedValue: labProfiles,
@@ -195,18 +223,40 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
     onSaved: (profiles, submitted) => {
       setLabProfiles(profiles);
       setLabText(text => {
-        try { return pretty(parseTestingLabProfiles(text)) === pretty(submitted) ? pretty(profiles) : text; }
+        try {
+          if (pretty(parseTestingLabProfiles(text)) !== pretty(submitted)) return text;
+          labEdited.current = false;
+          return pretty(profiles);
+        }
         catch { return text; }
       });
     },
   });
   const labSaving = labAutosave.status === "saving";
 
+  useEffect(() => {
+    if (!draft || !platform.configuration || autosave.hasPendingWrites()) return;
+    const current = { ...draft, mcpServers: mcp.servers ?? draft.mcpServers };
+    for (const field of edited.current) {
+      if (field === "mcpServers" && !mcp.servers) continue;
+      if (pretty(platformDraftField(current, field)) === pretty(platformDraftField(platform.configuration, field))) edited.current.delete(field);
+    }
+  }, [draft, platform.configuration, mcp.servers, autosave.status, autosave.hasPendingWrites]);
+  useEffect(() => {
+    if (!labAutosave.hasPendingWrites() && lab.profiles && pretty(lab.profiles) === pretty(labProfiles)) labEdited.current = false;
+  }, [lab.profiles, labProfiles, labAutosave.status, labAutosave.hasPendingWrites]);
+
   function update<K extends keyof PlatformConfig>(key: K, value: PlatformConfig[K]) {
+    if (key !== "appearance") edited.current.add(key as Exclude<keyof PlatformConfig, "appearance">);
     setDraft(previous => previous ? { ...previous, [key]: value } : previous);
   }
   function appearance(value: Partial<AppearanceConfig>) {
-    if (draft) update("appearance", { ...draft.appearance, ...value });
+    for (const field of Object.keys(value) as (keyof AppearanceConfig)[]) edited.current.add(`appearance.${field}`);
+    setDraft(previous => previous ? { ...previous, appearance: { ...previous.appearance, ...value } } : previous);
+  }
+  function editMcp(text: string) {
+    edited.current.add("mcpServers");
+    setMcpText(text);
   }
   async function readSkill(skill: PlatformSkill) {
     setReadingSkills(previous => [...previous, skill.id]); setSkillError("");
@@ -244,7 +294,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
       env: {}, url: kind === "http" ? "https://example.com/mcp" : null,
       bearerTokenEnvVar: kind === "http" ? "MCP_TOKEN" : null, startupTimeoutSec: 30, toolTimeoutSec: 600,
     };
-    setMcpText(pretty([...mcp.servers, server]));
+    editMcp(pretty([...mcp.servers, server]));
   }
   function addLab(kind: "virtualbox" | "android") {
     if (!lab.profiles) return;
@@ -253,6 +303,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
     const profile: TestingLabProfile = { id: `device-${count}`, label: kind === "virtualbox" ? "Existing Windows VM" : "Existing Android device",
       kind, enabled: false, executable: kind === "virtualbox" ? "VBoxManage" : "adb",
       ...(kind === "virtualbox" ? { vmName: "Your existing VM name", guestUser: "", passwordEnv: "" } : { deviceSerial: "", avdName: "", emulatorExecutable: "" }) };
+    labEdited.current = true;
     setLabText(pretty([...lab.profiles, profile])); setLabNotice("");
   }
   async function runLab(profile: TestingLabProfile, action: TestingLabAction["action"]) {
@@ -362,7 +413,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
       <Panel id="platform-mcp" title="MCP connections" icon={<Plug size={19} />} wide>
         <p className="platform-note">Configure stdio commands or HTTP endpoints. Each profile needs a unique id and name, an enabled switch, and timeouts. For stdio, env can include local secrets. For HTTP, bearerTokenEnvVar references an existing environment variable for authorization. Agent tools receive redacted configuration.</p>
         <div className="platform-toolbar"><button disabled={locked || Boolean(mcp.error)} onClick={() => addMcp("stdio")}>Add stdio example</button><button disabled={locked || Boolean(mcp.error)} onClick={() => addMcp("http")}>Add HTTP example</button><span>{mcp.servers?.filter(server => server.enabled).length ?? 0} enabled profiles</span></div>
-        <label className="platform-field" htmlFor="platform-mcp-json">MCP profiles JSON</label><textarea id="platform-mcp-json" className="platform-json-editor" rows={12} value={mcpText} spellCheck={false} disabled={locked} aria-invalid={Boolean(mcp.error)} aria-describedby="platform-mcp-help" onChange={event => setMcpText(event.target.value)} />
+        <label className="platform-field" htmlFor="platform-mcp-json">MCP profiles JSON</label><textarea id="platform-mcp-json" className="platform-json-editor" rows={12} value={mcpText} spellCheck={false} disabled={locked} aria-invalid={Boolean(mcp.error)} aria-describedby="platform-mcp-help" onChange={event => editMcp(event.target.value)} />
         {mcp.error && <p className="platform-error" role="alert">{mcp.error}</p>}
         <p id="platform-mcp-help" className="platform-note">Examples start disabled. Stdio uses command, args, and env; HTTP uses url and bearerTokenEnvVar with empty args/env. Valid edits save automatically. Local stdio secret values are visible in this editor.</p>
         {mcp.servers && <div className="platform-connection-summaries">{mcp.servers.map(server => <div key={server.id}><strong>{server.name}</strong><span>{server.command ? "stdio" : "HTTP"} · {server.enabled ? "Enabled" : "Disabled"}</span><code>{server.command ?? server.url}</code></div>)}</div>}
@@ -404,7 +455,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
       <Panel id="platform-testing" title="Testing lab" icon={<FlaskConical size={19} />} wide>
         <p className="platform-note">Connect existing VirtualBox PCs or Android devices and emulators. Set VBoxManage or adb in executable, and the VM name or device serial. An AVD also needs an installed emulator executable. VM images and mobile SDKs must already be installed.</p>
         <div className="platform-toolbar"><button disabled={labLoading || Boolean(lab.error)} onClick={() => addLab("virtualbox")}>Add VirtualBox example</button><button disabled={labLoading || Boolean(lab.error)} onClick={() => addLab("android")}>Add Android example</button></div>
-        <label className="platform-field" htmlFor="platform-lab-json">Testing profiles JSON</label><textarea id="platform-lab-json" className="platform-json-editor" rows={8} value={labText} spellCheck={false} disabled={labLoading} aria-invalid={Boolean(lab.error)} onChange={event => { setLabText(event.target.value); setLabNotice(""); }} />
+        <label className="platform-field" htmlFor="platform-lab-json">Testing profiles JSON</label><textarea id="platform-lab-json" className="platform-json-editor" rows={8} value={labText} spellCheck={false} disabled={labLoading} aria-invalid={Boolean(lab.error)} onChange={event => { labEdited.current = true; setLabText(event.target.value); setLabNotice(""); }} />
         {lab.error && <p className="platform-error" role="alert">{lab.error}</p>}{labError && <p className="platform-error" role="alert">{labError}</p>}
         {labAutosave.error && <p className="platform-error" role="alert">Could not save testing profiles: {labAutosave.error}</p>}
         <div className="platform-toolbar"><span role="status" aria-label="Testing profiles save status">{platform.preview ? "Preview · Changes are not persisted" : labLoading ? "Loading profiles…" : labAutosave.status === "saving" ? "Saving…" : labAutosave.status === "error" ? "Could not save profiles" : lab.error ? "Invalid profile edits need correction" : "Saved · Profiles save automatically"}</span>{labAutosave.status === "error" && <button onClick={labAutosave.retry}>Retry saving testing profiles</button>}{labDirty && <span>Device actions wait for valid profile edits to be saved.</span>}</div>
