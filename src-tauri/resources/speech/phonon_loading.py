@@ -3,6 +3,60 @@
 The installed reference decoder remains authoritative. FP32 preserves its values;
 BF16 explicitly rounds those values to the selected runtime precision.
 """
+from contextlib import contextmanager
+from threading import RLock
+
+_EXPANSION_LOCK = RLock()
+
+
+def optimized_five_value(blob, shape, *, trits, original, raw=None):
+    """Replace finite FP16 multiplication by {-1,0,+1} with exact bit operations.
+
+    Keep the publisher's trit decoder, byte layout, assertions and raw receipt.
+    Nonfinite learned levels use its original multiply to preserve NaN behavior.
+    """
+    import numpy as np
+    o, i = shape
+    rb = (i + 4) // 5
+    codes = trits(blob[:o * rb], o, i)
+    nzmask = codes != 1
+    nnz = int(nzmask.sum())
+    rbytes = (nnz + 7) // 8
+    off = o * rb
+    bits = np.unpackbits(np.frombuffer(blob[off:off + rbytes], dtype=np.uint8),
+                         bitorder='little')[:nnz].astype(bool)
+    off += rbytes
+    lo = np.frombuffer(blob[off:off + 2 * o], dtype=np.float16)
+    hi = np.frombuffer(blob[off + 2 * o:off + 4 * o], dtype=np.float16)
+    assert off + 4 * o == len(blob), (off + 4 * o, len(blob))
+    if not (np.isfinite(lo).all() and np.isfinite(hi).all()):
+        return original(blob, shape, raw)
+    is_hi = np.zeros((o, i), dtype=bool)
+    is_hi[nzmask] = bits
+    result = np.where(is_hi, hi.view(np.uint16)[:, None], lo.view(np.uint16)[:, None])
+    # Multiplication by -1 toggles the FP16 sign; +1 preserves every bit. For
+    # +0 * a finite level, retain the level's sign even when the result is zero.
+    np.bitwise_xor(result, (codes == 0) * np.uint16(0x8000), out=result)
+    np.bitwise_and(result, np.where(nzmask, np.uint16(0xffff), np.uint16(0x8000)), out=result)
+    if raw is not None:
+        raw.update(sign=codes.astype(np.int8) - 1, is_hi=is_hi, lo=lo.copy(), hi=hi.copy())
+    return result.view(np.float16)
+
+
+@contextmanager
+def accelerated_five_value_expansion(reader=None):
+    """Use the exact fast decoder only during the unchanged publisher read."""
+    if reader is None:
+        import fermion_container as reader
+    with _EXPANSION_LOCK:
+        original = reader._five_value
+        def accelerated(blob, shape, raw=None):
+            return optimized_five_value(blob, shape, trits=reader._trits, original=original, raw=raw)
+        reader._five_value = accelerated
+        try:
+            yield
+        finally:
+            reader._five_value = original
 
 
 def materialize_model(config, state, dtype):
@@ -41,7 +95,8 @@ def load_model(container, base_dir, dtype, progress):
     progress('building-model')
     config = ParakeetTDTConfig.from_pretrained(base_dir, local_files_only=True)
     progress('expanding-weights')
-    state, index = container_state_dict(container)
+    with accelerated_five_value_expansion():
+        state, index = container_state_dict(container)
     progress('applying-weights')
     model = materialize_model(config, state, dtype)
     receipt = {'params': sum(p.numel() for p in model.parameters()),
