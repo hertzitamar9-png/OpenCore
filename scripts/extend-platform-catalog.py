@@ -45,7 +45,7 @@ def add(id, label, repo, category, precision, note, *, names=None, prefix=None, 
     catalog['models']=[old for old in catalog['models'] if old['id']!=id]+[model]
 
 add('swift-27b','Swift 1.5 27B','ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF','text','IQ2_S',
-    'Optional IQ2_S download (9.26 GB). Quantized 27B checkpoint; quality and speed on this GPU are unverified. ECHO recall enabled; no vision projector.',
+    'Optional IQ2_S download (9.26 GB). Quantized 27B checkpoint; quality and speed depend on the selected hardware and are unverified. ECHO recall enabled; no vision projector.',
     names=['Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf'],backend='gguf',selectable=True,context=16384)
 add('dirk-27b','Dirk 27B Vision','peculiar-ragdoll/Dirk-Qwen3.8-27B-GGUF','text','IQ2_S + F16 vision',
     '9.61 GB weights plus 0.93 GB vision projector. Tight on 12 GB; CPU KV and bounded 8K attention. Includes MTP weights, but speculative decoding is not enabled. ECHO recall enabled.',
@@ -77,7 +77,7 @@ add('pixal3d','Pixal3D','TencentARC/Pixal3D','3d','Original BF16/FP16',
 add('triposr','TripoSR','stabilityai/TripoSR','3d','Original weights',
     'Fast image to 3D mesh. Requires TripoSR runtime and image preprocessing; weights are downloaded separately.',names=['config.yaml','model.ckpt','README.md'],setup='https://github.com/VAST-AI-Research/TripoSR')
 add('hy-motion-1','HY-Motion 1.0','tencent/HY-Motion-1.0','3d-animation','Original 1.0B checkpoint',
-    'Text to humanoid skeleton motion. Upstream minimum is 26 GB VRAM, exceeding this 12 GB GPU. Text encoders and SMPL assets are separate dependencies; not a universal mesh animator.',names=['HY-Motion-1.0/config.yml','HY-Motion-1.0/latest.ckpt','LICENSE.txt'],setup='https://github.com/Tencent-Hunyuan/HY-Motion-1.0')
+    'Text to humanoid skeleton motion. Upstream minimum is 26 GB VRAM. Text encoders and SMPL assets are separate dependencies; not a universal mesh animator.',names=['HY-Motion-1.0/config.yml','HY-Motion-1.0/latest.ckpt','LICENSE.txt'],setup='https://github.com/Tencent-Hunyuan/HY-Motion-1.0')
 add('hy-motion-1-lite','HY-Motion 1.0 Lite','tencent/HY-Motion-1.0','3d-animation','Original 0.46B checkpoint',
     'Smaller motion checkpoint from the same official repository. Published minimum is 24 GB VRAM; unverified CPU-offload optimizations are not enabled.',names=['HY-Motion-1.0-Lite/config.yml','HY-Motion-1.0-Lite/latest.ckpt','LICENSE.txt'],setup='https://github.com/Tencent-Hunyuan/HY-Motion-1.0')
 for id,label,category,url,note in [

@@ -83,6 +83,32 @@ describe("platform configuration boundaries", () => {
     expect(root.style.getPropertyValue("--bg")).toBe("#ffffff");
   });
 
+  it("applies a blue default accent and navy surfaces when opening the browser preview", async () => {
+    Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
+    const configuration = await loadPlatformConfiguration();
+    const root = document.createElement("div");
+    applyPlatformAppearance(configuration.appearance, root);
+    const channels = (name: string) => [1, 3, 5].map(offset => parseInt(root.style.getPropertyValue(name).slice(offset, offset + 2), 16));
+    const [accentRed, accentGreen, accentBlue] = channels("--platform-accent");
+    expect(accentBlue).toBeGreaterThan(accentGreen);
+    expect(accentGreen).toBeGreaterThan(accentRed);
+    const [surfaceRed, surfaceGreen, surfaceBlue] = channels("--surface");
+    expect(surfaceBlue).toBeGreaterThan(surfaceGreen);
+    expect(surfaceGreen).toBeGreaterThan(surfaceRed);
+    expect(root.dataset.platformTheme).toBe("dark");
+  });
+
+  it("retains the light palette and a custom accent when switching back to dark mode", () => {
+    const root = document.createElement("div");
+    const appearance = { ...defaultPlatformConfiguration().appearance, accentColor: "#bd4937" };
+    applyPlatformAppearance({ ...appearance, theme: "light" }, root);
+    expect(root.style.getPropertyValue("--surface")).toBe("#ffffff");
+    expect(root.style.getPropertyValue("--platform-accent")).toBe("#bd4937");
+    applyPlatformAppearance({ ...appearance, theme: "dark" }, root);
+    expect(root.dataset.platformTheme).toBe("dark");
+    expect(root.style.getPropertyValue("--platform-accent")).toBe("#bd4937");
+  });
+
   it("keeps button text legible for a light or dark custom accent", () => {
     const root = document.createElement("div");
     applyPlatformAppearance({ ...defaultPlatformConfiguration().appearance, accentColor: "#ffffff" }, root);

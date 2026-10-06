@@ -7,7 +7,7 @@
 .section-heading strong { color:var(--theme-ink,#e9eef3); font-size:14px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .section-heading button { padding:0; width:30px; min-height:30px; border-color:transparent; background:transparent; color:var(--theme-muted,#abb7c3); }
 .section-header-actions { flex:none; }
-.section-header .workspace-access { min-height:31px; padding:0 10px; font-size:12px; background:var(--theme-panel,#1c222a); border-color:var(--theme-border,#46525e); }
+.section-header .workspace-access { width:34px; min-height:31px; padding:0; background:var(--theme-panel,#1c222a); border-color:var(--theme-border,#46525e); }
 .section-header .workspace-access[aria-expanded="true"] { color:var(--theme-ink,#e7f4ff); border-color:var(--theme-border,#718899); background:var(--theme-panel,#293540); }
 .section-workspace-stage { display:flex; min-width:0; min-height:0; overflow:hidden; }
 .section-main { flex:1 1 auto; min-width:0; min-height:0; overflow:hidden; container: main-section / inline-size; }
@@ -31,6 +31,10 @@
 .unified-workspace-header > svg { color:var(--theme-muted,#b6c8d7); }
 .unified-workspace-header strong { font-size:13px; flex:1; font-weight:650; }
 .unified-workspace-header button { min-height:29px; width:29px; padding:0; color:var(--theme-muted,#b2c1ce); background:transparent; border-color:transparent; }
+.unified-workspace > .workspace-snap-control { height:auto; display:grid; grid-template-columns:auto minmax(0,1fr) 36px; gap:9px; padding:12px; }
+.unified-workspace > .workspace-snap-control input { min-width:0; width:100%; accent-color:var(--platform-accent,var(--blue)); }
+.unified-workspace > .workspace-snap-control strong { text-align:right; }
+.unified-workspace > .workspace-snap-control p { grid-column:1 / -1; margin:0; font-size:11px; line-height:1.5; }
 .unified-workspace-tabs { min-height:42px; flex:none; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; padding:5px 7px 0; background:var(--theme-canvas,#11171e); border-bottom:1px solid var(--theme-border,#38444f); }
 .unified-workspace-tabs > button { min-width:0; min-height:35px; padding:0 4px; border-radius:7px 7px 0 0; border:1px solid transparent; border-bottom:0; background:transparent; color:var(--theme-muted,#a5b3bf); font-size:11px; gap:5px; white-space:nowrap; }
 .unified-workspace-tabs > button[aria-selected="true"] { background:var(--theme-panel,#232d37); border-color:var(--theme-accent-border,#526575); color:var(--theme-ink,#eff6fc); }

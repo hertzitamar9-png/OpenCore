@@ -1,22 +1,15 @@
-name: Codex harness validation
+name: Check Windows native changes
 
 on:
-  push:
-    branches:
-      - 'codex/**'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
-concurrency:
-  group: codex-harness-validation-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  windows:
+  native:
     runs-on: windows-latest
-    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,6 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
@@ -45,18 +41,14 @@ jobs:
         run: ./scripts/build-desktop-focus-guard.ps1
       - name: Install JavaScript dependencies
         run: npm ci
-      - name: Prepare packaged Node runtime for integration fixtures
-        run: node scripts/prepare-claude-connector.mjs
-      - name: Prepare pinned OpenAI Codex app-server runtime
-        run: node scripts/prepare-codex-harness.mjs
-      - name: Probe packaged app-server schema
-        run: node scripts/test-codex-app-server-schema.mjs
-      - name: Test app-server inference, tools, cancellation, and resume
-        run: node scripts/test-codex-agent-runtime.mjs
-      - name: Test frontend and integration suites
-        run: npm test
-      - name: Test Rust libraries with MSVC
-        id: rust-tests
+      - name: Prepare bundled connector runtimes
+        run: |
+          node scripts/prepare-claude-connector.mjs
+          node scripts/prepare-codex-harness.mjs
+      - name: Test studio cancellation and worker bounds
+        run: python -m unittest discover -s src-tauri/resources/studio -p "test*.py"
+      - name: Test Windows native library and disposable desktop fixtures
+        id: native-tests
         working-directory: src-tauri
         shell: pwsh
         run: |
@@ -66,34 +58,14 @@ jobs:
           cargo --config $runnerConfig test --lib 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'opencore-native-tests.log')
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Preserve native assertion diagnostics before cache operations
-        if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
+        if: ${{ failure() && steps.native-tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: native-assertion-diagnostics
           path: ${{ runner.temp }}/opencore-native-tests.log
           retention-days: 7
-      - name: Diagnose a failed Windows test executable
-        if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
-        shell: powershell
-        run: ./scripts/windows-loader-diagnostics.ps1
-      - name: Preserve resolved native dependency lock
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: native-cargo-lock
-          path: src-tauri/Cargo.lock
-          retention-days: 7
-      - name: Preserve Windows loader diagnostics
-        if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-loader-diagnostics
-          path: artifacts/windows-loader/
-          retention-days: 7
-      - name: Build Windows app executable without packaging or publishing
-        run: npx tauri build --no-bundle
-      - name: Save compiled native dependencies for diagnostic retries
-        if: ${{ always() && steps.desktop-guard.outcome == 'success' && steps.rust-tests.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true' }}
+      - name: Save compiled native dependencies
+        if: ${{ always() && steps.desktop-guard.outcome == 'success' && steps.native-tests.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: |

@@ -165,8 +165,10 @@ it("reports a failed write without an endless retry and allows an explicit retry
   rerender({ value: 2 });
   expect(writes).toBe(1);
   act(() => result.current.retry());
-  await waitFor(() => expect(persisted).toBe(2));
-  expect(result.current.status).toBe("saved");
+  await waitFor(() => {
+    expect(persisted).toBe(2);
+    expect(result.current.status).toBe("saved");
+  });
   unmount();
 });
 

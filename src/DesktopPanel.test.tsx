@@ -109,9 +109,9 @@ it("maps screenshot clicks to the selected window and requires background contro
   imageBounds(image);
   fireEvent.click(image, { clientX: 340, clientY: 175 });
   await waitFor(() => expect(screen.getByLabelText("Type in selected window")).toHaveValue("Existing note"));
-  expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 480, y: 270, backgroundOnly: true, allowForegroundFallback: false });
+  expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 480, y: 270, backgroundOnly: true, allowForegroundFallback: false, manualControl: true });
   fireEvent.change(screen.getByLabelText("Type in selected window"), { target: { value: "New note" } });
-  await waitFor(() => expect(command).toHaveBeenCalledWith("set_at", { windowId: 10, x: 480, y: 270, text: "New note", backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("set_at", { windowId: 10, x: 480, y: 270, text: "New note", backgroundOnly: true, allowForegroundFallback: false, manualControl: true }));
   expect(command.mock.calls.some(([action]) => action === "click" || action === "focus")).toBe(false);
 });
 
@@ -139,7 +139,7 @@ it("preserves the draft when native text application cannot submit the control",
   await screen.findByText(/Text updated.*Activate a supported submit button/);
   expect(input).toHaveValue("Keep this draft");
   expect(input).toBeEnabled();
-  expect(command).toHaveBeenCalledWith("commit_text", { windowId: 10, x: 480, y: 270, text: "Keep this draft", backgroundOnly: true, allowForegroundFallback: false });
+  expect(command).toHaveBeenCalledWith("commit_text", { windowId: 10, x: 480, y: 270, text: "Keep this draft", backgroundOnly: true, allowForegroundFallback: false, manualControl: true });
   expect(command.mock.calls.some(([action]) => action === "commit_enter")).toBe(false);
 });
 
@@ -220,7 +220,7 @@ it("does not replace the selected window with an older screenshot that finishes 
   const picker = await screen.findByLabelText("Window");
   await waitFor(() => expect(picker.querySelector('option[value="10"]')).not.toBeNull());
   fireEvent.change(picker, { target: { value: "10" } });
-  await waitFor(() => expect(command).toHaveBeenCalledWith("screenshot", { windowId: 10 }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("screenshot", { windowId: 10, backgroundOnly: true, allowForegroundFallback: false, manualControl: true }));
   fireEvent.change(picker, { target: { value: "20" } });
   await waitFor(() => expect(screen.getByAltText("Selected Windows app")).toHaveAttribute("src", "data:image/png;base64,Yg=="));
   await act(async () => { resolveOld(screenshot(10)); await oldShot; });
@@ -298,7 +298,7 @@ it("maps wheel scrolling to the app capture with strict background arguments", a
   const image = await selectWindow();
   imageBounds(image);
   fireEvent.wheel(image, { clientX: 220, clientY: 107.5, deltaY: -120 });
-  await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", { windowId: 10, x: 240, y: 135, direction: "up", backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", { windowId: 10, x: 240, y: 135, direction: "up", backgroundOnly: true, allowForegroundFallback: false, manualControl: true }));
 });
 
 it("adds the capture crop origin to clicks and wheel actions, including a refreshed origin", async () => {
@@ -313,17 +313,17 @@ it("adds the capture crop origin to clicks and wheel actions, including a refres
   const image = await selectWindow();
   imageBounds(image);
   fireEvent.click(image, { clientX: 340, clientY: 175 });
-  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 488, y: 277, backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 488, y: 277, backgroundOnly: true, allowForegroundFallback: false, manualControl: true }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Refresh capture" })).toBeEnabled());
   fireEvent.wheel(image, { clientX: 220, clientY: 107.5, deltaY: -120 });
-  await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", { windowId: 10, x: 248, y: 142, direction: "up", backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", { windowId: 10, x: 248, y: 142, direction: "up", backgroundOnly: true, allowForegroundFallback: false, manualControl: true }));
   await waitFor(() => expect(screen.getByRole("button", { name: "Refresh capture" })).toBeEnabled());
   origin = { x: 0, y: 0 };
   const capturesBeforeRefresh = command.mock.calls.filter(([action]) => action === "screenshot").length;
   fireEvent.click(screen.getByRole("button", { name: "Refresh capture" }));
   await waitFor(() => expect(command.mock.calls.filter(([action]) => action === "screenshot").length).toBeGreaterThan(capturesBeforeRefresh));
   fireEvent.click(image, { clientX: 340, clientY: 175 });
-  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 480, y: 270, backgroundOnly: true, allowForegroundFallback: false }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", { windowId: 10, x: 480, y: 270, backgroundOnly: true, allowForegroundFallback: false, manualControl: true }));
 });
 
 it("does not enable text input for an unconfirmed pointer fallback response", async () => {
@@ -339,6 +339,48 @@ it("does not enable text input for an unconfirmed pointer fallback response", as
   fireEvent.click(image, { clientX: 340, clientY: 175 });
   expect(await screen.findByRole("alert")).toHaveTextContent(/does not support background interaction/);
   expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
+});
+
+it.each([
+  { activated: true, inputMode: "pointer" },
+  { editable: true, value: "Foreground field", inputMode: "keyboard" },
+])("rejects confirmed foreground input from a background control response: $inputMode", async result => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return result as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  expect(await screen.findByRole("alert")).toHaveTextContent(/foreground input.*disabled/i);
+  expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
+  expect(command.mock.calls.filter(([action]) => action === "interact")).toHaveLength(1);
+});
+
+it("keeps an unapplied draft and blocks activation when a text response reports no update", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "interact") return { editable: true, value: "Existing note", inputMode: "accessibility" } as never;
+    return { updated: false, submitted: false, message: "This field does not support background text updates." } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow();
+  imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const input = screen.getByLabelText("Type in selected window");
+  await waitFor(() => expect(input).toBeEnabled());
+  fireEvent.change(input, { target: { value: "Keep this unapplied text" } });
+  expect(await screen.findByRole("alert")).toHaveTextContent(/does not support background text updates/);
+  expect(input).toHaveValue("Keep this unapplied text");
+  expect(screen.getByRole("button", { name: "Discard local draft" })).toBeVisible();
+  fireEvent.click(image, { clientX: 550, clientY: 250 });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply text to selected window" })).toBeEnabled());
+  expect(command.mock.calls.filter(([action]) => action === "interact")).toHaveLength(1);
 });
 
 it("holds app activation after a failed text update until the local draft is discarded", async () => {
@@ -395,5 +437,5 @@ it("applies a preserved local draft before activating an app control after reope
   fireEvent.click(image, { clientX: 550, clientY: 250 });
   await act(async () => { await Promise.resolve(); });
   expect(order).toEqual(["set_at", "interact"]);
-  expect(command).toHaveBeenCalledWith("set_at", { windowId: 10, x: 480, y: 270, text: "Preserved local draft", backgroundOnly: true, allowForegroundFallback: false });
+  expect(command).toHaveBeenCalledWith("set_at", { windowId: 10, x: 480, y: 270, text: "Preserved local draft", backgroundOnly: true, allowForegroundFallback: false, manualControl: true });
 });

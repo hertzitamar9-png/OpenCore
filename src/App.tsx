@@ -33,6 +33,7 @@ import {
   Network,
   Play,
   PanelLeft,
+  PanelRight,
   Pin,
   PinOff,
   RefreshCw,
@@ -570,11 +571,13 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   const [openArchiveId, setOpenArchiveId] = useState<string | null>(null);
   const [archivePages, setArchivePages] = useState<ArchivePageRef[]>([]);
   const [archiveEvents, setArchiveEvents] = useState<ArchiveEvent[]>([]);
+  const [archiveEventsBusy, setArchiveEventsBusy] = useState(false);
   const [generalEvents, setGeneralEvents] = useState<ArchiveEvent[] | null>(null);
   const [archiveEventsMore, setArchiveEventsMore] = useState(false);
   const [memoryCategory, setMemoryCategory] = useState("all");
   const [archivePageText, setArchivePageText] = useState<Record<string, string>>({});
-  const [archivePageBusy, setArchivePageBusy] = useState<string | null>(null);
+  const [archivePageBusy, setArchivePageBusy] = useState<Record<string, boolean>>({});
+  const [archivePageError, setArchivePageError] = useState<Record<string, string>>({});
   const [archiveHasMore, setArchiveHasMore] = useState(false);
   const archiveRequest = useRef(0);
   const archiveReader = useRef<HTMLElement | null>(null);
@@ -736,28 +739,30 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   };
 
   const archivePageKey = (page: ArchivePageRef) => `${page.archiveFile}:${page.pageId}`;
-  const readArchiveText = async (page: ArchivePageRef) => {
+  const readArchiveText = async (page: ArchivePageRef, request = archiveRequest.current) => {
+    if (request !== archiveRequest.current) return;
     const key = archivePageKey(page);
-    setArchivePageBusy(key);
+    setArchivePageBusy((current) => ({ ...current, [key]: true }));
+    setArchivePageError((current) => { const next = { ...current }; delete next[key]; return next; });
     try {
       const content = await api.readArchivePage(page.archiveFile, page.pageId);
-      setArchivePageText((current) => ({ ...current, [key]: content }));
-    } catch (error) { onNotice(String(error)); }
-    finally { setArchivePageBusy(null); }
+      if (request === archiveRequest.current) setArchivePageText((current) => ({ ...current, [key]: content }));
+    } catch (error) {
+      if (request === archiveRequest.current) setArchivePageError((current) => ({ ...current, [key]: String(error) }));
+    } finally {
+      if (request === archiveRequest.current) setArchivePageBusy((current) => { const next = { ...current }; delete next[key]; return next; });
+    }
   };
   const fillArchivePages = async (pages: ArchivePageRef[], request: number) => {
-    for (let offset = 0; offset < pages.length; offset += 4) {
-      const batch = pages.slice(offset, offset + 4);
-      const results = await Promise.allSettled(batch.map((page) => api.readArchivePage(page.archiveFile, page.pageId)));
-      if (request !== archiveRequest.current) return;
-      const texts: Record<string, string> = {};
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") texts[archivePageKey(batch[index])] = result.value;
-      });
-      setArchivePageText((current) => ({ ...current, ...texts }));
-      const failed = results.find((result) => result.status === "rejected");
-      if (failed?.status === "rejected") onNotice(`Could not open an archive page: ${String(failed.reason)}`);
-    }
+    await Promise.all(pages.slice(0, 4).map((page) => readArchiveText(page, request)));
+  };
+  const closeArchive = () => {
+    archiveRequest.current += 1;
+    setOpenArchiveId(null);
+    setMemoryBusy(false);
+    setArchiveEventsBusy(false);
+    setArchivePageBusy({});
+    setArchivePageError({});
   };
   const openArchive = async (conversationId: string) => {
     const request = ++archiveRequest.current;
@@ -769,18 +774,27 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     setArchivePages([]);
     setArchiveEvents([]);
     setArchiveEventsMore(false);
+    setArchiveEventsBusy(true);
     setArchivePageText({});
+    setArchivePageBusy({});
+    setArchivePageError({});
+    setArchiveHasMore(false);
     setMemoryBusy(true);
+    void api.listArchiveEvents(conversationId, 0, 100).then((events) => {
+      if (request !== archiveRequest.current) return;
+      setArchiveEvents(events);
+      setArchiveEventsMore(events.length === 100);
+    }).catch((error) => {
+      if (request === archiveRequest.current) onNotice(`Could not open archive activity: ${String(error)}`);
+    }).finally(() => { if (request === archiveRequest.current) setArchiveEventsBusy(false); });
     try {
-      const [pages, events] = await Promise.all([api.listArchivePages(conversationId, 0, 40), api.listArchiveEvents(conversationId, 0, 100)]);
+      const pages = await api.listArchivePages(conversationId, 0, 40);
       if (request !== archiveRequest.current) return;
       setArchivePages(pages);
       setArchiveHasMore(pages.length === 40);
-      setArchiveEvents(events);
-      setArchiveEventsMore(events.length === 100);
       window.setTimeout(() => { if (request === archiveRequest.current) archiveReader.current?.scrollIntoView?.({ behavior: "smooth", block: "start" }); }, 0);
-      await fillArchivePages(pages, request);
-    } catch (error) { onNotice(String(error)); }
+      void fillArchivePages(pages, request);
+    } catch (error) { if (request === archiveRequest.current) onNotice(String(error)); }
     finally { if (request === archiveRequest.current) setMemoryBusy(false); }
   };
   const openGeneralArchive = async () => {
@@ -789,11 +803,14 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     setMemoryScope("all");
     setMemoryCategory("all");
     setGeneralEvents(null);
+    setArchiveEventsBusy(false);
+    setArchivePageBusy({});
+    setArchivePageError({});
     setMemoryBusy(true);
     try {
       const events = await api.listArchiveEvents("*", 0, 50);
       if (request === archiveRequest.current) setGeneralEvents(events);
-    } catch (error) { onNotice(`Could not open general ECHO activity: ${String(error)}`); }
+    } catch (error) { if (request === archiveRequest.current) onNotice(`Could not open general ECHO activity: ${String(error)}`); }
     finally { if (request === archiveRequest.current) setMemoryBusy(false); }
   };
   const loadMoreArchivePages = async () => {
@@ -805,20 +822,21 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
       if (request !== archiveRequest.current) return;
       setArchivePages((current) => [...current, ...pages]);
       setArchiveHasMore(pages.length === 40);
-      await fillArchivePages(pages, request);
-    } catch (error) { onNotice(String(error)); }
+    } catch (error) { if (request === archiveRequest.current) onNotice(String(error)); }
     finally { if (request === archiveRequest.current) setMemoryBusy(false); }
   };
 
   const loadMoreArchiveEvents = async () => {
-    if (!openArchiveId || memoryBusy) return;
-    setMemoryBusy(true);
+    if (!openArchiveId || archiveEventsBusy) return;
+    const request = archiveRequest.current;
+    setArchiveEventsBusy(true);
     try {
       const events = await api.listArchiveEvents(openArchiveId, archiveEvents.length, 100);
+      if (request !== archiveRequest.current) return;
       setArchiveEvents((current) => [...current, ...events]);
       setArchiveEventsMore(events.length === 100);
-    } catch (error) { onNotice(String(error)); }
-    finally { setMemoryBusy(false); }
+    } catch (error) { if (request === archiveRequest.current) onNotice(String(error)); }
+    finally { if (request === archiveRequest.current) setArchiveEventsBusy(false); }
   };
 
   const memoryAction = async (action: "trim" | "compact") => {
@@ -911,7 +929,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     <div className="memory-layout">
       <section>
         <h2>Search archive</h2>
-        <label className="memory-scope-label">Scope<select aria-label="Memory scope" value={memoryScope} onChange={(event) => { const next = event.target.value; setMemoryScope(next); setMemoryHits([]); setMemorySearched(false); if (next.startsWith("chat:")) void openArchive(next.slice(5)); else { archiveRequest.current += 1; setOpenArchiveId(null); setMemoryBusy(false); } }}>
+        <label className="memory-scope-label">Scope<select aria-label="Memory scope" value={memoryScope} onChange={(event) => { const next = event.target.value; setMemoryScope(next); setMemoryHits([]); setMemorySearched(false); if (next.startsWith("chat:")) void openArchive(next.slice(5)); else closeArchive(); }}>
           <option value="all">All ECHO memory</option>
           {snapshot.projects.map((project) => <option key={project.id} value={`project:${project.id}`}>Project · {project.name}</option>)}
           {snapshot.conversations.map((conversation) => <option key={conversation.id} value={`chat:${conversation.id}`}>Chat · {conversation.title}</option>)}
@@ -940,15 +958,23 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
     </div>
     {generalEvents ? <section className="archive-reader" aria-label="General ECHO archive"><div className="archive-reader-heading"><div><h2>General ECHO activity</h2><span>Latest 50 exact events across all archives · select a conversation above to open its full history</span></div><button onClick={() => setGeneralEvents(null)}>Close archive</button></div><div className="archive-event-list">{generalEvents.map((event) => <ArchiveEventCard key={event.eventId} event={event} onNotice={onNotice} />)}</div></section> : null}
     {openArchiveId ? <section ref={archiveReader} className="archive-reader" aria-label="Open archive">
-      <div className="archive-reader-heading"><div><h2>{snapshot.conversations.find((item) => item.id === openArchiveId)?.title || openArchiveId}</h2><span>{archivePages.length.toLocaleString()} of {(archiveOverview?.conversations.find((item) => item.conversationId === openArchiveId)?.pages || archivePages.length).toLocaleString()} pages · exact source</span></div><button onClick={() => { archiveRequest.current += 1; setOpenArchiveId(null); setMemoryBusy(false); }}>Close archive</button></div>
+      <div className="archive-reader-heading"><div><h2>{snapshot.conversations.find((item) => item.id === openArchiveId)?.title || openArchiveId}</h2><span role="status" aria-label="Archive reading status">{archivePages.length.toLocaleString()} of {(archiveOverview?.conversations.find((item) => item.conversationId === openArchiveId)?.pages || archivePages.length).toLocaleString()} pages listed · {archivePages.filter(page => archivePageText[archivePageKey(page)] !== undefined).length.toLocaleString()} read · {archivePages.filter(page => archivePageBusy[archivePageKey(page)]).length.toLocaleString()} opening</span></div><button onClick={closeArchive}>Close archive</button></div>
       <h3 className="archive-section-title">Activity, tools, files, and images</h3>
-      {archiveEvents.length ? <div className="archive-event-list">{archiveEvents.map((event) => <ArchiveEventCard key={event.eventId} event={event} onNotice={onNotice} />)}</div> : <p className="archive-legacy-note">This archive has exact transcript pages but no indexed activity yet. Use “Index imported chats” to rebuild its tool and file records from available conversation history.</p>}
-      {archiveEventsMore ? <button className="archive-load-more" onClick={() => void loadMoreArchiveEvents()} disabled={memoryBusy}>Load more activity</button> : null}
+      {archiveEvents.length ? <div className="archive-event-list">{archiveEvents.map((event) => <ArchiveEventCard key={event.eventId} event={event} onNotice={onNotice} />)}</div> : archiveEventsBusy ? <p className="archive-legacy-note" role="status">Reading archive activity…</p> : <p className="archive-legacy-note">This archive has exact transcript pages but no indexed activity yet. Use “Index activity and files” to rebuild its tool and file records from available conversation history.</p>}
+      {archiveEventsMore ? <button className="archive-load-more" onClick={() => void loadMoreArchiveEvents()} disabled={archiveEventsBusy}>{archiveEventsBusy ? "Loading activity…" : "Load more activity"}</button> : null}
       <h3 className="archive-section-title">Exact transcript pages</h3>
-      {archivePages.length === 0 ? <p>{memoryBusy ? "Opening archive…" : "No pages in this archive."}</p> : archivePages.map((page, index) => <article className="archive-reader-page" key={`${page.archiveFile}:${page.pageId}`}>
-        <div><strong>Page {index + 1}</strong><small>Bytes {page.offsetStart.toLocaleString()}–{page.offsetEnd.toLocaleString()}</small><button onClick={() => void readArchiveText(page)} disabled={archivePageBusy === archivePageKey(page)}>{archivePageText[archivePageKey(page)] !== undefined ? "Reload" : archivePageBusy === archivePageKey(page) ? "Opening…" : "Open page"}</button></div>
-        {archivePageText[archivePageKey(page)] !== undefined ? <pre>{archivePageText[archivePageKey(page)]}</pre> : <p className="archive-page-loading">{memoryBusy ? "Opening exact text…" : "Open page to retry."}</p>}
-      </article>)}
+      <p className="archive-legacy-note">The first four pages open automatically. Select Open page to read any other exact page. Each read verifies its source hash.</p>
+      {archivePages.length === 0 ? <p>{memoryBusy ? "Opening archive…" : "No pages in this archive."}</p> : archivePages.map((page, index) => {
+        const key = archivePageKey(page);
+        const opening = archivePageBusy[key];
+        const text = archivePageText[key];
+        const error = archivePageError[key];
+        return <article className="archive-reader-page" key={key}>
+          <div><strong>Page {index + 1}</strong><small>Bytes {page.offsetStart.toLocaleString()}–{page.offsetEnd.toLocaleString()}</small><button onClick={() => void readArchiveText(page)} disabled={opening}>{opening ? "Opening…" : error ? "Retry page" : text !== undefined ? "Reload" : "Open page"}</button></div>
+          {error ? <p className="archive-page-loading" role="alert">Could not read this exact page: {error}. Select Retry page to try again.</p> : null}
+          {text !== undefined ? <pre>{text}</pre> : !error ? <p className="archive-page-loading">{opening ? "Reading and verifying exact text…" : "Exact text is available on demand. Select Open page to read it."}</p> : null}
+        </article>;
+      })}
       {archiveHasMore ? <button className="archive-load-more" onClick={() => void loadMoreArchivePages()} disabled={memoryBusy}>{memoryBusy ? "Loading…" : "Load more pages"}</button> : null}
     </section> : null}
     {memoryPreview ? <FloatingWindow id="memory-page" title={memoryPreview.title} icon={<Archive size={17} />} className="memory-page-preview" onClose={() => setMemoryPreview(null)} place="center" initialWidth={760} initialHeight={620} minWidth={390} minHeight={260} ariaLabel="Exact ECHO archive page"><pre>{memoryPreview.content}</pre></FloatingWindow> : null}
@@ -1252,15 +1278,15 @@ export default function App() {
     void listen<{source?: string} | null>('opencore-open-native-browser', ({payload}) => { if (!disposed && payload?.source === 'agent') openWorkspace('browser'); }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
     return () => { disposed = true; stop?.(); };
   }, [openWorkspace]);
-  useEffect(() => { void api.listStudioJobs().then(jobs => { for (const job of jobs) studioJobs.current.set(job.id, job.status); setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status))); }).catch(() => {}); }, []);
+  useEffect(() => { void api.listStudioJobs().then(jobs => { for (const job of jobs) studioJobs.current.set(job.id, job.progress?.cleanupPending ? 'stopping' : job.status); setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing','stopping'].includes(status))); }).catch(() => {}); }, []);
   useEffect(() => {
     let disposed = false;
     let stop: (() => void) | undefined;
     const announced = new Set<string>();
     void listen<api.StudioJob>("opencore-studio-job", ({payload}) => {
       if (disposed) return;
-      studioJobs.current.set(payload.id, payload.status);
-      setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing'].includes(status)));
+      studioJobs.current.set(payload.id, payload.progress?.cleanupPending ? 'stopping' : payload.status);
+      setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing','stopping'].includes(status)));
       if (!['completed','failed','cancelled'].includes(payload.status)) return;
       const conversation = payload.request?.conversationId;
       if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
@@ -1609,7 +1635,7 @@ export default function App() {
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
-      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><Files size={16} /><span>Workspace</span></button></div></header>
+      <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
       <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
     </div>
     <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />

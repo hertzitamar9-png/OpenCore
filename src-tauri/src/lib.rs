@@ -26,7 +26,10 @@ mod compat;
 mod computer_ops;
 #[cfg(windows)]
 mod desktop_capture;
+#[cfg(windows)]
+mod desktop_focus_guard;
 mod desktop_policy;
+pub mod desktop_helper;
 mod connector_config;
 mod gateway;
 mod file_browser;
@@ -158,7 +161,7 @@ fn set_computer_focus_mode(keep_user_window_in_front: bool) {
 async fn vision_frame(window_id: i64) -> Result<vision::Frame, String> {
     tokio::task::spawn_blocking(move || {
         let frame = desktop_capture::frame_for_window(window_id as isize)?;
-        let origin = desktop_capture::frame_origin(window_id as isize);
+        let origin = desktop_capture::frame_origin(window_id as isize)?;
         Ok(vision::Frame { data_url: frame.data_url, width: frame.width, height: frame.height, origin })
     }).await.map_err(|error| error.to_string())?
 }

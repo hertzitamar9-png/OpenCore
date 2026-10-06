@@ -4,6 +4,11 @@
 use base64::Engine;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
+use windows::Win32::Foundation::{HWND, RECT};
+use windows::Win32::UI::HiDpi::{
+    SetThreadDpiAwarenessContext, DPI_AWARENESS_CONTEXT,
+    DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2,
+};
 use windows_capture::capture::{CaptureControl, Context, GraphicsCaptureApiHandler};
 use windows_capture::frame::Frame;
 use windows_capture::graphics_capture_api::InternalCaptureControl;
@@ -65,22 +70,68 @@ struct Session {
 
 static SESSION: OnceLock<Mutex<Option<Session>>> = OnceLock::new();
 
+/// Win32 rectangles and window placement must use the compositor's physical
+/// pixels, regardless of the calling worker or main thread's current DPI mode.
+/// Restore the caller's context on every exit; never change process DPI mode.
+pub(crate) struct PhysicalDpiScope(DPI_AWARENESS_CONTEXT);
+
+impl PhysicalDpiScope {
+    pub(crate) fn new() -> Result<Self, String> {
+        let previous = unsafe {
+            SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
+        };
+        if previous.0.is_null() {
+            return Err("Windows could not establish physical desktop coordinates. No desktop input was sent.".into());
+        }
+        Ok(Self(previous))
+    }
+}
+
+impl Drop for PhysicalDpiScope {
+    fn drop(&mut self) {
+        unsafe { SetThreadDpiAwarenessContext(self.0); }
+    }
+}
+
+pub(crate) fn physical_window_rect(window_id: isize) -> Result<RECT, String> {
+    use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
+    let _dpi = PhysicalDpiScope::new()?;
+    let mut rect = RECT::default();
+    unsafe { GetWindowRect(HWND(window_id as *mut std::ffi::c_void), &mut rect) }
+        .map_err(|error| format!("Cannot read the selected window's physical bounds: {error}"))?;
+    if rect.right <= rect.left || rect.bottom <= rect.top {
+        return Err("The selected window has no available physical bounds.".into());
+    }
+    Ok(rect)
+}
+
+/// DWM reports the visible frame in physical screen pixels and excludes the
+/// invisible resize edges included by GetWindowRect and UI Automation.
+pub(crate) fn visible_window_rect(window_id: isize) -> Result<RECT, String> {
+    use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
+    let mut rect = RECT::default();
+    unsafe {
+        DwmGetWindowAttribute(HWND(window_id as *mut std::ffi::c_void),
+            DWMWA_EXTENDED_FRAME_BOUNDS, (&mut rect as *mut RECT).cast(),
+            std::mem::size_of::<RECT>() as u32)
+    }.map_err(|error| format!("Cannot read the selected window's visible frame: {error}"))?;
+    if rect.right <= rect.left || rect.bottom <= rect.top {
+        return Err("The selected window has no available visible frame.".into());
+    }
+    Ok(rect)
+}
+
+fn origin_from_bounds(outer: RECT, visible: RECT) -> (i64, i64) {
+    (i64::from(visible.left) - i64::from(outer.left),
+     i64::from(visible.top) - i64::from(outer.top))
+}
+
 /// Where the captured image's top-left pixel sits in the window rectangle that click
 /// coordinates use. Windows 10 and 11 give normal windows an invisible resize border
 /// (7-8 px) that GetWindowRect and UI Automation include but the compositor capture
 /// does not, so image coordinates must be shifted by this origin before clicking.
-pub(crate) fn frame_origin(window_id: isize) -> (i64, i64) {
-    use windows::Win32::Foundation::{HWND, RECT};
-    use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
-    use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
-    let hwnd = HWND(window_id as *mut std::ffi::c_void);
-    let (mut outer, mut visible) = (RECT::default(), RECT::default());
-    let found = unsafe {
-        GetWindowRect(hwnd, &mut outer).is_ok()
-            && DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, (&mut visible as *mut RECT).cast(),
-                                     std::mem::size_of::<RECT>() as u32).is_ok()
-    };
-    if found { (i64::from(visible.left - outer.left), i64::from(visible.top - outer.top)) } else { (0, 0) }
+pub(crate) fn frame_origin(window_id: isize) -> Result<(i64, i64), String> {
+    Ok(origin_from_bounds(physical_window_rect(window_id)?, visible_window_rect(window_id)?))
 }
 
 pub(crate) fn stop_capture() {
@@ -125,4 +176,21 @@ fn capture_frame(window_id: isize) -> Result<CapturedFrame, String> {
         std::thread::sleep(Duration::from_millis(50));
     }
     Err("The selected window has not produced a frame yet. Keep it open and try Refresh.".into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use windows::Win32::Foundation::RECT;
+
+    #[test]
+    fn capture_origin_is_the_physical_crop_offset_without_dpi_scaling() {
+        let outer = RECT { left: -1932, top: 132, right: -468, bottom: 984 };
+        let visible = RECT { left: -1920, top: 132, right: -480, bottom: 972 };
+        assert_eq!(origin_from_bounds(outer, visible), (12, 0));
+        let outer = RECT { left: 148, top: 92, right: 1088, bottom: 732 };
+        let visible = RECT { left: 158, top: 92, right: 1078, bottom: 722 };
+        assert_eq!(origin_from_bounds(outer, visible), (10, 0));
+        assert_eq!(origin_from_bounds(visible, visible), (0, 0));
+    }
 }

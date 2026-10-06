@@ -5,6 +5,14 @@ import * as api from './api';
 vi.mock('./api', async (original) => ({ ...await original<typeof api>(), musicStudioStatus: vi.fn(), startMusicStudio: vi.fn(), openLocalPath: vi.fn(), modelLibrary: vi.fn().mockResolvedValue({models:[]}), listStudioJobs: vi.fn().mockResolvedValue([]), studioRuntime:vi.fn().mockResolvedValue(null) }));
 const status = { installed: true, running: false, owned: false, url: null, folder: 'C:\\Users\\hertz\\YuE', modelLoaded: false, error: null };
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(api.musicStudioStatus).mockResolvedValue(status); });
+it('refreshes a legacy running host through the packaged controls before reusing it', async()=>{
+  vi.mocked(api.musicStudioStatus).mockResolvedValue({...status,running:true,url:'http://127.0.0.1:7860',integrationCurrent:false});
+  vi.mocked(api.startMusicStudio).mockResolvedValue({...status,running:true,url:'http://127.0.0.1:7860',integrationCurrent:true});
+  render(<MusicStudio runtimeActive={false} onNotice={vi.fn()}/>);
+  await waitFor(()=>expect(api.startMusicStudio).toHaveBeenCalledTimes(1));
+  await waitFor(()=>expect(screen.queryByRole('button',{name:'Update Music Studio controls'})).not.toBeInTheDocument());
+  expect(screen.getByTitle('YuE2 Music Studio')).toBeInTheDocument();
+});
 it('connects the existing music interface only after the user opens it', async () => {
   vi.mocked(api.startMusicStudio).mockResolvedValue({ ...status, running: true, owned: true, url: 'http://127.0.0.1:7860' });
   render(<MusicStudio runtimeActive={false} onNotice={vi.fn()} />);

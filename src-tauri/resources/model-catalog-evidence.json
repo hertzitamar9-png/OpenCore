@@ -6816,6 +6816,1935 @@
         }
       ],
       "runtimeValidation": "Publisher adapter required; no local generation or hardware qualification performed."
+    },
+    {
+      "modelId": "qwen-image-21",
+      "category": "image",
+      "repo": "Qwen/Qwen-Image-2.1",
+      "revision": "d26bb61231c349cf6b7896fa83353113880e1ba3",
+      "publisher": "Qwen",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/Qwen/Qwen-Image-2.1/revision/d26bb61231c349cf6b7896fa83353113880e1ba3?blobs=true",
+      "apiMetadataSha256": "fe21bcbcd4bf4f0e390ef99cf8436b45c724c9a51efcc16c6a9c84141b71c97a",
+      "modelCardUrl": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/README.md",
+      "modelCardSha256": "d4aee8d372df2a890b6283e7d1885e3f68b57190c7d3f4b9466a61beffc16016",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://github.com/QwenLM/Qwen-Image",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-ee03ace9a3b1",
+        "qwen-image-21-f16e5b349051",
+        "qwen-image-21-dffbb05f0731",
+        "qwen-image-21-5c109f006668",
+        "qwen-image-21-f112452e220b",
+        "qwen-image-21-806999dec73f",
+        "qwen-image-21-05256ef2130c",
+        "qwen-image-21-c2c3c4f263f7",
+        "qwen-image-21-318665c6b385",
+        "qwen-image-21-1ffa00cf1523",
+        "qwen-image-21-67ecb3dc37a8",
+        "qwen-image-21-bcfd37e83e34",
+        "qwen-image-21-b77bbf3992d6",
+        "qwen-image-21-4b3f04e89879",
+        "qwen-image-21-bf09924b57c7",
+        "qwen-image-21-4d08688fb462",
+        "qwen-image-21-6d8c6d3e1568",
+        "qwen-image-21-5fc12c01f9a5",
+        "qwen-image-21-98e965502aea",
+        "qwen-image-21-f94009964319",
+        "qwen-image-21-48c20e2a08ef",
+        "qwen-image-21-322b43acad54",
+        "qwen-image-21-101abd63dac6",
+        "qwen-image-21-86e9ee3b4fe6"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "model_index.json",
+          "bytes": 447,
+          "sha256": "cf1ecd104ea090855d60d8cec0895c1e9d6ee41b2f87e231b678beecd1cf7809"
+        },
+        {
+          "filename": "processor/added_tokens.json",
+          "bytes": 707,
+          "sha256": "c0284b582e14987fbd3d5a2cb2bd139084371ed9acbae488829a1c900833c680"
+        },
+        {
+          "filename": "processor/chat_template.jinja",
+          "bytes": 5292,
+          "sha256": "3636d0f0bd6bef02654cdffdc447b79cb2cef8ab02cc75267345946291a489e4"
+        },
+        {
+          "filename": "processor/merges.txt",
+          "bytes": 1671853,
+          "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
+        },
+        {
+          "filename": "processor/preprocessor_config.json",
+          "bytes": 782,
+          "sha256": "93585062a80db5e8ca038efc7726a3e6411d9db948472d81d63c6303993be8c5"
+        },
+        {
+          "filename": "processor/special_tokens_map.json",
+          "bytes": 613,
+          "sha256": "76862e765266b85aa9459767e33cbaf13970f327a0e88d1c65846c2ddd3a1ecd"
+        },
+        {
+          "filename": "processor/tokenizer.json",
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+        },
+        {
+          "filename": "processor/tokenizer_config.json",
+          "bytes": 5445,
+          "sha256": "81ec7bb9530159b326c0bef1d0b6c33d392090524014ea3f0123a3c1eb9c2af5"
+        },
+        {
+          "filename": "processor/video_preprocessor_config.json",
+          "bytes": 817,
+          "sha256": "59c5c9eb52182eb14c06ffb10ca9effd29adce5f238a95de23ca14a38dbd2cb1"
+        },
+        {
+          "filename": "processor/vocab.json",
+          "bytes": 2776833,
+          "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+        },
+        {
+          "filename": "scheduler/scheduler_config.json",
+          "bytes": 485,
+          "sha256": "5895f3a167c14a967fe9ac70c64924ae5acc79799e0679fd12907e594a713cd1"
+        },
+        {
+          "filename": "text_encoder/config.json",
+          "bytes": 1517,
+          "sha256": "6001331949f7f86ab6d791a80b12246d4f8da5159fa08c3e62368a39f36d63a9"
+        },
+        {
+          "filename": "text_encoder/generation_config.json",
+          "bytes": 213,
+          "sha256": "4d9818c3d27895c0058828a5f68bc7a4de80c3ae1bcdac90936ce24178063f59"
+        },
+        {
+          "filename": "text_encoder/model-00001-of-00004.safetensors",
+          "bytes": 4998056552,
+          "sha256": "dde00291b5f7fb92013895310a3da0ddba78674df9f10d505d375243dc01fc6f"
+        },
+        {
+          "filename": "text_encoder/model-00002-of-00004.safetensors",
+          "bytes": 4915962464,
+          "sha256": "9047faccc0a6d98496a52d55f27be1c94a9c259d1e283fbea0128d054a948d42"
+        },
+        {
+          "filename": "text_encoder/model-00003-of-00004.safetensors",
+          "bytes": 4915962496,
+          "sha256": "8c54187654c0176b73ae73785bf791dc9a14c9df7fb4310083a09d42048cb57e"
+        },
+        {
+          "filename": "text_encoder/model-00004-of-00004.safetensors",
+          "bytes": 2704357976,
+          "sha256": "5311532aaaeae3259eb6a7b2c600636be1159adf7ded35f53579f7d0e7d43cdd"
+        },
+        {
+          "filename": "text_encoder/model.safetensors.index.json",
+          "bytes": 67795,
+          "sha256": "859146bff8db1d617fca8b457a5223edff963bb70076b3645f2189fe0540a147"
+        },
+        {
+          "filename": "transformer/config.json",
+          "bytes": 370,
+          "sha256": "56ae3281c4e6c2d1aa3658252d187488071815fd79bef15808bb0205fc1a2241"
+        },
+        {
+          "filename": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+          "bytes": 9968332504,
+          "sha256": "9e6bc2d641e67bf277895ea8777141044a38f3edb7101bc469b2961dd7c36b4b"
+        },
+        {
+          "filename": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+          "bytes": 4261951904,
+          "sha256": "3aaf234dcbe128530479735854a346b5e3e66283b7c11db56f836bbd1c13ebaa"
+        },
+        {
+          "filename": "transformer/diffusion_pytorch_model.safetensors.index.json",
+          "bytes": 30283,
+          "sha256": "17987f6623b1c814d0ef55a137d99142b7b3b040eb1bf241b5575dd35af803a2"
+        },
+        {
+          "filename": "vae/config.json",
+          "bytes": 2079,
+          "sha256": "9785d527b278cb8b210e9f48a8028d92a4190968ce7e24c8fc85d9d1b82f6ba2"
+        },
+        {
+          "filename": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 1350989512,
+          "sha256": "a07a1b7c4ee2966a1b3bdc37de9b4f983d56937e46619f709a80b6e490675417"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "qwen-image-21-gguf",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-c326a7dc9ddd"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q6_K.gguf",
+          "bytes": 6271551200,
+          "sha256": "2ead1ee665e8ebc5fec517d287a167f5c6a7e985acbf3b1b93143437a04616ac"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-f16-8aa239",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-0ade2347-8aa239e5"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-F16.gguf",
+          "bytes": 14230275808,
+          "sha256": "8aa239e5ddb28d4641942231396d7171da41ad305ea401dd92a7d6410bde798d"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q2-k-053e2c",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-6f825d73-053e2cf1"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q2_K.gguf",
+          "bytes": 2466137824,
+          "sha256": "053e2cf11059e9f5091c03853025b18bc64d18fff4426b1a17da09ed29cc09c9"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q3-k-m-f688e4",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-4f6ca405-f688e47c"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q3_K_M.gguf",
+          "bytes": 3168290528,
+          "sha256": "f688e47c32c033aa8d059c6b7e27d668b2cef0f1dd3d667f97f544954d541238"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q3-k-s-e71af4",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-bd6e2c1c-e71af472"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q3_K_S.gguf",
+          "bytes": 2724742880,
+          "sha256": "e71af4723442d004b469425ddbdbbf5e4f5f6068c2544cd82d9bb49791b54be3"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q3-k-xl-ef42f3",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-7c264ae2-ef42f3a1"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q3_K_XL.gguf",
+          "bytes": 3612493536,
+          "sha256": "ef42f3a1b0ccf30be0a068341d383beeea86173e6aa1aa1a33749b337e55e0a9"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q4-k-m-631d53",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-1450fa3b-631d532e"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q4_K_M.gguf",
+          "bytes": 4199565024,
+          "sha256": "631d532e7ca71e8d90a87c71d3699761a812039d22e3370e87498d87754660fe"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q4-k-s-328a2b",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-b6aa04bf-328a2b22"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q4_K_S.gguf",
+          "bytes": 3906356960,
+          "sha256": "328a2b2203ceb45a7f14515fb902c5ec28e9df901d43f49020b4fd251234587f"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q5-k-m-4b5332",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-1abd7dd5-4b533216"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q5_K_M.gguf",
+          "bytes": 5390223072,
+          "sha256": "4b53321654dd3bf0aa8dd6bb821fdcb1c9053ca735070e359a23cbb9f97268ce"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q5-k-s-ba9399",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-a52ee35b-ba9399e0"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q5_K_S.gguf",
+          "bytes": 4501948128,
+          "sha256": "ba9399e07005c929d2cba313d73f0658e7893219825f29dc609130b75803ea75"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q6-k-xl-9410ad",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-896ebc6b-9410ad28"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q6_K_XL.gguf",
+          "bytes": 6718506720,
+          "sha256": "9410ad28f20018e7f2f300a06eed7e48db144286d02f0a6d4208d4dbd266691b"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "qwen-image-21-gguf-q8-0-c0ed4b",
+      "category": "image",
+      "repo": "unsloth/Qwen-Image-2.1-GGUF",
+      "revision": "2c31ccd392b367a6637841a143813320a02dff55",
+      "publisher": "unsloth",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/unsloth/Qwen-Image-2.1-GGUF/revision/2c31ccd392b367a6637841a143813320a02dff55?blobs=true",
+      "apiMetadataSha256": "55a2ed12a6cc34b316a5fbeddb565ae919a65fd1feaacc58b32d1114a97f71e6",
+      "modelCardUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF/blob/2c31ccd392b367a6637841a143813320a02dff55/README.md",
+      "modelCardSha256": "34ff7a5e5d7ad7d0cd2a046857fb1bb058fff3c5e1b0d25b9806d06095734012",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "qwen-research",
+      "gated": false,
+      "setupUrl": "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF",
+      "installable": true,
+      "selectedArtifactIds": [
+        "qwen-image-21-gguf-variant-9a996bdb-c0ed4b2f"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "qwen-image-2.1-Q8_0.gguf",
+          "bytes": 7640860384,
+          "sha256": "c0ed4b2ffd56cbe9c3df1e4a4098045256484ebe94ba5a7e4338d35ec046baa5"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched.",
+      "externalDependencies": [
+        {
+          "component": "Text encoder",
+          "repo": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+          "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+          "filename": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "managedByApp": false
+        },
+        {
+          "component": "VAE",
+          "repo": "unsloth/Qwen-Image-2.1-FP8",
+          "revision": "bb21a8ba7f0371c19ad1f72c82a5e8fc10f39939",
+          "filename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+          "bytes": 675508656,
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "managedByApp": false
+        }
+      ]
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-f16",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-e061bd7a9d60",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-F16.gguf",
+          "bytes": 16384959136,
+          "sha256": "d1e6984531bab1962d8bc73da4b6dffc5c2d9b0da336603943df04100e57c3de"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q8-0",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-0f127209d908",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q8_0.gguf",
+          "bytes": 8707877536,
+          "sha256": "ae6af22ad3b7f1a7bf667922af84b9eb3e2199cc86f402702eaf9b054054788d"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q6-k",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-de0c0592e67a",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q6_K.gguf",
+          "bytes": 6724631456,
+          "sha256": "d6003486177440ddf4718d596f1a0410b641814a4d49685fe2e2f4b0e4f7e0f1"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q5-k-m",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-36ee51bce362",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q5_K_M.gguf",
+          "bytes": 5849946912,
+          "sha256": "5d32e7569f2ef9c61de81a4fba3890a225240a5cf753e0348f5889dbf44ea434"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q5-k-s",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-7be755114ec5",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q5_K_S.gguf",
+          "bytes": 5719595808,
+          "sha256": "7739a71cb00897343bf5a1bfb248d73b0b8e354debf25fdca1351140909670be"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q5-1",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-357ebf889cd3",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q5_1.gguf",
+          "bytes": 6192553760,
+          "sha256": "08b3acc6f216dc182b6b63ec511d3252fae0ee42278e0ec1ccd4476bfd6474be"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q5-0",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-9844f13ad4e9",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q5_0.gguf",
+          "bytes": 5719595808,
+          "sha256": "9604b7cf2b09ab4053ea455c08dd6ebcab4cdb20342470b28f5daa389b654681"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q4-k-m",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-5765e64bfc59",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q4_K_M.gguf",
+          "bytes": 5026714400,
+          "sha256": "1237a97ee081b8abebc47aa7dad565701e8f5f904cdc92f6723ac4281bbc0932"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q4-k-s",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-b0d9c90c6d77",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q4_K_S.gguf",
+          "bytes": 4800942880,
+          "sha256": "6e78724d41da3ca331e6e4c88db106e4029b5498caa9630d262a054ff4fb660a"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q4-1",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-be6c0c85a6e1",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q4_1.gguf",
+          "bytes": 5246637856,
+          "sha256": "431dbff7a8ad384a6b62d8dc41b14512a8c8b0fc88f762aac9bdde91d9718704"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-minicpm-o-4-5-gguf-q4-0",
+      "category": "omni",
+      "repo": "openbmb/MiniCPM-o-4_5-gguf",
+      "revision": "db25077c33951fe163b42986fba0132e279872a2",
+      "publisher": "openbmb",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/openbmb/MiniCPM-o-4_5-gguf/revision/db25077c33951fe163b42986fba0132e279872a2?blobs=true",
+      "apiMetadataSha256": "b921030c8ce8f6053e286ee932ae043174b0c1489c12be871d8e1bdf6d14d572",
+      "modelCardUrl": "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf/blob/db25077c33951fe163b42986fba0132e279872a2/README.md",
+      "modelCardSha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-minicpm-o-4-5-gguf-fced2b08cc10",
+        "omni-minicpm-o-4-5-gguf-b33563055168",
+        "omni-minicpm-o-4-5-gguf-ceace4a679d4",
+        "omni-minicpm-o-4-5-gguf-c4af0231c145",
+        "omni-minicpm-o-4-5-gguf-8b066cd495d5",
+        "omni-minicpm-o-4-5-gguf-a654659b71d5",
+        "omni-minicpm-o-4-5-gguf-b28fc6dfc1fe",
+        "omni-minicpm-o-4-5-gguf-ea6c4f062172",
+        "omni-minicpm-o-4-5-gguf-c7577e2c2414",
+        "omni-minicpm-o-4-5-gguf-c0162cc50ded",
+        "omni-minicpm-o-4-5-gguf-ff1d499c992a"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "MiniCPM-o-4_5-Q4_0.gguf",
+          "bytes": 4773679904,
+          "sha256": "0df3f51f5d6f2342d302f69f0e5426fe6fa3507368c6a847e3163d75d1440947"
+        },
+        {
+          "filename": "README.md",
+          "bytes": 85902,
+          "sha256": "3cd86c202577fc229ec6730d04df31c6639be78dc8048538fae90675905a1e54"
+        },
+        {
+          "filename": "audio/MiniCPM-o-4_5-audio-F16.gguf",
+          "bytes": 660167904,
+          "sha256": "d5b188ac7feaf98e17175c3f9bd14bf269301bfd187439fdaa3e3a494fc32ef7"
+        },
+        {
+          "filename": "vision/MiniCPM-o-4_5-vision-F16.gguf",
+          "bytes": 1095113184,
+          "sha256": "1453678cc4e4fe18de241952962e234f265cb8dda780773526103ab8ba82f421"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-projector-F16.gguf",
+          "bytes": 14948640,
+          "sha256": "4b1b5b377358a5e594a304ff6ea5d52df606a9ba7d886c4299d232f0c67dd1fd"
+        },
+        {
+          "filename": "tts/MiniCPM-o-4_5-tts-F16.gguf",
+          "bytes": 1157244416,
+          "sha256": "c7be3748a863dd6966ae7eed42600b7f41ca67affb03729ff245247f0e5ea088"
+        },
+        {
+          "filename": "token2wav-gguf/encoder.gguf",
+          "bytes": 151339008,
+          "sha256": "7f8d265da594eaf5e1de2db8f5f1867dbcb0bb75ef5878fadf2952347116f4d0"
+        },
+        {
+          "filename": "token2wav-gguf/flow_extra.gguf",
+          "bytes": 13663328,
+          "sha256": "c67611aa7d02500fe395a7798bf0bfdfb55c74d37ba93934ca74d82b4e63f78d"
+        },
+        {
+          "filename": "token2wav-gguf/flow_matching.gguf",
+          "bytes": 458250240,
+          "sha256": "eda6069f3edeb5dd3a87fbf2aedb2ddd1b46f3273926c4fcf09b24476a39cab8"
+        },
+        {
+          "filename": "token2wav-gguf/hifigan2.gguf",
+          "bytes": 83242816,
+          "sha256": "1b8b3bf5d8d3066aeee4324fdcdd41aefce170d0ee907645858de408d82835c2"
+        },
+        {
+          "filename": "token2wav-gguf/prompt_cache.gguf",
+          "bytes": 211613152,
+          "sha256": "81fe6f541ebe0b67db06a1e395df928da47991dc9637c2cf47d6c59d5b979f2c"
+        }
+      ],
+      "indexChecks": [],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
+    },
+    {
+      "modelId": "omni-qwen3-omni-30b-a3b-captioner",
+      "category": "omni",
+      "repo": "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+      "revision": "a2bd106cbf527db5676e79662674da22b0545ec0",
+      "publisher": "Qwen",
+      "verifiedAt": "2026-10-06",
+      "apiUrl": "https://huggingface.co/api/models/Qwen/Qwen3-Omni-30B-A3B-Captioner/revision/a2bd106cbf527db5676e79662674da22b0545ec0?blobs=true",
+      "apiMetadataSha256": "2b83820502125d3228d1780e04883757370679945d7b13b334ff7809779007a7",
+      "modelCardUrl": "https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Captioner/blob/a2bd106cbf527db5676e79662674da22b0545ec0/README.md",
+      "modelCardSha256": "5561afcbfa9eded1e96d86bf6f47062c57faf20e95ab68d2c66ddd9ff6d2b0bc",
+      "modelCardAccess": "fetched-and-hashed",
+      "licenseFromCard": "apache-2.0",
+      "gated": false,
+      "setupUrl": "https://github.com/QwenLM/Qwen3-Omni/blob/main/cookbooks/omni_captioner.ipynb",
+      "installable": true,
+      "selectedArtifactIds": [
+        "omni-qwen3-omni-30b-a3b-captioner-b33563055168",
+        "omni-qwen3-omni-30b-a3b-captioner-56edbbf8f70a",
+        "omni-qwen3-omni-30b-a3b-captioner-587cb980af76",
+        "omni-qwen3-omni-30b-a3b-captioner-97dd3d578b41",
+        "omni-qwen3-omni-30b-a3b-captioner-b0d6dcfed49b",
+        "omni-qwen3-omni-30b-a3b-captioner-397629aa3017",
+        "omni-qwen3-omni-30b-a3b-captioner-51de3ad3a216",
+        "omni-qwen3-omni-30b-a3b-captioner-92477a6b69b7",
+        "omni-qwen3-omni-30b-a3b-captioner-6e8aa7e289ee",
+        "omni-qwen3-omni-30b-a3b-captioner-33f8b2679bdc",
+        "omni-qwen3-omni-30b-a3b-captioner-0d7d210183ae",
+        "omni-qwen3-omni-30b-a3b-captioner-6724260b16d2",
+        "omni-qwen3-omni-30b-a3b-captioner-d91a18958c46",
+        "omni-qwen3-omni-30b-a3b-captioner-4fd2c57dd3b8",
+        "omni-qwen3-omni-30b-a3b-captioner-35f77a8104ed",
+        "omni-qwen3-omni-30b-a3b-captioner-0775c194099c",
+        "omni-qwen3-omni-30b-a3b-captioner-75930862218a",
+        "omni-qwen3-omni-30b-a3b-captioner-111193e08386",
+        "omni-qwen3-omni-30b-a3b-captioner-78d8c312eba4",
+        "omni-qwen3-omni-30b-a3b-captioner-0b41d00232dd",
+        "omni-qwen3-omni-30b-a3b-captioner-8d5b2bd05cb4",
+        "omni-qwen3-omni-30b-a3b-captioner-0a05be823898",
+        "omni-qwen3-omni-30b-a3b-captioner-36afccab5d8d",
+        "omni-qwen3-omni-30b-a3b-captioner-94d5c6ba8f6b",
+        "omni-qwen3-omni-30b-a3b-captioner-ba05d8e2e484"
+      ],
+      "publishedFiles": [
+        {
+          "filename": "README.md",
+          "bytes": 11542,
+          "sha256": "5561afcbfa9eded1e96d86bf6f47062c57faf20e95ab68d2c66ddd9ff6d2b0bc"
+        },
+        {
+          "filename": "chat_template.json",
+          "bytes": 5946,
+          "sha256": "3afb9519448b62e252cefeed1c0c1939b01b4e8ed70adbaf3c9f952969aa0ec7"
+        },
+        {
+          "filename": "config.json",
+          "bytes": 8528,
+          "sha256": "e6f8c637528461398ef4e11d48b6112ce73db2458a563dfea548127c2cce253f"
+        },
+        {
+          "filename": "generation_config.json",
+          "bytes": 112,
+          "sha256": "399218e58e26b42d0856fb6624fe6f54a01c212682adb6442c06c875a2b200fb"
+        },
+        {
+          "filename": "merges.txt",
+          "bytes": 1671839,
+          "sha256": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3"
+        },
+        {
+          "filename": "model-00001-of-00016.safetensors",
+          "bytes": 3999958720,
+          "sha256": "7f2e8477f5e8aef9163d7b46ead3e955bf13fec2826092990bc1df434cba67af"
+        },
+        {
+          "filename": "model-00002-of-00016.safetensors",
+          "bytes": 3999984304,
+          "sha256": "1eea7a21447ac311636eeb8b2a8f4a10fbe8e1dbb85870432081a0785715c820"
+        },
+        {
+          "filename": "model-00003-of-00016.safetensors",
+          "bytes": 3997370920,
+          "sha256": "95465568b11da26b96dbf873c785baec9b371b07d1eaee7516bf0b97ca4d8b8d"
+        },
+        {
+          "filename": "model-00004-of-00016.safetensors",
+          "bytes": 3999985128,
+          "sha256": "b6b237e045ab59f8038c8b31fb2d311ef3063101adf90656f1ab931f6c082f87"
+        },
+        {
+          "filename": "model-00005-of-00016.safetensors",
+          "bytes": 3999985488,
+          "sha256": "ca7c8c1000c27533a7a1142f6249119539e39964056d67f1bbc889c56e7b7365"
+        },
+        {
+          "filename": "model-00006-of-00016.safetensors",
+          "bytes": 3999985560,
+          "sha256": "9f292ccd339bb83d5282ea8d941a77d7a8a8e12ba721a711b6691a2e9156cdbd"
+        },
+        {
+          "filename": "model-00007-of-00016.safetensors",
+          "bytes": 3999985584,
+          "sha256": "628f156bc9f4bfa57095dd91b21e2fdf16856d67d249eeb722915f40e1821e8d"
+        },
+        {
+          "filename": "model-00008-of-00016.safetensors",
+          "bytes": 3997372144,
+          "sha256": "461eeda21222c8f69c4bc7ebc6e977ad776f7350f92c0b440de9149b1452b27c"
+        },
+        {
+          "filename": "model-00009-of-00016.safetensors",
+          "bytes": 3999985488,
+          "sha256": "40e7baf316bbfbf5ca007847402f9435ce985bb2893e25e33bd9bb7972aee3f3"
+        },
+        {
+          "filename": "model-00010-of-00016.safetensors",
+          "bytes": 3999985504,
+          "sha256": "9c8bd10a2f8d6c5c504f50ec6a1bfbfb311757ce226e600775ac6511c6589bbb"
+        },
+        {
+          "filename": "model-00011-of-00016.safetensors",
+          "bytes": 3999985560,
+          "sha256": "b86e1441bdc73585b1e958535aa58a39c96b60ffb1a4af88bdb344df8b678ac8"
+        },
+        {
+          "filename": "model-00012-of-00016.safetensors",
+          "bytes": 3987402152,
+          "sha256": "39ae0c5e0073778cc6ac487e8056d803696aa9045738e7e9339e1197b37ba0f7"
+        },
+        {
+          "filename": "model-00013-of-00016.safetensors",
+          "bytes": 3997372112,
+          "sha256": "80d775cad42794687b663d5c574b2ec851035e1a8fda81a61f9bec7dfb84cc86"
+        },
+        {
+          "filename": "model-00014-of-00016.safetensors",
+          "bytes": 3999985488,
+          "sha256": "c3195c7dda8c4f6033f5f2bc002d06e2f6eb8fad38fe73e92fe798715f42d03e"
+        },
+        {
+          "filename": "model-00015-of-00016.safetensors",
+          "bytes": 3999985520,
+          "sha256": "4b5049b50cfd5ef272dca6473b2451774a8828a93aeb37beaadbbe6b4c1f2e41"
+        },
+        {
+          "filename": "model-00016-of-00016.safetensors",
+          "bytes": 3461668112,
+          "sha256": "1fe9823d6d7edf67788970f1f9336cf88cf908dd62bdc26692795dbb4488bebe"
+        },
+        {
+          "filename": "model.safetensors.index.json",
+          "bytes": 1928754,
+          "sha256": "282a41fa34d22e13753ae868ce12872ed48c14f32bfbe25b627e18844664afc4"
+        },
+        {
+          "filename": "preprocessor_config.json",
+          "bytes": 603,
+          "sha256": "b10e27fd4542cf89ec7145942b87f3e65408d4e9f9d031a29acdd293c15fb3fc"
+        },
+        {
+          "filename": "tokenizer_config.json",
+          "bytes": 7344,
+          "sha256": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670"
+        },
+        {
+          "filename": "vocab.json",
+          "bytes": 2776833,
+          "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+        }
+      ],
+      "indexChecks": [
+        {
+          "filename": "model.safetensors.index.json",
+          "shards": [
+            "model-00016-of-00016.safetensors",
+            "model-00001-of-00016.safetensors",
+            "model-00004-of-00016.safetensors",
+            "model-00005-of-00016.safetensors",
+            "model-00006-of-00016.safetensors",
+            "model-00007-of-00016.safetensors",
+            "model-00002-of-00016.safetensors",
+            "model-00008-of-00016.safetensors",
+            "model-00009-of-00016.safetensors",
+            "model-00010-of-00016.safetensors",
+            "model-00011-of-00016.safetensors",
+            "model-00012-of-00016.safetensors",
+            "model-00013-of-00016.safetensors",
+            "model-00014-of-00016.safetensors",
+            "model-00015-of-00016.safetensors",
+            "model-00003-of-00016.safetensors"
+          ]
+        }
+      ],
+      "runtimeValidation": "Published compatible upstream loader documented; app adapter and local inference are unverified. No weight bytes fetched."
     }
   ],
   "releaseAudit": {
@@ -6859,5 +8788,46 @@
       "holotron4-30b-a3b"
     ],
     "method": "Pinned publisher API metadata, LFS hashes and exact byte counts; only public cards/configuration metadata were fetched. Gated raw-card hashes are explicitly unavailable. No model weight bytes were fetched."
+  },
+  "currentImageOmniAudit": {
+    "verifiedAt": "2026-10-06",
+    "modelIds": [
+      "qwen-image-21",
+      "qwen-image-21-gguf",
+      "qwen-image-21-gguf-f16-8aa239",
+      "qwen-image-21-gguf-q2-k-053e2c",
+      "qwen-image-21-gguf-q3-k-m-f688e4",
+      "qwen-image-21-gguf-q3-k-s-e71af4",
+      "qwen-image-21-gguf-q3-k-xl-ef42f3",
+      "qwen-image-21-gguf-q4-k-m-631d53",
+      "qwen-image-21-gguf-q4-k-s-328a2b",
+      "qwen-image-21-gguf-q5-k-m-4b5332",
+      "qwen-image-21-gguf-q5-k-s-ba9399",
+      "qwen-image-21-gguf-q6-k-xl-9410ad",
+      "qwen-image-21-gguf-q8-0-c0ed4b",
+      "omni-minicpm-o-4-5-gguf-f16",
+      "omni-minicpm-o-4-5-gguf-q8-0",
+      "omni-minicpm-o-4-5-gguf-q6-k",
+      "omni-minicpm-o-4-5-gguf-q5-k-m",
+      "omni-minicpm-o-4-5-gguf-q5-k-s",
+      "omni-minicpm-o-4-5-gguf-q5-1",
+      "omni-minicpm-o-4-5-gguf-q5-0",
+      "omni-minicpm-o-4-5-gguf-q4-k-m",
+      "omni-minicpm-o-4-5-gguf-q4-k-s",
+      "omni-minicpm-o-4-5-gguf-q4-1",
+      "omni-minicpm-o-4-5-gguf-q4-0",
+      "omni-qwen3-omni-30b-a3b-captioner"
+    ],
+    "method": "Pinned publisher/community API, exact file bytes and LFS SHA-256; small configuration/model cards fetched and hashed. Existing artifact identities preserved. No weight bytes or local inference.",
+    "discoverySources": [
+      "https://huggingface.co/api/models?author=Qwen&search=Omni&limit=100",
+      "https://huggingface.co/openbmb/MiniCPM-o-4_5-gguf",
+      "https://huggingface.co/unsloth/Qwen-Image-2.1-GGUF"
+    ],
+    "compatibilitySources": [
+      "https://github.com/leejet/stable-diffusion.cpp/blob/master/docs/qwen_image_2.1.md",
+      "https://github.com/QwenLM/Qwen3-Omni/blob/main/cookbooks/omni_captioner.ipynb",
+      "https://github.com/OpenSQZ/MiniCPM-V-CookBook/blob/main/demo/web_demo/WebRTC_Demo/README.md"
+    ]
   }
 }

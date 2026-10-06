@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YuE2 Studio</title>
+<style>
+:root{--bg:#0b111a;--panel:#121e2c;--panel2:#192c40;--field:#080f18;--line:#29415d;--text:#e8f0f9;--muted:#9aafc8;--accent:#72aff7;--accent2:#245ca8;--good:#4cc38a;--warn:#f0b35a;--bad:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:18px;margin:0;letter-spacing:.02em}
+header h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.wrap{max-width:1500px;margin:0 auto;padding:16px 20px}
+main.wrap{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;padding-bottom:0}
+@media(max-width:1000px){main.wrap{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.card h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.chip{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:3px 10px;border-radius:999px;cursor:pointer;font-size:12.5px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#0b0d12}
+.lbl{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+textarea,input[type=text],input[type=number],select{width:100%;background:var(--field);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 9px;font:inherit}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+textarea{resize:vertical}
+.mono{font-family:ui-monospace,Consolas,monospace}
+#lyrics{min-height:280px}
+#abc{min-height:170px;font-size:12.5px}
+#style{min-height:64px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.slider{display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(80px,2fr) 78px;gap:10px;align-items:center;margin:8px 0}
+.slider input[type=range]{width:100%;accent-color:var(--accent)}
+.slider label{font-size:13px}
+.hint{color:var(--muted);font-size:12px;font-weight:normal}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:6px 11px}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:#0b0d12;font-weight:650;padding:10px 20px}
+button.danger{border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.small{font-size:12px;padding:3px 8px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+@media(max-width:560px){.seg{grid-template-columns:1fr}}
+.seg label{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:var(--panel2)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seg b{display:block;font-size:13px}
+details{border-top:1px solid var(--line);margin-top:10px;padding-top:6px}
+summary{cursor:pointer;color:var(--text);font-size:13px;padding:4px 0}
+.check{display:flex;gap:8px;align-items:flex-start;margin:8px 0;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--accent)}
+footer{position:sticky;bottom:0;z-index:4;background:rgba(22,25,32,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
+footer .wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 20px}
+.progress{flex:1 1 220px;min-width:180px}
+.bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:4px}
+.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
+#error{color:var(--bad);font-size:13px;white-space:pre-wrap}
+.run{border-top:1px solid var(--line);padding:12px 0}
+.run:first-child{border-top:0}
+.run-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:4px 0}
+.take{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0;padding:8px;background:var(--panel2);border-radius:8px}
+.take audio{flex:1 1 260px;min-width:0;height:36px}
+.badge{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge.warn{color:var(--warn);border-color:var(--warn)}
+.badge.bad{color:var(--bad);border-color:var(--bad)}
+.badge.good{color:var(--good);border-color:var(--good)}
+pre.score{max-height:160px;overflow:auto;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>YuE2</span> Studio</h1>
+  <span class="hint" id="gpu">Connecting…</span>
+  <span class="row" style="margin-left:auto">
+    <select id="presetSelect" aria-label="Saved presets" style="width:auto"><option value="">Presets…</option></select>
+    <button class="small" id="presetSave">Save preset</button>
+    <button class="small" id="presetDelete">Delete preset</button>
+    <button class="small" id="resetAll">Reset to defaults</button>
+  </span>
+</header>
+
+<main class="wrap">
+  <section>
+    <div class="card">
+      <h2>Song</h2>
+      <label class="lbl" for="title">Title (used for the folder name)</label>
+      <input type="text" id="title" placeholder="My song">
+
+      <label class="lbl">Style builder <span class="hint">— click to add or remove</span></label>
+      <div id="chipGroups"></div>
+      <div class="grid2">
+        <div>
+          <label class="check"><input type="checkbox" id="useBpm"><span>Tempo <span class="hint" id="bpmLabel">100 BPM</span></span></label>
+          <input type="range" id="bpm" min="50" max="200" value="100" style="width:100%;accent-color:var(--accent)">
+        </div>
+        <div>
+          <label class="check"><input type="checkbox" id="useKey"><span>Key</span></label>
+          <select id="key"></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label class="lbl" for="exclude">Leave out (comma separated)</label><input type="text" id="exclude" placeholder="guitar, autotune"></div>
+        <div><label class="lbl" for="extra">Anything else</label><input type="text" id="extra" placeholder="cinematic build, whispered verses"></div>
+      </div>
+      <label class="lbl" for="style">Style prompt sent to the model <button class="small" id="rebuild" hidden>Rebuild from picks</button></label>
+      <textarea id="style" placeholder="English, warm piano pop, expressive female vocal, 88 BPM"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Lyrics <span class="hint" id="lyricStats"></span></h2>
+      <label class="check"><input type="checkbox" id="instrumental"><span>Instrumental <span class="hint">— experimental: YuE2 has no official instrumental mode, so this sends an [Instrumental] section and adds "instrumental, no vocals" to the style</span></span></label>
+      <div class="chips" id="tagButtons"></div>
+      <textarea id="lyrics" class="mono" placeholder="[Verse]&#10;Your first verse here&#10;&#10;[Chorus]&#10;Your hook here"></textarea>
+      <div class="hint">[Verse] and [Chorus] are the officially documented tags; others are passed as text and may be followed loosely.</div>
+    </div>
+
+    <div class="card" id="scoreCard">
+      <h2>Score (melody &amp; chords, ABC notation)</h2>
+      <label class="check"><input type="checkbox" id="useScore"><span>Render using this score <span class="hint">— instead of letting the model write a new one</span></span></label>
+      <textarea id="abc" class="mono" placeholder="Click “Write score only” to have the model compose a melody and chords you can edit here, or use “Edit score” on any song below."></textarea>
+      <div class="row" style="margin-top:8px"><button class="small" id="clearScore">Clear score</button><span class="hint">Tip: for covers, use Melody mode with a score that has no chord symbols.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>Generation</h2>
+      <span class="lbl">Planning mode</span>
+      <div class="seg">
+        <label><input type="radio" name="cot" value="full" checked><b>Full</b><span class="hint">Writes melody + chords first. Best default.</span></label>
+        <label><input type="radio" name="cot" value="melody"><b>Melody</b><span class="hint">Writes melody only; free accompaniment.</span></label>
+        <label><input type="radio" name="cot" value="off"><b>Off</b><span class="hint">Straight from lyrics and style.</span></label>
+      </div>
+      <div id="genSliders"></div>
+      <div class="grid2">
+        <div>
+          <label class="lbl" for="seed">Seed</label>
+          <div class="row" style="flex-wrap:nowrap"><input type="number" id="seed" min="0" step="1" value="831001"><button id="dice" title="Random seed">🎲</button></div>
+        </div>
+        <div><label class="check" style="margin-top:26px"><input type="checkbox" id="randomSeed"><span>New random seed for every take</span></label></div>
+      </div>
+      <label class="check"><input type="checkbox" id="customCfg"><span>Custom guidance (CFG) <span class="hint">— default is 1.0 (1.01 in Off mode). Any value other than 1.0 roughly <b>doubles GPU memory</b> while generating; higher follows style/lyrics harder but is not guaranteed better</span></span></label>
+      <div id="cfgSlider"></div>
+    </div>
+
+    <div class="card">
+      <h2>Length &amp; quality <button class="small" id="useMax" type="button" title="Let the song run as long as the model's context allows">Model maximum</button></h2>
+      <div id="lengthSliders"></div>
+      <div class="hint" id="lengthEstimate"></div>
+      <div id="qualitySliders"></div>
+    </div>
+
+    <div class="card">
+      <h2>Creativity — audio generation</h2>
+      <div id="semSliders"></div>
+      <details>
+        <summary>Score planner sampling (melody &amp; chords)</summary>
+        <div id="abcSliders"></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>GPU memory</h2>
+      <label class="check"><input type="checkbox" id="offload" checked><span>Offload model while rendering <span class="hint">— needed on 12 GB cards; same quality, a bit slower</span></span></label>
+      <label class="check"><input type="checkbox" id="fp8"><span>FP8 quantization <span class="hint">— uses less memory but <b>lowers quality</b>; only if you run out of memory</span></span></label>
+      <label class="check"><input type="checkbox" id="spill"><span>Let overflow spill into system RAM <span class="hint">— last resort: instead of an out-of-memory error, borrow regular RAM. This can make generation <b>crawl for many minutes</b> at 100% GPU. Prefer guidance 1.0, a lower max length, or shorter lyrics</span></span></label>
+      <label class="lbl" for="chunks">Decoder chunk size <span class="hint">— smaller uses less memory</span></label>
+      <select id="chunks"><option>128</option><option>256</option><option selected>512</option><option>1024</option></select>
+    </div>
+  </section>
+</main>
+
+<section class="wrap">
+  <div class="card">
+    <h2>Your songs <button class="small" id="refresh">Refresh</button></h2>
+    <div id="runs"><p class="hint">Loading…</p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <button class="primary" id="go" title="Ctrl+Enter">Generate song</button>
+    <button id="planBtn">Write score only</button>
+    <button class="danger" id="cancel" hidden>Cancel</button>
+    <button id="releaseResources" hidden>Retry releasing resources</button>
+    <div class="progress">
+      <div class="hint" id="statusText">Ready</div>
+      <div class="bar"><div id="barFill"></div></div>
+      <div id="error"></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const $ = (sel) => document.querySelector(sel);
+const CHIPS = {
+  Language: ["English", "Mandarin", "Cantonese", "Japanese", "Korean", "Spanish", "French", "German", "Portuguese", "Hebrew"],
+  Genre: ["pop", "rock", "hip hop", "trap", "R&B", "soul", "EDM", "house", "synthwave", "jazz", "blues", "country", "folk", "metal", "punk", "reggaeton", "afrobeats", "lo-fi", "ballad", "cinematic", "classical", "gospel"],
+  Mood: ["happy", "sad", "dark", "epic", "romantic", "chill", "energetic", "nostalgic", "dreamy", "angry", "hopeful", "melancholic"],
+  Vocals: ["female vocal", "male vocal", "duet", "choir", "powerful vocal", "soft vocal", "breathy vocal", "raspy vocal", "falsetto", "rap verses"],
+  Instruments: ["piano", "acoustic guitar", "electric guitar", "bass", "drums", "808 bass", "synth", "strings", "violin", "cello", "saxophone", "trumpet", "organ", "Rhodes", "harp", "flute"],
+  Production: ["polished modern mix", "warm analog", "live band feel", "wide stereo", "punchy drums", "reverb-heavy", "stripped back", "big chorus"],
+};
+const KEYS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(k => [`${k} major`, `${k} minor`]);
+const TAGS = ["Intro", "Verse", "Pre-Chorus", "Chorus", "Bridge", "Outro", "Instrumental", "Guitar Solo", "Piano Solo", "Sax Solo", "Drop", "Break"];
+const SAMPLING = [
+  ["temperature", "Temperature", 0, 2, 0.01, 5, "Higher = wilder, lower = safer"],
+  ["top_p", "Top-p", 0.05, 1, 0.01, 1, "Sample only from the most likely choices"],
+  ["top_k", "Top-k", 1, 300, 1, 100000, "Max number of choices per step"],
+  ["repetition_penalty", "Repetition penalty", 0.8, 2, 0.005, 20, "Above 1 discourages repeating"],
+  ["penalty_window", "Penalty window", 1, 100, 1, 100, "Recent tokens the penalty checks"],
+];
+let INFO = null, picked = {}, manualStyle = false, pollTimer = null, lastStatus = null, lastResultCount = 0;
+let lastRunSeen = null, startedRun = null, cancelPending = false, statusRevision = 0, lastSnapshot = {status: 'idle'}, lastWorkerActive = false;
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") node.className = v;
+    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined && v !== false) node.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) if (c !== null && c !== undefined) node.append(c instanceof Node ? c : String(c));
+  return node;
+}
+
+function slider(id, label, min, max, step, value, hint, numMax) {
+  const range = el("input", {type: "range", id: id + "_r", min, max, step, value, "aria-label": label});
+  const num = el("input", {type: "number", id, min, max: numMax ?? max, step, value});
+  range.addEventListener("input", () => { num.value = range.value; num.dispatchEvent(new Event("input")); });
+  num.addEventListener("input", () => { range.value = num.value; updateEstimate(); });
+  return el("div", {class: "slider"}, el("label", {for: id}, label, hint ? el("div", {class: "hint"}, hint) : null), range, num);
+}
+const val = (id) => Number($("#" + id).value);
+function setVal(id, v) { if (v === undefined || v === null) return; $("#" + id).value = v; const r = $("#" + id + "_r"); if (r) r.value = v; }
+
+function buildControls() {
+  const d = INFO.defaults;
+  const groups = $("#chipGroups");
+  for (const [group, items] of Object.entries(CHIPS)) {
+    picked[group] = new Set();
+    groups.append(el("div", {class: "hint"}, group), el("div", {class: "chips"}, items.map(item =>
+      el("button", {class: "chip", type: "button", "data-group": group, "data-item": item, onclick: (e) => {
+        picked[group].has(item) ? picked[group].delete(item) : picked[group].add(item);
+        e.currentTarget.classList.toggle("on"); refreshStyle();
+      }}, item))));
+  }
+  KEYS.forEach(k => $("#key").append(el("option", {}, k)));
+  TAGS.forEach(t => $("#tagButtons").append(el("button", {class: "chip", type: "button", onclick: () => insertTag(t)}, `[${t}]`)));
+  $("#genSliders").append(slider("takes", "Takes", 1, 8, 1, 1, "Versions per run; pick the best"));
+  $("#cfgSlider").append(slider("cfg", "Guidance", 0, 3, 0.01, 1.0, null, 20));
+  $("#lengthSliders").append(
+    slider("sem_max_tokens", "Max length", 300, 24576, 50, d.semantic.max_tokens, "25 tokens ≈ 1 second. The model's context (24,576 tokens) also holds the lyrics and score, so anything above what's left is trimmed to the model's limit automatically. Very long songs need more GPU memory to render", 24576),
+    slider("sem_min_tokens", "Min length", 0, 12000, 50, d.semantic.min_tokens, "Prevents ending too early", 24576));
+  $("#qualitySliders").append(slider("ode_steps", "Rendering steps", 4, 64, 1, d.ode_steps, "More = finer audio detail, slower. Default 32", 256));
+  for (const [name, label, min, max, step, numMax, hint] of SAMPLING) {
+    $("#semSliders").append(slider("sem_" + name, label, min, max, step, d.semantic[name], hint, numMax));
+    $("#abcSliders").append(slider("abc_" + name, label, min, max, step, d.abc[name], hint, numMax));
+  }
+  $("#abcSliders").append(
+    slider("abc_max_tokens", "Max score length", 64, 4096, 16, d.abc.max_tokens, "Score tokens", 20000),
+    slider("abc_min_tokens", "Min score length", 0, 1024, 8, d.abc.min_tokens, null, 20000));
+}
+
+function composeStyle() {
+  const parts = [];
+  for (const group of Object.keys(CHIPS)) parts.push(...picked[group]);
+  if ($("#useKey").checked) parts.push($("#key").value);
+  if ($("#useBpm").checked) parts.push(`${$("#bpm").value} BPM`);
+  $("#exclude").value.split(",").map(s => s.trim()).filter(Boolean).forEach(x => parts.push(`no ${x}`));
+  if ($("#extra").value.trim()) parts.push($("#extra").value.trim());
+  if ($("#instrumental").checked) parts.push("instrumental, no vocals");
+  return parts.join(", ");
+}
+function refreshStyle() {
+  $("#bpmLabel").textContent = `${$("#bpm").value} BPM`;
+  if (!manualStyle) $("#style").value = composeStyle();
+}
+function insertTag(tag) {
+  const box = $("#lyrics");
+  const start = box.selectionStart ?? box.value.length, end = box.selectionEnd ?? start;
+  const before = box.value.slice(0, start), after = box.value.slice(end);
+  const text = `${before && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : ""}[${tag}]\n`;
+  box.value = before + text + after;
+  box.focus(); box.selectionStart = box.selectionEnd = before.length + text.length;
+  updateLyricStats();
+}
+function updateLyricStats() {
+  const lines = $("#lyrics").value.split("\n").filter(l => l.trim() && !/^\[.*\]$/.test(l.trim())).length;
+  $("#lyricStats").textContent = `${lines} sung lines`;
+}
+function updateEstimate() {
+  const rate = INFO && INFO.tokens_per_second;
+  const box = $("#lengthEstimate");
+  if (!box) return;
+  if (!rate) { box.textContent = "A seconds estimate appears here after your first finished song."; return; }
+  const fmt = (t) => { const s = Math.round(t / rate); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+  box.textContent = `≈ ${fmt(val("sem_min_tokens"))} min to ${fmt(val("sem_max_tokens"))} max (measured ${rate.toFixed(1)} tokens/sec)`;
+}
+
+function sampling(prefix, extra) {
+  const out = {};
+  for (const [name] of SAMPLING) out[name] = val(`${prefix}_${name}`);
+  for (const name of extra) out[name] = val(`${prefix}_${name}`);
+  return out;
+}
+function uiState() {
+  return {picked: Object.fromEntries(Object.entries(picked).map(([g, s]) => [g, [...s]])), useKey: $("#useKey").checked, key: $("#key").value,
+    useBpm: $("#useBpm").checked, bpm: $("#bpm").value, exclude: $("#exclude").value, extra: $("#extra").value, manualStyle,
+    customCfg: $("#customCfg").checked, useScore: $("#useScore").checked, lyricsText: $("#lyrics").value};
+}
+function collect(mode) {
+  const cot = document.querySelector("input[name=cot]:checked").value;
+  return {
+    mode, title: $("#title").value.trim(), style: $("#style").value, cot,
+    lyrics: $("#instrumental").checked ? "[Instrumental]" : $("#lyrics").value,
+    instrumental: $("#instrumental").checked,
+    abc: $("#useScore").checked && cot !== "off" && mode === "song" ? $("#abc").value : "",
+    seed: val("seed"), random_seed: $("#randomSeed").checked, takes: val("takes"),
+    cfg_scale: $("#customCfg").checked ? val("cfg") : null, ode_steps: val("ode_steps"),
+    abc_sampling: sampling("abc", ["min_tokens", "max_tokens"]),
+    semantic_sampling: sampling("sem", ["min_tokens", "max_tokens"]),
+    memory: {offload_ar: $("#offload").checked, quantization: $("#fp8").checked ? "fp8" : "none", vae_core_frames: val("chunks"), spill_to_ram: $("#spill").checked},
+    ui: uiState(),
+  };
+}
+function apply(s) {
+  if (!s) return;
+  const ui = s.ui || {};
+  $("#title").value = s.title || "";
+  document.querySelectorAll(".chip[data-group]").forEach(chip => {
+    const on = (ui.picked?.[chip.dataset.group] || []).includes(chip.dataset.item);
+    chip.classList.toggle("on", on);
+    on ? picked[chip.dataset.group].add(chip.dataset.item) : picked[chip.dataset.group].delete(chip.dataset.item);
+  });
+  $("#useKey").checked = !!ui.useKey; if (ui.key) $("#key").value = ui.key;
+  $("#useBpm").checked = !!ui.useBpm; if (ui.bpm) $("#bpm").value = ui.bpm;
+  $("#exclude").value = ui.exclude || ""; $("#extra").value = ui.extra || "";
+  $("#instrumental").checked = !!s.instrumental;
+  manualStyle = !!ui.manualStyle; $("#rebuild").hidden = !manualStyle;
+  $("#style").value = s.style || "";
+  $("#lyrics").value = ui.lyricsText ?? (s.instrumental ? "" : s.lyrics || "");
+  const radio = document.querySelector(`input[name=cot][value="${s.cot}"]`); if (radio) radio.checked = true;
+  $("#useScore").checked = !!ui.useScore && !!s.abc; if (s.abc) $("#abc").value = s.abc;
+  setVal("seed", s.seed); $("#randomSeed").checked = !!s.random_seed; setVal("takes", s.takes);
+  $("#customCfg").checked = s.cfg_scale !== null && s.cfg_scale !== undefined; if ($("#customCfg").checked) setVal("cfg", s.cfg_scale);
+  setVal("ode_steps", s.ode_steps);
+  for (const [key, prefix] of [["abc_sampling", "abc"], ["semantic_sampling", "sem"]])
+    for (const [name, v] of Object.entries(s[key] || {})) setVal(`${prefix}_${name}`, v);
+  if (s.memory) { $("#offload").checked = s.memory.offload_ar !== false; $("#fp8").checked = s.memory.quantization === "fp8"; $("#chunks").value = String(s.memory.vae_core_frames || 512); $("#spill").checked = s.memory.spill_to_ram === true; }
+  syncModeUi(); updateLyricStats(); updateEstimate(); $("#bpmLabel").textContent = `${$("#bpm").value} BPM`;
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+function syncModeUi() {
+  const off = document.querySelector("input[name=cot]:checked").value === "off";
+  const running = lastStatus === "running" || lastWorkerActive || cancelPending;
+  $("#planBtn").disabled = off || running;
+  $("#useScore").disabled = off;
+  $("#lyrics").disabled = $("#instrumental").checked;
+  $("#cfg").disabled = $("#cfg_r").disabled = !$("#customCfg").checked;
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+async function start(mode) {
+  $("#error").textContent = "";
+  try { const data = await api("/api/generate", collect(mode)); startedRun = data.run; lastStatus = "running"; lastResultCount = 0; poll(); loadHistory(); }
+  catch (e) { $("#error").textContent = e.message; }
+}
+async function poll() {
+  const revision = statusRevision;
+  clearTimeout(pollTimer);
+  let d;
+  try { d = await api("/api/status"); } catch { pollTimer = setTimeout(poll, 3000); return; }
+  const previous = lastStatus;
+  if (revision !== statusRevision) return;
+  if (cancelPending) { pollTimer = setTimeout(poll, 250); return; }
+  const wasWorking = lastWorkerActive;
+  lastSnapshot = d;
+  lastWorkerActive = d.status === "running" || d.worker_active === true;
+  lastStatus = d.status;
+  renderStatus(d);
+  if (d.status === "running" && d.run && d.run !== lastRunSeen) {
+    lastRunSeen = d.run;
+    if (d.run !== startedRun) adoptRun(d.run);
+  }
+  if ((d.results || []).length !== lastResultCount) { lastResultCount = (d.results || []).length; loadHistory(); refreshInfo(); }
+  if (lastWorkerActive) { pollTimer = setTimeout(poll, 500); return; }
+  // Keep a slow watch while idle so tasks started from the desktop app's control bar show up here.
+  pollTimer = setTimeout(poll, 3000);
+  if (previous === "running" || wasWorking) {
+    loadHistory(); refreshInfo();
+    const last = (d.results || []).at(-1);
+    if (d.status === "done" && d.mode === "plan" && last?.abc) { $("#abc").value = last.abc; $("#useScore").checked = true; $("#scoreCard").scrollIntoView({behavior: "smooth"}); }
+  }
+}
+// Show the full settings of a song started elsewhere (another window or the API) in this form.
+async function adoptRun(run) {
+  try {
+    const match = (await api("/api/history")).find(r => r.run === run);
+    if (match && match.settings) apply(match.settings);
+  } catch {}
+}
+function renderStatus(d) {
+  const running = d.status === "running";
+  const busy = running || d.worker_active === true;
+  $("#go").disabled = busy; $("#planBtn").disabled = busy; $("#cancel").hidden = !running; syncModeUi();
+  $("#releaseResources").hidden = !d.cleanup_error;
+  const pct = running ? (d.total ? Math.min(100, 100 * d.done / d.total) : 0) : (d.status === "done" ? 100 : 0);
+  $("#barFill").style.width = pct + "%";
+  let text = {idle: "Ready", done: "Finished ✓", cancelled: "Cancelled", error: "Stopped with an error"}[d.status] || d.status;
+  if (d.status === "cancelled" && d.worker_active) text = "Cancelled · releasing resources…";
+  if (d.status === "done" && d.worker_active) text = "Finishing · releasing resources…";
+  if (!running && ["load", "unload"].includes(d.mode) && d.stage) text = d.stage;
+  if (running) {
+    const secs = Math.max(0, Math.round(Date.now() / 1000 - d.started));
+    text = `${d.take ? `Take ${d.take}/${d.takes} · ` : ""}${d.stage || "Working"}`;
+    if (d.total) text += ` · ${d.done}/${d.total}${d.unit === "tokens" ? " tokens (stops early when the song ends)" : ""}`;
+    text += ` · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")} elapsed`;
+  }
+  $("#statusText").textContent = text;
+  $("#error").textContent = d.cleanup_error || (d.status === "error" ? d.error || "" : "");
+}
+
+async function cancelGeneration() {
+  if (cancelPending) return;
+  cancelPending = true;
+  statusRevision++;
+  renderStatus({...lastSnapshot, status: "cancelled", worker_active: true, error: null});
+  try {
+    const result = await api("/api/cancel", {});
+    lastSnapshot = {...lastSnapshot, ...result};
+    renderStatus(lastSnapshot);
+  } catch (error) {
+    renderStatus(lastSnapshot);
+    $("#error").textContent = `Could not cancel: ${error.message}`;
+  } finally {
+    cancelPending = false;
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(poll, 0);
+  }
+}
+
+async function loadHistory() {
+  let runs;
+  try { runs = await api("/api/history"); } catch { return; }
+  const box = $("#runs");
+  box.replaceChildren();
+  if (!runs.length) { box.append(el("p", {class: "hint"}, "No songs yet — they will show up here.")); return; }
+  for (const run of runs) {
+    const s = run.settings || {};
+    const statusBadge = run.status && run.status !== "done"
+      ? el("span", {class: `badge ${run.status === "running" ? "good" : run.status === "cancelled" ? "warn" : "bad"}`}, run.status) : null;
+    const takes = (run.takes || []).map(t => {
+      const cut = t.truncated && Object.values(t.truncated).some(Boolean);
+      const base = `/files/${encodeURIComponent(run.run)}/${encodeURIComponent(t.dir)}`;
+      const length = t.seconds ? `${Math.floor(t.seconds / 60)}:${String(Math.round(t.seconds % 60)).padStart(2, "0")}` : null;
+      return el("div", {class: "take"},
+        el("strong", {}, t.dir.split("-")[0]),
+        run.mode === "plan" ? el("pre", {class: "score mono", style: "flex:1 1 260px;margin:0"}, t.abc || "(no score)") : el("audio", {controls: true, preload: "none", src: `${base}/audio.flac`}),
+        run.mode === "plan" ? null : el("button", {class: "small", title: "Save a copy to your Downloads folder", onclick: async (e) => {
+          const button = e.currentTarget;
+          try { await api("/api/download", {run: run.run, take: t.dir}); button.textContent = "Saved to Downloads ✓"; }
+          catch (err) { alert(err.message); }
+        }}, "⬇ Download"),
+        el("span", {class: "badge"}, `seed ${t.seed}`),
+        length ? el("span", {class: "badge"}, length) : null,
+        cut ? el("span", {class: "badge warn", title: "Hit the length limit; raise max length or shorten lyrics"}, "cut off") : null,
+        el("button", {class: "small", onclick: () => { apply(s); setVal("seed", t.seed); $("#randomSeed").checked = false; setVal("takes", 1); }}, "Reuse with this seed"),
+        t.abc ? el("button", {class: "small", onclick: () => {
+          apply(s); setVal("seed", t.seed); $("#randomSeed").checked = false; setVal("takes", 1);
+          if (s.cot === "off") document.querySelector("input[name=cot][value=full]").checked = true;
+          $("#abc").value = t.abc; $("#useScore").checked = true; syncModeUi(); $("#scoreCard").scrollIntoView({behavior: "smooth"});
+        }}, run.mode === "plan" ? "Edit & render" : "Edit score") : null);
+    });
+    box.append(el("div", {class: "run"},
+      el("div", {class: "run-head"}, el("strong", {}, s.title || run.run), el("span", {class: "badge"}, run.mode === "plan" ? "score only" : `${s.cot} mode`),
+        statusBadge, el("span", {class: "hint"}, run.created || ""),
+        el("span", {class: "row", style: "margin-left:auto"},
+          el("button", {class: "small", onclick: () => apply(s)}, "Reuse settings"),
+          el("button", {class: "small", onclick: () => api("/api/open", {run: run.run}).catch(e => alert(e.message))}, "Open folder"))),
+      el("div", {class: "hint clamp"}, s.style || ""),
+      run.error ? el("div", {class: "hint", style: "color:var(--bad)"}, run.error) : null, takes));
+  }
+}
+
+function presets() { try { return JSON.parse(localStorage.getItem("yue2-presets") || "{}"); } catch { return {}; } }
+function storePresets(p) { try { localStorage.setItem("yue2-presets", JSON.stringify(p)); } catch {} }
+function renderPresets() {
+  const sel = $("#presetSelect");
+  sel.replaceChildren(el("option", {value: ""}, "Presets…"), ...Object.keys(presets()).sort().map(n => el("option", {value: n}, n)));
+}
+async function refreshInfo() {
+  try { INFO = await api("/api/info"); } catch { return; }
+  $("#gpu").textContent = `Local music runtime · model ${INFO.model_loaded ? "loaded" : "loads on first generate"}`;
+  $("#gpu").title = INFO.gpu ? `Detected hardware: ${INFO.gpu}${INFO.vram_gib ? ` · ${INFO.vram_gib} GB` : ""}` : "No supported GPU detected";
+  updateEstimate();
+}
+
+async function init() {
+  try { INFO = await api("/api/info"); } catch (e) { $("#gpu").textContent = "Studio server is not running — start it with studio\\start.bat"; return; }
+  buildControls();
+  const defaults = collect("song");
+  refreshInfo(); renderPresets(); refreshStyle(); updateLyricStats(); syncModeUi();
+  ["useKey", "key", "useBpm", "bpm", "exclude", "extra", "instrumental"].forEach(id => $("#" + id).addEventListener("input", () => { refreshStyle(); syncModeUi(); }));
+  $("#style").addEventListener("input", () => { manualStyle = true; $("#rebuild").hidden = false; });
+  $("#rebuild").addEventListener("click", () => { manualStyle = false; $("#rebuild").hidden = true; refreshStyle(); });
+  $("#lyrics").addEventListener("input", updateLyricStats);
+  document.querySelectorAll("input[name=cot]").forEach(r => r.addEventListener("change", syncModeUi));
+  $("#customCfg").addEventListener("change", syncModeUi);
+  $("#dice").addEventListener("click", () => setVal("seed", Math.floor(Math.random() * 2 ** 31)));
+  $("#useMax").addEventListener("click", () => { setVal("sem_max_tokens", 24576); updateEstimate(); });
+  $("#clearScore").addEventListener("click", () => { $("#abc").value = ""; $("#useScore").checked = false; });
+  $("#go").addEventListener("click", () => start("song"));
+  $("#planBtn").addEventListener("click", () => start("plan"));
+  $("#cancel").addEventListener("click", cancelGeneration);
+  $("#releaseResources").addEventListener("click", async()=>{
+    try { await api("/api/model/unload", {}); poll(); }
+    catch (error) { $("#error").textContent = `Could not release resources: ${error.message}`; }
+  });
+  $("#refresh").addEventListener("click", loadHistory);
+  $("#resetAll").addEventListener("click", () => { if (confirm("Reset every setting to the defaults?")) { apply({...defaults, ui: {}}); manualStyle = false; refreshStyle(); } });
+  $("#presetSave").addEventListener("click", () => {
+    const name = prompt("Preset name:"); if (!name) return;
+    const p = presets(); p[name] = collect("song"); storePresets(p); renderPresets(); $("#presetSelect").value = name;
+  });
+  $("#presetDelete").addEventListener("click", () => {
+    const name = $("#presetSelect").value; if (!name) return;
+    const p = presets(); delete p[name]; storePresets(p); renderPresets();
+  });
+  $("#presetSelect").addEventListener("change", (e) => { const p = presets()[e.target.value]; if (p) apply(p); });
+  document.addEventListener("keydown", (e) => { if (e.ctrlKey && e.key === "Enter" && !$("#go").disabled) start("song"); });
+  loadHistory(); poll();
+}
+init();
+</script>
+</body>
+</html>

@@ -14,8 +14,25 @@ pub struct ProcessJob {
 impl ProcessJob {
     pub fn new(child: &Child) -> Result<Self, String> {
         #[cfg(windows)]
-        unsafe {
+        {
             use std::os::windows::io::AsRawHandle;
+            Self::from_windows_handle(child.as_raw_handle())
+        }
+        #[cfg(not(windows))]
+        {
+            let _ = child;
+            Ok(Self {})
+        }
+    }
+
+    #[cfg(windows)]
+    pub(crate) fn for_async_child(child: &tokio::process::Child) -> Result<Self, String> {
+        Self::from_windows_handle(child.raw_handle().ok_or("The desktop helper has no owned process handle")?)
+    }
+
+    #[cfg(windows)]
+    fn from_windows_handle(child: std::os::windows::io::RawHandle) -> Result<Self, String> {
+        unsafe {
             use windows::Win32::Foundation::{CloseHandle, HANDLE};
             use windows::Win32::System::JobObjects::{
                 AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
@@ -27,17 +44,12 @@ impl ProcessJob {
             let configured = SetInformationJobObject(job, JobObjectExtendedLimitInformation,
                 &limits as *const _ as *const core::ffi::c_void,
                 std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32)
-                .and_then(|_| AssignProcessToJobObject(job, HANDLE(child.as_raw_handle())));
+                .and_then(|_| AssignProcessToJobObject(job, HANDLE(child)));
             if let Err(error) = configured {
                 let _ = CloseHandle(job);
                 return Err(format!("Could not own the runtime process tree: {error}"));
             }
             Ok(Self { handle: job.0 as usize })
-        }
-        #[cfg(not(windows))]
-        {
-            let _ = child;
-            Ok(Self {})
         }
     }
 }
