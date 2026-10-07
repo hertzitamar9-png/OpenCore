@@ -57,6 +57,8 @@
       "resources/speech/phonon_worker.py": "speech/phonon_worker.py",
       "resources/speech/phonon_original.py": "speech/phonon_original.py",
       "resources/speech/phonon_minimal.py": "speech/phonon_minimal.py",
+      "resources/speech/PHONON-LICENSE.txt": "speech/PHONON-LICENSE.txt",
+      "resources/speech/PHONON-NOTICE.txt": "speech/PHONON-NOTICE.txt",
       "resources/speech/phonon_loading.py": "speech/phonon_loading.py",
       "resources/speech/phonon_cache.py": "speech/phonon_cache.py",
       "resources/speech/prepare_phonon_runtime.py": "speech/prepare_phonon_runtime.py",
