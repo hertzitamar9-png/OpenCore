@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { GenerationForm, StudioJobs } from './StudioJobs';
 import * as api from './api';
@@ -127,7 +127,10 @@ it('submits exact music settings through the same durable job API used by chat',
 it('builds a customized animation job from an installed animation model',async()=>{
   const motion:api.InstalledModel={id:'hy-motion-1',label:'HY-Motion 1.0',category:'3d-animation',precision:'BF16',installed:true,selectable:false,externalManaged:false,description:'Text-to-motion',license:'Apache',experimental:true,note:'',contextTokens:0,downloadBytes:1,totalBytes:1};
   vi.spyOn(api,'modelLibrary').mockResolvedValue({models:[motion],progress:null,diskFreeBytes:88e9,minimumFreeBytes:64e6});
-  vi.spyOn(api,'studioRuntime').mockResolvedValue({modelId:motion.id,python:'python.exe',sourceDir:null,runner:'worker.py'});
+  const readyRuntime:api.StudioRuntime={modelId:motion.id,python:'python.exe',sourceDir:null,runner:'worker.py'};
+  let resolveRuntime!:(runtime:api.StudioRuntime)=>void;
+  const runtimeReady=new Promise<api.StudioRuntime>(resolve=>{resolveRuntime=resolve;});
+  vi.spyOn(api,'studioRuntime').mockReturnValue(runtimeReady);
   const submit=vi.spyOn(api,'submitStudioJob').mockResolvedValue({} as api.StudioJob);
   render(<GenerationForm category="3d-animation" onNotice={vi.fn()}/>);
   await screen.findByRole('option',{name:'HY-Motion 1.0'});
@@ -138,7 +141,13 @@ it('builds a customized animation job from an installed animation model',async()
   fireEvent.change(screen.getByLabelText('Frames per second'),{target:{value:'30'}});
   fireEvent.change(screen.getByLabelText('Frame count'),{target:{value:'180'}});
   fireEvent.click(screen.getByLabelText('Loop animation'));
-  fireEvent.click(screen.getByRole('button',{name:'Generate'}));
+  const generate=screen.getByRole('button',{name:'Generate'});
+  expect(generate).toBeDisabled();
+  fireEvent.click(generate);
+  expect(submit).not.toHaveBeenCalled();
+  await act(async()=>{resolveRuntime(readyRuntime);});
+  await waitFor(()=>expect(generate).toBeEnabled());
+  fireEvent.click(generate);
   await waitFor(()=>expect(submit).toHaveBeenCalledWith({modelId:'hy-motion-1',prompt:'A character walks into the room',settings:{seed:42,durationSeconds:6,fps:30,frameCount:180,loop:true,outputFormat:'glb',motionPrompt:'Walk slowly, then wave'}}));
 });
 it.each([
