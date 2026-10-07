@@ -622,7 +622,10 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   useEffect(() => {
     if (view !== "connectors" && view !== "settings") return;
     let active = true;
+    let pending = false;
     const tick = async () => {
+      if (pending || document.hidden) return;
+      pending = true;
       try {
         const next = await api.listOperations();
         if (!active) return;
@@ -631,6 +634,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         setOperations(next);
         if (next.some((item) => item.kind === "history_sync" && previous.has(item.id) && previous.get(item.id) !== item.status && (item.status === "completed" || item.status === "failed" || item.status === "cancelled"))) await onRefresh();
       } catch (error) { if (active) setConnectorNotice(String(error)); }
+      finally { pending = false; }
     };
     void tick();
     const timer = window.setInterval(tick, 1200);

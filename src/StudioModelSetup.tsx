@@ -19,18 +19,24 @@ export function StudioModelSetup({model, connected, disabled, onRefresh, onNotic
   useEffect(() => {
     if (!installing) return;
     let alive = true;
-    const refresh = () => api.modelLibrary().then(async library => {
-      if (!alive) return;
-      setProgress(library.progress);
-      if (library.progress?.modelId !== model.id) return;
-      if (library.progress.phase === 'complete') {
-        setInstalling(false); await onRefresh();
-        onNotice(`${model.label} weights are verified. ${managed ? 'Its runtime is being prepared automatically.' : 'Its publisher runtime requirements are listed here.'}`);
-      } else if (library.progress.phase === 'failed') {
-        setInstalling(false); setError(library.progress.error || 'Weight installation failed.');
-      }
-    }).catch(cause => {if (alive) {setError(String(cause)); setInstalling(false);}});
-    void refresh(); const timer = setInterval(() => void refresh(), 1000);
+    let pending = false;
+    const refresh = (fresh = false) => {
+      if (pending) return;
+      pending = true;
+      return api.modelLibrary({ fresh }).then(async library => {
+        if (!alive) return;
+        setProgress(library.progress);
+        if (library.progress?.modelId !== model.id) return;
+        if (library.progress.phase === 'complete') {
+          setInstalling(false); await onRefresh();
+          onNotice(`${model.label} weights are verified. ${managed ? 'Its runtime is being prepared automatically.' : 'Its publisher runtime requirements are listed here.'}`);
+        } else if (library.progress.phase === 'failed') {
+          setInstalling(false); setError(library.progress.error || 'Weight installation failed.');
+        }
+      }).catch(cause => {if (alive) {setError(String(cause)); setInstalling(false);}})
+        .finally(() => { pending = false; });
+    };
+    void refresh(true); const timer = setInterval(() => void refresh(), 1000);
     return () => {alive = false; clearInterval(timer);};
   }, [installing]);
   async function install() {

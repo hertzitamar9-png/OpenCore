@@ -56,3 +56,23 @@ it("refreshes a changed runtime after a pending pre-action snapshot", async () =
   await expect(afterStart).resolves.toHaveProperty("runtime.status", "running");
   expect(bridge.invoke).toHaveBeenCalledTimes(2);
 });
+
+it("shares slow catalogue scans but reads fresh installed state after an action", async () => {
+  Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
+  let finishOld!: (value: unknown) => void;
+  const beforeInstall = { models: [{ id: "yue2", installed: false }] };
+  const afterInstall = { models: [{ id: "yue2", installed: true }] };
+  bridge.invoke.mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve; }))
+    .mockResolvedValue(afterInstall);
+  const musicPoll = api.modelLibrary();
+  const pickerPoll = api.modelLibrary();
+  const afterAction = api.modelLibrary({ fresh: true });
+  expect(bridge.invoke).toHaveBeenCalledTimes(1);
+  finishOld(beforeInstall);
+  await expect(musicPoll).resolves.toEqual(beforeInstall);
+  await expect(pickerPoll).resolves.toEqual(beforeInstall);
+  await expect(afterAction).resolves.toEqual(afterInstall);
+  expect(bridge.invoke).toHaveBeenCalledTimes(2);
+  await api.modelLibrary();
+  expect(bridge.invoke).toHaveBeenCalledTimes(3);
+});

@@ -1345,6 +1345,31 @@ describe("OpenCore", () => {
     } finally { view.unmount(); sourceHook.mockRestore(); if (originalStorage) Object.defineProperty(window, "localStorage", originalStorage); }
   });
 
+  it("waits for a slow operations read before starting another polling request", async () => {
+    let finish!: (operations: OperationRecord[]) => void;
+    const operations = vi.spyOn(api, "listOperations").mockImplementationOnce(() =>
+      new Promise(resolve => { finish = resolve; })).mockResolvedValue([]);
+    const view = render(<App />);
+    await screen.findByText("Build a data analysis script", { selector: "h2" });
+    const intervals: (() => void)[] = [];
+    const originalInterval = window.setInterval.bind(window);
+    const interval = vi.spyOn(window, "setInterval").mockImplementation((callback, delay, ...args) => {
+      if (delay === 1200 && typeof callback === "function") intervals.push(callback as () => void);
+      return originalInterval(callback, delay, ...args);
+    });
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
+      expect(operations).toHaveBeenCalledTimes(1);
+      const tick = intervals.at(-1)!;
+      expect(tick).toBeTypeOf("function");
+      await act(async () => { tick(); tick(); });
+      expect(operations).toHaveBeenCalledTimes(1);
+      await act(async () => finish([]));
+      await act(async () => tick());
+      expect(operations).toHaveBeenCalledTimes(2);
+    } finally { view.unmount(); interval.mockRestore(); operations.mockRestore(); }
+  });
+
   it("shows persisted history-sync file progress in its connector status", async () => {
     const operations = vi.spyOn(api, "listOperations").mockResolvedValue([{
       id: "sync-1", kind: "history_sync", target: "codex", phase: "Importing transcripts", status: "running",

@@ -740,10 +740,19 @@ fn select_profile(core: tauri::State<'_, Arc<AppCore>>, profile: String) -> Resu
 }
 
 #[tauri::command]
-fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<Value, String> {
-    let mut library=serde_json::to_value(model_catalog::list(core.runtime.install_root())?).map_err(|e|e.to_string())?;
-    if let Some(models)=library["models"].as_array_mut(){for model in models {let connected=core.studios.runtime_connected(model["id"].as_str().unwrap_or(""));model["runtimeConnected"]=json!(connected);}}
-    Ok(library)
+async fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<Value, String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut library = serde_json::to_value(model_catalog::list(core.runtime.install_root())?)
+            .map_err(|error| error.to_string())?;
+        if let Some(models) = library["models"].as_array_mut() {
+            for model in models {
+                let connected = core.studios.runtime_connected(model["id"].as_str().unwrap_or(""));
+                model["runtimeConnected"] = json!(connected);
+            }
+        }
+        Ok(library)
+    }).await.map_err(|error| error.to_string())?
 }
 #[tauri::command]
 async fn installed_skill_models(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<Value>,String> {
@@ -1152,8 +1161,10 @@ async fn sync_local_history(core: tauri::State<'_, Arc<AppCore>>, id: String) ->
 }
 
 #[tauri::command]
-fn list_operations(core: tauri::State<'_, Arc<AppCore>>) -> Result<Vec<OperationRecord>, String> {
-    core.store.list_operations()
+async fn list_operations(core: tauri::State<'_, Arc<AppCore>>) -> Result<Vec<OperationRecord>, String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || core.store.list_operations())
+        .await.map_err(|error| error.to_string())?
 }
 
 #[tauri::command]

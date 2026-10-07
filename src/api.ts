@@ -99,8 +99,11 @@ export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
   progress: { modelId: string; phase: string; downloadedBytes: number; totalBytes: number; currentFile: string; error: string | null } | null;
 }
-export async function modelLibrary(): Promise<ModelLibrary> {
-  if (desktop()) return invoke<ModelLibrary>("list_model_library");
+export async function modelLibrary(options?: { fresh?: boolean }): Promise<ModelLibrary> {
+  if (desktop()) {
+    if (options?.fresh) await pendingReads.get('model-library')?.catch(() => undefined);
+    return sharedRead('model-library', () => invoke<ModelLibrary>("list_model_library"));
+  }
   return { models: modelCatalog.models.map((model) => {
     const files = modelCatalog.artifacts.filter((file) => model.artifacts.includes(file.id));
     const exactBytes = files.reduce((sum, file) => sum + file.bytes, 0);
