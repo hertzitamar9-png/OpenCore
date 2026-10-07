@@ -22,7 +22,16 @@ it('connects the existing music interface only after the user opens it', async (
   const frame = await screen.findByTitle('YuE2 Music Studio');
   expect(frame).toHaveAttribute('src', 'http://127.0.0.1:7860');
   expect(screen.queryByRole('region', { name: 'New generation' })).not.toBeInTheDocument();
-  expect(await screen.findByRole('region', { name: 'Generation jobs' })).toBeVisible();
+  expect(screen.queryByRole('region', { name: 'Generation jobs' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Music Studio' })).not.toBeInTheDocument();
+  expect(frame).toHaveAttribute('allowfullscreen');
+});
+it('uses the existing YuE2 workspace without adding another generation history', async () => {
+  vi.mocked(api.musicStudioStatus).mockResolvedValue({ ...status, running: true, url: 'http://127.0.0.1:7860', integrationCurrent: true });
+  render(<MusicStudio runtimeActive={false} onNotice={vi.fn()} />);
+  await screen.findByTitle('YuE2 Music Studio');
+  expect(screen.queryByRole('region', { name: 'Generation jobs' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Refresh Music Studio' })).not.toBeInTheDocument();
 });
 it('does not embed an unrelated URL returned by the backend', async () => {
   vi.mocked(api.musicStudioStatus).mockResolvedValue({ ...status, running: true, url: 'https://other.example' });
