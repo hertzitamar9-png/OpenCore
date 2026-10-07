@@ -398,9 +398,9 @@ describe("OpenCore", () => {
           { kind: "thinking", content: "latest live thought" },
         ],
       } }));
-      const first = await screen.findByText("first live thought");
+      const first = await screen.findByText("first live thought", { selector: '.reasoning-text' });
       const answer = await screen.findByText("answer arriving now");
-      const latest = await screen.findByText("latest live thought");
+      const latest = await screen.findByText("latest live thought", { selector: '.reasoning-text' });
       expect(first.compareDocumentPosition(answer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(answer.compareDocumentPosition(latest) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(screen.getByRole("button", { name: "Stop generation" })).toBeVisible();
