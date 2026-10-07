@@ -52,6 +52,30 @@ class GgufVariantRefreshTests(unittest.TestCase):
         self.assertEqual(artifact["revision"], "a" * 40)
         self.assertEqual(artifact["sha256"], "b" * 64)
 
+    def test_refresh_preserves_existing_profile_pins_and_adds_no_orphan_artifacts(self):
+        parent = {
+            "id": "pinned", "label": "Pinned", "precision": "Q8_0", "artifacts": ["base"],
+            "weightArtifacts": ["base"], "selectable": True, "category": "text", "backend": "gguf",
+            "memoryMode": "echo", "runtimeModelPath": "models/library/pinned/base-Q8_0.gguf",
+        }
+        existing = dict(parent, id="pinned-q4-k-m-bbbbbb", precision="Q4_K_M", variantOf="pinned",
+                        artifacts=["shipped-q4"], weightArtifacts=["shipped-q4"],
+                        runtimeModelPath="models/library/pinned/shipped-Q4_K_M.gguf")
+        native = dict(existing, id=f"{existing['id']}-native", memoryMode="native")
+        catalog = {"models": [parent, existing, native], "artifacts": [
+            {"id": "base", "path": parent["runtimeModelPath"], "repo": "org/pinned",
+             "filename": "base-Q8_0.gguf", "revision": "c" * 40, "sha256": "a" * 64, "bytes": 1000},
+            {"id": "shipped-q4", "path": existing["runtimeModelPath"], "repo": "org/pinned",
+             "filename": "base-Q4_K_M.gguf", "revision": "c" * 40, "sha256": "b" * 64, "bytes": 1000},
+        ]}
+        before = copy.deepcopy(catalog)
+        repo = {"id": "org/pinned", "sha": "d" * 40,
+                "siblings": [file_entry("base-Q4_K_M.gguf", "b")]}
+        self.assertEqual(refresh_catalog(catalog, {"org/pinned": repo}), 0)
+        self.assertEqual(catalog, before)
+        for model in catalog["models"]:
+            self.assertTrue(set(model["weightArtifacts"]).issubset(model["artifacts"]))
+
     def test_refreshes_image_gguf_variants_without_text_runtime_profiles(self):
         parent = {
             "id": "qwen-image-21-gguf", "label": "Qwen Image GGUF", "precision": "Q6_K",

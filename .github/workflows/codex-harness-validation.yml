@@ -30,6 +30,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
+      - name: Test GGUF quantization catalog refresh
+        run: python -m unittest scripts.test_sync_gguf_variants -v
+      - name: Refresh published GGUF quantizations before native validation
+        run: python scripts/sync_gguf_variants.py
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
