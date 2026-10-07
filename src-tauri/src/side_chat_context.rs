@@ -83,8 +83,18 @@ impl EventStore {
         Ok(Some(SideChatContextUpdate {parent_id:parent,through,entries}))
     }
 
-    /// Call only after the Codex turn containing this delta has been accepted.
-    /// Never advance it on a failed/cancelled request or while only updating the UI.
+    /// A successful native fork admits only context already in its parent's thread.
+    pub fn acknowledge_side_chat_fork(&self, parent: &str, child: &str, through: i64) -> Result<(), String> {
+        // A parent branch can have copied newer context into its timeline
+        // without sending it to its durable thread. The native fork contains
+        // only the admitted prefix; keep the remaining child delta pending.
+        let admitted=self.side_chat_context_update(parent)?.and_then(|update|update.entries.iter().map(|entry|entry.id).min())
+            .map_or(through,|first_pending|through.min(first_pending.saturating_sub(1)));
+        self.mark_side_chat_context_delivered(child,admitted)
+    }
+
+    /// Call only after the Codex input has been accepted or inherited by a native fork.
+    /// Failed requests and UI refreshes must leave the delivery cursor pending.
     pub fn mark_side_chat_context_delivered(&self, id: &str, through: i64) -> Result<(), String> {
         let mut connection=self.connection.lock().map_err(|e|e.to_string())?;
         let transaction=connection.transaction().map_err(|e|e.to_string())?;

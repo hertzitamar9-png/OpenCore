@@ -28,7 +28,7 @@ export interface BackgroundRun {
 }
 export interface BackgroundSnapshot {
   tasks: BackgroundTask[]; runs: BackgroundRun[]; webhook: { url: string; token: string | null };
-  execution: { appMustBeOpen: true; noPermanentService?: boolean; gpuWorkersHoldReservationUntilExit?: boolean };
+  execution: { appMustBeOpen: boolean; agentMustBeRunning?: boolean; windowCloseRequiresBackgroundAgent?: boolean; noPermanentService?: boolean; gpuWorkersHoldReservationUntilExit?: boolean };
 }
 export interface BackgroundLogs { stdout: string; stderr: string; stdoutTruncated: boolean; stderrTruncated: boolean; limitBytesPerStream?: number }
 export interface BackgroundCommandArgs { action: string; conversationId?: string; taskId?: string; runId?: string; task?: unknown; event?: unknown }

@@ -1,0 +1,147 @@
+{
+  "sourceFilesUnchanged": true,
+  "sourceSha256": {
+    "C:\\Users\\hertz\\OpenCore\\speech\\phonon-2\\model.fermion": "4b6bfa3a12cc3c4e0a54f2ab3ec4ca7a842b09e5c7ecfc8e7ca0ac6cc8c11468",
+    "C:\\Users\\hertz\\OpenCore\\speech\\phonon-2\\fermion_container.py": "5cf172e8cf6b313e951c4ef588ca913c7285b0aa3b92de413c3d7ec2b939c0e4",
+    "C:\\Users\\hertz\\OpenCore\\speech\\phonon-2\\reference_transformers.py": "dd51dc042bda14b9578ef797ea9b137b73d09d801f8ce421c7f3eb3b6ddd40d1",
+    "C:\\Users\\hertz\\OpenCore\\speech\\settings.json": "df3bd24e55209240f9e656e2699d91f41a61c30c1b543849ac66e55787f72c85"
+  },
+  "cudaInferencePerformed": false,
+  "downloadedDependencies": false,
+  "results": [
+    {
+      "precision": "bf16",
+      "readyMs": 36863,
+      "loadReceipt": {
+        "container_records": 723,
+        "params": 627008134,
+        "state_dict_keys": 723,
+        "denseCache": {
+          "hit": false,
+          "bytes": 1254343385,
+          "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\.worktrees\\codex-startup-recovery\\.test-tmp-setup\\phonon-cache-qualified",
+          "identitySha256": "ebdb9565a7409af21b9449b2851cfd98c3bf43f708bdd24b8bc1fbbefaf3a8ac",
+          "detail": "Prepared from the installed container at the selected runtime precision",
+          "derivedFromInstalledCheckpoint": true
+        }
+      },
+      "stages": [
+        "building-model",
+        "verifying-dense-cache",
+        "expanding-weights",
+        "applying-weights",
+        "saving-dense-cache",
+        "preparing-processor"
+      ],
+      "publisherTensorParity": true,
+      "tensorKeysCompared": 723,
+      "tensorElementsCompared": 627057310,
+      "peakWorkingSetBytes": 5870284800,
+      "torchVersion": "2.11.0+cu126",
+      "transformersVersion": "5.18.0",
+      "device": "cpu",
+      "phase": "miss",
+      "processWallMs": 66753
+    },
+    {
+      "precision": "bf16",
+      "readyMs": 18014,
+      "loadReceipt": {
+        "container_records": 723,
+        "params": 627008134,
+        "state_dict_keys": 723,
+        "denseCache": {
+          "hit": true,
+          "bytes": 1254343385,
+          "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\.worktrees\\codex-startup-recovery\\.test-tmp-setup\\phonon-cache-qualified",
+          "identitySha256": "ebdb9565a7409af21b9449b2851cfd98c3bf43f708bdd24b8bc1fbbefaf3a8ac",
+          "detail": "Verified dense CPU cache",
+          "derivedFromInstalledCheckpoint": true
+        }
+      },
+      "stages": [
+        "building-model",
+        "verifying-dense-cache",
+        "loading-dense-cache",
+        "applying-weights",
+        "preparing-processor"
+      ],
+      "publisherTensorParity": true,
+      "tensorKeysCompared": 723,
+      "tensorElementsCompared": 627057310,
+      "peakWorkingSetBytes": 4610715648,
+      "torchVersion": "2.11.0+cu126",
+      "transformersVersion": "5.18.0",
+      "device": "cpu",
+      "phase": "hit",
+      "processWallMs": 43762
+    },
+    {
+      "precision": "fp32",
+      "readyMs": 30288,
+      "loadReceipt": {
+        "container_records": 723,
+        "params": 627008134,
+        "state_dict_keys": 723,
+        "denseCache": {
+          "hit": false,
+          "bytes": 2508457945,
+          "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\.worktrees\\codex-startup-recovery\\.test-tmp-setup\\phonon-cache-qualified",
+          "identitySha256": "baf42d8a3377cbbdab2c8d153a5175f179c0657b704d7474ae249135db457457",
+          "detail": "Prepared from the installed container at the selected runtime precision",
+          "derivedFromInstalledCheckpoint": true
+        }
+      },
+      "stages": [
+        "building-model",
+        "verifying-dense-cache",
+        "expanding-weights",
+        "applying-weights",
+        "saving-dense-cache",
+        "preparing-processor"
+      ],
+      "publisherTensorParity": true,
+      "tensorKeysCompared": 723,
+      "tensorElementsCompared": 627057310,
+      "peakWorkingSetBytes": 7120900096,
+      "torchVersion": "2.11.0+cu126",
+      "transformersVersion": "5.18.0",
+      "device": "cpu",
+      "phase": "miss",
+      "processWallMs": 58226
+    },
+    {
+      "precision": "fp32",
+      "readyMs": 12051,
+      "loadReceipt": {
+        "container_records": 723,
+        "params": 627008134,
+        "state_dict_keys": 723,
+        "denseCache": {
+          "hit": true,
+          "bytes": 2508457945,
+          "path": "C:\\Users\\hertz\\Documents\\Best ai model in the world\\apps\\opencore-control-center\\.worktrees\\codex-startup-recovery\\.test-tmp-setup\\phonon-cache-qualified",
+          "identitySha256": "baf42d8a3377cbbdab2c8d153a5175f179c0657b704d7474ae249135db457457",
+          "detail": "Verified dense CPU cache",
+          "derivedFromInstalledCheckpoint": true
+        }
+      },
+      "stages": [
+        "building-model",
+        "verifying-dense-cache",
+        "loading-dense-cache",
+        "applying-weights",
+        "preparing-processor"
+      ],
+      "publisherTensorParity": true,
+      "tensorKeysCompared": 723,
+      "tensorElementsCompared": 627057310,
+      "peakWorkingSetBytes": 4610367488,
+      "torchVersion": "2.11.0+cu126",
+      "transformersVersion": "5.18.0",
+      "device": "cpu",
+      "phase": "hit",
+      "processWallMs": 38540
+    }
+  ]
+}

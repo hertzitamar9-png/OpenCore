@@ -133,9 +133,21 @@ fn command(executable: impl AsRef<std::ffi::OsStr>) -> Command {
     #[cfg(windows)] result.creation_flags(0x0800_0000);
     result
 }
+async fn own_setup_process(child:&mut tokio::process::Child)->Result<Option<crate::child_guard::ProcessJob>,String> {
+    #[cfg(windows)] {
+        if let Some(handle)=child.raw_handle(){crate::child_guard::adopt_handle(handle);}
+        match crate::child_guard::ProcessJob::for_async_child(child) {
+            Ok(job)=>Ok(Some(job)),
+            Err(error)=>{let _=child.kill().await;let _=child.wait().await;Err(error)},
+        }
+    }
+    #[cfg(not(windows))] {let _=child;Ok(None)}
+}
 
 impl RuntimeSetupManager {
     pub fn new(root: PathBuf, resources: PathBuf) -> Result<Arc<Self>, String> {
+        std::fs::create_dir_all(&root).map_err(|error|error.to_string())?;
+        let root=std::fs::canonicalize(root).map_err(|error|format!("Cannot resolve the managed runtime root: {error}"))?;
         let path = root.join("runtime-setup/jobs.json");
         let mut jobs: Vec<SetupJob> = if path.is_file() {
             serde_json::from_slice(&std::fs::read(&path).map_err(|error|error.to_string())?)
@@ -191,7 +203,8 @@ impl RuntimeSetupManager {
             Err(error) => return Err(error.to_string()),
         };
         let mut receipt: Value = serde_json::from_slice(&bytes).map_err(|error|format!("Invalid runtime setup receipt: {error}"))?;
-        let executable = receipt["python"].as_str().or_else(||receipt["executable"].as_str()).map(PathBuf::from);
+        let executable = receipt["python"].as_str().or_else(||receipt["executable"].as_str()).map(PathBuf::from)
+            .filter(|path|path.is_absolute()).and_then(|path|std::fs::canonicalize(path).ok());
         if receipt["schema"] != 1 || receipt["dependenciesVerified"] != true
             || receipt["recipeFingerprint"].as_str() != Some(recipe_fingerprint(&recipe)?.as_str())
             || executable.as_ref().is_none_or(|path|!path.is_absolute() || !path.is_file()) {
@@ -294,7 +307,7 @@ impl RuntimeSetupManager {
             .arg("--options-file").arg(options_file).env("PYTHONIOENCODING", "utf-8")
             .stdout(Stdio::piped()).stderr(Stdio::piped());
         let mut child = process.spawn().map_err(|error|format!("Cannot start managed dependency setup: {error}"))?;
-        #[cfg(windows)] if let Some(handle)=child.raw_handle() { crate::child_guard::adopt_handle(handle); }
+        let owned_process=own_setup_process(&mut child).await?;
         let mut stdout = BufReader::new(child.stdout.take().ok_or("Missing setup output")?).lines();
         let mut stderr = BufReader::new(child.stderr.take().ok_or("Missing setup diagnostics")?).lines();
         let mut out_done = false;
@@ -313,6 +326,7 @@ impl RuntimeSetupManager {
                 // This absolute deadline is polled before output. A process
                 // emitting continuous diagnostics cannot postpone cancellation.
                 _=wait_cancel_deadline(cancel_deadline)=>{
+                    drop(owned_process);
                     let _=child.kill().await;let _=child.wait().await;
                     return Err("Setup cancelled; its process was stopped. Windows administrator installers may require completing their own permission/rollback dialog.".into());
                 }
@@ -355,6 +369,7 @@ impl RuntimeSetupManager {
                 cancelled=true;cancel_deadline=Some(tokio::time::Instant::now()+Duration::from_secs(12));
             },
             _=wait_cancel_deadline(cancel_deadline)=>{
+                drop(owned_process);
                 let _=child.kill().await;let _=child.wait().await;
                 return Err("Setup cancelled; the remaining setup process was stopped".into());
             },
@@ -461,7 +476,9 @@ impl RuntimeSetupManager {
         self.update(id,|job|{job.detail="Installing the managed Python interpreter without changing PATH or existing environments".into();})?;
         let mut child=command(installer).args(["/quiet","InstallAllUsers=0","Include_pip=1","Include_launcher=0","Include_test=0","PrependPath=0","Shortcuts=0","AssociateFiles=0"])
             .arg(format!("TargetDir={}",base.display())).spawn().map_err(|error|error.to_string())?;
-        let status=tokio::select!{_=token.cancelled()=>{let _=child.kill().await;let _=child.wait().await;return Err("Managed Python installation cancelled; retry to repair its managed directory".into());},result=child.wait()=>result.map_err(|error|error.to_string())?};
+        let owned_process=own_setup_process(&mut child).await?;
+        let status=tokio::select!{_=token.cancelled()=>{drop(owned_process);let _=child.kill().await;let _=child.wait().await;return Err("Managed Python installation cancelled; retry to repair its managed directory".into());},result=child.wait()=>result.map_err(|error|error.to_string())?};
+        drop(owned_process);
         if !status.success() || !healthy_python(&python).await{return Err(format!("Managed Python bootstrap did not pass its interpreter health check ({status})"));}
         Ok(python)
     }
@@ -515,6 +532,38 @@ pub fn runtime_setup_record_inference(core:tauri::State<'_,Arc<crate::AppCore>>,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn owned_setup_process_stops_its_descendant_when_released() {
+        let code="import subprocess,sys,time; child=subprocess.Popen([sys.executable,'-c','import time; time.sleep(120)'],creationflags=0x08000000); print(child.pid,flush=True); time.sleep(120)";
+        let mut child=command("python.exe").args(["-u","-c",code]).stdout(Stdio::piped()).spawn().unwrap();
+        let owned=own_setup_process(&mut child).await.unwrap();
+        let mut output=BufReader::new(child.stdout.take().unwrap()).lines();
+        let pid=tokio::time::timeout(Duration::from_secs(5),output.next_line()).await.unwrap().unwrap().unwrap().trim().parse::<u32>().unwrap();
+        let descendant=crate::process_watch::ProcessWatch::open(pid).unwrap();
+        assert!(descendant.exit_code().unwrap().is_none());
+        drop(owned);
+        tokio::time::timeout(Duration::from_secs(5),child.wait()).await.unwrap().unwrap();
+        tokio::time::timeout(Duration::from_secs(5),async {
+            while descendant.exit_code().unwrap().is_none(){tokio::time::sleep(Duration::from_millis(10)).await;}
+        }).await.expect("Releasing setup ownership must terminate its descendant too");
+    }
+    #[test]
+    fn relative_managed_root_accepts_its_canonical_interpreter_and_rejects_escape() {
+        let relative=PathBuf::from(format!(".setup-relative-root-{}",uuid::Uuid::new_v4()));
+        let manager=RuntimeSetupManager::new(relative.clone(),PathBuf::new()).unwrap();
+        assert!(manager.root.is_absolute());
+        let python=manager.root.join("runtime-setup/environments/sana-16/Scripts/python.exe");
+        std::fs::create_dir_all(python.parent().unwrap()).unwrap();std::fs::write(&python,b"fixture; never executed").unwrap();
+        let recipe=recipe_for("sana-16").unwrap();
+        let mut receipt=json!({"schema":1,"recipeFingerprint":recipe_fingerprint(&recipe).unwrap(),"python":python,"dependenciesVerified":true,"inferenceVerified":false});
+        atomic_json(&manager.root.join("runtime-setup/receipts/sana-16.json"),&receipt).unwrap();
+        assert!(manager.receipt("sana-16").unwrap().is_some());
+        let escaped=manager.root.join("outside-environment.exe");std::fs::write(&escaped,b"fixture").unwrap();receipt["python"]=json!(escaped);
+        atomic_json(&manager.root.join("runtime-setup/receipts/sana-16.json"),&receipt).unwrap();
+        assert!(manager.receipt("sana-16").unwrap().is_none());
+        let root=manager.root.clone();drop(manager);std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn recipe_fingerprint_matches_python_canonical_utf8_fixture() {
         let recipe=json!({"supported":true,"nested":{"z":2,"a":1},"label":"café","id":"fixture"});

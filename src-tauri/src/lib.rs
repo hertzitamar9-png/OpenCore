@@ -441,12 +441,18 @@ fn workspace_files_sync(core:&AppCore,app:&tauri::AppHandle,args:Value)->Result<
             if let Some(files)=value["files"].as_array() {records.extend(files.iter().cloned());}
             if let Some(notes)=value["coverage"].as_array() {coverage.extend(notes.iter().cloned());}
         }
-        for job in core.studios.list()? {
+        let mut job_cursor=0;
+        loop {
+          let page=core.studios.history_page(job_cursor,100)?;
+          if page.is_empty(){break;}
+          for (rowid,job) in page {
+            job_cursor=rowid;
             let conversation=job.request.conversation_id.clone().unwrap_or_else(||format!("studio:{}",job.category));
             if selected.is_some_and(|id|id!=conversation) || job.outputs.is_empty() {continue;}
             match core.files.command(json!({"action":"index","paths":job.outputs,"conversationId":conversation,"jobId":job.id,"source":"studio"})) {
                 Ok(value)=>append(value,&mut records,&mut coverage),Err(error)=>coverage.push(json!(format!("Studio output index: {error}"))),
             }
+          }
         }
         let root=artifact_root(&app)?;
         for artifact in core.store.published_artifacts(selected)? {
@@ -498,7 +504,7 @@ async fn create_side_chat(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppH
     core.store.set_setting(&format!("chat_model_{id}"),&selected)?;
     match codex_harness::fork_side_context(core.inner().clone(),&app,&conversation_id,&id,&workspace).await {
         Ok(true)=>{
-            core.store.mark_side_chat_context_delivered(&id,info["copiedThrough"].as_i64().ok_or("Side chat context marker is missing")?)?;
+            core.store.acknowledge_side_chat_fork(&conversation_id,&id,info["copiedThrough"].as_i64().ok_or("Side chat context marker is missing")?)?;
             info["contextSource"]=json!("codex-fork");
         },
         Ok(false)=>{},

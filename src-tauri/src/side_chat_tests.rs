@@ -109,6 +109,26 @@ fn nested_context_refresh_is_incremental_and_survives_parent_deletion() {
 }
 
 #[test]
+fn native_nested_fork_retains_context_copied_but_not_admitted_by_its_parent() {
+    let root=std::env::temp_dir().join(format!("opencore-nested-fork-pending-{}",uuid::Uuid::new_v4()));
+    let store=EventStore::open(&root.join("history.sqlite3")).unwrap();
+    store.ensure_conversation("main","OpenCore","echo","Main").unwrap();
+    store.add_timeline("main","message","user","OpenCore","You","Already in the native thread",&json!({})).unwrap();
+    let first=store.create_side_chat("main","side","echo",262_144).unwrap();
+    store.acknowledge_side_chat_fork("main","side",first["copiedThrough"].as_i64().unwrap()).unwrap();
+    store.add_timeline("main","message","user","OpenCore","You","New inherited decision",&json!({})).unwrap();
+    store.refresh_side_chat_context("side").unwrap();
+    let nested=store.create_side_chat("side","nested","echo",262_144).unwrap();
+    store.acknowledge_side_chat_fork("side","nested",nested["copiedThrough"].as_i64().unwrap()).unwrap();
+    let pending=store.side_chat_context_update("nested").unwrap().unwrap();
+    assert_eq!(pending.entries.iter().map(|entry|entry.content.as_str()).collect::<Vec<_>>(),vec!["New inherited decision"]);
+    assert!(store.side_chat_context_update("side").unwrap().is_some());
+    store.mark_side_chat_context_delivered("nested",pending.through).unwrap();
+    assert!(store.side_chat_context_update("nested").unwrap().is_none());
+    drop(store);std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn side_chat_shares_project_but_never_reuses_source_harness_mapping() {
     let root = std::env::temp_dir().join(format!("opencore-side-project-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&root).unwrap();
