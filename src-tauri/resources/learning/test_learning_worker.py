@@ -411,7 +411,7 @@ class GateAndChunkTests(unittest.TestCase):
         worker = module("worker")
         with tempfile.TemporaryDirectory() as temp:
             spec = worker.setup_spec(Path(temp))
-            self.assertTrue(Path(spec["python"]).is_relative_to(Path(temp)))
+            self.assertTrue(Path(spec["python"]).is_relative_to(Path(temp).resolve()))
             self.assertIn("unsloth==2026.9.4", spec["packages"])
             self.assertIn("torchvision==0.26.0+cu130", spec["torch"]["companions"])
             self.assertTrue(any("triton-windows==3.6.0.post26" in item for item in spec["packages"]))
@@ -627,7 +627,7 @@ class GateAndChunkTests(unittest.TestCase):
         from unittest.mock import patch
         worker = module("worker")
         with tempfile.TemporaryDirectory() as temp:
-            output = Path(temp)
+            output = Path(temp).resolve()
             checkpoint = output / "checkpoint-1"
             checkpoint.mkdir()
             (checkpoint / "trainer_state.json").write_text('{"global_step":1}')
