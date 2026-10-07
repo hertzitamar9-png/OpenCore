@@ -186,10 +186,10 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
         </fieldset> : null}
         <fieldset disabled={!model.installed}><legend>When the microphone starts</legend>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "cold"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("cold"))} />
-            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon ? 'starts runtime and loads its verified dense cache when available; ' : ''}about {speech.coldStartMs == null ? "measured on first use" : `${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
+            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon ? 'starts runtime and loads its verified dense cache when available; ' : ''}{speech.coldStartMs == null ? "startup time is measured on first use" : `about ${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
           </label>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "ram"} disabled={Boolean(pending)} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("ram"))} />
-            <span><strong>Keep sleeping in RAM</strong><small>Recommended for frequent dictation · about {speech.warmWakeMs == null ? "measured when enabled" : `${(speech.warmWakeMs / 1000).toFixed(2)} s on this device`}; CPU weights stay in RAM and leave the GPU while asleep.</small></span>
+            <span><strong>Keep sleeping in RAM</strong><small>Recommended for frequent dictation · {speech.warmWakeMs == null ? "wake time is measured when enabled" : `about ${(speech.warmWakeMs / 1000).toFixed(2)} s on this device`}; CPU weights stay in RAM and leave the GPU while asleep.</small></span>
           </label>
         </fieldset>
         {selectedPhonon ? <SpeechRuntimeControls speech={speech} onRefresh={refresh} onNotice={onNotice} /> : null}
