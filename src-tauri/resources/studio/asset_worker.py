@@ -148,29 +148,10 @@ def generate(request, output):
         generator.enable_model_cpu_offload()
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
         args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
-        is_animation = model_id == "animation-diffusion-2d"
-        if is_animation:
-            frame_parameters = inspect.signature(generator.__call__).parameters
-            if "num_frames" not in frame_parameters and not any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in frame_parameters.values()):
-                raise RuntimeError("The connected 2D animation pipeline does not expose frame generation")
-            args["num_frames"] = bounded_integer(settings, "frameCount", 16, 2, 240)
-        progress(output, "Generating animation frames" if is_animation else "Generating image", steps=args["num_inference_steps"])
+        # The catalog's animation-diffusion-2d is a plain Stable Diffusion
+        # checkpoint for animation-style still images, without a motion adapter.
+        progress(output, "Generating image", steps=args["num_inference_steps"])
         result = generator(**args)
-        if is_animation:
-            frames = getattr(result, "frames", None)
-            if isinstance(frames, (list, tuple)) and frames and isinstance(frames[0], (list, tuple)):
-                frames = frames[0]
-            if frames is None or len(frames) < 2:
-                raise RuntimeError("The connected animation pipeline did not return a usable frame sequence")
-            from PIL import Image
-            frames = [frame.convert("RGBA") if hasattr(frame, "convert") else Image.fromarray(frame).convert("RGBA") for frame in frames]
-            output_format = validate_output_format(settings.get("outputFormat", "gif"), {"gif", "webp"}, "outputFormat")
-            fps = bounded_integer(settings, "fps", 12, 1, 60)
-            loop = 0 if settings.get("loop", False) is True else 1
-            frames[0].save(output / f"animation.{output_format}", save_all=True, append_images=frames[1:],
-                           duration=max(1, round(1000 / fps)), loop=loop)
-            progress(output, "Animation complete", frames=len(frames), fps=fps)
-            return
         if not getattr(result, "images", None):
             raise RuntimeError("The selected pipeline did not return images")
         output_format = validate_output_format(settings.get("outputFormat", "png"), {"png", "webp", "jpeg"}, "outputFormat")

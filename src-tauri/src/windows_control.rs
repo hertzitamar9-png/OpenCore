@@ -994,6 +994,91 @@ mod platform {
     }
 }
 
+pub(crate) async fn available_windows() -> Result<Value, String> {
+    #[cfg(windows)]
+    { tokio::task::spawn_blocking(|| platform::run("list", &json!({}))).await.map_err(|e| e.to_string())? }
+    #[cfg(not(windows))]
+    { Err("Desktop control is available on Windows".into()) }
+}
+
+pub(crate) fn background_capabilities() -> Value {
+    json!({"accessibility":true,"standardWin32Controls":["Button (push buttons)","Edit (Unicode text fields)"],
+        "canvasInput":false,"rawKeyboardAndPointer":false,
+        "unsupportedReason":"Windows canvases, games and custom controls without accessibility patterns cannot be controlled in the background. Use their browser CDP integration when available, or explicitly select foreground computer use."})
+}
+
+pub(crate) async fn command_authorized(action: String, args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
+    validate_action(&action, &args)?;
+    if action == "list" {
+        let policy = crate::computer_access::load(&store)?;
+        if !policy.enabled { return Ok(json!({"windows":[],"computerUseEnabled":false,"backgroundCapabilities":background_capabilities()})); }
+        let mut listed = available_windows().await?;
+        // Settings may have changed while Windows enumerated its providers.
+        let policy = crate::computer_access::load(&store)?;
+        listed["computerUseEnabled"] = json!(policy.enabled);
+        listed["backgroundCapabilities"] = background_capabilities();
+        if let Some(rows) = listed["windows"].as_array_mut() {
+            rows.retain_mut(|row| {
+                if !policy.enabled { return false; }
+                let Some(id) = row["windowId"].as_i64() else { return false; };
+                let Ok(app) = crate::computer_access::window_identity(id) else { return false; };
+                if policy.access(&app.path) == Some(crate::computer_access::Access::Deny) { return false; }
+                row["permission"] = json!(if policy.access(&app.path).is_some() { "allowed" } else { "ask" });
+                row["application"] = json!(app.name);
+                row["executablePath"] = json!(app.path);
+                true
+            });
+        }
+        return Ok(listed);
+    }
+    let mut changes = crate::computer_access::subscribe();
+    let expected = crate::computer_access::check_window(&store, args["windowId"].as_i64().ok_or("Select an application window first")?)?;
+    #[cfg(windows)]
+    {
+        let operation = async {
+            if args["manualControl"].as_bool() == Some(true) {
+                crate::desktop_helper::command_authorized(action, args, store.clone(), expected.clone()).await
+            } else {
+                let store = store.clone();
+                let expected = expected.clone();
+                tokio::task::spawn_blocking(move || {
+                    crate::computer_access::recheck_window(&store, &expected)?;
+                    platform::run(&action, &args)
+                }).await.map_err(|e| e.to_string())?
+            }
+        };
+        tokio::pin!(operation);
+        loop {
+            tokio::select! {
+                biased;
+                _ = changes.changed() => {
+                    crate::computer_access::recheck_window(&store, &expected)
+                        .map_err(|error| format!("{error} The action was cancelled; an operation already sent to Windows may finish."))?;
+                },
+                result = &mut operation => return result,
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    { let _ = (action, args, changes, expected); Err("Desktop control is available on Windows".into()) }
+}
+
+/// The app browser may capture OpenCore's actual window; a title match is not ownership.
+pub(crate) async fn capture_owned_window(app: &tauri::AppHandle) -> Result<Value, String> {
+    #[cfg(windows)] {
+        use tauri::Manager;
+        let window = app.get_window("main").ok_or("The OpenCore window is unavailable")?;
+        let id = window.hwnd().map_err(|e| e.to_string())?.0 as i64;
+        if crate::computer_access::window_identity(id)?.pid != std::process::id() {
+            return Err("Browser capture target is not owned by OpenCore".into());
+        }
+        tokio::task::spawn_blocking(move || platform::run("screenshot", &json!({"windowId":id}))).await.map_err(|e| e.to_string())?
+    }
+    #[cfg(not(windows))] { let _ = app; Err("Browser screenshot capture requires Windows".into()) }
+}
+
+// Native fixtures deliberately bypass persisted app permissions for their own windows.
+#[cfg(test)]
 pub(crate) async fn command(action: String, args: Value) -> Result<Value, String> {
     validate_action(&action, &args)?;
     #[cfg(windows)]

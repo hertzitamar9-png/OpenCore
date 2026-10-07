@@ -112,4 +112,32 @@ class StudioBounds(unittest.TestCase):
             self.assertTrue((output/"image-1.png").is_file())
             self.assertTrue(Pipeline.loaded[1]["local_files_only"])
 
+    def test_animation_diffusion_checkpoint_generates_a_still_image(self):
+        # ModelsLab/3D-Animation-Diffusion is a Stable Diffusion image model.
+        # Its name does not make its pipeline produce temporal frames.
+        class Image:
+            def save(self, path, format=None): Path(path).write_bytes(b"image")
+        class Pipeline:
+            @classmethod
+            def from_pretrained(cls, path, **kwargs): return cls()
+            def enable_model_cpu_offload(self): pass
+            def __call__(self, prompt, num_inference_steps, width, height, generator):
+                return types.SimpleNamespace(images=[Image()])
+        class Generator:
+            def __init__(self, device): pass
+            def manual_seed(self, seed): return self
+        torch=types.ModuleType("torch")
+        torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"; torch.Generator=Generator
+        diffusers=types.ModuleType("diffusers")
+        diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            self.write_safetensors_header(root/"models/library/animation-diffusion-2d/unet/model.safetensors", "F16")
+            output=root/"output"
+            request={"modelId":"animation-diffusion-2d","modelRoot":str(root),"prompt":"a character sheet","settings":{}}
+            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):
+                generate(request,output)
+            self.assertTrue((output/"image-1.png").is_file())
+            self.assertFalse((output/"animation.gif").exists())
+
 if __name__ == "__main__": unittest.main()

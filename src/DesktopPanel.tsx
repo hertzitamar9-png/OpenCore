@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent, WheelEvent } from "react";
-import { AppWindow, Check, Maximize2, Minimize2, RefreshCw, ShieldCheck } from "lucide-react";
+import { AppWindow, Check, Maximize2, Minimize2, RefreshCw, ShieldCheck, Square } from "lucide-react";
+import { listen } from "@tauri-apps/api/event";
 import * as api from "./api";
 import { browserPoint } from "./browser-coordinates";
 import { FloatingWindow } from "./FloatingWindow";
+import "./AutomationSettings.css";
 
 type Props = {
   onClose: () => void;
@@ -20,6 +22,7 @@ type Interaction = BackgroundResult & { editable?: boolean; value?: string; acti
 type TextResult = BackgroundResult & { updated?: boolean; submitted?: boolean };
 type Feedback = { error: boolean; warning?: boolean; message: string };
 type PendingEdit = { context: Context; at: Point; text: string };
+type PermissionWindow = api.DesktopWindow & { executablePath?: string };
 const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false, manualControl: true };
 const DESKTOP_VIEW_ONLY = "Entire desktop is view only. Select an app window to use background controls.";
 
@@ -30,7 +33,9 @@ function requireBackgroundInput(result: BackgroundResult) {
 }
 
 export function DesktopPanel({ onClose, onNotice, embedded = false, active = true, onExpandedChange }: Props) {
-  const [windows, setWindows] = useState<api.DesktopWindow[]>([]);
+  const [windows, setWindows] = useState<PermissionWindow[]>([]);
+  const [enabled, setEnabled] = useState(false);
+  const [accessBusy, setAccessBusy] = useState(false);
   const [windowId, setWindowId] = useState<number | null>(null);
   const [shot, setShot] = useState<api.DesktopShot | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
@@ -42,6 +47,8 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
   const [size, setSize] = useState<"fit" | "actual">("fit");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const mounted = useRef(true);
+  const accessVersion = useRef(0);
+  const windowsRef = useRef(windows);
   const activeRef = useRef(active);
   const noticeRef = useRef(onNotice);
   const selection = useRef({ windowId: null as number | null, revision: 0 });
@@ -59,6 +66,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
   activeRef.current = active;
   noticeRef.current = onNotice;
   shotRef.current = shot;
+  windowsRef.current = windows;
 
   const context = useCallback((): Context => ({ ...selection.current, activity: activity.current }), []);
   const current = useCallback((target: Context) => mounted.current && activeRef.current &&
@@ -106,8 +114,10 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     const latest = () => current(target) && sequence === captureSequence.current;
     if (manual) setCapturing(true);
     try {
-      const listed = await api.desktopCommand<{ windows: api.DesktopWindow[] }>("list", BACKGROUND_CONTROL);
+      const listed = await api.desktopCommand<{ windows: PermissionWindow[]; computerUseEnabled?: boolean }>("list", BACKGROUND_CONTROL);
       if (!latest()) return;
+      setEnabled(listed.computerUseEnabled !== false);
+      if (listed.computerUseEnabled === false) { select(null); setWindows([]); return; }
       setWindows(previous => {
         // Accessibility enumeration can briefly omit a still-open window.
         // Keep its picker entry and verify availability through capture instead.
@@ -116,6 +126,11 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
           ? [...listed.windows, retained] : listed.windows;
       });
       if (target.windowId == null) return;
+      if (listed.windows.find(item => item.windowId === target.windowId)?.permission === "ask") {
+        cancelPending(); shotRef.current = null; localDraft.current = null;
+        setShot(null); setEditor(null); setTyping(""); setFeedback(null);
+        return;
+      }
       const captured = await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: target.windowId, ...BACKGROUND_CONTROL });
       if (!latest()) return;
       if (captured.windowId !== target.windowId || captured.bounds.width <= 0 || captured.bounds.height <= 0) {
@@ -139,12 +154,26 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
       if (capturePending.current?.sequence === sequence) capturePending.current = null;
       if (latest()) setCapturing(false);
     }
-  }, [context, current, report]);
+  }, [context, current, report, select, cancelPending]);
 
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
+  useEffect(() => {
+    const events = listen<api.ComputerAccess>("opencore-computer-access", event => {
+      if (!mounted.current) return;
+      const policy = event.payload;
+      setEnabled(policy.enabled);
+      const path = windowsRef.current.find(item => item.windowId === selection.current.windowId)?.executablePath;
+      const identity = (value: string) => value.replaceAll("/", "\\").toLowerCase();
+      const allowed = !path || policy.apps.some(app => identity(app.path) === identity(path) && app.access === "allow");
+      const denied = path && policy.apps.some(app => identity(app.path) === identity(path) && app.access === "deny");
+      if (!policy.enabled || !allowed || denied) { select(null); if (!policy.enabled) setWindows([]); }
+      if (activeRef.current) void refresh(true);
+    }).catch(() => () => {});
+    return () => { void events.then(unlisten => unlisten()); };
+  }, [refresh, select]);
   useEffect(() => {
     if (!active) { setExpanded(false); setBusy(false); setCapturing(false); return; }
     void refresh(true);
@@ -274,7 +303,33 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     });
   };
 
+  const setAccess = async (nextEnabled: boolean) => {
+    const version = ++accessVersion.current;
+    setAccessBusy(true);
+    if (!nextEnabled) { select(null); setWindows([]); }
+    try {
+      const policy = await api.computerAccess();
+      if (!mounted.current || version !== accessVersion.current) return;
+      const saved = await api.setComputerAccess({ ...policy, enabled: nextEnabled });
+      if (!mounted.current || version !== accessVersion.current) return;
+      setEnabled(saved.enabled); void refresh(true);
+    } catch (error) { if (mounted.current && version === accessVersion.current) report(error); }
+    finally { if (mounted.current && version === accessVersion.current) setAccessBusy(false); }
+  };
+  const grantSelected = async () => {
+    const selected = selection.current.windowId;
+    if (selected == null || selected <= 0 || accessBusy) return;
+    setAccessBusy(true);
+    try {
+      await api.allowComputerWindow(selected);
+      if (mounted.current && selected === selection.current.windowId) void refresh(true);
+    } catch (error) { if (mounted.current) report(error); }
+    finally { if (mounted.current) setAccessBusy(false); }
+  };
+
   const content = <>
+    <div className="desktop-access-bar"><span>{enabled ? "Only permitted apps can be controlled" : "Computer use is disabled"}</span>{!enabled && <button type="button" disabled={accessBusy} onClick={() => void setAccess(true)}>Enable computer use</button>}<button type="button" className="automation-stop" disabled={!enabled && !accessBusy} onClick={() => void setAccess(false)}><Square size={14} aria-hidden="true" /> Stop computer use</button></div>
+    {windows.find(item => item.windowId === windowId)?.permission === "ask" && <div className="desktop-access-bar"><span>Allow OpenCore to inspect and control {windows.find(item => item.windowId === windowId)?.application || windows.find(item => item.windowId === windowId)?.title}?</span><button type="button" disabled={accessBusy} onClick={() => void grantSelected()}>Allow this app</button></div>}
     <div className="desktop-toolbar" role="toolbar" aria-label="Computer view controls">
       <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><select aria-label="Window" value={windowId ?? ""} onChange={event => {
         const id = event.target.value === "" ? null : Number(event.target.value);

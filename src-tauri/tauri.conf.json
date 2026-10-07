@@ -19,6 +19,7 @@
         "minWidth": 1180,
         "minHeight": 720,
         "center": true,
+        "visible": false,
         "decorations": false,
         "resizable": true,
         "dragDropEnabled": false
@@ -43,6 +44,9 @@
       "icons/icon.ico"
     ],
     "resources": {
+      "resources/runtime-setup/setup_manager.py": "runtime-setup/setup_manager.py",
+      "resources/runtime-setup/provision_testing.py": "runtime-setup/provision_testing.py",
+      "resources/runtime-setup/recipes.json": "runtime-setup/recipes.json",
       "resources/desktop/opencore-focus-guard.dll": "desktop/opencore-focus-guard.dll",
       "resources/studio/asset_worker.py": "studio/asset_worker.py",
       "resources/speech/whisper_worker.py": "speech/whisper_worker.py",

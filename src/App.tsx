@@ -71,6 +71,8 @@ import { MusicStudio } from './MusicStudio';
 import { GameDevStudio } from './AssetsStudio';
 import { UpdateButton, UpdateSettings, useAppUpdateInstalling } from './AppUpdateControls';
 import { AgentPlatformSettings } from './AgentPlatformSettings';
+import { ComputerAccessSettings, BrowserAccessSettings } from './AutomationSettings';
+import { RuntimeSetupPanel } from './RuntimeSetupControls';
 import { AgentConnectorControls } from './AgentConnectorControls';
 import { SETTINGS_SAVE_ERROR_EVENT, type SettingsSaveError } from './useSettingsAutosave';
 import { AgentQuestions } from './AgentQuestions';
@@ -1018,6 +1020,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   if (view === "settings") return <div className="support-page settings-page">
     <div className="page-heading"><div><h1>Settings</h1><p>Real local controls for storage, privacy, history, and diagnostics.</p></div></div>
     <AgentPlatformSettings />
+    <RuntimeSetupPanel onNotice={onNotice} />
     <div className="settings-grid">
       <InspectorSection title="Terminal appearance">
         <label className="appearance-label" htmlFor="terminal-font-size">Terminal/log text <strong>{appearance.terminalFontSize}px</strong></label>
@@ -1026,12 +1029,14 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         {appearanceStorageError ? <p className="workspace-inline-error" role="alert">Local preferences could not be saved: {appearanceStorageError}</p> : <p className="appearance-note" role="status">Local preferences saved automatically.</p>}
       </InspectorSection>
       <InspectorSection title="Computer use">
+        <ComputerAccessSettings onNotice={onNotice} />
         <div className="appearance-label">Window focus</div>
         <div className="appearance-choices"><button className={!appearance.keepUserWindowInFront ? "active" : ""} aria-pressed={!appearance.keepUserWindowInFront} onClick={() => onAppearanceChange({ ...appearance, keepUserWindowInFront: false })}>Bring OpenCore's work forward</button><button className={appearance.keepUserWindowInFront ? "active" : ""} aria-pressed={appearance.keepUserWindowInFront} onClick={() => onAppearanceChange({ ...appearance, keepUserWindowInFront: true })}>Keep my window in front</button></div>
         <p className="appearance-note">When your window stays in front, OpenCore can use supported app controls without taking focus. Mouse and keyboard actions wait until foreground control is selected. Windows may still foreground newly opened apps.</p>
         <p className="appearance-note">Press Escape twice to stop an active OpenCore run.</p>
       </InspectorSection>
       <InspectorSection title="Tools">
+        <BrowserAccessSettings onNotice={onNotice} />
         <div className="appearance-choices"><button className={appearance.projectSkillsEnabled ? "active" : ""} aria-pressed={appearance.projectSkillsEnabled} onClick={() => onAppearanceChange({ ...appearance, projectSkillsEnabled: !appearance.projectSkillsEnabled })}>{appearance.projectSkillsEnabled ? "Project skills enabled" : "Project skills disabled"}</button></div>
         <p className="appearance-note">When enabled, the Codex agent runtime can read workspace guidance such as AGENTS.md and enabled skills. OpenCore app tools still follow the selected approval mode.</p>
         <div className="appearance-label">Default skills for every new prompt</div>
@@ -1681,7 +1686,7 @@ export default function App() {
   const sectionContent = view === 'conversations' ? conversationContent : view === "runtime"
       ? <RuntimeView snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} runtimeAction={runtimeAction} actions={{ start, stop, restart, navigate: setView, notice: setNotice }} />
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
-      : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} />
+      : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} onBrowseModels={() => setView('models')} />
       : view === 'media' ? <MediaStudio category={mediaCategory} onCategoryChange={setMediaCategory} onNotice={setNotice} />
       : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} onNotice={setNotice} />
       : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} onOpenExternal={async file => { await openWorkspaceFileExternal(file.id); }} />

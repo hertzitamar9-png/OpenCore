@@ -204,6 +204,17 @@ mod tests {
         Frame { data_url: String::new(), width, height, origin }
     }
 
+    // Opt-in live tests capture their explicitly selected test windows without
+    // changing the installed app's persisted computer-use permissions.
+    #[cfg(windows)]
+    async fn test_window_frame(window_id: i64) -> Result<Frame, String> {
+        tokio::task::spawn_blocking(move || {
+            let captured = crate::desktop_capture::frame_for_window(window_id as isize)?;
+            let origin = crate::desktop_capture::frame_origin(window_id as isize)?;
+            Ok(Frame { data_url: captured.data_url, width: captured.width, height: captured.height, origin })
+        }).await.map_err(|error| error.to_string())?
+    }
+
     #[test]
     fn points_map_from_the_model_grid_to_window_coordinates() {
         assert_eq!(parse_point("{\"x\": 500, \"y\": 250}"), Some((0.5, 0.25)));
@@ -235,7 +246,7 @@ mod tests {
             let (width, height) = (bounds["width"].as_i64().unwrap_or(0), bounds["height"].as_i64().unwrap_or(0));
             if id == 0 || left < -100 || width < 300 || height < 200 { continue; }
             let Ok(inspected) = crate::windows_control::command("inspect".into(), json!({"windowId":id})).await else { continue };
-            let Ok(frame) = crate::vision_frame(id).await else { continue };
+            let Ok(frame) = test_window_frame(id).await else { continue };
             let mut targets = Vec::new();
             for row in inspected["elements"].as_array().unwrap().iter().skip(1) {
                 let name = row["name"].as_str().unwrap_or_default().trim().to_string();
@@ -291,7 +302,7 @@ mod tests {
                        ("the Delete draft button", "Delete draft"), ("Account details link", "Account details")];
         let mut hits = 0;
         for (goal, expected) in targets {
-            let frame = crate::vision_frame(id).await.unwrap();
+            let frame = test_window_frame(id).await.unwrap();
             let point = vision.locate(&frame, goal).await.unwrap();
             let clicked = crate::windows_control::command("click".into(),
                 json!({"windowId":id,"x":point["x"],"y":point["y"]})).await;

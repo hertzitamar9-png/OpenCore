@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "recipes": [
+    {
+      "id": "diffusers-images-v1",
+      "label": "Isolated image runtime",
+      "kind": "studio",
+      "modelIds": ["qwen-image-21", "animation-diffusion-2d", "sana-16", "hunyuan-dit-v12-distilled"],
+      "packages": {"diffusers": "0.41.0", "transformers": "5.18.0", "accelerate": "1.12.0", "safetensors": "0.6.2", "sentencepiece": "0.2.1", "pillow": "11.3.0", "numpy": "2.2.6", "protobuf": "6.33.5"},
+      "torchPackages": {"torch": "2.7.1", "torchvision": "0.22.1"},
+      "torchIndex": "https://download.pytorch.org/whl/cu128",
+      "imports": {"diffusers": ["DiffusionPipeline", "QwenImage21Pipeline", "SanaPipeline", "HunyuanDiTPipeline", "StableDiffusionPipeline"], "accelerate": ["cpu_offload_with_hook"], "PIL.Image": ["Image"]},
+      "minimumDiskBytes": 9000000000,
+      "minimumRamBytes": 8000000000,
+      "requiresCuda": true,
+      "sourceUrls": ["https://huggingface.co/docs/diffusers/v0.41.0/installation", "https://pytorch.org/get-started/previous-versions/", "https://pypi.org/project/transformers/5.18.0/"],
+      "limitations": "Exact dependency versions and worker pipeline imports are checked, then a CUDA kernel is executed. Model inference is verified only by a real completed generation. CPU offload still requires enough host RAM for the selected published checkpoint."
+    },
+    {
+      "id": "whisper-reference-v1",
+      "label": "Isolated Whisper runtime",
+      "kind": "speech",
+      "modelIds": ["whisper-large-v3-turbo", "whisper-large-v3"],
+      "packages": {"transformers": "4.48.3", "accelerate": "1.2.1", "av": "13.1.0", "psutil": "6.1.1", "faster-whisper": "1.2.1", "ctranslate2": "4.8.2"},
+      "minimumDiskBytes": 7000000000,
+      "minimumRamBytes": 6000000000,
+      "requiresCuda": false,
+      "sourceUrls": ["https://huggingface.co/openai/whisper-large-v3-turbo", "https://pytorch.org/get-started/previous-versions/"],
+      "limitations": "Uses the existing pinned speech preparation script and verifies its isolated interpreter. CPU inference is allowed; CUDA is checked when available. No checkpoint is downloaded by dependency preparation."
+    },
+    {
+      "id": "phonon-reference-v1",
+      "label": "Isolated Phonon reference runtime",
+      "kind": "speech",
+      "modelIds": ["phonon-2"],
+      "packages": {"transformers": "5.18.0", "zstandard": "0.25.0", "av": "13.1.0", "psutil": "6.1.1", "librosa": "0.11.0"},
+      "minimumDiskBytes": 7000000000,
+      "minimumRamBytes": 8000000000,
+      "requiresCuda": false,
+      "sourceUrls": ["https://pypi.org/project/transformers/5.18.0/", "https://pytorch.org/get-started/previous-versions/"],
+      "limitations": "Preserves the installed Fermion checkpoint and both BF16/FP32 choices. Derived dense runtime caches remain separate and precision specific. Inference is verified only by transcription."
+    },
+    {
+      "id": "android-sdk-api36-v1",
+      "label": "Managed Android SDK and emulator",
+      "kind": "android",
+      "modelIds": ["testing-android"],
+      "packages": {},
+      "minimumDiskBytes": 16000000000,
+      "minimumRamBytes": 8000000000,
+      "requiresCuda": false,
+      "requiresLicenseAcceptance": true,
+      "sourceUrls": ["https://developer.android.com/studio", "https://developer.android.com/tools/sdkmanager", "https://developer.android.com/tools/avdmanager", "https://developer.android.com/studio/run/emulator-acceleration"],
+      "limitations": "The command-line tools archive is SHA-256 pinned. Google resolves stable SDK package revisions; installed revisions are recorded. Requires an existing Java 17+ runtime and working hardware virtualization. The setup never enables Windows features or reboots the host."
+    },
+    {
+      "id": "virtualbox-tools-v1",
+      "label": "VirtualBox host tools",
+      "kind": "virtualbox",
+      "modelIds": ["testing-virtualbox"],
+      "packages": {},
+      "minimumDiskBytes": 2000000000,
+      "minimumRamBytes": 8000000000,
+      "requiresCuda": false,
+      "requiresAdministrator": true,
+      "requiresLicenseAcceptance": true,
+      "sourceUrls": ["https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/installation.html", "https://download.virtualbox.org/virtualbox/7.2.20/SHA256SUMS"],
+      "limitations": "Reuses installed VirtualBox when present. Otherwise downloads the SHA-256 pinned Windows x64 installer and requests Windows administrator permission. A host installation and a working guest OS are separate checks. No Extension Pack or operating system is downloaded."
+    },
+    {
+      "id": "virtualbox-guest-v1",
+      "label": "Managed PC testing VM from a licensed ISO",
+      "kind": "virtualbox-guest",
+      "modelIds": ["testing-pc-vm"],
+      "packages": {},
+      "minimumDiskBytes": 24000000000,
+      "minimumRamBytes": 12000000000,
+      "requiresCuda": false,
+      "requiresLicenseAcceptance": true,
+      "sourceUrls": ["https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/vboxmanage.html"],
+      "limitations": "Creates a new managed VM using an existing user-selected licensed ISO and a password held in a named environment variable. Existing VMs are not changed. Guest readiness requires Guest Additions and a successful guest command after unattended installation; unsupported ISOs fail explicitly."
+    }
+  ],
+  "pythonBootstrap": {
+    "version": "3.12.10",
+    "url": "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe",
+    "sha256": "67b5635e80ea51072b87941312d00ec8927c4db9ba18938f7ad2d27b328b95fb",
+    "sourceUrl": "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/p/Python/Python/3/12/3.12.10/Python.Python.3.12.installer.yaml"
+  }
+}

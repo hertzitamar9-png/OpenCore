@@ -20,6 +20,10 @@ pub struct EventStore {
 #[path = "side_chat_tests.rs"]
 mod side_chat_tests;
 
+#[path = "side_chat_context.rs"]
+mod side_chat_context;
+pub use side_chat_context::SideChatContextUpdate;
+
 #[path = "store_export.rs"]
 mod store_export;
 
@@ -603,6 +607,8 @@ impl EventStore {
         let inherited = transaction.execute("INSERT INTO timeline(conversation_id,timestamp,kind,role,source,title,content,metadata)
             SELECT ?2,timestamp,kind,role,source,title,content,
               json_set(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,
+                '$.sideChatOriginConversation',coalesce(json_extract(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,'$.sideChatOriginConversation'),json_extract(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,'$.sideChatParent'),?1),
+                '$.sideChatOriginEntry',coalesce(json_extract(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,'$.sideChatOriginEntry'),json_extract(CASE WHEN json_valid(metadata) THEN metadata ELSE '{}' END,'$.sideChatSourceEntry'),id),
                 '$.sideChatInherited',json('true'),'$.sideChatParent',?1,'$.sideChatSourceEntry',id,
                 '$.opencore_source_event_id','side:'||?2||':'||id)
             FROM timeline WHERE conversation_id=?1 AND id<=?3 ORDER BY timestamp,id",

@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
@@ -26,6 +26,9 @@ struct LedgerLimits {
     max_depth: usize,
     max_reference_bytes: u64,
     max_preview_bytes: u64,
+    max_output_bytes: u64,
+    max_output_batch_bytes: u64,
+    min_free_snapshot_bytes: u64,
     diff_work: usize,
 }
 impl Default for LedgerLimits {
@@ -37,6 +40,9 @@ impl Default for LedgerLimits {
             max_depth: 48,
             max_reference_bytes: 256 * 1024 * 1024,
             max_preview_bytes: 12 * 1024 * 1024,
+            max_output_bytes: 4 * 1024 * 1024 * 1024,
+            max_output_batch_bytes: 8 * 1024 * 1024 * 1024,
+            min_free_snapshot_bytes: 256 * 1024 * 1024,
             diff_work: 20_000_000,
         }
     }
@@ -68,6 +74,25 @@ pub(crate) struct BrowserFile {
     pub mime: String,
     pub bytes: Vec<u8>,
     pub sha256: String,
+}
+
+/// The verified handle stays open while the browser streams it. Windows denies
+/// concurrent writes/deletion to this handle; no whole-file buffer is allocated.
+pub(crate) struct BrowserStream {
+    pub name: String,
+    pub mime: String,
+    pub file: File,
+    pub sha256: String,
+    pub size: u64,
+}
+
+#[derive(Serialize, Deserialize)]
+struct HistoryCursor {
+    sequence: i64,
+    path: String,
+    rowid: i64,
+    ceiling: i64,
+    scope: String,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -351,7 +376,8 @@ impl WorkspaceLedger {
         self.latest_changes(&json!({"conversationId":capture.conversation,"turnId":capture.turn}))
     }
 
-    /// Output paths come from the studio's persisted, owned output list. Large binaries are references, not copied weights.
+    /// Output paths come from persisted, owned output lists. Authored media is
+    /// streamed into immutable objects; model weights remain excluded.
     pub fn register_outputs(
         &self,
         conversation: &str,
@@ -389,6 +415,7 @@ impl WorkspaceLedger {
         let mut references = BTreeMap::new();
         let mut coverage = Coverage::default();
         let mut total_read = 0u64;
+        let mut total_snapshot = 0u64;
         for output in paths.iter().take(self.limits.max_entries.min(1000)) {
             let path = &output.path;
             let record = (|| -> Result<(FileRecord, PathBuf), String> {
@@ -396,8 +423,7 @@ impl WorkspaceLedger {
                 reject_links(&path)?;
                 let path = fs::canonicalize(&path).map_err(err)?;
                 let root = safe_root(path.parent().ok_or("Output has no parent directory")?)?;
-                let file = open_confined(&root, &path)?;
-                let mut size = file.metadata().map_err(err)?.len();
+                let mut size = open_confined(&root, &path)?.metadata().map_err(err)?.len();
                 let name = path_text(&path)?.to_owned();
                 let display_name = output.name.as_deref().unwrap_or(&name);
                 valid_label(display_name, "output name", false)?;
@@ -406,35 +432,62 @@ impl WorkspaceLedger {
                     .clone()
                     .unwrap_or_else(|| mime_for(Path::new(display_name), false).to_owned());
                 let mut saved = false;
-                let hash = if is_weight(&path)
-                    || size > self.limits.max_reference_bytes
-                    || total_read.saturating_add(size) > self.limits.max_reference_bytes
-                {
+                let hash = if is_weight(&path) || is_weight(Path::new(display_name)) {
                     coverage.add(format!(
-                        "Output reference only (hash/size limit or model weights): {name}"
+                        "Output reference only (model weights excluded): {name}"
                     ));
                     None
-                } else if size <= self.limits.max_file_bytes {
-                    let bytes = read_confined(&root, &path, self.limits.max_file_bytes)?;
-                    size = bytes.len() as u64;
-                    total_read += size;
-                    let text = hinted_mime
-                        .as_deref()
-                        .map(|mime| is_text_for_mime(&bytes, mime))
-                        .unwrap_or_else(|| is_text(&bytes, Path::new(display_name)));
-                    mime = hinted_mime
-                        .clone()
-                        .unwrap_or_else(|| mime_for(Path::new(display_name), text).to_owned());
-                    let hash = self.put_snapshot(&bytes)?;
-                    saved = true;
-                    Some(hash)
                 } else {
-                    let (hash, observed_size) =
-                        hash_confined(&root, &path, self.limits.max_reference_bytes)?;
-                    size = observed_size;
-                    total_read += size;
-                    coverage.add(format!("Large output is a verified source reference without a copied snapshot: {name}"));
-                    Some(hash)
+                    let snapshot = if size > self.limits.max_output_bytes {
+                        Err(format!(
+                            "output snapshot byte cap is {} bytes",
+                            self.limits.max_output_bytes
+                        ))
+                    } else if size
+                        > self
+                            .limits
+                            .max_output_batch_bytes
+                            .saturating_sub(total_snapshot)
+                    {
+                        Err(format!(
+                            "output snapshot batch cap is {} bytes",
+                            self.limits.max_output_batch_bytes
+                        ))
+                    } else {
+                        total_snapshot = total_snapshot.saturating_add(size);
+                        self.put_output_snapshot(&root, &path, size, None)
+                    };
+                    match snapshot {
+                        Ok((hash, observed_size, prefix)) => {
+                            size = observed_size;
+                            let text = hinted_mime
+                                .as_deref()
+                                .map(|mime| is_text_for_mime(&prefix, mime))
+                                .unwrap_or_else(|| is_text(&prefix, Path::new(display_name)));
+                            mime = hinted_mime.clone().unwrap_or_else(|| {
+                                mime_for(Path::new(display_name), text).to_owned()
+                            });
+                            saved = true;
+                            Some(hash)
+                        }
+                        Err(cause) => {
+                            coverage.add(format!("Output snapshot not saved ({cause}): {name}"));
+                            if size > self.limits.max_reference_bytes.saturating_sub(total_read) {
+                                coverage.add(format!("Output reference has no verified hash: {} byte hash budget reached: {name}", self.limits.max_reference_bytes));
+                                None
+                            } else {
+                                let (hash, observed_size) = hash_confined(
+                                    &root,
+                                    &path,
+                                    self.limits.max_reference_bytes.saturating_sub(total_read),
+                                )?;
+                                size = observed_size;
+                                total_read = total_read.saturating_add(size);
+                                coverage.add(format!("Output is a verified source reference without an immutable snapshot: {name}"));
+                                Some(hash)
+                            }
+                        }
+                    }
                 };
                 let id = sha256(
                     format!(
@@ -496,6 +549,94 @@ impl WorkspaceLedger {
             "index" => self.index(&args),
             _ => Err("Unknown workspace file action".into()),
         }
+    }
+
+    /// Upgrade only surviving bytes that still match their historical hash.
+    /// Missing, changed, excluded, or over-budget sources remain references;
+    /// no past-deleted bytes are inferred. `nextRowId` continues a bounded pass.
+    pub fn backfill_output_snapshots(
+        &self,
+        after_rowid: i64,
+        limit: usize,
+    ) -> Result<Value, String> {
+        let limit = limit.clamp(1, 1000);
+        let rows = {
+            let db = self.database()?;
+            let mut statement=db.prepare("SELECT rowid,record,reference_root FROM files WHERE rowid>?1 AND after_hash IS NOT NULL AND json_extract(record,'$.snapshotAvailable')=0 AND json_extract(record,'$.origin') IN('studio','published','indexed') ORDER BY rowid LIMIT ?2").map_err(err)?;
+            let rows = statement
+                .query_map(params![after_rowid.max(0), (limit + 1) as i64], |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                    ))
+                })
+                .map_err(err)?
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(err)?;
+            rows
+        };
+        let next_rowid = if rows.len() > limit {
+            Some(rows[limit - 1].0)
+        } else {
+            None
+        };
+        let mut files = Vec::new();
+        let mut coverage = Coverage::default();
+        let mut total = 0u64;
+        for (_, raw, reference) in rows.into_iter().take(limit) {
+            let mut record: FileRecord = serde_json::from_str(&raw).map_err(err)?;
+            let result = (|| -> Result<(), String> {
+                if is_weight(Path::new(&record.source)) || is_weight(Path::new(&record.path)) {
+                    return Err("model weights excluded".into());
+                }
+                let hash = record.after_hash.as_ref().ok_or("No historical hash")?;
+                let object = self.object_path(hash)?;
+                if object.exists() || fs::symlink_metadata(&object).is_ok() {
+                    self.browser_stream(&BrowserAsset::Record {
+                        id: record.id.clone(),
+                        version: "after".into(),
+                    })?;
+                } else {
+                    if record.size > self.limits.max_output_bytes {
+                        return Err("output snapshot byte cap reached".into());
+                    }
+                    if record.size > self.limits.max_output_batch_bytes.saturating_sub(total) {
+                        return Err("output snapshot batch cap reached".into());
+                    }
+                    total = total.saturating_add(record.size);
+                    let root = reference.as_ref().ok_or("No confined historical source")?;
+                    self.put_output_snapshot(
+                        Path::new(root),
+                        Path::new(&record.source),
+                        record.size,
+                        Some(hash),
+                    )?;
+                }
+                Ok(())
+            })();
+            match result {
+                Ok(()) => {
+                    record.snapshot_available = true;
+                    self.database()?
+                        .execute(
+                            "UPDATE files SET record=?2 WHERE id=?1 AND after_hash=?3",
+                            params![
+                                record.id,
+                                serde_json::to_string(&record).map_err(err)?,
+                                record.after_hash
+                            ],
+                        )
+                        .map_err(err)?;
+                    files.push(record);
+                }
+                Err(cause) => coverage.add(format!(
+                    "Historical bytes not recovered for {}: {cause}",
+                    record.path
+                )),
+            }
+        }
+        Ok(json!({"files":files,"coverage":coverage.finish(),"nextRowId":next_rowid}))
     }
 
     /// A browser session can read only versions recorded in this exact capture.
@@ -573,7 +714,10 @@ impl WorkspaceLedger {
         }
         let target = browser_file_path(&selected, output_root.as_deref())?;
         // Eagerly verify the chosen file before opening the browser; every asset is verified again when read.
-        self.browser_file(id, version)?;
+        self.browser_stream(&BrowserAsset::Record {
+            id: id.to_owned(),
+            version: version.to_owned(),
+        })?;
         manifest.insert(
             target.clone(),
             BrowserAsset::Record {
@@ -585,46 +729,104 @@ impl WorkspaceLedger {
     }
 
     pub(crate) fn browser_asset(&self, asset: &BrowserAsset) -> Result<BrowserFile, String> {
-        match asset {
-            BrowserAsset::Record { id, version } => self.browser_file(id, version),
+        let mut stream = self.browser_stream(asset)?;
+        if stream.size > self.limits.max_preview_bytes {
+            return Err("This saved version is too large for an inline preview; open it in the external browser".into());
+        }
+        let mut bytes = Vec::with_capacity(stream.size as usize);
+        (&mut stream.file)
+            .take(self.limits.max_preview_bytes + 1)
+            .read_to_end(&mut bytes)
+            .map_err(err)?;
+        if bytes.len() as u64 != stream.size || sha256(&bytes) != stream.sha256 {
+            return Err("Captured asset changed after verification".into());
+        }
+        Ok(BrowserFile {
+            name: stream.name,
+            mime: stream.mime,
+            bytes,
+            sha256: stream.sha256,
+        })
+    }
+
+    pub(crate) fn browser_file(&self, id: &str, version: &str) -> Result<BrowserFile, String> {
+        self.browser_asset(&BrowserAsset::Record {
+            id: id.to_owned(),
+            version: version.to_owned(),
+        })
+    }
+
+    pub(crate) fn browser_stream(&self, asset: &BrowserAsset) -> Result<BrowserStream, String> {
+        let (name, mime, hash, expected_size, root, path) = match asset {
             BrowserAsset::Snapshot {
                 name,
                 hash,
                 mime,
                 size,
-            } => {
-                let bytes = self.read_snapshot(hash)?;
-                if bytes.len() as u64 != *size {
-                    return Err("Captured asset size verification failed".into());
+            } => (
+                name.clone(),
+                mime.clone(),
+                hash.clone(),
+                Some(*size),
+                self.objects.clone(),
+                self.object_path(hash)?,
+            ),
+            BrowserAsset::Record { id, version } => {
+                if !matches!(version.as_str(), "before" | "after") {
+                    return Err("File version must be before or after".into());
                 }
-                Ok(BrowserFile {
-                    name: name.clone(),
-                    mime: mime.clone(),
-                    bytes,
-                    sha256: hash.clone(),
-                })
+                let (record, reference) = self.get_record(id)?;
+                let before = version == "before";
+                let hash = if before {
+                    record.before_hash
+                } else {
+                    record.after_hash
+                }
+                .ok_or("Recorded version has no verified hash")?;
+                let object = self.object_path(&hash)?;
+                let (root, path) = if object.exists() || fs::symlink_metadata(&object).is_ok() {
+                    (self.objects.clone(), object)
+                } else if before || record.snapshot_available {
+                    return Err(
+                        "Recorded snapshot is unavailable; the current source is not a substitute"
+                            .into(),
+                    );
+                } else {
+                    (
+                        reference.ok_or("This record has no confined source reference")?,
+                        PathBuf::from(&record.source),
+                    )
+                };
+                (
+                    record
+                        .path
+                        .rsplit(['/', '\\'])
+                        .next()
+                        .unwrap_or("file")
+                        .to_owned(),
+                    record.mime,
+                    hash,
+                    if before { None } else { Some(record.size) },
+                    root,
+                    path,
+                )
             }
+        };
+        let mut file = open_confined_mode(&root, &path, true)?;
+        let (observed_hash, size) = hash_opened(
+            &mut file,
+            self.limits.max_output_bytes.max(self.limits.max_file_bytes),
+        )?;
+        if observed_hash != hash || expected_size.is_some_and(|expected| expected != size) {
+            return Err("Recorded file hash/size verification failed".into());
         }
-    }
-
-    pub(crate) fn browser_file(&self, id: &str, version: &str) -> Result<BrowserFile, String> {
-        if !matches!(version, "before" | "after") {
-            return Err("File version must be before or after".into());
-        }
-        let (record, reference) = self.get_record(id)?;
-        let (bytes, sha256, _) =
-            self.version_bytes(&record, reference.as_deref(), version == "before")?;
-        let name = record
-            .path
-            .rsplit(['/', '\\'])
-            .next()
-            .unwrap_or("file")
-            .to_owned();
-        Ok(BrowserFile {
+        file.seek(SeekFrom::Start(0)).map_err(err)?;
+        Ok(BrowserStream {
             name,
-            mime: record.mime,
-            bytes,
-            sha256,
+            mime,
+            file,
+            sha256: hash,
+            size,
         })
     }
 
@@ -843,11 +1045,123 @@ impl WorkspaceLedger {
         }
         Ok(hash)
     }
+
+    fn reserve_output_space(&self, additional: u64) -> Result<(), String> {
+        // Canonical Windows roots use an extended prefix while disk mount points do not.
+        let text = self.objects.to_string_lossy();
+        let disk_root = if let Some(unc) = text.strip_prefix(r"\\?\UNC\") {
+            PathBuf::from(format!(r"\\{unc}"))
+        } else {
+            PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text))
+        };
+        let disks = sysinfo::Disks::new_with_refreshed_list();
+        let free = disks
+            .list()
+            .iter()
+            .filter(|disk| disk_root.starts_with(disk.mount_point()))
+            .max_by_key(|disk| disk.mount_point().components().count())
+            .map(|disk| disk.available_space())
+            .ok_or("disk reserve could not be checked for the snapshot volume")?;
+        let needed = self
+            .limits
+            .min_free_snapshot_bytes
+            .checked_add(additional)
+            .ok_or("disk reserve exceeds available space")?;
+        if free < needed {
+            return Err(format!("disk reserve requires {} free bytes plus {additional} bytes for this snapshot; {free} bytes available", self.limits.min_free_snapshot_bytes));
+        }
+        Ok(())
+    }
+
+    /// Copy and hash one bounded source directly to a staging object. Only a
+    /// complete, stable source with a flushed object is atomically published.
+    fn put_output_snapshot(
+        &self,
+        root: &Path,
+        path: &Path,
+        expected_size: u64,
+        expected_hash: Option<&str>,
+    ) -> Result<(String, u64, Vec<u8>), String> {
+        let _writer = self
+            .object_writer
+            .lock()
+            .map_err(|_| "Snapshot writer lock is unavailable")?;
+        self.reserve_output_space(expected_size)?;
+        reject_links(&self.objects)?;
+        let temporary = self.objects.join(format!("{}.tmp", uuid::Uuid::new_v4()));
+        let result = (|| -> Result<(String, u64, Vec<u8>), String> {
+            let mut source = open_confined(root, path)?;
+            let before = source.metadata().map_err(err)?;
+            if before.len() != expected_size || before.len() > self.limits.max_output_bytes {
+                return Err("output size changed before snapshot capture".into());
+            }
+            let mut target = OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temporary)
+                .map_err(err)?;
+            let mut hasher = Sha256::new();
+            let mut buffer = [0u8; 64 * 1024];
+            let mut prefix = Vec::new();
+            let mut copied = 0u64;
+            let mut checked = 0u64;
+            loop {
+                let count = source.read(&mut buffer).map_err(err)?;
+                if count == 0 {
+                    break;
+                }
+                copied = copied
+                    .checked_add(count as u64)
+                    .ok_or("Output size overflow")?;
+                if copied > expected_size {
+                    return Err("Output grew during snapshot capture".into());
+                }
+                if prefix.is_empty() {
+                    prefix.extend_from_slice(&buffer[..count]);
+                }
+                hasher.update(&buffer[..count]);
+                target.write_all(&buffer[..count]).map_err(err)?;
+                if copied - checked >= 32 * 1024 * 1024 {
+                    self.reserve_output_space(expected_size - copied)?;
+                    checked = copied;
+                }
+            }
+            if copied != before.len() || !unchanged(&before, &source.metadata().map_err(err)?) {
+                return Err("Output changed during snapshot capture".into());
+            }
+            target.sync_all().map_err(err)?;
+            drop(target);
+            let hash = format!("{:x}", hasher.finalize());
+            if expected_hash.is_some_and(|expected| expected != hash) {
+                return Err("Historical source hash changed; this is not the saved version".into());
+            }
+            let object = self.object_path(&hash)?;
+            reject_links(&object)?;
+            if object.exists() {
+                let mut existing = open_confined(&self.objects, &object)?;
+                let (observed, size) = hash_opened(&mut existing, self.limits.max_output_bytes)?;
+                if observed != hash || size != copied {
+                    return Err("Existing snapshot hash verification failed".into());
+                }
+            } else {
+                let parent = object.parent().ok_or("Snapshot has no parent")?;
+                reject_links(parent)?;
+                fs::create_dir_all(parent).map_err(err)?;
+                reject_links(&object)?;
+                fs::rename(&temporary, &object).map_err(err)?;
+            }
+            Ok((hash, copied, prefix))
+        })();
+        let _ = fs::remove_file(&temporary);
+        result
+    }
     fn read_snapshot(&self, hash: &str) -> Result<Vec<u8>, String> {
         let bytes = read_confined(
             &self.objects,
             &self.object_path(hash)?,
-            self.limits.max_file_bytes,
+            self.limits
+                .max_preview_bytes
+                .max(self.limits.max_file_bytes),
         )?;
         if sha256(&bytes) != hash {
             return Err("Snapshot hash verification failed".into());
@@ -886,6 +1200,11 @@ impl WorkspaceLedger {
             transaction.execute("INSERT OR IGNORE INTO files(id,capture_id,path,before_hash,after_hash,record,reference_root) VALUES(?1,?2,?3,?4,?5,?6,?7)", params![file.id, capture_id, file.path, file.before_hash, file.after_hash, serde_json::to_string(file).map_err(err)?, reference]).map_err(err)?;
             // A completed job may strengthen an earlier indexed observation of that exact same output.
             transaction.execute("UPDATE files SET capture_id=?1,record=?2,reference_root=?3 WHERE id=?4 AND ?5='completed' AND capture_id IN(SELECT capture_id FROM turns WHERE kind='index')", params![capture_id, serde_json::to_string(file).map_err(err)?, reference, file.id, status]).map_err(err)?;
+            // Re-indexing a surviving exact-hash output may upgrade an old
+            // reference without rewriting its original time, status or origin.
+            if file.snapshot_available {
+                transaction.execute("UPDATE files SET record=json_set(record,'$.snapshotAvailable',json('true')) WHERE id=?1 AND after_hash=?2 AND json_extract(record,'$.size')=?3 AND json_extract(record,'$.snapshotAvailable')=0",params![file.id,file.after_hash,file.size]).map_err(err)?;
+            }
         }
         if let Some((before, after)) = assets {
             transaction.execute("INSERT INTO capture_assets(capture_id,before_assets,after_assets) VALUES(?1,?2,?3) ON CONFLICT(capture_id) DO UPDATE SET before_assets=excluded.before_assets,after_assets=excluded.after_assets",
@@ -897,6 +1216,35 @@ impl WorkspaceLedger {
 
     fn list(&self, args: &Value) -> Result<Value, String> {
         let conversation = optional_arg(args, "conversationId");
+        let scope = sha256(
+            serde_json::to_string(&(
+                conversation,
+                optional_arg(args, "search").filter(|search| !search.is_empty()),
+            ))
+            .map_err(err)?
+            .as_bytes(),
+        );
+        let cursor = optional_arg(args, "cursor")
+            .map(|value| {
+                if value.len() > 16_384 {
+                    return Err("Invalid file history cursor".to_owned());
+                }
+                let cursor: HistoryCursor = serde_json::from_slice(
+                    &STANDARD
+                        .decode(value)
+                        .map_err(|_| "Invalid file history cursor")?,
+                )
+                .map_err(|_| "Invalid file history cursor")?;
+                if cursor.scope != scope
+                    || cursor.sequence < 0
+                    || cursor.rowid < 0
+                    || cursor.ceiling < cursor.rowid
+                {
+                    return Err("File history cursor does not match this filter".into());
+                }
+                Ok(cursor)
+            })
+            .transpose()?;
         let search = optional_arg(args, "search")
             .filter(|search| !search.is_empty())
             .map(|search| {
@@ -910,20 +1258,60 @@ impl WorkspaceLedger {
             });
         let limit = args["limit"].as_u64().unwrap_or(300).clamp(1, 2000) as usize;
         let db = self.database()?;
-        let mut statement = db.prepare("SELECT f.record,t.coverage FROM files f JOIN turns t ON f.capture_id=t.capture_id WHERE (?1 IS NULL OR t.conversation_id=?1) AND (?2 IS NULL OR f.path LIKE ?2 ESCAPE '\' OR t.conversation_id LIKE ?2 ESCAPE '\' OR t.turn_id LIKE ?2 ESCAPE '\' OR f.record LIKE ?2 ESCAPE '\') ORDER BY t.sequence DESC,f.path ASC,f.rowid DESC LIMIT ?3").map_err(err)?;
+        let ceiling = match cursor.as_ref() {
+            Some(cursor) => cursor.ceiling,
+            None => db
+                .query_row("SELECT COALESCE(MAX(rowid),0) FROM files", [], |row| {
+                    row.get::<_, i64>(0)
+                })
+                .map_err(err)?,
+        };
+        let mut statement = db.prepare("SELECT f.record,t.coverage,t.sequence,f.path,f.rowid FROM files f JOIN turns t ON f.capture_id=t.capture_id WHERE (?1 IS NULL OR t.conversation_id=?1) AND (?2 IS NULL OR f.path LIKE ?2 ESCAPE '\' OR t.conversation_id LIKE ?2 ESCAPE '\' OR t.turn_id LIKE ?2 ESCAPE '\' OR f.record LIKE ?2 ESCAPE '\') AND f.rowid<=?4 AND (?5 IS NULL OR t.sequence<?5 OR (t.sequence=?5 AND (f.path>?6 OR (f.path=?6 AND f.rowid<?7)))) ORDER BY t.sequence DESC,f.path ASC,f.rowid DESC LIMIT ?3").map_err(err)?;
         let rows = statement
-            .query_map(params![conversation, search, (limit + 1) as i64], |row| {
-                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-            })
+            .query_map(
+                params![
+                    conversation,
+                    search,
+                    (limit + 1) as i64,
+                    ceiling,
+                    cursor.as_ref().map(|cursor| cursor.sequence),
+                    cursor.as_ref().map(|cursor| cursor.path.as_str()),
+                    cursor.as_ref().map(|cursor| cursor.rowid)
+                ],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, String>(3)?,
+                        row.get::<_, i64>(4)?,
+                    ))
+                },
+            )
             .map_err(err)?
             .collect::<Result<Vec<_>, _>>()
             .map_err(err)?;
         let mut files = Vec::<FileRecord>::new();
         let mut coverage = Coverage::default();
-        if rows.len() > limit {
-            coverage.add(format!("Showing {limit} newest matching file versions; refine the search for older history"));
-        }
-        for (record, notes) in rows.into_iter().take(limit) {
+        let has_more = rows.len() > limit;
+        let next_cursor = if has_more {
+            let (_, _, sequence, path, rowid) = &rows[limit - 1];
+            Some(
+                STANDARD.encode(
+                    serde_json::to_vec(&HistoryCursor {
+                        sequence: *sequence,
+                        path: path.clone(),
+                        rowid: *rowid,
+                        ceiling,
+                        scope,
+                    })
+                    .map_err(err)?,
+                ),
+            )
+        } else {
+            None
+        };
+        for (record, notes, _, _, _) in rows.into_iter().take(limit) {
             files.push(serde_json::from_str(&record).map_err(err)?);
             coverage.extend(serde_json::from_str::<Vec<String>>(&notes).map_err(err)?);
         }
@@ -936,7 +1324,9 @@ impl WorkspaceLedger {
         for notes in notes {
             coverage.extend(serde_json::from_str::<Vec<String>>(&notes).map_err(err)?);
         }
-        Ok(json!({"files":files,"coverage":coverage.finish()}))
+        Ok(
+            json!({"files":files,"coverage":coverage.finish(),"nextCursor":next_cursor,"hasMore":has_more}),
+        )
     }
     fn latest_changes(&self, args: &Value) -> Result<Value, String> {
         let conversation = required_arg(args, "conversationId")?;
@@ -1415,6 +1805,9 @@ fn confirmed_absent(root: &Path, relative: &str) -> Result<bool, String> {
     }
 }
 fn open_confined(root: &Path, path: &Path) -> Result<File, String> {
+    open_confined_mode(root, path, false)
+}
+fn open_confined_mode(root: &Path, path: &Path, immutable: bool) -> Result<File, String> {
     reject_links(root)?;
     reject_links(path)?;
     let root = fs::canonicalize(root).map_err(err)?;
@@ -1428,7 +1821,12 @@ fn open_confined(root: &Path, path: &Path) -> Result<File, String> {
     {
         use std::os::windows::fs::OpenOptionsExt;
         options.custom_flags(0x00200000);
+        if immutable {
+            options.share_mode(1);
+        }
     }
+    #[cfg(not(windows))]
+    let _ = immutable;
     #[cfg(target_os = "linux")]
     {
         use std::os::unix::fs::OpenOptionsExt;
@@ -1521,6 +1919,9 @@ pub(crate) fn read_confined(root: &Path, path: &Path, limit: u64) -> Result<Vec<
 }
 fn hash_confined(root: &Path, path: &Path, limit: u64) -> Result<(String, u64), String> {
     let mut file = open_confined(root, path)?;
+    hash_opened(&mut file, limit)
+}
+fn hash_opened(file: &mut File, limit: u64) -> Result<(String, u64), String> {
     let before = file.metadata().map_err(err)?;
     if before.len() > limit {
         return Err("Output hash byte limit reached".into());

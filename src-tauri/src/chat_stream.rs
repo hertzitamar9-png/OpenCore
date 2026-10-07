@@ -87,21 +87,47 @@ pub(crate) async fn read(response: reqwest::Response, mut on_preview: impl FnMut
     }
     let mut decoder = Decoder::default();
     let mut source = response.bytes_stream();
-    let mut last = std::time::Instant::now() - std::time::Duration::from_secs(1);
-    let mut pending_preview = None;
+    let mut last_preview: Option<Value> = None;
     while let Some(chunk) = source.next().await {
-        for preview in decoder.push(&chunk.map_err(|e| e.to_string())?)? { pending_preview = Some(preview); }
-        if last.elapsed() >= std::time::Duration::from_millis(40) {
-            if let Some(preview) = pending_preview.take() { on_preview(preview); last = std::time::Instant::now(); }
+        for preview in decoder.push(&chunk.map_err(|e| e.to_string())?)? {
+            if last_preview.as_ref() != Some(&preview) {
+                last_preview = Some(preview.clone());
+                on_preview(preview);
+            }
         }
     }
-    if let Some(preview) = pending_preview { on_preview(preview); }
     decoder.finish()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn each_distinct_preview_in_one_sse_chunk_reaches_the_ui_in_order() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener=tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address=listener.local_addr().unwrap();
+        let fixture=concat!(
+            "data: {\"choices\":[{\"delta\":{\"content\":\"Hello \"}}]}\n\n",
+            "data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"Checking facts. \"}}]}\n\n",
+            "data: {\"choices\":[{\"delta\":{\"content\":\"שלום café\"}}]}\n\n",
+            "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"lookup\",\"function\":{\"name\":\"lookup\",\"arguments\":\"{}\"}}]},\"finish_reason\":\"tool_calls\"}]}\n\ndata: [DONE]\n\n");
+        let server=tokio::spawn(async move {
+            let (mut socket,_)=listener.accept().await.unwrap();
+            let mut request=[0;4096]; socket.read(&mut request).await.unwrap();
+            socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n\r\n").await.unwrap();
+            socket.write_all(fixture.as_bytes()).await.unwrap(); socket.flush().await.unwrap();
+        });
+        let response=reqwest::Client::builder().no_proxy().build().unwrap().get(format!("http://{address}/")).send().await.unwrap();
+        let mut previews=Vec::new();
+        let result=read(response,|preview|previews.push(preview)).await.unwrap();
+        server.await.unwrap();
+        assert_eq!(previews.iter().map(|preview|(preview["content"].as_str().unwrap(),preview["reasoning"].as_str().unwrap())).collect::<Vec<_>>(),
+            vec![("Hello ",""),("Hello ","Checking facts. "),("Hello שלום café","Checking facts. ")]);
+        assert_eq!(result["choices"][0]["message"]["content"],"Hello שלום café");
+        assert_eq!(result["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"],"{}");
+    }
 
     #[test]
     fn fragmented_utf8_and_tool_arguments_are_preserved() {

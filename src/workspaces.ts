@@ -19,12 +19,12 @@ export interface FileRecord {
   origin?: 'workspace' | 'studio' | 'indexed' | 'published';
   status?: string;
 }
-export interface WorkspaceFilesResult { files: FileRecord[]; coverage: string[] }
+export interface WorkspaceFilesResult { files: FileRecord[]; coverage: string[]; nextCursor?: string | null; hasMore?: boolean }
 export interface FileChangesResult extends WorkspaceFilesResult { turnId: string | null; added: number; removed: number; status?: string; timestamp?: string }
 export interface FilePreviewResult { name: string; mime: string; text?: string; dataUrl?: string; sha256: string; size: number; snapshotAvailable?: boolean }
 export interface FileDiffResult { path: string; before?: string | null; after?: string | null; added: number | null; removed: number | null; binary?: boolean; coverage?: string[] }
 export type WorkspaceFilesArgs =
-  | { action: 'list'; conversationId?: string; search?: string; limit?: number }
+  | { action: 'list'; conversationId?: string; search?: string; limit?: number; cursor?: string }
   | { action: 'changes'; conversationId: string; turnId?: string }
   | { action: 'preview'; id: string; version?: 'before' | 'after' }
   | { action: 'diff'; id: string }

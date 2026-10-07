@@ -125,10 +125,18 @@ export const cancelModelInstall = () => invoke<void>("cancel_model_install");
 
 export type ArtifactPreview = { id: string; name: string; mime: string; size: number; dataUrl: string; text: string | null };
 export type ComposerAttachmentPreview = { name: string; mime: string; size: number; dataUrl: string; text: string | null };
-export type BrowserStatus = { port: number; token: string; connected: boolean; extensionPath?: string };
+export type BrowserStatus = { port: number; token: string; connected: boolean; enabled?: boolean; extensionPath?: string };
+export type ComputerAppPermission = {path: string; name: string; access: 'allow' | 'deny'};
+export type ComputerAccess = {enabled: boolean; apps: ComputerAppPermission[]; revision?: number};
+export type ComputerAccessWindow = {windowId: number; title: string; path: string; name: string; pid?: number};
+export const computerAccess = (): Promise<ComputerAccess> => desktop() ? invoke('computer_access') : Promise.resolve({enabled:false, apps:[], revision:0});
+export const computerAccessWindows = (): Promise<ComputerAccessWindow[]> => desktop() ? invoke('computer_access_windows') : Promise.resolve([]);
+export const setComputerAccess = (policy: ComputerAccess) => invoke<ComputerAccess>('set_computer_access', {policy});
+export const allowComputerWindow = (windowId: number) => invoke<ComputerAccess>('allow_computer_window', {windowId});
+export const setBrowserAccess = (enabled: boolean) => invoke<BrowserStatus>('set_browser_access', {enabled});
 export type BrowserTab = { tabId: number; title: string; url: string; active: boolean };
 export type BrowserShot = { tabId: number; dataUrl: string; viewport: { width: number; height: number } };
-export type DesktopWindow = { windowId: number; title: string; bounds: { left: number; top: number; width: number; height: number } };
+export type DesktopWindow = { windowId: number; title: string; permission?: 'allowed'|'ask'; application?: string; bounds: { left: number; top: number; width: number; height: number } };
 export type DesktopShot = { windowId: number; bounds: DesktopWindow["bounds"]; origin?: { x: number; y: number }; dataUrl: string };
 
 export async function desktopCommand<T>(action: string, args: Record<string, unknown> = {}): Promise<T> {

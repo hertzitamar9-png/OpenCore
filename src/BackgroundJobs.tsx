@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { Clock3, Copy, FileText, Pause, Play, Plus, RefreshCw, Square, Terminal, Trash2, X } from 'lucide-react';
 import { backgroundCommand, backgroundError, describeSchedule, type BackgroundAction, type BackgroundLogs, type BackgroundRun, type BackgroundSchedule, type BackgroundSnapshot, type BackgroundTask } from './background-jobs';
 import './BackgroundJobs.css';
+import { BackgroundAgentSettings } from './BackgroundAgentSettings';
 
 interface Draft {
   id?: string; name: string; conversationId: string; action: 'prompt' | 'worker'; prompt: string;
@@ -97,7 +98,7 @@ export function BackgroundJobs({ conversationId, onNotice }: { conversationId?: 
     try {
       const task = definition(draft);
       await backgroundCommand({ action: draft.id ? 'update' : 'create', ...(draft.id ? { taskId: draft.id } : {}), ...(draft.conversationId.trim() ? { conversationId: draft.conversationId.trim() } : {}), task });
-      setDraft(null); await refresh(); callback.current(draft.id ? 'Job updated.' : 'Job saved. It runs while OpenCore is open.');
+      setDraft(null); await refresh(); callback.current(draft.id ? 'Job updated.' : 'Job saved.');
     } catch (error) { setError(backgroundError(error)); }
     finally { setBusy(''); }
   }
@@ -117,7 +118,8 @@ export function BackgroundJobs({ conversationId, onNotice }: { conversationId?: 
       <button type="button" aria-label="Refresh jobs" disabled={!!busy} onClick={() => void refresh()}><RefreshCw size={15} /></button>
       <button type="button" className="jobs-primary" onClick={() => { setError(''); setDraft(makeDraft(conversationId)); }}><Plus size={15} />New job</button>
     </div></div>
-    <div className="jobs-execution"><Clock3 size={16} /><div><strong>OpenCore must stay open for jobs to run.</strong><p>Reopening coalesces missed schedules into one queued run. Interrupted runs retain their evidence and can be retried with Run now. Prompt jobs wait for chat, studio and speech work to finish. GPU workers keep the GPU until they exit; checkpoint prompts wait in the queue.</p></div></div>
+    <BackgroundAgentSettings />
+    <div className="jobs-execution"><Clock3 size={16} /><div><strong>Schedules resume automatically while the agent is running.</strong><p>Reopening coalesces missed schedules into one queued run. Interrupted runs retain their evidence and can be retried with Run now. Prompt jobs wait for chat, studio and speech work to finish. GPU workers keep the GPU until they exit; checkpoint prompts wait in the queue.</p></div></div>
     {error && <div className="jobs-error" role="alert">{error}</div>}
     {draft && <section className="jobs-editor" aria-label={draft.id ? 'Edit job' : 'Create job'}>
       <div className="jobs-section-title"><h3>{draft.id ? 'Edit job' : 'Create job'}</h3><button type="button" aria-label="Close job editor" onClick={() => setDraft(null)}><X size={16} /></button></div>

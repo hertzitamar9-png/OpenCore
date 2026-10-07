@@ -5,6 +5,7 @@ import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
 import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, matchingModelVariant, modelMemoryMode } from "./model-variants";
 import { speechLoadingMessage } from "./speech-progress";
+import "./ModelLibrary.css";
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
@@ -25,6 +26,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [memoryMode, setMemoryMode] = useState<"all" | "native" | "echo">("all");
   const [pending, setPending] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<api.InstalledModel | null>(null);
+  const [selectedModes, setSelectedModes] = useState<Record<string, "native" | "echo">>({});
   const [quantization, setQuantization] = useState<Record<string, string>>({});
   const [speech, setSpeech] = useState<api.SpeechStatus>({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
   const refresh = useCallback(async () => {
@@ -125,14 +127,19 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     {library && visibleModels.length === 0 ? <p role="status">No models match these filters.</p> : null}
     <div className="model-library-grid">{visibleModels.map((group) => {
       const remembered = modelById.get(quantization[group.id]);
-      const matchingRemembered = matchingModelVariant(group, remembered);
       const selected = modelById.get(selectedProfile);
-      const matchingSelection = matchingModelVariant(group, selected);
-      const chosenId = matchingRemembered?.id || matchingSelection?.id || group.variants[0]?.id || group.id;
-      const model = group.variants.find(item => item.id === chosenId) || group.model;
+      // Work within both active filters so Installed never offers missing deliveries.
+      const availableModes = [...new Set(group.variants.map(modelMemoryMode))];
+      const preferredMode = selectedModes[group.id] || (remembered ? modelMemoryMode(remembered) : selected && matchingModelVariant(group, selected) ? modelMemoryMode(selected) : modelMemoryMode(group.model));
+      const activeMode = availableModes.includes(preferredMode) ? preferredMode : availableModes[0];
+      const modeVariants = group.variants.filter(variant => modelMemoryMode(variant) === activeMode);
+      const modeGroup = {...group, variants: modeVariants};
+      const matchingRemembered = matchingModelVariant(modeGroup, remembered);
+      const matchingSelection = matchingModelVariant(modeGroup, selected);
+      const model = matchingRemembered || matchingSelection || modeVariants[0] || group.model;
       const profileSelected = group.aliases[selectedProfile] === model.id;
       const vram = vramEstimate(model);
-      const modeVariants = group.variants;
+      const showQuantization = modeVariants.length > 1 || (category !== "installed" && categoryOf(model) === "text" && model.backend === "gguf");
       const preparedRuntime = model.preparedRuntime?.kind === 'woof-mlx-affine4-bf16' ? model.preparedRuntime : undefined;
       const selectedPhonon = model.id === 'phonon-2' && speech.modelId === model.id;
       const phononPrecision = speech.runtimePrecision || 'bf16';
@@ -140,11 +147,22 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       return <article key={group.id} className={`model-library-card ${(model.speechLanguage ? model.id === speech.modelId : profileSelected) ? "selected" : ""}`}>
       <header><div><h3>{group.model.label}</h3><span>{modelMemoryMode(model) === "echo" ? "ECHO" : "Native"} · {model.precision}{model.speechLanguage ? <> · <b>{model.speechLanguage}</b></> : null}</span></div><span className={`model-install-state ${model.installed || model.externalManaged ? "installed" : ""}`}>{model.installed ? model.runtimeReady === false ? "Weights downloaded" : "Installed" : model.externalManaged ? "Local weights found" : model.installable === false ? "Setup needed" : "Not installed"}</span></header>
       <p>{model.description}</p>
-      {modeVariants.length > 1 ? <label className="model-quantization-picker">Mode and quantization
-        <select aria-label={`Quantization for ${group.model.label}`} value={model.id} disabled={Boolean(pending)} onChange={event => setQuantization(current => ({ ...current, [group.id]: event.target.value }))}>
-          {modeVariants.map(variant => { const estimate = vramEstimate(variant); const needsPackageLabel = variant.backend === "external" || modeVariants.some(other => other.id !== variant.id && other.precision === variant.precision && modelMemoryMode(other) === modelMemoryMode(variant)); return <option key={variant.id} value={variant.id}>{modelMemoryMode(variant) === "echo" ? "ECHO" : "Native"} · {variant.precision}{needsPackageLabel ? ` · ${variant.label}` : ""} · {downloadLabel(variant)}{estimate ? ` · ${gb(estimate.minBytes)}–${gb(estimate.maxBytes)} VRAM est.` : " · VRAM estimate unavailable"}</option>; })}
-        </select>
-      </label> : null}
+      {availableModes.length > 1 || showQuantization ? <div className="model-variant-controls">
+        {availableModes.length > 1 ? <label className="model-quantization-picker">Memory mode
+          <select aria-label={`Memory mode for ${group.model.label}`} value={activeMode} disabled={Boolean(pending)} onChange={event => {
+            setSelectedModes(current => ({...current, [group.id]: event.target.value as "native" | "echo"}));
+            setQuantization(current => ({...current, [group.id]: model.id}));
+          }}>
+            {availableModes.map(mode => <option key={mode} value={mode}>{mode === "echo" ? "ECHO" : "Native"}</option>)}
+          </select>
+        </label> : null}
+        {showQuantization ? <label className="model-quantization-picker">Quantization
+          <select aria-label={`Quantization for ${group.model.label}`} value={model.id} disabled={Boolean(pending) || modeVariants.length <= 1} onChange={event => setQuantization(current => ({...current, [group.id]: event.target.value}))}>
+            {modeVariants.map(variant => { const estimate = vramEstimate(variant); const needsPackageLabel = variant.backend === "external" || modeVariants.some(other => other.id !== variant.id && other.precision === variant.precision); return <option key={variant.id} value={variant.id}>{variant.precision}{needsPackageLabel ? ` · ${variant.label}` : ""} · {downloadLabel(variant)}{estimate ? ` · ${gb(estimate.minBytes)}–${gb(estimate.maxBytes)} VRAM est.` : " · VRAM estimate unavailable"}</option>; })}
+          </select>
+          {modeVariants.length === 1 ? <small>Only verified quantization available for this model.</small> : null}
+        </label> : null}
+      </div> : null}
       <dl><div><dt>{model.selectable ? "Active context" : "Load mode"}</dt><dd>{model.selectable ? `${model.contextTokens.toLocaleString()} tokens` : model.runtimeReady === false ? "Setup needed" : "On demand"}</dd></div><div><dt>Download</dt><dd>{downloadLabel(model)}</dd></div>{vram ? <div><dt>Estimated VRAM (full GPU offload)</dt><dd>{gb(vram.minBytes)}–{gb(vram.maxBytes)}</dd></div> : model.runtimeReady === false || model.installable === false ? <div><dt>Estimated VRAM</dt><dd>Requires a compatible runtime and its complete component set</dd></div> : null}</dl>
       <small>{model.note}</small>
       {model.runtimeConnected ? <p className="model-library-note">Connected runtime. Model weights are managed separately by this runtime.</p> : null}

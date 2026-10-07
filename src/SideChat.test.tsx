@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import * as api from './api';
 import * as sideChat from './side-chat';
+import * as sideContext from './side-chat-context';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({open: vi.fn()}));
 vi.mock('@tauri-apps/api/app', () => ({getVersion: vi.fn(async () => '0.2.110')}));
@@ -13,10 +14,51 @@ vi.mock('@tauri-apps/api/event', () => ({listen: vi.fn(async (name: string, call
 beforeEach(() => {
   const values = new Map<string, string>();
   vi.stubGlobal('localStorage', {getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key)});
+  vi.spyOn(sideContext, 'refreshSideChatContext').mockImplementation(async id => ({conversationId: id, parentId: 'main', title: 'Side chat', contextTokens: 32768, sharedWorkspace: true, updatedEntries: 0}));
 });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); handlers.clear(); });
 
 describe('Side chat branch', () => {
+  it('refreshes new main context before each side turn and preserves side messages and changed effort', async () => {
+    const original = await api.snapshot(); const parent = original.conversations[0];
+    const branch = {conversationId: 'side:live-context', parentId: parent.id, title: 'Live branch', contextTokens: 32768, sharedWorkspace: true as const};
+    vi.spyOn(sideChat, 'createSideChat').mockResolvedValue(branch);
+    vi.spyOn(api, 'conversation').mockImplementation(async id => id === branch.conversationId ? [{id: 990, conversationId: id, timestamp: '2026-10-07T10:00:00Z', kind: 'message', role: 'assistant', source: 'OpenCore', title: 'Side reply', content: 'Keep the independent side answer', metadata: {}}] : []);
+    const order: string[] = [];
+    vi.mocked(sideContext.refreshSideChatContext).mockImplementation(async () => {order.push('refresh'); return {...branch, inheritedEntries: 4, updatedEntries: 2};});
+    vi.spyOn(sideChat, 'sendSideChatMessage').mockImplementation(async () => {order.push('send'); return {conversationId: branch.conversationId, title: branch.title};});
+    render(<App />); await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
+    const input = await screen.findByLabelText('Message side chat'); const side = input.closest('main')!;
+    fireEvent.click(within(side).getByRole('button', {name: /^Effort:/}));
+    fireEvent.change(screen.getByRole('slider', {name: 'Reasoning effort'}), {target: {value: '2'}});
+    fireEvent.click(screen.getByRole('button', {name: 'Close Effort'}));
+    for (const text of ['First side question', 'Use the updated main decision']) {
+      fireEvent.change(input, {target: {value: text}});
+      await waitFor(() => expect(within(side).getByRole('button', {name: 'Send message'})).toBeEnabled());
+      fireEvent.keyDown(input, {key: 'Enter'});
+      await waitFor(() => expect(order.filter(step => step === 'send')).toHaveLength(text === 'First side question' ? 1 : 2));
+    }
+    expect(order).toEqual(['refresh', 'send', 'refresh', 'send']);
+    expect(within(side).getByRole('button', {name: 'Effort: Medium'})).toBeVisible();
+    expect(screen.getByText('Keep the independent side answer')).toBeVisible();
+    expect(screen.getByText(/4 inherited entries/)).toBeVisible();
+    expect(screen.getByText(/refreshes before each side message/)).toBeVisible();
+  });
+
+  it('keeps a failed context refresh from sending a stale side turn', async () => {
+    const original = await api.snapshot(); const parent = original.conversations[0];
+    vi.spyOn(sideChat, 'createSideChat').mockResolvedValue({conversationId: 'side:refresh-failed', parentId: parent.id, title: 'Failed refresh', contextTokens: 32768, sharedWorkspace: true});
+    vi.spyOn(api, 'conversation').mockResolvedValue([]);
+    vi.mocked(sideContext.refreshSideChatContext).mockRejectedValue(new Error('Main context could not be loaded'));
+    const send = vi.spyOn(sideChat, 'sendSideChatMessage').mockResolvedValue({conversationId: 'side:refresh-failed', title: 'Failed refresh'});
+    render(<App />); await screen.findByLabelText('Message OpenCore');
+    fireEvent.click(screen.getByRole('button', {name: 'Workspace'})); fireEvent.click(screen.getByRole('tab', {name: 'Side chat'})); fireEvent.click(screen.getByRole('button', {name: 'Create side chat'}));
+    const input = await screen.findByLabelText('Message side chat');
+    fireEvent.change(input, {target: {value: 'Needs current context'}}); fireEvent.keyDown(input, {key: 'Enter'});
+    expect(await screen.findByText(/Main context could not be loaded/)).toBeVisible();
+    expect(send).not.toHaveBeenCalled();
+  });
   it('keeps changed branch effort and approval when opening it as a full chat', async () => {
     const original = await api.snapshot(); const parent = original.conversations[0];
     const branchId = 'side:updated-settings';

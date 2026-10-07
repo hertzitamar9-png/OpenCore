@@ -212,6 +212,7 @@ async fn stop_active_work_for_update(core: &AppCore) -> Result<(), String> {
     } else {
         None
     };
+    core.runtime_setup.shutdown().await;
     let background_error=core.background.cancel_active().await.err();
 
     // Cancel dictation and stop the verified YuE model before replacing

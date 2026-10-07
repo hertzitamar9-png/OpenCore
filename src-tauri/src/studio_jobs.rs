@@ -199,6 +199,7 @@ impl StudioManager {
                                 "data":{"jobId":job.id,"category":job.category,"modelId":job.request.model_id,"conversationId":job.request.conversation_id,"status":job.status,"outputs":job.outputs,"error":job.error}});
                             if let Err(error)=core.background.emit(event) { core.store.log("warn","background-events",&error); }
                             if job.status=="completed" && !job.outputs.is_empty() {
+                                if let Err(error)=core.runtime_setup.record_inference(job) { core.store.log("warn","runtime-evidence",&error); }
                                 let files=core.files.clone(); let log=core.store.clone(); let notice=app.clone();
                                 let conversation=job.request.conversation_id.clone().unwrap_or_else(||format!("studio:{}",job.category));
                                 let job_id=job.id.clone(); let paths:Vec<PathBuf>=job.outputs.iter().map(PathBuf::from).collect();
@@ -337,7 +338,7 @@ impl StudioManager {
                 return;
             }
             let chats = core.active_chats.lock().is_ok_and(|chats| chats.is_empty());
-            if !self.busy() && !core.claude_bridge.busy() && chats && !gpu_reserved() && !core.speech.is_active().await {
+            if !self.busy() && !core.runtime_setup.busy() && !core.claude_bridge.busy() && chats && !gpu_reserved() && !core.speech.is_active().await {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(200)).await;
@@ -653,7 +654,7 @@ impl StudioManager {
                     .lock()
                     .map_err(|e| e.to_string())?
                     .is_empty();
-            if !chats_active && !core.claude_bridge.busy() && !gpu_reserved() && !core.speech.is_active().await {
+            if !chats_active && !core.runtime_setup.busy() && !core.claude_bridge.busy() && !gpu_reserved() && !core.speech.is_active().await {
                 break;
             }
             tokio::select! {_=token.cancelled()=>return Err("Cancelled before generation".into()),_=tokio::time::sleep(Duration::from_millis(200))=>{}}

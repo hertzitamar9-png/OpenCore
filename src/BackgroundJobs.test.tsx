@@ -9,7 +9,7 @@ beforeEach(() => { vi.restoreAllMocks(); vi.spyOn(jobs, 'backgroundCommand').moc
 
 it('states execution conditions and explains the authenticated loopback event', async () => {
   render(<BackgroundJobs onNotice={vi.fn()} />);
-  expect(await screen.findByText(/OpenCore must stay open/)).toBeVisible();
+  expect(await screen.findByText(/Schedules resume automatically while the agent is running/)).toBeVisible();
   fireEvent.click(screen.getByText('Webhook setup'));
   expect(screen.getByText('http://127.0.0.1:4222/background/events')).toBeVisible();
   expect((screen.getByLabelText('Event example') as HTMLTextAreaElement).value).toContain('training.checkpoint');

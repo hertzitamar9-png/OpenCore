@@ -2,6 +2,100 @@ use super::*;
 use serde_json::json;
 use std::fs;
 
+#[test]
+fn parses_one_bounded_range_and_rejects_empty_invalid_or_multiple_ranges() {
+    assert_eq!(byte_range("bytes=2-4", 10), Ok((2, 3)));
+    assert_eq!(byte_range("bytes=2-", 10), Ok((2, 8)));
+    assert_eq!(byte_range("bytes=-20", 10), Ok((0, 10)));
+    assert_eq!(byte_range("bytes=2-100", 10), Ok((2, 8)));
+    for range in [
+        "bytes=-0",
+        "bytes=10-",
+        "bytes=4-2",
+        "bytes=0-1,4-5",
+        "items=1-2",
+        "bytes=18446744073709551616-",
+    ] {
+        assert!(byte_range(range, 10).is_err(), "{range}");
+    }
+    assert!(byte_range("bytes=0-", 0).is_err());
+}
+
+#[tokio::test]
+async fn large_immutable_outputs_support_head_and_byte_ranges_after_the_source_is_deleted() {
+    let root =
+        std::env::temp_dir().join(format!("opencore-browser-range-{}", uuid::Uuid::new_v4()));
+    fs::create_dir_all(&root).unwrap();
+    let source = root.join("video.mp4");
+    let bytes = (0..13 * 1024 * 1024)
+        .map(|index| (index % 251) as u8)
+        .collect::<Vec<_>>();
+    fs::write(&source, &bytes).unwrap();
+    let ledger = WorkspaceLedger::new(root.join("data")).unwrap();
+    let result = ledger
+        .register_outputs("chat", "large-video", &[source.clone()])
+        .unwrap();
+    assert_eq!(result["files"][0]["snapshotAvailable"], true);
+    fs::remove_file(source).unwrap();
+    let browser = FileBrowser::new(ledger.clone());
+    let opened = browser
+        .open(result["files"][0]["id"].as_str().unwrap().into(), None)
+        .await
+        .unwrap();
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let head = client.head(&opened.url).send().await.unwrap();
+    assert_eq!(head.status(), StatusCode::OK);
+    assert_eq!(head.headers()["content-length"], bytes.len().to_string());
+    assert!(head.bytes().await.unwrap().is_empty());
+    let range = client
+        .get(&opened.url)
+        .header("range", "bytes=17-39")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(range.status(), StatusCode::PARTIAL_CONTENT);
+    assert_eq!(
+        range.headers()["content-range"],
+        format!("bytes 17-39/{}", bytes.len())
+    );
+    assert_eq!(range.bytes().await.unwrap().as_ref(), &bytes[17..40]);
+    let suffix = client
+        .get(&opened.url)
+        .header("range", "bytes=-5")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(
+        suffix.bytes().await.unwrap().as_ref(),
+        &bytes[bytes.len() - 5..]
+    );
+    let invalid = client
+        .get(&opened.url)
+        .header("range", format!("bytes={}-", bytes.len()))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(invalid.status(), StatusCode::RANGE_NOT_SATISFIABLE);
+    let hash = result["files"][0]["afterHash"].as_str().unwrap();
+    fs::write(
+        root.join("data/workspace-files/objects")
+            .join(&hash[..2])
+            .join(format!("{hash}.blob")),
+        b"tampered",
+    )
+    .unwrap();
+    assert_eq!(
+        client
+            .get(&opened.url)
+            .header("range", "bytes=0-3")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::NOT_FOUND
+    );
+}
+
 #[tokio::test]
 async fn serves_real_html_and_recorded_relative_assets_without_exposing_other_files() {
     let root = std::env::temp_dir().join(format!("opencore-browser-{}", uuid::Uuid::new_v4()));

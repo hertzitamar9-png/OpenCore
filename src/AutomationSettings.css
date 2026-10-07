@@ -1,0 +1,22 @@
+.automation-settings { display:grid; gap:12px; margin-bottom:18px; }
+.desktop-access-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-2,#102132); border-bottom:1px solid var(--border); font-size:12px; }
+.desktop-access-bar > span { flex:1; min-width:150px; }
+.automation-heading,.automation-browser { display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
+.automation-heading > div,.automation-browser > div { flex:1; min-width:160px; }
+.automation-heading p,.automation-browser p { margin:5px 0 0; }
+.automation-switch { width:44px; height:26px; padding:3px; border-radius:99px; flex:none; background:#253343; border:1px solid #526376; }
+.automation-switch span { display:block; width:18px; height:18px; border-radius:50%; background:#c6d3e2; transition:transform .15s; }
+.automation-switch[aria-checked="true"] { background:#087bb5; border-color:#4bccff; }
+.automation-switch[aria-checked="true"] span { transform:translateX(16px); background:white; }
+.automation-stop { justify-self:start; border-color:#935357; color:#ffc2c2; }
+.automation-app-picker { display:flex; gap:8px; }
+.automation-app-picker select { flex:1; width:0; min-width:0; color:inherit; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:8px; }
+.automation-apps { display:grid; gap:8px; }
+.automation-app { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:9px; }
+.automation-app > div { flex:1; min-width:140px; }
+.automation-app small { display:block; color:var(--muted); overflow-wrap:anywhere; margin-top:3px; font-size:11px; }
+.automation-tabs { padding-left:20px; margin:0; display:grid; gap:8px; max-height:200px; overflow:auto; }
+.automation-tabs small { display:block; color:var(--muted); overflow-wrap:anywhere; }
+.automation-settings [role="alert"] { color:#ffc2c2; }
+.automation-help-link { justify-self:start; }
+@media (prefers-reduced-motion:reduce) { .automation-switch span { transition:none; } }

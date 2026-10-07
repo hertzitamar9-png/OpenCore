@@ -285,7 +285,7 @@ impl BackgroundManager {
         Ok(Some((run, task)))
     }
     async fn idle(core: &AppCore) -> bool {
-        core.active_chats.lock().is_ok_and(|chats| chats.is_empty()) && !core.studios.busy() && !core.studios.continuation_pending() && !core.claude_bridge.busy() && !crate::studio_jobs::gpu_reserved() && !core.speech.is_active().await
+        core.active_chats.lock().is_ok_and(|chats| chats.is_empty()) && !core.runtime_setup.busy() && !core.studios.busy() && !core.studios.continuation_pending() && !core.claude_bridge.busy() && !crate::studio_jobs::gpu_reserved() && !core.speech.is_active().await
     }
     fn pending(&self) -> Result<Vec<(BackgroundRun, BackgroundTask)>, String> {
         let db = self.db.lock().map_err(|error| error.to_string())?;

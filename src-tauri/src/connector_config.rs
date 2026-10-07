@@ -54,7 +54,10 @@ fn ensure_parent(path: &Path) -> Result<(), String> {
 }
 
 pub fn configure_claude_code() -> Result<String, String> {
-    let claude_root = profile_root()?.join(".claude");
+    configure_claude_code_at(&profile_root()?.join(".claude"))
+}
+
+fn configure_claude_code_at(claude_root: &Path) -> Result<String, String> {
     let global_path = claude_root.join("settings.json");
     if global_path.is_file() {
         let mut global = serde_json::from_slice::<Value>(
@@ -80,6 +83,9 @@ pub fn configure_claude_code() -> Result<String, String> {
         serde_json::to_vec_pretty(&root).map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())?;
+    if !claude_configured_at(&path) {
+        return Err(format!("Claude Code profile was written but did not validate: {}", path.display()));
+    }
     Ok(format!(
         "OpenCore Local settings installed for Claude Code. Your normal Claude account and global settings were not changed; use claude --settings \"{}\" when you want the local model.",
         path.display()
@@ -124,6 +130,10 @@ fn ensure_table<'a>(parent: &'a mut Table, name: &str) -> &'a mut Table {
 
 pub fn configure_codex() -> Result<String, String> {
     let path = profile_root()?.join(".codex").join("config.toml");
+    configure_codex_at(&path)
+}
+
+fn configure_codex_at(path: &Path) -> Result<String, String> {
     ensure_parent(&path)?;
     backup(&path)?;
     let source = if path.is_file() {
@@ -138,7 +148,10 @@ pub fn configure_codex() -> Result<String, String> {
     install_codex_profile(&mut doc);
 
     std::fs::write(&path, doc.to_string()).map_err(|e| e.to_string())?;
-    Ok("OpenCore Local profile installed for Codex. Your default provider and login were not changed; use codex --profile opencore when you want the local model.".into())
+    if !codex_configured_at(path) {
+        return Err(format!("Codex profile was written but did not validate: {}", path.display()));
+    }
+    Ok(format!("OpenCore Local profile installed for Codex at {}. Your default provider and login were not changed; use codex --profile opencore when you want the local model.", path.display()))
 }
 
 fn install_codex_profile(doc: &mut DocumentMut) {
@@ -162,55 +175,81 @@ pub fn claude_configured() -> bool {
     let Ok(root) = profile_root() else {
         return false;
     };
-    let path = root.join(".claude").join(CLAUDE_OPENCORE_SETTINGS);
+    claude_configured_at(&root.join(".claude").join(CLAUDE_OPENCORE_SETTINGS))
+}
+
+fn claude_configured_at(path: &Path) -> bool {
     let Ok(bytes) = std::fs::read(path) else {
         return false;
     };
     let Ok(value) = serde_json::from_slice::<Value>(&bytes) else {
         return false;
     };
-    value
-        .pointer("/env/ANTHROPIC_BASE_URL")
-        .and_then(Value::as_str)
-        == Some(GATEWAY)
-        && value
-            .pointer("/env/ANTHROPIC_MODEL")
-            .and_then(Value::as_str)
-            == Some("opencore")
+    CLAUDE_OPENCORE_ENV.iter().all(|(key, expected)| value.pointer(&format!("/env/{key}")).and_then(Value::as_str)==Some(*expected))
 }
 
 pub fn codex_configured() -> bool {
     let Ok(root) = profile_root() else {
         return false;
     };
-    let path = root.join(".codex").join("config.toml");
+    codex_configured_at(&root.join(".codex").join("config.toml"))
+}
+
+fn codex_configured_at(path: &Path) -> bool {
     let Ok(source) = std::fs::read_to_string(path) else {
         return false;
     };
     let Ok(doc) = source.parse::<DocumentMut>() else {
         return false;
     };
-    doc.get("model_providers")
-        .and_then(Item::as_table)
-        .and_then(|t| t.get("opencore"))
-        .and_then(Item::as_table)
-        .and_then(|t| t.get("base_url"))
-        .and_then(Item::as_value)
-        .and_then(|v| v.as_str())
-        == Some("http://127.0.0.1:8812/v1")
-        && doc
-            .get("profiles")
-            .and_then(Item::as_table)
-            .and_then(|t| t.get("opencore"))
-            .and_then(Item::as_table)
-            .and_then(|t| t.get("model_provider"))
-            .and_then(Item::as_value)
-            .and_then(|v| v.as_str())
-            == Some("opencore")
+    let text_at=|section: &str,field: &str|doc.get(section).and_then(Item::as_table)
+        .and_then(|table|table.get("opencore")).and_then(Item::as_table)
+        .and_then(|table|table.get(field)).and_then(Item::as_value).and_then(|value|value.as_str());
+    text_at("model_providers","base_url")==Some("http://127.0.0.1:8812/v1")
+        && text_at("model_providers","wire_api")==Some("responses")
+        && text_at("model_providers","experimental_bearer_token")==Some("opencore-local")
+        && text_at("profiles","model_provider")==Some("opencore")
+        && text_at("profiles","model")==Some("opencore")
 }
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn configured_codex_profile_is_verified_at_reported_path_and_preserves_defaults() {
+        let root=std::env::temp_dir().join(format!("opencore-configured-codex-{}",uuid::Uuid::new_v4()));
+        let path=root.join(".codex/config.toml");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path,"model = \"user-model\"\nmodel_provider = \"user-provider\"\n").unwrap();
+        let result=configure_codex_at(&path).unwrap();
+        assert!(result.contains(path.to_string_lossy().as_ref()));
+        assert!(codex_configured_at(&path));
+        let installed=std::fs::read_to_string(&path).unwrap().parse::<DocumentMut>().unwrap();
+        assert_eq!(installed["model"].as_str(),Some("user-model"));
+        assert_eq!(installed["model_provider"].as_str(),Some("user-provider"));
+        drop(installed);
+        std::fs::write(&path,"[model_providers.opencore]\nbase_url=\"http://127.0.0.1:8812/v1\"\n[profiles.opencore]\nmodel_provider=\"opencore\"\n").unwrap();
+        assert!(!codex_configured_at(&path),"a missing Responses transport or model is not a verified connector");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn configured_claude_profile_is_verified_and_preserves_user_account_settings() {
+        let root=std::env::temp_dir().join(format!("opencore-configured-claude-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let global=root.join("settings.json");
+        std::fs::write(&global,serde_json::to_vec(&json!({"env":{"ANTHROPIC_BASE_URL":GATEWAY,"ANTHROPIC_MODEL":"user-choice","UNRELATED":"keep"},"enableWorkflows":true})).unwrap()).unwrap();
+        let result=configure_claude_code_at(&root).unwrap();
+        let managed=root.join(CLAUDE_OPENCORE_SETTINGS);
+        assert!(result.contains(managed.to_string_lossy().as_ref())); assert!(claude_configured_at(&managed));
+        let preserved:Value=serde_json::from_slice(&std::fs::read(&global).unwrap()).unwrap();
+        assert_eq!(preserved["env"]["ANTHROPIC_MODEL"],"user-choice");
+        assert_eq!(preserved["env"]["UNRELATED"],"keep"); assert_eq!(preserved["enableWorkflows"],true);
+        std::fs::write(&managed,serde_json::to_vec(&json!({"env":{"ANTHROPIC_BASE_URL":GATEWAY,"ANTHROPIC_MODEL":"opencore"}})).unwrap()).unwrap();
+        assert!(!claude_configured_at(&managed),"missing managed auth/model fields are not a verified connector");
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn toml_provider_shape_is_valid() {

@@ -48,6 +48,12 @@ def main() -> int:
             **values,
         )
         action = "created"
+    installed = next(
+        (row for row in providers_db.list_providers() if row["id"] == "opencore-control"),
+        None,
+    )
+    if installed is None or installed.get("base_url", "").rstrip("/") != gateway:
+        raise RuntimeError("Unsloth provider update did not persist the requested gateway")
     print(json.dumps({"ok": True, "action": action, "gateway": gateway, "runtime": str(runtime)}))
     return 0
 

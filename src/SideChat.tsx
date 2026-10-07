@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { GitBranch, Maximize2, RefreshCw } from 'lucide-react';
 import { AssistantConversation, type ConversationSettings } from './AssistantConversation';
 import { createSideChat, sendSideChatMessage, type SideChatBranch } from './side-chat';
+import { refreshSideChatContext } from './side-chat-context';
 import { profileLabel } from './ModelProfiles';
 import * as api from './api';
 import type { ComposerSkillId } from './composer-skills';
@@ -55,6 +56,24 @@ export function SideChat({parentId, parentTitle, settings, selectedProfile, onSe
     } catch (reason) { if (branchRef.current === id) setError(`Could not refresh side chat: ${String(reason)}`); }
     finally { setRefreshing(false); }
   }, [onRefresh]);
+  const refreshMainContext = useCallback(async (id: string) => {
+    setRefreshing(true);
+    try {
+      const latest = await refreshSideChatContext(id);
+      if (latest.conversationId !== id) throw new Error('The side chat context response belongs to a different conversation.');
+      setBranches(current => {
+        if (!parentId || current[parentId]?.branch.conversationId !== id) return current;
+        return {...current, [parentId]: {...current[parentId], branch: {...current[parentId].branch, ...latest}}};
+      });
+      const history = await api.conversation(id);
+      if (branchRef.current === id) {setEntries(history); setError('');}
+      return latest;
+    } finally {setRefreshing(false);}
+  }, [parentId]);
+  const sendWithMainContext = useCallback<typeof api.sendChatMessage>(async (...args) => {
+    await refreshMainContext(args[0]);
+    return sendSideChatMessage(...args);
+  }, [refreshMainContext]);
   useEffect(() => { setEntries([]); setStream(undefined); setError(''); if (branch) void refreshBranch(); }, [branch?.conversationId, refreshBranch]);
   useEffect(() => {
     let disposed = false; let stop: (() => void) | undefined;
@@ -86,12 +105,12 @@ export function SideChat({parentId, parentTitle, settings, selectedProfile, onSe
     finally { setCreating(false); }
   };
 
-  if (!branch || !stored) return <section className="side-chat-intro" aria-label="Side chat"><GitBranch size={27} /><h3>Explore a side chat</h3><p>Create a branch of {parentTitle || 'this conversation'} with the saved context at this moment. The branch has its own messages and shares this chat’s workspace.</p><p className="side-chat-muted">It uses the same selected model and approval settings. The history snapshot stays fixed when later messages are added to the main chat.</p>{blocked ? <p role="status">{blocked}</p> : null}{!parentId ? <p>Send a message in the main chat first to create a saved branch.</p> : null}{error ? <p className="side-chat-error" role="alert">{error}</p> : null}<button className="primary" disabled={!parentId || Boolean(blocked) || creating} onClick={() => void create()}><GitBranch size={15} />{creating ? 'Creating branch…' : 'Create side chat'}</button></section>;
+  if (!branch || !stored) return <section className="side-chat-intro" aria-label="Side chat"><GitBranch size={27} /><h3>Explore a side chat</h3><p>Create a branch of {parentTitle || 'this conversation'} with its saved context. The branch has its own messages and shares this chat’s workspace.</p><p className="side-chat-muted">It starts with the selected model and approval settings. New main-chat context refreshes before each side message while the side chat keeps its own conversation and settings.</p>{blocked ? <p role="status">{blocked}</p> : null}{!parentId ? <p>Send a message in the main chat first to create a saved branch.</p> : null}{error ? <p className="side-chat-error" role="alert">{error}</p> : null}<button className="primary" disabled={!parentId || Boolean(blocked) || creating} onClick={() => void create()}><GitBranch size={15} />{creating ? 'Creating branch…' : 'Create side chat'}</button></section>;
 
   return <section className="side-chat-session" aria-label="Side chat branch">
-    <header className="side-chat-context"><div><GitBranch size={15} /><strong>Branch of {parentTitle}</strong></div><p>{profileLabel(selectedProfile)} · {branch.contextTokens.toLocaleString()}-token context · Shared workspace</p><small>{branch.contextSource === 'codex-fork' ? 'Saved Codex context fork' : 'Saved conversation snapshot'}{typeof branch.inheritedEntries === 'number' ? ` · ${branch.inheritedEntries.toLocaleString()} inherited entries` : ''}</small><div className="side-chat-actions"><button disabled={refreshing} aria-label="Refresh side chat" title="Refresh side chat" onClick={() => void refreshBranch()}><RefreshCw size={14} /></button><button aria-label="Open as full chat" onClick={() => onOpenConversation(branch.conversationId, stored.settings)}><Maximize2 size={14} /> Open as full chat</button></div></header>
+    <header className="side-chat-context"><div><GitBranch size={15} /><strong>Branch of {parentTitle}</strong></div><p>{profileLabel(selectedProfile)} · {branch.contextTokens.toLocaleString()}-token context · Shared workspace</p><small>{branch.contextSource === 'codex-fork' ? 'Saved Codex context fork' : 'Saved conversation context'}{typeof branch.inheritedEntries === 'number' ? ` · ${branch.inheritedEntries.toLocaleString()} inherited entries` : ''}</small><small>Main-chat context refreshes before each side message.</small><div className="side-chat-actions"><button disabled={refreshing || Boolean(blocked) || activeConversationIds.includes(branch.conversationId)} aria-label="Refresh main chat context" title="Refresh main chat context and side messages" onClick={() => void refreshMainContext(branch.conversationId).catch(reason => setError(`Could not refresh main chat context: ${String(reason)}`))}><RefreshCw size={14} /></button><button aria-label="Open as full chat" onClick={() => onOpenConversation(branch.conversationId, stored.settings)}><Maximize2 size={14} /> Open as full chat</button></div></header>
     {branch.contextWarning ? <p className="side-chat-error" role="status">{branch.contextWarning}</p> : null}
     {error ? <p className="side-chat-error" role="alert">{error}</p> : null}
-    <AssistantConversation key={branch.conversationId} embedded conversationId={branch.conversationId} title={branch.title} client="OpenCore" entries={visibleEntries} runtimeRunning={running} runtimeSnapshot={{...runtimeSnapshot, contextSize: branch.contextTokens}} telemetry={telemetry} selectedProfile={selectedProfile} onSelectProfile={onSelectProfile} liveTokenSpeed={null} promptProgress={null} backendActive={activeConversationIds.includes(branch.conversationId)} inferenceBlocked={blocked} onConversationId={() => {}} onRefresh={refreshBranch} onNotice={onNotice} onExport={() => { void api.exportConversation(branch.conversationId, 'markdown').then(path => onNotice(`Exported to ${path}`)).catch(reason => onNotice(String(reason))); }} onRename={() => onOpenConversation(branch.conversationId)} onDelete={() => onOpenConversation(branch.conversationId)} pinned={false} project="" projectId={null} projects={projects} onPin={() => { void api.setConversationPinned(branch.conversationId, true).then(onRefresh).catch(reason => onNotice(String(reason))); }} onMoveProject={() => {}} onCreateProject={async () => false} defaultSkills={defaultSkills} subagentsEnabled={stored.settings.subagentsEnabled} maxSubagents={stored.settings.maxSubagents} projectSkillsEnabled={stored.settings.projectSkillsEnabled} compactAtTokens={stored.settings.compactAtTokens} initialSettings={stored.settings} onSettingsChange={rememberBranchSettings} sendMessage={sendSideChatMessage} onActivityChange={onActivityChange} onOpenWorkspace={onOpenWorkspace} onOpenPreview={onOpenPreview} onOpenBrowserLink={onOpenBrowserLink} onOpenFileRecord={onOpenFileRecord} onWorkspaceObscuredChange={onWorkspaceObscuredChange} />
+    <AssistantConversation key={branch.conversationId} embedded conversationId={branch.conversationId} title={branch.title} client="OpenCore" entries={visibleEntries} runtimeRunning={running} runtimeSnapshot={{...runtimeSnapshot, contextSize: branch.contextTokens}} telemetry={telemetry} selectedProfile={selectedProfile} onSelectProfile={onSelectProfile} liveTokenSpeed={null} promptProgress={null} backendActive={activeConversationIds.includes(branch.conversationId)} inferenceBlocked={blocked} onConversationId={() => {}} onRefresh={refreshBranch} onNotice={onNotice} onExport={() => { void api.exportConversation(branch.conversationId, 'markdown').then(path => onNotice(`Exported to ${path}`)).catch(reason => onNotice(String(reason))); }} onRename={() => onOpenConversation(branch.conversationId)} onDelete={() => onOpenConversation(branch.conversationId)} pinned={false} project="" projectId={null} projects={projects} onPin={() => { void api.setConversationPinned(branch.conversationId, true).then(onRefresh).catch(reason => onNotice(String(reason))); }} onMoveProject={() => {}} onCreateProject={async () => false} defaultSkills={defaultSkills} subagentsEnabled={stored.settings.subagentsEnabled} maxSubagents={stored.settings.maxSubagents} projectSkillsEnabled={stored.settings.projectSkillsEnabled} compactAtTokens={stored.settings.compactAtTokens} initialSettings={stored.settings} onSettingsChange={rememberBranchSettings} sendMessage={sendWithMainContext} onActivityChange={onActivityChange} onOpenWorkspace={onOpenWorkspace} onOpenPreview={onOpenPreview} onOpenBrowserLink={onOpenBrowserLink} onOpenFileRecord={onOpenFileRecord} onWorkspaceObscuredChange={onWorkspaceObscuredChange} />
   </section>;
 }
