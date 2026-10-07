@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Download, ExternalLink } from 'lucide-react';
 import * as api from './api';
+import { RuntimeSetupControls } from './RuntimeSetupControls';
 import './StudioModelSetup.css';
 
 const size = (bytes: number) => `${(bytes / 1_000_000_000).toLocaleString(undefined, {maximumFractionDigits: 2})} GB`;
@@ -53,6 +54,7 @@ export function StudioModelSetup({model, connected, disabled, onRefresh, onNotic
     {!model.installed && model.installable === false && <small>Obtain weights through the publisher, then connect its compatible runtime.</small>}
     {current && <div className="studio-weight-progress" role="status"><span>{current.phase} · {size(current.downloadedBytes)} / {size(current.totalBytes)}</span><progress aria-label="Weight download progress" max={current.totalBytes || 1} value={current.downloadedBytes} />{installing && <button type="button" onClick={() => void api.cancelModelInstall().catch(cause => setError(String(cause)))}>Cancel download</button>}</div>}
     {model.note && <details><summary>Model requirements and limitations</summary><p>{model.note}</p></details>}
+    <RuntimeSetupControls targetId={model.id} label={model.label} installed={model.installed} disabled={disabled} onRefresh={onRefresh} onNotice={onNotice} />
     {error && <p role="alert">{error}</p>}
   </section>;
 }

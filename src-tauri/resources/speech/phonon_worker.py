@@ -6,6 +6,7 @@ the teacher's weight file or substitute another ASR model. CUDA is temporary.
 import argparse
 import gc
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -55,6 +56,7 @@ def main():
     parser.add_argument('--idle-mode', choices=('cold','ram'), required=True)
     parser.add_argument('--awake', action='store_true')
     parser.add_argument('--precision', choices=('bf16', 'fp32'), default='bf16')
+    parser.add_argument('--cache-dir')
     args = parser.parse_args()
     directory = Path(args.model).resolve()
     started = time.monotonic()
@@ -72,10 +74,15 @@ def main():
         if not container.is_file() or container.stat().st_size != CONTAINER_BYTES or digest(container) != CONTAINER_SHA:
             raise RuntimeError('Phonon-2 container is missing or corrupted. Reinstall the speech model.')
         require_ram(psutil, MIN_RAM_FREE, 'Phonon-2 reference checkpoint loading')
+        cache_dir = Path(args.cache_dir) if args.cache_dir else directory.parent / 'runtime-cache' / 'phonon-2'
+        numba_cache = cache_dir.parent / 'numba'
+        numba_cache.mkdir(parents=True, exist_ok=True)
+        os.environ['NUMBA_CACHE_DIR'] = str(numba_cache)
         sys.path.insert(0, str(directory))
         from phonon_loading import load_model
         model, processor, receipt = load_model(str(container), str(directory / 'processor'), dtype=dtype,
-            progress=lambda stage: emit({'progress': stage}))
+            progress=lambda stage: emit({'progress': stage}),
+            cache_dir=cache_dir)
         gc.collect()
         device = 'cpu'
 
@@ -108,7 +115,7 @@ def main():
         emit({'ready':True,'modelId':'phonon-2','language':'en','device':device,
             'coldStartMs':round((time.monotonic()-started)*1000),'wakeMs':wake_ms,
             'params':receipt['params'],'weightDtype':str(dtype).removeprefix('torch.'),
-            'runtimePrecision':args.precision})
+            'runtimePrecision':args.precision, 'denseCache':receipt.get('denseCache')})
         for line in sys.stdin:
             try:
                 request = json.loads(line)

@@ -88,20 +88,44 @@ def materialize_model(config, state, dtype):
     return model
 
 
-def load_model(container, base_dir, dtype, progress):
+def load_model(container, base_dir, dtype, progress, cache_dir=None):
+    import torch
     from reference_transformers import container_state_dict
     from transformers import AutoProcessor, GenerationConfig, ParakeetTDTConfig
 
     progress('building-model')
     config = ParakeetTDTConfig.from_pretrained(base_dir, local_files_only=True)
-    progress('expanding-weights')
-    with accelerated_five_value_expansion():
-        state, index = container_state_dict(container)
+    if dtype not in (torch.float32, torch.bfloat16):
+        raise ValueError('Phonon-2 runtime precision must be BF16 or FP32.')
+    cache, cached, receipt = None, None, {}
+    if cache_dir is not None:
+        from phonon_cache import DenseCache, source_identity, expected_tensors
+        progress('verifying-dense-cache')
+        cache = DenseCache(cache_dir, 'bf16' if dtype == torch.bfloat16 else 'fp32',
+                           source_identity(container, base_dir, config, dtype), expected_tensors(config, dtype))
+        cached = cache.read()
+    if cached is not None:
+        progress('loading-dense-cache')
+        state, receipt = cached
+    else:
+        progress('expanding-weights')
+        with accelerated_five_value_expansion():
+            state, index = container_state_dict(container)
+        receipt = {'container_records': len(index)}
+        del index
     progress('applying-weights')
     model = materialize_model(config, state, dtype)
-    receipt = {'params': sum(p.numel() for p in model.parameters()),
-               'container_records': len(index), 'state_dict_keys': len(state)}
-    del state, index
+    receipt.update(params=sum(p.numel() for p in model.parameters()), state_dict_keys=len(state))
+    if cache is not None:
+        if cached is None:
+            progress('saving-dense-cache')
+            try:
+                cache.write(state, receipt)
+                cache.reason = 'Prepared from the installed container at the selected runtime precision'
+            except (OSError, ValueError, RuntimeError) as error:
+                cache.reason = f'Optional dense cache was not saved: {error}'
+        receipt['denseCache'] = cache.details(cached is not None)
+    del state, cached
     progress('preparing-processor')
     model.generation_config = GenerationConfig.from_pretrained(base_dir, local_files_only=True)
     processor = AutoProcessor.from_pretrained(base_dir, local_files_only=True)

@@ -115,7 +115,7 @@ export function StudioJobs({ category, onNotice }: { category: string; onNotice:
   </section>;
 }
 
-export function GenerationForm({ category, onNotice }: { category: string; onNotice: (message: string) => void }) {
+export function GenerationForm({ category, onNotice, onBrowseModels }: { category: string; onNotice: (message: string) => void; onBrowseModels?: (category: string) => void }) {
   const [models, setModels] = useState<api.InstalledModel[]>([]);
   const [modelId, setModelId] = useState('');
   const [prompt, setPrompt] = useState('');
@@ -131,6 +131,7 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [runtime, setRuntime] = useState<api.StudioRuntime | null>(null);
+  const runtimeRevision = useRef(0);
   const [connecting, setConnecting] = useState(false);
   const customControls = controlsForModel(category, modelId);
   const selected = models.find(model => model.id === modelId);
@@ -141,10 +142,12 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
   const needsDrivingVideo = modelId.startsWith('wan-animate-2-');
 
   async function refreshModels() {
-    const library = await api.modelLibrary();
+    const request = ++runtimeRevision.current;
+    const [library, refreshedRuntime] = await Promise.all([api.modelLibrary(), modelId ? api.studioRuntime(modelId) : Promise.resolve(null)]);
     const candidates = library.models.filter(model => model.category === category);
     setModels(candidates);
     setModelId(current => selectStudioModel(candidates, category, current));
+    if (request === runtimeRevision.current) setRuntime(refreshedRuntime);
   }
 
   useEffect(() => {
@@ -171,9 +174,10 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
     } catch { setPresets([]); }
   }, [category]);
   useEffect(() => {
+    const request = ++runtimeRevision.current;
     let alive = true; setRuntime(null);
-    if (modelId) void api.studioRuntime(modelId).then(value => {if (alive) setRuntime(value);}).catch(() => {if (alive) setRuntime(null);});
-    return () => {alive = false;};
+    if (modelId) void api.studioRuntime(modelId).then(value => {if (alive && request === runtimeRevision.current) setRuntime(value);}).catch(() => {if (alive && request === runtimeRevision.current) setRuntime(null);});
+    return () => {alive = false; ++runtimeRevision.current;};
   }, [modelId]);
 
   function setControl(key: string, value: unknown) { setControls(current => ({ ...current, [key]: value })); }
@@ -261,6 +265,7 @@ export function GenerationForm({ category, onNotice }: { category: string; onNot
       <label>Model<select aria-label="Model" value={modelId} disabled={busy || connecting} onChange={event => {setPresetId(''); setModelId(event.target.value);}}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
       {selected && GAME_DEV_CATEGORIES.some(([id]) => id === category) && <StudioModelSetup key={modelId} model={selected} connected={connected} disabled={busy || connecting} onRefresh={refreshModels} onNotice={onNotice} />}
     </>}
+      {onBrowseModels ? <div className="studio-model-required">{!models.some(model => model.installed) ? <p role="status">Install a compatible model from Models to enable generation. You can prepare a prompt and settings now.</p> : null}<button type="button" onClick={() => onBrowseModels(category)}>Browse models</button></div> : null}
       {GAME_DEV_CATEGORIES.some(([id]) => id === category) && <div className="studio-presets" aria-label="Saved generation presets"><label>Presets<select aria-label="Presets" value={presetId} onChange={event => loadPreset(event.target.value)}><option value="">Select a preset…</option>{presets.map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</select></label><label>Preset name<input aria-label="Preset name" value={presetName} onChange={event => setPresetName(event.target.value)} placeholder="My style" /></label><div><button type="button" onClick={savePreset}>Save preset</button><button type="button" disabled={!presetId} onClick={deletePreset}>Delete preset</button><button type="button" onClick={resetSettings}>Reset to defaults</button></div></div>}
       <label>Prompt<textarea value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={category === 'music' ? 'A song about AI…' : 'Describe the asset or animation…'} /></label>
       {category === 'music' ? <><label>Title<input value={title} onChange={event => setTitle(event.target.value)} /></label><label>Style<textarea value={style} onChange={event => setStyle(event.target.value)} placeholder="Genre, instruments, mood, vocals…" /></label><label>Lyrics<textarea value={lyrics} onChange={event => setLyrics(event.target.value)} /></label></> : <>

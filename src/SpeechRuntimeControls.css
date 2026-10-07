@@ -1,0 +1,5 @@
+.speech-runtime-controls {display:grid;gap:7px;padding:12px;border:1px solid var(--border,#d9dde3);border-radius:9px;font-size:12px;}
+.speech-runtime-controls p {margin:0;line-height:1.5;}
+.speech-runtime-controls small {opacity:.8;line-height:1.5;}
+.speech-runtime-actions {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.speech-runtime-controls [role="alert"] {color:var(--error,#b42318);}

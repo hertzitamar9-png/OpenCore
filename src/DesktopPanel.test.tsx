@@ -30,6 +30,68 @@ function imageBounds(image: HTMLElement) {
 }
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
+it("starts disabled and enables computer use with one click while preserving saved app permissions", async () => {
+  const policy: api.ComputerAccess = { enabled: false, revision: 4, apps: [{ path: "C:\\Apps\\Notes.exe", name: "Notes", access: "allow" }] };
+  let enabled = false;
+  const command = desktop();
+  command.mockImplementation(async action => ({ windows: enabled ? [windows[1]] : [], computerUseEnabled: enabled }) as never);
+  vi.spyOn(api, "computerAccess").mockResolvedValue(policy);
+  const save = vi.spyOn(api, "setComputerAccess").mockImplementation(async next => {
+    enabled = next.enabled;
+    return { ...next, revision: 5 };
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const enable = await screen.findByRole("button", { name: "Enable computer use" });
+  expect(screen.getByText("Computer use is disabled")).toBeVisible();
+  expect(screen.queryByAltText("Selected Windows app")).toBeNull();
+  fireEvent.click(enable);
+  await waitFor(() => expect(save).toHaveBeenCalledWith({ ...policy, enabled: true }));
+  expect(save).toHaveBeenCalledTimes(1);
+  expect(await screen.findByText("Only permitted apps can be controlled")).toBeVisible();
+  await waitFor(() => expect(screen.getByRole("option", { name: "Notes" })).toBeInTheDocument());
+  expect(command.mock.calls.some(([action]) => action === "screenshot")).toBe(false);
+});
+
+it("clears the selected capture when computer access is disabled during refresh", async () => {
+  const command = desktop();
+  let enabled = true;
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows: enabled ? windows : [], computerUseEnabled: enabled } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { editable: true, value: "Existing note", inputMode: "accessibility" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  await selectWindow();
+  const before = command.mock.calls.filter(([action]) => action === "screenshot").length;
+  enabled = false;
+  fireEvent.click(screen.getByRole("button", { name: "Refresh capture" }));
+  await waitFor(() => expect(screen.queryByAltText("Selected Windows app")).toBeNull());
+  expect(screen.getByText("Computer use is disabled")).toBeVisible();
+  expect(command.mock.calls.filter(([action]) => action === "screenshot")).toHaveLength(before);
+});
+
+it("asks permission before capturing an unknown executable", async () => {
+  const command = desktop();
+  let allowed = false;
+  command.mockImplementation(async action => action === "list"
+    ? { windows: [{ ...windows[1], permission: allowed ? "allowed" : "ask" }], computerUseEnabled: true } as never : screenshot(10) as never);
+  const grant = vi.spyOn(api, "allowComputerWindow").mockImplementation(async () => {
+    allowed = true;
+    return { enabled: true, apps: [{ path: "C:\\Apps\\Notes.exe", name: "Notes", access: "allow" }] };
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const picker = await screen.findByLabelText("Window");
+  await waitFor(() => expect(picker.querySelector('option[value="10"]')).not.toBeNull());
+  fireEvent.change(picker, { target: { value: "10" } });
+  expect(await screen.findByRole("button", { name: "Allow this app" })).toBeVisible();
+  expect(screen.queryByAltText("Selected Windows app")).toBeNull();
+  expect(command.mock.calls.some(([action]) => action === "screenshot")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Allow this app" }));
+  expect(await screen.findByAltText("Selected Windows app")).toBeVisible();
+  expect(grant).toHaveBeenCalledWith(10);
+  expect(grant).toHaveBeenCalledTimes(1);
+});
+
 it("retains the selected app and draft when the window list temporarily omits a live capture", async () => {
   const command = desktop();
   let omitted = false;

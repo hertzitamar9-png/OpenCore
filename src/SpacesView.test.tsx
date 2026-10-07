@@ -45,3 +45,39 @@ it('reports a failed external open without changing the selected chat or hiding 
   expect(onOpenConversation).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: /^src\/main.ts/ })).toBeEnabled();
 });
+
+it('loads every older version by cursor without collapsing duplicate filenames', async () => {
+  const first = Array.from({length: 300}, (_, index) => ({...record, id: `version-${index}`, turnId: `turn-${index}`}));
+  const last = {...record, id: 'oldest-version', turnId: 'oldest-turn'};
+  const list = vi.spyOn(files, 'workspaceFiles').mockImplementation(async args => 'cursor' in args && args.cursor === 'older-page'
+    ? {files: [first[299], last], coverage: ['Older capture omission'], nextCursor: null}
+    : {files: first, coverage: ['First capture omission'], nextCursor: 'older-page'});
+  const open = vi.fn();
+  render(<SpacesView conversationId="chat-filter" onNotice={vi.fn()} onOpenFile={open} />);
+  fireEvent.click(await screen.findByText('Load older versions'));
+  await waitFor(() => expect(document.querySelectorAll('.spaces-file-open')).toHaveLength(301));
+  expect(list).toHaveBeenLastCalledWith({action: 'list', conversationId: 'chat-filter', search: '', limit: 300, cursor: 'older-page'});
+  fireEvent.click(document.querySelectorAll('.spaces-file-open')[300]);
+  expect(open).toHaveBeenCalledWith(last);
+  expect(screen.queryByText('Load older versions')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('Capture coverage · 2 notes'));
+  expect(screen.getByText('First capture omission')).toBeVisible();
+  expect(screen.getByText('Older capture omission')).toBeVisible();
+});
+
+it('resets pagination on search and ignores an old page that resolves after the filter changed', async () => {
+  let finishOld!: (value: files.WorkspaceFilesResult) => void;
+  const list = vi.spyOn(files, 'workspaceFiles').mockImplementation(async args => {
+    if ('cursor' in args && args.cursor) return new Promise(resolve => {finishOld = resolve;});
+    if ('search' in args && args.search) return {files: [{...record, id: 'filtered', path: 'filtered.ts'}], coverage: [], nextCursor: null};
+    return {files: [record], coverage: [], nextCursor: 'older-page'};
+  });
+  render(<SpacesView conversationId="chat-filter" onNotice={vi.fn()} />);
+  fireEvent.click(await screen.findByRole('button', {name: 'Load older versions'}));
+  fireEvent.change(screen.getByRole('searchbox', {name: 'Search file history'}), {target: {value: 'filtered'}});
+  expect(await screen.findByRole('button', {name: /^filtered.ts/})).toBeVisible();
+  finishOld({files: [{...record, id: 'stale', path: 'stale.ts'}], coverage: [], nextCursor: 'stale-cursor'});
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith({action: 'list', conversationId: 'chat-filter', search: 'filtered', limit: 300}));
+  expect(screen.queryByRole('button', {name: /^stale.ts/})).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', {name: 'Load older versions'})).not.toBeInTheDocument();
+});

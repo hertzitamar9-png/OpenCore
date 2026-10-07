@@ -2,14 +2,15 @@
 //! The browser receives no filesystem paths, model APIs, or access to other captures.
 use crate::workspace_ledger::{BrowserManifest, WorkspaceLedger};
 use axum::{
-    body::Body,
+    body::{Body, Bytes},
     extract::{Path, State},
-    http::{HeaderMap, Response, StatusCode},
+    http::{HeaderMap, Method, Response, StatusCode},
     routing::get,
     Router,
 };
 use serde::Serialize;
 use std::{collections::HashMap, sync::Arc, time::Instant};
+use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio_util::sync::CancellationToken;
 
 // Permit ordinary generated games and recorded resources, plus common HTTPS asset CDNs.
@@ -59,7 +60,7 @@ impl FileBrowser {
             let selected = records
                 .get(&target)
                 .ok_or("Selected file is absent from its capture")?;
-            let file = ledger.browser_asset(selected)?;
+            let file = ledger.browser_stream(selected)?;
             Ok::<_, String>((target, records, file.name, file.sha256))
         })
         .await
@@ -138,6 +139,7 @@ impl Drop for FileBrowser {
 async fn serve_file(
     State(session): State<Arc<Session>>,
     Path((token, path)): Path<(String, String)>,
+    method: Method,
     headers: HeaderMap,
 ) -> Response<Body> {
     let host = headers.get("host").and_then(|value| value.to_str().ok());
@@ -157,20 +159,67 @@ async fn serve_file(
         );
     };
     let ledger = session.ledger.clone();
-    match tauri::async_runtime::spawn_blocking(move || ledger.browser_asset(&selected)).await {
+    match tauri::async_runtime::spawn_blocking(move || ledger.browser_stream(&selected)).await {
         Ok(Ok(file)) => {
+            let etag = format!("\"{}\"", file.sha256);
+            // HEAD describes the whole representation. A stale If-Range requests
+            // the complete verified version rather than a range of another version.
+            let requested = if method == Method::GET
+                && headers
+                    .get("if-range")
+                    .map(|value| value.to_str().ok() == Some(etag.as_str()))
+                    .unwrap_or(true)
+            {
+                headers.get("range")
+            } else {
+                None
+            };
+            let range = match requested {
+                Some(value) => match value
+                    .to_str()
+                    .ok()
+                    .and_then(|value| byte_range(value, file.size).ok())
+                {
+                    Some(range) => Some(range),
+                    None => {
+                        return Response::builder()
+                            .status(StatusCode::RANGE_NOT_SATISFIABLE)
+                            .header("content-range", format!("bytes */{}", file.size))
+                            .header("accept-ranges", "bytes")
+                            .header("etag", &etag)
+                            .header("cache-control", "no-store")
+                            .body(Body::empty())
+                            .unwrap()
+                    }
+                },
+                None => None,
+            };
+            let (start, length) = range.unwrap_or((0, file.size));
             let displayed = file.mime.starts_with("text/")
                 || file.mime.starts_with("image/")
                 || file.mime.starts_with("audio/")
                 || file.mime.starts_with("video/")
                 || matches!(file.mime.as_str(), "application/pdf" | "application/json");
             let mut response = Response::builder()
-                .status(StatusCode::OK)
+                .status(if range.is_some() {
+                    StatusCode::PARTIAL_CONTENT
+                } else {
+                    StatusCode::OK
+                })
                 .header("content-type", &file.mime)
+                .header("content-length", length.to_string())
+                .header("accept-ranges", "bytes")
+                .header("etag", &etag)
                 .header("x-content-type-options", "nosniff")
                 .header("cache-control", "no-store")
                 .header("referrer-policy", "no-referrer")
                 .header("content-security-policy", browser_policy());
+            if range.is_some() {
+                response = response.header(
+                    "content-range",
+                    format!("bytes {start}-{}/{}", start + length - 1, file.size),
+                );
+            }
             if !displayed {
                 response = response.header(
                     "content-disposition",
@@ -180,7 +229,29 @@ async fn serve_file(
                     ),
                 );
             }
-            response.body(Body::from(file.bytes)).unwrap_or_else(|_| {
+            let body = if method == Method::HEAD {
+                Body::empty()
+            } else {
+                let stream = async_stream::stream! {
+                    let mut source = tokio::fs::File::from_std(file.file);
+                    if let Err(cause) = source.seek(std::io::SeekFrom::Start(start)).await {
+                        yield Err::<Bytes,std::io::Error>(cause);
+                        return;
+                    }
+                    let mut remaining = length;
+                    let mut buffer = [0u8;64*1024];
+                    while remaining > 0 {
+                        let capacity = remaining.min(buffer.len() as u64) as usize;
+                        match source.read(&mut buffer[..capacity]).await {
+                            Ok(0) => {yield Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof,"Verified file was truncated during streaming"));break;}
+                            Ok(count) => {remaining -= count as u64;yield Ok(Bytes::copy_from_slice(&buffer[..count]));}
+                            Err(cause) => {yield Err(cause);break;}
+                        }
+                    }
+                };
+                Body::from_stream(stream)
+            };
+            response.body(body).unwrap_or_else(|_| {
                 error_response(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Could not display this file",
@@ -196,6 +267,33 @@ async fn serve_file(
             "The file preview is unavailable",
         ),
     }
+}
+
+/// One RFC byte range, including open-ended and suffix ranges. Multipart
+/// ranges are rejected so each response retains bounded memory and one handle.
+fn byte_range(value: &str, size: u64) -> Result<(u64, u64), ()> {
+    let value = value.trim().strip_prefix("bytes=").ok_or(())?;
+    if size == 0 || value.contains(',') {
+        return Err(());
+    }
+    let (start, end) = value.split_once('-').ok_or(())?;
+    if start.is_empty() {
+        let length = end.parse::<u64>().map_err(|_| ())?.min(size);
+        if length == 0 {
+            return Err(());
+        }
+        return Ok((size - length, length));
+    }
+    let start = start.parse::<u64>().map_err(|_| ())?;
+    let end = if end.is_empty() {
+        size - 1
+    } else {
+        end.parse::<u64>().map_err(|_| ())?.min(size - 1)
+    };
+    if start >= size || end < start {
+        return Err(());
+    }
+    Ok((start, end - start + 1))
 }
 fn error_response(status: StatusCode, message: &str) -> Response<Body> {
     Response::builder()

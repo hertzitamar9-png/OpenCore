@@ -212,6 +212,8 @@ async fn stop_active_work_for_update(core: &AppCore) -> Result<(), String> {
     } else {
         None
     };
+    core.runtime_setup.shutdown().await;
+    if core.runtime_setup.busy() {return Err("Runtime setup is still stopping. Wait for it to finish before installing an update.".into());}
     let background_error=core.background.cancel_active().await.err();
 
     // Cancel dictation and stop the verified YuE model before replacing

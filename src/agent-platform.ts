@@ -110,6 +110,7 @@ export interface PlatformMemory {
 export interface TestingLabProfile {
   id: string; label: string; kind: "virtualbox" | "android"; enabled: boolean; executable: string;
   vmName?: string | null; deviceSerial?: string | null; avdName?: string | null; emulatorExecutable?: string | null;
+  sdkRoot?: string | null; avdHome?: string | null; androidUserHome?: string | null; emulatorPort?: number | null;
   guestUser?: string | null; passwordEnv?: string | null;
 }
 export interface TestingLabAction {
@@ -261,14 +262,19 @@ export function parseTestingLabProfiles(text: string): TestingLabProfile[] {
     if (record.executable !== undefined && typeof record.executable !== "string") throw new Error(`${label}: executable must be text.`);
     const profile: TestingLabProfile = { id: record.id, label: record.label, kind: record.kind,
       enabled: record.enabled, executable: (record.executable as string | undefined) ?? "" };
-    for (const key of ["vmName", "deviceSerial", "avdName", "emulatorExecutable", "guestUser", "passwordEnv"] as const) {
+    for (const key of ["vmName", "deviceSerial", "avdName", "emulatorExecutable", "sdkRoot", "avdHome", "androidUserHome", "guestUser", "passwordEnv"] as const) {
       const item = optionalString(record, key, label);
       profile[key] = item?.trim() ? item : null;
     }
-    if ([profile.executable, profile.vmName, profile.deviceSerial, profile.avdName, profile.emulatorExecutable, profile.guestUser, profile.passwordEnv]
+    if ([profile.executable, profile.vmName, profile.deviceSerial, profile.avdName, profile.emulatorExecutable, profile.sdkRoot, profile.avdHome, profile.androidUserHome, profile.guestUser, profile.passwordEnv]
       .some(item => item != null && (utf8Bytes(item) > 4096 || /[\0\r\n]/.test(item)))) throw new Error(`${label}: device fields must be a single line with at most 4,096 UTF-8 bytes.`);
     if (profile.kind === "virtualbox" && !profile.vmName?.trim()) throw new Error(`${label}: an existing VM name is required.`);
     if (profile.passwordEnv && !environmentName.test(profile.passwordEnv)) throw new Error(`${label}: passwordEnv must be an environment variable name.`);
+    if (record.emulatorPort != null) {
+      if (typeof record.emulatorPort !== "number" || !Number.isInteger(record.emulatorPort) || record.emulatorPort < 5554 || record.emulatorPort > 5682 || record.emulatorPort % 2 !== 0) throw new Error(`${label}: emulatorPort must be an even port from 5554 to 5682.`);
+      profile.emulatorPort = record.emulatorPort;
+      if (profile.deviceSerial !== `emulator-${profile.emulatorPort}`) throw new Error(`${label}: deviceSerial must match the configured emulator port.`);
+    }
     return profile;
   });
 }

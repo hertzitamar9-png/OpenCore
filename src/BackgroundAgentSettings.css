@@ -1,0 +1,8 @@
+.background-agent-settings { margin: 0 0 20px; padding: 15px; border: 1px solid var(--theme-border,#34343b); border-radius: 9px; background: var(--theme-canvas,#19191f); }
+.background-agent-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.background-agent-heading h3 { margin: 0; font-size: 14px; }
+.background-agent-heading span,.background-agent-settings p { color: var(--theme-muted,#aaaab5); font-size: 12px; line-height: 1.6; }
+.background-agent-settings label { display: flex; flex-direction: row; align-items: center; gap: 9px; margin: 11px 0; }
+.background-agent-settings label input { flex: none; width: 15px; height: 15px; accent-color: var(--theme-accent,#3579f6); }
+.background-agent-settings p { margin: 12px 0 0; }
+.background-agent-settings [role=alert] { color: var(--theme-error,#e7b1b1); }

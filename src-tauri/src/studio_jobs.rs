@@ -199,6 +199,7 @@ impl StudioManager {
                                 "data":{"jobId":job.id,"category":job.category,"modelId":job.request.model_id,"conversationId":job.request.conversation_id,"status":job.status,"outputs":job.outputs,"error":job.error}});
                             if let Err(error)=core.background.emit(event) { core.store.log("warn","background-events",&error); }
                             if job.status=="completed" && !job.outputs.is_empty() {
+                                if let Err(error)=core.runtime_setup.record_inference(job) { core.store.log("warn","runtime-evidence",&error); }
                                 let files=core.files.clone(); let log=core.store.clone(); let notice=app.clone();
                                 let conversation=job.request.conversation_id.clone().unwrap_or_else(||format!("studio:{}",job.category));
                                 let job_id=job.id.clone(); let paths:Vec<PathBuf>=job.outputs.iter().map(PathBuf::from).collect();
@@ -252,6 +253,14 @@ impl StudioManager {
             })
             .map_err(|_| "Studio job not found".to_string())?;
         serde_json::from_str(&data).map_err(|e| e.to_string())
+    }
+    /// Keyset pages for durable output discovery, independent of the UI's
+    /// recent-job limit. Release the database lock before snapshotting files.
+    pub fn history_page(&self, after_rowid: i64, limit: usize) -> Result<Vec<(i64, StudioJob)>, String> {
+        let db=self.db.lock().map_err(|error|error.to_string())?;
+        let mut statement=db.prepare("SELECT rowid,payload FROM jobs WHERE rowid>?1 ORDER BY rowid LIMIT ?2").map_err(|error|error.to_string())?;
+        let rows=statement.query_map(rusqlite::params![after_rowid.max(0),limit.clamp(1,1000) as i64],|row|Ok((row.get::<_,i64>(0)?,row.get::<_,String>(1)?))).map_err(|error|error.to_string())?;
+        rows.map(|row| {let (id,payload)=row.map_err(|error|error.to_string())?;Ok((id,serde_json::from_str(&payload).map_err(|error|error.to_string())?))}).collect()
     }
     pub fn busy(&self) -> bool {
         self.running.lock().is_ok_and(|jobs| !jobs.is_empty())
@@ -337,7 +346,7 @@ impl StudioManager {
                 return;
             }
             let chats = core.active_chats.lock().is_ok_and(|chats| chats.is_empty());
-            if !self.busy() && !core.claude_bridge.busy() && chats && !gpu_reserved() && !core.speech.is_active().await {
+            if !self.busy() && !core.runtime_setup.busy() && !core.claude_bridge.busy() && chats && !gpu_reserved() && !core.speech.is_active().await {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(200)).await;
@@ -643,6 +652,7 @@ impl StudioManager {
     ) -> Result<(), String> {
         let _gate = tokio::select! {guard=self.gate.lock()=>guard,_=token.cancelled()=>return Err("Cancelled before generation".into())};
         loop {
+            if core.update_in_progress.load(Ordering::Acquire) {token.cancel();return Err("Cancelled while OpenCore is closing".into());}
             let chats_active = !core
                 .active_chats
                 .lock()
@@ -653,7 +663,7 @@ impl StudioManager {
                     .lock()
                     .map_err(|e| e.to_string())?
                     .is_empty();
-            if !chats_active && !core.claude_bridge.busy() && !gpu_reserved() && !core.speech.is_active().await {
+            if !chats_active && !core.runtime_setup.busy() && !core.claude_bridge.busy() && !gpu_reserved() && !core.speech.is_active().await {
                 break;
             }
             tokio::select! {_=token.cancelled()=>return Err("Cancelled before generation".into()),_=tokio::time::sleep(Duration::from_millis(200))=>{}}
@@ -1448,6 +1458,20 @@ pub async fn studio_output_preview(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn output_history_paging_includes_jobs_older_than_the_recent_ui_limit() {
+        let root=std::env::temp_dir().join(format!("studio-history-pages-{}",uuid::Uuid::new_v4()));
+        let manager=StudioManager::new(root.clone()).unwrap();
+        for index in 0..205 {
+            manager.save(&StudioJob{id:format!("job-{index}"),category:"image".into(),request:StudioRequest{model_id:"fixture".into(),prompt:"Fixture".into(),settings:json!({}),conversation_id:None},status:"completed".into(),stage:"Completed".into(),created_at:"2026-10-07T00:00:00Z".into(),updated_at:"2026-10-07T00:00:00Z".into(),backend_run:None,progress:json!({}),outputs:vec![format!("older-output-{index}.png")],error:None}).unwrap();
+        }
+        assert_eq!(manager.list().unwrap().len(),200);
+        assert!(!manager.list().unwrap().iter().any(|job|job.id=="job-0"));
+        let mut cursor=0;let mut discovered=Vec::new();
+        loop {let page=manager.history_page(cursor,73).unwrap();if page.is_empty(){break;}for (rowid,job) in page {assert!(rowid>cursor);cursor=rowid;discovered.push(job.id);}}
+        assert_eq!(discovered.len(),205);assert_eq!(discovered[0],"job-0");assert_eq!(discovered[204],"job-204");
+        drop(manager);std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn agent_runtime_configuration_cannot_switch_to_a_different_model() {
         let args=json!({"modelId":"tts-f5-tts","runtime":{"modelId":"ocr-other","python":"C:/runtime/python.exe"}});

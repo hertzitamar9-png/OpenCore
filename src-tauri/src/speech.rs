@@ -11,7 +11,7 @@ struct Session {
     result: watch::Receiver<Outcome>, ready: watch::Receiver<Option<Result<(), String>>>, cancel: CancellationToken,
     _gpu: Option<crate::studio_jobs::GpuReservation>,
 }
-struct Worker { child: Child, input: ChildStdin, output: BufReader<tokio::process::ChildStdout>, model_id: String, runtime_precision: String, cold_start_ms: Option<u64>, wake_ms: Option<u64> }
+struct Worker { child: Child, input: ChildStdin, output: BufReader<tokio::process::ChildStdout>, model_id: String, runtime_precision: String, cold_start_ms: Option<u64>, wake_ms: Option<u64>, awake: bool }
 impl Worker {
     async fn read(&mut self) -> Result<Value, String> {
         let mut line = String::new();
@@ -46,7 +46,8 @@ impl Drop for StartupInterrupt {
 }
 fn startup_progress(value:&Value) -> Option<&str> {
     value["progress"].as_str().filter(|phase| ["starting-runtime", "verifying-checkpoint", "building-model",
-        "expanding-weights", "applying-weights", "preparing-processor", "activating-device"].contains(phase))
+        "expanding-weights", "applying-weights", "preparing-processor", "activating-device",
+        "verifying-dense-cache", "loading-dense-cache", "saving-dense-cache"].contains(phase))
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -73,17 +74,23 @@ pub struct SpeechStatus {
     runtime_precision: String, loading_elapsed_ms: Option<u64>,
     installed: bool, enabled: bool, idle_mode: String, worker_ready: bool,
     cold_start_ms: Option<u64>, warm_wake_ms: Option<u64>, phase: String,
+    runtime_cache_bytes: u64, runtime_cache_entries: Vec<RuntimeCacheEntry>, dense_cache_hit: Option<bool>,
+    prewarmed_for_session: bool,
 }
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct RuntimeCacheEntry { precision:String, bytes:u64 }
 pub struct SpeechManager {
     root: PathBuf, resources: PathBuf, control: Arc<Mutex<()>>,
     session: Arc<Mutex<Option<Session>>>, worker: Arc<Mutex<Option<Worker>>>,
     settings: Arc<StdMutex<Settings>>, phase: Arc<StdMutex<String>>,
     startup: Arc<StdMutex<StartupState>>,
     update_in_progress: Arc<AtomicBool>,
+    dense_cache_hit: Arc<StdMutex<Option<bool>>>,
 }
 impl Clone for SpeechManager {
     fn clone(&self) -> Self { Self { root:self.root.clone(), resources:self.resources.clone(), control:self.control.clone(),
-        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), startup:self.startup.clone(), update_in_progress:self.update_in_progress.clone() } }
+        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), startup:self.startup.clone(), update_in_progress:self.update_in_progress.clone(),dense_cache_hit:self.dense_cache_hit.clone() } }
 }
 impl SpeechManager {
     pub fn new(root: PathBuf, resources: PathBuf) -> Self {
@@ -95,7 +102,7 @@ impl SpeechManager {
             .and_then(|v| decode_settings(&v)).unwrap_or_default();
         Self { root:speech_root, resources, control:Arc::new(Mutex::new(())), session:Arc::new(Mutex::new(None)),
             worker:Arc::new(Mutex::new(None)), settings:Arc::new(StdMutex::new(settings)),
-            phase:Arc::new(StdMutex::new("off".into())), startup:Arc::new(StdMutex::new(StartupState::default())), update_in_progress }
+            phase:Arc::new(StdMutex::new("off".into())), startup:Arc::new(StdMutex::new(StartupState::default())), update_in_progress,dense_cache_hit:Arc::new(StdMutex::new(None)) }
     }
     fn ensure_not_updating(&self) -> Result<(), String> {
         if self.update_in_progress.load(Ordering::Acquire) {
@@ -124,11 +131,56 @@ impl SpeechManager {
     }
     fn status(&self) -> SpeechStatus {
         let cfg=self.settings();
+        let entries=self.cache_entries();
+        let worker_ready=self.worker.try_lock().map(|w|w.is_some()).unwrap_or(false);
         SpeechStatus { model_id:cfg.model_id.clone(), installed:self.installed(), enabled:cfg.enabled, idle_mode:cfg.idle_mode.clone(),
             runtime_precision:cfg.runtime_precision.clone(), loading_elapsed_ms:self.startup.lock().ok().and_then(|s|s.started.map(|t|t.elapsed().as_millis() as u64)),
-            worker_ready:self.worker.try_lock().map(|w|w.is_some()).unwrap_or(false),
+            worker_ready,
             cold_start_ms:cfg.cold_start_ms, warm_wake_ms:cfg.warm_wake_ms,
-            phase:self.phase.lock().map(|p|p.clone()).unwrap_or_else(|_|"off".into()) }
+            phase:self.phase.lock().map(|p|p.clone()).unwrap_or_else(|_|"off".into()),
+            runtime_cache_bytes:entries.iter().map(|entry|entry.bytes).sum(),runtime_cache_entries:entries,
+            dense_cache_hit:self.dense_cache_hit.lock().ok().and_then(|value|*value),prewarmed_for_session:cfg.idle_mode=="cold" && worker_ready }
+    }
+    fn cache_entries(&self)->Vec<RuntimeCacheEntry> {
+        let directory=self.root.join("runtime-cache/phonon-2");
+        ["bf16","fp32"].iter().filter_map(|precision|{
+            let metadata=std::fs::symlink_metadata(directory.join(format!("expanded-{precision}.pt"))).ok()?;
+            metadata.file_type().is_file().then(||RuntimeCacheEntry{precision:(*precision).into(),bytes:metadata.len()})
+        }).collect()
+    }
+    pub async fn prewarm_session(&self)->Result<SpeechStatus,String> {
+        let _control=self.control.lock().await;self.ensure_not_updating()?;
+        if self.is_active().await{return Err("Finish dictation before preparing speech.".into());}
+        let cfg=self.settings();
+        if !cfg.enabled || !self.installed(){return Err("Enable and install the selected speech model before preparing it.".into());}
+        if self.worker.lock().await.is_none() {
+            // This is a temporary RAM standby action. The saved cold preference
+            // still unloads the worker after the next dictation or app restart.
+            let worker=self.spawn_worker(&cfg.model_id,&cfg.runtime_precision,"ram",false,&CancellationToken::new()).await?;
+            *self.worker.lock().await=Some(worker);
+        }
+        self.set_phase("sleeping");Ok(self.status())
+    }
+    pub async fn clear_runtime_cache(&self)->Result<SpeechStatus,String> {
+        let _interrupt={let session=self.session.lock().await;if session.is_some(){return Err("Finish dictation before clearing its derived cache.".into());}self.interrupt_startup()};
+        let _control=self.control.lock().await;
+        if self.is_active().await{return Err("Finish dictation before clearing its derived cache.".into());}
+        if let Some(mut worker)=self.worker.lock().await.take(){worker.stop().await;}
+        let directory=self.root.join("runtime-cache/phonon-2");
+        if directory.exists() {
+            let actual=std::fs::canonicalize(&directory).map_err(|error|error.to_string())?;
+            let root=std::fs::canonicalize(&self.root).map_err(|error|error.to_string())?;
+            if actual!=root.join("runtime-cache/phonon-2"){return Err("The derived speech cache path is redirected; clear it manually after reviewing that path.".into());}
+            for entry in std::fs::read_dir(&directory).map_err(|error|error.to_string())? {
+                let entry=entry.map_err(|error|error.to_string())?;let name=entry.file_name().to_string_lossy().into_owned();
+                let known=["expanded-bf16.pt","expanded-bf16.json","expanded-fp32.pt","expanded-fp32.json"].contains(&name.as_str())
+                    || (name.starts_with(".expanded-") && (name.ends_with(".pt.tmp") || name.ends_with(".json.tmp")));
+                if known && entry.file_type().map_err(|error|error.to_string())?.is_file(){std::fs::remove_file(entry.path()).map_err(|error|error.to_string())?;}
+            }
+        }
+        if let Ok(mut value)=self.dense_cache_hit.lock(){*value=None;}
+        self.set_phase(if self.settings().enabled{"ready"}else{"off"});
+        Ok(self.status())
     }
     pub async fn restore_saved_mode(&self) -> Result<(),String> {
         let _control=self.control.lock().await;
@@ -166,7 +218,7 @@ impl SpeechManager {
         let model=self.model_dir(model_id)?;
         let mut command=tokio::process::Command::new(python);
         command.arg(self.resources.join("speech").join(if model_id=="phonon-2" {"phonon_worker.py"} else {"whisper_worker.py"})).arg("--model").arg(&model).arg("--idle-mode").arg(mode);
-        if model_id=="phonon-2" {command.arg("--precision").arg(precision);}
+        if model_id=="phonon-2" {command.arg("--precision").arg(precision).arg("--cache-dir").arg(self.root.join("runtime-cache/phonon-2"));}
         if awake { command.arg("--awake"); }
         command.env("PYTHONIOENCODING","utf-8").env("HF_HUB_OFFLINE","1")
             .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true);
@@ -175,7 +227,7 @@ impl SpeechManager {
         #[cfg(windows)]
         if let Some(handle)=child.raw_handle(){crate::child_guard::adopt_handle(handle);}
         let mut worker=Worker { input:child.stdin.take().ok_or("Missing Speech input")?,
-            output:BufReader::new(child.stdout.take().ok_or("Missing speech output")?), child, model_id:model_id.into(), runtime_precision:precision.into(), cold_start_ms:None, wake_ms:None };
+            output:BufReader::new(child.stdout.take().ok_or("Missing speech output")?), child, model_id:model_id.into(), runtime_precision:precision.into(), cold_start_ms:None, wake_ms:None,awake };
         let ready=self.wait_startup_ready(&mut worker,cancel,startup_cancel).await?;
         if model_id=="phonon-2" && ready["runtimePrecision"].as_str()!=Some(precision) {
             worker.abort().await;return Err("Phonon-2 did not load the selected runtime precision.".into());
@@ -183,6 +235,7 @@ impl SpeechManager {
         let mut cfg=self.settings();
         worker.cold_start_ms=Some(started.elapsed().as_millis() as u64);
         worker.wake_ms=ready["wakeMs"].as_u64();
+        if let Ok(mut value)=self.dense_cache_hit.lock(){*value=ready["denseCache"]["hit"].as_bool();}
         if cfg.model_id==model_id && (model_id!="phonon-2" || cfg.runtime_precision==precision) {
             cfg.cold_start_ms=worker.cold_start_ms;
             cfg.warm_wake_ms=worker.wake_ms.or(cfg.warm_wake_ms);
@@ -248,7 +301,7 @@ impl SpeechManager {
         if self.is_active().await{return Err("Finish the current dictation before changing its sleep mode.".into());}
         let cfg=self.settings();
         if cfg.idle_mode == mode && !(cfg.enabled && mode=="ram" && self.worker.lock().await.is_none()) {
-            if mode=="cold" {self.set_phase(if cfg.enabled {"ready"}else{"off"});}
+            if mode=="cold" {if let Some(mut worker)=self.worker.lock().await.take(){worker.stop().await;}self.set_phase(if cfg.enabled {"ready"}else{"off"});}
             return Ok(self.status());
         }
         if cfg.enabled && mode=="ram" {
@@ -375,7 +428,7 @@ impl SpeechManager {
                     }
                 });
                 let worker=active_worker.as_mut().unwrap();
-                let awake=if worker.child.id().is_some() && manager.settings().idle_mode=="ram" {
+                let awake=if worker.child.id().is_some() && !worker.awake {
                     manager.set_phase("activating-device");
                     if let Ok(mut state)=manager.startup.lock(){state.started=Some(Instant::now());}
                     worker.send(json!({"action":"wake"})).await?;
@@ -384,6 +437,7 @@ impl SpeechManager {
                     let result=result?;
                     if let Some(error)=result["error"].as_str(){return Err(format!("Speech could not move to the GPU or CPU: {error}"));}
                     if result["awake"] != true {return Err("Speech did not enter the recording state.".into());}
+                    worker.awake=true;
                     result["wakeMs"].as_u64()
                 }else{None};
                 if let Some(ms)=awake {
@@ -397,6 +451,7 @@ impl SpeechManager {
                 worker.send(json!({"action":"transcribe","audio":audio})).await?;
                 let output=tokio::select!{_ = cancel.cancelled()=>return Err("Recording cancelled".into()),v=worker.read()=>v?};
                 if let Some(error)=output["error"].as_str(){return Err(format!("Speech: {error}"));}
+                worker.awake=false;
                 if manager.settings().idle_mode=="ram" && manager.settings().enabled{
                     *manager.worker.lock().await=active_worker.take();
                     manager.set_phase("sleeping");
@@ -512,15 +567,30 @@ pub async fn speech_set_runtime_precision(core:tauri::State<'_,Arc<crate::AppCor
     let _gpu=speech_setting_reservation(&core)?;
     core.speech.set_runtime_precision(&precision).await
 }
+#[tauri::command]
+pub async fn speech_prewarm_session(core:tauri::State<'_,Arc<crate::AppCore>>,webview:tauri::Webview)->Result<SpeechStatus,String>{
+    crate::computer_access::require_settings_surface(webview.label())?;
+    let _gpu=speech_setting_reservation(&core)?;core.speech.prewarm_session().await
+}
+#[tauri::command]
+pub async fn speech_cancel_prewarm(core:tauri::State<'_,Arc<crate::AppCore>>,webview:tauri::Webview)->Result<SpeechStatus,String>{
+    crate::computer_access::require_settings_surface(webview.label())?;
+    core.speech.release_idle_model().await?;Ok(core.speech.status())
+}
+#[tauri::command]
+pub async fn speech_clear_runtime_cache(core:tauri::State<'_,Arc<crate::AppCore>>,webview:tauri::Webview)->Result<SpeechStatus,String>{
+    crate::computer_access::require_settings_surface(webview.label())?;
+    core.speech.clear_runtime_cache().await
+}
 fn speech_setting_reservation(core:&crate::AppCore)->Result<crate::studio_jobs::GpuReservation,String>{
-    if core.studios.busy() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before loading speech.".into());}
+    if core.runtime_setup.busy() || core.background.busy_gpu() || core.studios.busy() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat, setup or background job before loading speech.".into());}
     let gpu=crate::studio_jobs::reserve_gpu()?;
     if !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat before loading speech.".into());}
     Ok(gpu)
 }
 #[tauri::command]
 pub async fn speech_start(core:tauri::State<'_,Arc<crate::AppCore>>,session_id:Option<String>)->Result<String,String>{
-    if core.studios.busy() || core.studios.continuation_pending() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat or background job before using the microphone.".into());}
+    if core.runtime_setup.busy() || core.background.busy_gpu() || core.studios.busy() || core.studios.continuation_pending() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat, setup or background job before using the microphone.".into());}
     crate::music_studio::require_idle_gpu().await?;
     let gpu=crate::studio_jobs::reserve_gpu()?;
     if !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty(){return Err("Finish the current chat before using the microphone.".into());}
@@ -541,7 +611,7 @@ mod tests {
         let mut child=tokio::process::Command::new("python").args(["-u","-c",source])
             .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true).spawn().unwrap();
         Worker{input:child.stdin.take().unwrap(),output:BufReader::new(child.stdout.take().unwrap()),child,
-            model_id:"phonon-2".into(),runtime_precision:"bf16".into(),cold_start_ms:None,wake_ms:None}
+            model_id:"phonon-2".into(),runtime_precision:"bf16".into(),cold_start_ms:None,wake_ms:None,awake:false}
     }
     #[tokio::test]
     async fn loading_protocol_reads_progress_before_ready_and_kills_cancelled_startup() {
@@ -574,6 +644,20 @@ mod tests {
         assert_eq!(startup_progress(&json!({"progress":"expanding-weights"})),Some("expanding-weights"));
         assert_eq!(startup_progress(&json!({"progress":"made-up-percent"})),None);
         assert_eq!(startup_progress(&json!({"ready":true})),None);
+        assert_eq!(startup_progress(&json!({"progress":"loading-dense-cache"})),Some("loading-dense-cache"));
+    }
+    #[tokio::test]
+    async fn clearing_derived_cache_preserves_checkpoint_preferences_and_unrelated_files() {
+        let root=std::env::temp_dir().join(format!("speech-cache-clear-{}",uuid::Uuid::new_v4()));
+        let cache=root.join("speech/runtime-cache/phonon-2");std::fs::create_dir_all(&cache).unwrap();
+        std::fs::write(cache.join("expanded-bf16.pt"),b"derived").unwrap();std::fs::write(cache.join("expanded-bf16.json"),b"{}").unwrap();
+        std::fs::write(cache.join("keep.txt"),b"unrelated").unwrap();std::fs::create_dir_all(root.join("speech/phonon-2")).unwrap();
+        let checkpoint=root.join("speech/phonon-2/model.fermion");std::fs::write(&checkpoint,b"checkpoint").unwrap();
+        let manager=SpeechManager::new(root,PathBuf::new());manager.save_settings(Settings{model_id:"phonon-2".into(),enabled:true,idle_mode:"cold".into(),..Settings::default()}).unwrap();
+        assert_eq!(manager.status().runtime_cache_bytes,7);
+        assert_eq!(manager.clear_runtime_cache().await.unwrap().runtime_cache_bytes,0);
+        assert_eq!(std::fs::read(checkpoint).unwrap(),b"checkpoint");assert!(cache.join("keep.txt").is_file());
+        assert_eq!(manager.settings().idle_mode,"cold");assert!(manager.settings().enabled);
     }
     #[tokio::test]
     async fn standby_stops_interrupt_startup_before_waiting_for_control() {

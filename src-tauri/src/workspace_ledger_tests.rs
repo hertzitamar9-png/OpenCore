@@ -356,6 +356,8 @@ fn large_output_references_are_verified_and_never_substituted_for_changed_bytes(
         max_reference_bytes: 128,
         max_preview_bytes: 128,
         diff_work: 10_000,
+        max_output_bytes: 16,
+        ..LedgerLimits::default()
     };
     let ledger = WorkspaceLedger::open(f.root.join("references"), limits).unwrap();
     let output = f.workspace.join("song.wav");
@@ -378,6 +380,193 @@ fn large_output_references_are_verified_and_never_substituted_for_changed_bytes(
 }
 
 #[test]
+fn large_generated_outputs_have_immutable_snapshots_and_keep_scanner_limits() {
+    let f = Fixture::new();
+    let bytes = vec![42u8; 5 * 1024 * 1024];
+    f.write("clip.mp4", &bytes);
+    let result = f
+        .ledger
+        .register_outputs("chat", "large-job", &[f.workspace.join("clip.mp4")])
+        .unwrap();
+    let record = &result["files"][0];
+    assert_eq!(record["snapshotAvailable"], true);
+    assert_eq!(record["afterHash"], sha256(&bytes));
+    fs::remove_file(f.workspace.join("clip.mp4")).unwrap();
+    let reopened = WorkspaceLedger::new(f.root.join("data")).unwrap();
+    assert_eq!(
+        reopened
+            .command(json!({"action":"preview","id":record["id"]}))
+            .unwrap()["snapshotAvailable"],
+        true
+    );
+    let mut stream = reopened
+        .browser_stream(&BrowserAsset::Record {
+            id: record["id"].as_str().unwrap().into(),
+            version: "after".into(),
+        })
+        .unwrap();
+    let mut restored = Vec::new();
+    stream.file.read_to_end(&mut restored).unwrap();
+    assert_eq!(restored, bytes);
+    f.write("large-workspace-file.txt", &vec![b'a'; 5 * 1024 * 1024]);
+    let indexed = f
+        .ledger
+        .command(json!({"action":"index","workspace":f.workspace}))
+        .unwrap();
+    assert!(indexed["files"].as_array().unwrap().is_empty());
+    assert!(indexed["coverage"].to_string().contains("size"));
+}
+
+#[test]
+fn output_caps_and_disk_reserve_are_reported_without_copying_model_weights() {
+    let f = Fixture::new();
+    f.write("clip.mp4", &[1u8; 64]);
+    f.write("model.gguf", b"weights");
+    let ledger = WorkspaceLedger::open(
+        f.root.join("output-cap"),
+        LedgerLimits {
+            max_output_bytes: 32,
+            ..LedgerLimits::default()
+        },
+    )
+    .unwrap();
+    let result = ledger
+        .register_outputs(
+            "chat",
+            "capped",
+            &[f.workspace.join("clip.mp4"), f.workspace.join("model.gguf")],
+        )
+        .unwrap();
+    assert!(result["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|file| file["snapshotAvailable"] == false));
+    assert!(result["coverage"]
+        .to_string()
+        .contains("output snapshot byte cap"));
+    assert!(result["coverage"].to_string().contains("model weights"));
+    let ledger = WorkspaceLedger::open(
+        f.root.join("disk-reserve"),
+        LedgerLimits {
+            min_free_snapshot_bytes: u64::MAX,
+            ..LedgerLimits::default()
+        },
+    )
+    .unwrap();
+    let result = ledger
+        .register_outputs("chat", "disk", &[f.workspace.join("clip.mp4")])
+        .unwrap();
+    assert_eq!(result["files"][0]["snapshotAvailable"], false);
+    assert!(result["coverage"].to_string().contains("disk reserve"));
+}
+
+#[test]
+fn pagination_reaches_all_duplicate_names_and_stays_stable_when_new_outputs_arrive() {
+    let f = Fixture::new();
+    f.write("same.txt", b"saved output");
+    for index in 0..305 {
+        f.ledger
+            .register_outputs(
+                "chat",
+                &format!("job-{index}"),
+                &[f.workspace.join("same.txt")],
+            )
+            .unwrap();
+    }
+    let first = f
+        .ledger
+        .command(json!({"action":"list","conversationId":"chat","limit":300}))
+        .unwrap();
+    assert_eq!(first["files"].as_array().unwrap().len(), 300);
+    let cursor = first["nextCursor"].as_str().unwrap();
+    f.ledger
+        .register_outputs("chat", "newer-job", &[f.workspace.join("same.txt")])
+        .unwrap();
+    let second = f
+        .ledger
+        .command(json!({"action":"list","conversationId":"chat","limit":300,"cursor":cursor}))
+        .unwrap();
+    assert_eq!(second["files"].as_array().unwrap().len(), 5);
+    assert!(second["nextCursor"].is_null());
+    let ids = first["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .chain(second["files"].as_array().unwrap())
+        .map(|file| file["id"].as_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(ids.len(), 305);
+    assert!(f
+        .ledger
+        .command(json!({"action":"list","conversationId":"other-chat","cursor":cursor}))
+        .is_err());
+}
+
+#[test]
+fn historical_backfill_copies_only_the_exact_surviving_recorded_version() {
+    let f = Fixture::new();
+    f.write("surviving.wav", b"RIFF original surviving output");
+    f.write("changed.wav", b"RIFF original changed output");
+    f.write("missing.wav", b"RIFF missing output");
+    let data = f.root.join("old-references");
+    let old = WorkspaceLedger::open(
+        data.clone(),
+        LedgerLimits {
+            max_output_bytes: 1,
+            ..LedgerLimits::default()
+        },
+    )
+    .unwrap();
+    let result = old
+        .register_outputs(
+            "chat",
+            "historical",
+            &[
+                f.workspace.join("surviving.wav"),
+                f.workspace.join("changed.wav"),
+                f.workspace.join("missing.wav"),
+            ],
+        )
+        .unwrap();
+    assert!(result["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|file| file["snapshotAvailable"] == false));
+    f.write("changed.wav", b"RIFF this is a later unrelated output");
+    fs::remove_file(f.workspace.join("missing.wav")).unwrap();
+    drop(old);
+    let ledger = WorkspaceLedger::new(data).unwrap();
+    let backfilled = ledger.backfill_output_snapshots(0, 100).unwrap();
+    assert_eq!(backfilled["files"].as_array().unwrap().len(), 1);
+    assert!(backfilled["coverage"].to_string().contains("not recovered"));
+    let surviving = &result["files"][0];
+    fs::remove_file(f.workspace.join("surviving.wav")).unwrap();
+    assert_eq!(
+        ledger
+            .command(json!({"action":"preview","id":surviving["id"]}))
+            .unwrap()["snapshotAvailable"],
+        true
+    );
+    let listed = ledger.command(json!({"action":"list"})).unwrap();
+    assert_eq!(listed["files"].as_array().unwrap().len(), 3);
+    assert_eq!(
+        listed["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|file| file["snapshotAvailable"] == true)
+            .count(),
+        1
+    );
+    assert!(ledger.backfill_output_snapshots(0, 100).unwrap()["files"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
 fn size_and_dependency_omissions_are_visible_and_are_never_called_deletions() {
     let f = Fixture::new();
     f.write("small.txt", b"before\n");
@@ -391,6 +580,7 @@ fn size_and_dependency_omissions_are_visible_and_are_never_called_deletions() {
         max_reference_bytes: 128,
         max_preview_bytes: 128,
         diff_work: 10_000,
+        ..LedgerLimits::default()
     };
     let ledger = WorkspaceLedger::open(f.root.join("limited"), limits).unwrap();
     let capture = ledger.begin_turn("chat", "limit", &f.workspace).unwrap();
@@ -418,6 +608,7 @@ fn traversal_and_byte_limits_report_incomplete_capture() {
         max_reference_bytes: 128,
         max_preview_bytes: 128,
         diff_work: 10_000,
+        ..LedgerLimits::default()
     };
     let ledger = WorkspaceLedger::open(f.root.join("limited"), limits).unwrap();
     let result = ledger

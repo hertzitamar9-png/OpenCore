@@ -163,9 +163,11 @@ describe("optional model installation", () => {
     const install = vi.spyOn(api, "installModel").mockResolvedValue();
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
-      const picker = await screen.findByRole("combobox", { name: /Quantization for Coder/ });
-      fireEvent.change(picker, { target: { value: native.id } });
+      const mode = await screen.findByRole("combobox", { name: "Memory mode for Coder" });
+      fireEvent.change(mode, { target: { value: "native" } });
+      const picker = screen.getByRole("combobox", { name: /Quantization for Coder/ });
       expect(picker).toHaveValue(native.id);
+      expect(picker).toBeDisabled();
       fireEvent.click(screen.getByRole("button", { name: "Install" }));
       await waitFor(() => expect(install).toHaveBeenCalledWith(native.id));
     } finally { library.mockRestore(); speech.mockRestore(); install.mockRestore(); }
@@ -183,7 +185,7 @@ describe("optional model installation", () => {
     try {
       render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
       const picker = await screen.findByRole("combobox", { name: "Quantization for Qwen 3.8 Distill 9B" });
-      expect(screen.getByRole("option", { name: /ECHO · Q4_K_M · 5\.780 GB · 5,780,090,176 bytes download/ })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /Q4_K_M · 5\.780 GB · 5,780,090,176 bytes download/ })).toBeInTheDocument();
       fireEvent.change(picker, { target: { value: q4.id } });
       fireEvent.click(screen.getByRole("button", { name: "Install" }));
       await waitFor(() => expect(install).toHaveBeenCalledWith(q4.id));
@@ -207,11 +209,34 @@ describe("optional model installation", () => {
       fireEvent.click(screen.getByRole("button", { name: /^Native models/ }));
       expect(await screen.findByRole("combobox", { name: /Quantization for Qwen/ })).toBeVisible();
       expect(screen.getByRole("option", { name: /5\.780 GB · 5,780,090,176 bytes/ })).toBeInTheDocument();
-      expect(screen.queryByRole("option", { name: /ECHO · Q8_0/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole("combobox", { name: /Memory mode for Qwen/ })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: /^ECHO models/ }));
-      expect(await screen.findByRole("option", { name: /ECHO · Q8_0/ })).toBeInTheDocument();
+      expect(await screen.findByRole("option", { name: /Q8_0 · 9\.786 GB/ })).toBeInTheDocument();
       expect(screen.getByText(/Estimated VRAM \(full GPU offload\)/)).toBeVisible();
     } finally { library.mockRestore(); speech.mockRestore(); }
+  });
+
+  it("changes memory mode separately while retaining the matching quantized delivery", async () => {
+    const base: api.InstalledModel = { id: "mode-coder", label: "Mode coder", description: "Chat", precision: "Q8_0",
+      contextTokens: 16384, license: "Apache", experimental: false, note: "Pinned", selectable: true, installed: false,
+      externalManaged: false, downloadBytes: 5e9, totalBytes: 5e9, category: "text", backend: "gguf", memoryMode: "echo", artifactIdentity: "q8" };
+    const q4 = {...base, id: "mode-coder-q4", precision: "Q4_K_M", variantOf: base.id, artifactIdentity: "q4"};
+    const native = {...base, id: "mode-coder-native", variantOf: base.id, memoryMode: "native" as const};
+    const nativeQ4 = {...q4, id: "mode-coder-q4-native", memoryMode: "native" as const};
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({models: [base, q4, native, nativeQ4], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6});
+    const install = vi.spyOn(api, "installModel").mockResolvedValue();
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+      const mode = await screen.findByRole("combobox", {name: "Memory mode for Mode coder"});
+      const quantization = screen.getByRole("combobox", {name: "Quantization for Mode coder"});
+      expect(within(quantization).getAllByRole("option")).toHaveLength(2);
+      fireEvent.change(quantization, {target: {value: q4.id}});
+      fireEvent.change(mode, {target: {value: "native"}});
+      expect(quantization).toHaveValue(nativeQ4.id);
+      expect(within(quantization).getAllByRole("option")).toHaveLength(2);
+      fireEvent.click(screen.getByRole("button", {name: "Install"}));
+      await waitFor(() => expect(install).toHaveBeenCalledWith(nativeQ4.id));
+    } finally {library.mockRestore(); install.mockRestore();}
   });
 
   it("stops an active runtime only after confirmation and passes the reviewed token to uninstallation", async () => {

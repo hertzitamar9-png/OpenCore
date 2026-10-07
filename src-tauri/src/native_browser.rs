@@ -147,12 +147,7 @@ pub(crate) async fn agent_command(app: &tauri::AppHandle, action: &str, args: &V
             format!(r#"(() => {{ const key={literal}; const el=document.activeElement||document.body; if(key==='Enter'&&el?.form){{el.form.requestSubmit();return {{key}};}} if(key==='PageDown')window.scrollBy(0,innerHeight*.85);else if(key==='PageUp')window.scrollBy(0,-innerHeight*.85);else {{el?.dispatchEvent(new KeyboardEvent('keydown',{{key,bubbles:true,cancelable:true}}));el?.dispatchEvent(new KeyboardEvent('keyup',{{key,bubbles:true,cancelable:true}}));}}return {{key}}; }})()"#)
         }
         "screenshot" => {
-            let listed = crate::windows_control::command("list".into(), json!({})).await?;
-            let window_id = listed["windows"].as_array().and_then(|windows| windows.iter().find(|window|
-                window["title"].as_str().is_some_and(|title| title == "OpenCore")))
-                .and_then(|window| window["windowId"].as_i64())
-                .ok_or("OpenCore Browser window is not visible")?;
-            return crate::windows_control::command("screenshot".into(), json!({"windowId":window_id})).await;
+            return crate::windows_control::capture_owned_window(app).await;
         }
         _ => return Err("Unsupported in-app browser action".into()),
     };

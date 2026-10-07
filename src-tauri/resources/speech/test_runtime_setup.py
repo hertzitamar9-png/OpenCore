@@ -5,9 +5,20 @@ import unittest
 from unittest.mock import patch
 
 import runtime_setup as runtime
+import os
 
 
 class RuntimeDiskSpace(unittest.TestCase):
+    def test_detects_available_managed_environments_without_requiring_a_named_training_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            installed = root / 'training-envs/available-runtime/Scripts/python.exe'
+            installed.parent.mkdir(parents=True)
+            installed.write_bytes(b'fixture')
+            with patch.dict(os.environ, {'LOCALAPPDATA': str(root)}):
+                candidates = runtime.python_candidates(root / 'speech')
+            self.assertIn(str(installed), candidates)
+
     def prepare_without_downloads(self, free):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

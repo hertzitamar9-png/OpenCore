@@ -19,6 +19,7 @@
         "minWidth": 1180,
         "minHeight": 720,
         "center": true,
+        "visible": false,
         "decorations": false,
         "resizable": true,
         "dragDropEnabled": false
@@ -43,12 +44,16 @@
       "icons/icon.ico"
     ],
     "resources": {
+      "resources/runtime-setup/setup_manager.py": "runtime-setup/setup_manager.py",
+      "resources/runtime-setup/provision_testing.py": "runtime-setup/provision_testing.py",
+      "resources/runtime-setup/recipes.json": "runtime-setup/recipes.json",
       "resources/desktop/opencore-focus-guard.dll": "desktop/opencore-focus-guard.dll",
       "resources/studio/asset_worker.py": "studio/asset_worker.py",
       "resources/speech/whisper_worker.py": "speech/whisper_worker.py",
       "resources/speech/prepare_runtime.py": "speech/prepare_runtime.py",
       "resources/speech/phonon_worker.py": "speech/phonon_worker.py",
       "resources/speech/phonon_loading.py": "speech/phonon_loading.py",
+      "resources/speech/phonon_cache.py": "speech/phonon_cache.py",
       "resources/speech/prepare_phonon_runtime.py": "speech/prepare_phonon_runtime.py",
       "resources/speech/runtime_setup.py": "speech/runtime_setup.py",
       "resources/configure_unsloth.py": "resources/configure_unsloth.py",

@@ -2,6 +2,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { GenerationForm, StudioJobs } from './StudioJobs';
 import * as api from './api';
+import * as setup from './StudioModelSetup';
+
+it.each([
+  ['image', 'Negative prompt'], ['3d', 'Mesh resolution'], ['3d-animation', 'Motion description'], ['2d-animation', 'Frame count'],
+])('offers Browse models for %s while keeping draft controls available', async (category, control) => {
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  const browse = vi.fn();
+  render(<GenerationForm category={category} onNotice={vi.fn()} onBrowseModels={browse} />);
+  fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'A game asset'}});
+  expect(screen.getByLabelText(control)).toBeVisible();
+  expect(screen.getByRole('combobox', {name: 'Presets'})).toBeVisible();
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+  fireEvent.click(await screen.findByRole('button', {name: 'Browse models'}));
+  expect(browse).toHaveBeenCalledWith(category);
+});
 afterEach(()=>vi.restoreAllMocks());
 const music: api.InstalledModel={id:'yue2',label:'YuE2',category:'music',precision:'BF16',installed:true,selectable:false,externalManaged:true,description:'Music',license:'CC-BY-NC',experimental:true,note:'',contextTokens:0,downloadBytes:0,totalBytes:1};
 it('defaults to FLUX.2 Klein 4B and its controls when older uninstalled image models appear first', async () => {
@@ -48,6 +63,21 @@ it('requires the matching runtime before generating with installed image weights
   await screen.findByRole('option', {name: 'Sana'});
   fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'A game environment'}});
   expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+});
+it('refreshes the selected managed runtime after setup completes without clearing the draft', async () => {
+  const model: api.InstalledModel = {...music, id: 'sana-16', label: 'Sana', category: 'image', installed: true, backend: 'diffusers'};
+  vi.spyOn(api, 'modelLibrary').mockResolvedValue({models: [model], progress: null, diskFreeBytes: 88e9, minimumFreeBytes: 64e6});
+  const runtime = vi.spyOn(api, 'studioRuntime').mockResolvedValueOnce(null).mockResolvedValue({modelId: model.id, python: 'C:/managed/python.exe', runner: null, sourceDir: null});
+  vi.spyOn(setup, 'StudioModelSetup').mockImplementation(({onRefresh}) => <button onClick={() => void onRefresh()}>Setup completed</button>);
+  render(<GenerationForm category="image" onNotice={vi.fn()} />);
+  await screen.findByRole('option', {name: 'Sana'});
+  await waitFor(() => expect(runtime).toHaveBeenCalledTimes(1));
+  fireEvent.change(screen.getByLabelText('Prompt'), {target: {value: 'Keep this draft after setup'}});
+  expect(screen.getByRole('button', {name: 'Generate'})).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', {name: 'Setup completed'}));
+  await waitFor(() => expect(screen.getByRole('button', {name: 'Generate'})).toBeEnabled());
+  expect(runtime).toHaveBeenCalledTimes(2);
+  expect(screen.getByLabelText('Prompt')).toHaveValue('Keep this draft after setup');
 });
 it('shows TRELLIS 2 supported resolution controls before installation', async () => {
   const model: api.InstalledModel = {...music, id: 'trellis-2-4b', label: 'TRELLIS.2', category: '3d', installed: false, backend: 'external'};

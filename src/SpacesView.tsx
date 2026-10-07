@@ -26,9 +26,29 @@ export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpe
     } catch (cause) { if (alive.current && request === revision.current) setError(String(cause)); }
     finally { if (alive.current && request === revision.current) setBusy(false); }
   }, [conversationId, search]);
+  async function loadMore() {
+    if (busy || !history.nextCursor) return;
+    const request = ++revision.current;
+    setBusy(true);
+    try {
+      const value = await workspaceFiles({ action: 'list', conversationId, search, limit: 300, cursor: history.nextCursor });
+      if (alive.current && request === revision.current) {
+        setHistory(previous => {
+          const known = new Set(previous.files.map(file => file.id));
+          const appended = value.files.filter(file => { if (known.has(file.id)) return false; known.add(file.id); return true; });
+          return { ...value, files: [...previous.files, ...appended], coverage: [...new Set([...previous.coverage, ...value.coverage])] };
+        });
+        setError('');
+      }
+    } catch (cause) { if (alive.current && request === revision.current) setError(String(cause)); }
+    finally { if (alive.current && request === revision.current) setBusy(false); }
+  }
   useEffect(() => { alive.current = true; return () => { alive.current = false; ++revision.current; }; }, []);
   useEffect(() => {
     ++revision.current;
+    setHistory({ files: [], coverage: [] });
+    setBusy(true);
+    setError('');
     const timer = window.setTimeout(() => void refresh(), search ? 180 : 0);
     const unsubscribe = subscribeWorkspaceFiles(() => void refresh());
     return () => { window.clearTimeout(timer); unsubscribe(); ++revision.current; };
@@ -66,7 +86,7 @@ export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpe
   const versions = new Map<string, number>();
   for (const file of history.files) versions.set(file.source, (versions.get(file.source) || 0) + 1);
   return <section className="spaces-view" aria-label={conversationId ? 'Chat files' : 'Spaces'}>
-    <header className="spaces-heading"><div><Files size={19} /><h2>{conversationId ? 'Files' : 'Spaces'}</h2><span>{history.files.length} saved {history.files.length === 1 ? 'version' : 'versions'}</span></div><div>
+    <header className="spaces-heading"><div><Files size={19} /><h2>{conversationId ? 'Files' : 'Spaces'}</h2><span>{history.files.length} {history.nextCursor ? 'loaded' : 'saved'} {history.files.length === 1 ? 'version' : 'versions'}</span></div><div>
       <button aria-label="Index saved outputs" title="Index existing outputs linked by saved studio and chat records" onClick={() => void indexSavedOutputs()} disabled={busy}><ArchiveRestore size={16} /></button>
       <button aria-label="Index existing folder" title="Index existing files without generating them again" onClick={() => void indexFolder()} disabled={busy}><FolderPlus size={16} /></button>
       <button aria-label="Refresh file history" onClick={() => void refresh()} disabled={busy}><RefreshCw size={16} className={busy ? 'workspace-spinning' : ''} /></button>
@@ -87,6 +107,7 @@ export function SpacesView({ conversationId, onNotice, onOpenConversation, onOpe
         {file.conversationId && onOpenConversation && <button onClick={() => onOpenConversation(file.conversationId)} aria-label={`Open originating chat for ${file.path}`} title="Open originating chat"><MessageSquare size={13} /></button>}
       </div>
     </article>)}</div>}
+    {!selected && history.nextCursor && <button className="spaces-back" onClick={() => void loadMore()} disabled={busy}>{busy ? 'Loading older versions…' : 'Load older versions'}</button>}
     {!selected && !history.files.length && !busy && <div className="spaces-empty"><Files size={26} /><p>{search ? 'No recorded files match this search.' : 'File versions appear after an agent task changes workspace files or a studio job produces an output.'}</p><p>Index an existing folder to save its current versions.</p></div>}
     <CaptureCoverage coverage={history.coverage} />
   </section>;

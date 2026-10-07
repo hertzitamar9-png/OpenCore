@@ -147,6 +147,7 @@ async fn protocol(
     args: &Value,
     foreground: &mut Option<crate::windows_control::ManualForegroundGuard>,
     dispatched: &mut bool,
+    authorization: Option<(&crate::store::EventStore, &crate::computer_access::WindowIdentity)>,
 ) -> Result<Value, String> {
     use tokio::io::AsyncWriteExt;
     let mut received = 0;
@@ -169,10 +170,21 @@ async fn protocol(
                 if args["manualControl"].as_bool() != Some(true) || *dispatched {
                     return Err("Unexpected desktop helper dispatch request".into());
                 }
+                // The provider has finished discovering its control. Recheck
+                // revocation and HWND/PID identity immediately before mutation,
+                // rather than trusting the permission observed before spawn.
+                if let Some((store, expected)) = authorization {
+                    crate::computer_access::recheck_window(store, expected)?;
+                }
                 let cursor = crate::windows_control::cursor_position()
                     .ok_or("Cannot verify the desktop cursor before background dispatch; no input was sent")?;
                 let window = unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() }.0 as isize;
                 *foreground = crate::windows_control::ManualForegroundGuard::acquire(args)?;
+                // A target's protection acknowledgement can take time. Honor
+                // a revocation received during that wait before authorizing input.
+                if let Some((store, expected)) = authorization {
+                    crate::computer_access::recheck_window(store, expected)?;
+                }
                 original_desktop = Some((window, cursor));
                 *dispatched = true;
                 dispatch_deadline = Some(tokio::time::Instant::now() + DISPATCH_TIMEOUT);
@@ -258,10 +270,17 @@ impl Drop for HelperLease {
 }
 
 #[cfg(windows)]
-pub(crate) async fn execute(action: String, mut args: Value, mut command: tokio::process::Command) -> Result<Value, String> {
+pub(crate) async fn execute(action: String, args: Value, command: tokio::process::Command) -> Result<Value, String> {
+    execute_authorized(action, args, command, None).await
+}
+
+#[cfg(windows)]
+async fn execute_authorized(action: String, mut args: Value, mut command: tokio::process::Command,
+    authorization: Option<(std::sync::Arc<crate::store::EventStore>, crate::computer_access::WindowIdentity)>) -> Result<Value, String> {
     use tokio::io::AsyncWriteExt;
     prepare(&action, &mut args)?;
     crate::windows_control::validate_manual_target(&action, &args)?;
+    if let Some((store, expected)) = authorization.as_ref() { crate::computer_access::recheck_window(store, expected)?; }
     let request = serde_json::to_vec(&Request { version: 1, action, args: args.clone() }).map_err(|error| error.to_string())?;
     if request.len() + 1 > MAX_REQUEST_BYTES { return Err("Desktop helper request exceeds its size limit".into()); }
     command.stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped())
@@ -280,7 +299,8 @@ pub(crate) async fn execute(action: String, mut args: Value, mut command: tokio:
         input.write_all(&request).await.map_err(|error| error.to_string())?;
         input.write_all(b"\n").await.map_err(|error| error.to_string())?;
         input.flush().await.map_err(|error| error.to_string())?;
-        protocol(&mut reader, &mut input, &args, &mut lease.foreground, &mut dispatched).await
+        protocol(&mut reader, &mut input, &args, &mut lease.foreground, &mut dispatched,
+            authorization.as_ref().map(|(store, expected)| (store.as_ref(), expected))).await
     }).await.unwrap_or_else(|_| Err(if dispatched {
         "The desktop operation exceeded its deadline. It may have completed; verify the target before retrying.".into()
     } else { "The selected app did not respond within the desktop operation deadline. No foreground fallback was used.".into() }));
@@ -299,6 +319,18 @@ pub(crate) async fn execute(action: String, mut args: Value, mut command: tokio:
 #[cfg(windows)]
 pub(crate) async fn command(action: String, args: Value) -> Result<Value, String> {
     execute(action, args, helper_command()?).await
+}
+
+#[cfg(windows)]
+pub(crate) async fn command_authorized(action: String, args: Value, store: std::sync::Arc<crate::store::EventStore>,
+    expected: crate::computer_access::WindowIdentity) -> Result<Value, String> {
+    execute_authorized(action, args, helper_command()?, Some((store, expected))).await
+}
+
+#[cfg(all(test, windows))]
+pub(crate) async fn execute_authorized_for_test(action: String, args: Value, command: tokio::process::Command,
+    store: std::sync::Arc<crate::store::EventStore>, expected: crate::computer_access::WindowIdentity) -> Result<Value, String> {
+    execute_authorized(action, args, command, Some((store, expected))).await
 }
 
 #[cfg(test)]
@@ -352,6 +384,21 @@ mod tests {
                         std::fs::write(path, std::process::id().to_string()).map_err(|error| error.to_string())?;
                     }
                     std::thread::sleep(std::time::Duration::from_secs(30));
+                    Ok(serde_json::json!({"activated":true}))
+                });
+            }
+            if mode == "wait_before_dispatch" {
+                let ready = args["discoveryReceipt"].as_str().ok_or("missing fixture discovery receipt")?;
+                let release = args["discoveryRelease"].as_str().ok_or("missing fixture discovery release")?;
+                std::fs::write(ready, std::process::id().to_string()).map_err(|error| error.to_string())?;
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+                while !std::path::Path::new(release).is_file() {
+                    if std::time::Instant::now() > deadline { return Err("fixture discovery wait expired".into()); }
+                    std::thread::sleep(std::time::Duration::from_millis(2));
+                }
+                return dispatch_with_parent(|| {
+                    std::fs::write(args["dispatchReceipt"].as_str().ok_or("missing fixture dispatch receipt")?, b"input allowed")
+                        .map_err(|error| error.to_string())?;
                     Ok(serde_json::json!({"activated":true}))
                 });
             }
