@@ -152,10 +152,10 @@ def add_repository_variants(catalog: dict, parent: dict, repository: dict) -> in
         model_id = profile_id(parent_id, precision, checksum)
         if precision.upper() == parent.get("precision", "").upper():
             continue
-        existing_model = model_by_id.get(model_id)
         # Preserve existing immutable profiles rather than mutating a shipped pin.
-        if not existing_model and any(model.get("variantOf") == parent_id and model.get("precision", "").upper() == precision.upper()
-                                      for model in catalog["models"]):
+        # Their artifact IDs and paths may differ from this generator's naming.
+        if model_id in model_by_id or any(model.get("variantOf") == parent_id and model.get("precision", "").upper() == precision.upper()
+                                         for model in catalog["models"]):
             continue
         artifact_ids = []
         primary_paths = []
@@ -178,12 +178,6 @@ def add_repository_variants(catalog: dict, parent: dict, repository: dict) -> in
             primary_paths.append(rel_path)
         if projector_id and projector_id not in artifact_ids:
             artifact_ids.append(projector_id)
-        if existing_model:
-            existing_model["weightArtifacts"] = artifact_ids.copy()
-            native_existing = model_by_id.get(f"{model_id}-native")
-            if native_existing:
-                native_existing["weightArtifacts"] = artifact_ids.copy()
-            continue
         label = f"{parent['label']} · {precision}"
         is_text_gguf = parent.get("category") == "text" and parent.get("backend") == "gguf"
         experimental = copy.deepcopy(parent)
