@@ -66,6 +66,7 @@ jobs:
         run: python -m unittest discover -s src-tauri/resources/speech -p "test_phonon_*.py" -v
       - name: Test Windows native library and disposable desktop fixtures
         id: native-tests
+        if: ${{ !cancelled() && steps.desktop-guard.outcome == 'success' }}
         working-directory: src-tauri
         shell: pwsh
         run: |

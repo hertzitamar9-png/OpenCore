@@ -796,6 +796,101 @@ fn verify_headless_helper(fixture: &Fixture, button: &Value, foreground: HWND,
     }
 }
 
+fn verify_authorized_background_controls(fixture: &Fixture, button: &Value) {
+    use crate::computer_access::{self, Access, Policy};
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let store = std::sync::Arc::new(crate::store::EventStore::open(&fixture.directory.0.join("permissions.sqlite3")).unwrap());
+    let target = computer_access::window_identity(fixture.target as i64).unwrap();
+    assert_eq!(target.pid, fixture.process.child.id(), "permissions must resolve the exact owned external executable");
+    let original = fixture.state();
+    let foreground = unsafe { GetForegroundWindow() };
+    let cursor = cursor_position().unwrap();
+    fixture.phase("authorized disabled and unknown app admission");
+    runtime.block_on(async {
+        let listed = super::command_authorized("list".into(), json!({}), store.clone()).await.unwrap();
+        assert_eq!(listed["computerUseEnabled"], false);
+        assert!(listed["windows"].as_array().unwrap().is_empty());
+        assert!(super::command_authorized("interact".into(), button.clone(), store.clone()).await.unwrap_err().contains("disabled"));
+        computer_access::save(&store, Policy { enabled: true, ..Policy::default() }).unwrap();
+        assert!(super::command_authorized("inspect".into(), button.clone(), store.clone()).await.unwrap_err().contains("requires permission"));
+        computer_access::grant(&store, &target).unwrap();
+        let listed = super::command_authorized("list".into(), json!({}), store.clone()).await.unwrap();
+        let windows = listed["windows"].as_array().unwrap();
+        assert!(!windows.iter().any(|row| row["windowId"] == 0), "whole-desktop capture cannot enforce executable permissions");
+        assert!(windows.iter().any(|row| row["windowId"] == fixture.target as i64 && row["permission"] == "allowed"));
+        assert_eq!(listed["backgroundCapabilities"]["canvasInput"], false);
+        let inspected = super::command_authorized("inspect".into(), button.clone(), store.clone()).await.unwrap();
+        assert!(inspected["elements"].as_array().unwrap().iter().any(|row| row["name"] == "Background fixture action"));
+    });
+    fixture.assert_desktop_unchanged("authorized read admission", foreground, cursor, original.activations, original.z_changes);
+    assert_eq!(fixture.state().button_clicks, original.button_clicks, "denied admission and reading must send no input");
+    fixture.assert_covered(button);
+
+    fixture.phase("authorized covered button mutation");
+    fixture.flag("try-foreground");
+    let clicked = runtime.block_on(super::command_authorized("interact".into(), button.clone(), store.clone())).unwrap();
+    assert_eq!(clicked["activated"], true);
+    assert_eq!(clicked["inputMode"], "window-message");
+    assert_eq!(clicked["backgroundVerified"], true);
+    assert_eq!(fixture.state().button_clicks, original.button_clicks + 1);
+    assert!(!fixture.state().foreground_allowed, "the permission-checked helper must retain the foreground activation veto");
+    fixture.assert_desktop_unchanged("authorized covered button mutation", foreground, cursor, original.activations, original.z_changes);
+    fixture.assert_covered(button);
+
+    fixture.phase("authorized covered text mutation");
+    let mut edit = fixture.args(fixture.edit);
+    edit["text"] = json!("permission-checked background text");
+    let updated = runtime.block_on(super::command_authorized("commit_text".into(), edit.clone(), store.clone())).unwrap();
+    assert_eq!(updated["updated"], true);
+    assert_eq!(updated["inputMode"], "window-message");
+    assert_eq!(fixture.edit_text(), "permission-checked background text");
+    fixture.assert_desktop_unchanged("authorized covered text mutation", foreground, cursor, original.activations, original.z_changes);
+    fixture.assert_covered(&edit);
+
+    fixture.phase("authorized unsupported canvas and revoked permission");
+    let canvas = fixture.args(fixture.canvas);
+    assert!(runtime.block_on(super::command_authorized("interact".into(), canvas, store.clone())).is_err());
+    assert_eq!(fixture.state().canvas_clicks, original.canvas_clicks, "authorization cannot invent background canvas support");
+    // Pause a real owned helper after admission but before DispatchReady.
+    // Invoke the production authorization protocol directly so this assertion
+    // proves the final recheck, independently of the outer cancellation watcher.
+    let discovery = fixture.directory.0.join("authorization-discovered");
+    let release = fixture.directory.0.join("authorization-release");
+    let dispatched = fixture.directory.0.join("authorization-dispatched");
+    let mut paused = button.clone();
+    paused["discoveryReceipt"] = json!(discovery.to_string_lossy());
+    paused["discoveryRelease"] = json!(release.to_string_lossy());
+    paused["dispatchReceipt"] = json!(dispatched.to_string_lossy());
+    let mut helper = crate::desktop_helper::helper_command().unwrap();
+    helper.env("OPENCORE_DESKTOP_HELPER_TEST_MODE", "wait_before_dispatch");
+    runtime.block_on(async {
+        let mut operation = Box::pin(crate::desktop_helper::execute_authorized_for_test(
+            "interact".into(), paused, helper, store.clone(), target.clone()));
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while !discovery.is_file() {
+            tokio::select! {
+                result = &mut operation => panic!("permission fixture ended before discovery: {result:?}"),
+                _ = tokio::time::sleep(Duration::from_millis(10)) => {}
+            }
+            assert!(Instant::now() < deadline, "permission helper did not reach discovery");
+        }
+        let mut denied = computer_access::load(&store).unwrap();
+        denied.apps.iter_mut().find(|app| computer_access::identity(&app.path) == computer_access::identity(&target.path)).unwrap().access = Access::Deny;
+        computer_access::save(&store, denied).unwrap();
+        std::fs::write(&release, []).unwrap();
+        let error = operation.await.unwrap_err();
+        assert!(error.contains("denied"), "DispatchReady must recheck revocation: {error}");
+    });
+    assert!(!dispatched.exists(), "a permission revoked after admission must not reach helper dispatch");
+    let blocked = runtime.block_on(super::command_authorized("interact".into(), button.clone(), store.clone())).unwrap_err();
+    assert!(blocked.contains("denied"), "{blocked}");
+    let listed = runtime.block_on(super::command_authorized("list".into(), json!({}), store.clone())).unwrap();
+    assert!(!listed["windows"].as_array().unwrap().iter().any(|row| row["windowId"] == fixture.target as i64));
+    assert_eq!(fixture.state().button_clicks, original.button_clicks + 1, "revoked permissions must block new mutation");
+    fixture.assert_desktop_unchanged("authorized canvas refusal and revocation", foreground, cursor, original.activations, original.z_changes);
+    fixture.assert_covered(button);
+}
+
 #[test]
 fn strict_accessibility_client_disables_automatic_pattern_focus() {
     assert_eq!(
@@ -1232,6 +1327,7 @@ fn occluded_background_controls_never_activate_move_cursor_or_expose_target() {
     println!("background native fixture: button invoked, text updated, list scrolled {}->{}, unsupported canvas/Enter rejected; foreground={:#x}, cursor=({}, {}), no target activation or z changes", before_scroll, after_scroll, foreground.0 as usize, cursor.0, cursor.1);
 
     verify_headless_helper(&fixture, &button, foreground, cursor, activations, z_changes);
+    verify_authorized_background_controls(&fixture, &button);
 
     // Change desktop input from another thread only after the real notification
     // handler begins. Its completed button outcome must survive the warning,

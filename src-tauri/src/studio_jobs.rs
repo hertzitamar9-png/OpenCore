@@ -644,6 +644,7 @@ impl StudioManager {
     ) -> Result<(), String> {
         let _gate = tokio::select! {guard=self.gate.lock()=>guard,_=token.cancelled()=>return Err("Cancelled before generation".into())};
         loop {
+            if core.update_in_progress.load(Ordering::Acquire) {token.cancel();return Err("Cancelled while OpenCore is closing".into());}
             let chats_active = !core
                 .active_chats
                 .lock()

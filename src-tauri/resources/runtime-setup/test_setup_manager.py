@@ -19,6 +19,13 @@ def runner(*args):
 
 
 class SetupBehavior(unittest.TestCase):
+    def test_recipe_fingerprint_matches_native_canonical_utf8_fixture(self):
+        # The same fixture and digest live in runtime_setup.rs.
+        recipe = {"supported": True, "nested": {"z": 2, "a": 1}, "label": "café", "id": "fixture"}
+        expected = "82eb70d7b4c560b040337f074e68fc522442eab39a71f0f2d51786aa587fe34a"
+        self.assertEqual(setup.recipe_fingerprint(recipe), expected)
+        self.assertEqual(setup.recipe_fingerprint({key: value for key, value in recipe.items() if key != "supported"}), expected)
+
     def test_unknown_architecture_cannot_select_a_generic_recipe(self):
         result = setup.recipe_for("flux-2-klein-4b")
         self.assertFalse(result["supported"])
@@ -37,7 +44,7 @@ class SetupBehavior(unittest.TestCase):
             target = setup.create_environment(root, "fixture-v1", sys.executable, runner())
             self.assertTrue(target.is_file())
             info = json.loads(subprocess.check_output([str(target), "-c", "import json,sys;print(json.dumps({'prefix':sys.prefix,'base':sys.base_prefix}))"], text=True))
-            self.assertEqual(Path(info["prefix"]).resolve(), root / "runtime-setup" / "environments" / "fixture-v1")
+            self.assertEqual(Path(info["prefix"]).resolve(), (root / "runtime-setup" / "environments" / "fixture-v1").resolve())
             self.assertNotEqual(info["prefix"], info["base"])
             self.assertEqual((original / "keep.txt").read_text(), "user environment")
 

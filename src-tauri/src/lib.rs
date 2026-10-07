@@ -2814,6 +2814,7 @@ pub fn run() {
             if !EXIT_READY.load(std::sync::atomic::Ordering::Acquire) {
                 api.prevent_exit();
                 if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {
+                    if let Some(core)=app.try_state::<Arc<AppCore>>() {core.update_in_progress.store(true,Ordering::Release);}
                     let app=app.clone();
                     tauri::async_runtime::spawn(async move {
                         if let Some(core)=app.try_state::<Arc<AppCore>>() {

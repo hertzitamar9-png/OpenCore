@@ -30,6 +30,14 @@ pub struct TestingLabProfile {
     #[serde(default)]
     pub emulator_executable: Option<String>,
     #[serde(default)]
+    pub sdk_root: Option<String>,
+    #[serde(default)]
+    pub avd_home: Option<String>,
+    #[serde(default)]
+    pub android_user_home: Option<String>,
+    #[serde(default)]
+    pub emulator_port: Option<u16>,
+    #[serde(default)]
     pub guest_user: Option<String>,
     #[serde(default)]
     pub password_env: Option<String>,
@@ -70,6 +78,9 @@ fn validate(profiles: &[TestingLabProfile]) -> Result<(), String> {
             p.device_serial.as_deref().unwrap_or(""),
             p.avd_name.as_deref().unwrap_or(""),
             p.emulator_executable.as_deref().unwrap_or(""),
+            p.sdk_root.as_deref().unwrap_or(""),
+            p.avd_home.as_deref().unwrap_or(""),
+            p.android_user_home.as_deref().unwrap_or(""),
             p.guest_user.as_deref().unwrap_or(""),
             p.password_env.as_deref().unwrap_or(""),
         ] {
@@ -79,6 +90,9 @@ fn validate(profiles: &[TestingLabProfile]) -> Result<(), String> {
         }
         if p.kind == "virtualbox" && p.vm_name.as_deref().unwrap_or("").trim().is_empty() {
             return Err("PC profiles require an existing VirtualBox VM name".into());
+        }
+        if p.emulator_port.is_some_and(|port|!(5554..=5682).contains(&port) || port%2!=0) {
+            return Err("Android emulator ports must be even numbers from 5554 to 5682".into());
         }
         if let Some(name) = &p.password_env {
             if name.is_empty() || !name.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_') {
@@ -98,6 +112,33 @@ pub fn save_profiles(
         &serde_json::to_string(&value).map_err(|e| e.to_string())?,
     )?;
     Ok(value)
+}
+/// Add only a successfully provisioned environment; preserve unrelated saved
+/// profiles and the user's label/enabled choice when repairing a managed AVD.
+pub fn save_setup_profile(store: &EventStore, receipt: &Value) -> Result<(), String> {
+    let target=receipt["targetId"].as_str().unwrap_or("");
+    let required=|key:&str|->Result<String,String>{receipt[key].as_str().filter(|v|!v.is_empty()).map(str::to_owned).ok_or_else(||format!("Verified testing setup is missing {key}"))};
+    let mut next:TestingLabProfile=match target {
+        "testing-android" if receipt["bootVerified"]==true=>TestingLabProfile{
+            id:"opencore-managed-android-api36".into(),label:"OpenCore Android API 36".into(),kind:"android".into(),enabled:true,
+            executable:required("executable")?,emulator_executable:Some(required("emulatorExecutable")?),
+            sdk_root:Some(required("sdkRoot")?),avd_home:Some(required("avdHome")?),android_user_home:Some(required("androidUserHome")?),
+            emulator_port:Some(receipt["emulatorPort"].as_u64().and_then(|port|u16::try_from(port).ok()).ok_or("Verified Android setup is missing its emulator port")?),
+            device_serial:Some(required("deviceSerial")?),avd_name:Some(required("avdName")?),vm_name:None,guest_user:None,password_env:None,
+        },
+        "testing-pc-vm" if receipt["guestVerified"]==true=>TestingLabProfile{
+            id:format!("opencore-vm-{}",required("vmId")?),label:required("vmName")?,kind:"virtualbox".into(),enabled:true,
+            executable:required("executable")?,vm_name:Some(required("vmId")?),guest_user:Some(required("guestUser")?),password_env:Some(required("passwordEnv")?),
+            emulator_executable:None,sdk_root:None,avd_home:None,android_user_home:None,emulator_port:None,device_serial:None,avd_name:None,
+        },
+        "testing-android"|"testing-pc-vm"=>return Err("A testing profile requires a verified guest boot or command".into()),
+        _=>return Ok(()),
+    };
+    let mut saved=profiles(store)?;
+    if let Some(existing)=saved.iter_mut().find(|profile|profile.id==next.id) {
+        next.label=existing.label.clone();next.enabled=existing.enabled;*existing=next;
+    } else {saved.push(next);}
+    save_profiles(store,saved).map(|_|())
 }
 pub fn tool_spec() -> Value {
     json!({"type":"function","function":{"name":"testing_lab","description":"Control an existing configured VirtualBox PC or Android device/emulator. Status/list discover profiles and SDK readiness; configure saves a validated profiles array through the same persistence as Settings. Launch, install an APK, inspect UI hierarchy, screenshot, tap, type, key, or execute a guest application. Screenshots are visual evidence, not automatically a passing test. No VM images are downloaded. Follow the selected approval policy and report host/device changes.","parameters":{"type":"object","properties":{"action":{"type":"string","enum":["list","configure","status","start","stop","inspect","screenshot","install_app","launch_app","tap","key","text"]},"profiles":{"type":"array","maxItems":32,"items":{"type":"object","properties":{"id":{"type":"string"},"label":{"type":"string"},"kind":{"type":"string","enum":["android","virtualbox"]},"enabled":{"type":"boolean"},"executable":{"type":"string"},"vmName":{"type":"string"},"deviceSerial":{"type":"string"},"avdName":{"type":"string"},"emulatorExecutable":{"type":"string"},"guestUser":{"type":"string"},"passwordEnv":{"type":"string"}},"required":["id","label","kind"]}},"profileId":{"type":"string"},"path":{"type":"string"},"args":{"type":"array","items":{"type":"string"}},"x":{"type":"integer"},"y":{"type":"integer"},"text":{"type":"string"},"key":{"type":"string"}},"required":["action"]}}})
@@ -220,7 +261,16 @@ pub async fn execute(store: &EventStore, data: &Path, args: &Value) -> Result<Va
                     .unwrap_or("emulator");
                 // The Android emulator is intentionally long lived. Do not kill it at tool completion.
                 let mut c = Command::new(executable);
-                c.args(["-avd", avd])
+                c.args(["-avd", avd]);
+                if let Some(port)=p.emulator_port {
+                    // Never redirect a managed serial to an unrelated emulator.
+                    for number in [port,port+1] {std::net::TcpListener::bind(("127.0.0.1",number)).map_err(|_|format!("Android emulator port {number} is already in use. Check this profile's status or stop its existing emulator."))?;}
+                    c.args(["-port",&port.to_string()]);
+                }
+                if let Some(path)=&p.sdk_root {c.env("ANDROID_SDK_ROOT",path).env("ANDROID_HOME",path);}
+                if let Some(path)=&p.avd_home {c.env("ANDROID_AVD_HOME",path);}
+                if let Some(path)=&p.android_user_home {c.env("ANDROID_USER_HOME",path);}
+                c
                     .stdin(std::process::Stdio::null())
                     .stdout(std::process::Stdio::null())
                     .stderr(std::process::Stdio::null());
@@ -397,6 +447,7 @@ mod tests {
             device_serial: Some("emulator-5554".into()),
             avd_name: None,
             emulator_executable: None,
+            sdk_root:None,avd_home:None,android_user_home:None,emulator_port:None,
             guest_user: None,
             password_env: None,
         }
@@ -427,6 +478,22 @@ mod tests {
             profiles(&store).unwrap()[0].device_serial.as_deref(),
             Some("emulator-5554")
         );
+    }
+    #[test]
+    fn provisioned_profile_preserves_existing_profiles_and_managed_environment() {
+        let root=std::env::temp_dir().join(format!("labs-setup-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();let store=EventStore::open(&root.join("app.sqlite3")).unwrap();
+        save_profiles(&store,vec![profile()]).unwrap();
+        let receipt=json!({"targetId":"testing-android","bootVerified":true,"executable":"C:/managed/sdk/platform-tools/adb.exe",
+            "emulatorExecutable":"C:/managed/sdk/emulator/emulator.exe","sdkRoot":"C:/managed/sdk","avdHome":"C:/managed/avd",
+            "androidUserHome":"C:/managed/user","avdName":"OpenCore_API_36","emulatorPort":5580,"deviceSerial":"emulator-5580"});
+        save_setup_profile(&store,&receipt).unwrap();let mut saved=profiles(&store).unwrap();
+        assert_eq!(saved.len(),2);assert_eq!(saved[0].id,"phone");assert_eq!(saved[1].avd_home.as_deref(),Some("C:/managed/avd"));
+        assert_eq!(adb_base(&saved[1]),["-s","emulator-5580"]);
+        saved[1].enabled=false;saved[1].label="My emulator".into();save_profiles(&store,saved).unwrap();
+        save_setup_profile(&store,&receipt).unwrap();let repaired=profiles(&store).unwrap();
+        assert_eq!(repaired.len(),2);assert!(!repaired[1].enabled);assert_eq!(repaired[1].label,"My emulator");
+        assert!(save_setup_profile(&store,&json!({"targetId":"testing-pc-vm","guestVerified":false})).is_err());
     }
     #[tokio::test]
     async fn disabled_profiles_cannot_launch() {

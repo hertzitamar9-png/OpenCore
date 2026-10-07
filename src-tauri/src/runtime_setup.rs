@@ -80,7 +80,21 @@ pub fn recipe_for(target: &str) -> Option<Value> {
         .cloned().map(|mut value| { value["supported"] = json!(true); value })
 }
 fn recipe_fingerprint(recipe: &Value) -> Result<String, String> {
-    Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(recipe).map_err(|error|error.to_string())?)))
+    fn sorted(value: &Value) -> Value {
+        match value {
+            Value::Object(object)=>{
+                let mut entries=object.iter().collect::<Vec<_>>();entries.sort_by(|a,b|a.0.cmp(b.0));
+                let mut result=serde_json::Map::new();
+                for (key,value) in entries {result.insert(key.clone(),sorted(value));}
+                Value::Object(result)
+            },
+            Value::Array(values)=>Value::Array(values.iter().map(sorted).collect()),
+            _=>value.clone(),
+        }
+    }
+    let mut bare=recipe.clone();
+    if let Some(object)=bare.as_object_mut(){object.remove("supported");}
+    Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(&sorted(&bare)).map_err(|error|error.to_string())?)))
 }
 fn atomic_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     let parent = path.parent().ok_or("Missing setup state directory")?;
@@ -110,6 +124,9 @@ fn atomic_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     Ok(())
 }
 fn now() -> String { chrono::Utc::now().to_rfc3339() }
+async fn wait_cancel_deadline(deadline: Option<tokio::time::Instant>) {
+    match deadline {Some(deadline)=>tokio::time::sleep_until(deadline).await,None=>std::future::pending::<()>().await}
+}
 fn command(executable: impl AsRef<std::ffi::OsStr>) -> Command {
     let mut result = Command::new(executable);
     result.kill_on_drop(true).stdin(Stdio::null());
@@ -257,7 +274,8 @@ impl RuntimeSetupManager {
     }
     async fn run_setup(&self, core: Arc<crate::AppCore>, _app: tauri::AppHandle, id: &str, target: &str, options: &SetupOptions, token: &CancellationToken, weights_active: &Arc<AtomicBool>) -> Result<Value, String> {
         self.update(id, |job|{job.status="running".into();job.stage="discovering-python".into();job.detail="Finding a healthy compatible Python installation".into();})?;
-        let python = match discover_python(&self.root).await { Ok(python)=>python, Err(_)=>self.bootstrap_python(id, token).await? };
+        let detected=tokio::select! {biased;_=token.cancelled()=>return Err("Runtime setup cancelled during interpreter discovery".into()),value=discover_python(&self.root)=>value};
+        let python = match detected { Ok(python)=>python, Err(_)=>self.bootstrap_python(id, token).await? };
         if token.is_cancelled() { return Err("Runtime setup cancelled".into()); }
         let job_dir = self.root.join("runtime-setup/runs").join(id);
         std::fs::create_dir_all(&job_dir).map_err(|error|error.to_string())?;
@@ -288,6 +306,12 @@ impl RuntimeSetupManager {
                     cancelled=true;cancel_deadline=Some(tokio::time::Instant::now()+Duration::from_secs(12));
                     self.update(id,|job|{job.status="cancelling".into();job.detail="Stopping setup subprocesses and releasing resources".into();})?;
                 }
+                // This absolute deadline is polled before output. A process
+                // emitting continuous diagnostics cannot postpone cancellation.
+                _=wait_cancel_deadline(cancel_deadline)=>{
+                    let _=child.kill().await;let _=child.wait().await;
+                    return Err("Setup cancelled; its process was stopped. Windows administrator installers may require completing their own permission/rollback dialog.".into());
+                }
                 line=stdout.next_line(), if !out_done => match line.map_err(|error|error.to_string())? {
                     None=>out_done=true,
                     Some(line)=>{
@@ -315,16 +339,23 @@ impl RuntimeSetupManager {
                     None=>err_done=true,
                     Some(line)=>self.update(id,|job|{job.diagnostics.push(line.chars().take(2048).collect());if job.diagnostics.len()>80{job.diagnostics.remove(0);}})?,
                 },
-                _=tokio::time::sleep(Duration::from_millis(150))=>{
-                    if cancel_deadline.is_some_and(|deadline|tokio::time::Instant::now()>deadline) {
-                        let _=child.kill().await;let _=child.wait().await;
-                        return Err("Setup cancelled; its process was stopped. Windows administrator installers may require completing their own permission/rollback dialog.".into());
-                    }
-                }
             }
             if out_done && err_done {break;}
         }
-        let status = child.wait().await.map_err(|error|error.to_string())?;
+        // A child can close its pipes and remain alive. Keep cancellation and
+        // the same deadline active while waiting for its actual exit.
+        let status = loop {tokio::select! {
+            biased;
+            _=token.cancelled(),if !cancelled=>{
+                std::fs::write(&cancel_file,b"cancel").map_err(|error|error.to_string())?;
+                cancelled=true;cancel_deadline=Some(tokio::time::Instant::now()+Duration::from_secs(12));
+            },
+            _=wait_cancel_deadline(cancel_deadline)=>{
+                let _=child.kill().await;let _=child.wait().await;
+                return Err("Setup cancelled; the remaining setup process was stopped".into());
+            },
+            status=child.wait()=>break status.map_err(|error|error.to_string())?,
+        }};
         if cancelled {return Err("Setup cancelled; completed files were retained for retry.".into());}
         if !status.success() {
             let job = self.jobs.lock().map_err(|error|error.to_string())?.iter().find(|job|job.id==id).cloned();
@@ -332,6 +363,7 @@ impl RuntimeSetupManager {
         }
         let receipt = receipt.ok_or("Runtime setup returned without a verified dependency receipt")?;
         if self.receipt(target)?.is_none() {return Err("Runtime setup receipt failed validation".into());}
+        crate::testing_labs::save_setup_profile(&core.store,&receipt)?;
         if recipe_for(target).is_some_and(|recipe|recipe["kind"]=="studio") {
             let python=receipt["python"].as_str().ok_or("Verified runtime did not return its interpreter")?;
             core.studios.configure(crate::studio_jobs::StudioRuntime { model_id:target.into(),python:PathBuf::from(python),source_dir:None,runner:None })?;
@@ -479,6 +511,20 @@ pub fn runtime_setup_record_inference(core:tauri::State<'_,Arc<crate::AppCore>>,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn recipe_fingerprint_matches_python_canonical_utf8_fixture() {
+        let recipe=json!({"supported":true,"nested":{"z":2,"a":1},"label":"café","id":"fixture"});
+        assert_eq!(recipe_fingerprint(&recipe).unwrap(),"82eb70d7b4c560b040337f074e68fc522442eab39a71f0f2d51786aa587fe34a");
+        let mut bare=recipe;bare.as_object_mut().unwrap().remove("supported");
+        assert_eq!(recipe_fingerprint(&bare).unwrap(),"82eb70d7b4c560b040337f074e68fc522442eab39a71f0f2d51786aa587fe34a");
+    }
+    #[tokio::test]
+    async fn absolute_cancellation_deadline_is_not_starved_by_ready_output() {
+        let deadline=tokio::time::Instant::now()+Duration::from_millis(20);
+        tokio::time::timeout(Duration::from_millis(250),async {
+            loop {tokio::select! {biased;_=wait_cancel_deadline(Some(deadline))=>break,_=std::future::ready(())=>tokio::task::yield_now().await}}
+        }).await.expect("Continuous ready output must not reset the cancellation deadline");
+    }
     #[test]
     fn unsupported_models_have_no_automatic_setup_recipe(){assert!(recipe_for("flux-2-klein-4b").is_none());assert!(recipe_for("sana-16").is_some());assert!(recipe_for("triposr").is_none());}
     #[test]

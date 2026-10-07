@@ -82,7 +82,8 @@ def recipe_for(target):
 
 
 def recipe_fingerprint(recipe):
-    return hashlib.sha256(json.dumps(recipe, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    bare = {key: value for key, value in recipe.items() if key != "supported"}
+    return hashlib.sha256(json.dumps(bare, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode('utf-8')).hexdigest()
 
 
 def atomic_json(path, value):

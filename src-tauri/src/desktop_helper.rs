@@ -180,6 +180,11 @@ async fn protocol(
                     .ok_or("Cannot verify the desktop cursor before background dispatch; no input was sent")?;
                 let window = unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() }.0 as isize;
                 *foreground = crate::windows_control::ManualForegroundGuard::acquire(args)?;
+                // A target's protection acknowledgement can take time. Honor
+                // a revocation received during that wait before authorizing input.
+                if let Some((store, expected)) = authorization {
+                    crate::computer_access::recheck_window(store, expected)?;
+                }
                 original_desktop = Some((window, cursor));
                 *dispatched = true;
                 dispatch_deadline = Some(tokio::time::Instant::now() + DISPATCH_TIMEOUT);
@@ -322,6 +327,12 @@ pub(crate) async fn command_authorized(action: String, args: Value, store: std::
     execute_authorized(action, args, helper_command()?, Some((store, expected))).await
 }
 
+#[cfg(all(test, windows))]
+pub(crate) async fn execute_authorized_for_test(action: String, args: Value, command: tokio::process::Command,
+    store: std::sync::Arc<crate::store::EventStore>, expected: crate::computer_access::WindowIdentity) -> Result<Value, String> {
+    execute_authorized(action, args, command, Some((store, expected))).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -373,6 +384,21 @@ mod tests {
                         std::fs::write(path, std::process::id().to_string()).map_err(|error| error.to_string())?;
                     }
                     std::thread::sleep(std::time::Duration::from_secs(30));
+                    Ok(serde_json::json!({"activated":true}))
+                });
+            }
+            if mode == "wait_before_dispatch" {
+                let ready = args["discoveryReceipt"].as_str().ok_or("missing fixture discovery receipt")?;
+                let release = args["discoveryRelease"].as_str().ok_or("missing fixture discovery release")?;
+                std::fs::write(ready, std::process::id().to_string()).map_err(|error| error.to_string())?;
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+                while !std::path::Path::new(release).is_file() {
+                    if std::time::Instant::now() > deadline { return Err("fixture discovery wait expired".into()); }
+                    std::thread::sleep(std::time::Duration::from_millis(2));
+                }
+                return dispatch_with_parent(|| {
+                    std::fs::write(args["dispatchReceipt"].as_str().ok_or("missing fixture dispatch receipt")?, b"input allowed")
+                        .map_err(|error| error.to_string())?;
                     Ok(serde_json::json!({"activated":true}))
                 });
             }
