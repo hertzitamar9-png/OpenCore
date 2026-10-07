@@ -115,6 +115,7 @@
 .side-chat-actions { display:flex; align-items:center; gap:6px; margin-top:10px; }
 .side-chat-actions button { min-height:28px; padding:0 8px; font-size:calc(11px * var(--ui-scale,1)); }
 .side-chat-session .assistant-thread-panel.side-chat-thread { flex:1; min-height:0; min-width:0; height:auto; overflow:visible; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
+.section-main .assistant-thread-panel.chat-mode.side-chat-thread { grid-template-rows:minmax(0,1fr) auto; }
 .side-chat-thread > .timeline-heading { display:none; }
 .unified-workspace .side-chat-thread .aui-thread-viewport { padding:18px 12px; }
 .side-chat-thread .chat-composer-wrap { min-width:0; padding:10px; container:side-chat-composer / inline-size; }

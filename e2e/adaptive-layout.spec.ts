@@ -186,3 +186,22 @@ test('side chat keeps controls compact and gives a wide composer one message row
   await expect(composer.getByRole('button', { name: 'Effort: OpenCore', exact: true })).toBeVisible();
   await expect(composer.getByRole('button', { name: 'Approval: Ask every time', exact: true })).toBeVisible();
 });
+
+test('Learning Studio gives the message history space above its compact composer', async ({ page }) => {
+  await page.goto('/tests/fixtures/workspace-preview.html');
+  await page.getByRole('button', { name: 'Learning Studio', exact: true }).click();
+  const thread = page.locator('.learning-assistant-chat .side-chat-thread');
+  await expect(thread.getByRole('textbox', { name: 'Message side chat', exact: true })).toBeVisible();
+  for (const viewport of [{ width: 1369, height: 900 }, { width: 760, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    const layout = await thread.evaluate(element => ({
+      height: element.getBoundingClientRect().height,
+      bottom: element.getBoundingClientRect().bottom,
+      messages: element.querySelector('.aui-thread-root')!.getBoundingClientRect().toJSON(),
+      composer: element.querySelector('.chat-composer-wrap')!.getBoundingClientRect().toJSON(),
+    }));
+    expect(layout.messages.height).toBeGreaterThan(layout.height / 2);
+    expect(layout.composer.height).toBeLessThan(layout.height / 2);
+    expect(Math.abs(layout.composer.bottom - layout.bottom)).toBeLessThanOrEqual(1);
+  }
+});
