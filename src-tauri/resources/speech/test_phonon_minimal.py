@@ -66,6 +66,8 @@ class MinimalFrontend(unittest.TestCase):
         np.testing.assert_array_equal(pb, [[37]])
         np.testing.assert_array_equal(lo, [0.5])
         np.testing.assert_array_equal(hi, [1.5])
+        self.assertTrue(lo.flags.owndata, 'Small scale vectors must not retain compressed record blobs')
+        self.assertTrue(hi.flags.owndata, 'Small scale vectors must not retain compressed record blobs')
         np.testing.assert_array_equal(tensors['encoder.bias'], [0.25, -0.75])
 
     @unittest.skipUnless(os.environ.get('OPENCORE_PHONON_NUMERICS') == '1', 'Publisher parity runs in Windows CI')

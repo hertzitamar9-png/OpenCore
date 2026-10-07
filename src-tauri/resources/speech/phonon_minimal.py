@@ -55,8 +55,10 @@ def read_packed_container(path, lib, pk, engine):
                 offset += bit_bytes
                 if offset + 4 * rows != len(blob):
                     raise ValueError('Invalid packed Phonon record length.')
-                lo = np.frombuffer(blob, '<f2', count=rows, offset=offset)
-                hi = np.frombuffer(blob, '<f2', count=rows, offset=offset + 2 * rows)
+                # Legacy matrices keep these vectors; views would retain the
+                # entire compressed record through their backing byte buffer.
+                lo = np.frombuffer(blob, '<f2', count=rows, offset=offset).copy()
+                hi = np.frombuffer(blob, '<f2', count=rows, offset=offset + 2 * rows).copy()
 
                 def plane(values):
                     groups = values.reshape(rows, cols // 4, 4)
@@ -154,7 +156,8 @@ def load(directory, progress=lambda _stage: None):
     started = time.monotonic()
     directory = Path(directory)
     physical = psutil.cpu_count(logical=False) or os.cpu_count() or 1
-    threads = max(1, min(16, physical, os.cpu_count() or 1))
+    logical = os.cpu_count() or physical
+    threads = max(1, min(16, physical if physical >= 6 else logical))
     lib = pk.load_library()
     forced = pk.forced_kernel()
     if forced:

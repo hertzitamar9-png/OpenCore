@@ -1,8 +1,8 @@
 fermion-research
 Copyright 2026 Fermion Research
 
-OpenCore's phonon_minimal.py adapts the 0.2.10 audio frontend and encoder
-binding to use NumPy without importing Torch. The original publisher's
+OpenCore's phonon_minimal.py adapts the 0.2.10 audio frontend, packed
+container reader and encoder binding to use NumPy without importing Torch. The original publisher's
 packed CPU kernel binaries and checkpoint decoder are used unchanged.
 For this distribution, the Apache License text is in PHONON-LICENSE.txt.
 
