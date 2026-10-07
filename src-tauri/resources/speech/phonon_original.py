@@ -104,8 +104,8 @@ def run_worker(args, started, emit):
         ensure_publisher_runtime(lambda stage: emit({'progress': stage}))
         os.environ.update(original_environment(os.environ))
         emit({'progress': 'loading-packed-weights'})
-        from fermion._speech.engine_phonon2_cpu import load
-        model = load(directory, profile='five-value', backend='phonon2-five-value', quiet=True)
+        from phonon_minimal import load
+        model = load(directory, lambda stage: emit({'progress': stage}))
         description = model.describe()
         require_compact_engine(description)
         emit({'ready': True, 'modelId': 'phonon-2', 'language': 'en', 'device': 'cpu',

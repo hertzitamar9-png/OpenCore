@@ -33,7 +33,7 @@
 
 - [x] Write native regression cases for exact multiline text, source updates, failure retention, pagination and grouped holdout split.
 - [x] Implement timeline/ECHO synchronization, raw detail/query/annotation and JSONL/CSV/dataset export.
-- [ ] Parse with rustfmt locally; run all native tests only in GitHub Actions.
+- [x] Parse with rustfmt locally; run all native tests only in GitHub Actions. Release 0.2.137 passed 500 native tests (17 ignored).
 
 ### 2. Unsloth worker
 
@@ -61,10 +61,12 @@
 - [x] Register one desktop command and common agent tool; add automatic source sync and exact dated activity queries.
 - [x] Add three configuration modes and a real dedicated assistant conversation with model selection; records, runs, loss/checkpoint/raw views.
 - [x] Integrate supported runtime setup with model installation/generation; keep unsupported capability errors accurate.
-- [ ] Verify interpreted/frontend/type checks, then GitHub native tests and packaged integration.
+- [x] Verify interpreted/frontend/type checks, then GitHub native tests and packaged integration. Release 0.2.137 passed 458 frontend, 54 Node integration, 54 learning-worker and 21 Phonon checks; packaged learning/speech resources were verified in the installed app context.
 
 ### 5. Release and installed verification
 
 - [x] Independent review of data gates, raw preservation, lifecycle and layout; fix concrete findings.
-- [ ] Push/attach PR, merge passing source, verify public release assets and install through updater.
-- [ ] Verify automatic reopen, existing data/music preservation, job continuation and resized installed UI; report exact remaining external prerequisites.
+- [x] Push/attach PR, merge passing source, verify public release assets and install through updater. PRs #15 and #16 merged; public signed release 0.2.137 was installed through the Update action.
+- [x] Verify automatic reopen, existing data/music preservation, job continuation and resized installed UI; report exact remaining external prerequisites. The app reopened automatically, data/settings/music preservation receipts passed, and the bounded verification worker completed. Real CUDA optimizer qualification remains pending; it is not implied by the passing fixture tests.
+
+Release evidence: https://github.com/hertzitamar9-png/OpenCore/actions/runs/37656532900 . Subsequent updates remain user-initiated; checking availability does not download or install an update.

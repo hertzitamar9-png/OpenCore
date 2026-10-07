@@ -219,7 +219,7 @@ const readProfilePreference = (): RuntimeProfile => {
 };
 
 function StatusDot({ state }: { state: string }) {
-  const kind = ["running", "ready", "detected", "configured", "observed", "stop", "active"].includes(state) ? "good" : state === "error" ? "bad" : state === "starting" ? "warn" : "muted";
+  const kind = ["running", "ready", "detected", "configured", "observed", "stop", "active"].includes(state) ? "good" : ["error", "stopped", "off"].includes(state) ? "bad" : state === "starting" ? "warn" : "muted";
   return <span className={`status-dot ${kind}`} aria-label={state} />;
 }
 

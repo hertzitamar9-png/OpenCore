@@ -116,8 +116,10 @@ jobs:
           python -m pip install --only-binary=:all: torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
           python -m pip install --only-binary=:all: transformers==5.18.0
           python -m pip install --only-binary=:all: av==13.1.0 psutil==6.1.1 zstandard==0.25.0
+          python -c "import sys; sys.path.insert(0,'src-tauri/resources/speech'); from phonon_original import ensure_publisher_runtime; ensure_publisher_runtime(print)"
       - name: Qualify Phonon precision and exact checkpoint expansion
         env:
+          OPENCORE_PHONON_NUMERICS: '1'
           CUDA_VISIBLE_DEVICES: ''
           HF_HUB_OFFLINE: '1'
         run: python -m unittest discover -s src-tauri/resources/speech -p "test_phonon_*.py" -v

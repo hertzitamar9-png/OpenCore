@@ -56,6 +56,7 @@
       "resources/speech/prepare_runtime.py": "speech/prepare_runtime.py",
       "resources/speech/phonon_worker.py": "speech/phonon_worker.py",
       "resources/speech/phonon_original.py": "speech/phonon_original.py",
+      "resources/speech/phonon_minimal.py": "speech/phonon_minimal.py",
       "resources/speech/phonon_loading.py": "speech/phonon_loading.py",
       "resources/speech/phonon_cache.py": "speech/phonon_cache.py",
       "resources/speech/prepare_phonon_runtime.py": "speech/prepare_phonon_runtime.py",

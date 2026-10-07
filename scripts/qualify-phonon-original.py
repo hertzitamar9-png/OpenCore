@@ -28,6 +28,46 @@ def word_errors(expected, actual):
     return previous[-1]
 
 
+def run_worker(directory, fixture, reference=False):
+    requests = [{'action': 'wake'}, {'action': 'transcribe', 'audio': str(fixture)}, {'action': 'shutdown'}]
+    command = [sys.executable, '-B', str(SPEECH / 'phonon_worker.py')]
+    if reference:
+        # CI-only baseline in a separate process. The shipped worker has no heavy fallback.
+        source = ("import sys,runpy; sys.path.insert(0,sys.argv.pop(1)); import phonon_minimal; "
+                  "from fermion._speech.engine_phonon2_cpu import load; "
+                  "phonon_minimal.load=lambda directory,progress:load(directory,profile='five-value',backend='phonon2-five-value',quiet=True); "
+                  "sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0],run_name='__main__')")
+        command = [sys.executable, '-B', '-c', source, str(SPEECH), str(SPEECH / 'phonon_worker.py')]
+    started = time.monotonic()
+    result = subprocess.run([*command, '--model', str(directory), '--precision', 'original', '--idle-mode', 'cold'],
+                            input=''.join(json.dumps(r) + '\n' for r in requests), capture_output=True,
+                            text=True, encoding='utf-8', timeout=240,
+                            env={**os.environ, 'HF_HUB_OFFLINE': '1', 'PYTHONIOENCODING': 'utf-8'})
+    events = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+    return {'exitCode': result.returncode, 'seconds': round(time.monotonic() - started, 3),
+            'events': events, 'stderr': result.stderr}
+
+
+def validate(receipt, minimal):
+    events = receipt['events']
+    assert receipt['exitCode'] == 0, receipt
+    assert not any('error' in event for event in events), events
+    ready = next(event for event in events if event.get('ready'))
+    assert ready['runtimePrecision'] == 'original' and ready['device'] == 'cpu', ready
+    assert ready['runtimeResidentBytes'] > 0, 'Original must report measured RAM'
+    require_compact_engine(ready['publisherRuntime'])
+    if minimal:
+        assert ready['publisherRuntime']['frontend'] == 'numpy', ready
+        assert ready['publisherRuntime']['torchImported'] is False, ready
+    transcription = next(event for event in events if 'text' in event)
+    expected = 'Open core can recognize the sentence Both precision options should work correctly'.lower().split()
+    errors = word_errors(expected, re.findall(r'[a-z]+', transcription['text'].lower()))
+    assert errors <= 3, f'Original smoke transcript differs by {errors} words: {transcription}'
+    assert transcription['gpuModelBytes'] == transcription['torchGpuBytes'] == 0, transcription
+    return {'startupMs': ready['coldStartMs'], 'startupRamBytes': ready['runtimeResidentBytes'],
+            'decodeSeconds': transcription['decodeSeconds'], 'fixtureWordErrors': errors, 'text': transcription['text']}
+
+
 def main():
     import zstandard
     parser = argparse.ArgumentParser()
@@ -49,33 +89,21 @@ def main():
         assert archive.stat().st_size == artifact['bytes'], 'Original archive size differs from its pin'
         assert digest.hexdigest() == artifact['sha256'], 'Original archive hash differs from its pin'
         extract_container(directory, zstandard)
-        requests = [{'action': 'wake'}, {'action': 'transcribe', 'audio': str(fixture)}, {'action': 'shutdown'}]
-        started = time.monotonic()
-        result = subprocess.run([sys.executable, '-B', str(SPEECH / 'phonon_worker.py'),
-                                 '--model', str(directory), '--precision', 'original', '--idle-mode', 'cold'],
-                                input=''.join(json.dumps(r) + '\n' for r in requests), capture_output=True,
-                                text=True, encoding='utf-8', timeout=240,
-                                env={**os.environ, 'HF_HUB_OFFLINE': '1', 'PYTHONIOENCODING': 'utf-8'})
-        events = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
-        receipt = {'exitCode': result.returncode, 'seconds': round(time.monotonic() - started, 3),
-                   'checkpointSha256': artifact['sha256'], 'events': events, 'stderr': result.stderr}
-        output.write_text(json.dumps(receipt, indent=2), encoding='utf-8')
-        assert result.returncode == 0, f'Original worker failed: {events} {result.stderr}'
-        assert not any('error' in event for event in events), events
-        ready = next(event for event in events if event.get('ready'))
-        assert ready['runtimePrecision'] == 'original' and ready['device'] == 'cpu', ready
-        assert ready['runtimeResidentBytes'] > 0, 'Original must report measured RAM'
-        require_compact_engine(ready['publisherRuntime'])
-        transcription = next(event for event in events if 'text' in event)
-        expected = 'Open core can recognize the sentence Both precision options should work correctly'.lower().split()
-        actual = re.findall(r'[a-z]+', transcription['text'].lower())
-        errors = word_errors(expected, actual)
-        assert errors <= 3, f'Original smoke transcript differs by {errors} words: {actual}'
-        assert transcription['gpuModelBytes'] == transcription['torchGpuBytes'] == 0, transcription
+        receipt = {'checkpointSha256': artifact['sha256'], 'runs': {}}
+        metrics = {}
+        for label in ('publisher', 'minimal', 'minimalRepeat'):
+            receipt['runs'][label] = run_worker(directory, fixture, reference=label == 'publisher')
+            output.write_text(json.dumps(receipt, indent=2), encoding='utf-8')
+            metrics[label] = validate(receipt['runs'][label], minimal=label != 'publisher')
+            print(json.dumps({'run': label, **metrics[label]}), flush=True)
+        assert metrics['minimal']['text'] == metrics['minimalRepeat']['text'] == metrics['publisher']['text'], metrics
+        assert metrics['minimal']['startupRamBytes'] < metrics['publisher']['startupRamBytes'], metrics
+        assert metrics['minimal']['startupMs'] < metrics['publisher']['startupMs'], metrics
         assert not (directory.parent / 'runtime-cache/phonon-2/expanded-fp32.pt').exists()
-        print(json.dumps({'status': 'passed', 'runtime': ready['runtimeDescription'],
-                          'startupMs': ready['coldStartMs'], 'startupRamBytes': ready['runtimeResidentBytes'],
-                          'decodeSeconds': transcription['decodeSeconds'], 'fixtureWordErrors': errors}))
+        receipt['metrics'] = metrics
+        receipt['status'] = 'passed'
+        output.write_text(json.dumps(receipt, indent=2), encoding='utf-8')
+        print(json.dumps({'status': 'passed', 'metrics': metrics}))
 
 
 if __name__ == '__main__':
