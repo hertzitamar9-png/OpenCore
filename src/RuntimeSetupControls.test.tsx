@@ -32,6 +32,17 @@ it('restores persisted running setup and lets the user cancel its real job', asy
   await waitFor(() => expect(cancel).toHaveBeenCalledWith('persisted-job'));
 });
 
+it('prepares an installed supported model automatically once without downloading its weights again', async () => {
+  vi.spyOn(setup, 'setupDesktopAvailable').mockReturnValue(true);
+  vi.spyOn(setup, 'runtimeSetupStatus').mockResolvedValue(snapshot);
+  const start = vi.spyOn(setup, 'runtimeSetupStart').mockRejectedValue(new Error('fixture setup failure'));
+  const view = render(<RuntimeSetupControls targetId="sana-16" label="Sana" installed autoStart />);
+  await waitFor(() => expect(start).toHaveBeenCalledWith('sana-16', expect.objectContaining({installWeights: false})));
+  expect(await screen.findByRole('alert')).toHaveTextContent('fixture setup failure');
+  view.rerender(<RuntimeSetupControls targetId="sana-16" label="Sana" installed autoStart />);
+  expect(start).toHaveBeenCalledTimes(1);
+});
+
 it('requires Android license acceptance before issuing provisioning', async () => {
   vi.spyOn(setup, 'setupDesktopAvailable').mockReturnValue(true);
   const android = {...recipe, kind: 'android', modelIds: ['testing-android'], requiresLicenseAcceptance: true};

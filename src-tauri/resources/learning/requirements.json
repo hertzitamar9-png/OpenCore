@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "python": ">=3.11,<3.13",
+  "license": "Apache-2.0 core library; no Unsloth Studio UI copied",
+  "torch": {"requirement": "torch==2.11.0+cu130", "indexUrl": "https://download.pytorch.org/whl/cu130", "companions": ["torchvision==0.26.0+cu130", "xformers==0.0.35"]},
+  "packages": ["unsloth==2026.9.4", "unsloth-zoo==2026.9.3", "transformers==5.5.0", "trl==0.23.1", "peft==0.18.1", "datasets==4.3.0", "accelerate==1.14.0", "bitsandbytes==0.50.1", "torchao==0.17.0", "triton-windows==3.6.0.post26; sys_platform == 'win32'", "triton==3.6.0; sys_platform == 'linux'"],
+  "setupPolicy": "Explicit native setup/train action only. Use dedicated root/venv. Reuse a probe-ready environment. Never install into the source model or system interpreter.",
+  "hardware": "NVIDIA CUDA with native BF16; no precision fallback",
+  "references": [
+    "https://github.com/unslothai/unsloth/blob/main/README.md",
+    "https://github.com/unslothai/unsloth/blob/main/pyproject.toml",
+    "https://unsloth.ai/docs/basics/finetuning-from-last-checkpoint",
+    "https://huggingface.co/docs/trl/v0.23.1/sft_trainer",
+    "https://huggingface.co/docs/trl/v0.23.1/dpo_trainer",
+    "https://huggingface.co/docs/transformers/v5.5.0/main_classes/trainer",
+    "https://pypi.org/pypi/unsloth/2026.9.4/json",
+    "https://pypi.org/pypi/unsloth-zoo/2026.9.3/json",
+    "https://pytorch.org/get-started/previous-versions/",
+    "https://github.com/pytorch/ao/issues/2919",
+    "https://raw.githubusercontent.com/pytorch/pytorch/v2.11.0/.ci/docker/triton_version.txt"
+  ],
+  "qualification": "Direct Unsloth/zoo ranges and CUDA Torch/torchvision, TorchAO and Triton compatibility checked against official package metadata and upstream sources 2026-10-07. Setup runs pip check and actual library imports. Transitive packages remain resolver-selected. No clean install or GPU optimizer run has been qualified locally; supported release CI/runtime must perform that qualification."
+}

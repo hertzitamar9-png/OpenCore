@@ -27,6 +27,9 @@ pub use side_chat_context::SideChatContextUpdate;
 #[path = "store_export.rs"]
 mod store_export;
 
+#[path = "store_learning.rs"]
+mod store_learning;
+
 #[path = "store_import_listing.rs"]
 mod store_import_listing;
 pub use store_import_listing::ImportedConversationPage;

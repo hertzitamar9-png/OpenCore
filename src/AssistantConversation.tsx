@@ -79,6 +79,7 @@ export type ConversationSettings = {
 type Props = {
   conversationId?: string;
   initialDraft?: ComposerDraft;
+  draftRequest?: { id: number; text: string };
   onDraftChange?: (draft: ComposerDraft) => void;
   title: string;
   client: string;
@@ -490,7 +491,7 @@ function MessageActions() {
   </ActionBarPrimitive.Root>;
 }
 export const AssistantConversation = memo(function AssistantConversation({
-  conversationId, initialDraft, onDraftChange, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, selectedProfile, onSelectProfile, liveTokenSpeed, promptProgress, backendActive,
+  conversationId, initialDraft, draftRequest, onDraftChange, title, client, entries, runtimeRunning, runtimeSnapshot, telemetry, selectedProfile, onSelectProfile, liveTokenSpeed, promptProgress, backendActive,
   onConversationId, onRefresh, onNotice, onExport, onRename, onDelete,
   pinned, project, projectId, projects, onPin, onMoveProject, onCreateProject,
   defaultSkills, subagentsEnabled, maxSubagents, projectSkillsEnabled, compactAtTokens, updateControl,
@@ -498,6 +499,12 @@ export const AssistantConversation = memo(function AssistantConversation({
   initialSettings, embedded = false, inferenceBlocked, sendMessage = api.sendChatMessage,
 }: Props) {
   const [draft, setDraft] = useState(initialDraft?.text || "");
+  const appliedDraftRequest = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!draftRequest?.text || draftRequest.id === appliedDraftRequest.current) return;
+    appliedDraftRequest.current = draftRequest.id;
+    setDraft(current => current ? `${current}\n\n---\n\n${draftRequest.text}` : draftRequest.text);
+  }, [draftRequest?.id, draftRequest?.text]);
   const draftInput = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const input = draftInput.current;

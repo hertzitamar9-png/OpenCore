@@ -4,7 +4,7 @@ import './SpeechRuntimeControls.css';
 
 export interface SpeechRuntimeState {
   modelId: string; enabled: boolean; installed: boolean; idleMode: 'cold' | 'ram'; workerReady: boolean; phase: string;
-  runtimePrecision?: 'bf16' | 'fp32'; loadingElapsedMs?: number | null;
+  runtimePrecision?: 'original' | 'bf16' | 'fp32'; loadingElapsedMs?: number | null;
   runtimeCacheBytes?: number; runtimeCacheEntries?: {precision: string; bytes: number}[];
   denseCacheHit?: boolean | null; prewarmedForSession?: boolean;
 }
@@ -51,11 +51,12 @@ export function SpeechRuntimeControls({speech, onRefresh, onNotice}: {
   }
   if (speech.modelId !== 'phonon-2') return null;
   const bytes = status.runtimeCacheBytes || 0;
+  const original = status.runtimePrecision === 'original';
   const active = ['recording', 'transcribing', 'activating-device'].includes(status.phase);
   return <section className="speech-runtime-controls" aria-label="Phonon runtime preparation">
-    <strong>Derived dense runtime cache · {(bytes / 1e9).toFixed(2)} GB on disk</strong>
-    <p>Prepared from the same installed checkpoint at the selected BF16 or FP32 runtime precision. A verified cache avoids expanding the container on each cold start.</p>
-    {status.runtimeCacheEntries?.length ? <small>{status.runtimeCacheEntries.map(entry => `${entry.precision.toUpperCase()}: ${(entry.bytes / 1e9).toFixed(2)} GB`).join(' · ')}{status.denseCacheHit === true ? ' · Last startup used a verified cache' : ''}</small> : <small>The first startup prepares this optional cache when disk space is available.</small>}
+    <strong>{original ? 'Original runtime preparation' : `Derived dense runtime cache · ${(bytes / 1e9).toFixed(2)} GB on disk`}</strong>
+    <p>{original ? 'Original runs on CPU. Its first use prepares the publisher runtime automatically.' : 'Prepared from the same installed checkpoint at the selected BF16 or FP32 runtime precision. A verified cache avoids expanding the container on each cold start.'}</p>
+    {status.runtimeCacheEntries?.length ? <small>{original ? 'Unused BF16/FP32 cache on disk: ' : ''}{status.runtimeCacheEntries.map(entry => `${entry.precision.toUpperCase()}: ${(entry.bytes / 1e9).toFixed(2)} GB`).join(' · ')}{!original && status.denseCacheHit === true ? ' · Last startup used a verified cache' : ''}</small> : !original ? <small>The first startup prepares this optional cache when disk space is available.</small> : null}
     {status.prewarmedForSession ? <p role="status">Prepared in CPU RAM for the next dictation. Your saved cold startup preference is unchanged; the worker exits after dictation or app restart.</p> : status.idleMode === 'cold' ? <p>Prepare the next dictation now to wait for startup before you need the microphone. You can cancel preparation.</p> : null}
     <div className="speech-runtime-actions">
       {status.idleMode === 'cold' && !status.prewarmedForSession && !preparing ? <button disabled={!status.enabled || !status.installed || active || clearing} onClick={() => void prepare()}>Prepare next dictation</button> : null}

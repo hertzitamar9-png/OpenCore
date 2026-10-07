@@ -64,7 +64,7 @@ it('applies LTX 2.5 distilled defaults and rejects an incompatible frame count',
   vi.spyOn(api, 'studioRuntime').mockResolvedValue({modelId: model.id, python: 'python.exe', sourceDir: 'C:\\models', runner: 'worker.py'});
   const submit = vi.spyOn(api, 'submitStudioJob');
   render(<MediaStudio category="video" models={[model]} onNotice={vi.fn()} />);
-  await screen.findByText('Connected runtime · external weights');
+  await screen.findByText('Ready · external weights');
   expect(screen.getByLabelText('Inference steps')).toHaveValue(8);
   expect(screen.getByLabelText('Guidance scale')).toHaveValue(1);
   expect(screen.getByLabelText('Frame count')).toHaveValue(121);
@@ -100,9 +100,10 @@ it('connects an explicit worker and source folder for a setup-only catalog entry
   render(<MediaStudio category="video" models={[candidate('video')]} onNotice={vi.fn()} />);
   expect(await screen.findByRole('option', { name: 'video publisher model' })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Generate' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Connect runtime' }));
+  fireEvent.click(screen.getByText(/Advanced publisher runtime/));
+  fireEvent.click(screen.getByRole('button', { name: 'Configure publisher runtime' }));
   await waitFor(() => expect(configure).toHaveBeenCalledWith({ modelId: 'video-candidate', python: 'C:\\runtime\\python.exe', runner: 'C:\\runtime\\worker.py', sourceDir: 'C:\\runtime\\publisher-model' }));
-  expect(await screen.findByText('Connected runtime · external weights')).toBeVisible();
+  expect(await screen.findByText('Ready · external weights')).toBeVisible();
   expect(screen.getByText('Verified installed weights: No')).toBeVisible();
 });
 
@@ -111,7 +112,7 @@ it('submits customized video controls without implying model installation', asyn
   vi.spyOn(api, 'studioRuntime').mockResolvedValue({ modelId: 'video-candidate', python: 'C:\\runtime\\python.exe', sourceDir: 'C:\\runtime\\model', runner: 'C:\\runtime\\worker.py' });
   const submit = vi.spyOn(api, 'submitStudioJob').mockResolvedValue({ id: 'video-job' } as api.StudioJob);
   render(<MediaStudio category="video" models={[candidate('video')]} onNotice={vi.fn()} />);
-  await screen.findByText('Connected runtime · external weights');
+  await screen.findByText('Ready · external weights');
   fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: 'A paper boat crosses a lake' } });
   fireEvent.change(screen.getByLabelText('Seed'), { target: { value: '42' } });
   fireEvent.change(screen.getByLabelText('Frame count'), { target: { value: '49' } });
@@ -126,7 +127,7 @@ it('requires reference audio for voice cloning and sends its transcript exactly'
   vi.spyOn(api, 'pickStudioFile').mockResolvedValue('C:\\clips\\reference.wav');
   const submit = vi.spyOn(api, 'submitStudioJob').mockResolvedValue({ id: 'voice-job' } as api.StudioJob);
   render(<MediaStudio category="voice-cloning" models={[candidate('voice-cloning')]} onNotice={vi.fn()} />);
-  await screen.findByText('Connected runtime · external weights');
+  await screen.findByText('Ready · external weights');
   fireEvent.change(screen.getByLabelText('Text to speak'), { target: { value: 'Welcome to the project.' } });
   expect(screen.getByRole('button', { name: 'Generate' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Choose reference audio' }));
@@ -155,7 +156,7 @@ it('rejects array settings and invalid numeric overrides before submitting', asy
   vi.spyOn(api, 'studioRuntime').mockResolvedValue({ modelId: 'video-candidate', python: 'C:\\runtime\\python.exe', sourceDir: 'C:\\runtime\\model', runner: 'C:\\runtime\\worker.py' });
   const submit = vi.spyOn(api, 'submitStudioJob');
   render(<MediaStudio category="video" models={[candidate('video')]} onNotice={vi.fn()} />);
-  await screen.findByText('Connected runtime · external weights');
+  await screen.findByText('Ready · external weights');
   fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: 'A landscape' } });
   fireEvent.change(screen.getByLabelText('Advanced settings JSON'), { target: { value: '[]' } });
   fireEvent.click(screen.getByRole('button', { name: 'Generate' }));

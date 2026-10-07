@@ -45,3 +45,4 @@ export const runtimeSetupStart = (targetId: string, options: SetupOptions): Prom
 export const runtimeSetupCancel = (jobId: string): Promise<void> => invoke('runtime_setup_cancel', {jobId});
 export const runtimeSetupRecordInference = (jobId: string): Promise<SetupReceipt> => invoke('runtime_setup_record_inference', {jobId});
 export const isSetupActive = (job: SetupJob | undefined) => !!job && ['queued', 'running', 'cancelling'].includes(job.status);
+export const hasManagedRuntime = (targetId: string) => recipes.recipes.some(recipe => recipe.modelIds.includes(targetId));

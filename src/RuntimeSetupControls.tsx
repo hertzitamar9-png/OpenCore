@@ -6,8 +6,8 @@ import './RuntimeSetupControls.css';
 const bytes = (value: number) => `${(value / 1e9).toLocaleString(undefined, {maximumFractionDigits: 2})} GB`;
 const human = (value: string) => value.replaceAll('-', ' ');
 
-export function RuntimeSetupControls({targetId, label, installed = false, disabled = false, onRefresh, onNotice}: {
-  targetId: string; label: string; installed?: boolean; disabled?: boolean;
+export function RuntimeSetupControls({targetId, label, installed = false, autoStart = false, disabled = false, onRefresh, onNotice}: {
+  targetId: string; label: string; installed?: boolean; autoStart?: boolean; disabled?: boolean;
   onRefresh?: () => Promise<void>; onNotice?: (message: string) => void;
 }) {
   const [snapshot, setSnapshot] = useState<setup.SetupSnapshot | null>(null);
@@ -19,6 +19,7 @@ export function RuntimeSetupControls({targetId, label, installed = false, disabl
   const [guestUser, setGuestUser] = useState('opencore');
   const [passwordEnv, setPasswordEnv] = useState('OPENCORE_TEST_GUEST_PASSWORD');
   const reported = useRef<string | null>(null);
+  const autoAttempt = useRef<string | null>(null);
   const callbacks = useRef({onRefresh, onNotice});
   callbacks.current = {onRefresh, onNotice};
   useEffect(() => {
@@ -64,6 +65,11 @@ export function RuntimeSetupControls({targetId, label, installed = false, disabl
     try { await setup.runtimeSetupCancel(job.id); setSnapshot(await setup.runtimeSetupStatus()); }
     catch (cause) { setError(String(cause)); }
   }
+  useEffect(() => {
+    if (!autoStart || !snapshot || !recipe || receipt?.dependenciesVerified || job || active || starting || otherSetup || disabled || !setup.setupDesktopAvailable() || recipe.requiresLicenseAcceptance || recipe.requiresAdministrator || recipe.kind === 'virtualbox-guest' || autoAttempt.current === targetId) return;
+    autoAttempt.current = targetId;
+    void start();
+  }, [autoStart, snapshot, recipe, receipt, job, active, starting, otherSetup, disabled, targetId]);
   if (!snapshot && !error) return <div className="runtime-setup-controls" role="status">Checking automatic runtime setup…</div>;
   return <div className="runtime-setup-controls" aria-label={`${label} automatic setup`}>
     {!recipe ? <small>Automatic runtime setup is unavailable for this architecture. Connect its publisher-compatible worker and dependencies.</small> : <>
@@ -80,7 +86,7 @@ export function RuntimeSetupControls({targetId, label, installed = false, disabl
         <label>Guest password environment variable<input value={passwordEnv} onChange={event => setPasswordEnv(event.target.value)} disabled={active} /></label>
       </div>}
       <div className="runtime-setup-actions">
-        <button type="button" disabled={disabled || active || starting || otherSetup || !setup.setupDesktopAvailable() || !!recipe.requiresLicenseAcceptance && !acceptLicenses || recipe.kind === 'virtualbox-guest' && !isoPath.trim()} onClick={() => void start()}>{receipt ? <RefreshCw size={14} /> : <Download size={14} />}{starting ? 'Starting setup…' : receipt ? 'Recheck runtime setup' : 'Set up automatically'}</button>
+        <button type="button" disabled={disabled || active || starting || otherSetup || !setup.setupDesktopAvailable() || !!recipe.requiresLicenseAcceptance && !acceptLicenses || recipe.kind === 'virtualbox-guest' && !isoPath.trim()} onClick={() => void start()}>{receipt ? <RefreshCw size={14} /> : <Download size={14} />}{starting ? 'Starting setup…' : receipt ? 'Recheck runtime setup' : isModel ? installed ? 'Prepare runtime automatically' : 'Install and prepare automatically' : 'Set up automatically'}</button>
         {active && <button type="button" onClick={() => void cancel()} disabled={job?.status === 'cancelling'}><Square size={13} />{job?.status === 'cancelling' ? 'Cancelling setup…' : 'Cancel setup'}</button>}
       </div>
       {!setup.setupDesktopAvailable() && <small>Automatic installation runs in the desktop app.</small>}

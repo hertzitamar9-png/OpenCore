@@ -5,6 +5,8 @@ const loadingPhases: Record<string, string> = {
   "starting-runtime": "Starting speech runtime…",
   "verifying-checkpoint": "Checking installed speech files…",
   "building-model": "Preparing speech model…",
+  "preparing-original-runtime": "Preparing original Phonon runtime…",
+  "loading-packed-weights": "Loading original speech weights…",
   "verifying-dense-cache": "Checking prepared speech tensors…",
   "loading-dense-cache": "Loading prepared speech tensors…",
   "expanding-weights": "Expanding speech weights…",

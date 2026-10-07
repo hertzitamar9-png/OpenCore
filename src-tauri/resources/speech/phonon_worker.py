@@ -55,12 +55,15 @@ def main():
     parser.add_argument('--model', required=True)
     parser.add_argument('--idle-mode', choices=('cold','ram'), required=True)
     parser.add_argument('--awake', action='store_true')
-    parser.add_argument('--precision', choices=('bf16', 'fp32'), default='bf16')
+    parser.add_argument('--precision', choices=('original', 'bf16', 'fp32'), default='bf16')
     parser.add_argument('--cache-dir')
     args = parser.parse_args()
     directory = Path(args.model).resolve()
     started = time.monotonic()
     emit({'progress': 'starting-runtime'})
+    if args.precision == 'original':
+        from phonon_original import run_worker
+        return run_worker(args, started, emit)
     try:
         import av
         import numpy as np
@@ -115,7 +118,9 @@ def main():
         emit({'ready':True,'modelId':'phonon-2','language':'en','device':device,
             'coldStartMs':round((time.monotonic()-started)*1000),'wakeMs':wake_ms,
             'params':receipt['params'],'weightDtype':str(dtype).removeprefix('torch.'),
-            'runtimePrecision':args.precision, 'denseCache':receipt.get('denseCache')})
+            'runtimePrecision':args.precision, 'denseCache':receipt.get('denseCache'),
+            'runtimeResidentBytes':psutil.Process().memory_info().rss,
+            'runtimeDescription':f'Dense {args.precision.upper()} reference runtime'})
         for line in sys.stdin:
             try:
                 request = json.loads(line)

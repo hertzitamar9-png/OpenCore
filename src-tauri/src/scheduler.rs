@@ -208,6 +208,15 @@ impl BackgroundManager {
         let runs: Vec<BackgroundRun> = rows.map(|row| serde_json::from_str(&row.map_err(|error| error.to_string())?).map_err(|error| error.to_string())).collect::<Result<_, String>>()?;
         Ok(runs.into_iter().filter(|run| conversation.is_none_or(|id| run.conversation_id.as_deref() == Some(id))).collect())
     }
+    /// Raw job evidence for the local learning ledger, without webhook secrets.
+    pub fn learning_evidence(&self) -> Result<Value,String> {
+        let tasks=self.tasks()?;
+        let db=self.db.lock().map_err(|error|error.to_string())?;
+        let mut statement=db.prepare("SELECT payload FROM runs ORDER BY queued_at,rowid").map_err(|error|error.to_string())?;
+        let rows=statement.query_map([],|row|row.get::<_,String>(0)).map_err(|error|error.to_string())?;
+        let runs=rows.map(|row|serde_json::from_str::<Value>(&row.map_err(|error|error.to_string())?).map_err(|error|error.to_string())).collect::<Result<Vec<_>,String>>()?;
+        Ok(json!({"tasks":tasks,"runs":runs,"complete":true}))
+    }
     fn task(&self, id: &str) -> Result<BackgroundTask, String> {
         let payload: String = self.db.lock().map_err(|error| error.to_string())?.query_row("SELECT payload FROM tasks WHERE id=?1 AND deleted=0", [id], |row| row.get(0)).map_err(|_| "Background job not found")?;
         serde_json::from_str(&payload).map_err(|error| error.to_string())
@@ -224,7 +233,7 @@ impl BackgroundManager {
             if !event.is_object() { return Err("Event must be a JSON object".into()); }
             check_event_conversation(&event,conversation)?;
             let name=event["name"].as_str().unwrap_or(""); let id=event["id"].as_str().unwrap_or("");
-            if ["generation.","studio.","background."].iter().any(|prefix|name.starts_with(*prefix)) || ["generation:","studio:","background:"].iter().any(|prefix|id.starts_with(*prefix)) {
+            if ["generation.","studio.","background.","learning."].iter().any(|prefix|name.starts_with(*prefix)) || ["generation:","studio:","background:","learning:"].iter().any(|prefix|id.starts_with(*prefix)) {
                 return Err("Runtime completion events are emitted by OpenCore; use a custom event name and id".into());
             }
             event["conversationId"]=json!(conversation);
@@ -327,8 +336,13 @@ impl BackgroundManager {
             tauri::async_runtime::spawn(async move {
                 let outcome = manager.perform(core.clone(), app, &run, &task, token.clone()).await;
                 let closing = manager.closing.load(Ordering::Acquire) || core.update_in_progress.load(Ordering::Acquire);
+                let admission_wait = outcome.as_ref().err().is_some_and(|error|error==crate::SCHEDULED_ADMISSION_BUSY);
+                let review_outcome = if token.is_cancelled() { Err("The checkpoint review was cancelled".to_string()) } else { outcome.as_ref().map(|_|()).map_err(Clone::clone) };
                 if let Err(error) = manager.finish(&run.id, outcome, token.is_cancelled(), closing) {
                     core.store.log("error", "background", &format!("Could not persist background run {}: {error}",run.id));
+                }
+                if !admission_wait {
+                    if let Err(error)=core.learning.review_finished(&run.evidence,review_outcome) {core.store.log("error","learning-review",&error);}
                 }
                 drop(gpu);
                 if let Ok(mut running) = manager.running.lock() { running.remove(&run.id); }
@@ -763,7 +777,7 @@ mod tests {
     #[test]
     fn agent_events_cannot_impersonate_other_chats_or_runtime_events() {
         let (root,manager)=fixture(); chat_task(&manager,"main"); chat_task(&manager,"side");
-        for event in [json!({"id":"wrong-root","name":"training.checkpoint","conversationId":"side"}),json!({"id":"wrong-data","name":"training.checkpoint","data":{"conversationId":"side"}}),json!({"id":"generation:reserved:completed","name":"training.checkpoint"}),json!({"id":"reserved-name","name":"background.completed"})] {
+        for event in [json!({"id":"wrong-root","name":"training.checkpoint","conversationId":"side"}),json!({"id":"wrong-data","name":"training.checkpoint","data":{"conversationId":"side"}}),json!({"id":"generation:reserved:completed","name":"training.checkpoint"}),json!({"id":"reserved-name","name":"background.completed"}),json!({"id":"forged-learning-event","name":"learning.progress"}),json!({"id":"learning:forged:checkpoint","name":"training.checkpoint"})] {
             assert!(manager.command(&json!({"action":"emit","event":event}),Some(chat_context("main","allow-all"))).is_err());
         }
         let custom=json!({"action":"emit","event":{"id":"custom-checkpoint","name":"training.checkpoint","data":{"runId":"external-training-1","step":500}}});

@@ -3,6 +3,8 @@ import { CircleStop, FolderOpen, Play, RefreshCw } from 'lucide-react';
 import * as api from './api';
 import { StudioModelSetup } from './StudioModelSetup';
 import { selectStudioModel } from './studio-model-selection';
+import { formatExactTime } from './learning-config';
+import { hasManagedRuntime } from './runtimeSetupApi';
 import './GameDevStudio.css';
 
 export const GAME_DEV_CATEGORIES = [
@@ -105,6 +107,7 @@ export function StudioJobs({ category, onNotice }: { category: string; onNotice:
     {!jobs.length && <p>No generations yet. Submit a prompt here or use the category skill in chat.</p>}
     {jobs.map(job => <article key={job.id} className="studio-job"><header><div><strong>{String(job.request.settings.title || job.request.modelId)}</strong><small>{job.status} · {job.stage}</small></div>{active(job) && <button onClick={() => void cancel(job.id)}><CircleStop size={15} />Cancel</button>}</header>
       <p>{job.request.prompt}</p>
+      <p><time dateTime={job.createdAt} title={job.createdAt}>Created {formatExactTime(job.createdAt)}</time> · <time dateTime={job.updatedAt} title={job.updatedAt}>Updated {formatExactTime(job.updatedAt)}</time></p>
       {job.error && <p role="alert">{job.error}</p>}
       <details><summary>Prompt and generation settings</summary><pre>{JSON.stringify(job.request, null, 2)}</pre></details>
       {Object.keys(job.progress).length > 0 && <details><summary>Progress</summary><pre>{JSON.stringify(job.progress, null, 2)}</pre></details>}
@@ -127,6 +130,7 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
   const [controls, setControls] = useState<Record<string, unknown>>({});
   const [presets, setPresets] = useState<StudioPreset[]>([]);
   const [presetId, setPresetId] = useState('');
+  const selectedPreset = useRef('');
   const [presetName, setPresetName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -165,14 +169,15 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
     void refresh(); const timer = setInterval(() => void refresh(), 3000);
     return () => { alive = false; clearInterval(timer); };
   }, [category]);
-  useEffect(() => { if (!presetId) setControls(Object.fromEntries(customControls.map(control => [control.key, control.value]))); }, [category, modelId]);
   useEffect(() => {
+    selectedPreset.current='';
     setPresetId('');
     try {
       const value = JSON.parse(window.localStorage.getItem(presetStorageKey(category)) || '[]');
       setPresets(Array.isArray(value) ? value.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string') : []);
     } catch { setPresets([]); }
   }, [category]);
+  useEffect(() => { if (!selectedPreset.current) setControls(Object.fromEntries(customControls.map(control => [control.key, control.value]))); }, [category, modelId]);
   useEffect(() => {
     const request = ++runtimeRevision.current;
     let alive = true; setRuntime(null);
@@ -188,12 +193,13 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
     const next = [...presets.filter(item => item.id !== id), { id, name, modelId, prompt, inputPath, advancedJson, controls }];
     try {
       window.localStorage.setItem(presetStorageKey(category), JSON.stringify(next));
-      setPresets(next); setPresetId(id); setPresetName(name); setError('');
+      selectedPreset.current=id; setPresets(next); setPresetId(id); setPresetName(name); setError('');
       onNotice(`Preset “${name}” saved.`);
     } catch (cause) { setError(`Could not save preset: ${String(cause)}`); }
   }
   function loadPreset(id: string) {
     const preset = presets.find(item => item.id === id);
+    selectedPreset.current=id;
     setPresetId(id); setPresetName(preset?.name || '');
     if (!preset) return;
     setModelId(preset.modelId); setPrompt(preset.prompt); setInputPath(preset.inputPath);
@@ -202,10 +208,11 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
   function deletePreset() {
     if (!presetId) return;
     const next = presets.filter(item => item.id !== presetId);
-    try { window.localStorage.setItem(presetStorageKey(category), JSON.stringify(next)); setPresets(next); setPresetId(''); setPresetName(''); }
+    try { window.localStorage.setItem(presetStorageKey(category), JSON.stringify(next)); selectedPreset.current=''; setPresets(next); setPresetId(''); setPresetName(''); }
     catch (cause) { setError(`Could not remove preset: ${String(cause)}`); }
   }
   function resetSettings() {
+    selectedPreset.current='';
     setPresetId(''); setPresetName(''); setPrompt(''); setInputPath(''); setAdvancedJson('{}');
     setControls(Object.fromEntries(customControls.map(control => [control.key, control.value])));
   }
@@ -262,7 +269,7 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
 
   return <section className="studio-form" aria-label="New generation"><h2>New generation</h2>
     {!models.length ? <p>No catalog models are available yet. You can prepare a prompt and save generation presets below.</p> : <>
-      <label>Model<select aria-label="Model" value={modelId} disabled={busy || connecting} onChange={event => {setPresetId(''); setModelId(event.target.value);}}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
+      <label>Model<select aria-label="Model" value={modelId} disabled={busy || connecting} onChange={event => {selectedPreset.current=''; setPresetId(''); setModelId(event.target.value);}}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
       {selected && GAME_DEV_CATEGORIES.some(([id]) => id === category) && <StudioModelSetup key={modelId} model={selected} connected={connected} disabled={busy || connecting} onRefresh={refreshModels} onNotice={onNotice} />}
     </>}
       {onBrowseModels ? <div className="studio-model-required">{!models.some(model => model.installed) ? <p role="status">Install a compatible model from Models to enable generation. You can prepare a prompt and settings now.</p> : null}<button type="button" onClick={() => onBrowseModels(category)}>Browse models</button></div> : null}
@@ -273,7 +280,7 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
         {customControls.length > 0 && <fieldset className="studio-options"><legend>Generation controls</legend><p>Prepare settings before installation. The selected adapter defines supported sizes, sampling options, and output formats.</p><div className="studio-options-grid">{customControls.map(renderControl)}</div></fieldset>}
       </>}
       <details><summary>Advanced model settings</summary><p>Pass model-specific settings supported by the connected runtime. Advanced values override matching controls above.</p><textarea aria-label="Generation settings JSON" value={advancedJson} onChange={event => setAdvancedJson(event.target.value)} /></details>
-      {!builtInService && selected && <details className="studio-runtime"><summary>Runtime connection · {connected ? 'Connected' : 'Setup needed'}</summary><p>{selected.backend === 'diffusers' || modelId === 'triposr' ? 'Connect the Python environment containing this model’s dependencies to use the built-in adapter.' : 'Connect the model’s publisher-compatible local runtime. Its adapter defines supported inputs and output formats.'}</p><button type="button" disabled={busy || connecting} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Connect runtime'}</button>{runtime && <details><summary>Connection details</summary><pre>{JSON.stringify(runtime, null, 2)}</pre></details>}</details>}
+      {!builtInService && selected && !hasManagedRuntime(modelId) && <details className="studio-runtime"><summary>Advanced publisher runtime · {connected ? 'Connected' : 'Setup needed'}</summary><p>This architecture needs a publisher-compatible local adapter. Its inputs and outputs are defined by that adapter.</p><button type="button" disabled={busy || connecting} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Configure publisher runtime'}</button>{runtime && <details><summary>Connection details</summary><pre>{JSON.stringify(runtime, null, 2)}</pre></details>}</details>}
       <button className="studio-submit-action" disabled={busy || connecting || !canGenerate || !prompt.trim() || (needsImage && !inputPath) || (needsDrivingVideo && !String(controls.drivingVideoPath || '').trim()) || (category === 'music' && (!style.trim() || !lyrics.trim()))} onClick={event => { event.preventDefault(); void submit(); }}><Play size={16} />{busy ? 'Submitting…' : 'Generate'}</button>
       {GAME_DEV_CATEGORIES.some(([id]) => id === category) && <p className="studio-queue-note">One model uses the GPU at a time. The queue releases the chat model for generation and resumes the conversation afterward.</p>}
     {error && <p role="alert">{error}</p>}

@@ -4,12 +4,13 @@ import { ModelLibrary } from "./ModelLibrary";
 import * as api from "./api";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
-it("states that both Phonon runtime precisions use one downloadable checkpoint", () => {
+it("states that all three Phonon choices use one downloadable checkpoint", () => {
   const phonon = modelCatalog.models.find(model => model.id === "phonon-2");
   expect(phonon?.precision).toBe("Five-value checkpoint");
-  expect(phonon?.note).toMatch(/BF16 or FP32 runtime precision/i);
+  expect(phonon?.note).toMatch(/Original \(164 MB\), BF16 or FP32/i);
   expect(phonon?.note).toMatch(/not separate weight downloads/i);
-  expect(phonon?.runtimePrecision?.runtimeDtype).toBe("BF16 or FP32");
+  expect(phonon?.runtimePrecision?.runtimeDtype).toBe("Original, BF16 or FP32");
+  expect(phonon?.weightArtifacts).toEqual(['phonon-2-phonon-2-bps-tar-zst']);
   expect(phonon?.runtimePrecision?.estimatedRuntimeBytes).toBe(2_500_000_000);
   expect(modelCatalog.models.some(model => model.variantOf === "phonon-2")).toBe(false);
 });
@@ -26,8 +27,8 @@ it("shows Phonon's source checkpoint separately from its selectable runtime prec
   try {
     render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
     fireEvent.click(await screen.findByRole("button", { name: /^Speech\s*\d*$/ }));
-    expect(await screen.findByRole("region", { name: "Phonon-2 download and runtime precision" })).toHaveTextContent("Download: Five-value checkpoint. Runtime: BF16 or FP32.");
-    expect(screen.getByText(/BF16 and FP32 are created in memory from the same compact checkpoint/i)).toBeVisible();
+    expect(await screen.findByRole("region", { name: "Phonon-2 download and runtime precision" })).toHaveTextContent("Download: Five-value checkpoint · 164 MB. Runtime: Original, BF16 or FP32.");
+    expect(screen.getByText(/BF16 and FP32 are created from the same compact checkpoint/i)).toBeVisible();
   } finally { library.mockRestore(); speech.mockRestore(); }
 });
 
@@ -54,20 +55,28 @@ it('chooses the speech backend separately from the chat model and labels its lan
   } finally { library.mockRestore(); read.mockRestore(); choose.mockRestore(); }
 });
 
-it('offers both Phonon runtime precisions, reflects the selected dtype and keeps the Cold choice', async () => {
+it('offers Original, BF16 and FP32 independently, with checkpoint size separate from runtime RAM', async () => {
   const model = { ...modelCatalog.models.find(model => model.id === 'phonon-2')!, installed: true, externalManaged: false,
-    downloadBytes: 0, totalBytes: 177438361, memoryMode: 'native' } as api.InstalledModel;
+    downloadBytes: 0, totalBytes: 164720784, weightBytes: 163515201, memoryMode: 'native' } as api.InstalledModel;
   const status: api.SpeechStatus = { modelId: 'phonon-2', installed: true, enabled: true, idleMode: 'cold', workerReady: false,
     coldStartMs: 25900, warmWakeMs: 797, phase: 'ready', runtimePrecision: 'bf16', loadingElapsedMs: null };
   const library = vi.spyOn(api, 'modelLibrary').mockResolvedValue({ models: [model], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
   const speech = vi.spyOn(api, 'speechStatus').mockResolvedValue(status);
-  const precision = vi.spyOn(api, 'setSpeechRuntimePrecision').mockResolvedValue({ ...status, runtimePrecision: 'fp32' });
+  const precision = vi.spyOn(api, 'setSpeechRuntimePrecision').mockImplementation(async runtimePrecision => ({ ...status, runtimePrecision }));
   const install = vi.spyOn(api, 'installModel').mockResolvedValue();
   try {
     render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
     const selected = await screen.findByRole('radio', { name: /BF16/ });
     expect(selected).toBeChecked();
     const detail = screen.getByRole('region', { name: 'Phonon-2 download and runtime precision' });
+    expect(detail).toHaveTextContent('164 MB');
+    fireEvent.click(screen.getByRole('radio', { name: /Original/ }));
+    await waitFor(() => expect(screen.getByRole('radio', { name: /Original/ })).toBeChecked());
+    expect(precision).toHaveBeenLastCalledWith('original');
+    expect(detail).toHaveTextContent('Original (164 MB)');
+    expect(detail).not.toHaveTextContent('Estimated runtime memory: 0.164');
+    fireEvent.click(screen.getByRole('radio', { name: /BF16/ }));
+    await waitFor(() => expect(screen.getByRole('radio', { name: /BF16/ })).toBeChecked());
     expect(detail).toHaveTextContent('Runtime: BF16.');
     expect(detail).toHaveTextContent('1.255 GB');
     fireEvent.click(screen.getByRole('radio', { name: /FP32/ }));
