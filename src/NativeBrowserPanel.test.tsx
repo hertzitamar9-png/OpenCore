@@ -115,7 +115,11 @@ it.each(['poll', 'navigate'])("ignores a delayed old-tab %s URL after switching 
     onDownload={() => {}} width={520} onWidthChange={() => {}} side="right" onSideChange={() => {}}
     snapPx={0} onSnapChange={() => {}} embedded />);
   await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/original'));
-  if (operation === 'poll') { polling = true; act(() => poll()); }
+  if (operation === 'poll') {
+    await waitFor(() => expect(poll).toBeTypeOf('function'));
+    polling = true;
+    act(() => poll());
+  }
   else fireEvent.click(screen.getByRole('button', {name: 'Go'}));
   fireEvent.click(screen.getByRole('button', {name: 'New web tab'}));
   await waitFor(() => expect(screen.getByLabelText('Browser address')).toHaveValue('https://example.com/current'));
