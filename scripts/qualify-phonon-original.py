@@ -10,12 +10,13 @@ import sys
 import tempfile
 import time
 import urllib.request
+import wave
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEECH = ROOT / 'src-tauri/resources/speech'
 sys.path.insert(0, str(SPEECH))
 from prepare_phonon_runtime import extract_container
-from phonon_original import require_compact_engine
+from phonon_original import extract_original_config, require_compact_engine
 
 
 def word_errors(expected, actual):
@@ -28,14 +29,14 @@ def word_errors(expected, actual):
     return previous[-1]
 
 
-def run_worker(directory, fixture, reference=False):
-    requests = [{'action': 'wake'}, {'action': 'transcribe', 'audio': str(fixture)}, {'action': 'shutdown'}]
+def run_worker(directory, fixtures, reference=False):
+    requests = [{'action': 'wake'}, *[{'action': 'transcribe', 'audio': str(fixture)} for fixture in fixtures], {'action': 'shutdown'}]
     command = [sys.executable, '-B', str(SPEECH / 'phonon_worker.py')]
     if reference:
         # CI-only baseline in a separate process. The shipped worker has no heavy fallback.
-        source = ("import sys,runpy; sys.path.insert(0,sys.argv.pop(1)); import phonon_minimal; "
-                  "from fermion._speech.engine_phonon2_cpu import load; "
-                  "phonon_minimal.load=lambda directory,progress:load(directory,profile='five-value',backend='phonon2-five-value',quiet=True); "
+        source = ("import sys,runpy,types; sys.path.insert(0,sys.argv.pop(1)); reference=types.ModuleType('phonon_minimal'); "
+                  "reference.load=lambda directory,progress:__import__('fermion._speech.engine_phonon2_cpu',fromlist=['load']).load(directory,profile='five-value',backend='phonon2-five-value',quiet=True); "
+                  "sys.modules['phonon_minimal']=reference; "
                   "sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0],run_name='__main__')")
         command = [sys.executable, '-B', '-c', source, str(SPEECH), str(SPEECH / 'phonon_worker.py')]
     started = time.monotonic()
@@ -59,13 +60,16 @@ def validate(receipt, minimal):
     if minimal:
         assert ready['publisherRuntime']['frontend'] == 'numpy', ready
         assert ready['publisherRuntime']['torchImported'] is False, ready
-    transcription = next(event for event in events if 'text' in event)
+    transcriptions = [event for event in events if 'text' in event]
+    assert len(transcriptions) == 3, transcriptions
+    transcription = transcriptions[0]
     expected = 'Open core can recognize the sentence Both precision options should work correctly'.lower().split()
     errors = word_errors(expected, re.findall(r'[a-z]+', transcription['text'].lower()))
     assert errors <= 3, f'Original smoke transcript differs by {errors} words: {transcription}'
-    assert transcription['gpuModelBytes'] == transcription['torchGpuBytes'] == 0, transcription
+    assert all(item['gpuModelBytes'] == item['torchGpuBytes'] == 0 for item in transcriptions), transcriptions
     return {'startupMs': ready['coldStartMs'], 'startupRamBytes': ready['runtimeResidentBytes'],
-            'decodeSeconds': transcription['decodeSeconds'], 'fixtureWordErrors': errors, 'text': transcription['text']}
+            'decodeSeconds': [item['decodeSeconds'] for item in transcriptions], 'fixtureWordErrors': errors,
+            'texts': [item['text'] for item in transcriptions]}
 
 
 def main():
@@ -89,14 +93,30 @@ def main():
         assert archive.stat().st_size == artifact['bytes'], 'Original archive size differs from its pin'
         assert digest.hexdigest() == artifact['sha256'], 'Original archive hash differs from its pin'
         extract_container(directory, zstandard)
+        # Both processes start with the same prepared source files. Config
+        # extraction is installation work, not a fair repeated-start comparison.
+        extract_original_config(directory, zstandard)
+        import numpy as np
+        with wave.open(str(fixture), 'rb') as recording:
+            params, pcm = recording.getparams(), recording.readframes(recording.getnframes())
+        assert params.sampwidth == 2, 'Qualification fixture must be PCM16'
+        quiet, long = directory / 'quiet.wav', directory / 'long.wav'
+        with wave.open(str(quiet), 'wb') as recording:
+            recording.setparams(params)
+            recording.writeframes((np.frombuffer(pcm, dtype='<i2') * 0.2).astype('<i2').tobytes())
+        with wave.open(str(long), 'wb') as recording:
+            recording.setparams(params)
+            recording.writeframes(pcm * 10)
+        assert params.nframes * 10 / params.framerate > 35, 'Long-audio case must exercise segmentation'
+        fixtures = [fixture, quiet, long]
         receipt = {'checkpointSha256': artifact['sha256'], 'runs': {}}
         metrics = {}
         for label in ('publisher', 'minimal', 'minimalRepeat'):
-            receipt['runs'][label] = run_worker(directory, fixture, reference=label == 'publisher')
+            receipt['runs'][label] = run_worker(directory, fixtures, reference=label == 'publisher')
             output.write_text(json.dumps(receipt, indent=2), encoding='utf-8')
             metrics[label] = validate(receipt['runs'][label], minimal=label != 'publisher')
             print(json.dumps({'run': label, **metrics[label]}), flush=True)
-        assert metrics['minimal']['text'] == metrics['minimalRepeat']['text'] == metrics['publisher']['text'], metrics
+        assert metrics['minimal']['texts'] == metrics['minimalRepeat']['texts'] == metrics['publisher']['texts'], metrics
         assert metrics['minimal']['startupRamBytes'] < metrics['publisher']['startupRamBytes'], metrics
         assert metrics['minimal']['startupMs'] < metrics['publisher']['startupMs'], metrics
         assert not (directory.parent / 'runtime-cache/phonon-2/expanded-fp32.pt').exists()

@@ -68,8 +68,8 @@ class OriginalRuntime(unittest.TestCase):
 
     def test_original_adapter_is_in_the_packaged_resource_manifest(self):
         config = json.loads((Path(__file__).parents[2] / 'tauri.conf.json').read_text(encoding='utf-8'))
-        self.assertEqual(config['bundle']['resources'].get('resources/speech/phonon_original.py'),
-                         'speech/phonon_original.py')
+        for name in ('phonon_original', 'phonon_minimal'):
+            self.assertEqual(config['bundle']['resources'].get(f'resources/speech/{name}.py'), f'speech/{name}.py')
 
     def test_automatic_setup_uses_the_pinned_wheel_without_replacing_dependencies(self):
         adapter = self.adapter()
