@@ -18,7 +18,7 @@ use std::{
     },
     time::Duration,
 };
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 use tokio_util::sync::CancellationToken;
 
 pub struct LearningManager {
@@ -758,8 +758,9 @@ impl LearningManager {
             return Ok(());
         }
         let event = json!({"id":event_id,"name":"learning.progress","runId":id,"status":status,"step":step,"conversationId":run["conversationId"],"identitySha256":run["receipt"]["identitySha256"],"checkpoint":run["receipt"]["checkpoint"],"receiptPath":self.root.join("runs").join(id).join("receipt.json"),"error":run["error"]});
+        let awaiting_review = status == "awaiting-review";
         run["pendingEvent"] = event.clone();
-        if status == "awaiting-review" {
+        if awaiting_review {
             run["reviewEvent"] = event;
             run["reviewPending"] = json!(true);
         }
@@ -1505,7 +1506,7 @@ impl LearningManager {
             })?;
             return Ok(());
         }
-        run = self.update_run(id, |run| {
+        self.update_run(id, |run| {
             run["python"] = json!(python);
             run["stage"] = json!("Running a bounded Unsloth checkpoint chunk");
             Ok(())
