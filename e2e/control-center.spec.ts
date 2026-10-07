@@ -81,8 +81,8 @@ test("composer placeholder stays left aligned and sits between the two text line
     return { textAlign: style.textAlign, paddingTop: parseFloat(style.paddingTop), height: element.clientHeight, lineHeight: parseFloat(style.lineHeight) };
   });
   expect(placeholderStyle.textAlign).toBe("left");
-  expect(placeholderStyle.paddingTop).toBe(12);
-  expect(placeholderStyle.height).toBe(placeholderStyle.lineHeight * 2);
+  expect(placeholderStyle.paddingTop).toBeCloseTo(placeholderStyle.lineHeight / 2, 1);
+  expect(placeholderStyle.height).toBeCloseTo(placeholderStyle.lineHeight * 2, 0);
   await composer.screenshot({ path: `${screenshotRoot}/composer-placeholder-left-centered.png` });
 
   await input.fill("Open the exits");

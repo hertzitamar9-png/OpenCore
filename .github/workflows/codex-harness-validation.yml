@@ -62,6 +62,8 @@ jobs:
         run: node scripts/test-codex-agent-runtime.mjs
       - name: Test frontend and integration suites
         run: npm test
+      - name: Test Learning Studio data, training policy and checkpoint worker
+        run: python -m unittest discover -s src-tauri/resources/learning -p "test_*.py" -v
       - name: Verify capture borders and historical appearance against rendered production styles
         run: |
           npx playwright install chromium

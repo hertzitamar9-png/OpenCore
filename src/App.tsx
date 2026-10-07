@@ -56,6 +56,8 @@ import { AssistantConversation, type ComposerDraft, type ConversationSettings } 
 import { WorkspacePanel, type WorkspacePreview, type WorkspaceTab } from "./WorkspacePanel";
 import { SideChat } from "./SideChat";
 import { BackgroundJobs } from "./BackgroundJobs";
+import { LearningStudio } from './LearningStudio';
+import { LearningAssistant } from './LearningAssistant';
 import { SpacesView } from "./SpacesView";
 import { ChatImportDialog } from "./ChatImportDialog";
 import { ChatExportDialog } from "./ChatExportDialog";
@@ -80,7 +82,7 @@ import { usePlatformConfiguration, executePlatformAction } from './agent-platfor
 import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
-type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "media" | "connectors" | "settings" | "troubleshooting" | "jobs" | "spaces";
+type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "media" | "connectors" | "settings" | "troubleshooting" | "jobs" | "spaces" | "learning";
 type RuntimeAction = "starting" | "stopping" | "switching" | null;
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
@@ -139,6 +141,7 @@ const nav: Array<{ id: View; label: string; icon: typeof Home; group?: boolean }
   { id: "memory", label: "Memory", icon: Database },
   { id: "runtime", label: "Runtime & Logs", icon: SquareTerminal, group: true },
   { id: "models", label: "Models", icon: Box },
+  { id: "learning", label: "Learning Studio", icon: BrainCircuit },
   { id: "music", label: "Music Studio", icon: Music2 },
   { id: "assets", label: "Game Dev Studio", icon: Box },
   { id: "media", label: "Media Studio", icon: Play },
@@ -1294,6 +1297,8 @@ export default function App() {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const settingsByConversation = useRef(new Map<string, ConversationSettings>());
   const [parentSettings, setParentSettings] = useState<ConversationSettings>({approvalMode: 'ask-every-time', reasoningEffort: 'off', subagentsEnabled: true, maxSubagents: 3, projectSkillsEnabled: true, compactAtTokens: defaultAppearance.compactAtTokens});
+  const [learningConversationId, setLearningConversationId] = useState<string>();
+  const [learningSettings, setLearningSettings] = useState<ConversationSettings>();
   const rememberSettings = useCallback((settings: ConversationSettings) => {
     settingsByConversation.current.set(draftKey, settings);
     setParentSettings(current => JSON.stringify(current) === JSON.stringify(settings) ? current : settings);
@@ -1689,16 +1694,19 @@ export default function App() {
       : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} onBrowseModels={() => setView('models')} />
       : view === 'media' ? <MediaStudio category={mediaCategory} onCategoryChange={setMediaCategory} onNotice={setNotice} />
       : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} onNotice={setNotice} />
+      : view === 'learning' ? <LearningStudio onNotice={setNotice} renderAssistant={(prompt,revision,onConversation,blockedReason)=><LearningAssistant initialPrompt={prompt} promptRevision={revision} onConversation={id=>{setLearningConversationId(id);onConversation(id);}} settings={learningSettings||parentSettings} onSettingsChange={setLearningSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds||[]} inferenceOwner={inferenceOwner} inferenceBlocked={runtimeTransitionReason||blockedReason||(studioActive?'A studio or training worker is using the GPU. The assistant resumes when it releases its checkpoint.':undefined)} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setMainWorkspaceObscured}/>}/>
       : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} onOpenExternal={async file => { await openWorkspaceFileExternal(file.id); }} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} appearanceStorageError={appearanceStorageError} onAppearanceChange={changeAppearance} />;
 
+  const workspaceConversationId = view === 'learning' ? learningConversationId : selectedConversation;
+  const workspaceSettings = view === 'learning' ? learningSettings||parentSettings : parentSettings;
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
       <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
-      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} inferenceBlocked={runtimeTransitionReason} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
+      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={workspaceConversationId} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={workspaceConversationId} parentTitle={view==='learning'?'Learning assistant':selected?.title || 'New conversation'} settings={workspaceSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} inferenceBlocked={runtimeTransitionReason} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
     </div>
-    <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={profile => void switchRuntimeProfile(profile)} blockedReason={modelSwitchBlocked} conversationId={selectedConversation} />
+    <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={profile => void switchRuntimeProfile(profile)} blockedReason={modelSwitchBlocked} conversationId={workspaceConversationId} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
     {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
     {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}

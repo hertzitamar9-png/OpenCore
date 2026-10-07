@@ -1,0 +1,52 @@
+/* The browser keeps focus, labels, type-ahead, option selection and Escape.
+   WebView2/Chromium's base picker can be themed without an OS gray popup. */
+.themed-select {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--theme-ink, #dce9f5);
+  background: var(--theme-canvas, #08121b);
+  border: 1px solid var(--theme-border, #263b4d);
+  border-radius: 7px;
+  padding: calc(8px * var(--ui-scale, 1)) calc(10px * var(--ui-scale, 1));
+  font: inherit;
+}
+
+@supports (appearance: base-select) {
+  /* Include legacy selects so existing settings and presets share the picker. */
+  .app-window-frame select, .themed-select,
+  .app-window-frame select::picker(select), .themed-select::picker(select) {
+    appearance: base-select;
+  }
+  .app-window-frame select::picker(select), .themed-select::picker(select) {
+    max-height: min(360px, 60dvh);
+    max-width: min(720px, calc(100vw - 24px));
+    overflow: auto;
+    padding: 5px;
+    border: 1px solid var(--theme-accent-border, #3c5870);
+    border-radius: 9px;
+    color: var(--theme-ink, #dce9f5);
+    background: linear-gradient(155deg, var(--theme-panel, #142231), var(--theme-canvas, #08121b));
+    box-shadow: 0 12px 30px var(--theme-shadow-strong, #020a1299);
+    font: inherit;
+  }
+  .app-window-frame select option, .themed-select option {
+    min-height: calc(34px * var(--ui-scale, 1));
+    padding: 7px 10px;
+    border-radius: 5px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .app-window-frame select option:is(:hover, :focus-visible, :checked),
+  .themed-select option:is(:hover, :focus-visible, :checked) {
+    color: var(--theme-ink, #dce9f5);
+    background: var(--theme-raised, #1a3044);
+    outline: none;
+  }
+  .app-window-frame select::picker-icon, .themed-select::picker-icon {
+    color: var(--theme-muted, #8da2b5);
+    margin-left: 8px;
+  }
+  .app-window-frame select option::checkmark, .themed-select option::checkmark {
+    color: var(--theme-accent-ink, #3d8fe9);
+  }
+}

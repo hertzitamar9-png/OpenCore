@@ -94,6 +94,8 @@ jobs:
         run: python -m unittest discover -s tests -p "test_configure_unsloth.py" -v
       - name: Test managed runtime and testing environment setup
         run: python -m unittest discover -s src-tauri/resources/runtime-setup -p "test_*.py" -v
+      - name: Test Learning Studio data, training policy and checkpoint worker
+        run: python -m unittest discover -s src-tauri/resources/learning -p "test_*.py" -v
       - name: Verify capture borders against rendered production styles
         run: |
           npx playwright install chromium

@@ -1,3 +1,4 @@
+import { ThemedSelect } from "./ThemedSelect";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent, WheelEvent } from "react";
 import { AppWindow, Check, Maximize2, Minimize2, RefreshCw, ShieldCheck, Square } from "lucide-react";
@@ -331,11 +332,11 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     <div className="desktop-access-bar"><span>{enabled ? "Only permitted apps can be controlled" : "Computer use is disabled"}</span>{!enabled && <button type="button" disabled={accessBusy} onClick={() => void setAccess(true)}>Enable computer use</button>}<button type="button" className="automation-stop" disabled={!enabled && !accessBusy} onClick={() => void setAccess(false)}><Square size={14} aria-hidden="true" /> Stop computer use</button></div>
     {windows.find(item => item.windowId === windowId)?.permission === "ask" && <div className="desktop-access-bar"><span>Allow OpenCore to inspect and control {windows.find(item => item.windowId === windowId)?.application || windows.find(item => item.windowId === windowId)?.title}?</span><button type="button" disabled={accessBusy} onClick={() => void grantSelected()}>Allow this app</button></div>}
     <div className="desktop-toolbar" role="toolbar" aria-label="Computer view controls">
-      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><select aria-label="Window" value={windowId ?? ""} onChange={event => {
+      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><ThemedSelect aria-label="Window" value={windowId ?? ""} onChange={event => {
         const id = event.target.value === "" ? null : Number(event.target.value);
         select(id);
         void refresh(true);
-      }}><option value="">Select a window</option>{windows.map(item => <option key={item.windowId} value={item.windowId}>{item.windowId === 0 ? `${item.title} (view only)` : item.title}</option>)}</select></div>
+      }}><option value="">Select a window</option>{windows.map(item => <option key={item.windowId} value={item.windowId}>{item.windowId === 0 ? `${item.title} (view only)` : item.title}</option>)}</ThemedSelect></div>
       <button type="button" title="Refresh capture" aria-label="Refresh capture" disabled={capturing || !active} onClick={() => void refresh(true, true)}><RefreshCw size={15} className={capturing ? "desktop-refreshing" : undefined} aria-hidden="true" /></button>
       <div className="desktop-size-controls" role="group" aria-label="Capture size">
         <button type="button" title="Fit capture; the wheel scrolls supported app controls" aria-pressed={size === "fit"} onClick={() => setSize("fit")}>Fit</button>

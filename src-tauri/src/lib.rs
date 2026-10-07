@@ -10,6 +10,8 @@ mod scheduler_worker;
 mod background_host;
 mod computer_access;
 mod runtime_setup;
+mod learning;
+mod learning_store;
 mod workspace_ledger;
 mod codex_app_server;
 mod claude_bridge;
@@ -81,6 +83,7 @@ pub struct AppCore {
     studios: Arc<studio_jobs::StudioManager>,
     background: Arc<scheduler::BackgroundManager>,
     runtime_setup: Arc<runtime_setup::RuntimeSetupManager>,
+    learning: Arc<learning::LearningManager>,
     files: Arc<workspace_ledger::WorkspaceLedger>,
     file_browser: Arc<file_browser::FileBrowser>,
     speech: speech::SpeechManager,
@@ -2331,6 +2334,7 @@ async fn send_chat_turn(core: Arc<AppCore>, app: tauri::AppHandle, mut request: 
     if request.skills.iter().any(|s|s=="music") {available_tools.push(studio_jobs::music_tool_spec());}
     available_tools.push(studio_jobs::wait_tool_spec());
     available_tools.push(scheduler::tool_spec());
+    available_tools.push(learning::tool_spec());
     for spec in &mut available_tools {
         spec["function"]["parameters"]["properties"]["explanation"] = json!({"type":"string", "description":"Explain to the user what you learned and why this exact action is needed, in clear complete sentences. Name the relevant file, behavior or error. Do not use generic filler."});
         if let Some(required) = spec["function"]["parameters"]["required"].as_array_mut() {
@@ -2540,6 +2544,7 @@ pub fn run() {
                 runtime_setup: runtime_setup::RuntimeSetupManager::new(runtime.install_root().to_path_buf(),app.path().resource_dir()?)?,
                 studios: studio_jobs::StudioManager::new(app.path().app_data_dir()?.join("studio"))?,
                 background: scheduler::BackgroundManager::new(app.path().app_data_dir()?.join("background"))?,
+                learning: learning::LearningManager::new(app.path().app_data_dir()?.join("learning"),app.path().resource_dir()?)?,
                 files: files.clone(),
                 file_browser: file_browser::FileBrowser::new(files),
                 speech: speech::SpeechManager::new_with_update_gate(runtime.install_root().to_path_buf(), app.path().resource_dir()?, update_in_progress.clone()),
@@ -2559,6 +2564,7 @@ pub fn run() {
             });
             core.studios.attach_app(app.handle().clone());
             core.background.attach_app(core.clone(),app.handle().clone());
+            core.learning.attach_app(core.clone(),app.handle().clone());
             claude_bridge_install::start(store.clone(), app.handle());
             let browser_state = core.browser.clone();
             let browser_log = store.clone();
@@ -2789,6 +2795,7 @@ pub fn run() {
             ,runtime_setup::runtime_setup_start
             ,runtime_setup::runtime_setup_cancel
             ,runtime_setup::runtime_setup_record_inference
+            ,learning::learning_command
             ,send_side_chat_message
         ]);
     let app = match builder.build(tauri::generate_context!()) {
@@ -2840,6 +2847,7 @@ pub fn run() {
                             core.runtime_setup.shutdown().await;
                             core.speech.stop_for_update().await;
                             core.background.shutdown().await;
+                            core.learning.shutdown().await;
                             core.studios.shutdown().await;
                             if let Err(error)=core.codex_app_server_pool.shutdown_all().await {
                                 core.store.log("warn","codex-app-server",&error.to_string());

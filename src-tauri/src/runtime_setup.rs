@@ -442,6 +442,38 @@ impl RuntimeSetupManager {
         atomic_json(&self.root.join("runtime-setup/receipts").join(format!("{target}.json")),&receipt)?;
         Ok(receipt)
     }
+    /// Learning owns its admission reservation and cancellation token. Reuse
+    /// the same pinned publisher bootstrap without modifying existing Python
+    /// environments, and retain a receipt even if its workflow budget expires.
+    pub async fn prepare_learning_python(&self, token: &CancellationToken, maximum: Duration, evidence_path: &Path) -> Result<(PathBuf, Value), String> {
+        let id=uuid::Uuid::new_v4().to_string();
+        let created=now();
+        let job=SetupJob {id:id.clone(),target_id:"learning-python".into(),recipe_id:"python-bootstrap".into(),status:"running".into(),stage:"bootstrapping-python".into(),detail:"Preparing a managed Python interpreter for Learning Studio".into(),created_at:created.clone(),updated_at:created.clone(),downloaded_bytes:0,total_bytes:0,diagnostics:vec![],error:None,receipt:None};
+        {
+            let mut jobs=self.jobs.lock().map_err(|error|error.to_string())?;
+            jobs.push(job);
+            atomic_json(&self.root.join("runtime-setup/jobs.json"),&*jobs)?;
+        }
+        let result=if maximum.is_zero() {
+            Err("The learning workflow time budget expired before Python preparation".to_string())
+        } else {
+            match tokio::time::timeout(maximum.min(Duration::from_secs(900)),self.bootstrap_python(&id,token)).await {
+                Ok(result)=>result,
+                Err(_)=>Err("The learning workflow time budget stopped managed Python preparation; its owned installer process tree was released".into()),
+            }
+        };
+        let folder=self.root.join("runtime-setup/runs").join(&id);
+        let receipt=learning_python_receipt(&id,&created,&folder,&result,token.is_cancelled());
+        atomic_json(&folder.join("python-bootstrap-receipt.json"),&receipt)?;
+        atomic_json(evidence_path,&receipt)?;
+        self.update(&id,|job|{
+            job.status=receipt["status"].as_str().unwrap_or("failed").into();
+            job.stage=job.status.clone();
+            job.detail=if result.is_ok(){"Managed Python passed its interpreter health check; training dependencies have not been installed".into()}else{"Managed Python preparation stopped; inspect its exact receipt and installer logs".into()};
+            job.error=result.as_ref().err().cloned();job.receipt=Some(receipt.clone());
+        })?;
+        result.map(|python|(python,receipt))
+    }
     async fn bootstrap_python(&self, id: &str, token: &CancellationToken) -> Result<PathBuf, String> {
         if !cfg!(all(windows,target_arch="x86_64")){return Err("No healthy Python 3.10–3.12 x64 was found. Automatic Python bootstrap is supported on Windows x64.".into());}
         let pin=manifest()["pythonBootstrap"].clone();
@@ -474,7 +506,12 @@ impl RuntimeSetupManager {
         if installer.exists(){std::fs::remove_file(&installer).map_err(|error|error.to_string())?;}
         std::fs::rename(temporary,&installer).map_err(|error|error.to_string())?;
         self.update(id,|job|{job.detail="Installing the managed Python interpreter without changing PATH or existing environments".into();})?;
+        let logs=self.root.join("runtime-setup/runs").join(id);
+        std::fs::create_dir_all(&logs).map_err(|error|error.to_string())?;
+        let stdout=std::fs::File::create(logs.join("python-installer-stdout.log")).map_err(|error|error.to_string())?;
+        let stderr=std::fs::File::create(logs.join("python-installer-stderr.log")).map_err(|error|error.to_string())?;
         let mut child=command(installer).args(["/quiet","InstallAllUsers=0","Include_pip=1","Include_launcher=0","Include_test=0","PrependPath=0","Shortcuts=0","AssociateFiles=0"])
+            .stdout(Stdio::from(stdout)).stderr(Stdio::from(stderr))
             .arg(format!("TargetDir={}",base.display())).spawn().map_err(|error|error.to_string())?;
         let owned_process=own_setup_process(&mut child).await?;
         let status=tokio::select!{_=token.cancelled()=>{drop(owned_process);let _=child.kill().await;let _=child.wait().await;return Err("Managed Python installation cancelled; retry to repair its managed directory".into());},result=child.wait()=>result.map_err(|error|error.to_string())?};
@@ -482,6 +519,9 @@ impl RuntimeSetupManager {
         if !status.success() || !healthy_python(&python).await{return Err(format!("Managed Python bootstrap did not pass its interpreter health check ({status})"));}
         Ok(python)
     }
+}
+fn learning_python_receipt(id:&str,created:&str,folder:&Path,result:&Result<PathBuf,String>,cancelled:bool)->Value {
+    json!({"schema":1,"kind":"learning-python-bootstrap","id":id,"createdAt":created,"updatedAt":now(),"status":if result.is_ok(){"python-ready"}else if cancelled{"cancelled"}else{"failed"},"python":result.as_ref().ok(),"error":result.as_ref().err(),"publisherPin":manifest()["pythonBootstrap"],"trainingPerformed":false,"trainingDependenciesInstalled":false,"logs":{"stdout":folder.join("python-installer-stdout.log"),"stderr":folder.join("python-installer-stderr.log")}})
 }
 fn modified_ns(metadata:&std::fs::Metadata)->String{metadata.modified().ok().and_then(|time|time.duration_since(std::time::UNIX_EPOCH).ok()).map(|time|time.as_nanos().to_string()).unwrap_or_default()}
 fn model_pin(target:&str)->Value{crate::model_catalog::model(target).and_then(|model|serde_json::to_value(model).ok()).map(|model|json!({"artifacts":model["artifacts"],"sourceUrl":model["sourceUrl"],"precision":model["precision"]})).unwrap_or(Value::Null)}
@@ -532,6 +572,23 @@ pub fn runtime_setup_record_inference(core:tauri::State<'_,Arc<crate::AppCore>>,
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn learning_python_bootstrap_receipts_keep_pins_errors_and_exact_logs_without_claiming_training() {
+        let folder=PathBuf::from("owned-runtime/runs/fixture");
+        let receipt=learning_python_receipt("fixture","2026-10-07T15:23:17Z",&folder,&Err("Exact installer failure".into()),false);
+        assert_eq!(receipt["status"],"failed");
+        assert_eq!(receipt["error"],"Exact installer failure");
+        assert_eq!(receipt["publisherPin"]["sha256"],manifest()["pythonBootstrap"]["sha256"]);
+        assert_eq!(receipt["createdAt"],"2026-10-07T15:23:17Z");
+        assert_eq!(receipt["logs"]["stdout"],json!(folder.join("python-installer-stdout.log")));
+        assert_eq!(receipt["trainingPerformed"],false);
+        assert_eq!(receipt["trainingDependenciesInstalled"],false);
+        let ready=learning_python_receipt("fixture","2026-10-07T15:23:17Z",&folder,&Ok(folder.join("python.exe")),false);
+        assert_eq!(ready["status"],"python-ready");
+        assert_eq!(ready["trainingPerformed"],false);
+        let cancelled=learning_python_receipt("fixture","2026-10-07T15:23:17Z",&folder,&Err("Cancelled".into()),true);
+        assert_eq!(cancelled["status"],"cancelled");
+    }
     #[cfg(windows)]
     #[tokio::test]
     async fn owned_setup_process_stops_its_descendant_when_released() {

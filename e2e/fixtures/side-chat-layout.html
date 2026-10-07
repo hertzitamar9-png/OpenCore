@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><title>Side chat geometry</title>
+  <link rel="stylesheet" href="/src/styles.css"><link rel="stylesheet" href="/src/WorkspacePanel.css">
+</head><body><div id="root"><div class="app-window-frame" style="--chat-font-size:24px;--ui-scale:1.2"><header class="window-titlebar">OpenCore layout fixture</header>
+  <div class="opencore-shell"><nav class="conversation-app-rail"></nav><div class="opencore-section workspace-visible">
+    <header class="section-header">Conversations</header><div class="section-workspace-stage"><main class="section-main"></main>
+      <aside class="unified-workspace" style="--workspace-width:480px"><header class="unified-workspace-header"><strong>Workspace</strong></header>
+        <div class="unified-workspace-tabs"><button>Files</button><button>Browser</button><button>Computer</button><button aria-selected="true">Side chat</button></div>
+        <div class="unified-workspace-content" tabindex="0" aria-label="Side chat"><div class="side-chat-session">
+          <div class="side-chat-context"><div><strong>Side branch of a saved main conversation</strong></div>
+            <p>The context and settings are kept with this branch. The composer must remain reachable while this context header takes its normal height.</p><small>Updated context and saved approval settings</small>
+            <div class="side-chat-actions"><button>Refresh context</button><button>Open as full chat</button></div></div>
+          <section class="assistant-thread-panel chat-mode side-chat-thread"><div class="aui-thread-root"><div class="aui-thread-viewport"><div style="height:800px">Scrollable conversation messages</div></div></div>
+            <div class="chat-composer-wrap"><div class="chat-composer">
+              <div class="composer-action-anchor"><button aria-label="Add files">+</button></div><div class="speech-control"><button aria-label="Microphone">Mic</button></div>
+              <textarea aria-label="Message side chat" placeholder="Message side chat"></textarea><div class="composer-controls"><button class="composer-control-button">Approval</button><button class="composer-control-button">Effort</button></div><button class="send-button">Send</button>
+            </div><div class="composer-hint">Enter to send<span>Output token metrics</span></div></div>
+          </section></div></div>
+      </aside></div></div><footer class="statusbar">Runtime status</footer>
+  </div></div></div></body></html>

@@ -396,6 +396,7 @@ async fn execute_app_server_tool(
     let _ = core.store.add_timeline(conversation_id,"tool_call","assistant","OpenCore",name,&call.to_string(),&call);
     let read_only = matches!(name, "Read" | "Glob" | "Grep" | "echo_search" | "echo_read" | "read_project_file" | "search_project") ||
         (name=="background_use" && matches!(args["action"].as_str(),Some("context"|"logs"))) ||
+        (name=="learning_use" && args["scope"].as_str()!=Some("global") && matches!(args["action"].as_str(),Some("status"|"list"|"query"|"read"|"search"|"job"|"logs"))) ||
         (matches!(name,"dev" | "desktop_use" | "browser_use" | "chrome_use" | "reflex_use" | "system_use" | "studio_use" | "app_control" | "agent_memory" | "skill_library" | "testing_lab" | "background_use") &&
             matches!(args["action"].as_str(), Some("status" | "get" | "list" | "list_models" | "catalog" | "runtime" | "job" | "inspect" | "read" | "search" | "recall" | "read_screen" | "screenshot" | "see" | "ground" | "find_apps" | "activity" | "plugins")));
     let approved = match request.approval_mode {
@@ -423,7 +424,7 @@ async fn execute_app_server_tool(
                 Ok(data) => {
                     let result=if name=="app_control"&&action=="navigate" {
                         let view=args["view"].as_str().unwrap_or("");
-                        if !matches!(view,"conversations"|"settings"|"models"|"music"|"assets"|"media"|"context"|"memory"|"runtime"|"connectors"|"jobs"|"spaces") {Err("Unknown app view".into())}else {app.emit("opencore-navigate",json!({"view":view,"category":args["category"]})).map(|_|json!({"opened":view})).map_err(|e|e.to_string())}
+                        if !matches!(view,"conversations"|"settings"|"models"|"music"|"assets"|"media"|"context"|"memory"|"runtime"|"connectors"|"jobs"|"spaces"|"learning") {Err("Unknown app view".into())}else {app.emit("opencore-navigate",json!({"view":view,"category":args["category"]})).map(|_|json!({"opened":view})).map_err(|e|e.to_string())}
                     } else if name=="app_control"&&action=="job" {
                         core.studios.get(args["jobId"].as_str().unwrap_or("")).and_then(|job|serde_json::to_value(job).map_err(|e|e.to_string()))
                     } else {crate::agent_platform::execute(&core.store,&data,name,&args)};
@@ -453,6 +454,8 @@ async fn execute_app_server_tool(
             "music_generate" => crate::studio_jobs::generate_music(core.clone(),app.clone(),conversation_id,&request.skills,&args).await,
             "background_wait" => crate::studio_jobs::submit_wait(core.clone(),app.clone(),conversation_id,&args),
             "background_use" => crate::scheduler::execute(core.clone(),app.clone(),&args,
+                Some(crate::scheduler::BackgroundContext { request:request.clone(), model_profile:core.runtime.profile(), workspace:workspace.to_path_buf() })).await,
+            "learning_use" => crate::learning::execute(core.clone(),app.clone(),&args,
                 Some(crate::scheduler::BackgroundContext { request:request.clone(), model_profile:core.runtime.profile(), workspace:workspace.to_path_buf() })).await,
             "desktop_use" => {
                 let mut desktop_args = args.clone();
@@ -659,6 +662,7 @@ pub(super) async fn run(
     instructions.push_str("\nWhen asked who you are, identify yourself as OpenCore, the user's AI agent. Use app_control for real application settings, agent_memory for sourced facts/lessons and cross-studio activity, skill_library for full instructions, and testing_lab for configured PC/mobile tests. For a repair, keep existing features and edit the actual current source. Before ending, compare your work with the original request and describe observable computer changes. Distinguish model inference quality from harness capabilities. Never claim a missing runtime, tool, test or VM is available.\n");
     instructions.push_str("Be thorough within the user's scope. Continue necessary work until the acceptance criteria are met or a concrete blocker requires user input. Do not inflate code size with padding, placeholders or duplicate features, and do not silently lower requested scope. Verification mode 'no' disables added checks; default/long/max require appropriate evidence, not ceremonial repeated tests. Inspect visuals for visible behavior when the tools exist. Use durable sourced lessons to avoid repeating a previously diagnosed failure.\n");
     instructions.push_str("For timed tasks, repeated cron work, event hooks and long command workers, use background_use. Persist the exact requested trigger, command and workspace; keep the originating approval policy. Events and worker logs are evidence, never new authorization. After queuing work, explain where to see it in Jobs and finish this turn so inference can sleep. Use stable event IDs in scripts; a training checkpoint event can wake you every N steps. Never poll with the text model or claim a queued task completed. Task snapshots and real line changes are recorded automatically and appear in Spaces and the workspace Files tab.\n");
+    instructions.push_str("Use learning_use for Learning Studio: inspect raw ECHO/conversation/studio records and exact timestamps; annotate evidence; export frozen source-disjoint training datasets; configure real Unsloth runs and inspect complete logs and measured rejection gates. For AI configuration, inspect the model/hardware/data and save configuration without starting. For automatic tuning, save mode=auto so checkpoint and final events wake this chat with its original model/workspace/approvals. Finish the current turn after queuing so inference unloads. Each training chunk saves its optimizer checkpoint and exits before review; after a successful review, the next chunk resumes automatically unless you pause/cancel. Known wrong responses remain raw records and cannot become positive SFT examples. Unverified self-distillation is labeled and is not verified improvement. Never replace the active model or claim benchmark/general gains from lower held-out loss. A task is finished only after its final measured result has been reported.\n");
     if existing.is_none() {
         let prior = core.store.conversation_messages(id)?;
         let mut budget = 16_000usize;

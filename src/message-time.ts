@@ -7,9 +7,9 @@ export function formatMessageTimestamp(value?: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
 
-  const time = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}`;
+  const time = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
   const day = twoDigits(date.getDate());
   const month = twoDigits(date.getMonth() + 1);
-  const year = twoDigits(date.getFullYear() % 100);
+  const year = String(date.getFullYear());
   return `${time} · ${day}/${month}/${year}`;
 }

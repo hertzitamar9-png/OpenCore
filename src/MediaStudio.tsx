@@ -1,8 +1,10 @@
+import { ThemedSelect } from "./ThemedSelect";
 import { useEffect, useState } from 'react';
 import { CircleStop, FolderOpen, Play, RefreshCw } from 'lucide-react';
 import * as api from './api';
 import { StudioModelSetup } from './StudioModelSetup';
 import { selectStudioModel } from './studio-model-selection';
+import { hasManagedRuntime } from './runtimeSetupApi';
 import './MediaStudio.css';
 
 export const MEDIA_CATEGORIES = [
@@ -186,19 +188,19 @@ function MediaGenerationForm({category, label, models: providedModels, onNotice,
     const value = values[control.key] ?? control.value;
     const update = (next: unknown) => setValues(current => ({...current, [control.key]: next}));
     if (control.kind === 'checkbox') return <label className="media-checkbox" key={control.key}><input type="checkbox" aria-label={control.label} checked={Boolean(value)} onChange={event => update(event.target.checked)} />{control.label}</label>;
-    if (control.kind === 'select') return <label key={control.key}>{control.label}<select aria-label={control.label} value={String(value)} onChange={event => update(event.target.value)}>{control.options!.map(option => <option key={option} value={option}>{option}</option>)}</select></label>;
+    if (control.kind === 'select') return <label key={control.key}>{control.label}<ThemedSelect aria-label={control.label} value={String(value)} onChange={event => update(event.target.value)}>{control.options!.map(option => <option key={option} value={option}>{option}</option>)}</ThemedSelect></label>;
     return <label key={control.key}>{control.label}{control.kind === 'textarea' ? <textarea aria-label={control.label} value={String(value)} onChange={event => update(event.target.value)} /> : <input aria-label={control.label} type={control.kind === 'number' ? 'number' : 'text'} min={control.min} max={control.max} step={control.step ?? 1} value={String(value)} onChange={event => update(control.kind === 'number' ? Number(event.target.value) : event.target.value)} />}</label>;
   }
   return <form className="media-form" aria-label={`New ${label.toLowerCase()} job`} onSubmit={event => {event.preventDefault(); void submit();}}><h2>{label}</h2>
     {!models.length ? <p>No catalog models in this category are available. Open Models to inspect publisher sources and setup requirements.</p> : <>
-      <label>Model<select aria-label="Model" value={modelId} disabled={connecting || busy} onChange={event => setModelId(event.target.value)}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</select></label>
+      <label>Model<ThemedSelect aria-label="Model" value={modelId} disabled={connecting || busy} onChange={event => setModelId(event.target.value)}>{models.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}</ThemedSelect></label>
       {selected && <StudioModelSetup key={modelId} model={selected} connected={connected} disabled={connecting || busy} onRefresh={async () => {const library = await api.modelLibrary(); setModels(library.models.filter(model => model.category === category));}} onNotice={onNotice} />}
       <label>{prompts[category]?.[0] || 'Prompt'}<textarea aria-label={prompts[category]?.[0] || 'Prompt'} value={prompt} onChange={event => setPrompt(event.target.value)} /></label>
       {inputLabels[category] && <div className="media-input"><button type="button" onClick={() => void api.pickStudioFile('input').then(path => { if (path) setInputPath(path); }).catch(cause => setError(String(cause)))}>{inputLabels[category]}</button><span>{inputPath || (inputRequired(category, values) ? 'Required input file' : 'Optional reference image')}</span>{inputPath && <button type="button" onClick={() => setInputPath('')}>Clear input</button>}</div>}
       {category === 'policy' && <p>Save observations in the publisher SDK’s JSON or NPZ schema. This job produces action predictions to inspect; deploying them uses the robot’s configured SDK.</p>}
       <fieldset><legend>Job controls</legend><p>{modelId.startsWith('ltx-25') ? 'LTX 2.5 uses dimensions divisible by 32 and frame counts of 8n + 1. Distilled checkpoints use 8 steps and guidance 1.' : 'Prepare settings before installation. The model adapter defines supported modes, sizes, voices, and formats.'}</p><div className="media-controls">{controlsForModel(category, modelId).map(controlField)}</div></fieldset>
       <details className="media-advanced"><summary>Advanced model settings</summary><p>Additional SDK options and overrides are saved with the request.</p><textarea aria-label="Advanced settings JSON" value={advancedJson} onChange={event => setAdvancedJson(event.target.value)} /></details>
-      <section className="media-runtime"><button type="button" disabled={connecting || busy} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Connect runtime'}</button><details><summary>Runtime connection · {connected ? 'Connected' : 'Setup needed'}</summary><p>Use a publisher-compatible local adapter. Choose its Python environment, worker, and existing SDK/model folder. Saving a connection does not verify generation.</p>{runtime && <pre>{JSON.stringify(runtime, null, 2)}</pre>}</details></section>
+      {!hasManagedRuntime(modelId) && <details className="media-runtime"><summary>Advanced publisher runtime · {connected ? 'Connected' : 'Setup needed'}</summary><button type="button" disabled={connecting || busy} onClick={() => void connect()}>{connecting ? 'Connecting…' : 'Configure publisher runtime'}</button><p>This architecture needs a publisher-compatible local adapter. Saving its connection preserves the selected environment and model folder; the first successful generation verifies inference.</p>{runtime && <pre>{JSON.stringify(runtime, null, 2)}</pre>}</details>}
       <button type="submit" className="media-generate" disabled={busy || connecting || !canGenerate || !prompt.trim() || (inputRequired(category, values) && !inputPath)}><Play size={16} />{busy ? 'Submitting…' : 'Generate'}</button>
       <p className="media-queue-note">Jobs share OpenCore’s durable GPU queue. The text model is released before generation, and chat continuations resume after the job.</p>
     </>}{error && <p role="alert">{error}</p>}

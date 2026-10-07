@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { GenerationForm, StudioJobs } from './StudioJobs';
 import * as api from './api';
 import * as setup from './StudioModelSetup';
+import * as runtimeSetup from './runtimeSetupApi';
 
 it.each([
   ['image', 'Negative prompt'], ['3d', 'Mesh resolution'], ['3d-animation', 'Motion description'], ['2d-animation', 'Frame count'],
@@ -143,19 +144,22 @@ it('builds a customized animation job from an installed animation model',async()
 it.each([
   ['sana-16','Sana 1.6B'],
   ['hunyuan-dit-v12-distilled','Hunyuan-DiT v1.2 Distilled'],
-])('connects %s to the built-in image worker without requesting a custom runner',async(id,label)=>{
+])('prepares %s automatically without requesting an interpreter or custom worker',async(id,label)=>{
   const model:api.InstalledModel={id,label,category:'image',backend:'diffusers',precision:'FP16',installed:true,selectable:false,externalManaged:false,description:'Image generation',license:'Open weights',experimental:true,note:'',contextTokens:0,downloadBytes:1,totalBytes:1};
   vi.spyOn(api,'modelLibrary').mockResolvedValue({models:[model],progress:null,diskFreeBytes:88e9,minimumFreeBytes:64e6});
   vi.spyOn(api,'studioRuntime').mockResolvedValue(null);
   const pick=vi.spyOn(api,'pickStudioFile').mockImplementation(async kind=>kind==='python'?'python.exe':null);
   const configure=vi.spyOn(api,'configureStudioRuntime').mockResolvedValue();
+  vi.spyOn(runtimeSetup,'setupDesktopAvailable').mockReturnValue(true);
+  const recipe:runtimeSetup.SetupRecipe={id:'images',label:'Image runtime',kind:'studio',modelIds:[id],packages:{},minimumDiskBytes:1e9,minimumRamBytes:8e9,requiresCuda:true,sourceUrls:[],limitations:''};
+  vi.spyOn(runtimeSetup,'runtimeSetupStatus').mockResolvedValue({recipes:[recipe],jobs:[],receipts:[],activeJobId:null,managedRoot:'C:/managed'});
+  const prepare=vi.spyOn(runtimeSetup,'runtimeSetupStart').mockResolvedValue({id:'setup',targetId:id,recipeId:recipe.id,status:'queued',stage:'queued',detail:'',createdAt:'',updatedAt:'',downloadedBytes:0,totalBytes:0,diagnostics:[],error:null,receipt:null});
   render(<GenerationForm category="image" onNotice={vi.fn()}/>);
   await screen.findByRole('option',{name:label});
-  fireEvent.click(screen.getByText(/Runtime connection/));
-  fireEvent.click(await screen.findByRole('button',{name:'Connect runtime'}));
-  await waitFor(()=>expect(configure).toHaveBeenCalledWith({modelId:id,python:'python.exe',runner:null,sourceDir:null}));
-  expect(pick).toHaveBeenCalledWith('python');
-  expect(pick).not.toHaveBeenCalledWith('worker');
+  await waitFor(()=>expect(prepare).toHaveBeenCalledWith(id,expect.objectContaining({installWeights:false})));
+  expect(screen.queryByRole('button',{name:'Configure publisher runtime'})).not.toBeInTheDocument();
+  expect(configure).not.toHaveBeenCalled();
+  expect(pick).not.toHaveBeenCalled();
 });
 it('loads saved Game Dev generation presets back into the form',async()=>{
   const motion:api.InstalledModel={id:'hy-motion-1',label:'HY-Motion 1.0',category:'3d-animation',precision:'BF16',installed:true,selectable:false,externalManaged:false,description:'Text-to-motion',license:'Apache',experimental:true,note:'',contextTokens:0,downloadBytes:1,totalBytes:1};
