@@ -26,12 +26,15 @@ const markup = `<div class="conversation-list-focus" style="width:300px;height:5
     <span class="approval-thumb"></span><input class="approval-range" type="range" min="0" max="3" value="0" aria-label="Approval level"/></div>
     <div class="approval-labels"><span>Ask every time</span><span>Approve for me</span><span>Allow everything in this chat</span><span>Allow everything</span></div>
   </div>
+</div><div class="floating-window dialog-floating" style="position:relative;width:500px;height:180px">
+  <div class="modal-actions"><button>Cancel</button><button class="primary">Import chats</button></div>
 </div>`;
 const selectors = [".conversation-list-focus", ".conversation-list-head", ".conversation-sections button",
   ".assistant-thread-panel", ".kind-thinking", ".kind-thinking summary svg", ".kind-thinking summary strong",
   ".tool-group", ".tool-group > summary svg", ".tool-group > summary strong", ".tool-group > summary em",
   ".tool-chain .tool-activity", ".tool-chain .tool-activity svg", ".tool-status-icon", ".tool-activity.failed",
-  ".aui-md strong", ".aui-md a", ".chat-composer", ".composer-popover", ".approval-thumb", ".approval-range", ".approval-labels"];
+  ".aui-md strong", ".aui-md a", ".chat-composer", ".composer-popover", ".approval-thumb", ".approval-range", ".approval-labels",
+  ".modal-actions button.primary"];
 const geometryProperties = ["display", "position", "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight",
   "padding", "margin", "gap", "fontSize", "lineHeight", "overflow", "zIndex", "pointerEvents", "transform",
   "gridTemplateColumns", "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"];
@@ -61,7 +64,7 @@ test("historical dark paint restores real gradients without changing light theme
     for (const theme of ["light", "contrast", "dark"]) {
       const contrast = theme === "contrast";
       const selectedTheme = contrast ? "dark" : theme;
-      await page.setContent(`<html data-platform-theme="${selectedTheme}" data-platform-high-contrast="${contrast}" style="--platform-accent:#245ca8;--platform-link:#3d8fe9;--platform-font-family:'Segoe UI',sans-serif;--platform-font-size:14px;${palettes[selectedTheme]}"><head><style>${production}</style></head><body>${markup}</body></html>`);
+      await page.setContent(`<html data-platform-theme="${selectedTheme}" data-platform-high-contrast="${contrast}" style="--platform-accent:#245ca8;--platform-link:#3d8fe9;--platform-accent-text:#fff;--platform-font-family:'Segoe UI',sans-serif;--platform-font-size:14px;${palettes[selectedTheme]}"><head><style>${production}\n* { transition: none !important; animation: none !important; }</style></head><body>${markup}</body></html>`);
       const before = await inspect(page);
       await page.addStyleTag({ content: restored });
       const after = await inspect(page);
@@ -86,6 +89,17 @@ test("historical dark paint restores real gradients without changing light theme
       assert.equal(value(".aui-md a", "text-decoration-line"), "none");
       assert.equal(value(".aui-md a", "color"), before[".aui-md a"].paint.color);
       assert.equal(value(".aui-md strong", "background-color"), before[".aui-md strong"].paint["background-color"]);
+      assert.equal(value(".modal-actions button.primary", "background-color"), "rgb(36, 92, 168)");
+      assert.equal(value(".modal-actions button.primary", "background-image"), "none");
+      assert.equal(value(".modal-actions button.primary", "color"), "rgb(255, 255, 255)");
+      await page.evaluate(() => {
+        document.documentElement.style.setProperty("--platform-accent", "#268762");
+        document.documentElement.style.setProperty("--platform-accent-text", "#000");
+      });
+      assert.deepEqual(await page.locator(".modal-actions button.primary").evaluate(button => {
+        const style = getComputedStyle(button);
+        return [style.backgroundColor, style.color];
+      }), ["rgb(38, 135, 98)", "rgb(0, 0, 0)"], "primary actions must continue following the saved custom accent");
       assert.equal(value(".conversation-list-focus", "background-image"), "linear-gradient(155deg, rgb(25, 28, 34) 0%, rgb(16, 18, 23) 32%, rgb(9, 11, 15) 100%)");
       assert.match(value(".assistant-thread-panel", "background-image"), /rgb\(42, 46, 54\).*rgb\(17, 19, 24\).*rgb\(9, 11, 15\)/);
     }

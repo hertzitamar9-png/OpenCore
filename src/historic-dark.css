@@ -1035,3 +1035,9 @@ html:root[data-platform-theme="dark"]:not([data-platform-high-contrast="true"]) 
 html:root[data-platform-theme="dark"]:not([data-platform-high-contrast="true"]) :is(.section-header,.unified-workspace-header) {
   background: linear-gradient(180deg,#20242b,#101318);
 }
+
+html:root[data-platform-theme="dark"]:not([data-platform-high-contrast="true"]) .floating-window.dialog-floating .modal-actions button.primary {
+  background: var(--platform-accent);
+  border-color: var(--platform-link);
+  color: var(--platform-accent-text);
+}

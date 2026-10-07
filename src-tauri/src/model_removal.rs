@@ -238,7 +238,9 @@ mod tests {
         let unrelated=fixture.write("models/prepared/personal-notes.txt",b"preserve unrelated file");
         let reviewed=plan(&fixture.root,"underdog-woof-4b-11",&fixture.data).unwrap();
         assert_eq!(reviewed.files.len(),1,"Only this mode's source receipt is unshared");
-        assert!(reviewed.retained_files.iter().any(|file|file.path==runtime.to_string_lossy()));
+        // Windows may render the final separator differently after checked_file
+        // joins the filename again. Compare path components, not display strings.
+        assert!(reviewed.retained_files.iter().any(|file|Path::new(&file.path)==runtime));
         remove(&fixture.root,"underdog-woof-4b-11",&fixture.data,&reviewed.confirmation_token).unwrap();
         assert!(source.is_file() && runtime.is_file() && metadata.is_file() && receipt.is_file());
         let last=plan(&fixture.root,"underdog-woof-4b-11-native",&fixture.data).unwrap();
