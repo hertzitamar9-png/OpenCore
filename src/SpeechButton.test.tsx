@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { SpeechButton } from './SpeechButton';
 import * as api from './api';
 
-vi.mock('./api', () => ({ speechStart: vi.fn(), speechTranscribe: vi.fn(), speechCancel: vi.fn() }));
+vi.mock('./api', () => ({ speechStart: vi.fn(), speechTranscribe: vi.fn(), speechCancel: vi.fn(), speechStatus: vi.fn() }));
 const stopTrack = vi.fn();
 let bytes = 4096;
 let deferredStop: (() => void) | undefined;
@@ -24,7 +24,24 @@ beforeEach(() => {
   } });
   vi.mocked(api.speechStart).mockResolvedValue('session');
   vi.mocked(api.speechCancel).mockResolvedValue();
+  vi.mocked(api.speechStatus).mockResolvedValue({ modelId: 'phonon-2', installed: true, enabled: true, idleMode: 'cold', workerReady: false, coldStartMs: null, warmWakeMs: null, phase: 'off', runtimePrecision: 'bf16', loadingElapsedMs: null });
   vi.mocked(api.speechTranscribe).mockResolvedValue({ text: 'Una español, I am Itamar, אני אוהב שניצל.', language: 'auto' });
+});
+it('shows the speech loading stage and elapsed time while keeping cancellation available', async () => {
+  let ready!: (id: string) => void;
+  vi.mocked(api.speechStart).mockReturnValue(new Promise(resolve => { ready = resolve; }));
+  vi.mocked(api.speechStatus).mockResolvedValue({ modelId: 'phonon-2', installed: true, enabled: true, idleMode: 'cold', workerReady: false, coldStartMs: null, warmWakeMs: null, phase: 'expanding-weights', runtimePrecision: 'bf16', loadingElapsedMs: 13800 });
+  const view = render(<SpeechButton onTranscript={vi.fn()} onError={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button'));
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Expanding speech weights… · 13.8 s'));
+  const cancel = screen.getByRole('button', { name: 'Loading Microphone… click again to cancel' });
+  expect(cancel).toBeEnabled();
+  fireEvent.click(cancel);
+  await waitFor(() => expect(api.speechCancel).toHaveBeenCalled());
+  await act(async () => ready('session'));
+  await screen.findByRole('button', { name: 'Microphone: click to dictate' });
+  expect(api.speechTranscribe).not.toHaveBeenCalled();
+  view.unmount();
 });
 it('keeps the input track alive until the recorder flushes its final chunk', async () => {
   deferStop = true;

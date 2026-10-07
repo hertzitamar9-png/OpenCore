@@ -21,7 +21,111 @@ vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn(async (name: string, cal
   return () => { eventHandlers.delete(name); };
 }) }));
 
+function mockFooterModels() {
+  const base: api.InstalledModel = { id: "echo", label: "ECHO 3T", description: "Installed chat model", precision: "BF16",
+    contextTokens: 262144, license: "Apache", experimental: false, note: "Pinned", selectable: true,
+    installed: true, externalManaged: false, downloadBytes: 0, totalBytes: 5e9, category: "text", backend: "gguf" };
+  return vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, { ...base, id: "swift-27b", label: "Swift 1.5", precision: "IQ2_S" }],
+    progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+}
+
 describe("OpenCore", () => {
+  it("switches an idle running model from the footer in order and keeps competing choices paused", async () => {
+    const initial = await api.snapshot();
+    let runtime = { ...initial.runtime, status: "running", profile: "echo" };
+    const snapshot = vi.spyOn(api, "snapshot").mockImplementation(async () => ({ ...initial, runtime, activeConversationIds: [] }));
+    const library = mockFooterModels();
+    const calls: string[] = [];
+    let finishStop!: () => void;
+    const stop = vi.spyOn(api, "stopRuntime").mockImplementation(() => {
+      calls.push("stop");
+      return new Promise(resolve => { finishStop = () => { runtime = { ...runtime, status: "stopped", profile: "stopped" }; resolve(); }; });
+    });
+    const select = vi.spyOn(api, "selectProfile").mockImplementation(async profile => { calls.push(`select:${profile}`); });
+    const start = vi.spyOn(api, "startProfile").mockImplementation(async profile => { calls.push(`start:${profile}`); runtime = { ...runtime, status: "running", profile }; });
+    try {
+      render(<App />);
+      const trigger = await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" });
+      expect(trigger).toBeEnabled();
+      fireEvent.click(trigger);
+      const menu = await screen.findByRole("group", { name: "Choose model profile" });
+      expect(document.querySelector(".statusbar")).not.toContainElement(menu);
+      fireEvent.click(await within(menu).findByRole("button", { name: /^Swift 1\.5/ }));
+      expect(calls).toEqual(["stop"]);
+      fireEvent.click(trigger);
+      const waiting = await screen.findByRole("group", { name: "Choose model profile" });
+      expect(await within(waiting).findByRole("button", { name: /^Swift 1\.5/ })).toBeDisabled();
+      expect(within(waiting.parentElement!).getByRole("status")).toHaveTextContent("Changing the model…");
+      await act(async () => finishStop());
+      await screen.findByRole("button", { name: "Choose model profile, currently Swift 1.5 · ECHO" });
+      expect(calls).toEqual(["stop", "select:swift-27b", "start:swift-27b"]);
+    } finally { snapshot.mockRestore(); library.mockRestore(); stop.mockRestore(); select.mockRestore(); start.mockRestore(); }
+  });
+
+  it("opens the footer menu during an active chat and explains why model switching is held", async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, "snapshot").mockResolvedValue({ ...initial, runtime: { ...initial.runtime, status: "running", profile: "echo" }, activeConversationIds: ["preview"] });
+    const library = mockFooterModels();
+    const stop = vi.spyOn(api, "stopRuntime").mockResolvedValue();
+    const start = vi.spyOn(api, "startProfile").mockResolvedValue();
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
+      const menu = await screen.findByRole("group", { name: "Choose model profile" });
+      const alternate = await within(menu).findByRole("button", { name: /^Swift 1\.5/ });
+      expect(alternate).toBeDisabled();
+      expect(screen.getByText("Wait for the active chat to finish before changing models.")).toBeVisible();
+      fireEvent.click(alternate);
+      expect(stop).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+    } finally { snapshot.mockRestore(); library.mockRestore(); stop.mockRestore(); start.mockRestore(); }
+  });
+
+  it('keeps the footer inspectable during an app update and prevents competing runtime commands', async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, 'snapshot').mockResolvedValue({ ...initial, runtime: { ...initial.runtime, status: 'running', profile: 'echo' }, activeConversationIds: [] });
+    const library = mockFooterModels();
+    const check = vi.spyOn(api, 'checkLatestAppVersion').mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
+    let complete!: () => void;
+    const install = vi.spyOn(api, 'installLatestAppUpdate').mockImplementation(() => new Promise<void>(resolve => { complete = resolve; }));
+    const stop = vi.spyOn(api, 'stopRuntime').mockResolvedValue();
+    const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Update' }));
+      const installButton = await screen.findByRole('button', { name: 'Install update' });
+      await waitFor(() => expect(installButton).toBeEnabled());
+      fireEvent.click(installButton);
+      fireEvent.click(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
+      const menu = await screen.findByRole('group', { name: 'Choose model profile' });
+      expect(await within(menu).findByRole('button', { name: /^Swift 1\.5/ })).toBeDisabled();
+      expect(within(menu.parentElement!).getByRole('status')).toHaveTextContent('Wait for the app update to finish.');
+      expect(stop).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+      await act(async () => complete());
+      await waitFor(() => expect(within(menu).getByRole('button', { name: /^Swift 1\.5/ })).toBeEnabled());
+    } finally { if (complete) await act(async () => complete()); snapshot.mockRestore(); library.mockRestore(); check.mockRestore(); install.mockRestore(); stop.mockRestore(); start.mockRestore(); }
+  });
+
+  it('retains the current model when stopping it for a switch fails', async () => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, 'snapshot').mockResolvedValue({ ...initial, runtime: { ...initial.runtime, status: 'running', profile: 'echo' }, activeConversationIds: [] });
+    const library = mockFooterModels();
+    const stop = vi.spyOn(api, 'stopRuntime').mockRejectedValue(new Error('Runtime is still busy'));
+    const select = vi.spyOn(api, 'selectProfile').mockResolvedValue();
+    const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
+      const menu = await screen.findByRole('group', { name: 'Choose model profile' });
+      fireEvent.click(await within(menu).findByRole('button', { name: /^Swift 1\.5/ }));
+      expect(await screen.findByText('Could not change the model: Error: Runtime is still busy')).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' })).toBeEnabled();
+      expect(select).not.toHaveBeenCalled();
+      expect(start).not.toHaveBeenCalled();
+    } finally { snapshot.mockRestore(); library.mockRestore(); stop.mockRestore(); select.mockRestore(); start.mockRestore(); }
+  });
+
   it("reports ECHO conversation progress and calls out stale batch updates accurately", () => {
     const operation: OperationRecord = {
       id: "sync", kind: "history_sync", target: "codex",
@@ -799,6 +903,8 @@ describe("OpenCore", () => {
     expect(screen.getAllByRole("button", { name: "OpenCore" }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("button", { name: "Claude Code" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Codex" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hermes" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "OpenCode" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Projects" })).toBeInTheDocument();
     expect(screen.getByLabelText("Message OpenCore")).toBeInTheDocument();
     expect(screen.queryByText("Telemetry")).not.toBeInTheDocument();
@@ -807,6 +913,81 @@ describe("OpenCore", () => {
     expect(await screen.findByText("Ran a command", { selector: "summary span" })).toBeInTheDocument();
     await waitFor(() => expect(document.querySelector(".aui-md pre code")).toBeInTheDocument());
     expect(screen.queryByText("You", { selector: ".aui-message-meta span" })).not.toBeInTheDocument();
+  });
+
+  it("gives imported sources distinct All groups and keeps copied Codex and Claude chats in their source categories", async () => {
+    const initial = await api.snapshot();
+    const imported = [
+      ["hermes", "Imported Hermes"], ["opencode", "Imported OpenCode"], ["codex", "Imported Codex"],
+      ["claude", "Imported Claude Code"], ["json", "Imported JSON"], ["opencore", "Imported OpenCore"],
+    ].map(([source,client]) => ({...initial.conversations[0],id:`import:${source}:copied`,client,title:`Copied ${source} notes`,pinned:false}));
+    const clients: Record<string,string> = {hermes:"Imported Hermes",opencode:"Imported OpenCode",codex:"Imported Codex",claude:"Imported Claude Code"};
+    const pages = vi.spyOn(api,"listImportedConversations").mockImplementation(async (query = "",offset = 0,limit = 100,source = "all") => {
+      const matches = imported.filter(item => (source === "all" || (source === "other" ? !Object.values(clients).includes(item.client) : item.client === clients[source])) && item.title.toLowerCase().includes(query));
+      return {conversations:matches.slice(offset,offset+limit),total:matches.length,offset,limit};
+    });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      for (const [label,source] of [["Hermes","hermes"],["OpenCode","opencode"],["Codex","codex"],["Claude Code","claude"]]) {
+        const group = await screen.findByRole("region",{name:`${label} chats`});
+        expect(await within(group).findByText(`Copied ${source} notes`)).toBeVisible();
+        for (const other of imported.filter(item=>item.id!==`import:${source}:copied`)) {
+          expect(within(group).queryByText(other.title)).not.toBeInTheDocument();
+        }
+      }
+      const other = screen.getByRole("region",{name:"Imported chats"});
+      expect(within(other).getByText("Copied json notes")).toBeVisible();
+      expect(within(other).getByText("Copied opencore notes")).toBeVisible();
+      expect(within(other).queryByText("Copied hermes notes")).not.toBeInTheDocument();
+      expect(within(other).queryByText("Copied opencode notes")).not.toBeInTheDocument();
+      expect(screen.getByRole("button",{name:"Codex group, 2"})).toBeVisible();
+      expect(screen.getByRole("button",{name:"Claude Code group, 2"})).toBeVisible();
+      for (const [label,source] of [["Hermes","hermes"],["OpenCode","opencode"],["Codex","codex"],["Claude Code","claude"]]) {
+        fireEvent.click(screen.getByRole("button",{name:label}));
+        const region = screen.getByRole("region",{name:`${label} chats`});
+        expect(await within(region).findByText(`Copied ${source} notes`)).toBeVisible();
+        expect(pages).toHaveBeenCalledWith("",0,100,source);
+      }
+      fireEvent.click(screen.getByRole("button",{name:"Imported"}));
+      const allImports = screen.getByRole("region",{name:"Imported chats"});
+      await within(allImports).findByText("Copied hermes notes");
+      for (const item of imported) expect(within(allImports).getByText(item.title)).toBeVisible();
+    } finally { pages.mockRestore(); }
+  });
+
+  it("pages, searches, pins and opens a Hermes chat absent from the recent snapshot with its original project", async () => {
+    const initial = await api.snapshot();
+    const imported = Array.from({length:102},(_,index)=>({...initial.conversations[0],id:`import:hermes:source-${index}`,client:"Imported Hermes",title:`Hermes source notes ${index}`,project:"Work",projectId:"project-work",pinned:false}));
+    const pages = vi.spyOn(api,"listImportedConversations").mockImplementation(async (query = "",offset = 0,limit = 100,source = "all") => {
+      const matches = source === "hermes" || source === "all" ? imported.filter(item=>item.title.toLowerCase().includes(query)) : [];
+      return {conversations:matches.slice(offset,offset+limit),total:matches.length,offset,limit};
+    });
+    const summary = vi.spyOn(api,"importedConversationSummary").mockImplementation(async id=>imported.find(item=>item.id===id)??null);
+    const history = vi.spyOn(api,"conversation").mockResolvedValue([]);
+    const pin = vi.spyOn(api,"setConversationPinned").mockImplementation(async (id,pinned)=>{ imported.find(item=>item.id===id)!.pinned=pinned; });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button",{name:"Hermes"}));
+      const region = screen.getByRole("region",{name:"Hermes chats"});
+      await within(region).findByText("Hermes source notes 99");
+      fireEvent.click(within(region).getByRole("button",{name:"Load more hermes chats"}));
+      await within(region).findByText("Hermes source notes 101");
+      expect(pages).toHaveBeenCalledWith("",100,100,"hermes");
+      fireEvent.change(screen.getByLabelText("Search conversations"),{target:{value:"notes 101"}});
+      await waitFor(()=>expect(pages).toHaveBeenCalledWith("notes 101",0,100,"hermes"));
+      await within(region).findByText("Hermes source notes 101");
+      expect(within(region).queryByText("Hermes source notes 99")).not.toBeInTheDocument();
+      fireEvent.click(within(region).getByRole("button",{name:"Pin Hermes source notes 101"}));
+      await waitFor(()=>expect(pin).toHaveBeenCalledWith(imported[101].id,true));
+      expect(await within(region).findByRole("button",{name:"Unpin Hermes source notes 101"})).toBeVisible();
+      fireEvent.click(within(region).getByText("Hermes source notes 101"));
+      expect(await screen.findByRole("heading",{name:"Hermes source notes 101",level:2})).toBeVisible();
+      expect(history).toHaveBeenCalledWith(imported[101].id);
+      expect(screen.getByRole("button",{name:"Project: Work"})).toBeVisible();
+      expect(within(region).getByText("Imported Hermes · Work")).toBeVisible();
+    } finally { pages.mockRestore();summary.mockRestore();history.mockRestore();pin.mockRestore(); }
   });
 
   it("opens the full OpenCore workspace only when requested", async () => {
@@ -859,10 +1040,10 @@ describe("OpenCore", () => {
     expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /DuoCore · ECHO K2 \+ Nanbeige · competing drafts, one selected answer · ECHO archive/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /ECHO 3T Addressable history target/ }));
-    expect(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
+    expect(await topbar.findByRole("button", { name: /Choose model profile, currently ECHO 3T/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently ECHO 3T/ }));
     fireEvent.click(await screen.findByRole("button", { name: /1M extended · ECHO.*1,000,000-token YaRN window.*ECHO archive.*trained context 262,144/ }));
-    expect(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ })).toBeVisible();
+    expect(await topbar.findByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ })).toBeVisible();
     fireEvent.click(topbar.getByRole("button", { name: /Choose model profile, currently 1M extended · ECHO/ }));
     expect(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Connectors" }));
@@ -888,7 +1069,7 @@ describe("OpenCore", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose model profile, currently 1M extended · ECHO" }));
     expect(screen.getByRole("group", { name: "Choose model profile" })).toBeVisible();
     fireEvent.click(await screen.findByRole("button", { name: /ECHO 3T Addressable history target/ }));
-    expect(footer).toContainElement(screen.getByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
+    expect(footer).toContainElement(await screen.findByRole("button", { name: "Choose model profile, currently ECHO 3T" }));
     library.mockRestore();
   });
 

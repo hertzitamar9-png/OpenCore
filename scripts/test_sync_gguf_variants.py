@@ -16,6 +16,7 @@ class GgufVariantRefreshTests(unittest.TestCase):
         self.assertEqual(quantization_for_filename("model-MTP-Q4_K_M.gguf")[0], "Q4_K_M MTP")
         self.assertEqual(quantization_for_filename("model-LOW-MTP-Q6_K.gguf")[0], "Q6_K LOW-MTP")
         self.assertEqual(quantization_for_filename("FrogNano-4B-Q6_K_S.gguf")[0], "Q6_K_S")
+        self.assertEqual(quantization_for_filename("PentaCoder-9B.i1-Q2_K_S.gguf")[0], "Q2_K_S")
         self.assertEqual(quantization_for_filename("Ternary-Bonsai-PTQ1_0.gguf")[0], "PTQ1_0")
         self.assertEqual(quantization_for_filename("Ornith-MTP-Q4_K_M.gguf", intrinsic_mtp=True)[0], "Q4_K_M")
         self.assertIsNone(quantization_for_filename("mmproj-F16.gguf"))

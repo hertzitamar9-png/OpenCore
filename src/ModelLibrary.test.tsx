@@ -1,19 +1,20 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ModelLibrary } from "./ModelLibrary";
 import * as api from "./api";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
-it("states that Phonon runtime FP32 expansion is not a downloadable quantization", () => {
+it("states that both Phonon runtime precisions use one downloadable checkpoint", () => {
   const phonon = modelCatalog.models.find(model => model.id === "phonon-2");
   expect(phonon?.precision).toBe("Five-value checkpoint");
-  expect(phonon?.note).toMatch(/no separate FP16, FP32, or GGUF quantization downloads/i);
-  expect(phonon?.runtimePrecision?.runtimeDtype).toBe("FP32");
+  expect(phonon?.note).toMatch(/BF16 or FP32 runtime precision/i);
+  expect(phonon?.note).toMatch(/not separate weight downloads/i);
+  expect(phonon?.runtimePrecision?.runtimeDtype).toBe("BF16 or FP32");
   expect(phonon?.runtimePrecision?.estimatedRuntimeBytes).toBe(2_500_000_000);
   expect(modelCatalog.models.some(model => model.variantOf === "phonon-2")).toBe(false);
 });
 
-it("shows Phonon's source checkpoint separately from its in-memory FP32 runtime", async () => {
+it("shows Phonon's source checkpoint separately from its selectable runtime precisions", async () => {
   const model = modelCatalog.models.find(model => model.id === "phonon-2")!;
   const installedPhonon = {
     ...model, installed: false, externalManaged: false, downloadBytes: 164_000_000, totalBytes: 164_000_000,
@@ -25,8 +26,8 @@ it("shows Phonon's source checkpoint separately from its in-memory FP32 runtime"
   try {
     render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
     fireEvent.click(await screen.findByRole("button", { name: /^Speech\s*\d*$/ }));
-    expect(await screen.findByRole("region", { name: "Phonon-2 download and runtime precision" })).toHaveTextContent("Download: Five-value checkpoint. Runtime: FP32.");
-    expect(screen.getByText(/FP32 is created in memory and is not a second model download/i)).toBeVisible();
+    expect(await screen.findByRole("region", { name: "Phonon-2 download and runtime precision" })).toHaveTextContent("Download: Five-value checkpoint. Runtime: BF16 or FP32.");
+    expect(screen.getByText(/BF16 and FP32 are created in memory from the same compact checkpoint/i)).toBeVisible();
   } finally { library.mockRestore(); speech.mockRestore(); }
 });
 
@@ -53,7 +54,82 @@ it('chooses the speech backend separately from the chat model and labels its lan
   } finally { library.mockRestore(); read.mockRestore(); choose.mockRestore(); }
 });
 
+it('offers both Phonon runtime precisions, reflects the selected dtype and keeps the Cold choice', async () => {
+  const model = { ...modelCatalog.models.find(model => model.id === 'phonon-2')!, installed: true, externalManaged: false,
+    downloadBytes: 0, totalBytes: 177438361, memoryMode: 'native' } as api.InstalledModel;
+  const status: api.SpeechStatus = { modelId: 'phonon-2', installed: true, enabled: true, idleMode: 'cold', workerReady: false,
+    coldStartMs: 25900, warmWakeMs: 797, phase: 'ready', runtimePrecision: 'bf16', loadingElapsedMs: null };
+  const library = vi.spyOn(api, 'modelLibrary').mockResolvedValue({ models: [model], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+  const speech = vi.spyOn(api, 'speechStatus').mockResolvedValue(status);
+  const precision = vi.spyOn(api, 'setSpeechRuntimePrecision').mockResolvedValue({ ...status, runtimePrecision: 'fp32' });
+  const install = vi.spyOn(api, 'installModel').mockResolvedValue();
+  try {
+    render(<ModelLibrary selectedProfile="echo" onSelect={vi.fn()} runtimeActive={false} onNotice={vi.fn()} />);
+    const selected = await screen.findByRole('radio', { name: /BF16/ });
+    expect(selected).toBeChecked();
+    const detail = screen.getByRole('region', { name: 'Phonon-2 download and runtime precision' });
+    expect(detail).toHaveTextContent('Runtime: BF16.');
+    expect(detail).toHaveTextContent('1.255 GB');
+    fireEvent.click(screen.getByRole('radio', { name: /FP32/ }));
+    await waitFor(() => expect(screen.getByRole('radio', { name: /FP32/ })).toBeChecked());
+    expect(precision).toHaveBeenCalledWith('fp32');
+    expect(detail).toHaveTextContent('Runtime: FP32.');
+    expect(detail).toHaveTextContent('2.510 GB');
+    expect(screen.getByRole('radio', { name: /Load from disk each time/ })).toBeChecked();
+    expect(install).not.toHaveBeenCalled();
+  } finally { library.mockRestore(); speech.mockRestore(); precision.mockRestore(); install.mockRestore(); }
+});
+
 describe("optional model installation", () => {
+  it('registers only the reviewed prepared Woof files and refreshes runtime readiness', async () => {
+    const model: api.InstalledModel = { id: 'woof-1-1-9b', label: 'Woof 1.1', description: 'Published MLX source with verified Windows conversion', precision: 'MLX 4-bit source', contextTokens: 32768,
+      license: 'Apache', experimental: true, note: 'Prepare audited GGUF', selectable: false, installed: true, externalManaged: false,
+      downloadBytes: 0, totalBytes: 4e9, category: 'text', backend: 'gguf', runtimeReady: false, sourceDownloaded: true, preparedReady: false,
+      preparedRuntime: { kind: 'woof-mlx-affine4-bf16', path: 'woof/model.gguf', sha256: 'gguf-hash', bytes: 8424393184,
+        sourceRepo: 'publisher/Woof-1.1', sourceRevision: 'source-revision', sourceFilename: 'model.safetensors', sourceSha256: 'source-hash', sourceBytes: 4e9, conversionManifestSha256: 'manifest-hash' } };
+    const ready = { ...model, selectable: true, runtimeReady: true, preparedReady: true };
+    const library = vi.spyOn(api, 'modelLibrary').mockResolvedValueOnce({ models: [model], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 })
+      .mockResolvedValue({ models: [ready], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+    const paths = { path: 'C:\\prepared\\woof.gguf', manifestPath: 'C:\\prepared\\conversion-manifest.json' };
+    const choose = vi.spyOn(api, 'choosePreparedModelFiles').mockResolvedValue(paths);
+    const register = vi.spyOn(api, 'registerPreparedModel').mockResolvedValue();
+    const select = vi.fn();
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={select} runtimeActive={false} onNotice={vi.fn()} />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Use prepared GGUF' }));
+      await waitFor(() => expect(register).toHaveBeenCalledWith(model.id, paths.path, paths.manifestPath));
+      expect(await screen.findByRole('button', { name: 'Use model' })).toBeEnabled();
+      expect(screen.queryByRole('button', { name: 'Use prepared GGUF' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Use model' }));
+      expect(select).toHaveBeenCalledWith(model.id);
+    } finally { library.mockRestore(); choose.mockRestore(); register.mockRestore(); }
+  });
+  it("filters installed deliveries and selects the installed quantization rather than its missing base", async () => {
+    const base: api.InstalledModel = { id: "installed-filter-coder", label: "Installed filter coder", description: "Chat model",
+      precision: "Q8_0", contextTokens: 16384, license: "Apache", experimental: false, note: "Pinned",
+      selectable: true, installed: false, externalManaged: false, downloadBytes: 5e9, totalBytes: 5e9, category: "text", backend: "gguf", memoryMode: "echo" };
+    const downloaded = { ...base, id: "installed-filter-coder-q4", precision: "Q4_K_M", variantOf: base.id, installed: true, downloadBytes: 0, memoryMode: "native" as const };
+    const missing = { ...base, id: "missing-coder", label: "Missing coder" };
+    const library = vi.spyOn(api, "modelLibrary").mockResolvedValue({ models: [base, downloaded, missing], progress: null, diskFreeBytes: 140e9, minimumFreeBytes: 64e6 });
+    const select = vi.fn();
+    const install = vi.spyOn(api, "installModel").mockResolvedValue();
+    try {
+      render(<ModelLibrary selectedProfile="echo" onSelect={select} runtimeActive={false} onNotice={vi.fn()} />);
+      await screen.findByRole("heading", { name: "Missing coder" });
+      const categories = screen.getByRole("group", { name: "Model categories" });
+      fireEvent.click(within(categories).getByRole("button", { name: /^Installed/ }));
+      expect(screen.queryByRole("heading", { name: "Missing coder" })).not.toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Installed filter coder" })).toBeVisible();
+      expect(screen.queryByRole("combobox", { name: /Quantization for Installed filter coder/ })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Use model" }));
+      expect(select).toHaveBeenCalledWith("installed-filter-coder-q4");
+      expect(install).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: /^ECHO models/ }));
+      expect(screen.getByText("No models match these filters.")).toBeVisible();
+      expect(screen.queryByRole("heading", { name: "Installed filter coder" })).not.toBeInTheDocument();
+    } finally { library.mockRestore(); install.mockRestore(); }
+  });
+
   it("selects distinct BF16 packages by ID and labels setup profiles without zero-byte downloads", async () => {
     const base: api.InstalledModel = { id: "video-distilled", label: "Video Distilled BF16", description: "Distilled pipeline",
       precision: "BF16", contextTokens: 0, license: "Publisher", experimental: true, note: "Publisher setup required",

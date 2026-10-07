@@ -20,6 +20,14 @@ const IMPORTED_SEARCH: &str = "c.client GLOB 'Imported *' AND (
     instr(lower(c.title),lower(?1)) > 0 OR instr(lower(c.client),lower(?1)) > 0
     OR instr(lower(c.id),lower(?1)) > 0 OR instr(lower(c.project),lower(?1)) > 0)";
 
+const IMPORTED_SOURCE: &str = "(?2='all'
+    OR (?2='hermes' AND c.client='Imported Hermes')
+    OR (?2='opencode' AND c.client='Imported OpenCode')
+    OR (?2='codex' AND c.client='Imported Codex')
+    OR (?2='claude' AND c.client='Imported Claude Code')
+    OR (?2='other' AND c.client NOT IN
+      ('Imported Hermes','Imported OpenCode','Imported Codex','Imported Claude Code')))";
+
 fn imported_summary_from_row(row: &Row<'_>) -> rusqlite::Result<ConversationSummary> {
     Ok(ConversationSummary {
         id: row.get(0)?,
@@ -44,6 +52,23 @@ impl EventStore {
         offset: usize,
         limit: usize,
     ) -> Result<ImportedConversationPage, String> {
+        self.list_imported_conversations_for_source(query, offset, limit, "all")
+    }
+
+    /// Filter the complete imported library before counting, ordering and paging.
+    pub fn list_imported_conversations_for_source(
+        &self,
+        query: &str,
+        offset: usize,
+        limit: usize,
+        source: &str,
+    ) -> Result<ImportedConversationPage, String> {
+        if !matches!(
+            source,
+            "all" | "hermes" | "opencode" | "codex" | "claude" | "other"
+        ) {
+            return Err("Choose a supported imported chat source.".into());
+        }
         let sql_offset =
             i64::try_from(offset).map_err(|_| "Imported chat offset is too large".to_string())?;
         let limit = limit.clamp(1, 100);
@@ -55,21 +80,21 @@ impl EventStore {
         // even when another connection imports or deletes chats between them.
         let total = transaction
             .query_row(
-                &format!("SELECT COUNT(*) FROM conversations c WHERE {IMPORTED_SEARCH}"),
-                [query],
+                &format!("SELECT COUNT(*) FROM conversations c WHERE {IMPORTED_SEARCH} AND {IMPORTED_SOURCE}"),
+                params![query, source],
                 |row| row.get::<_, i64>(0),
             )
             .map_err(|error| error.to_string())? as u64;
         let conversations = {
             let mut statement = transaction
                 .prepare(&format!(
-                    "SELECT {SUMMARY_COLUMNS} FROM conversations c WHERE {IMPORTED_SEARCH}
-                 ORDER BY c.pinned DESC,c.updated_at DESC,c.id ASC LIMIT ?2 OFFSET ?3"
+                    "SELECT {SUMMARY_COLUMNS} FROM conversations c WHERE {IMPORTED_SEARCH} AND {IMPORTED_SOURCE}
+                 ORDER BY c.pinned DESC,c.updated_at DESC,c.id ASC LIMIT ?3 OFFSET ?4"
                 ))
                 .map_err(|error| error.to_string())?;
             let rows = statement
                 .query_map(
-                    params![query, limit as i64, sql_offset],
+                    params![query, source, limit as i64, sql_offset],
                     imported_summary_from_row,
                 )
                 .map_err(|error| error.to_string())?;
@@ -321,6 +346,158 @@ mod tests {
             .unwrap();
         assert_eq!(outside.total, 1_000);
         assert!(outside.conversations.is_empty());
+    }
+
+    #[test]
+    fn source_categories_have_complete_disjoint_pages_and_keep_project_and_pin_fields() {
+        let fixture = Fixture::new();
+        fixture.populate(|transaction| {
+            transaction.execute("INSERT INTO projects(id,name,folder_path,created_at,updated_at) VALUES('source-project','Source folder',?1,'2020','2020')",[fixture.root.to_string_lossy().as_ref()]).unwrap();
+            for index in 0..600 {
+                insert(transaction,&format!("native-{index:04}"),"Newer native chat","OpenCore","","2040-01-01",false);
+            }
+            for (source,client) in [("hermes","Imported Hermes"),("opencode","Imported OpenCode"),("codex","Imported Codex"),("claude","Imported Claude Code")] {
+                for index in 0..205 {
+                    insert(transaction,&format!("{source}-{index:04}"),&format!("{source} notes {index}"),client,"Source folder","2000-01-01",source=="hermes" && index==204);
+                }
+            }
+            for (id,client) in [("json","Imported JSON"),("opencore","Imported OpenCore"),("unknown","Imported Future Client"),("lookalike","Imported Hermes Extra")] {
+                insert(transaction,id,id,client,"","2000-01-01",false);
+            }
+            transaction.execute("UPDATE conversations SET project_id='source-project' WHERE id='hermes-0204'",[]).unwrap();
+        });
+        let mut categorized = HashSet::new();
+        for (source, client, total) in [
+            ("hermes", "Imported Hermes", 205),
+            ("opencode", "Imported OpenCode", 205),
+            ("codex", "Imported Codex", 205),
+            ("claude", "Imported Claude Code", 205),
+            ("other", "", 4),
+        ] {
+            let mut ids = Vec::new();
+            for offset in (0..total).step_by(100) {
+                let page = fixture
+                    .store()
+                    .list_imported_conversations_for_source("", offset, 100, source)
+                    .unwrap();
+                assert_eq!(
+                    (page.total, page.offset, page.limit),
+                    (total as u64, offset, 100),
+                    "{source}"
+                );
+                assert!(page
+                    .conversations
+                    .iter()
+                    .all(|chat| client.is_empty() || chat.client == client));
+                if source == "hermes" && offset == 0 {
+                    assert_eq!(page.conversations[0].id, "hermes-0204");
+                    assert!(page.conversations[0].pinned);
+                    assert_eq!(page.conversations[0].project, "Source folder");
+                    assert_eq!(
+                        page.conversations[0].project_id.as_deref(),
+                        Some("source-project")
+                    );
+                }
+                ids.extend(page.conversations.into_iter().map(|chat| chat.id));
+            }
+            assert_eq!(ids.len(), total);
+            for id in ids {
+                assert!(
+                    categorized.insert(id),
+                    "A chat appeared under two source categories"
+                );
+            }
+        }
+        let mut all = HashSet::new();
+        for offset in (0..824).step_by(100) {
+            let page = fixture
+                .store()
+                .list_imported_conversations_for_source("", offset, 100, "all")
+                .unwrap();
+            assert_eq!(page.total, 824);
+            all.extend(page.conversations.into_iter().map(|chat| chat.id));
+        }
+        assert_eq!(categorized, all);
+        assert_eq!(
+            fixture
+                .store()
+                .list_imported_conversations("", 0, 100)
+                .unwrap()
+                .total,
+            824
+        );
+    }
+
+    #[test]
+    fn source_filter_and_literal_search_apply_to_count_and_later_pages_together() {
+        let fixture = Fixture::new();
+        fixture.populate(|transaction| {
+            for (source, client) in [
+                ("hermes", "Imported Hermes"),
+                ("opencode", "Imported OpenCode"),
+            ] {
+                for index in 0..150 {
+                    insert(
+                        transaction,
+                        &format!("{source}-{index:04}"),
+                        "Shared search",
+                        client,
+                        "Original project",
+                        "2000",
+                        false,
+                    );
+                }
+                transaction
+                    .execute(
+                        "UPDATE conversations SET title=?1 WHERE id=?2",
+                        params![r"Literal %_\ marker", format!("{source}-0149")],
+                    )
+                    .unwrap();
+            }
+        });
+        for source in ["hermes", "opencode"] {
+            let later = fixture
+                .store()
+                .list_imported_conversations_for_source("SHARED", 100, 100, source)
+                .unwrap();
+            assert_eq!((later.total, later.conversations.len()), (149, 49));
+            assert!(later
+                .conversations
+                .iter()
+                .all(|chat| chat.id.starts_with(source)));
+            let literal = fixture
+                .store()
+                .list_imported_conversations_for_source(r"%_\", 0, 100, source)
+                .unwrap();
+            assert_eq!(literal.total, 1);
+            assert_eq!(literal.conversations[0].id, format!("{source}-0149"));
+            let project = fixture
+                .store()
+                .list_imported_conversations_for_source("ORIGINAL PROJECT", 100, 100, source)
+                .unwrap();
+            assert_eq!((project.total, project.conversations.len()), (150, 50));
+        }
+        assert_eq!(
+            fixture
+                .store()
+                .list_imported_conversations_for_source("hermes", 0, 100, "opencode")
+                .unwrap()
+                .total,
+            0
+        );
+        for invalid in [
+            "Hermes",
+            "hermes ",
+            "Imported Hermes",
+            "",
+            "hermes' OR 1=1 --",
+        ] {
+            assert!(fixture
+                .store()
+                .list_imported_conversations_for_source("", 0, 100, invalid)
+                .unwrap_err()
+                .contains("source"));
+        }
     }
 
     #[test]

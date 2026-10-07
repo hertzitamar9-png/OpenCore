@@ -1,7 +1,8 @@
 import { EchoContextStatus } from "./EchoContextStatus";
 import { EchoMemorySettings } from "./EchoMemorySettings";
 import { ClaudeBridgePanel } from "./ClaudeBridgePanel";
-import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { CSSProperties } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { getVersion } from "@tauri-apps/api/app";
@@ -68,7 +69,7 @@ import { ModelProfileOptions, profileDescription, profileLabel, isSelectableMode
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
 import { GameDevStudio } from './AssetsStudio';
-import { UpdateButton, UpdateSettings } from './AppUpdateControls';
+import { UpdateButton, UpdateSettings, useAppUpdateInstalling } from './AppUpdateControls';
 import { AgentPlatformSettings } from './AgentPlatformSettings';
 import { AgentConnectorControls } from './AgentConnectorControls';
 import { SETTINGS_SAVE_ERROR_EVENT, type SettingsSaveError } from './useSettingsAutosave';
@@ -78,6 +79,7 @@ import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
 type View = "overview" | "conversations" | "context" | "memory" | "runtime" | "models" | "music" | "assets" | "media" | "connectors" | "settings" | "troubleshooting" | "jobs" | "spaces";
+type RuntimeAction = "starting" | "stopping" | "switching" | null;
 type ConversationDialog = { kind: "rename"; value: string } | { kind: "delete" } | null;
 type ProjectDialog = { kind: "rename"; project: ProjectSummary; value: string } | { kind: "delete"; project: ProjectSummary } | null;
 type Appearance = {
@@ -240,7 +242,7 @@ function Navigation({ active, onChange, running, compact = false }: { active: Vi
 }
 
 function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedProfile, onStart, onStop, onRestart, onExport }: {
-  snapshot: AppSnapshot; busy: boolean; runtimeAction: "starting" | "stopping" | null; selectedProfile: RuntimeProfile; setSelectedProfile: (profile: RuntimeProfile) => void;
+  snapshot: AppSnapshot; busy: boolean; runtimeAction: RuntimeAction; selectedProfile: RuntimeProfile; setSelectedProfile: (profile: RuntimeProfile) => void;
   onStart: () => void; onStop: () => void; onRestart: () => void; onExport: () => void;
 }) {
   const running = snapshot.runtime.status === "running";
@@ -269,7 +271,7 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
   return <header className="topbar">
     <div className="brand"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><div><strong>OpenCore</strong><small>Observe · Understand · Trust</small></div></div>
     <div className="runtime-actions">
-      <button className={active ? "runtime-stop-button" : "primary"} disabled={runtimeAction === "stopping"} onClick={active ? onStop : onStart}>{active ? <CircleStop size={15} /> : <Play size={15} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button>
+      <button className={active ? "runtime-stop-button" : "primary"} disabled={runtimeAction === "stopping" || runtimeAction === "switching"} onClick={active ? onStop : onStart}>{active ? <CircleStop size={15} /> : <Play size={15} />}{runtimeAction === "switching" ? "Changing…" : runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button>
       <button disabled={busy || runtimeAction !== null || !running} onClick={onRestart}><RotateCw size={15} /> Restart</button>
       <div className="model-picker" ref={profilePickerRef}>
         <span className="model-picker-label">Model</span>
@@ -333,13 +335,15 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
 }) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "imported" | "projects">("all");
+  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "hermes" | "opencode" | "imported" | "projects">("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(["all-projects"]));
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectFolder, setProjectFolder] = useState("");
   const [projectError, setProjectError] = useState("");
-  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["imported", "Imported"], ["projects", "Projects"]] as const;
+  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["hermes", "Hermes"], ["opencode", "OpenCode"], ["imported", "Imported"], ["projects", "Projects"]] as const;
+  const sourceLabels = {claude: "Claude Code", codex: "Codex", hermes: "Hermes", opencode: "OpenCode"} as const;
+  const isSourceSection = section === "claude" || section === "codex" || section === "hermes" || section === "opencode";
   const needle = deferredQuery.trim().toLowerCase();
   const importedRevision = useMemo(() => `${importRevision}:${JSON.stringify(conversations.map(item => [item.id, item.updatedAt, item.title, item.pinned]))}`, [conversations, importRevision]);
   const importedRows = (items: ConversationSummary[]) => <ConversationRows items={items} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />;
@@ -356,6 +360,8 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
       opencore: searched.filter(isOpenCore),
       claude: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("claude")),
       codex: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("codex")),
+      hermes: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("hermes")),
+      opencode: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("opencode")),
     };
   }, [searched]);
   const projects = useMemo(() => {
@@ -386,16 +392,15 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
     <div className="search conversation-search"><Search size={14} /><input aria-label="Search conversations" placeholder="Search…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
     <div className="conversation-sections">{sections.map(([id, label]) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}>{label}</button>)}</div>
     <div className="conversation-scroll">
-      {searched.length === 0 && section !== "imported" ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
+      {searched.length === 0 && section !== "imported" && section !== "all" && !isSourceSection ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
       {section === "all" ? <>
         {sourceItems.pinned.length ? <CollapsibleConversationGroup id="all-pinned" label="Pinned" count={sourceItems.pinned.length} collapsed={collapsed.has("all-pinned")} onToggle={toggle}><ConversationRows items={sourceItems.pinned} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup> : null}
         <CollapsibleConversationGroup id="all-recent" label="Recent" count={sourceItems.recent.length} collapsed={collapsed.has("all-recent")} onToggle={toggle}><ConversationRows items={sourceItems.recent} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-opencore" label="OpenCore" count={sourceItems.opencore.length} collapsed={collapsed.has("all-opencore")} onToggle={toggle}><ConversationRows items={sourceItems.opencore} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        <CollapsibleConversationGroup id="all-claude" label="Claude Code" count={sourceItems.claude.length} collapsed={collapsed.has("all-claude")} onToggle={toggle}><ConversationRows items={sourceItems.claude} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        <CollapsibleConversationGroup id="all-codex" label="Codex" count={sourceItems.codex.length} collapsed={collapsed.has("all-codex")} onToggle={toggle}><ConversationRows items={sourceItems.codex} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        <ImportedChats query={needle} revision={importedRevision} grouped renderRows={importedRows} />
+        {(["claude", "codex", "hermes", "opencode"] as const).map(source => <ImportedChats key={source} query={needle} revision={importedRevision} source={source} label={sourceLabels[source]} nativeItems={sourceItems[source]} grouped collapsed={collapsed.has(`all-${source}`)} onToggle={() => toggle(`all-${source}`)} renderRows={importedRows} />)}
+        <ImportedChats query={needle} revision={importedRevision} source="other" grouped renderRows={importedRows} />
         <CollapsibleConversationGroup id="all-projects" label="Projects" count={projects.length} collapsed={collapsed.has("all-projects")} onToggle={toggle}>{projectGroups}</CollapsibleConversationGroup>
-      </> : section === "projects" ? projectGroups : section === "imported" ? <ImportedChats query={needle} revision={importedRevision} renderRows={importedRows} /> : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
+      </> : section === "projects" ? projectGroups : section === "imported" ? <ImportedChats query={needle} revision={importedRevision} renderRows={importedRows} /> : isSourceSection ? <ImportedChats query={needle} revision={importedRevision} source={section} label={sourceLabels[section]} nativeItems={sourceItems[section]} renderRows={importedRows} /> : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
     </div>
   </section>;
 }
@@ -464,7 +469,7 @@ function RuntimeLogs({ logs }: { logs: LogEntry[] }) {
   </section>;
 }
 
-function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAction, actions }: { snapshot: AppSnapshot; selectedProfile: RuntimeProfile; setSelectedProfile: (p: RuntimeProfile) => void; runtimeAction: "starting" | "stopping" | null; actions: { start: () => void; stop: () => void; restart: () => void; navigate: (view: View) => void; notice: (message: string) => void } }) {
+function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAction, actions }: { snapshot: AppSnapshot; selectedProfile: RuntimeProfile; setSelectedProfile: (p: RuntimeProfile) => void; runtimeAction: RuntimeAction; actions: { start: () => void; stop: () => void; restart: () => void; navigate: (view: View) => void; notice: (message: string) => void } }) {
   const runtime = snapshot.runtime;
   const { installedProfiles, error: profileLoadError } = useInstalledModelProfiles();
   const availableProfiles = profilesForInstalledModels(installedProfiles || []);
@@ -1160,13 +1165,30 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
   </div>;
 }
 
-function StatusbarModelSelector({ selectedProfile, onSelect, disabled }: { selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void; disabled: boolean }) {
+function StatusbarModelSelector({ selectedProfile, onSelect, blockedReason }: { selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void; blockedReason?: string }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ left: 8, bottom: 36, width: 300, maxHeight: 400 });
+  useLayoutEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = Math.min(300, window.innerWidth - 16);
+      const top = rect.height ? rect.top : window.innerHeight - 28;
+      setPosition({ left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)),
+        bottom: Math.max(8, window.innerHeight - top + 8), width, maxHeight: Math.max(80, top - 16) });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => { window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
+  }, [open]);
   useEffect(() => {
     if (!open) return;
-    const outside = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false); };
+    const outside = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false); };
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpen(false); triggerRef.current?.focus(); } };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
@@ -1174,17 +1196,21 @@ function StatusbarModelSelector({ selectedProfile, onSelect, disabled }: { selec
   }, [open]);
   const choose = (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => { onSelect(profile); setOpen(false); triggerRef.current?.focus(); };
   return <div className="statusbar-model-picker" ref={rootRef}>
-    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" disabled={disabled} onClick={() => setOpen((value) => !value)}>
+    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" onClick={() => setOpen((value) => !value)}>
       <BrainCircuit size={13} aria-hidden="true" /><strong>{profileLabel(selectedProfile)}</strong><ChevronDown size={12} aria-hidden="true" />
     </button>
-    {open && !disabled ? <ModelProfileOptions selectedProfile={selectedProfile} onSelect={choose} id="statusbar-model-profile-options" /> : null}
+    {open ? createPortal(<div ref={menuRef} className="statusbar-model-popover" style={{ position: "fixed", ...position }}>
+      {blockedReason ? <p className="statusbar-model-reason" role="status">{blockedReason}</p> : null}
+      <ModelProfileOptions selectedProfile={selectedProfile} onSelect={choose} disabled={Boolean(blockedReason)} id="statusbar-model-profile-options" />
+    </div>, document.body) : null}
   </div>;
 }
 
-function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, conversationId, className = "" }: {
+function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, blockedReason, conversationId, className = "" }: {
   snapshot: AppSnapshot;
   selectedProfile: RuntimeProfile;
   setSelectedProfile: (profile: RuntimeProfile) => void;
+  blockedReason?: string;
   conversationId?: string;
   className?: string;
 }) {
@@ -1197,13 +1223,14 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, conve
     <span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span>
     <span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span>
     <span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span>
-    <StatusbarModelSelector selectedProfile={currentProfile} onSelect={setSelectedProfile} disabled={active || Boolean(snapshot.activeConversationIds?.length)} />
+    <StatusbarModelSelector selectedProfile={currentProfile} onSelect={setSelectedProfile} blockedReason={blockedReason} />
     <ContextUsageIndicator conversationId={conversationId} profile={currentProfile} runtime={snapshot.runtime} />
   </footer>;
 }
 
 export default function App() {
   const platform=usePlatformConfiguration();
+  const updatingApp = useAppUpdateInstalling();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>("conversations");
   const [assetCategory,setAssetCategory]=useState('image');
@@ -1297,7 +1324,8 @@ export default function App() {
     }).then(unlisten => { if (disposed) unlisten(); else stop = unlisten; }).catch(() => {});
     return () => { disposed = true; stop?.(); };
   }, []);
-  const [runtimeAction, setRuntimeAction] = useState<"starting" | "stopping" | null>(null);
+  const [runtimeAction, setRuntimeAction] = useState<RuntimeAction>(null);
+  const switchingProfile = useRef(false);
   const [conversationDialog, setConversationDialog] = useState<ConversationDialog>(null);
   const [projectDialog, setProjectDialog] = useState<ProjectDialog>(null);
   const [appearance, setAppearance] = useState<Appearance>(savedAppearance);
@@ -1327,12 +1355,12 @@ export default function App() {
     try { window.localStorage.setItem("opencore.model-profile", profile); } catch { /* The choice remains active for this session. */ }
   }, []);
   useEffect(() => {
-    if (!snapshot || ["running", "starting"].includes(snapshot.runtime.status)) return;
+    if (!snapshot || switchingProfile.current || ["running", "starting"].includes(snapshot.runtime.status)) return;
     void api.selectProfile(selectedProfile).catch((error) => setNotice(String(error)));
   }, [selectedProfile, snapshot?.runtime.status]);
   useEffect(() => {
     const runtime = snapshot?.runtime;
-    if (!runtime || !["running", "starting"].includes(runtime.status) || runtime.profile === "stopped" || runtime.profile === selectedProfile) return;
+    if (!runtime || switchingProfile.current || !["running", "starting"].includes(runtime.status) || runtime.profile === "stopped" || runtime.profile === selectedProfile) return;
     setSelectedProfile(runtime.profile);
   }, [snapshot?.runtime.profile, snapshot?.runtime.status, selectedProfile, setSelectedProfile]);
   useEffect(() => { try { window.localStorage.setItem(appearanceKey, JSON.stringify(appearance)); setAppearanceStorageError(''); } catch (error) { setAppearanceStorageError(String(error)); } }, [appearance]);
@@ -1448,19 +1476,44 @@ export default function App() {
   const selected = useMemo(() => snapshot?.conversations.find((item) => item.id === selectedConversation) ||
     (importedSelection?.id === selectedConversation ? importedSelection : undefined), [snapshot, selectedConversation, importedSelection]);
   const act = async (operation: () => Promise<unknown>): Promise<boolean> => { setBusy(true); setNotice(undefined); try { await operation(); await refresh(); if (selectedConversation?.startsWith("import:")) setImportRevision(value => value + 1); return true; } catch (error) { setNotice(String(error)); return false; } finally { setBusy(false); } };
+  const runtimeTransitionReason = updatingApp ? 'Wait for the app update to finish.' : runtimeAction === 'switching' ? 'Changing the model…' : runtimeAction || snapshot?.runtime.status === 'starting' ? 'Wait for the runtime operation to finish.' : undefined;
+  const modelSwitchBlocked = runtimeTransitionReason || (studioActive ? 'Wait for the active studio task to finish before changing models.' :
+    snapshot?.activeConversationIds?.length || inferenceOwner ? 'Wait for the active chat to finish before changing models.' : busy ? 'Wait for the current operation to finish.' : undefined);
+  const switchRuntimeProfile = async (profile: RuntimeProfile) => {
+    if (profile === 'stopped' || switchingProfile.current) return;
+    if (modelSwitchBlocked) { setNotice(modelSwitchBlocked); return; }
+    const runtime = snapshot?.runtime;
+    const wasRunning = runtime?.status === 'running';
+    if (profile === (wasRunning ? runtime.profile : selectedProfile)) return;
+    switchingProfile.current = true;
+    setRuntimeAction('switching'); setNotice(undefined);
+    try {
+      if (wasRunning) await api.stopRuntime();
+      await api.selectProfile(profile);
+      setSelectedProfile(profile);
+      if (wasRunning) await api.startProfile(profile);
+    } catch (error) { setNotice(`Could not change the model: ${String(error)}`); }
+    finally {
+      await refresh();
+      switchingProfile.current = false;
+      setRuntimeAction(null);
+    }
+  };
   const start = async () => {
+    if (switchingProfile.current || updatingApp) return;
     setRuntimeAction("starting"); setNotice(undefined);
     try { await api.startProfile(selectedProfile); await refresh(); }
     catch (error) { if (!String(error).includes("Runtime loading stopped")) setNotice(String(error)); }
     finally { setRuntimeAction((current) => current === "starting" ? null : current); }
   };
   const stop = async () => {
+    if (switchingProfile.current || updatingApp) return;
     setRuntimeAction("stopping");
     try { await api.stopRuntime(); await refresh(); }
     catch (error) { setNotice(String(error)); }
     finally { setRuntimeAction(null); }
   };
-  const restart = () => act(api.restartRuntime);
+  const restart = () => switchingProfile.current || updatingApp ? Promise.resolve(false) : act(api.restartRuntime);
   const exportCurrent = () => selectedConversation ? setExportChatId(selectedConversation) : setNotice("Select a conversation to export.");
   const importChats = useCallback(async (path: string, format: ImportFormat) => {
     const requestId = crypto.randomUUID();
@@ -1478,7 +1531,9 @@ export default function App() {
     setConversationDialog({ kind: "delete" });
   };
   const togglePinned = () => selectedConversation && selected ? act(() => api.setConversationPinned(selectedConversation, !selected.pinned)) : Promise.resolve();
-  const toggleRowPinned = (item: ConversationSummary) => { void act(() => api.setConversationPinned(item.id, !item.pinned)); };
+  const toggleRowPinned = (item: ConversationSummary) => { void act(() => api.setConversationPinned(item.id, !item.pinned)).then(changed => {
+    if (changed && item.client.startsWith("Imported ") && !selectedConversation?.startsWith("import:")) setImportRevision(value => value + 1);
+  }); };
   const moveCurrentToProject = (projectId: string | null) => selectedConversation ? act(() => api.moveConversationToProject(selectedConversation, projectId)) : Promise.resolve();
   const createProject = (name: string, folderPath: string) => act(() => api.createProject(name, folderPath));
   const createProjectForCurrent = (name: string, folderPath: string) => act(async () => {
@@ -1574,7 +1629,7 @@ export default function App() {
   ].filter(Boolean) as ("computer-use" | "browser-use" | "chrome-control")[];
 
   const hideConversationList = conversationsCollapsed || (workspaceOpen && viewportWidth < 1440);
-  const mainBlocked = studioActive ? 'Wait for the active studio task to finish.' : (snapshot.activeConversationIds || []).some(id => id !== selectedConversation) || Boolean(inferenceOwner && inferenceOwner !== selectedConversation) ? 'Another chat is working. Wait for it to finish before sending.' : undefined;
+  const mainBlocked = runtimeTransitionReason || (studioActive ? 'Wait for the active studio task to finish.' : (snapshot.activeConversationIds || []).some(id => id !== selectedConversation) || Boolean(inferenceOwner && inferenceOwner !== selectedConversation) ? 'Another chat is working. Wait for it to finish before sending.' : undefined);
   const conversationList = <ConversationsList conversations={snapshot.conversations} projects={snapshot.projects} selected={selectedConversation} onSelect={selectConversation} onNew={newChat} onExit={() => setView("overview")} onCreateProject={createProject} onTogglePin={toggleRowPinned} onEditProject={(project) => setProjectDialog({ kind: "rename", project, value: project.name })} onRemoveProject={(project) => setProjectDialog({ kind: "delete", project })} onOpenProjectFolder={openProjectFolder} onChangeProjectFolder={changeProjectFolder} importRevision={importRevision} />;
   const conversationContent = <div className={`conversation-content-grid ${hideConversationList ? 'conversation-list-collapsed' : ''}`} style={{'--conversation-list-width': `${sidebarWidth}px`} as CSSProperties}>
       {conversationList}<div className="conversation-resizer" role="separator" tabIndex={0} aria-label="Resize conversations" aria-orientation="vertical" aria-valuemin={230} aria-valuemax={600} aria-valuenow={sidebarWidth} onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setSidebarWidth(current => Math.min(600, Math.max(230, current + (event.key === 'ArrowRight' ? 24 : -24)))); } }} onPointerDown={(event) => { sidebarResize.current = { x: event.clientX, width: sidebarWidth }; event.currentTarget.setPointerCapture(event.pointerId); }} onPointerMove={(event) => { if (sidebarResize.current) setSidebarWidth(Math.min(600, Math.max(230, sidebarResize.current.width + event.clientX - sidebarResize.current.x))); }} onPointerUp={(event) => { sidebarResize.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }} />
@@ -1636,9 +1691,9 @@ export default function App() {
     <Navigation active={view} onChange={setView} running={running} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
       <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
-      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
+      <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={selectedConversation} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={selectedConversation} parentTitle={selected?.title || 'New conversation'} settings={parentSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} inferenceBlocked={runtimeTransitionReason} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
     </div>
-    <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={setSelectedProfile} conversationId={selectedConversation} />
+    <RuntimeStatusBar snapshot={snapshot} selectedProfile={selectedProfile} setSelectedProfile={profile => void switchRuntimeProfile(profile)} blockedReason={modelSwitchBlocked} conversationId={selectedConversation} />
     {notice && <div className="toast"><CircleAlert size={17} /><span>{notice}{/Open Models and choose Install|Install this model from the Models tab|GGUF not found:/i.test(notice) && <button className="model-install-action" onClick={() => setView("models")}>Open Models</button>}</span><button onClick={() => setNotice(undefined)}><X size={15} /></button></div>}
     {conversationDialog && <OpenCoreDialog dialog={conversationDialog} title={selected?.title || "This conversation"} onChange={(value) => setConversationDialog({ kind: "rename", value })} onCancel={() => setConversationDialog(null)} onConfirm={confirmConversationDialog} />}
     {projectDialog && <ProjectEditDialog dialog={projectDialog} onChange={(value) => setProjectDialog((current) => current?.kind === "rename" ? { ...current, value } : current)} onCancel={() => setProjectDialog(null)} onConfirm={confirmProjectDialog} />}

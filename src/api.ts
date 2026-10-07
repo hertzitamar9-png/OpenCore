@@ -30,12 +30,13 @@ export async function pickStudioFile(kind: 'python' | 'worker' | 'input'): Promi
 export async function pickStudioSourceDirectory(): Promise<string | null> {
   const value=await open({multiple:false,directory:true});return typeof value==='string'?value:null;
 }
-export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; }
-const defaultSpeechStatus: SpeechStatus = { modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" };
+export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; runtimePrecision?: "bf16" | "fp32"; loadingElapsedMs?: number | null; }
+const defaultSpeechStatus: SpeechStatus = { modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off", runtimePrecision: "bf16", loadingElapsedMs: null };
 export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
 export const setSpeechEnabled = (enabled: boolean) => invoke<SpeechStatus>("speech_set_enabled", { enabled });
 export const setSpeechIdleMode = (mode: "cold" | "ram") => invoke<SpeechStatus>("speech_set_idle_mode", { mode });
 export const setSpeechModel = (modelId: string) => invoke<SpeechStatus>("speech_set_model", { modelId });
+export const setSpeechRuntimePrecision = (precision: "bf16" | "fp32") => invoke<SpeechStatus>("speech_set_runtime_precision", { precision });
 export interface EchoMemoryConfiguration { memoryTokens: number; refreshTokens: number; warmCacheMib: number; activeWindowTokens: number }
 export interface EchoVirtualMemory {
   recent_tokens: number; pinned_tokens: number; retrieved_tokens: number; reserve_tokens: number;
@@ -80,6 +81,8 @@ export interface InstalledModel {
   vramWeightMultiplier?: number; weightBytes?: number;
   artifactIdentity?: string | null;
   runtimePrecision?: { sourceFormat: string; runtimeDtype: string; estimatedRuntimeBytes: number; runtimeMemoryNote: string; runtimeComponent: string };
+  sourceDownloaded?: boolean; preparedReady?: boolean;
+  preparedRuntime?: { kind: string; path: string; sha256: string; bytes: number; sourceRepo: string; sourceRevision: string; sourceFilename: string; sourceSha256: string; sourceBytes: number; conversionManifestSha256: string };
 }
 export interface ModelLibrary {
   models: InstalledModel[]; diskFreeBytes: number; minimumFreeBytes: number;
@@ -232,6 +235,14 @@ export async function exportConversation(id: string, format: "json" | "markdown"
   const result = await invoke<{ path: string }>("export_conversation", { id, format });
   return result.path;
 }
+export const registerPreparedModel = (id: string, path: string, manifestPath: string) => invoke<void>("register_prepared_model", { id, path, manifestPath });
+export async function choosePreparedModelFiles(): Promise<{ path: string; manifestPath: string } | null> {
+  if (!desktop()) throw new Error("Prepared model setup requires the desktop application.");
+  const path = await open({ multiple: false, directory: false, title: "Choose the prepared Woof GGUF", filters: [{ name: "Prepared GGUF", extensions: ["gguf"] }] });
+  if (typeof path !== 'string') return null;
+  const manifestPath = await open({ multiple: false, directory: false, title: "Choose its adjacent conversion manifest", defaultPath: path.replace(/[\\/][^\\/]+$/, ''), filters: [{ name: "Conversion manifest", extensions: ["json"] }] });
+  return typeof manifestPath === 'string' ? { path, manifestPath } : null;
+}
 
 export interface ImportedConversationPage {
   conversations: import("./types").ConversationSummary[];
@@ -240,9 +251,11 @@ export interface ImportedConversationPage {
   limit: number;
 }
 
-export async function listImportedConversations(query = "", offset = 0, limit = 100): Promise<ImportedConversationPage> {
+export type ImportedConversationSource = "all" | "hermes" | "opencode" | "codex" | "claude" | "other";
+
+export async function listImportedConversations(query = "", offset = 0, limit = 100, source: ImportedConversationSource = "all"): Promise<ImportedConversationPage> {
   if (!desktop()) return { conversations: [], total: 0, offset, limit };
-  return invoke<ImportedConversationPage>("list_imported_conversations", { query, offset, limit });
+  return invoke<ImportedConversationPage>("list_imported_conversations", { query, offset, limit, source });
 }
 
 export async function importedConversationSummary(id: string): Promise<import("./types").ConversationSummary | null> {

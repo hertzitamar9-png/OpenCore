@@ -12581,6 +12581,564 @@
       "filename": "vocab.json",
       "bytes": 2776833,
       "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    {
+      "id": "defiant-fable-9b-924b16e1-a0ed28f9",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q8_0.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q8_0.gguf",
+      "sha256": "a0ed28f9af669f48ff2138f1f016bda3f1b3daf305cc3bb9c501f4c6b48e48a5",
+      "bytes": 10481052960
+    },
+    {
+      "id": "defiant-fable-9b-618f66b1-ae9679de",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ2_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ2_M.gguf",
+      "sha256": "ae9679dee69a4cb3a9375efa3644adc0164a362c61df2b283696d05e57df2fca",
+      "bytes": 4942441760
+    },
+    {
+      "id": "defiant-fable-9b-d02a8ca0-88cce3a5",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ3_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ3_M.gguf",
+      "sha256": "88cce3a5c2793a801e1c3f9b7ec4eaaa8d4c68ad2017718b517b6d019281eaea",
+      "bytes": 5615267104
+    },
+    {
+      "id": "defiant-fable-9b-d0c5247d-fc98be81",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_NL.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_NL.gguf",
+      "sha256": "fc98be8168f39ed159f65c6fd193e803ae5ac1a774b738654811db1244103360",
+      "bytes": 6618098976
+    },
+    {
+      "id": "defiant-fable-9b-c7ee15fa-a5a35852",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_XS.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_XS.gguf",
+      "sha256": "a5a35852c81f2c677c9cac813335add3be46328b66d517d94db84b76308b6217",
+      "bytes": 6396325152
+    },
+    {
+      "id": "defiant-fable-9b-497323f7-3349c656",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ2_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ2_M.gguf",
+      "sha256": "3349c656c2b16659a230a8d92acf0c55c2ae41876747deb5ba04a76a5a31a004",
+      "bytes": 4942442720
+    },
+    {
+      "id": "defiant-fable-9b-e4e251e2-726ad4c6",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ3_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ3_M.gguf",
+      "sha256": "726ad4c6c41906e314052e69a294ae3372310c8d11c2e78d4e97784d5beec110",
+      "bytes": 5722667232
+    },
+    {
+      "id": "defiant-fable-9b-4a209a03-c46c85c3",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_NL.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_NL.gguf",
+      "sha256": "c46c85c3e2d0c4d6ab62f5d7bb944739c0fd52fea8b04f786434a4358fa49def",
+      "bytes": 6755547360
+    },
+    {
+      "id": "defiant-fable-9b-7262720b-8d33af53",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_XS.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_XS.gguf",
+      "sha256": "8d33af536e35805967c9f4d77e1ed62b8212bdee282c80c6dc9b79ae6d677637",
+      "bytes": 6526302432
+    },
+    {
+      "id": "defiant-fable-9b-43f76aa0-d7eb4fac",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_M.gguf",
+      "sha256": "d7eb4fac9389d53fa576f64a6ff53e914a00bc7705dc354d1065887565147320",
+      "bytes": 6979975392
+    },
+    {
+      "id": "defiant-fable-9b-50ae21e7-1899fa1c",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_S.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_S.gguf",
+      "sha256": "1899fa1c7427db6f3e87f4b215a42a5101eec21eab7fd2cea5a658aad50dc2e1",
+      "bytes": 6688438496
+    },
+    {
+      "id": "defiant-fable-9b-39412a7f-a78b01d8",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_M.gguf",
+      "sha256": "a78b01d87e54c85191b7d139f229c5cdb5e9c9af08d832accd14b3b5fd1c3f6d",
+      "bytes": 7842429152
+    },
+    {
+      "id": "defiant-fable-9b-bdcde42a-bf2e8ade",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_S.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_S.gguf",
+      "sha256": "bf2e8adeb558711630e241d72b0ec0ff0f2de1af0e8764e5f9b8b2ccfb32826e",
+      "bytes": 7672527072
+    },
+    {
+      "id": "defiant-fable-9b-d23aa2fa-b54d045c",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf",
+      "sha256": "b54d045cc07cc48259a2329f2b86ba8956de15a44d71d5004a6f8598d71c36d6",
+      "bytes": 8758786272
+    },
+    {
+      "id": "defiant-fable-9b-f09092c0-1830f3be",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q8_0.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q8_0.gguf",
+      "sha256": "1830f3beffb43850143bf45ee6f9d637f82ca22ddd9e08e40be1399062be32a2",
+      "bytes": 10739611872
+    },
+    {
+      "id": "defiant-fable-9b-8aa5171d-d33db5e5",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+      "sha256": "d33db5e583b9c9251402e876443791bc979f12af934bfb0630eadfb456279f84",
+      "bytes": 6828993824
+    },
+    {
+      "id": "defiant-fable-9b-d3f17e63-6d738a56",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_S.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_S.gguf",
+      "sha256": "6d738a564822d8ad0f0f3b4cae135e66c90ef0f5e30ed1722c79817802e2b62b",
+      "bytes": 6551514400
+    },
+    {
+      "id": "defiant-fable-9b-fe73375c-3138b106",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_M.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_M.gguf",
+      "sha256": "3138b1069d7a798460eba9cedf7b865f4dbf285b43117d9db549d124797cebbf",
+      "bytes": 7667854624
+    },
+    {
+      "id": "defiant-fable-9b-f3062205-282eda65",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_S.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_S.gguf",
+      "sha256": "282eda65148f468154ea21ebc5e39ab1f1dce898c597640ceccfc47ecc139131",
+      "bytes": 7505194272
+    },
+    {
+      "id": "defiant-fable-9b-aa08f7bb-be2e829c",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf",
+      "sha256": "be2e829c3cb38fc98ec53ee25311a4fa6a8437463f974fded6ce1c052c3cd643",
+      "bytes": 8559144224
+    },
+    {
+      "id": "defiant-fable-9b-40e4df69-82418855",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q6_K.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q6_K.gguf",
+      "sha256": "824188550771077e8ae1131d4d4826d08f79dab862d2c5725d4506931b80e9a1",
+      "bytes": 8758792960
+    },
+    {
+      "id": "defiant-fable-9b-6988ef96-dcabfc7a",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q8_0.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q8_0.gguf",
+      "sha256": "dcabfc7ab12fac26f84adb061e99eee793837c1cf1bb432a27b8790f7a91f14e",
+      "bytes": 10739618560
+    },
+    {
+      "id": "defiant-fable-9b-93229133-6a772118",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-bf16.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-bf16.gguf",
+      "sha256": "6a772118b107772fb83d111fec59e54b139c993fe6dc4906288a3bb81178705d",
+      "bytes": 18407330272
+    },
+    {
+      "id": "defiant-fable-9b-f9e4edcf-2e8be304",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q6_K.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q6_K.gguf",
+      "sha256": "2e8be304734e365f6b77f95f255f7cbc3aa46dd112d4169f1ea5a42266e6ef76",
+      "bytes": 8758814912
+    },
+    {
+      "id": "defiant-fable-9b-a1b2f08b-701fd92f",
+      "path": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q8_0.gguf",
+      "repo": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+      "revision": "8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "filename": "Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q8_0.gguf",
+      "sha256": "701fd92f14cb7752923ecef608e1a5c5f6281affeb3dea6fc73b1b505c1c71a9",
+      "bytes": 10739640512
+    },
+    {
+      "id": "pentacoder-9b-af318708-65e0111e",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B-Q8_0.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-GGUF",
+      "revision": "168934b4e037344b17762f68b732a64bd1c90281",
+      "filename": "PentaCoder-9B-Q8_0.gguf",
+      "sha256": "65e0111ec4311d08c8a19f13b4f423f7c29de66bc0f2c824b5059aff45331f2f",
+      "bytes": 9527526752
+    },
+    {
+      "id": "pentacoder-9b-e62e9089-bb18b302",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B-Q4_K_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-GGUF",
+      "revision": "168934b4e037344b17762f68b732a64bd1c90281",
+      "filename": "PentaCoder-9B-Q4_K_M.gguf",
+      "sha256": "bb18b3026bb46bd327d0db609e5341b8f1a1084fc11d7516491d179da1234077",
+      "bytes": 5629134176
+    },
+    {
+      "id": "pentacoder-9b-6b8e67c5-f6859691",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B-Q5_K_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-GGUF",
+      "revision": "168934b4e037344b17762f68b732a64bd1c90281",
+      "filename": "PentaCoder-9B-Q5_K_M.gguf",
+      "sha256": "f68596917b77cf7f3350b53c7826a8bf44f43af7ab034b0c50a93dcc0f0e57a3",
+      "bytes": 6467994976
+    },
+    {
+      "id": "pentacoder-9b-4c5af568-426ee487",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ1_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ1_M.gguf",
+      "sha256": "426ee487286c096d0a239934c0adcbd4045c90d124d01c482631ef2a69504a75",
+      "bytes": 2877296352
+    },
+    {
+      "id": "pentacoder-9b-94e10885-265291b7",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ1_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ1_S.gguf",
+      "sha256": "265291b7375e309867d47885f127ca15e1bb87382ea98a811c640b4bedb885f8",
+      "bytes": 2742669024
+    },
+    {
+      "id": "pentacoder-9b-db1c0ea2-bb8ea453",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ2_M.gguf",
+      "sha256": "bb8ea453b9eaf24e012675107e895badc96c702aa942ca61cedc508e06a51281",
+      "bytes": 3607498464
+    },
+    {
+      "id": "pentacoder-9b-ff2bbd66-e59460e1",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ2_S.gguf",
+      "sha256": "e59460e1b654df52175d595042362a4b915915ddd3083deaa3b7d853ac48ab34",
+      "bytes": 3427995360
+    },
+    {
+      "id": "pentacoder-9b-e35899b3-bc21a32f",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_XS.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ2_XS.gguf",
+      "sha256": "bc21a32fef8c96ec4c87b30155ff5c5f3bea5779fc88be949c2367894b298a79",
+      "bytes": 3285372640
+    },
+    {
+      "id": "pentacoder-9b-10d4ce0a-2ac06ad2",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_XXS.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ2_XXS.gguf",
+      "sha256": "2ac06ad296a52b5090eb9b7731c7f8a43b5bc4a05b5ce0ffefa124f5987ff2cb",
+      "bytes": 3101675232
+    },
+    {
+      "id": "pentacoder-9b-3b25f8b5-59c07188",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ3_M.gguf",
+      "sha256": "59c071885d06ce3e52e2ff0b9b1a6ebbb44aa92ce91c2c03ab1debe49be06276",
+      "bytes": 4415409888
+    },
+    {
+      "id": "pentacoder-9b-c3741304-edc0bad1",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ3_S.gguf",
+      "sha256": "edc0bad12952a7e99e0cd4813d443ef6e92c60314c3445fed0221f7796b12b94",
+      "bytes": 4370845408
+    },
+    {
+      "id": "pentacoder-9b-645cb81c-365ee271",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_XS.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ3_XS.gguf",
+      "sha256": "365ee271fb94f4c97a80642d7df622bf6bd1d7aefb71646290cde2c159eddb39",
+      "bytes": 4243443424
+    },
+    {
+      "id": "pentacoder-9b-ef97b367-58ce4a90",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_XXS.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ3_XXS.gguf",
+      "sha256": "58ce4a906d5cb4bc3d928ebcfacb0402cc81667d36f92622fc1271f933788534",
+      "bytes": 3938193120
+    },
+    {
+      "id": "pentacoder-9b-bfff1c6a-f4e8a2ad",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ4_NL.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ4_NL.gguf",
+      "sha256": "f4e8a2ad2f3c060752cd9feaab033fdec72cce28e4e2d798d1f9d74071ae32db",
+      "bytes": 5418241760
+    },
+    {
+      "id": "pentacoder-9b-0de48714-e4b86628",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ4_XS.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-IQ4_XS.gguf",
+      "sha256": "e4b86628bbb89f8e1e88767802653c3f69afda72d5cbf9341ec3404b33a60bed",
+      "bytes": 5196467936
+    },
+    {
+      "id": "pentacoder-9b-37f2d2f8-fd75e3f8",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q2_K.gguf",
+      "sha256": "fd75e3f8299aa77ade1c805c009be2f4b890951e7a2f036b1588dd99e29aa630",
+      "bytes": 3827289824
+    },
+    {
+      "id": "pentacoder-9b-8ebe3e7d-8080f057",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_L.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q3_K_L.gguf",
+      "sha256": "8080f057ee20a429ebb3c09b57c400a6a8cf96562d3d99a3d36a406d150a52e0",
+      "bytes": 4925542112
+    },
+    {
+      "id": "pentacoder-9b-e9805ba0-92dff9c6",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q3_K_M.gguf",
+      "sha256": "92dff9c63d936b323a948cc9f1a025e33f77f9358ff44439f000d2304072fb46",
+      "bytes": 4623552224
+    },
+    {
+      "id": "pentacoder-9b-b7c731ca-013abe82",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q3_K_S.gguf",
+      "sha256": "013abe829289403f54b3eb034e6a38f2907778bd5a8edd2ba31e2531fbea1fc5",
+      "bytes": 4259434208
+    },
+    {
+      "id": "pentacoder-9b-8fbb4ea1-53b1c84c",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_0.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q4_0.gguf",
+      "sha256": "53b1c84c4f8a4609d95ec0abcfa391e7cbeaa6d6bf53386443bfcf3fcd8701b0",
+      "bytes": 5325967072
+    },
+    {
+      "id": "pentacoder-9b-6d6df054-6bd8d69b",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_1.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q4_1.gguf",
+      "sha256": "6bd8d69bb8c766145b22665427851d755954aa6a092beee1c9a6f314ef2608f4",
+      "bytes": 5809360608
+    },
+    {
+      "id": "pentacoder-9b-8b936fa0-133d4100",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_K_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q4_K_M.gguf",
+      "sha256": "133d410001493e6999c41acc80563fed57db118949bb19a6d20333de6b331797",
+      "bytes": 5629136608
+    },
+    {
+      "id": "pentacoder-9b-9ebe8a18-405b74fa",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_K_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q4_K_S.gguf",
+      "sha256": "405b74fa7d99870a46e8476681355c495aaa7cf8a08da37926bd7a2b5f95e582",
+      "bytes": 5351657184
+    },
+    {
+      "id": "pentacoder-9b-3bc5b694-3c22edbf",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q5_K_M.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q5_K_M.gguf",
+      "sha256": "3c22edbf04b0b5569eac1ad6d0523318ae56d0ec01ce65e3bfd1c3398651d5f4",
+      "bytes": 6467997408
+    },
+    {
+      "id": "pentacoder-9b-17881fef-4e248523",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q5_K_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q5_K_S.gguf",
+      "sha256": "4e2485236a4f3b7bf461c5e32df6e084ec5cf7b401e68f6186f49c486d2cfbed",
+      "bytes": 6305337056
+    },
+    {
+      "id": "pentacoder-9b-716fdb38-39f46e11",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q6_K.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q6_K.gguf",
+      "sha256": "39f46e1176899dd6b45c6390b8b9e6c01c172ecdb2fa9de95792c9b6a1aa1bb1",
+      "bytes": 7359287008
+    },
+    {
+      "id": "underdog-woof-4b-11-c6932796-bbedc3fd",
+      "path": "models/library/underdog-woof-4b-11/LICENSE",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "LICENSE",
+      "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+      "bytes": 11544
+    },
+    {
+      "id": "underdog-woof-4b-11-b3356305-119efcf7",
+      "path": "models/library/underdog-woof-4b-11/README.md",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "README.md",
+      "sha256": "119efcf70da25a6ae1c53dd32ad55761a8e5aefeea4991d203cb13db5fea1c03",
+      "bytes": 201
+    },
+    {
+      "id": "underdog-woof-4b-11-00824420-a4aee8af",
+      "path": "models/library/underdog-woof-4b-11/chat_template.jinja",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "chat_template.jinja",
+      "sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+      "bytes": 7756
+    },
+    {
+      "id": "underdog-woof-4b-11-587cb980-8ce143ee",
+      "path": "models/library/underdog-woof-4b-11/config.json",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "config.json",
+      "sha256": "8ce143ee295a76146f187f935eb36d0891aeae0791f88ca976ec71857a56edf9",
+      "bytes": 3124
+    },
+    {
+      "id": "underdog-woof-4b-11-97dd3d57-cb62c424",
+      "path": "models/library/underdog-woof-4b-11/generation_config.json",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "generation_config.json",
+      "sha256": "cb62c424e4c9d9d5ad55b7dde9d4a9507f60f5fc6e041a26f7d191c01f8f6b72",
+      "bytes": 138
+    },
+    {
+      "id": "underdog-woof-4b-11-9d75c109-db21a4aa",
+      "path": "models/library/underdog-woof-4b-11/model.safetensors",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "model.safetensors",
+      "sha256": "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e",
+      "bytes": 2367237149
+    },
+    {
+      "id": "underdog-woof-4b-11-0a05be82-5a3779ec",
+      "path": "models/library/underdog-woof-4b-11/model.safetensors.index.json",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "model.safetensors.index.json",
+      "sha256": "5a3779ecc1a94f395f26612fdc9a491c1884250eda9353d214322717564a69c7",
+      "bytes": 81008
+    },
+    {
+      "id": "underdog-woof-4b-11-1596a266-fc72f99b",
+      "path": "models/library/underdog-woof-4b-11/release-provenance.json",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "release-provenance.json",
+      "sha256": "fc72f99b97785ca3dac643da5a1aacb5a29313d92ecc22991a7d42b35558aa3c",
+      "bytes": 1277
+    },
+    {
+      "id": "underdog-woof-4b-11-224931eb-06b95093",
+      "path": "models/library/underdog-woof-4b-11/tokenizer.json",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "tokenizer.json",
+      "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+      "bytes": 19989325
+    },
+    {
+      "id": "underdog-woof-4b-11-94d5c6ba-8f781f0d",
+      "path": "models/library/underdog-woof-4b-11/tokenizer_config.json",
+      "repo": "ConwayResearch/Underdog-Woof-4B-1.1",
+      "revision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+      "filename": "tokenizer_config.json",
+      "sha256": "8f781f0d7369fb2532a77284368c2a5f9eccd6413a381dfa3795787e20ca4ca4",
+      "bytes": 1202
+    },
+    {
+      "id": "pentacoder-9b-436c6726-4dc19b03",
+      "path": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K_S.gguf",
+      "repo": "pragmaticcs/PentaCoder-9B-i1-GGUF",
+      "revision": "9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "filename": "PentaCoder-9B.i1-Q2_K_S.gguf",
+      "sha256": "4dc19b037349402e5f6748502495d63d4c4571718ac565245597e7dfe4a2e1fb",
+      "bytes": 3697266400
     }
   ],
   "models": [
@@ -14357,13 +14915,13 @@
       ],
       "license": "CC-BY-4.0 weights; Apache-2.0 reference code",
       "experimental": false,
-      "note": "English only. Single published five-value checkpoint; no separate FP16, FP32, or GGUF quantization downloads are available. The Windows reference runtime expands this compact checkpoint to about 2.5 GB of FP32 runtime memory plus audio buffers; this is runtime expansion, not a selectable or downloadable FP32 variant. Optional RAM standby; GPU memory is released after dictation.",
+      "note": "English only. One published five-value checkpoint. Choose BF16 or FP32 runtime precision in Microphone dictation; both options remain available and use this same download. Runtime expansion needs about 1.25 GB for BF16 or 2.5 GB for FP32 weights, plus audio buffers. These are runtime precision choices, not separate weight downloads. Optional RAM standby avoids repeated cold initialization; GPU memory is released after dictation.",
       "runtimePrecision": {
         "sourceFormat": "Five-value checkpoint",
-        "runtimeDtype": "FP32",
+        "runtimeDtype": "BF16 or FP32",
         "estimatedRuntimeBytes": 2500000000,
-        "runtimeMemoryNote": "About 2.5 GB plus audio buffers; actual peak use depends on the Transformers and CUDA runtime.",
-        "runtimeComponent": "The speech runtime is prepared during setup; FP32 is created in memory and is not a second model download."
+        "runtimeMemoryNote": "BF16 weights use about 1.25 GB; FP32 uses about 2.5 GB. Audio buffers and runtime workspaces add to this. Select precision independently from Cold start or RAM standby.",
+        "runtimeComponent": "BF16 and FP32 are created in memory from the same compact checkpoint; either selection is not a second model download."
       },
       "selectable": false,
       "speechLanguage": "English only",
@@ -26100,6 +26658,2801 @@
       "installable": true,
       "sourceUrl": "https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Captioner/tree/a2bd106cbf527db5676e79662674da22b0545ec0",
       "setupUrl": "https://github.com/QwenLM/Qwen3-Omni/blob/main/cookbooks/omni_captioner.ipynb"
+    },
+    {
+      "id": "defiant-fable-9b",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-924b16e1-a0ed28f9"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-924b16e1-a0ed28f9"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q8_0.gguf"
+    },
+    {
+      "id": "defiant-fable-9b-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-924b16e1-a0ed28f9"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-924b16e1-a0ed28f9"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq2-m-ae9679",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ2_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-618f66b1-ae9679de"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-618f66b1-ae9679de"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ2_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq2-m-ae9679-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ2_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-618f66b1-ae9679de"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-618f66b1-ae9679de"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ2_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq3-m-88cce3",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ3_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d02a8ca0-88cce3a5"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d02a8ca0-88cce3a5"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ3_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq3-m-88cce3-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ3_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d02a8ca0-88cce3a5"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d02a8ca0-88cce3a5"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ3_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-nl-fc98be",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_NL",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d0c5247d-fc98be81"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d0c5247d-fc98be81"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_NL.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-nl-fc98be-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_NL",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d0c5247d-fc98be81"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d0c5247d-fc98be81"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_NL.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-xs-a5a358",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_XS",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-c7ee15fa-a5a35852"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-c7ee15fa-a5a35852"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_XS.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-xs-a5a358-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_XS",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-c7ee15fa-a5a35852"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-c7ee15fa-a5a35852"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-IQ4_XS.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq2-m-mtp-3349c6",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ2_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-497323f7-3349c656"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-497323f7-3349c656"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ2_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq2-m-mtp-3349c6-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ2_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-497323f7-3349c656"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-497323f7-3349c656"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ2_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq3-m-mtp-726ad4",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ3_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-e4e251e2-726ad4c6"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-e4e251e2-726ad4c6"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ3_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq3-m-mtp-726ad4-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ3_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-e4e251e2-726ad4c6"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-e4e251e2-726ad4c6"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ3_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-nl-mtp-c46c85",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_NL MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-4a209a03-c46c85c3"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-4a209a03-c46c85c3"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_NL.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-nl-mtp-c46c85-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_NL MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-4a209a03-c46c85c3"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-4a209a03-c46c85c3"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_NL.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-xs-mtp-8d33af",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_XS MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-7262720b-8d33af53"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-7262720b-8d33af53"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_XS.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-iq4-xs-mtp-8d33af-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "IQ4_XS MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-7262720b-8d33af53"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-7262720b-8d33af53"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-IQ4_XS.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-m-mtp-d7eb4f",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-43f76aa0-d7eb4fac"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-43f76aa0-d7eb4fac"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-m-mtp-d7eb4f-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-43f76aa0-d7eb4fac"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-43f76aa0-d7eb4fac"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-s-mtp-1899fa",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-50ae21e7-1899fa1c"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-50ae21e7-1899fa1c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-s-mtp-1899fa-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-50ae21e7-1899fa1c"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-50ae21e7-1899fa1c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q4_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-m-mtp-a78b01",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-39412a7f-a78b01d8"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-39412a7f-a78b01d8"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-m-mtp-a78b01-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_M MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-39412a7f-a78b01d8"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-39412a7f-a78b01d8"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-s-mtp-bf2e8a",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-bdcde42a-bf2e8ade"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-bdcde42a-bf2e8ade"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-s-mtp-bf2e8a-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_S MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-bdcde42a-bf2e8ade"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-bdcde42a-bf2e8ade"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q5_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-mtp-b54d04",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d23aa2fa-b54d045c"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d23aa2fa-b54d045c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-mtp-b54d04-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d23aa2fa-b54d045c"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d23aa2fa-b54d045c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q8-0-mtp-1830f3",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0 MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-f09092c0-1830f3be"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-f09092c0-1830f3be"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q8-0-mtp-1830f3-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0 MTP",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-f09092c0-1830f3be"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-f09092c0-1830f3be"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-m-d33db5",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-8aa5171d-d33db5e5"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-8aa5171d-d33db5e5"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-m-d33db5-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-8aa5171d-d33db5e5"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-8aa5171d-d33db5e5"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-s-6d738a",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_S",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d3f17e63-6d738a56"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d3f17e63-6d738a56"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q4-k-s-6d738a-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q4_K_S",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-d3f17e63-6d738a56"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-d3f17e63-6d738a56"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-m-3138b1",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-fe73375c-3138b106"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-fe73375c-3138b106"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-m-3138b1-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-fe73375c-3138b106"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-fe73375c-3138b106"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_M.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-s-282eda",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_S",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-f3062205-282eda65"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-f3062205-282eda65"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q5-k-s-282eda-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q5_K_S",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-f3062205-282eda65"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-f3062205-282eda65"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q5_K_S.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-be2e82",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-aa08f7bb-be2e829c"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-aa08f7bb-be2e829c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-be2e82-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-aa08f7bb-be2e829c"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-aa08f7bb-be2e829c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-mtp-plusiq-template-824188",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K MTP / plusIQ template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-40e4df69-82418855"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-40e4df69-82418855"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-mtp-plusiq-template-824188-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K MTP / plusIQ template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-40e4df69-82418855"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-40e4df69-82418855"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q8-0-mtp-plusiq-template-dcabfc",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0 MTP / plusIQ template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-6988ef96-dcabfc7a"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-6988ef96-dcabfc7a"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q8-0-mtp-plusiq-template-dcabfc-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0 MTP / plusIQ template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-6988ef96-dcabfc7a"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-6988ef96-dcabfc7a"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-bf16-mtp-plusiq-template-6a7721",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "BF16 MTP / plusIQ template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-93229133-6a772118"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-93229133-6a772118"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-bf16.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-bf16-mtp-plusiq-template-6a7721-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "BF16 MTP / plusIQ template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-93229133-6a772118"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-93229133-6a772118"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-NEO-MAX-MTP-bf16.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-mtp-plusiq-tools-template-2e8be3",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K MTP / plusIQ tools template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-f9e4edcf-2e8be304"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-f9e4edcf-2e8be304"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q6-k-mtp-plusiq-tools-template-2e8be3-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q6_K MTP / plusIQ tools template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-f9e4edcf-2e8be304"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-f9e4edcf-2e8be304"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q6_K.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q8-0-mtp-plusiq-tools-template-701fd9",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0 MTP / plusIQ tools template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-a1b2f08b-701fd92f"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-a1b2f08b-701fd92f"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "defiant-fable-9b-q8-0-mtp-plusiq-tools-template-701fd9-native",
+      "label": "Defiant Fable 9B",
+      "description": "DavidAU Qwen3.5-9B uncensored Heretic/NEO merge with published GGUF variants.",
+      "precision": "Q8_0 MTP / plusIQ tools template",
+      "contextTokens": 16384,
+      "artifacts": [
+        "defiant-fable-9b-a1b2f08b-701fd92f"
+      ],
+      "weightArtifacts": [
+        "defiant-fable-9b-a1b2f08b-701fd92f"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Includes the publisher MTP package. This profile uses ordinary decoding; speculative MTP speed and quality are not claimed. The distinct publisher prompt/template package is explicitly labeled; it is not a duplicate download.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF/tree/8b192a8e203440d6492a133f6cdfa4bf7bffac98",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/defiant-fable-9b/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-plusIQ-TOOLS-NEO-MAX-MTP-Q8_0.gguf",
+      "variantOf": "defiant-fable-9b"
+    },
+    {
+      "id": "pentacoder-9b",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-af318708-65e0111e"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-af318708-65e0111e"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-GGUF/tree/168934b4e037344b17762f68b732a64bd1c90281",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B-Q8_0.gguf"
+    },
+    {
+      "id": "pentacoder-9b-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q8_0",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-af318708-65e0111e"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-af318708-65e0111e"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-GGUF/tree/168934b4e037344b17762f68b732a64bd1c90281",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B-Q8_0.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-k-m-bb18b3",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-e62e9089-bb18b302"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-e62e9089-bb18b302"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-GGUF/tree/168934b4e037344b17762f68b732a64bd1c90281",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B-Q4_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-k-m-bb18b3-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-e62e9089-bb18b302"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-e62e9089-bb18b302"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-GGUF/tree/168934b4e037344b17762f68b732a64bd1c90281",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B-Q4_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q5-k-m-f68596",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q5_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-6b8e67c5-f6859691"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-6b8e67c5-f6859691"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-GGUF/tree/168934b4e037344b17762f68b732a64bd1c90281",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B-Q5_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q5-k-m-f68596-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q5_K_M",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-6b8e67c5-f6859691"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-6b8e67c5-f6859691"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. ",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-GGUF/tree/168934b4e037344b17762f68b732a64bd1c90281",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B-Q5_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq1-m-imatrix-426ee4",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ1_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-4c5af568-426ee487"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-4c5af568-426ee487"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ1_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq1-m-imatrix-426ee4-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ1_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-4c5af568-426ee487"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-4c5af568-426ee487"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ1_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq1-s-imatrix-265291",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ1_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-94e10885-265291b7"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-94e10885-265291b7"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ1_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq1-s-imatrix-265291-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ1_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-94e10885-265291b7"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-94e10885-265291b7"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ1_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-m-imatrix-bb8ea4",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-db1c0ea2-bb8ea453"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-db1c0ea2-bb8ea453"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-m-imatrix-bb8ea4-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-db1c0ea2-bb8ea453"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-db1c0ea2-bb8ea453"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-s-imatrix-e59460",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-ff2bbd66-e59460e1"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-ff2bbd66-e59460e1"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-s-imatrix-e59460-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-ff2bbd66-e59460e1"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-ff2bbd66-e59460e1"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-xs-imatrix-bc21a3",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_XS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-e35899b3-bc21a32f"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-e35899b3-bc21a32f"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_XS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-xs-imatrix-bc21a3-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_XS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-e35899b3-bc21a32f"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-e35899b3-bc21a32f"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_XS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-xxs-imatrix-2ac06a",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_XXS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-10d4ce0a-2ac06ad2"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-10d4ce0a-2ac06ad2"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_XXS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq2-xxs-imatrix-2ac06a-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ2_XXS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-10d4ce0a-2ac06ad2"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-10d4ce0a-2ac06ad2"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ2_XXS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-m-imatrix-59c071",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-3b25f8b5-59c07188"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-3b25f8b5-59c07188"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-m-imatrix-59c071-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-3b25f8b5-59c07188"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-3b25f8b5-59c07188"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-s-imatrix-edc0ba",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-c3741304-edc0bad1"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-c3741304-edc0bad1"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-s-imatrix-edc0ba-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-c3741304-edc0bad1"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-c3741304-edc0bad1"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-xs-imatrix-365ee2",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_XS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-645cb81c-365ee271"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-645cb81c-365ee271"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_XS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-xs-imatrix-365ee2-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_XS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-645cb81c-365ee271"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-645cb81c-365ee271"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_XS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-xxs-imatrix-58ce4a",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_XXS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-ef97b367-58ce4a90"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-ef97b367-58ce4a90"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_XXS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq3-xxs-imatrix-58ce4a-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ3_XXS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-ef97b367-58ce4a90"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-ef97b367-58ce4a90"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ3_XXS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq4-nl-imatrix-f4e8a2",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ4_NL / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-bfff1c6a-f4e8a2ad"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-bfff1c6a-f4e8a2ad"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ4_NL.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq4-nl-imatrix-f4e8a2-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ4_NL / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-bfff1c6a-f4e8a2ad"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-bfff1c6a-f4e8a2ad"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ4_NL.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq4-xs-imatrix-e4b866",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ4_XS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-0de48714-e4b86628"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-0de48714-e4b86628"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ4_XS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-iq4-xs-imatrix-e4b866-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "IQ4_XS / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-0de48714-e4b86628"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-0de48714-e4b86628"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-IQ4_XS.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q2-k-imatrix-fd75e3",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q2_K / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-37f2d2f8-fd75e3f8"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-37f2d2f8-fd75e3f8"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q2-k-imatrix-fd75e3-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q2_K / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-37f2d2f8-fd75e3f8"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-37f2d2f8-fd75e3f8"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q3-k-l-imatrix-8080f0",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q3_K_L / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-8ebe3e7d-8080f057"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-8ebe3e7d-8080f057"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_L.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q3-k-l-imatrix-8080f0-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q3_K_L / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-8ebe3e7d-8080f057"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-8ebe3e7d-8080f057"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_L.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q3-k-m-imatrix-92dff9",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q3_K_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-e9805ba0-92dff9c6"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-e9805ba0-92dff9c6"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q3-k-m-imatrix-92dff9-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q3_K_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-e9805ba0-92dff9c6"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-e9805ba0-92dff9c6"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q3-k-s-imatrix-013abe",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q3_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-b7c731ca-013abe82"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-b7c731ca-013abe82"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q3-k-s-imatrix-013abe-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q3_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-b7c731ca-013abe82"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-b7c731ca-013abe82"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q3_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-0-imatrix-53b1c8",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_0 / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-8fbb4ea1-53b1c84c"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-8fbb4ea1-53b1c84c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_0.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-0-imatrix-53b1c8-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_0 / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-8fbb4ea1-53b1c84c"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-8fbb4ea1-53b1c84c"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_0.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-1-imatrix-6bd8d6",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_1 / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-6d6df054-6bd8d69b"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-6d6df054-6bd8d69b"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_1.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-1-imatrix-6bd8d6-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_1 / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-6d6df054-6bd8d69b"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-6d6df054-6bd8d69b"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_1.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-k-m-imatrix-133d41",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_K_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-8b936fa0-133d4100"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-8b936fa0-133d4100"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-k-m-imatrix-133d41-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_K_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-8b936fa0-133d4100"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-8b936fa0-133d4100"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-k-s-imatrix-405b74",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-9ebe8a18-405b74fa"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-9ebe8a18-405b74fa"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q4-k-s-imatrix-405b74-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q4_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-9ebe8a18-405b74fa"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-9ebe8a18-405b74fa"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q4_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-i1-q5-k-m-imatrix-3c22ed",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "I1-Q5_K_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-3bc5b694-3c22edbf"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-3bc5b694-3c22edbf"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q5_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-i1-q5-k-m-imatrix-3c22ed-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "I1-Q5_K_M / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-3bc5b694-3c22edbf"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-3bc5b694-3c22edbf"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q5_K_M.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q5-k-s-imatrix-4e2485",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q5_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-17881fef-4e248523"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-17881fef-4e248523"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q5_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q5-k-s-imatrix-4e2485-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q5_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-17881fef-4e248523"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-17881fef-4e248523"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q5_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q6-k-imatrix-39f46e",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q6_K / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-716fdb38-39f46e11"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-716fdb38-39f46e11"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q6_K.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q6-k-imatrix-39f46e-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q6_K / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-716fdb38-39f46e11"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-716fdb38-39f46e11"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q6_K.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "underdog-woof-4b-11",
+      "label": "Underdog Woof 4B 1.1",
+      "description": "ConwayResearch Qwen3.5-derived checkpoint, published as a 4-bit MLX model.",
+      "precision": "Published MLX 4-bit",
+      "contextTokens": 16384,
+      "artifacts": [
+        "underdog-woof-4b-11-c6932796-bbedc3fd",
+        "underdog-woof-4b-11-b3356305-119efcf7",
+        "underdog-woof-4b-11-00824420-a4aee8af",
+        "underdog-woof-4b-11-587cb980-8ce143ee",
+        "underdog-woof-4b-11-97dd3d57-cb62c424",
+        "underdog-woof-4b-11-9d75c109-db21a4aa",
+        "underdog-woof-4b-11-0a05be82-5a3779ec",
+        "underdog-woof-4b-11-1596a266-fc72f99b",
+        "underdog-woof-4b-11-224931eb-06b95093",
+        "underdog-woof-4b-11-94d5c6ba-8f781f0d"
+      ],
+      "weightArtifacts": [
+        "underdog-woof-4b-11-9d75c109-db21a4aa"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "The publisher provides MLX affine 4-bit weights, not a Windows GGUF. Install downloads the exact source checkpoint and tokenizer. Use prepared GGUF to register the verified local reconstruction with its conversion manifest. Native and ECHO share the prepared file and become runnable only after source and prepared-file verification. BF16 storage reconstructs the published quantized values; it does not recover original full precision.",
+      "selectable": false,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": false,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Woof-4B-1.1/tree/cf5f8db5409258e73303b78e112051fc443cb02b",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "preparedRuntime": {
+        "kind": "woof-mlx-affine4-bf16",
+        "path": "models/prepared/underdog-woof-4b-11/Underdog-Woof-4B-1.1-MLX4bit-dequant-BF16.gguf",
+        "sha256": "965b2ae8d2b570e01f7d8d5da70f26e697c6bc587878eedb89112a37ef980df5",
+        "bytes": 8424393184,
+        "sourceRepo": "ConwayResearch/Underdog-Woof-4B-1.1",
+        "sourceRevision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+        "sourceFilename": "model.safetensors",
+        "sourceSha256": "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e",
+        "sourceBytes": 2367237149,
+        "conversionManifestSha256": "0d3101797d98295dbf984eff912d368a7bbb4ddb1543a394cf35c0a505808e2a"
+      },
+      "runtimeModelPath": "models/prepared/underdog-woof-4b-11/Underdog-Woof-4B-1.1-MLX4bit-dequant-BF16.gguf"
+    },
+    {
+      "id": "underdog-woof-4b-11-native",
+      "label": "Underdog Woof 4B 1.1",
+      "description": "ConwayResearch Qwen3.5-derived checkpoint, published as a 4-bit MLX model.",
+      "precision": "Published MLX 4-bit",
+      "contextTokens": 16384,
+      "artifacts": [
+        "underdog-woof-4b-11-c6932796-bbedc3fd",
+        "underdog-woof-4b-11-b3356305-119efcf7",
+        "underdog-woof-4b-11-00824420-a4aee8af",
+        "underdog-woof-4b-11-587cb980-8ce143ee",
+        "underdog-woof-4b-11-97dd3d57-cb62c424",
+        "underdog-woof-4b-11-9d75c109-db21a4aa",
+        "underdog-woof-4b-11-0a05be82-5a3779ec",
+        "underdog-woof-4b-11-1596a266-fc72f99b",
+        "underdog-woof-4b-11-224931eb-06b95093",
+        "underdog-woof-4b-11-94d5c6ba-8f781f0d"
+      ],
+      "weightArtifacts": [
+        "underdog-woof-4b-11-9d75c109-db21a4aa"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "The publisher provides MLX affine 4-bit weights, not a Windows GGUF. Install downloads the exact source checkpoint and tokenizer. Use prepared GGUF to register the verified local reconstruction with its conversion manifest. Native and ECHO share the prepared file and become runnable only after source and prepared-file verification. BF16 storage reconstructs the published quantized values; it does not recover original full precision.",
+      "selectable": false,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": false,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Woof-4B-1.1/tree/cf5f8db5409258e73303b78e112051fc443cb02b",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "preparedRuntime": {
+        "kind": "woof-mlx-affine4-bf16",
+        "path": "models/prepared/underdog-woof-4b-11/Underdog-Woof-4B-1.1-MLX4bit-dequant-BF16.gguf",
+        "sha256": "965b2ae8d2b570e01f7d8d5da70f26e697c6bc587878eedb89112a37ef980df5",
+        "bytes": 8424393184,
+        "sourceRepo": "ConwayResearch/Underdog-Woof-4B-1.1",
+        "sourceRevision": "cf5f8db5409258e73303b78e112051fc443cb02b",
+        "sourceFilename": "model.safetensors",
+        "sourceSha256": "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e",
+        "sourceBytes": 2367237149,
+        "conversionManifestSha256": "0d3101797d98295dbf984eff912d368a7bbb4ddb1543a394cf35c0a505808e2a"
+      },
+      "runtimeModelPath": "models/prepared/underdog-woof-4b-11/Underdog-Woof-4B-1.1-MLX4bit-dequant-BF16.gguf",
+      "variantOf": "underdog-woof-4b-11"
+    },
+    {
+      "id": "pentacoder-9b-q2-k-s-imatrix-4dc19b",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q2_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-436c6726-4dc19b03"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-436c6726-4dc19b03"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "echo",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K_S.gguf",
+      "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "pentacoder-9b-q2-k-s-imatrix-4dc19b-native",
+      "label": "PentaCoder 9B",
+      "description": "pragmaticcs Qwen3.5-based coding merge with publisher GGUF and IMATRIX alternatives.",
+      "precision": "Q2_K_S / IMATRIX",
+      "contextTokens": 16384,
+      "artifacts": [
+        "pentacoder-9b-436c6726-4dc19b03"
+      ],
+      "weightArtifacts": [
+        "pentacoder-9b-436c6726-4dc19b03"
+      ],
+      "license": "Apache-2.0",
+      "experimental": true,
+      "note": "Native and ECHO use the same pinned weights. ECHO adds local archived-history retrieval; it does not expand simultaneous model attention. Select a lower quantization or CPU offload if the download plus runtime memory exceeds your GPU. FP32 expansion, when supported by a runtime, is computed in memory rather than a separate download. Publisher importance-matrix quantization; separate weights from the regular GGUF at the same nominal precision.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "memoryMode": "native",
+      "sourceUrl": "https://huggingface.co/pragmaticcs/PentaCoder-9B-i1-GGUF/tree/9c656dbb99501b8d0789b684f8f37f9eaad46014",
+      "setupUrl": "https://github.com/ggml-org/llama.cpp",
+      "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K_S.gguf",
+      "variantOf": "pentacoder-9b"
     }
   ]
 }

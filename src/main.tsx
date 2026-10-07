@@ -5,6 +5,7 @@ import App from "./App";
 import DesktopActivity from "./DesktopActivity";
 import { installExternalLinkGuard } from "./external-links";
 import "./styles.css";
+import "./historic-dark.css";
 
 installExternalLinkGuard(openUrl);
 

@@ -41,12 +41,25 @@ jobs:
         run: ./scripts/build-desktop-focus-guard.ps1
       - name: Install JavaScript dependencies
         run: npm ci
+      - name: Verify capture borders against rendered production styles
+        run: |
+          npx playwright install chromium
+          node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs
       - name: Prepare bundled connector runtimes
         run: |
           node scripts/prepare-claude-connector.mjs
           node scripts/prepare-codex-harness.mjs
       - name: Test studio cancellation and worker bounds
         run: python -m unittest discover -s src-tauri/resources/studio -p "test*.py"
+      - name: Install prebuilt CPU runtime for Phonon precision qualification
+        run: |
+          python -m pip install --only-binary=:all: torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --only-binary=:all: transformers==5.18.0
+      - name: Qualify Phonon precision and exact checkpoint expansion
+        env:
+          CUDA_VISIBLE_DEVICES: ''
+          HF_HUB_OFFLINE: '1'
+        run: python -m unittest discover -s src-tauri/resources/speech -p "test_phonon_*.py" -v
       - name: Test Windows native library and disposable desktop fixtures
         id: native-tests
         working-directory: src-tauri

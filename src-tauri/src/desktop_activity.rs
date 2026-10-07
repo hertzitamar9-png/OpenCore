@@ -11,6 +11,28 @@ use windows::Win32::UI::WindowsAndMessaging::{
 const IDLE_GRACE: Duration = Duration::from_millis(350);
 const TRACK_INTERVAL: Duration = Duration::from_millis(32);
 
+pub(crate) fn build_overlay(app: &tauri::AppHandle) -> tauri::Result<tauri::WebviewWindow> {
+    tauri::WebviewWindowBuilder::new(
+        app,
+        "desktop-activity",
+        tauri::WebviewUrl::App("index.html?desktop-activity".into()),
+    )
+    .title("OpenCore activity")
+    .decorations(false)
+    // An undecorated Tauri shadow still reserves asymmetric native client
+    // insets. The webview's frame must fill the outer DWM-sized HWND exactly.
+    .shadow(false)
+    .transparent(true)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .focused(false)
+    .focusable(false)
+    .visible(false)
+    .resizable(false)
+    .inner_size(290.0, 54.0)
+    .build()
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct Geometry {
     position: (i32, i32),
@@ -237,6 +259,69 @@ pub(crate) fn begin(app: &tauri::AppHandle, window_id: i64, args: &serde_json::V
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hidden_overlay_paints_the_whole_physical_frame_without_native_client_insets() {
+        use windows::Win32::UI::WindowsAndMessaging::{
+            GetWindowInfo, IsWindowVisible, WINDOWINFO, WS_EX_NOACTIVATE, WS_EX_TRANSPARENT,
+        };
+
+        // Exercise our real Tauri window settings. Merely converting a DWM RECT
+        // cannot catch an undecorated window's shadow reserving resize margins
+        // inside the HWND while the webview paints only its smaller client area.
+        let mut context = tauri::generate_context!();
+        context.config_mut().app.windows.clear();
+        let mut app = tauri::Builder::default()
+            .any_thread()
+            .build(context)
+            .expect("create an isolated native runtime for the hidden overlay");
+        let overlay = build_overlay(app.handle()).expect("build the production activity overlay");
+        overlay
+            .set_ignore_cursor_events(true)
+            .expect("keep the native overlay click-through");
+        let handle = overlay.hwnd().unwrap();
+        let hwnd = HWND(handle.0 as _);
+        let _dpi = crate::desktop_capture::PhysicalDpiScope::new().unwrap();
+        for (left, top, width, height) in [
+            (120, 80, 960, 540),
+            (-1920, 132, 1440, 840),
+            (2200, -900, 640, 480),
+        ] {
+            unsafe {
+                SetWindowPos(
+                    hwnd,
+                    HWND_TOPMOST,
+                    left,
+                    top,
+                    width,
+                    height,
+                    SWP_NOACTIVATE | SWP_NOOWNERZORDER,
+                )
+            }
+            .unwrap();
+            let mut info = WINDOWINFO {
+                cbSize: std::mem::size_of::<WINDOWINFO>() as u32,
+                ..Default::default()
+            };
+            unsafe { GetWindowInfo(hwnd, &mut info) }.unwrap();
+            let edges = |rect: RECT| (rect.left, rect.top, rect.right, rect.bottom);
+            let expected = (left, top, left + width, top + height);
+            assert_eq!(edges(info.rcWindow), expected, "physical overlay placement");
+            assert_eq!(
+                edges(info.rcClient),
+                expected,
+                "the CSS frame must paint the visible target's edges; native shadow insets displace it"
+            );
+            assert!(!unsafe { IsWindowVisible(hwnd) }.as_bool());
+            assert_ne!(info.dwExStyle.0 & WS_EX_NOACTIVATE.0, 0);
+            assert_ne!(info.dwExStyle.0 & WS_EX_TRANSPARENT.0, 0);
+        }
+        overlay.destroy().expect("destroy the hidden test overlay");
+        // Drain the single queued destruction; never show a fixture or run the
+        // production setup, capture, inference, or input paths in this test.
+        #[allow(deprecated)]
+        app.run_iteration(|_, _| {});
+    }
 
     #[test]
     fn border_geometry_uses_visible_physical_bounds_on_negative_origin_monitors() {

@@ -2,6 +2,10 @@
 
 This repository contains the OpenCore Windows desktop app, its browser extension, Reflex scripts, and the ECHO runtime scripts needed by the installer. It does not include language-model weights, Reflex weights, personal conversation data, or local installation files.
 
+## Install
+
+Download the Windows installer from [OpenCore releases](https://github.com/hertzitamar9-png/OpenCore/releases/latest). Model downloads are selected inside the app after installation.
+
 ## Build locally
 
 Install Node.js, Rust, and the Windows prerequisites for Tauri 2. Then run:
@@ -20,7 +24,7 @@ The NSIS installer is written under `src-tauri/target/release/bundle/nsis/`.
 
 ## Build on each push
 
-`.github/workflows/build.yml` tests and builds a signed Windows installer on every push to `main`, then publishes a versioned GitHub Release. Installed copies check for updates only when the user presses **Update** or uses **Settings → Updates → Check latest version**. A separate **Download installer again** action opens the official releases page for repair or reinstall. Public releases use Tauri's standard release endpoint and need no GitHub account or CLI. Private releases use the authenticated GitHub CLI when it is installed and signed in (`gh auth login`). Installing an update is a separate user action; OpenCore leaves active chats and generation work alone. Windows requires the running app to exit briefly while its files are replaced, then the updater reopens OpenCore. Private-release credentials remain in Rust memory and are never exposed to the webview.
+`.github/workflows/build.yml` tests and builds a Windows installer and its updater signature on every push to `main`, then publishes a versioned GitHub Release. Installed copies check the update feed on startup and show **Update** only when a newer version is available. You can also check through **Settings → Updates → Check latest version**. Feed checks do not interrupt work. Choosing to install an update stops active model and studio work, then closes OpenCore briefly while Windows replaces its files and reopens it. Chats and local model files are preserved. A separate **Download installer again** action opens the official releases page for repair or reinstall. Public releases need no GitHub account or CLI. For private releases, authentication uses the GitHub CLI when installed and signed in (`gh auth login`); credentials remain in Rust memory and are never exposed to the webview.
 
 The runtime looks for model assets under `OPENCORE_HOME` or the user's OpenCore installation directory. A successful app build verifies the desktop code and installer packaging, not model inference quality.
 

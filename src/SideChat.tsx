@@ -15,7 +15,7 @@ type Props = {
   parentId?: string; parentTitle: string; settings: ConversationSettings;
   selectedProfile: RuntimeProfile; onSelectProfile: (profile: RuntimeProfile) => void;
   runtimeSnapshot: RuntimeSnapshot; telemetry: TelemetrySnapshot; running: boolean; projects: ProjectSummary[];
-  activeConversationIds: string[]; inferenceOwner?: string; studioActive: boolean; defaultSkills: ComposerSkillId[];
+  activeConversationIds: string[]; inferenceOwner?: string; studioActive: boolean; inferenceBlocked?: string; defaultSkills: ComposerSkillId[];
   onNotice: (message: string) => void; onRefresh: () => Promise<void>; onOpenConversation: (id: string, settings?: ConversationSettings) => void;
   onActivityChange: (id: string, active: boolean) => void;
   onOpenWorkspace: (tab: WorkspaceTab) => void; onOpenPreview: (preview: WorkspacePreview) => void;
@@ -23,7 +23,7 @@ type Props = {
   onWorkspaceObscuredChange: (obscured: boolean) => void;
 };
 
-export function SideChat({parentId, parentTitle, settings, selectedProfile, onSelectProfile, runtimeSnapshot, telemetry, running, projects, activeConversationIds, inferenceOwner, studioActive, defaultSkills, onNotice, onRefresh, onOpenConversation, onActivityChange, onOpenWorkspace, onOpenPreview, onOpenBrowserLink, onOpenFileRecord, onWorkspaceObscuredChange}: Props) {
+export function SideChat({parentId, parentTitle, settings, selectedProfile, onSelectProfile, runtimeSnapshot, telemetry, running, projects, activeConversationIds, inferenceOwner, studioActive, inferenceBlocked, defaultSkills, onNotice, onRefresh, onOpenConversation, onActivityChange, onOpenWorkspace, onOpenPreview, onOpenBrowserLink, onOpenFileRecord, onWorkspaceObscuredChange}: Props) {
   const [branches, setBranches] = useState<Record<string, {branch: SideChatBranch; settings: ConversationSettings}>>({});
   const stored = parentId ? branches[parentId] : undefined;
   const branch = stored?.branch;
@@ -34,7 +34,7 @@ export function SideChat({parentId, parentTitle, settings, selectedProfile, onSe
   const [stream, setStream] = useState<Stream>();
   const branchRef = useRef(branch?.conversationId);
   branchRef.current = branch?.conversationId;
-  const blocked = studioActive ? 'Wait for the active studio task to finish.' : activeConversationIds.some(id => id !== branch?.conversationId) || Boolean(inferenceOwner && inferenceOwner !== branch?.conversationId) ? 'Wait for the active chat to finish before using side chat.' : undefined;
+  const blocked = inferenceBlocked || (studioActive ? 'Wait for the active studio task to finish.' : activeConversationIds.some(id => id !== branch?.conversationId) || Boolean(inferenceOwner && inferenceOwner !== branch?.conversationId) ? 'Wait for the active chat to finish before using side chat.' : undefined);
   const rememberBranchSettings = useCallback((next: ConversationSettings) => {
     if (!parentId) return;
     setBranches(current => {

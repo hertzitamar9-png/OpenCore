@@ -36,6 +36,7 @@ mod file_browser;
 mod history;
 mod models;
 mod model_catalog;
+mod model_prepared;
 mod music_studio;
 mod music_weights;
 mod startup_diagnostics;
@@ -570,9 +571,9 @@ fn list_conversations(
 }
 
 #[tauri::command]
-async fn list_imported_conversations(core: tauri::State<'_, Arc<AppCore>>, query: String, offset: usize, limit: usize) -> Result<store::ImportedConversationPage, String> {
+async fn list_imported_conversations(core: tauri::State<'_, Arc<AppCore>>, query: String, offset: usize, limit: usize, source: Option<String>) -> Result<store::ImportedConversationPage, String> {
     let core = core.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || core.store.list_imported_conversations(&query, offset, limit))
+    tauri::async_runtime::spawn_blocking(move || core.store.list_imported_conversations_for_source(&query, offset, limit, source.as_deref().unwrap_or("all")))
         .await.map_err(|error| error.to_string())?
 }
 
@@ -2383,18 +2384,7 @@ pub fn run() {
             );
             #[cfg(windows)]
             {
-                let overlay_result = tauri::WebviewWindowBuilder::new(app, "desktop-activity", tauri::WebviewUrl::App("index.html?desktop-activity".into()))
-            .title("OpenCore activity")
-                    .decorations(false)
-                    .transparent(true)
-                    .always_on_top(true)
-                    .skip_taskbar(true)
-                    .focused(false)
-                    .focusable(false)
-                    .visible(false)
-                    .resizable(false)
-                    .inner_size(290.0, 54.0)
-                    .build();
+                let overlay_result = desktop_activity::build_overlay(app.handle());
                 match overlay_result {
                     Ok(overlay) => {
                         if let Err(error) = overlay.set_ignore_cursor_events(true) {
@@ -2549,6 +2539,7 @@ pub fn run() {
             app_update::check_latest_app_version,
             app_update::install_latest_app_update,
             speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode, speech::speech_set_model,
+            speech::speech_set_runtime_precision,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
             get_snapshot,
             list_conversations,
@@ -2559,6 +2550,7 @@ pub fn run() {
             start_profile,
             list_model_library,
             install_model,
+            model_prepared::register_prepared_model,
             uninstall_model,
             model_removal_plan,
             cancel_model_install,

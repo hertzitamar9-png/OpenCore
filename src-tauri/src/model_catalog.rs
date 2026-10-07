@@ -49,6 +49,8 @@ pub struct Model {
     pub speech_language: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub runtime_precision: Option<RuntimePrecisionInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prepared_runtime: Option<crate::model_prepared::PreparedRuntime>,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -65,11 +67,13 @@ fn default_true()->bool {true}
 fn default_native_mode()->String {"native".into()}
 fn default_one_multiplier()->u32 {1}
 pub fn gguf_model(id:&str)->Option<Model> {
-    manifest().ok()?.models.into_iter().find(|model|model.id==id && model.selectable && model.backend=="gguf")
+    manifest().ok()?.models.into_iter().find(|model|model.id==id && model.backend=="gguf" &&
+        (model.selectable || model.prepared_runtime.is_some()))
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, external_managed: bool, download_bytes: u64, total_bytes: u64, weight_bytes: u64, artifact_identity: Option<String> }
+pub struct ModelInfo { #[serde(flatten)] model: Model, installed: bool, source_downloaded: bool, prepared_ready: bool,
+    external_managed: bool, download_bytes: u64, total_bytes: u64, weight_bytes: u64, artifact_identity: Option<String> }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallProgress {
@@ -97,9 +101,16 @@ fn manifest() -> Result<Manifest, String> {
         if !matches!(model.memory_mode.as_str(), "native" | "echo") || model.vram_weight_multiplier == 0 {
             return Err(format!("Invalid runtime mode or VRAM multiplier for {}", model.id));
         }
-        for path in model.runtime_model_path.iter().chain(model.vision_projector_path.iter()) {
+        crate::model_prepared::validate_descriptor(model, &data.artifacts)?;
+        for path in &model.runtime_model_path {
             safe_relative(path)?;
-            if !data.artifacts.iter().any(|file|file.path==*path && model.artifacts.contains(&file.id)){return Err(format!("Unpinned runtime path for {}",model.id));}
+            let hub_pin = data.artifacts.iter().any(|file|file.path==*path && model.artifacts.contains(&file.id));
+            let prepared_pin = model.prepared_runtime.as_ref().is_some_and(|pin|pin.path==*path);
+            if !hub_pin && !prepared_pin {return Err(format!("Unpinned runtime path for {}",model.id));}
+        }
+        for path in &model.vision_projector_path {
+            safe_relative(path)?;
+            if !data.artifacts.iter().any(|file|file.path==*path && model.artifacts.contains(&file.id)){return Err(format!("Unpinned projector path for {}",model.id));}
         }
         for id in &model.weight_artifacts {
             if !model.artifacts.contains(id) || !data.artifacts.iter().any(|file| &file.id == id) {
@@ -208,7 +219,7 @@ fn verified_file(root: &Path, file: &Artifact) -> bool {
         std::fs::metadata(&path).map(|m| m.is_file() && m.len() == file.bytes).unwrap_or(false) &&
         modified(&path).ok() == Some(receipt.modified_nanos)
 }
-fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
+fn source_downloaded(root: &Path, model: &Model, data: &Manifest) -> bool {
     if !model.installable || model.artifacts.is_empty(){return false;}
     if model.id == "yue2" && crate::music_weights::registered(root) { return true; }
     if is_speech_model(&model.id) {
@@ -220,24 +231,45 @@ fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
                 data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))
         });
     }
-    model_receipt(root, model).is_file() && model.artifacts.iter().all(|id|
+    (if model.prepared_runtime.is_some() {valid_model_receipt(root,model)} else {model_receipt(root, model).is_file()}) && model.artifacts.iter().all(|id|
         data.artifacts.iter().find(|f| &f.id == id).map(|f| verified_file(root, f)).unwrap_or(false))
+}
+fn installed(root: &Path, model: &Model, data: &Manifest) -> bool {
+    source_downloaded(root, model, data) &&
+        (model.prepared_runtime.is_none() || crate::model_prepared::ready(root, model))
+}
+pub(crate) fn preparation_sources(root: &Path, id: &str) -> Result<Vec<Artifact>, String> {
+    let data = manifest()?;
+    let model = data.models.iter().find(|model|model.id==id).ok_or("Unknown model")?;
+    if model.prepared_runtime.is_none() { return Err("This model has no declared prepared runtime".into()); }
+    if !source_downloaded(root, model, &data) { return Err("Download this model's pinned publisher source in Models before registering its prepared runtime".into()); }
+    Ok(data.artifacts.iter().filter(|file|model.artifacts.contains(&file.id)).cloned().collect())
+}
+pub(crate) fn runtime_model_path(root: &Path, model: &Model) -> Result<PathBuf, String> {
+    if model.prepared_runtime.is_some() { require_installed(root, &model.id)?; }
+    safe_path(root, model.runtime_model_path.as_deref().ok_or("Missing GGUF runtime path")?)
 }
 pub fn require_installed(root: &Path, id: &str) -> Result<(), String> {
     let data = manifest()?;
     let model = data.models.iter().find(|m| m.id == id).ok_or("Unknown model")?;
     if installed(root, model, &data) { Ok(()) }
-    else { Err(format!("{} is not installed. Open Models and choose Install.", model.label)) }
+    else if model.prepared_runtime.is_some() && source_downloaded(root,model,&data) {
+        Err(format!("{} publisher source is downloaded, but its approved prepared GGUF is not registered. Open Models and choose Register prepared runtime.",model.label))
+    } else { Err(format!("{} is not installed. Open Models and choose Install.", model.label)) }
 }
 pub fn installed_models(root: &Path) -> Result<Vec<Model>, String> {
-    let data=manifest()?; Ok(data.models.iter().filter(|model|installed(root,model,&data)).cloned().collect())
+    let data=manifest()?; Ok(data.models.iter().filter(|model|installed(root,model,&data)).map(|model| {
+        let mut model=model.clone();
+        if model.prepared_runtime.is_some() {model.selectable=true;model.runtime_ready=true;}
+        model
+    }).collect())
 }
 pub fn model(id: &str) -> Option<Model> { manifest().ok()?.models.into_iter().find(|model|model.id==id) }
 pub fn free_bytes(root: &Path) -> u64 {
     Disks::new_with_refreshed_list().list().iter().filter(|d| root.starts_with(d.mount_point()))
         .max_by_key(|d| d.mount_point().components().count()).map(|d| d.available_space()).unwrap_or(0)
 }
-fn reserve_space(root: &Path, additional: u64) -> Result<(), String> {
+pub(crate) fn reserve_space(root: &Path, additional: u64) -> Result<(), String> {
     let free = free_bytes(root);
     if free < MIN_FREE_BYTES.saturating_add(additional) {
         return Err(format!("Not enough disk space for this installation. Available: {:.2} GB; additional space needed: {:.2} GB, plus 64 MiB for installation metadata.", free as f64/1e9, additional as f64/1e9));
@@ -259,7 +291,10 @@ pub fn list(root: &Path) -> Result<Library, String> {
         let external_managed = externally_managed_speech(root, &m.id) || (m.id == "yue2" && crate::music_weights::external_dir().is_some());
         let mut model=m.clone();
         if model.id=="yue2" {model.runtime_ready=crate::music_studio::runtime_available();}
-        let weight_bytes = if !model.weight_artifacts.is_empty() {
+        let source_downloaded = source_downloaded(root,m,&data);
+        let prepared_ready = m.prepared_runtime.is_some() && installed(root,m,&data);
+        if model.prepared_runtime.is_some() {model.selectable=prepared_ready;model.runtime_ready=prepared_ready;}
+        let weight_bytes = if let Some(pin)=&model.prepared_runtime { pin.bytes } else if !model.weight_artifacts.is_empty() {
             files.iter().filter(|file| model.weight_artifacts.contains(&file.id)).map(|file| file.bytes).sum()
         } else if model.runtime_model_path.is_some() || model.vision_projector_path.is_some() {
             files.iter().filter(|file| model.runtime_model_path.as_deref() == Some(file.path.as_str()) ||
@@ -269,7 +304,7 @@ pub fn list(root: &Path) -> Result<Library, String> {
                 .iter().any(|extension| file.filename.to_ascii_lowercase().ends_with(extension))).map(|file| file.bytes).sum();
             if weights > 0 { weights } else { files.iter().map(|file| file.bytes).sum() }
         };
-        Ok(ModelInfo { model, installed: installed(root, m, &data), external_managed,
+        Ok(ModelInfo { model, installed: if m.prepared_runtime.is_some() {source_downloaded} else {installed(root,m,&data)}, source_downloaded, prepared_ready, external_managed,
             download_bytes: if external_managed { 0 } else { remaining_download_bytes(root, &files)? },
             total_bytes: files.iter().map(|f| f.bytes).sum(), weight_bytes, artifact_identity: artifact_identity(&files) })
     }).collect::<Result<Vec<_>, _>>()?;
@@ -283,7 +318,7 @@ fn artifact_identity(files: &[&Artifact]) -> Option<String> {
     identities.sort_unstable();
     serde_json::to_string(&identities).ok()
 }
-fn update(phase: &str, bytes: u64, current_file: &str, error: Option<String>) {
+pub(crate) fn update(phase: &str, bytes: u64, current_file: &str, error: Option<String>) {
     if let Ok(mut state) = PROGRESS.lock() {
         if let Some(p) = state.as_mut() {
             p.phase = phase.into(); p.downloaded_bytes = bytes; p.current_file = current_file.into(); p.error = error;
@@ -312,6 +347,15 @@ pub fn begin(id: &str) -> Result<(), String> {
     *state = Some(InstallProgress { model_id: id.into(), phase: "preparing".into(), downloaded_bytes: 0,
         total_bytes: if external_whisper { 0 } else { data.artifacts.iter().filter(|f| model.artifacts.contains(&f.id)).map(|f| f.bytes).sum() },
         current_file: String::new(), error: None });
+    Ok(())
+}
+pub(crate) fn begin_prepared(root: &Path, id: &str) -> Result<(), String> {
+    // Validate source receipts before claiming the operation; a source-only install is not runnable.
+    preparation_sources(root,id)?;
+    let model=model(id).ok_or("Unknown model")?;
+    let bytes=model.prepared_runtime.as_ref().ok_or("Missing declared prepared runtime")?.bytes;
+    begin(id)?;
+    if let Some(progress)=PROGRESS.lock().map_err(|e|e.to_string())?.as_mut() {progress.total_bytes=bytes;}
     Ok(())
 }
 fn digest(path: &Path) -> Result<String, String> {
@@ -525,6 +569,28 @@ pub fn uninstall(root: &Path, id: &str, confirmation_token: &str) -> Result<(), 
 mod tests {
     use super::*;
     #[test]
+    fn prepared_source_receipt_does_not_authorize_the_runtime() {
+        let root=std::env::temp_dir().join(format!("opencore-source-only-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let mut data=manifest().unwrap();
+        data.models.retain(|model|model.id=="underdog-woof-4b-11");
+        assert!(data.models[0].prepared_runtime.is_some());
+        let file=Artifact {id:"test-source".into(),path:"models/source/model.safetensors".into(),
+            repo:"ConwayResearch/Underdog-Woof-4B-1.1".into(),revision:"cf5f8db5409258e73303b78e112051fc443cb02b".into(),
+            filename:"model.safetensors".into(),sha256:format!("{:x}",Sha256::digest(b"source")),bytes:6,compatible_local_sha256:Vec::new()};
+        data.models[0].artifacts=vec![file.id.clone()];data.artifacts=vec![file.clone()];
+        let path=safe_path(&root,&file.path).unwrap();
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();std::fs::write(&path,b"source").unwrap();
+        record_file(&root,&file,&path).unwrap();
+        std::fs::write(model_receipt(&root,&data.models[0]),serde_json::to_vec(&data.models[0].artifacts).unwrap()).unwrap();
+        assert!(source_downloaded(&root,&data.models[0],&data));
+        assert!(!installed(&root,&data.models[0],&data),"Publisher MLX download must never claim a runnable GGUF");
+        assert!(!crate::model_prepared::ready(&root,&data.models[0]));
+        std::fs::write(model_receipt(&root,&data.models[0]),b"[]").unwrap();
+        assert!(!source_downloaded(&root,&data.models[0],&data),"Receipt must name this exact source artifact set");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn artifact_identity_requires_known_files_and_preserves_delivery_details() {
         assert_eq!(artifact_identity(&[]), None, "unknown external weight sets are not duplicate downloads");
         let catalog = manifest().unwrap();
@@ -642,6 +708,40 @@ mod tests {
         assert_eq!(hy.category,"3d-animation");
         assert!(!hy.runtime_ready);
         assert!(catalog.artifacts.iter().filter(|file|hy.artifacts.contains(&file.id)).all(|file|file.repo=="tencent/HY-Motion-1.0"));
+    }
+    #[test]
+    fn requested_20261006_models_preserve_package_identity_and_source_format() {
+        let catalog = manifest().unwrap();
+        for root in ["defiant-fable-9b", "pentacoder-9b"] {
+            let parent = gguf_model(root).expect("requested GGUF family must be selectable");
+            assert_eq!(parent.precision, "Q8_0");
+            let variants: Vec<_> = catalog.models.iter().filter(|model|
+                (model.id == root || model.variant_of.as_deref() == Some(root)) && model.memory_mode == "echo").collect();
+            let mut deliveries = std::collections::BTreeSet::new();
+            for model in variants {
+                assert!(deliveries.insert((model.precision.clone(), model.runtime_model_path.clone())),
+                    "{} must not duplicate a mode/precision/file", model.id);
+                let native = gguf_model(&format!("{}-native", model.id)).unwrap();
+                assert_eq!(native.artifacts, model.artifacts);
+                assert_eq!(native.weight_artifacts, model.weight_artifacts);
+            }
+        }
+        let penta: Vec<_> = catalog.models.iter().filter(|model|
+            model.variant_of.as_deref() == Some("pentacoder-9b") && model.memory_mode == "echo"
+                && model.precision.starts_with("Q4_K_M")).collect();
+        assert_eq!(penta.len(), 2, "regular and importance-matrix weights must be named separately");
+        assert_ne!(penta[0].precision, penta[1].precision);
+        assert_ne!(penta[0].runtime_model_path, penta[1].runtime_model_path);
+        let woof = catalog.models.iter().find(|model| model.id == "underdog-woof-4b-11").unwrap();
+        assert!(woof.installable);
+        assert!(!woof.runtime_ready && !woof.selectable, "published MLX weights must not masquerade as Windows GGUF");
+        let prepared = woof.prepared_runtime.as_ref().expect("local reconstruction must have a separate approved descriptor");
+        assert_eq!(woof.runtime_model_path.as_deref(), Some(prepared.path.as_str()));
+        assert_eq!(prepared.source_sha256, "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e");
+        assert_eq!(prepared.sha256, "965b2ae8d2b570e01f7d8d5da70f26e697c6bc587878eedb89112a37ef980df5");
+        assert!(catalog.artifacts.iter().any(|file| woof.artifacts.contains(&file.id)
+            && file.repo == "ConwayResearch/Underdog-Woof-4B-1.1" && file.filename == "model.safetensors"
+            && file.sha256 == "db21a4aae693db80ec907adc6d635c7bcb0c47622dff2ca0bc741af769a8174e"));
     }
     #[test]
     fn humaneval_gguf_models_are_downloadable_and_unimate_uses_its_hub_checkpoint() {
@@ -833,7 +933,7 @@ mod tests {
         assert_eq!(phonon.speech_language.as_deref(),Some("English only"));
         let runtime = phonon.runtime_precision.as_ref().unwrap();
         assert_eq!(runtime.source_format,"Five-value checkpoint");
-        assert_eq!(runtime.runtime_dtype,"FP32");
+        assert_eq!(runtime.runtime_dtype,"BF16 or FP32");
         assert_eq!(runtime.estimated_runtime_bytes,2_500_000_000);
         assert!(runtime.runtime_component.contains("not a second model download"));
         assert!(turbo.artifacts.iter().all(|id|!full.artifacts.contains(id)));
