@@ -171,6 +171,7 @@ jobs:
         run: |
           node scripts/release-version.mjs $env:GITHUB_RUN_NUMBER
       - uses: tauri-apps/tauri-action@v1
+        id: installer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -183,4 +184,16 @@ jobs:
           prerelease: false
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
+          retryAttempts: 3
           args: --bundles nsis
+      - name: Preserve signed Windows installer when publishing fails
+        if: ${{ failure() && steps.installer.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-windows-installer-${{ github.run_number }}
+          path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/nsis/*-setup.exe.sig
+          if-no-files-found: ignore
+          compression-level: 0
+          retention-days: 1
