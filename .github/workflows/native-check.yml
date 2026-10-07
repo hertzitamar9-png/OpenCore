@@ -41,6 +41,8 @@ jobs:
         run: ./scripts/build-desktop-focus-guard.ps1
       - name: Install JavaScript dependencies
         run: npm ci
+      - name: Test release ordering and public update manifests
+        run: node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs
       - name: Verify capture borders against rendered production styles
         run: |
           npx playwright install chromium

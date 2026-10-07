@@ -158,7 +158,7 @@ jobs:
           $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
           cargo --config $runnerConfig test --lib claude_bridge_install -- --include-ignored
       - name: Test release version ordering
-        run: node --test scripts/test-release-versioning.mjs
+        run: node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs
       - name: Save compiled native dependencies
         if: ${{ always() && steps.desktop-guard.outcome == 'success' && steps.rust-tests.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
@@ -188,6 +188,18 @@ jobs:
           updaterJsonPreferNsis: true
           retryAttempts: 3
           args: --bundles nsis
+      - name: Publish updater links for public downloads
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $tag = "app-v$version"
+          gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" > release-metadata.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/normalize-public-updater.mjs latest.json release-metadata.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release upload $tag latest.json --clobber
       - name: Preserve signed Windows installer when publishing fails
         if: ${{ failure() && steps.installer.outcome == 'failure' }}
         uses: actions/upload-artifact@v4

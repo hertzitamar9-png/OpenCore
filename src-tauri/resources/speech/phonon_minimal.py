@@ -4,7 +4,7 @@ The NumPy audio frontend and encoder binding are adapted from fermion-research
 0.2.10 (Fermion Research, Apache-2.0):
 https://github.com/fermionresearch/phonon
 The unchanged publisher wheel supplies and hash-checks the native binaries,
-container reader, packed matrices, decoder and long-audio segmentation.
+packed matrices, decoder and long-audio segmentation.
 """
 import ctypes
 import json
@@ -15,6 +15,71 @@ import time
 from types import SimpleNamespace
 
 import numpy as np
+
+
+def read_packed_container(path, lib, pk, engine):
+    """Use native wire loading where available, or decode only packed planes.
+
+    The pinned Windows DLL predates the direct wire entry point. Its existing
+    packed matrix constructor still works without creating dense encoder weights
+    or importing Torch. Keep its planes alive for the legacy native ABI.
+    """
+    if hasattr(lib, 'phonon2_cpu_create_onedot_wire'):
+        return engine._read_container(path, packed_lib=lib, wire=True, as_numpy=True)
+    tensors, raw, packed = {}, {}, {}
+    with Path(path).open('rb') as source:
+        header = json.loads(source.read(int.from_bytes(source.read(8), 'little')))
+        if header['format'] != 'fermion-five-value-parakeet-v1':
+            raise ValueError('Unsupported Phonon container format.')
+        for entry in header['index']:
+            name, kind, shape = entry['n'], entry['k'], tuple(entry['shape'])
+            blob = source.read(entry['b'])
+            if len(blob) != entry['b']:
+                raise ValueError('Truncated Phonon container record.')
+            if kind == 'five_value':
+                rows, cols = shape
+                if cols % 4:
+                    raise ValueError('Unsupported packed Phonon row width.')
+                row_bytes = (cols + 4) // 5
+                digits = np.frombuffer(blob, np.uint8, count=rows * row_bytes).reshape(rows, row_bytes).astype(np.uint16)
+                trits = np.empty((rows, row_bytes, 5), np.uint8)
+                for index in range(5):
+                    trits[:, :, index] = (digits // (3 ** index)) % 3
+                codes = trits.reshape(rows, -1)[:, :cols]
+                nonzero = codes != 1
+                count = int(nonzero.sum())
+                offset = rows * row_bytes
+                bit_bytes = (count + 7) // 8
+                high = np.zeros((rows, cols), bool)
+                high[nonzero] = np.unpackbits(np.frombuffer(blob[offset:offset + bit_bytes], np.uint8), bitorder='little')[:count]
+                offset += bit_bytes
+                if offset + 4 * rows != len(blob):
+                    raise ValueError('Invalid packed Phonon record length.')
+                lo = np.frombuffer(blob, '<f2', count=rows, offset=offset)
+                hi = np.frombuffer(blob, '<f2', count=rows, offset=offset + 2 * rows)
+
+                def plane(values):
+                    groups = values.reshape(rows, cols // 4, 4)
+                    return np.ascontiguousarray(groups[:, :, 0] | groups[:, :, 1] << 2 |
+                                                groups[:, :, 2] << 4 | groups[:, :, 3] << 6)
+
+                pa, pb = plane(codes), plane(np.where(high, codes, np.uint8(1)))
+                packed[name] = pk.PackedMatrix(lib, None, planes=(rows, cols, pa, pb, lo, hi))
+            elif kind in ('int6', 'int8'):
+                record = raw[name] = engine._intn_raw(blob, shape, int(kind[3:]))
+                if not name.startswith(('decoder.', 'joint.')):
+                    value = engine._intn_dense(record)
+                    if value.ndim == 2 and name.endswith(('.conv.pointwise_conv1.weight', '.conv.pointwise_conv2.weight')):
+                        value = value[:, :, None]
+                    tensors[name] = value
+            elif kind == 'fp16':
+                value = np.frombuffer(blob, '<f2').reshape(shape).astype(np.float32)
+                tensors[name] = value
+            else:
+                raise ValueError(f'Unsupported Phonon record: {kind}')
+        if source.read(1):
+            raise ValueError('Trailing Phonon container bytes.')
+    return tensors, raw, packed, len(packed)
 
 
 def log_mel(audio, filters):
@@ -95,12 +160,10 @@ def load(directory, progress=lambda _stage: None):
     if forced:
         lib.phonon2_cpu_set_kernel(int(forced))
     lib.phonon2_cpu_set_threads(threads)
-    if not hasattr(lib, 'phonon2_cpu_create_onedot_wire'):
-        raise RuntimeError('Phonon Original needs the pinned direct packed loader. Choose BF16 or FP32 on unsupported CPUs.')
-    tensors, raw, packed, count = engine._read_container(directory / engine.CONTAINER, packed_lib=lib, wire=True, as_numpy=True)
+    tensors, raw, packed, count = read_packed_container(directory / engine.CONTAINER, lib, pk, engine)
     expected = {f'encoder.layers.{layer}.{name}' for layer in range(engine.HF_CONFIG['encoder_config']['num_hidden_layers']) for name in pk.CEncoder._MATS}
-    if not expected.issubset(packed) or any(getattr(matrix, 'pa', None) is not None for matrix in packed.values()):
-        raise RuntimeError('Phonon Original could not load all direct packed matrices; refusing a dense fallback.')
+    if not expected.issubset(packed):
+        raise RuntimeError('Phonon Original could not load all packed matrices; refusing a dense fallback.')
     for matrix in packed.values():
         matrix.release_planes()
     progress('building-speech-frontend')
@@ -115,7 +178,8 @@ def load(directory, progress=lambda _stage: None):
     speech = MinimalSpeech(None, path=directory, profile='five-value', backend='phonon2-five-value', load_seconds=0,
                            decode={'five_value_modules': count, 'threads': threads, 'model_impl': 'C kernels + NumPy',
                                    'packed': {'modules': len(packed), 'kernel_id': kernel, 'kernel': _cpu_features.KERNEL_NAMES.get(kernel, '?'),
-                                              'tier': pk._plan()['tier'], 'onedot': True, 'plane_cache': 'direct',
+                                              'tier': pk._plan()['tier'], 'onedot': True,
+                                              'plane_cache': 'direct' if hasattr(lib, 'phonon2_cpu_create_onedot_wire') else 'off',
                                               'library': pk.default_library().name}})
     speech._cenc, speech._ctdt, speech._packed = encoder, decoder, packed
     speech._proj_w, speech._proj_b = tensors['encoder_projector.weight'], tensors['encoder_projector.bias']
