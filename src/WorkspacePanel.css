@@ -11,7 +11,7 @@
 .section-header .workspace-access[aria-expanded="true"] { color:var(--theme-ink,#e7f4ff); border-color:var(--theme-border,#718899); background:var(--theme-panel,#293540); }
 .section-workspace-stage { display:flex; min-width:0; min-height:0; overflow:hidden; }
 .section-main { flex:1 1 auto; min-width:0; min-height:0; overflow:hidden; container: main-section / inline-size; }
-.section-main > .support-page,.section-main > .workspace,.section-main > .music-studio,.section-main > .spaces-view,.section-main > .background-jobs { height:100%; min-width:0; min-height:0; }
+.section-main > .support-page,.section-main > .workspace,.section-main > .music-studio,.section-main > .game-dev-studio,.section-main > .media-studio,.section-main > .spaces-view,.section-main > .background-jobs { height:100%; min-width:0; min-height:0; }
 .conversation-content-grid { height:100%; min-height:0; min-width:0; display:grid; grid-template-columns:min(var(--conversation-list-width),38%) 7px minmax(0,1fr); overflow:hidden; }
 .conversation-chat-content { min-width:0; min-height:0; height:100%; container: main-section / inline-size; }
 .conversation-content-grid.conversation-list-collapsed { grid-template-columns:minmax(0,1fr); }

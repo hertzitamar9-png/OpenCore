@@ -93,7 +93,7 @@ jobs:
       - name: Verify capture borders against rendered production styles
         run: |
           npx playwright install chromium
-          node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs
+          node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs tests/studio-layout.test.mjs
       - name: Test resumable evaluation and isolated training transport
         run: |
           python -m unittest discover -s scripts/evaluation -p "test_gsm8k_echo.py"
