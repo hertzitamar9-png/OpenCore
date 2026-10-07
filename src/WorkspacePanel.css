@@ -117,20 +117,33 @@
 .side-chat-session .assistant-thread-panel.side-chat-thread { flex:1; min-height:0; min-width:0; height:auto; overflow:visible; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
 .side-chat-thread > .timeline-heading { display:none; }
 .unified-workspace .side-chat-thread .aui-thread-viewport { padding:18px 12px; }
-.side-chat-thread .chat-composer-wrap { min-width:0; padding:10px; }
+.side-chat-thread .chat-composer-wrap { min-width:0; padding:10px; container:side-chat-composer / inline-size; }
 .side-chat-thread .chat-composer { gap:6px; grid-template-columns:36px 30px minmax(0,1fr) 36px; }
 .side-chat-thread .chat-composer textarea { grid-column:1 / -1; grid-row:1; }
 .side-chat-thread .composer-action-anchor { grid-column:1; grid-row:2; }
 .side-chat-thread .speech-control { grid-column:2; grid-row:2; }
-.side-chat-thread .composer-controls { grid-column:3; grid-row:2; justify-self:stretch; gap:4px; }
+.side-chat-thread .composer-controls { grid-column:3; grid-row:2; justify-self:end; gap:4px; }
 .side-chat-thread .send-button { grid-column:4; grid-row:2; }
 .side-chat-thread .composer-hint { display:block; }
 .side-chat-thread .composer-hint span { display:block; margin-top:3px; font-size:calc(9px * var(--ui-scale,1)); }
-.side-chat-thread .composer-control-button { min-width:0; flex:1; gap:4px; padding:0 6px; }
+.side-chat-thread .composer-control-button { min-width:0; max-width:142px; flex:0 1 auto; gap:4px; padding:0 6px; }
 .side-chat-thread .composer-control-button > svg:last-child { display:none; }
 .side-chat-thread .composer-control-button .control-copy small { font-size:calc(8px * var(--ui-scale,1)); }
 .side-chat-thread .chat-composer textarea { min-height:calc(var(--chat-font-size,15px) * 3.2 * var(--ui-scale,1)); }
 .side-chat-thread .composer-model-chip { max-width:140px; }
+
+/* A widened side chat uses its available message space, independent of window size. */
+@container side-chat-composer (min-width:700px) {
+  .side-chat-thread .chat-composer { grid-template-columns:40px 36px minmax(0,1fr) auto 40px; }
+  .side-chat-thread .composer-action-anchor { grid-column:1; grid-row:1; }
+  .side-chat-thread .speech-control { grid-column:2; grid-row:1; }
+  .side-chat-thread .chat-composer textarea { grid-column:3; grid-row:1; }
+  .side-chat-thread .composer-controls { grid-column:4; grid-row:1; gap:7px; }
+  .side-chat-thread .composer-control-button { min-width:105px; padding:0 10px; gap:8px; }
+  .side-chat-thread .composer-control-button > svg:last-child { display:block; }
+  .side-chat-thread .composer-control-button .control-copy small { font-size:calc(9px * var(--ui-scale,1)); }
+  .side-chat-thread .send-button { grid-column:5; grid-row:1; }
+}
 
 @container main-section (max-width: 760px) {
   .section-main .assistant-thread-panel.chat-mode { grid-template-rows:108px minmax(0,1fr) auto; }
