@@ -140,3 +140,68 @@ for (const viewport of [{ width: 1180, height: 720 }, { width: 900, height: 450 
     expect(layout.composerTop).toBeGreaterThanOrEqual(layout.contextBottom - 1);
   });
 }
+
+test('side chat keeps controls compact and gives a wide composer one message row', async ({ page }) => {
+  await page.setViewportSize({ width: 1369, height: 900 });
+  await page.goto('/tests/fixtures/workspace-preview.html');
+  await page.getByRole('button', { name: 'Workspace', exact: true }).click();
+  await page.getByRole('tab', { name: 'Side chat', exact: true }).click();
+  await page.getByRole('button', { name: 'Create side chat', exact: true }).click();
+  const resize = page.getByRole('separator', { name: 'Resize workspace', exact: true });
+  const composer = page.locator('.side-chat-thread .chat-composer');
+  const measure = () => composer.evaluate(element => ({
+    width: element.clientWidth, scrollWidth: element.scrollWidth,
+    box: element.getBoundingClientRect().toJSON(),
+    input: element.querySelector('textarea')!.getBoundingClientRect().toJSON(),
+    controls: element.querySelector('.composer-controls')!.getBoundingClientRect().toJSON(),
+    buttons: [...element.querySelectorAll('.composer-control-button')].map(button => button.getBoundingClientRect().toJSON()),
+    send: element.querySelector('.send-button')!.getBoundingClientRect().toJSON(),
+  }));
+  for (const wide of [true, false, true]) {
+    await resize.press(wide ? 'End' : 'Home');
+    const layout = await measure();
+    expect(layout.buttons).toHaveLength(2);
+    for (const button of layout.buttons) {
+      expect(button.width).toBeGreaterThan(44);
+      expect(button.width).toBeLessThan(180);
+      expect(button.right).toBeLessThanOrEqual(layout.send.left);
+    }
+    expect(layout.send.left - layout.controls.right).toBeLessThan(10);
+    expect(layout.scrollWidth).toBeLessThanOrEqual(layout.width + 1);
+    if (wide) {
+      expect(layout.input.width).toBeGreaterThan(layout.box.width / 2);
+      expect(layout.input.top).toBeLessThan(layout.send.bottom);
+      expect(layout.send.top).toBeLessThan(layout.input.bottom);
+      expect(layout.input.right).toBeLessThan(layout.controls.left);
+    } else {
+      expect(layout.input.bottom).toBeLessThanOrEqual(layout.controls.top);
+    }
+  }
+  const input = composer.getByRole('textbox', { name: 'Message side chat', exact: true });
+  await input.fill('A message stays intact while resizing.');
+  await resize.press('Home');
+  await expect(input).toHaveValue('A message stays intact while resizing.');
+  await composer.getByRole('button', { name: 'Effort: Off', exact: true }).click();
+  await page.getByRole('slider', { name: 'Reasoning effort', exact: true }).press('End');
+  await expect(composer.getByRole('button', { name: 'Effort: OpenCore', exact: true })).toBeVisible();
+  await expect(composer.getByRole('button', { name: 'Approval: Ask every time', exact: true })).toBeVisible();
+});
+
+test('Learning Studio gives the message history space above its compact composer', async ({ page }) => {
+  await page.goto('/tests/fixtures/workspace-preview.html');
+  await page.getByRole('button', { name: 'Learning Studio', exact: true }).click();
+  const thread = page.locator('.learning-assistant-chat .side-chat-thread');
+  await expect(thread.getByRole('textbox', { name: 'Message side chat', exact: true })).toBeVisible();
+  for (const viewport of [{ width: 1369, height: 900 }, { width: 760, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    const layout = await thread.evaluate(element => ({
+      height: element.getBoundingClientRect().height,
+      bottom: element.getBoundingClientRect().bottom,
+      messages: element.querySelector('.aui-thread-root')!.getBoundingClientRect().toJSON(),
+      composer: element.querySelector('.chat-composer-wrap')!.getBoundingClientRect().toJSON(),
+    }));
+    expect(layout.messages.height).toBeGreaterThan(layout.height / 2);
+    expect(layout.composer.height).toBeLessThan(layout.height / 2);
+    expect(Math.abs(layout.composer.bottom - layout.bottom)).toBeLessThanOrEqual(1);
+  }
+});

@@ -31,6 +31,11 @@ const internals = {
     if (command === 'get_conversation') return structuredClone(branches.get(args.id) || (args.id === 'preview' ? previewTimeline : []));
     if (command === 'plugin:app|version') return '0.2.110 preview';
     if (command === 'agent_platform_configuration' || command === 'agent_platform_save_configuration') return defaultPlatformConfiguration();
+    if (command === 'learning_command') {
+      if (args.args.action === 'status') return {runs: [], active: false, root: 'C:/preview/learning', rawRecords: 0, assistantConversationId: 'learning-preview'};
+      if (args.args.action === 'assistant') return {conversationId: 'learning-preview'};
+      throw new Error('Training and record writes are unavailable in this UI preview.');
+    }
     if (command === 'list_model_library') return {models: catalog.models.map(model => ({...model, installed: ['doucode','echo','native1m'].includes(model.id), externalManaged: false, downloadBytes: 1, totalBytes: 1})), diskFreeBytes: 200e9, minimumFreeBytes: 64e6, progress: null};
     if (command === 'workspace_files') {
       if (args.args.action === 'changes') return {turnId: 'preview-turn', files: [file], added: 8, removed: 2, coverage: []};
