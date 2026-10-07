@@ -251,9 +251,11 @@ export interface ImportedConversationPage {
   limit: number;
 }
 
-export async function listImportedConversations(query = "", offset = 0, limit = 100): Promise<ImportedConversationPage> {
+export type ImportedConversationSource = "all" | "hermes" | "opencode" | "codex" | "claude" | "other";
+
+export async function listImportedConversations(query = "", offset = 0, limit = 100, source: ImportedConversationSource = "all"): Promise<ImportedConversationPage> {
   if (!desktop()) return { conversations: [], total: 0, offset, limit };
-  return invoke<ImportedConversationPage>("list_imported_conversations", { query, offset, limit });
+  return invoke<ImportedConversationPage>("list_imported_conversations", { query, offset, limit, source });
 }
 
 export async function importedConversationSummary(id: string): Promise<import("./types").ConversationSummary | null> {

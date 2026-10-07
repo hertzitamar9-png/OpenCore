@@ -335,13 +335,15 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
 }) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "imported" | "projects">("all");
+  const [section, setSection] = useState<"all" | "recent" | "opencore" | "claude" | "codex" | "hermes" | "opencode" | "imported" | "projects">("all");
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(["all-projects"]));
   const [creatingProject, setCreatingProject] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectFolder, setProjectFolder] = useState("");
   const [projectError, setProjectError] = useState("");
-  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["imported", "Imported"], ["projects", "Projects"]] as const;
+  const sections = [["all", "All"], ["recent", "Recent"], ["opencore", "OpenCore"], ["claude", "Claude Code"], ["codex", "Codex"], ["hermes", "Hermes"], ["opencode", "OpenCode"], ["imported", "Imported"], ["projects", "Projects"]] as const;
+  const sourceLabels = {claude: "Claude Code", codex: "Codex", hermes: "Hermes", opencode: "OpenCode"} as const;
+  const isSourceSection = section === "claude" || section === "codex" || section === "hermes" || section === "opencode";
   const needle = deferredQuery.trim().toLowerCase();
   const importedRevision = useMemo(() => `${importRevision}:${JSON.stringify(conversations.map(item => [item.id, item.updatedAt, item.title, item.pinned]))}`, [conversations, importRevision]);
   const importedRows = (items: ConversationSummary[]) => <ConversationRows items={items} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />;
@@ -358,6 +360,8 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
       opencore: searched.filter(isOpenCore),
       claude: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("claude")),
       codex: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("codex")),
+      hermes: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("hermes")),
+      opencode: searched.filter((item) => !isImported(item) && item.client.toLowerCase().includes("opencode")),
     };
   }, [searched]);
   const projects = useMemo(() => {
@@ -388,16 +392,15 @@ function ConversationsList({ conversations, projects: projectDefinitions, select
     <div className="search conversation-search"><Search size={14} /><input aria-label="Search conversations" placeholder="Search…" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
     <div className="conversation-sections">{sections.map(([id, label]) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}>{label}</button>)}</div>
     <div className="conversation-scroll">
-      {searched.length === 0 && section !== "imported" ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
+      {searched.length === 0 && section !== "imported" && section !== "all" && !isSourceSection ? <div className="empty-state"><MessageSquare /><strong>No conversations here</strong><span>Start a new OpenCore chat or choose another section.</span></div> : null}
       {section === "all" ? <>
         {sourceItems.pinned.length ? <CollapsibleConversationGroup id="all-pinned" label="Pinned" count={sourceItems.pinned.length} collapsed={collapsed.has("all-pinned")} onToggle={toggle}><ConversationRows items={sourceItems.pinned} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup> : null}
         <CollapsibleConversationGroup id="all-recent" label="Recent" count={sourceItems.recent.length} collapsed={collapsed.has("all-recent")} onToggle={toggle}><ConversationRows items={sourceItems.recent} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
         <CollapsibleConversationGroup id="all-opencore" label="OpenCore" count={sourceItems.opencore.length} collapsed={collapsed.has("all-opencore")} onToggle={toggle}><ConversationRows items={sourceItems.opencore} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        <CollapsibleConversationGroup id="all-claude" label="Claude Code" count={sourceItems.claude.length} collapsed={collapsed.has("all-claude")} onToggle={toggle}><ConversationRows items={sourceItems.claude} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        <CollapsibleConversationGroup id="all-codex" label="Codex" count={sourceItems.codex.length} collapsed={collapsed.has("all-codex")} onToggle={toggle}><ConversationRows items={sourceItems.codex} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} /></CollapsibleConversationGroup>
-        <ImportedChats query={needle} revision={importedRevision} grouped renderRows={importedRows} />
+        {(["claude", "codex", "hermes", "opencode"] as const).map(source => <ImportedChats key={source} query={needle} revision={importedRevision} source={source} label={sourceLabels[source]} nativeItems={sourceItems[source]} grouped collapsed={collapsed.has(`all-${source}`)} onToggle={() => toggle(`all-${source}`)} renderRows={importedRows} />)}
+        <ImportedChats query={needle} revision={importedRevision} source="other" grouped renderRows={importedRows} />
         <CollapsibleConversationGroup id="all-projects" label="Projects" count={projects.length} collapsed={collapsed.has("all-projects")} onToggle={toggle}>{projectGroups}</CollapsibleConversationGroup>
-      </> : section === "projects" ? projectGroups : section === "imported" ? <ImportedChats query={needle} revision={importedRevision} renderRows={importedRows} /> : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
+      </> : section === "projects" ? projectGroups : section === "imported" ? <ImportedChats query={needle} revision={importedRevision} renderRows={importedRows} /> : isSourceSection ? <ImportedChats query={needle} revision={importedRevision} source={section} label={sourceLabels[section]} nativeItems={sourceItems[section]} renderRows={importedRows} /> : <ConversationRows items={sourceItems[section]} selected={selected} onSelect={onSelect} onTogglePin={onTogglePin} />}
     </div>
   </section>;
 }
@@ -1528,7 +1531,9 @@ export default function App() {
     setConversationDialog({ kind: "delete" });
   };
   const togglePinned = () => selectedConversation && selected ? act(() => api.setConversationPinned(selectedConversation, !selected.pinned)) : Promise.resolve();
-  const toggleRowPinned = (item: ConversationSummary) => { void act(() => api.setConversationPinned(item.id, !item.pinned)); };
+  const toggleRowPinned = (item: ConversationSummary) => { void act(() => api.setConversationPinned(item.id, !item.pinned)).then(changed => {
+    if (changed && item.client.startsWith("Imported ") && !selectedConversation?.startsWith("import:")) setImportRevision(value => value + 1);
+  }); };
   const moveCurrentToProject = (projectId: string | null) => selectedConversation ? act(() => api.moveConversationToProject(selectedConversation, projectId)) : Promise.resolve();
   const createProject = (name: string, folderPath: string) => act(() => api.createProject(name, folderPath));
   const createProjectForCurrent = (name: string, folderPath: string) => act(async () => {

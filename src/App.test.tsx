@@ -903,6 +903,8 @@ describe("OpenCore", () => {
     expect(screen.getAllByRole("button", { name: "OpenCore" }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole("button", { name: "Claude Code" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Codex" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hermes" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "OpenCode" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Projects" })).toBeInTheDocument();
     expect(screen.getByLabelText("Message OpenCore")).toBeInTheDocument();
     expect(screen.queryByText("Telemetry")).not.toBeInTheDocument();
@@ -911,6 +913,81 @@ describe("OpenCore", () => {
     expect(await screen.findByText("Ran a command", { selector: "summary span" })).toBeInTheDocument();
     await waitFor(() => expect(document.querySelector(".aui-md pre code")).toBeInTheDocument());
     expect(screen.queryByText("You", { selector: ".aui-message-meta span" })).not.toBeInTheDocument();
+  });
+
+  it("gives imported sources distinct All groups and keeps copied Codex and Claude chats in their source categories", async () => {
+    const initial = await api.snapshot();
+    const imported = [
+      ["hermes", "Imported Hermes"], ["opencode", "Imported OpenCode"], ["codex", "Imported Codex"],
+      ["claude", "Imported Claude Code"], ["json", "Imported JSON"], ["opencore", "Imported OpenCore"],
+    ].map(([source,client]) => ({...initial.conversations[0],id:`import:${source}:copied`,client,title:`Copied ${source} notes`,pinned:false}));
+    const clients: Record<string,string> = {hermes:"Imported Hermes",opencode:"Imported OpenCode",codex:"Imported Codex",claude:"Imported Claude Code"};
+    const pages = vi.spyOn(api,"listImportedConversations").mockImplementation(async (query = "",offset = 0,limit = 100,source = "all") => {
+      const matches = imported.filter(item => (source === "all" || (source === "other" ? !Object.values(clients).includes(item.client) : item.client === clients[source])) && item.title.toLowerCase().includes(query));
+      return {conversations:matches.slice(offset,offset+limit),total:matches.length,offset,limit};
+    });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      for (const [label,source] of [["Hermes","hermes"],["OpenCode","opencode"],["Codex","codex"],["Claude Code","claude"]]) {
+        const group = await screen.findByRole("region",{name:`${label} chats`});
+        expect(await within(group).findByText(`Copied ${source} notes`)).toBeVisible();
+        for (const other of imported.filter(item=>item.id!==`import:${source}:copied`)) {
+          expect(within(group).queryByText(other.title)).not.toBeInTheDocument();
+        }
+      }
+      const other = screen.getByRole("region",{name:"Imported chats"});
+      expect(within(other).getByText("Copied json notes")).toBeVisible();
+      expect(within(other).getByText("Copied opencore notes")).toBeVisible();
+      expect(within(other).queryByText("Copied hermes notes")).not.toBeInTheDocument();
+      expect(within(other).queryByText("Copied opencode notes")).not.toBeInTheDocument();
+      expect(screen.getByRole("button",{name:"Codex group, 2"})).toBeVisible();
+      expect(screen.getByRole("button",{name:"Claude Code group, 2"})).toBeVisible();
+      for (const [label,source] of [["Hermes","hermes"],["OpenCode","opencode"],["Codex","codex"],["Claude Code","claude"]]) {
+        fireEvent.click(screen.getByRole("button",{name:label}));
+        const region = screen.getByRole("region",{name:`${label} chats`});
+        expect(await within(region).findByText(`Copied ${source} notes`)).toBeVisible();
+        expect(pages).toHaveBeenCalledWith("",0,100,source);
+      }
+      fireEvent.click(screen.getByRole("button",{name:"Imported"}));
+      const allImports = screen.getByRole("region",{name:"Imported chats"});
+      await within(allImports).findByText("Copied hermes notes");
+      for (const item of imported) expect(within(allImports).getByText(item.title)).toBeVisible();
+    } finally { pages.mockRestore(); }
+  });
+
+  it("pages, searches, pins and opens a Hermes chat absent from the recent snapshot with its original project", async () => {
+    const initial = await api.snapshot();
+    const imported = Array.from({length:102},(_,index)=>({...initial.conversations[0],id:`import:hermes:source-${index}`,client:"Imported Hermes",title:`Hermes source notes ${index}`,project:"Work",projectId:"project-work",pinned:false}));
+    const pages = vi.spyOn(api,"listImportedConversations").mockImplementation(async (query = "",offset = 0,limit = 100,source = "all") => {
+      const matches = source === "hermes" || source === "all" ? imported.filter(item=>item.title.toLowerCase().includes(query)) : [];
+      return {conversations:matches.slice(offset,offset+limit),total:matches.length,offset,limit};
+    });
+    const summary = vi.spyOn(api,"importedConversationSummary").mockImplementation(async id=>imported.find(item=>item.id===id)??null);
+    const history = vi.spyOn(api,"conversation").mockResolvedValue([]);
+    const pin = vi.spyOn(api,"setConversationPinned").mockImplementation(async (id,pinned)=>{ imported.find(item=>item.id===id)!.pinned=pinned; });
+    try {
+      render(<App />);
+      await screen.findByLabelText("Message OpenCore");
+      fireEvent.click(screen.getByRole("button",{name:"Hermes"}));
+      const region = screen.getByRole("region",{name:"Hermes chats"});
+      await within(region).findByText("Hermes source notes 99");
+      fireEvent.click(within(region).getByRole("button",{name:"Load more hermes chats"}));
+      await within(region).findByText("Hermes source notes 101");
+      expect(pages).toHaveBeenCalledWith("",100,100,"hermes");
+      fireEvent.change(screen.getByLabelText("Search conversations"),{target:{value:"notes 101"}});
+      await waitFor(()=>expect(pages).toHaveBeenCalledWith("notes 101",0,100,"hermes"));
+      await within(region).findByText("Hermes source notes 101");
+      expect(within(region).queryByText("Hermes source notes 99")).not.toBeInTheDocument();
+      fireEvent.click(within(region).getByRole("button",{name:"Pin Hermes source notes 101"}));
+      await waitFor(()=>expect(pin).toHaveBeenCalledWith(imported[101].id,true));
+      expect(await within(region).findByRole("button",{name:"Unpin Hermes source notes 101"})).toBeVisible();
+      fireEvent.click(within(region).getByText("Hermes source notes 101"));
+      expect(await screen.findByRole("heading",{name:"Hermes source notes 101",level:2})).toBeVisible();
+      expect(history).toHaveBeenCalledWith(imported[101].id);
+      expect(screen.getByRole("button",{name:"Project: Work"})).toBeVisible();
+      expect(within(region).getByText("Imported Hermes · Work")).toBeVisible();
+    } finally { pages.mockRestore();summary.mockRestore();history.mockRestore();pin.mockRestore(); }
   });
 
   it("opens the full OpenCore workspace only when requested", async () => {

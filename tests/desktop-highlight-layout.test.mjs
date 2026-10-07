@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { chromium } from "playwright";
 
-const css = (await Promise.all(["appearance.css", "styles.css", "WorkspacePanel.css"]
+const css = (await Promise.all(["appearance.css", "styles.css", "WorkspacePanel.css", "historic-dark.css"]
   .map(name => readFile(new URL(`../src/${name}`, import.meta.url), "utf8"))))
   .join("\n").replace(/@import\s+[^;]+;/g, "");
 
@@ -37,7 +37,8 @@ function assertStroke(pixels, color, label) {
 }
 
 test("capture and native activity frames paint all four app edges across display scales", async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true,
+    ...(process.env.OPENCORE_UI_TEST_BROWSER ? { channel: process.env.OPENCORE_UI_TEST_BROWSER } : {}) });
   try {
     for (const scale of [1, 1.25, 1.5, 2]) {
       const context = await browser.newContext({ viewport: { width: 1280, height: 1000 }, deviceScaleFactor: scale });

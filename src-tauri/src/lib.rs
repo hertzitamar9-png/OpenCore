@@ -571,9 +571,9 @@ fn list_conversations(
 }
 
 #[tauri::command]
-async fn list_imported_conversations(core: tauri::State<'_, Arc<AppCore>>, query: String, offset: usize, limit: usize) -> Result<store::ImportedConversationPage, String> {
+async fn list_imported_conversations(core: tauri::State<'_, Arc<AppCore>>, query: String, offset: usize, limit: usize, source: Option<String>) -> Result<store::ImportedConversationPage, String> {
     let core = core.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || core.store.list_imported_conversations(&query, offset, limit))
+    tauri::async_runtime::spawn_blocking(move || core.store.list_imported_conversations_for_source(&query, offset, limit, source.as_deref().unwrap_or("all")))
         .await.map_err(|error| error.to_string())?
 }
 
