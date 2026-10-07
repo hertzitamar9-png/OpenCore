@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import App, { historySyncProgressLabel, recentPromptProgress } from "./App";
+import App, { historySyncProgressLabel, recentPromptProgress, historySyncFailure } from "./App";
 import * as api from "./api";
 import opencoreLogo from "./assets/opencore-logo.png";
 import type { ArchiveEvent, ArchivePageRef, OperationRecord } from "./types";
@@ -30,6 +30,13 @@ function mockFooterModels() {
 }
 
 describe("OpenCore", () => {
+  it("identifies the connector on an old failed import without claiming an app is open", () => {
+    const legacy = "Close Hermes/OpenCode before importing its database, or use a JSON/JSONL export.";
+    expect(historySyncFailure(legacy, "Hermes")).toContain("Last Hermes sync failed");
+    expect(historySyncFailure(legacy, "Hermes")).not.toMatch(/OpenCode|Close|is open/);
+    expect(historySyncFailure("Cannot read source C:/Hermes/state.db: Access denied (os error 5)", "Hermes"))
+      .toContain("C:/Hermes/state.db: Access denied (os error 5)");
+  });
   it("switches an idle running model from the footer in order and keeps competing choices paused", async () => {
     const initial = await api.snapshot();
     let runtime = { ...initial.runtime, status: "running", profile: "echo" };
@@ -398,13 +405,44 @@ describe("OpenCore", () => {
           { kind: "thinking", content: "latest live thought" },
         ],
       } }));
-      const first = await screen.findByText("first live thought", { selector: '.reasoning-text' });
+      const first = await screen.findByText("first live thought", { selector: '.reasoning-text p' });
       const answer = await screen.findByText("answer arriving now");
-      const latest = await screen.findByText("latest live thought", { selector: '.reasoning-text' });
+      const latest = await screen.findByText("latest live thought", { selector: '.reasoning-text p' });
       expect(first.compareDocumentPosition(answer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(answer.compareDocumentPosition(latest) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(screen.getByRole("button", { name: "Stop generation" })).toBeVisible();
     } finally { send.mockRestore(); }
+  });
+  it("keeps later live text when a slow checkpoint refresh finishes", async () => {
+    const saved = await api.conversation("preview");
+    render(<App />);
+    await screen.findByText(/Create a Python script to analyze a CSV/);
+    await waitFor(() => expect(eventHandlers.has("opencore-generation")).toBe(true));
+    let finish!: (entries: typeof saved) => void;
+    const history = vi.spyOn(api, "conversation").mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    const emit = (payload: Record<string, unknown>) => act(() => eventHandlers.get("opencore-generation")!({ payload: { conversationId: "preview", runId: "checkpoint-race", ...payload } }));
+    try {
+      emit({ phase: "answering", content: "The first part is visible." });
+      await screen.findByText("The first part is visible.");
+      emit({ checkpoint: true, phase: "working" });
+      expect(history).toHaveBeenCalledWith("preview", { fresh: true });
+      emit({ phase: "answering", content: "The newer answer continues after that checkpoint." });
+      await act(async () => { finish(saved); });
+      expect(await screen.findByText("The newer answer continues after that checkpoint.")).toBeVisible();
+    } finally { history.mockRestore(); }
+  });
+  it("keeps the visible final answer when reading the saved response fails", async () => {
+    render(<App />);
+    await screen.findByText(/Create a Python script to analyze a CSV/);
+    await waitFor(() => expect(eventHandlers.has("opencore-generation")).toBe(true));
+    act(() => eventHandlers.get("opencore-generation")!({ payload: { conversationId: "preview", runId: "final-read", phase: "answering", content: "Keep this completed response visible." } }));
+    await screen.findByText("Keep this completed response visible.");
+    const history = vi.spyOn(api, "conversation").mockRejectedValue(new Error("Temporary disk read failure"));
+    try {
+      await act(async () => eventHandlers.get("opencore-generation")!({ payload: { conversationId: "preview", runId: "final-read", done: true } }));
+      expect(screen.getByText("Keep this completed response visible.")).toBeVisible();
+      expect(screen.getByText(/Could not load the saved response/)).toBeVisible();
+    } finally { history.mockRestore(); }
   });
   it("passes a chosen reasoning mode through the chat request", async () => {
     const send = vi.spyOn(api, "sendChatMessage").mockResolvedValue({ conversationId: "c1", title: "Test" });

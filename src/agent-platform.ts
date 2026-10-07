@@ -397,10 +397,10 @@ export function applyPlatformAppearance(appearance: AppearanceConfig, root: HTML
   Object.entries(variables).forEach(([name, value]) => root.style.setProperty(name, value));
 }
 
-export function usePlatformConfiguration() {
+export function usePlatformConfiguration(initialConfiguration?: PlatformConfig | null) {
   const preview = !platformNativeAvailable();
-  const [configuration, setConfiguration] = useState<PlatformConfig | null>(() => preview ? defaultPlatformConfiguration() : null);
-  const [loading, setLoading] = useState(!preview);
+  const [configuration, setConfiguration] = useState<PlatformConfig | null>(() => initialConfiguration ?? (preview ? defaultPlatformConfiguration() : null));
+  const [loading, setLoading] = useState(!preview && !initialConfiguration);
   const [error, setError] = useState("");
   const current = useRef(configuration);
   const generation = useRef(0);

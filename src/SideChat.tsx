@@ -50,7 +50,7 @@ export function SideChat({parentId, parentTitle, settings, selectedProfile, onSe
     if (!id) return;
     setRefreshing(true);
     try {
-      const latest = await api.conversation(id);
+      const latest = await api.conversation(id, { fresh: true });
       if (branchRef.current === id) { setEntries(latest); setError(''); }
       await onRefresh();
     } catch (reason) { if (branchRef.current === id) setError(`Could not refresh side chat: ${String(reason)}`); }
@@ -65,7 +65,7 @@ export function SideChat({parentId, parentTitle, settings, selectedProfile, onSe
         if (!parentId || current[parentId]?.branch.conversationId !== id) return current;
         return {...current, [parentId]: {...current[parentId], branch: {...current[parentId].branch, ...latest}}};
       });
-      const history = await api.conversation(id);
+      const history = await api.conversation(id, { fresh: true });
       if (branchRef.current === id) {setEntries(history); setError('');}
       return latest;
     } finally {setRefreshing(false);}

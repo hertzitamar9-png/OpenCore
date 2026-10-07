@@ -6,6 +6,7 @@ export type AgentConnectorId = "opencode" | "hermes";
 export type AgentConnectorControlsProps = {
   id: AgentConnectorId;
   busy?: boolean;
+  syncLabel?: string;
   onConfigure: (id: AgentConnectorId, profileFolder?: string) => Promise<unknown>;
   onSelectFolder: (id: AgentConnectorId, folder: string) => Promise<unknown>;
   onSync: (id: AgentConnectorId) => Promise<unknown>;
@@ -14,7 +15,7 @@ export type AgentConnectorControlsProps = {
   onError?: (message: string) => void;
 };
 
-export function AgentConnectorControls({ id, busy = false, onConfigure, onSelectFolder, onSync, onClear, onResult, onError }: AgentConnectorControlsProps) {
+export function AgentConnectorControls({ id, busy = false, syncLabel = "Sync chats and projects", onConfigure, onSelectFolder, onSync, onClear, onResult, onError }: AgentConnectorControlsProps) {
   const [working, setWorking] = useState(false);
   const [folder, setFolder] = useState<string>();
   const [error, setError] = useState("");
@@ -47,7 +48,7 @@ export function AgentConnectorControls({ id, busy = false, onConfigure, onSelect
   return <div className="agent-connector-controls">
     <div className="connector-actions">
       <button disabled={disabled} onClick={() => void run(() => onConfigure(id, folder), `${title} connected to OpenCore`)}><Cable size={14} />Connect OpenCore</button>
-      <button disabled={disabled} onClick={() => void run(() => onSync(id), `${title} history import started`)}><RefreshCw size={14} />Sync chats and projects</button>
+      <button disabled={disabled} onClick={() => void run(() => onSync(id), `${title} history import started`)}><RefreshCw size={14} />{syncLabel}</button>
       <button disabled={disabled} onClick={() => void chooseFolder()}><FolderOpen size={14} />Choose history folder</button>
       {onClear ? <button disabled={disabled} onClick={() => void run(() => onClear(id), `${title} copied history cleared`)}><Trash2 size={14} />Clear imported</button> : null}
     </div>

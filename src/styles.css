@@ -948,6 +948,9 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 .settings-page .page-heading h1 { font-size:calc(29px * var(--ui-scale,1)); }
 .settings-page .page-heading p { margin-top: 6px; font-size:calc(14px * var(--ui-scale,1)); line-height: 1.5; }
 .settings-page .settings-grid { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 1140px; gap: 16px; }
+.settings-page > .runtime-setup-panel, .settings-page > .settings-grid { width:100%; max-width:1260px; margin-inline:auto; }
+.connector-operation details { min-width:0; }
+.connector-operation pre { white-space:pre-wrap; overflow-wrap:anywhere; font-size:inherit; }
 .settings-page .inspector-section { padding: 19px 20px; border: 1px solid var(--theme-accent-border,#30475a); border-radius: 12px; background: var(--theme-panel,#111e2b); }
 .settings-page .inspector-section > h3 { margin-bottom: 13px; font-size:calc(17px * var(--ui-scale,1)); letter-spacing: -.2px; }
 .settings-page .key-value { grid-template-columns: 165px minmax(0,1fr); gap: 12px; min-height: 43px; font-size:calc(12px * var(--ui-scale,1)); }

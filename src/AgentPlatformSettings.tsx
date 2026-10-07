@@ -40,9 +40,9 @@ const pluginExample = {
   skills: ["skills"], mcpServers: [],
 };
 
-export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurationChange?: (configuration: PlatformConfig) => void } = {}) {
-  const platform = usePlatformConfiguration();
-  const [draft, setDraft] = useState<PlatformConfig | null>(null);
+export function AgentPlatformSettings({ onConfigurationChange, initialConfiguration }: { onConfigurationChange?: (configuration: PlatformConfig) => void; initialConfiguration?: PlatformConfig | null } = {}) {
+  const platform = usePlatformConfiguration(initialConfiguration);
+  const [draft, setDraft] = useState<PlatformConfig | null>(platform.configuration);
   const [skillDirectoryText, setSkillDirectoryText] = useState("");
   const [pluginDirectoryText, setPluginDirectoryText] = useState("");
   const [mcpText, setMcpText] = useState("[]");
@@ -316,7 +316,7 @@ export function AgentPlatformSettings({ onConfigurationChange }: { onConfigurati
 
   if (!draft) return <div className="agent-platform-settings platform-load-state" aria-busy={platform.loading}>
     <h2>Agent settings</h2>
-    {platform.loading ? <p role="status">Loading settings from this computer…</p> : <><p role="alert">Could not load settings: {platform.error}</p><button onClick={() => void platform.reload()}>Retry loading settings</button></>}
+    {platform.loading ? <><p role="status">Loading settings from this computer…</p><div className="platform-panels platform-loading-panels" aria-hidden="true">{["Identity and instructions", "Verification and repair", "Context and compaction", "Appearance"].map(title => <section className="platform-panel" key={title}><h2>{title}</h2><div className="platform-loading-placeholder" /></section>)}</div></> : <><p role="alert">Could not load settings: {platform.error}</p><button onClick={() => void platform.reload()}>Retry loading settings</button></>}
   </div>;
 
   const visibleSkills = skills.filter(skill => `${skill.name} ${skill.description} ${skill.source}`.toLowerCase().includes(skillSearch.toLowerCase()));

@@ -1246,7 +1246,10 @@ fn an_unfinished_live_transaction_is_busy_and_source_bytes_are_preserved() {
         }
     }).collect::<Vec<_>>();
     let before = read_sources();
-    assert_eq!(import_file(fixture.store(), &source, "hermes").unwrap_err(), BUSY_CHAT_DATABASE);
+    let error = import_file(fixture.store(), &source, "hermes").unwrap_err();
+    assert!(error.contains(BUSY_CHAT_DATABASE), "{error}");
+    assert!(error.contains(&source.display().to_string()), "{error}");
+    assert!(error.contains("os error 33") || error.contains("os error 32"), "{error}");
     assert!(fixture.store().list_conversations(None).unwrap().is_empty());
     assert_eq!(before, read_sources());
     writer.execute_batch("ROLLBACK;").unwrap();
@@ -1377,7 +1380,7 @@ fn live_writer_and_same_size_wal_checkpoint_reuse_never_imports_mixed_generation
                 .all(|row| row.content == item.title));
         }
         Err(error) => {
-            assert_eq!(error, BUSY_CHAT_DATABASE);
+            assert!(error.contains(BUSY_CHAT_DATABASE), "{error}");
             assert!(fixture.store().list_conversations(None).unwrap().is_empty());
         }
     }

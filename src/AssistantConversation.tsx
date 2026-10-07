@@ -24,7 +24,7 @@ import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
-import { removePersistedOptimisticDuplicates } from "./visible-entries";
+import { removePersistedOptimisticDuplicates, retainUnchangedTimeline } from "./visible-entries";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
 import { buildResponseSegments, visibleEchoReceiptGroups, type ResponseSegment, type ToolStep } from "./response-segments";
 import { ProjectPicker } from "./ProjectPicker";
@@ -377,7 +377,7 @@ function ReasoningDisclosure({ summary, content, active }: { summary: string; co
   useEffect(() => { setExpanded(active); }, [active]);
   return <details className="assistant-disclosure kind-thinking" open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
     <summary><BrainCircuit size={14} /><strong>{active ? "Reasoning summary" : "Reasoned"}</strong><span title={summary}>{summary}</span></summary>
-    <div className="reasoning-text">{content || summary}</div>
+    <div className="reasoning-text"><ResponseMarkdown content={content || summary} /></div>
   </details>;
 }
 
@@ -665,7 +665,7 @@ export const AssistantConversation = memo(function AssistantConversation({
       busy = true;
       try {
         const latest = await api.conversation(id);
-        if (!cancelled && latest.length) setLiveEntries(latest);
+        if (!cancelled && latest.length) setLiveEntries(previous => retainUnchangedTimeline(previous, latest));
       } catch { /* A transient read failure must not interrupt generation. */ }
       finally { busy = false; }
     };

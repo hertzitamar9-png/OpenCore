@@ -38,7 +38,7 @@ export function LearningAssistant(props: Props) {
     const conversationId=idRef.current;if(!conversationId)return;
     const revision=++historyRevision.current;
     try{
-      const latest=await api.conversation(conversationId);
+      const latest=await api.conversation(conversationId, {fresh:true});
       if(!alive.current||revision!==historyRevision.current||idRef.current!==conversationId)return;
       if(latest.some(entry=>entry.conversationId!==conversationId))throw new Error('The assistant history belongs to a different conversation. Refresh to retry.');
       setEntries(latest);setError('');

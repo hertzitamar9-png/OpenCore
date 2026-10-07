@@ -22,8 +22,16 @@ it('previews the model explanation for each step and retains its full text', () 
   expect(disclosures[1].querySelector('summary')).toHaveTextContent('The measured transcript matches');
   expect(container).not.toHaveTextContent('check what happened');
   fireEvent.click(disclosures[0].querySelector('summary')!);
-  expect(disclosures[0].querySelector('.reasoning-text')?.textContent).toBe(explanation);
+  const paragraphs = Array.from(disclosures[0].querySelectorAll('.reasoning-text p'), p => p.textContent);
+  expect(paragraphs).toEqual(explanation.split('\n\n'));
   expect(within(container).getByText('Used 1 tool')).toBeInTheDocument();
+});
+
+it('renders emphasis and lists in the available reasoning text', () => {
+  const { container } = render(<ResponseActivity active events={[row(1, 'thinking', '**Checking the capture**\n\n- Permission is required.\n- Preserve the app settings.')]} />);
+  expect(container.querySelector('.reasoning-text strong')).toHaveTextContent('Checking the capture');
+  expect(container.querySelectorAll('.reasoning-text li')).toHaveLength(2);
+  expect(container.querySelector('.reasoning-text')).not.toHaveTextContent('**');
 });
 
 it('does not invent a model explanation when no reasoning text was supplied', () => {

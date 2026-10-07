@@ -129,9 +129,11 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
       if (target.windowId == null) return;
       if (listed.windows.find(item => item.windowId === target.windowId)?.permission === "ask") {
         cancelPending(); shotRef.current = null; localDraft.current = null;
+        captureError.current = ""; setCaptureUnavailable(false);
         setShot(null); setEditor(null); setTyping(""); setFeedback(null);
         return;
       }
+      setCapturing(true);
       const captured = await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: target.windowId, ...BACKGROUND_CONTROL });
       if (!latest()) return;
       if (captured.windowId !== target.windowId || captured.bounds.width <= 0 || captured.bounds.height <= 0) {
@@ -328,6 +330,14 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
     finally { if (mounted.current) setAccessBusy(false); }
   };
 
+  const awaitingPermission = windows.find(item => item.windowId === windowId)?.permission === "ask";
+  const emptyTitle = !enabled ? "Computer use is paused" : awaitingPermission ? "Waiting for app permission"
+    : captureUnavailable ? "Capture unavailable" : windowId == null ? "Choose a window"
+    : !active ? "Computer view is paused" : "Capturing selected window…";
+  const emptyHelp = !enabled ? "Enable computer use to choose an app. Your saved app permissions are kept."
+    : awaitingPermission ? "Choose Allow this app above to capture this window and use its supported controls."
+    : captureUnavailable ? "Check the error below, restore the app window, then refresh the capture or choose another window."
+    : "View an app and use its supported controls in the background.";
   const content = <>
     <div className="desktop-access-bar"><span>{enabled ? "Only permitted apps can be controlled" : "Computer use is disabled"}</span>{!enabled && <button type="button" disabled={accessBusy} onClick={() => void setAccess(true)}>Enable computer use</button>}<button type="button" className="automation-stop" disabled={!enabled && !accessBusy} onClick={() => void setAccess(false)}><Square size={14} aria-hidden="true" /> Stop computer use</button></div>
     {windows.find(item => item.windowId === windowId)?.permission === "ask" && <div className="desktop-access-bar"><span>Allow OpenCore to inspect and control {windows.find(item => item.windowId === windowId)?.application || windows.find(item => item.windowId === windowId)?.title}?</span><button type="button" disabled={accessBusy} onClick={() => void grantSelected()}>Allow this app</button></div>}
@@ -345,7 +355,7 @@ export function DesktopPanel({ onClose, onNotice, embedded = false, active = tru
       <button ref={expandButton} type="button" className="desktop-expand" title={expanded ? "Restore computer view (Escape)" : "Fill the OpenCore window"} aria-label={expanded ? "Restore computer view" : "Expand computer view"} aria-expanded={expanded} disabled={!active} onClick={() => setExpanded(value => !value)}>{expanded ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}<span>{expanded ? "Restore" : "Expand"}</span></button>
     </div>
     <div className="desktop-control-status"><ShieldCheck size={14} aria-hidden="true" /><strong>{windowId === 0 ? "View only" : "Background only"}</strong><span>{busy ? "Applying to app…" : expanded ? "Escape restores the panel" : "OpenCore stays in front"}</span></div>
-    <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img src={shot.dataUrl} alt="Selected Windows app" aria-disabled={captureUnavailable} title={captureUnavailable ? "Last captured image. Refresh to resume background controls." : undefined} width={shot.bounds.width} height={shot.bounds.height} draggable={false} onClick={event => { const at = point(event); if (at) void interact(at); }} onWheel={scroll} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{windowId == null ? "Choose a window" : "Capturing selected window…"}</strong><p>View an app and use its supported controls in the background.</p></div>}</div>
+    <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img src={shot.dataUrl} alt="Selected Windows app" aria-disabled={captureUnavailable} title={captureUnavailable ? "Last captured image. Refresh to resume background controls." : undefined} width={shot.bounds.width} height={shot.bounds.height} draggable={false} onClick={event => { const at = point(event); if (at) void interact(at); }} onWheel={scroll} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{emptyTitle}</strong><p>{emptyHelp}</p></div>}</div>
     {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : feedback.warning ? " desktop-feedback-warning" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}</div> : null}
     <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || !active} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active || captureUnavailable} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button></div>
   </>;

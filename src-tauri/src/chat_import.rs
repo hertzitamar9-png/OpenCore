@@ -32,7 +32,7 @@ const MAX_CONVERSATIONS: usize = 1_000;
 const MAX_ENTRIES: usize = 50_000;
 const MAX_COLUMNS: usize = 256;
 pub const IMPORT_CANCELLED: &str = "__CHAT_IMPORT_CANCELLED__";
-const BUSY_CHAT_DATABASE: &str = "The Hermes/OpenCode database is busy in a background process. Wait for its current save or checkpoint, then retry, or import a JSON/JSONL export.";
+const BUSY_CHAT_DATABASE: &str = "Could not acquire a consistent read-only database snapshot within 2 seconds. Windows reported a sharing or lock conflict. Retry sync, or import a JSON/JSONL export.";
 type ImportedRow = (String, String, String, String, String, Value);
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -1424,10 +1424,10 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()
-        .map_err(|error| format!("Cannot read the Hermes/OpenCode database schema: {error}"))?;
+        .map_err(|error| format!("Cannot read the source database schema: {error}"))?;
     let Some((kind, sql)) = definition else {
         return Err(format!(
-            "This is not a supported Hermes/OpenCode database: missing {table}."
+            "This source database is not supported: missing {table}."
         ));
     };
     if kind != "table"
@@ -1436,7 +1436,7 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             .to_ascii_uppercase()
             .contains("VIRTUAL TABLE")
     {
-        return Err("Hermes/OpenCode import requires ordinary source tables.".into());
+        return Err("Database import requires ordinary source tables.".into());
     }
     let mut statement = db
         .prepare(&format!("PRAGMA table_info(\"{table}\")"))
@@ -1452,7 +1452,7 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             .any(|required| !columns.iter().any(|column| column == required))
     {
         return Err(format!(
-            "The Hermes/OpenCode {table} schema is missing required columns or is not supported."
+            "The source {table} schema is missing required columns or is not supported."
         ));
     }
     Ok(columns)

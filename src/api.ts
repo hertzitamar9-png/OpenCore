@@ -1,4 +1,15 @@
 import { invoke } from "@tauri-apps/api/core";
+
+// A slow disk read must not accumulate another request on each polling tick.
+// Manual refreshes share the in-flight read; completed results are never cached.
+const pendingReads = new Map<string, Promise<unknown>>();
+function sharedRead<T>(key: string, read: () => Promise<T>): Promise<T> {
+  const pending = pendingReads.get(key);
+  if (pending) return pending as Promise<T>;
+  const request = read().finally(() => { if (pendingReads.get(key) === request) pendingReads.delete(key); });
+  pendingReads.set(key, request);
+  return request;
+}
 export const speechStart = (sessionId?: string) => invoke<string>("speech_start", { sessionId });
 export interface ClaudeBridgeStatus { installed: boolean; connected: boolean; active: boolean; pluginPath: string; launchCommand: string; lastSeen: string | null; minimumVersion: string; enabled?: boolean; setupError?: string | null }
 const emptyClaudeBridge: ClaudeBridgeStatus = { installed: false, connected: false, active: false, pluginPath: '', launchCommand: '', lastSeen: null, minimumVersion: '2.1.287' };
@@ -106,7 +117,7 @@ export async function modelLibrary(): Promise<ModelLibrary> {
   }),
     diskFreeBytes: 240e9, minimumFreeBytes: 64 * 1024 * 1024, progress: null };
 }
-export const installedSkillModels = (): Promise<{id:string;category:string;installed:boolean;runtimeConnected?:boolean}[]> => desktop() ? invoke('installed_skill_models') : Promise.resolve([]);
+export const installedSkillModels = (): Promise<{id:string;category:string;installed:boolean;runtimeConnected?:boolean}[]> => desktop() ? sharedRead('installed-skill-models', () => invoke('installed_skill_models')) : Promise.resolve([]);
 export async function installModel(id: string): Promise<void> {
   if (!desktop()) throw new Error("Model installation requires the desktop application.");
   await invoke("install_model", { id });
@@ -202,16 +213,25 @@ export async function downloadArtifact(id: string): Promise<string> {
   return invoke<string>("download_artifact", { id });
 }
 
-export async function snapshot(): Promise<AppSnapshot> {
-  if (desktop()) return invoke<AppSnapshot>("get_snapshot");
+export async function snapshot(options?: { fresh?: boolean }): Promise<AppSnapshot> {
+  if (desktop()) {
+    if (options?.fresh) await pendingReads.get('snapshot')?.catch(() => undefined);
+    return sharedRead('snapshot', () => invoke<AppSnapshot>("get_snapshot"));
+  }
   const preview = structuredClone(previewSnapshot);
   const params = new URLSearchParams(window.location.search);
   if (params.has("previewActive") || params.has("previewReasoning")) preview.activeConversationIds = ["preview"];
   return preview;
 }
 
-export async function conversation(id: string): Promise<TimelineEntry[]> {
-  if (desktop()) return invoke<TimelineEntry[]>("get_conversation", { id });
+export async function conversation(id: string, options?: { fresh?: boolean }): Promise<TimelineEntry[]> {
+  if (desktop()) {
+    const key = `conversation:${id}`;
+    // A persisted checkpoint/final event must read after any pre-event poll.
+    // Reusing that older read could clear the live answer before it is visible.
+    if (options?.fresh) await pendingReads.get(key)?.catch(() => undefined);
+    return sharedRead(key, () => invoke<TimelineEntry[]>("get_conversation", { id }));
+  }
   if (id !== "preview") return [];
   return new URLSearchParams(window.location.search).has("previewReasoning")
     ? previewTimeline.filter((entry) => entry.id <= 4.5) : previewTimeline;

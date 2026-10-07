@@ -699,11 +699,13 @@ async fn get_imported_conversation_summary(core: tauri::State<'_, Arc<AppCore>>,
 }
 
 #[tauri::command]
-fn get_conversation(
+async fn get_conversation(
     core: tauri::State<'_, Arc<AppCore>>,
     id: String,
 ) -> Result<Vec<TimelineEntry>, String> {
-    core.store.conversation_activity(&id)
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || core.store.conversation_activity(&id))
+        .await.map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -744,10 +746,13 @@ fn list_model_library(core: tauri::State<'_, Arc<AppCore>>) -> Result<Value, Str
     Ok(library)
 }
 #[tauri::command]
-fn installed_skill_models(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<Value>,String> {
+async fn installed_skill_models(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<Value>,String> {
+    let core = core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
     let mut models=model_catalog::installed_models(core.runtime.install_root())?.into_iter().map(|model|json!({"id":model.id,"category":model.category,"installed":true})).collect::<Vec<_>>();
     for model in core.studios.configured_models()? {if !models.iter().any(|entry|entry["id"]==model.id){models.push(json!({"id":model.id,"category":model.category,"installed":false,"runtimeConnected":true}));}}
     Ok(models)
+    }).await.map_err(|error| error.to_string())?
 }
 #[tauri::command]
 fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id: String) -> Result<(), String> {
@@ -1311,6 +1316,8 @@ fn run_history_sync(store: Arc<EventStore>, runtime: Arc<RuntimeManager>, id: St
                 latest.imported as u64, latest.updated as u64, latest.skipped as u64);
         }
         Err(error) => {
+            let client = match id.as_str() { "hermes" => "Hermes", "opencode" => "OpenCode", "claude-code" => "Claude Code", "codex" => "Codex", _ => &id };
+            let error = format!("{client}: {error}");
             let _ = store.finish_operation(&operation_id, "History sync failed", Some(&error),
                 latest.current as u64, latest.total as u64,
                 latest.imported as u64, latest.updated as u64, latest.skipped as u64);

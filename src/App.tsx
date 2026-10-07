@@ -78,7 +78,8 @@ import { RuntimeSetupPanel } from './RuntimeSetupControls';
 import { AgentConnectorControls } from './AgentConnectorControls';
 import { SETTINGS_SAVE_ERROR_EVENT, type SettingsSaveError } from './useSettingsAutosave';
 import { AgentQuestions } from './AgentQuestions';
-import { usePlatformConfiguration, executePlatformAction } from './agent-platform';
+import { usePlatformConfiguration, executePlatformAction, type PlatformConfig } from './agent-platform';
+import { retainUnchangedTimeline } from './visible-entries';
 import { MediaStudio, MEDIA_CATEGORIES } from './MediaStudio';
 import type { AppSnapshot, ArchiveEvent, ArchivePageRef, ConversationSummary, LogEntry, OperationRecord, ProjectSummary, RuntimeProfile, TimelineEntry } from "./types";
 
@@ -567,7 +568,15 @@ function ArchiveEventCard({ event, onNotice }: { event: ArchiveEvent; onNotice: 
   </article>;
 }
 
-function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, appearanceStorageError, onAppearanceChange }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; onSelectProfile: (profile: RuntimeProfile) => void; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; appearanceStorageError: string; onAppearanceChange: (value: Appearance) => void }) {
+export function historySyncFailure(error: string | null | undefined, name: string): string {
+  if (!error) return `Last ${name} sync failed without a recorded cause. Retry sync to collect current diagnostics.`;
+  if (/close Hermes\/OpenCode|Hermes\/OpenCode database is busy in a background process/i.test(error)) {
+    return `Last ${name} sync failed. This older attempt did not record the specific database failure. Retry sync to collect current diagnostics.`;
+  }
+  return `Last ${name} sync failed: ${error.replaceAll("Hermes/OpenCode", name)}`;
+}
+
+function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, selectedConversation, onNotice, onRefresh, onNavigate, appearance, appearanceStorageError, onAppearanceChange, platformConfiguration }: { view: View; snapshot: AppSnapshot; selectedProfile: RuntimeProfile; onSelectProfile: (profile: RuntimeProfile) => void; selectedConversation?: string; onNotice: (message: string) => void; onRefresh: () => Promise<void>; onNavigate: (view: View) => void; appearance: Appearance; appearanceStorageError: string; onAppearanceChange: (value: Appearance) => void; platformConfiguration?: PlatformConfig | null }) {
   const [connectorForm, setConnectorForm] = useState({ name: "", endpoint: "", matchPattern: "", kind: "openai" });
   const [connectorNotice, setConnectorNotice] = useState("");
   const [memoryQuery, setMemoryQuery] = useState("");
@@ -888,7 +897,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
   if (view === "connectors") return <div className="support-page">
     <div className="page-heading"><div><h1>Connectors</h1><p>Connect coding clients directly to the loaded OpenCore model. Transcript sync is optional and separate.</p></div></div>
     <ClaudeBridgePanel onNotice={onNotice} />
-    <div className="connector-list">{snapshot.connectors.map((connector) => {
+    <div className="connector-list">{[...snapshot.connectors].sort((a, b) => Number(b.kind === "history") - Number(a.kind === "history")).map((connector) => {
       const history = connector.kind === "history";
       const syncOperation = history ? operationFor(connector.id) : undefined;
       const syncActive = syncOperation?.status === "running" || syncOperation?.status === "queued";
@@ -897,7 +906,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
         <div className="connector-copy"><h2>{connector.name}</h2><p>{connector.details}</p><code>{history ? "OpenCore local model connector" : connector.endpoint}</code></div>
         <div className="connector-state"><StatusDot state={connector.status} /><strong>{connector.status}</strong><span>{history ? (connector.status === "configured" ? "Opt-in profile added" : connector.status === "observed" ? "Local requests observed" : "Profile not added") : connector.observable ? "Observable" : "Not observable"}</span></div>
         {history ? <div className="connector-actions">
-          {connector.id === 'opencode' || connector.id === 'hermes' ? <AgentConnectorControls id={connector.id} busy={profileBusy[connector.id] || syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]}
+          {connector.id === 'opencode' || connector.id === 'hermes' ? <AgentConnectorControls id={connector.id} busy={profileBusy[connector.id] || syncActive || syncStarting[connector.id] || historyClearBusy[connector.id]} syncLabel={syncOperation ? syncLabel(connector.id) : undefined}
             onConfigure={connectAgent} onSelectFolder={async (id, folder) => { const result = await api.setAgentConnectorFolder(id, folder); await onRefresh(); return result; }} onSync={syncHistory} onClear={clearHistory}
             onResult={setConnectorNotice} onError={setConnectorNotice} /> : <>
           <button className="primary" disabled={profileBusy[connector.id]} onClick={() => void connectAgent(connector.id as api.AgentConnectorId).catch(() => {})}>{profileBusy[connector.id] ? "Writing profile…" : connector.status === "configured" ? "Refresh profile" : "Add profile"}</button>
@@ -906,7 +915,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
           </>}
           {syncActive && syncOperation ? <button className="cancel-history-button" aria-label={`Cancel ${connector.name} import`} disabled={syncCancelBusy[connector.id]} onClick={() => void cancelHistory(syncOperation.id, connector.id)}>{syncCancelBusy[connector.id] ? "Canceling…" : "Cancel import"}</button> : null}
           {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
-          {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? syncOperation.error : syncOperation.status === "running" ? historySyncProgressLabel(syncOperation) : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)}</time>{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
+          {syncOperation ? <div className={`connector-operation ${syncOperation.status}`} role="status"><span>{syncOperation.status === "failed" ? historySyncFailure(syncOperation.error, connector.name) : syncOperation.status === "running" ? historySyncProgressLabel(syncOperation) : syncOperation.summary || syncOperation.phase}</span><time>{shortDate(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)} · {shortTime(syncOperation.finishedAt || syncOperation.lastProgressAt || syncOperation.startedAt)}</time>{syncOperation.status === "failed" && syncOperation.error ? <details><summary>Original error from this attempt</summary><pre>{syncOperation.error}</pre></details> : null}{syncActive && syncOperation.total > 0 ? <progress max={syncOperation.total} value={syncOperation.current} /> : null}</div> : null}
         </div> : <div className="connector-actions single">
           <button disabled={connectorActionBusy[connector.id]} onClick={() => void configure(connector.id, connector.endpoint)}>{connectorActionBusy[connector.id] ? (connector.id === "unsloth" ? "Installing…" : "Testing…") : connector.id === "unsloth" ? "Install" : "Test"}</button>
           {connectorFeedback[connector.id] ? <div className={`connector-action-feedback ${connectorFeedback[connector.id].error ? "error" : "success"}`} role={connectorFeedback[connector.id].error ? "alert" : "status"}>{connectorFeedback[connector.id].message}</div> : null}
@@ -1022,7 +1031,7 @@ function SupportingView({ view, snapshot, selectedProfile, onSelectProfile, sele
 
   if (view === "settings") return <div className="support-page settings-page">
     <div className="page-heading"><div><h1>Settings</h1><p>Real local controls for storage, privacy, history, and diagnostics.</p></div></div>
-    <AgentPlatformSettings />
+    <AgentPlatformSettings initialConfiguration={platformConfiguration} />
     <RuntimeSetupPanel onNotice={onNotice} />
     <div className="settings-grid">
       <InspectorSection title="Terminal appearance">
@@ -1326,7 +1335,7 @@ export default function App() {
       setStudioActive([...studioJobs.current.values()].some(status => ['running','starting','loading','preparing','stopping'].includes(status)));
       if (!['completed','failed','cancelled'].includes(payload.status)) return;
       const conversation = payload.request?.conversationId;
-      if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation).then(setTimeline).catch(() => {});
+      if (conversation && conversation === selectedConversationRef.current) void api.conversation(conversation, { fresh: true }).then(entries => { if (conversation === selectedConversationRef.current) setTimeline(entries); }).catch(() => {});
       if (announced.has(payload.id)) return;
       announced.add(payload.id);
       const studio = payload.category === 'music' ? 'Music Studio' : MEDIA_CATEGORIES.some(([id])=>id===payload.category) ? 'Media Studio' : 'Game Dev Studio';
@@ -1382,9 +1391,9 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options: { fresh?: boolean } = { fresh: true }) => {
     try {
-      const next = await api.snapshot();
+      const next = await api.snapshot(options);
       const fingerprint = JSON.stringify(next);
       if (fingerprint !== snapshotFingerprintRef.current) {
         snapshotFingerprintRef.current = fingerprint;
@@ -1402,7 +1411,7 @@ export default function App() {
 
   useEffect(() => {
     let stopped = false;
-    const tick = async () => { if (!stopped && !document.hidden) await refresh(); };
+    const tick = async () => { if (!stopped && !document.hidden) await refresh({ fresh: false }); };
     tick();
     const timer = window.setInterval(tick, view === "conversations" || view === "models" || view === "runtime" || snapshot?.runtime.status === "starting" ? 2000 : 15000);
     const onVisibility = () => { if (!document.hidden) tick(); };
@@ -1420,7 +1429,7 @@ export default function App() {
     void listen<{ conversationId: string }>("opencore-bridge-activity", ({ payload }) => {
       void refresh();
       if (selectedConversationRef.current === payload.conversationId) {
-        void api.conversation(payload.conversationId).then(entries => {
+        void api.conversation(payload.conversationId, { fresh: true }).then(entries => {
           if (!disposed && selectedConversationRef.current === payload.conversationId) setTimeline(entries);
         }).catch(() => {});
       }
@@ -1430,18 +1439,20 @@ export default function App() {
   useEffect(() => {
     let disposed = false;
     let stop: (() => void) | undefined;
+    let eventRevision = 0;
     void listen<NonNullable<typeof liveGeneration> & { done?: boolean; checkpoint?: boolean }>("opencore-generation", ({ payload }) => {
+      const revision = ++eventRevision;
       if (payload.done) {
-        void api.conversation(payload.conversationId).then((entries) => {
+        void api.conversation(payload.conversationId, { fresh: true }).then((entries) => {
           if (disposed) return;
           if (selectedConversationRef.current === payload.conversationId) setTimeline(entries);
-          setLiveGeneration((current) => current?.runId === payload.runId ? undefined : current);
-        }).catch(() => { setLiveGeneration((current) => current?.runId === payload.runId ? undefined : current); });
+          setLiveGeneration((current) => revision === eventRevision && current?.runId === payload.runId ? undefined : current);
+        }).catch(error => { if (!disposed) setNotice(`Could not load the saved response: ${String(error)}`); });
       } else if (payload.checkpoint) {
-        void api.conversation(payload.conversationId).then((entries) => {
+        void api.conversation(payload.conversationId, { fresh: true }).then((entries) => {
           if (disposed) return;
           if (selectedConversationRef.current === payload.conversationId) setTimeline(entries);
-          setLiveGeneration((current) => current?.runId === payload.runId
+          setLiveGeneration((current) => revision === eventRevision && current?.runId === payload.runId
             ? { ...payload, checkpoint: undefined, segments: [], content: "", reasoning: "" } : current);
         }).catch(() => {});
       } else { setLiveGeneration(payload); }
@@ -1469,7 +1480,14 @@ export default function App() {
   useEffect(() => {
     if (!selectedConversation || !selectedActive) return;
     let live = true;
-    const update = () => { void api.conversation(selectedConversation).then((entries) => { if (live) setTimeline(entries); }).catch(() => {}); };
+    let pending = false;
+    const update = async () => {
+      if (pending || document.hidden) return;
+      pending = true;
+      try { const entries = await api.conversation(selectedConversation); if (live) setTimeline(previous => retainUnchangedTimeline(previous, entries)); }
+      catch { /* A later poll can recover a transient read failure. */ }
+      finally { pending = false; }
+    };
     update();
     const timer = window.setInterval(update, 1200);
     return () => { live = false; window.clearInterval(timer); };
@@ -1624,7 +1642,7 @@ export default function App() {
     await refresh();
     const id = selectedConversationRef.current;
     if (id) {
-      try { setTimeline(await api.conversation(id)); }
+      try { const entries = await api.conversation(id, { fresh: true }); if (selectedConversationRef.current === id) setTimeline(entries); }
       catch (error) { setNotice(String(error)); }
     }
   };
@@ -1696,7 +1714,7 @@ export default function App() {
       : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} onNotice={setNotice} />
       : view === 'learning' ? <LearningStudio onNotice={setNotice} renderAssistant={(prompt,revision,onConversation,blockedReason)=><LearningAssistant initialPrompt={prompt} promptRevision={revision} onConversation={id=>{setLearningConversationId(id);onConversation(id);}} settings={learningSettings||parentSettings} onSettingsChange={setLearningSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds||[]} inferenceOwner={inferenceOwner} inferenceBlocked={runtimeTransitionReason||blockedReason||(studioActive?'A studio or training worker is using the GPU. The assistant resumes when it releases its checkpoint.':undefined)} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setMainWorkspaceObscured}/>}/>
       : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} onOpenExternal={async file => { await openWorkspaceFileExternal(file.id); }} />
-      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} appearanceStorageError={appearanceStorageError} onAppearanceChange={changeAppearance} />;
+      : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} appearanceStorageError={appearanceStorageError} onAppearanceChange={changeAppearance} platformConfiguration={platform.configuration} />;
 
   const workspaceConversationId = view === 'learning' ? learningConversationId : selectedConversation;
   const workspaceSettings = view === 'learning' ? learningSettings||parentSettings : parentSettings;
