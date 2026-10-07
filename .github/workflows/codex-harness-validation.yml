@@ -68,6 +68,8 @@ jobs:
         run: |
           npx playwright install chromium
           node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs tests/studio-layout.test.mjs
+      - name: Verify live adaptive layout and keyboard controls
+        run: npx playwright test --config playwright.ci.config.ts
       - name: Install prebuilt CPU runtime for Phonon precision qualification
         run: |
           python -m pip install --only-binary=:all: torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu

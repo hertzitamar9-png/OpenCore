@@ -45,6 +45,8 @@ jobs:
         run: |
           npx playwright install chromium
           node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs tests/studio-layout.test.mjs
+      - name: Verify live adaptive layout and keyboard controls
+        run: npx playwright test --config playwright.ci.config.ts
       - name: Prepare bundled connector runtimes
         run: |
           node scripts/prepare-claude-connector.mjs
