@@ -47,7 +47,8 @@ impl Drop for StartupInterrupt {
 fn startup_progress(value:&Value) -> Option<&str> {
     value["progress"].as_str().filter(|phase| ["starting-runtime", "verifying-checkpoint", "building-model",
         "expanding-weights", "applying-weights", "preparing-processor", "activating-device",
-        "verifying-dense-cache", "loading-dense-cache", "saving-dense-cache"].contains(phase))
+        "verifying-dense-cache", "loading-dense-cache", "saving-dense-cache",
+        "preparing-original-runtime", "loading-packed-weights"].contains(phase))
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -76,6 +77,7 @@ pub struct SpeechStatus {
     cold_start_ms: Option<u64>, warm_wake_ms: Option<u64>, phase: String,
     runtime_cache_bytes: u64, runtime_cache_entries: Vec<RuntimeCacheEntry>, dense_cache_hit: Option<bool>,
     prewarmed_for_session: bool,
+    runtime_resident_bytes: Option<u64>, runtime_description: Option<String>,
 }
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all="camelCase")]
@@ -87,10 +89,11 @@ pub struct SpeechManager {
     startup: Arc<StdMutex<StartupState>>,
     update_in_progress: Arc<AtomicBool>,
     dense_cache_hit: Arc<StdMutex<Option<bool>>>,
+    runtime_observation: Arc<StdMutex<Option<(String,u64,String)>>>,
 }
 impl Clone for SpeechManager {
     fn clone(&self) -> Self { Self { root:self.root.clone(), resources:self.resources.clone(), control:self.control.clone(),
-        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), startup:self.startup.clone(), update_in_progress:self.update_in_progress.clone(),dense_cache_hit:self.dense_cache_hit.clone() } }
+        session:self.session.clone(), worker:self.worker.clone(), settings:self.settings.clone(), phase:self.phase.clone(), startup:self.startup.clone(), update_in_progress:self.update_in_progress.clone(),dense_cache_hit:self.dense_cache_hit.clone(),runtime_observation:self.runtime_observation.clone() } }
 }
 impl SpeechManager {
     pub fn new(root: PathBuf, resources: PathBuf) -> Self {
@@ -102,7 +105,7 @@ impl SpeechManager {
             .and_then(|v| decode_settings(&v)).unwrap_or_default();
         Self { root:speech_root, resources, control:Arc::new(Mutex::new(())), session:Arc::new(Mutex::new(None)),
             worker:Arc::new(Mutex::new(None)), settings:Arc::new(StdMutex::new(settings)),
-            phase:Arc::new(StdMutex::new("off".into())), startup:Arc::new(StdMutex::new(StartupState::default())), update_in_progress,dense_cache_hit:Arc::new(StdMutex::new(None)) }
+            phase:Arc::new(StdMutex::new("off".into())), startup:Arc::new(StdMutex::new(StartupState::default())), update_in_progress,dense_cache_hit:Arc::new(StdMutex::new(None)),runtime_observation:Arc::new(StdMutex::new(None)) }
     }
     fn ensure_not_updating(&self) -> Result<(), String> {
         if self.update_in_progress.load(Ordering::Acquire) {
@@ -133,13 +136,16 @@ impl SpeechManager {
         let cfg=self.settings();
         let entries=self.cache_entries();
         let worker_ready=self.worker.try_lock().map(|w|w.is_some()).unwrap_or(false);
+        let observation=self.runtime_observation.lock().ok().and_then(|value|value.clone())
+            .filter(|(precision,_,_)|cfg.model_id=="phonon-2" && *precision==cfg.runtime_precision);
         SpeechStatus { model_id:cfg.model_id.clone(), installed:self.installed(), enabled:cfg.enabled, idle_mode:cfg.idle_mode.clone(),
             runtime_precision:cfg.runtime_precision.clone(), loading_elapsed_ms:self.startup.lock().ok().and_then(|s|s.started.map(|t|t.elapsed().as_millis() as u64)),
             worker_ready,
             cold_start_ms:cfg.cold_start_ms, warm_wake_ms:cfg.warm_wake_ms,
             phase:self.phase.lock().map(|p|p.clone()).unwrap_or_else(|_|"off".into()),
             runtime_cache_bytes:entries.iter().map(|entry|entry.bytes).sum(),runtime_cache_entries:entries,
-            dense_cache_hit:self.dense_cache_hit.lock().ok().and_then(|value|*value),prewarmed_for_session:cfg.idle_mode=="cold" && worker_ready }
+            dense_cache_hit:self.dense_cache_hit.lock().ok().and_then(|value|*value),prewarmed_for_session:cfg.idle_mode=="cold" && worker_ready,
+            runtime_resident_bytes:observation.as_ref().map(|(_,bytes,_)|*bytes),runtime_description:observation.map(|(_,_,description)|description) }
     }
     fn cache_entries(&self)->Vec<RuntimeCacheEntry> {
         let directory=self.root.join("runtime-cache/phonon-2");
@@ -231,6 +237,11 @@ impl SpeechManager {
         let ready=self.wait_startup_ready(&mut worker,cancel,startup_cancel).await?;
         if model_id=="phonon-2" && ready["runtimePrecision"].as_str()!=Some(precision) {
             worker.abort().await;return Err("Phonon-2 did not load the selected runtime precision.".into());
+        }
+        if model_id=="phonon-2" {
+            if let (Some(bytes),Some(description))=(ready["runtimeResidentBytes"].as_u64(),ready["runtimeDescription"].as_str()) {
+                if let Ok(mut observation)=self.runtime_observation.lock(){*observation=Some((precision.into(),bytes,description.into()));}
+            }
         }
         let mut cfg=self.settings();
         worker.cold_start_ms=Some(started.elapsed().as_millis() as u64);
@@ -345,7 +356,7 @@ impl SpeechManager {
         Ok(self.status())
     }
     pub async fn set_runtime_precision(&self, precision:&str) -> Result<SpeechStatus,String> {
-        if !["bf16","fp32"].contains(&precision) {return Err("Choose BF16 or FP32 Phonon-2 runtime precision.".into());}
+        if !["original","bf16","fp32"].contains(&precision) {return Err("Choose Original (164 MB), BF16 or FP32 for Phonon-2.".into());}
         let _control=self.control.lock().await;
         self.ensure_not_updating()?;
         if self.is_active().await {return Err("Finish the current dictation before changing its precision.".into());}
@@ -727,6 +738,11 @@ mod tests {
         let root=std::env::temp_dir().join(format!("speech-precision-{}",uuid::Uuid::new_v4()));
         let manager=SpeechManager::new(root.clone(),root.clone());
         manager.save_settings(Settings{model_id:"phonon-2".into(),enabled:true,..Settings::default()}).unwrap();
+        for precision in ["original","bf16"] {
+            let status=manager.set_runtime_precision(precision).await.unwrap();
+            assert_eq!(status.runtime_precision,precision);assert!(!status.worker_ready);
+            assert_eq!(SpeechManager::new(root.clone(),root.clone()).settings().runtime_precision,precision);
+        }
         let status=manager.set_runtime_precision("fp32").await.unwrap();
         assert_eq!(status.runtime_precision,"fp32");assert_eq!(status.idle_mode,"cold");assert!(!status.worker_ready);
         assert!(manager.set_runtime_precision("nf4").await.is_err());

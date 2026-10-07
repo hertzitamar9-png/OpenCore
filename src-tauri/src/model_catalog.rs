@@ -933,7 +933,8 @@ mod tests {
         assert_eq!(phonon.speech_language.as_deref(),Some("English only"));
         let runtime = phonon.runtime_precision.as_ref().unwrap();
         assert_eq!(runtime.source_format,"Five-value checkpoint");
-        assert_eq!(runtime.runtime_dtype,"BF16 or FP32");
+        assert_eq!(runtime.runtime_dtype,"Original, BF16 or FP32");
+        assert_eq!(phonon.weight_artifacts,vec!["phonon-2-phonon-2-bps-tar-zst"]);
         assert_eq!(runtime.estimated_runtime_bytes,2_500_000_000);
         assert!(runtime.runtime_component.contains("not a second model download"));
         assert!(turbo.artifacts.iter().all(|id|!full.artifacts.contains(id)));

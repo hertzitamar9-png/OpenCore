@@ -30,13 +30,13 @@ export async function pickStudioFile(kind: 'python' | 'worker' | 'input'): Promi
 export async function pickStudioSourceDirectory(): Promise<string | null> {
   const value=await open({multiple:false,directory:true});return typeof value==='string'?value:null;
 }
-export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; runtimePrecision?: "bf16" | "fp32"; loadingElapsedMs?: number | null; runtimeCacheBytes?: number; runtimeCacheEntries?: {precision: string; bytes: number}[]; denseCacheHit?: boolean | null; prewarmedForSession?: boolean; }
+export interface SpeechStatus { modelId: string; installed: boolean; enabled: boolean; idleMode: "cold" | "ram"; workerReady: boolean; coldStartMs: number | null; warmWakeMs: number | null; phase: string; runtimePrecision?: "original" | "bf16" | "fp32"; loadingElapsedMs?: number | null; runtimeCacheBytes?: number; runtimeCacheEntries?: {precision: string; bytes: number}[]; denseCacheHit?: boolean | null; prewarmedForSession?: boolean; runtimeResidentBytes?: number | null; runtimeDescription?: string | null; }
 const defaultSpeechStatus: SpeechStatus = { modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off", runtimePrecision: "bf16", loadingElapsedMs: null };
 export const speechStatus = () => desktop() ? invoke<SpeechStatus>("speech_status") : Promise.resolve(defaultSpeechStatus);
 export const setSpeechEnabled = (enabled: boolean) => invoke<SpeechStatus>("speech_set_enabled", { enabled });
 export const setSpeechIdleMode = (mode: "cold" | "ram") => invoke<SpeechStatus>("speech_set_idle_mode", { mode });
 export const setSpeechModel = (modelId: string) => invoke<SpeechStatus>("speech_set_model", { modelId });
-export const setSpeechRuntimePrecision = (precision: "bf16" | "fp32") => invoke<SpeechStatus>("speech_set_runtime_precision", { precision });
+export const setSpeechRuntimePrecision = (precision: "original" | "bf16" | "fp32") => invoke<SpeechStatus>("speech_set_runtime_precision", { precision });
 export interface EchoMemoryConfiguration { memoryTokens: number; refreshTokens: number; warmCacheMib: number; activeWindowTokens: number }
 export interface EchoVirtualMemory {
   recent_tokens: number; pinned_tokens: number; retrieved_tokens: number; reserve_tokens: number;

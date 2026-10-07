@@ -14899,6 +14899,7 @@
       "label": "Phonon-2",
       "description": "Fermion Research's English speech recognition model, based on Parakeet TDT.",
       "precision": "Five-value checkpoint",
+      "weightArtifacts": ["phonon-2-phonon-2-bps-tar-zst"],
       "contextTokens": 0,
       "artifacts": [
         "phonon-2-phonon-2-bps-tar-zst",
@@ -14915,13 +14916,13 @@
       ],
       "license": "CC-BY-4.0 weights; Apache-2.0 reference code",
       "experimental": false,
-      "note": "English only. One published five-value checkpoint. Choose BF16 or FP32 runtime precision in Microphone dictation; both options remain available and use this same download. Runtime expansion needs about 1.25 GB for BF16 or 2.5 GB for FP32 weights, plus audio buffers. These are runtime precision choices, not separate weight downloads. Optional RAM standby avoids repeated cold initialization; GPU memory is released after dictation.",
+      "note": "English only. Choose Original (164 MB), BF16 or FP32 in Microphone dictation. All three use the same original checkpoint, not separate weight downloads. Original uses the publisher's optimized CPU runtime. BF16 and FP32 expand weights into about 1.25 GB or 2.51 GB of runtime memory, plus buffers. Optional RAM standby avoids repeated cold initialization.",
       "runtimePrecision": {
         "sourceFormat": "Five-value checkpoint",
-        "runtimeDtype": "BF16 or FP32",
+        "runtimeDtype": "Original, BF16 or FP32",
         "estimatedRuntimeBytes": 2500000000,
-        "runtimeMemoryNote": "BF16 weights use about 1.25 GB; FP32 uses about 2.5 GB. Audio buffers and runtime workspaces add to this. Select precision independently from Cold start or RAM standby.",
-        "runtimeComponent": "BF16 and FP32 are created in memory from the same compact checkpoint; either selection is not a second model download."
+        "runtimeMemoryNote": "Original runtime RAM is measured at startup. BF16 weights use about 1.25 GB; FP32 uses about 2.51 GB. Buffers and runtime workspaces add to this. The 164 MB figure is the original packed download.",
+        "runtimeComponent": "Original keeps the publisher's packed CPU execution. BF16 and FP32 are created from the same compact checkpoint; either selection is not a second model download."
       },
       "selectable": false,
       "speechLanguage": "English only",

@@ -11,7 +11,8 @@ import "./ModelLibrary.css";
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
 const downloadLabel = (model: api.InstalledModel) => model.totalBytes > 0
-  ? model.externalManaged ? `Existing weights · ${exactFileSize(model.totalBytes)}` : `${exactFileSize(model.totalBytes)} download`
+  ? model.id === 'phonon-2' && model.weightBytes ? `${Math.ceil(model.weightBytes / 1e6)} MB weights + ${((model.totalBytes - model.weightBytes) / 1e6).toFixed(1)} MB support files`
+    : model.externalManaged ? `Existing weights · ${exactFileSize(model.totalBytes)}` : `${exactFileSize(model.totalBytes)} download`
   : model.runtimeConnected ? "Runtime manages weights" : model.installable === false
     ? "External setup · no app download" : model.installed ? "No download required" : "Download size unavailable";
 const vramEstimate = (model: api.InstalledModel) => model.selectable && model.backend !== "external" && (model.weightBytes || model.totalBytes)
@@ -171,29 +172,33 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {['video','tts','voice-cloning','ocr','omni','policy'].includes(categoryOf(model)) ? <button onClick={()=>window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:categoryOf(model)}))}>Open Media Studio</button> : null}
       {model.runtimePrecision ? <section className="model-runtime-precision" aria-label={`${model.label} download and runtime precision`}>
         <strong>Download and runtime precision</strong>
-        <p>Download: {model.runtimePrecision.sourceFormat}. Runtime: {selectedPhonon ? phononPrecision.toUpperCase() : model.runtimePrecision.runtimeDtype}.</p>
-        <p>Estimated runtime memory: {gb(selectedPhonon ? phononPrecision === 'bf16' ? 1_255_000_000 : 2_510_000_000 : model.runtimePrecision.estimatedRuntimeBytes)}. {selectedPhonon ? 'Weight tensors only; buffers and runtime overhead use additional memory.' : model.runtimePrecision.runtimeMemoryNote}</p>
+        <p>Download: {model.runtimePrecision.sourceFormat}{model.id === 'phonon-2' ? ` · ${Math.ceil((model.weightBytes || 163515201) / 1e6)} MB` : ''}. Runtime: {selectedPhonon ? phononPrecision === 'original' ? 'Original (164 MB)' : phononPrecision.toUpperCase() : model.runtimePrecision.runtimeDtype}.</p>
+        {selectedPhonon && phononPrecision === 'original' ? <p>Uses the original checkpoint with the publisher’s packed runtime. Runtime RAM is separate from the 164 MB download.</p>
+          : model.id === 'phonon-2' && !selectedPhonon ? <p>{model.runtimePrecision.runtimeMemoryNote}</p>
+          : <p>Estimated weight memory: {gb(selectedPhonon ? phononPrecision === 'bf16' ? 1_255_000_000 : 2_510_000_000 : model.runtimePrecision.estimatedRuntimeBytes)}. {selectedPhonon ? 'Buffers and runtime overhead use additional memory.' : model.runtimePrecision.runtimeMemoryNote}</p>}
+        {selectedPhonon && speech.runtimeResidentBytes != null ? <p>Last measured startup RAM: {gb(speech.runtimeResidentBytes)}. Includes the worker and its loaded weights.</p> : null}
         <p>{model.runtimePrecision.runtimeComponent}</p>
       </section> : null}
       {model.speechLanguage && model.id === speech.modelId ? <div className="whisper-controls" aria-label="Speech settings">
-        <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>GPU memory is released after transcription; RAM standby keeps only CPU weights.</small></div>
+        <div className="whisper-enable-row"><div><strong>Microphone dictation</strong><small>{selectedPhonon && phononPrecision === 'original' ? 'Runs on CPU; RAM standby keeps it ready between recordings.' : 'GPU memory is released after transcription; RAM standby keeps only CPU weights.'}</small></div>
           <button type="button" role="switch" aria-checked={speech.enabled} aria-label="Speech to text" className={`whisper-toggle ${speech.enabled ? "on" : ""}`}
             disabled={!model.installed || Boolean(pending) && !speech.enabled} onClick={() => void updateSpeech(() => api.setSpeechEnabled(!speech.enabled))}><span />{speech.enabled ? "On" : "Off"}</button>
         </div>
-        {selectedPhonon ? <fieldset disabled={!model.installed || Boolean(pending) || speech.phase === 'recording'}><legend>Phonon runtime precision</legend>
-          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'bf16'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('bf16'))} /><span><strong>BF16 · about 1.25 GB of weights</strong><small>Uses less runtime memory. Expanded from the same installed checkpoint.</small></span></label>
-          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'fp32'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('fp32'))} /><span><strong>FP32 · about 2.51 GB of weights</strong><small>Full float runtime. Expanded from the same installed checkpoint.</small></span></label>
+        {selectedPhonon ? <fieldset disabled={!model.installed || Boolean(pending) || speech.phase === 'recording'}><legend>Phonon-2 version</legend>
+          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'original'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('original'))} /><span><strong>Original (164 MB)</strong><small>Original checkpoint. Prepared automatically on first use.</small></span></label>
+          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'bf16'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('bf16'))} /><span><strong>BF16</strong><small>About 1.25 GB of runtime weights.</small></span></label>
+          <label><input type="radio" name="phonon-runtime-precision" checked={phononPrecision === 'fp32'} onChange={() => void updateSpeech(() => api.setSpeechRuntimePrecision('fp32'))} /><span><strong>FP32</strong><small>About 2.51 GB of runtime weights.</small></span></label>
         </fieldset> : null}
         <fieldset disabled={!model.installed}><legend>When the microphone starts</legend>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "cold"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("cold"))} />
-            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon ? 'starts runtime and loads its verified dense cache when available; ' : ''}{speech.coldStartMs == null ? "startup time is measured on first use" : `about ${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
+            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon && phononPrecision !== 'original' ? 'starts runtime and loads its verified dense cache when available; ' : ''}{speech.coldStartMs == null ? "startup time is measured on first use" : `about ${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
           </label>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "ram"} disabled={Boolean(pending)} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("ram"))} />
             <span><strong>Keep sleeping in RAM</strong><small>Recommended for frequent dictation · {speech.warmWakeMs == null ? "wake time is measured when enabled" : `about ${(speech.warmWakeMs / 1000).toFixed(2)} s on this device`}; CPU weights stay in RAM and leave the GPU while asleep.</small></span>
           </label>
         </fieldset>
         {selectedPhonon ? <SpeechRuntimeControls speech={speech} onRefresh={refresh} onNotice={onNotice} /> : null}
-        <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : loadingSpeech || (speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk.")}</p>
+        <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : loadingSpeech || (speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? selectedPhonon && phononPrecision === 'original' ? "Sleeping in system RAM; ready for CPU dictation." : "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk.")}</p>
       </div> : null}
       {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}
       <footer>{preparedRuntime && model.runtimeReady === false ? <button disabled={!model.sourceDownloaded || runtimeActive || installing || Boolean(pending)} onClick={() => void prepareRuntime(model)}>{pending === model.id ? 'Verifying setup…' : 'Use prepared GGUF'}</button> : null}{!model.installed && model.installable !== false ? <button disabled={runtimeActive || installing || Boolean(pending)} onClick={() => void change(model)}>
