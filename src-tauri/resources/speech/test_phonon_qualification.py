@@ -18,16 +18,29 @@ class TranscriptGate(unittest.TestCase):
         metrics = self.metrics()
         for label in ('minimal', 'minimalRepeat'):
             metrics[label]['texts'][2] = metrics[label]['texts'][2].replace('Opencore', 'Open core')
-        self.assertFalse(qualification.require_transcript_parity(metrics)['rawLongAudioEqual'])
+        self.assertFalse(qualification.require_transcript_checks(metrics)['rawLongAudioEqual'])
         for wrong in ('Opencore cannot recognize the sentence.', 'Opencorecan recognize the sentence.', ''):
             broken = self.metrics()
             broken['minimal']['texts'][2] = broken['minimalRepeat']['texts'][2] = wrong
             with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
-                qualification.require_transcript_parity(broken)
+                qualification.require_transcript_checks(broken)
 
     def test_quiet_audio_and_repeat_must_still_match_raw_text(self):
         for label, index in (('minimal', 1), ('minimalRepeat', 2)):
             metrics = self.metrics()
             metrics[label]['texts'][index] += ' Extra words.'
             with self.subTest(label=label), self.assertRaises(AssertionError):
-                qualification.require_transcript_parity(metrics)
+                qualification.require_transcript_checks(metrics)
+
+    def test_correct_candidate_is_not_required_to_copy_a_publisher_word_drop(self):
+        metrics = self.metrics()
+        metrics['publisher']['texts'][2] = metrics['publisher']['texts'][2].replace('Opencore can', 'Opencorkin', 1)
+        checks = qualification.require_transcript_checks(metrics)
+        self.assertEqual(checks['publisherLongFixtureWordErrors'], 2)
+        self.assertEqual(checks['minimalLongFixtureWordErrors'], 0)
+        self.assertFalse(checks['canonicalLongAudioEqual'])
+        # Shared reference mistakes must never weaken the candidate's oracle.
+        for label in ('minimal', 'minimalRepeat'):
+            metrics[label]['texts'][2] = metrics['publisher']['texts'][2]
+        with self.assertRaises(AssertionError):
+            qualification.require_transcript_checks(metrics)

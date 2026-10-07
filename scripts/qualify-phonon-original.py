@@ -29,20 +29,25 @@ def word_errors(expected, actual):
     return previous[-1]
 
 
-def require_transcript_parity(metrics):
+def require_transcript_checks(metrics):
     publisher, minimal, repeat = (metrics[label]['texts'] for label in ('publisher', 'minimal', 'minimalRepeat'))
     assert minimal == repeat, 'The minimal runtime must produce repeatable raw transcripts'
     assert publisher[:2] == minimal[:2], 'Normal and quiet recordings must match the publisher exactly'
     # This fixture repeats the product name ten times. The two float32 audio
     # frontends can choose its joined or split spelling. Permit only that named
-    # orthographic alias, retaining all raw text and requiring the exact spoken
-    # sentence, punctuation and repetition count on this long-audio fixture.
+    # orthographic alias, retaining all raw text and requiring the candidate's
+    # exact spoken sentence, punctuation and repetition count. A publisher
+    # recognition error must not become the candidate's ground truth.
     canonical = lambda text: re.sub(r'\bOpen core\b', 'Opencore', text)
     expected = ' '.join(['Opencore can recognize the sentence. Both precision options should work correctly.'] * 10)
-    assert canonical(publisher[2]) == canonical(minimal[2]) == expected, metrics
+    candidate, reference = canonical(minimal[2]), canonical(publisher[2])
+    assert candidate == expected, metrics
     return {'normalAndQuiet': 'exact', 'minimalRepeat': 'exact',
-            'longAudio': 'exact except Open core/Opencore orthography',
-            'rawLongAudioEqual': publisher[2] == minimal[2]}
+            'longAudio': 'candidate matches exact fixture except Open core/Opencore orthography',
+            'rawLongAudioEqual': publisher[2] == minimal[2],
+            'canonicalLongAudioEqual': reference == candidate,
+            'publisherLongFixtureWordErrors': word_errors(expected.split(), reference.split()),
+            'minimalLongFixtureWordErrors': word_errors(expected.split(), candidate.split())}
 
 
 def run_worker(directory, fixtures, reference=False):
@@ -132,7 +137,7 @@ def main():
             output.write_text(json.dumps(receipt, indent=2), encoding='utf-8')
             metrics[label] = validate(receipt['runs'][label], minimal=label != 'publisher')
             print(json.dumps({'run': label, **metrics[label]}), flush=True)
-        receipt['transcriptParity'] = require_transcript_parity(metrics)
+        receipt['transcriptChecks'] = require_transcript_checks(metrics)
         assert metrics['minimal']['startupRamBytes'] < metrics['publisher']['startupRamBytes'], metrics
         assert metrics['minimal']['startupMs'] < metrics['publisher']['startupMs'], metrics
         assert not (directory.parent / 'runtime-cache/phonon-2/expanded-fp32.pt').exists()
