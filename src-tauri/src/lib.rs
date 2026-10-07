@@ -723,6 +723,7 @@ async fn start_profile(
 #[tauri::command]
 fn select_profile(core: tauri::State<'_, Arc<AppCore>>, profile: String) -> Result<(), String> {
     core.ensure_not_updating()?;
+    if core.runtime_setup.busy() {return Err("Finish runtime setup before selecting another model".into());}
     if core.background.busy_gpu() || !core.active_chats.lock().map_err(|e|e.to_string())?.is_empty() {return Err("Wait for the active model task before selecting another model".into());}
     core.runtime.select_profile(&profile)
 }
@@ -742,6 +743,8 @@ fn installed_skill_models(core:tauri::State<'_,Arc<AppCore>>)->Result<Vec<Value>
 #[tauri::command]
 fn install_model(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, id: String) -> Result<(), String> {
     core.ensure_not_updating()?;
+    let _admission=core.active_chats.lock().map_err(|error|error.to_string())?;
+    if core.runtime_setup.busy() {return Err("Finish runtime setup before changing model files".into());}
     if core.background.busy_gpu() {return Err("Wait for GPU background workers before changing model files".into());}
     if core.studios.busy() {return Err("Wait for studio jobs before changing model files".into());}
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before installing a model".into()); }
@@ -822,6 +825,7 @@ async fn model_removal_plan(core: tauri::State<'_, Arc<AppCore>>, id: String) ->
 #[tauri::command]
 async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String, confirmation_token: String) -> Result<(), String> {
     core.ensure_not_updating()?;
+    if core.runtime_setup.busy() {return Err("Finish runtime setup before uninstalling model files".into());}
     if core.background.busy_gpu() {return Err("Wait for GPU background workers before uninstalling model files".into());}
     if core.studios.busy() {return Err("Wait for studio jobs before uninstalling a model".into());}
     if matches!(core.runtime.snapshot().status.as_str(), "starting" | "running") { return Err("Stop the runtime before uninstalling a model".into()); }
@@ -844,7 +848,13 @@ async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String, confi
     if model_catalog::is_speech_model(&id) && core.speech.selected_model()==id { core.speech.set_enabled(false).await?; }
     if id == "reflex-vision" { core.vision.stop(); }
     if id == "reflex-policy" { core.reflex.stop(); }
-    tauri::async_runtime::spawn_blocking(move || model_catalog::uninstall(&root, &id, &confirmation_token)).await.map_err(|e| e.to_string())?
+    let owned_core=core.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _admission=owned_core.active_chats.lock().map_err(|error|error.to_string())?;
+        owned_core.ensure_not_updating()?;
+        if owned_core.runtime_setup.busy() {return Err("Finish runtime setup before uninstalling model files".into());}
+        model_catalog::uninstall(&root, &id, &confirmation_token)
+    }).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -2674,6 +2684,7 @@ pub fn run() {
             speech::speech_status, speech::speech_set_enabled, speech::speech_set_idle_mode, speech::speech_set_model,
             speech::speech_set_runtime_precision,
             speech::speech_start, speech::speech_transcribe, speech::speech_cancel,
+            speech::speech_prewarm_session, speech::speech_cancel_prewarm, speech::speech_clear_runtime_cache,
             get_snapshot,
             list_conversations,
             list_imported_conversations,
@@ -2821,7 +2832,7 @@ pub fn run() {
                             cancel_computer_tasks(&app,&core);
                             core.runtime.request_stop();
                             core.runtime_setup.shutdown().await;
-                            if let Err(error)=core.speech.stop_for_update().await {core.store.log("warn","speech",&error);}
+                            core.speech.stop_for_update().await;
                             core.background.shutdown().await;
                             core.studios.shutdown().await;
                             if let Err(error)=core.codex_app_server_pool.shutdown_all().await {

@@ -65,7 +65,7 @@ pub struct SetupSnapshot {
     pub active_job_id: Option<String>,
     pub managed_root: PathBuf,
 }
-struct ActiveJob { id: String, token: CancellationToken, weights_active: Arc<AtomicBool> }
+struct ActiveJob { id: String, token: CancellationToken, weights_active: Arc<AtomicBool>, _reservation: crate::studio_jobs::GpuReservation }
 pub struct RuntimeSetupManager {
     root: PathBuf,
     resources: PathBuf,
@@ -241,8 +241,12 @@ impl RuntimeSetupManager {
         }
         let chats=core.active_chats.lock().map_err(|error|error.to_string())?;
         if !chats.is_empty(){return Err("Finish active chats before starting dependency setup.".into());}
+        crate::model_catalog::require_idle()?;
         let mut active = self.active.lock().map_err(|error|error.to_string())?;
         if active.is_some() { return Err("Another runtime setup is in progress. Cancel it or wait for completion.".into()); }
+        // Keep the admission reservation used by model and speech loads until
+        // setup completes or its owned process has stopped.
+        let reservation = crate::studio_jobs::reserve_gpu()?;
         let id = uuid::Uuid::new_v4().to_string();
         let timestamp = now();
         let job = SetupJob { id: id.clone(), target_id: target.clone(), recipe_id: recipe["id"].as_str().unwrap_or("").into(),
@@ -256,7 +260,7 @@ impl RuntimeSetupManager {
             if jobs.len() > 48 { jobs.remove(0); }
             atomic_json(&self.root.join("runtime-setup/jobs.json"), &*jobs)?;
         }
-        *active = Some(ActiveJob { id: id.clone(), token: token.clone(), weights_active: weights_active.clone() });
+        *active = Some(ActiveJob { id: id.clone(), token: token.clone(), weights_active: weights_active.clone(), _reservation: reservation });
         drop(active);
         drop(chats);
         let manager = self.clone();
@@ -361,8 +365,8 @@ impl RuntimeSetupManager {
             let job = self.jobs.lock().map_err(|error|error.to_string())?.iter().find(|job|job.id==id).cloned();
             return Err(job.and_then(|job|job.error.or_else(||job.diagnostics.last().cloned())).unwrap_or_else(||format!("Runtime setup exited with {status}")));
         }
-        let receipt = receipt.ok_or("Runtime setup returned without a verified dependency receipt")?;
-        if self.receipt(target)?.is_none() {return Err("Runtime setup receipt failed validation".into());}
+        receipt.ok_or("Runtime setup returned without a verified dependency receipt")?;
+        let receipt = self.receipt(target)?.ok_or("Runtime setup receipt failed validation")?;
         crate::testing_labs::save_setup_profile(&core.store,&receipt)?;
         if recipe_for(target).is_some_and(|recipe|recipe["kind"]=="studio") {
             let python=receipt["python"].as_str().ok_or("Verified runtime did not return its interpreter")?;

@@ -5,6 +5,7 @@ import type { RuntimeProfile } from "./types";
 import { ModelDeleteDialog } from "./ModelDeleteDialog";
 import { estimateGgufVramRange, filterGroupsByMemoryMode, groupModelVariants, matchingModelVariant, modelMemoryMode } from "./model-variants";
 import { speechLoadingMessage } from "./speech-progress";
+import { SpeechRuntimeControls } from "./SpeechRuntimeControls";
 import "./ModelLibrary.css";
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
@@ -185,12 +186,13 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
         </fieldset> : null}
         <fieldset disabled={!model.installed}><legend>When the microphone starts</legend>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "cold"} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("cold"))} />
-            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon ? 'repeats runtime startup and weight expansion; ' : ''}about {speech.coldStartMs == null ? "measured on first use" : `${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
+            <span><strong>Load from disk each time</strong><small>Cold start · {selectedPhonon ? 'starts runtime and loads its verified dense cache when available; ' : ''}about {speech.coldStartMs == null ? "measured on first use" : `${(speech.coldStartMs / 1000).toFixed(2)} s on this device`}</small></span>
           </label>
           <label><input type="radio" name="whisper-idle-mode" checked={speech.idleMode === "ram"} disabled={Boolean(pending)} onChange={() => void updateSpeech(() => api.setSpeechIdleMode("ram"))} />
             <span><strong>Keep sleeping in RAM</strong><small>Recommended for frequent dictation · about {speech.warmWakeMs == null ? "measured when enabled" : `${(speech.warmWakeMs / 1000).toFixed(2)} s on this device`}; CPU weights stay in RAM and leave the GPU while asleep.</small></span>
           </label>
         </fieldset>
+        {selectedPhonon ? <SpeechRuntimeControls speech={speech} onRefresh={refresh} onNotice={onNotice} /> : null}
         <p className="whisper-runtime-status" role="status">{!model.installed ? model.externalManaged ? "Local weights found. Prepare the speech runtime to enable the microphone." : "Install this speech model to enable the microphone." : loadingSpeech || (speech.phase === "error" ? "Could not restore the saved standby mode. Check available RAM and the speech runtime, or select Cold start." : speech.enabled ? speech.idleMode === "ram" ? speech.workerReady ? "Sleeping in system RAM; moves to GPU when dictation starts." : "RAM standby will load before the next recording." : "Loads from disk when you click the microphone." : "Speech is off. The model stays installed on disk.")}</p>
       </div> : null}
       {model.runtimeReady === false && <small className="model-setup-note">{model.installed ? 'Weights downloaded · runtime setup required' : 'Runtime setup required'}</small>}

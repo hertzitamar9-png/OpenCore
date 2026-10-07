@@ -7,7 +7,7 @@ use toml_edit::{value, DocumentMut, Item, Table};
 mod agent_connector_config;
 pub use agent_connector_config::{
     configure_hermes, configure_opencode, hermes_configured, hermes_configured_in, hermes_history_root,
-    hermes_launch_guidance, hermes_profile_root, opencode_configured, opencode_history_root,
+    hermes_launch_guidance, opencode_configured, opencode_history_root,
 };
 
 const GATEWAY: &str = "http://127.0.0.1:8812";

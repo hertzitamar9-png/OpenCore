@@ -179,4 +179,12 @@ describe("platform configuration boundaries", () => {
     expect(profiles[0].passwordEnv).toBeNull();
     expect(() => parseTestingLabProfiles(JSON.stringify([{ id: "phone", label: "Phone", kind: "android", enabled: true, executable: "adb\nother" }]))).toThrow(/single line/i);
   });
+
+  it("preserves managed Android environment fields through profile editing and validates port identity", () => {
+    const managed = {id: "managed-android", label: "Managed AVD", kind: "android", enabled: true, executable: "C:/sdk/adb.exe", sdkRoot: "C:/sdk", avdHome: "C:/managed/avd", androidUserHome: "C:/managed/user", emulatorPort: 5580, deviceSerial: "emulator-5580"};
+    expect(parseTestingLabProfiles(JSON.stringify([managed]))[0]).toMatchObject(managed);
+    for (const emulatorPort of [5555, 5684, 5580.1, "5580"]) expect(() => parseTestingLabProfiles(JSON.stringify([{...managed, emulatorPort}]))).toThrow(/port/i);
+    expect(() => parseTestingLabProfiles(JSON.stringify([{...managed, deviceSerial: "emulator-5554"}]))).toThrow(/serial/i);
+    expect(() => parseTestingLabProfiles(JSON.stringify([{...managed, avdHome: "bad\nfolder"}]))).toThrow(/single line/i);
+  });
 });

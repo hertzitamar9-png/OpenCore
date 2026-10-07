@@ -110,6 +110,44 @@ class ParakeetLoadingTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'Missing key'):
             materialize_model(self.config, state, self.torch.float32)
 
+    def test_verified_cache_hit_skips_publisher_expansion_and_source_changes_fall_back(self):
+        from phonon_loading import load_model
+        from pathlib import Path
+        import tempfile
+        from transformers import GenerationConfig
+        torch = self.torch
+        for precision, dtype in [('bf16', torch.bfloat16), ('fp32', torch.float32)]:
+            with self.subTest(precision=precision), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                (root / 'model.fermion').write_bytes(b'small fixture')
+                for name in ('fermion_container.py', 'reference_transformers.py'):
+                    (root / name).write_text('# unchanged publisher fixture', encoding='utf-8')
+                self.config.save_pretrained(root / 'processor')
+                def decode(*args):
+                    return {name: value.clone() for name, value in self.state.items()}, [1, 2]
+                reader = SimpleNamespace(container_state_dict=decode)
+                stages = []
+                with patch.dict(sys.modules, {'reference_transformers': reader}), \
+                        patch('phonon_loading.accelerated_five_value_expansion', contextlib.nullcontext), \
+                        patch('transformers.AutoProcessor.from_pretrained', return_value=object()), \
+                        patch('transformers.GenerationConfig.from_pretrained', return_value=GenerationConfig()), \
+                        patch.object(reader, 'container_state_dict', wraps=decode) as expand:
+                    first, _, miss = load_model(root / 'model.fermion', root / 'processor', dtype, stages.append, cache_dir=root / 'cache')
+                    second, _, hit = load_model(root / 'model.fermion', root / 'processor', dtype, stages.append, cache_dir=root / 'cache')
+                    self.assertFalse(miss['denseCache']['hit'])
+                    self.assertTrue(hit['denseCache']['hit'])
+                    self.assertEqual(expand.call_count, 1)
+                    self.assertIn('loading-dense-cache', stages)
+                    for name, value in first.state_dict().items():
+                        self.assertEqual(value.dtype, second.state_dict()[name].dtype)
+                        self.assertTrue(torch.equal(value, second.state_dict()[name]), name)
+                    del first, second
+                    (root / 'fermion_container.py').write_text('# changed source', encoding='utf-8')
+                    rebuilt, _, invalidated = load_model(root / 'model.fermion', root / 'processor', dtype, stages.append, cache_dir=root / 'cache')
+                    self.assertFalse(invalidated['denseCache']['hit'])
+                    self.assertEqual(expand.call_count, 2)
+                    del rebuilt
+
 
 if __name__ == '__main__':
     unittest.main()

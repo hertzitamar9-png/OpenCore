@@ -6,6 +6,7 @@ from pathlib import Path
 import platform
 import re
 import shutil
+import socket
 import subprocess
 import tempfile
 import time
@@ -94,6 +95,21 @@ def source_properties(path):
         return {}
 
 
+def ensure_android_ports_free(port):
+    sockets = []
+    try:
+        for number in (port, port + 1):
+            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sockets.append(connection)
+            try:
+                connection.bind(("127.0.0.1", number))
+            except OSError as error:
+                raise RuntimeError(f"Android emulator port {number} is already in use; stop the existing device before verifying this managed AVD") from error
+    finally:
+        for connection in sockets:
+            connection.close()
+
+
 def provision_android(root, options, runner):
     from setup_manager import android_plan, download, extract_zip, WindowsJob
     require_windows_x64()
@@ -132,7 +148,10 @@ def provision_android(root, options, runner):
     if acceleration.returncode:
         raise RuntimeError("Android emulator acceleration is unavailable. Enable the Windows Hypervisor Platform/firmware virtualization and restart Windows if required. SDK installation is retained. " + acceleration.stdout)
     runner.reporter("verifying-emulator", detail="Booting the managed AVD and waiting for Android's boot-completed property")
-    device = subprocess.Popen([str(emulator), "-avd", plan["avdName"], "-port", "5580", "-no-window", "-no-audio", "-gpu", "auto"],
+    port = 5580
+    serial = f"emulator-{port}"
+    ensure_android_ports_free(port)
+    device = subprocess.Popen([str(emulator), "-avd", plan["avdName"], "-port", str(port), "-no-window", "-no-audio", "-gpu", "auto"],
                               env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                               creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
     job = WindowsJob(device)
@@ -142,8 +161,12 @@ def provision_android(root, options, runner):
             runner.check_cancel()
             if device.poll() is not None:
                 raise RuntimeError("Android emulator exited before its OS finished booting")
-            status = runner.run([adb, "-s", "emulator-5580", "shell", "getprop", "sys.boot_completed"], env=env, timeout=10, check=False)
+            status = runner.run([adb, "-s", serial, "shell", "getprop", "sys.boot_completed"], env=env, timeout=10, check=False)
             if status.returncode == 0 and status.stdout.strip() == "1":
+                identity = runner.run([adb, "-s", serial, "emu", "avd", "name"], env=env, timeout=10, check=False)
+                names = [line.strip() for line in identity.stdout.splitlines() if line.strip() and line.strip() != "OK"]
+                if identity.returncode or names != [plan["avdName"]]:
+                    raise RuntimeError("The responding emulator is not the managed AVD; no unrelated device was verified")
                 boot = True
                 break
             time.sleep(0.5)
@@ -151,13 +174,16 @@ def provision_android(root, options, runner):
             raise RuntimeError("Managed Android AVD did not finish booting within 240 seconds")
         packages = {name: source_properties(sdk.joinpath(*name.split(";")) / "source.properties") for name in plan["packages"]}
         return {"executable": str(adb), "emulatorExecutable": str(emulator), "sdkRoot": str(sdk), "avdHome": plan["avdHome"],
+                "androidUserHome": env["ANDROID_USER_HOME"], "emulatorPort": port, "deviceSerial": serial,
                 "avdName": plan["avdName"], "packageRevisions": packages, "commandLineToolsSha256": ANDROID_TOOLS_SHA256,
                 "environmentVerified": True, "bootVerified": True, "bootMs": round((time.monotonic() - started) * 1000),
                 "deviceState": "stopped-after-verification"}
     finally:
-        job.stop()
-        device.wait(timeout=15)
-        job.close()
+        try:
+            job.stop()
+            device.wait(timeout=8)
+        finally:
+            job.close()
 
 
 def provision_virtualbox(root, options, runner):
@@ -264,7 +290,12 @@ def provision_vm(root, options, runner):
                 "passwordEnv": config["passwordEnv"], "isoPath": config["isoPath"], "isoSha256": file_hash(config["isoPath"]),
                 "environmentVerified": True, "guestVerified": True, "guestInstallMs": round((time.monotonic() - started) * 1000)}
     finally:
-        if created:
-            # Only the UUID created in this operation can be stopped by cleanup.
-            runner.run([executable, "controlvm", config["id"], "poweroff"], timeout=30, check=False, allow_cancel=False)
-        secret.unlink(missing_ok=True)
+        # Remove the credential before potentially slow VM shutdown. A second
+        # finally also removes it if the first unlink needs another attempt.
+        try:
+            secret.unlink(missing_ok=True)
+            if created:
+                # Only the UUID created in this operation can be stopped.
+                runner.run([executable, "controlvm", config["id"], "poweroff"], timeout=8, check=False, allow_cancel=False)
+        finally:
+            secret.unlink(missing_ok=True)
