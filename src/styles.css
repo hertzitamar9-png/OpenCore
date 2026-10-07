@@ -1445,6 +1445,8 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
   overflow:auto;
   padding-inline:clamp(16px,2vw,44px);
 }
+/* YuE2 owns its complete viewport and its internal scroll area. */
+.section-main .music-studio-embedded { padding:0; overflow:hidden; }
 .section-main :is(.support-page > .page-heading,.support-list,.connector-list,.memory-layout,.settings-grid,.route-instruction) { max-width:none; }
 .section-main :is(.page-heading,.jobs-toolbar,.jobs-toolbar-actions,.jobs-editor-actions,.studio-jobs > header,.studio-job > header) { flex-wrap:wrap; }
 .section-main :is(.jobs-form-grid,.studio-form,.studio-options-grid,.studio-presets) > * { min-width:0; }
