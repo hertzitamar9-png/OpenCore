@@ -1416,7 +1416,7 @@ fn prepare_rollout(
     })
 }
 
-fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<String>, String> {
+fn table_columns(db: &Connection, source: &str, table: &str, required: &[&str]) -> Result<Vec<String>, String> {
     let definition: Option<(String, Option<String>)> = db
         .query_row(
             "SELECT type,sql FROM sqlite_master WHERE name=?1",
@@ -1424,10 +1424,10 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()
-        .map_err(|error| format!("Cannot read the source database schema: {error}"))?;
+        .map_err(|error| format!("Cannot read the {source} database schema: {error}"))?;
     let Some((kind, sql)) = definition else {
         return Err(format!(
-            "This source database is not supported: missing {table}."
+            "This {source} database is not supported: missing {table}."
         ));
     };
     if kind != "table"
@@ -1436,7 +1436,7 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             .to_ascii_uppercase()
             .contains("VIRTUAL TABLE")
     {
-        return Err("Database import requires ordinary source tables.".into());
+        return Err(format!("{source} database import requires ordinary source tables: {table}."));
     }
     let mut statement = db
         .prepare(&format!("PRAGMA table_info(\"{table}\")"))
@@ -1452,7 +1452,7 @@ fn table_columns(db: &Connection, table: &str, required: &[&str]) -> Result<Vec<
             .any(|required| !columns.iter().any(|column| column == required))
     {
         return Err(format!(
-            "The source {table} schema is missing required columns or is not supported."
+            "The {source} {table} schema is missing required columns or is not supported."
         ));
     }
     Ok(columns)
@@ -1592,11 +1592,12 @@ fn prepare_database(
     cancelled: &dyn Fn() -> bool,
 ) -> Result<PreparedFile, String> {
     let snapshot = snapshot_database(path, cancelled)?;
+    let source = match requested { "hermes" => "Hermes", "opencode" => "OpenCode", _ => "source" };
     let db = Connection::open_with_flags(
         &snapshot.path,
         OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
     )
-    .map_err(|error| format!("Cannot read the Hermes database snapshot: {error}"))?;
+    .map_err(|error| format!("Cannot read the {source} database snapshot: {error}"))?;
     db.busy_timeout(std::time::Duration::from_secs(2))
         .map_err(|error| error.to_string())?;
     db.execute_batch("PRAGMA query_only=ON; PRAGMA trusted_schema=OFF;")
@@ -1613,9 +1614,10 @@ fn prepare_database(
         return Ok(prepared);
     }
     let (project_registry, project_warning) = projects::hermes_registry(path, cancelled)?;
-    let session_columns = table_columns(&db, "sessions", &["id", "source", "started_at"])?;
+    let session_columns = table_columns(&db, "Hermes", "sessions", &["id", "source", "started_at"])?;
     let message_columns = table_columns(
         &db,
+        "Hermes",
         "messages",
         &["id", "session_id", "role", "content", "timestamp"],
     )?;

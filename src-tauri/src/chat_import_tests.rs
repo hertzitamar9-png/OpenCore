@@ -1401,6 +1401,19 @@ fn sqlite_import_without_supported_writer_exclusion_rejects_and_leaves_source_un
 }
 
 #[test]
+fn schema_errors_identify_only_the_selected_history_source() {
+    let db = Connection::open_in_memory().unwrap();
+    db.execute_batch("CREATE TABLE invalid(data TEXT); CREATE VIEW projected AS SELECT data FROM invalid;").unwrap();
+    for (source, other) in [("Hermes", "OpenCode"), ("OpenCode", "Hermes")] {
+        for (table, cause) in [("missing", "missing missing"), ("projected", "ordinary source tables"), ("invalid", "missing required columns")] {
+            let error = table_columns(&db, source, table, &["id"]).unwrap_err();
+            assert!(error.contains(source) && error.contains(cause), "{error}");
+            assert!(!error.contains(other), "{error}");
+        }
+    }
+}
+
+#[test]
 #[cfg(windows)]
 fn non_hermes_databases_and_virtual_or_missing_schema_are_rejected() {
     let fixture = Fixture::new();

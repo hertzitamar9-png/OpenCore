@@ -135,8 +135,8 @@ pub(super) fn hermes_registry(
         .map_err(|error| error.to_string())?;
         db.execute_batch("PRAGMA query_only=ON; PRAGMA trusted_schema=OFF;")
             .map_err(|error| error.to_string())?;
-        let columns = table_columns(&db, "projects", &["id", "name"])?;
-        let folder_columns = table_columns(&db, "project_folders", &["project_id", "path"])?;
+        let columns = table_columns(&db, "Hermes", "projects", &["id", "name"])?;
+        let folder_columns = table_columns(&db, "Hermes", "project_folders", &["project_id", "path"])?;
         let mut statement = db
             .prepare("SELECT * FROM projects ORDER BY id LIMIT 1001")
             .map_err(|error| error.to_string())?;

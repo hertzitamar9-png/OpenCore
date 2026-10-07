@@ -475,12 +475,14 @@ pub(super) fn prepare_database(
     };
     let session_columns = table_columns(
         db,
+        "OpenCode",
         session_table,
         &["id", "title", "directory", "time_created"],
     )?;
     let legacy_columns = if table_exists(db, "message")? {
         Some(table_columns(
             db,
+            "OpenCode",
             "message",
             &["id", "session_id", "data", "time_created"],
         )?)
@@ -490,6 +492,7 @@ pub(super) fn prepare_database(
     let part_columns = if legacy_columns.is_some() {
         Some(table_columns(
             db,
+            "OpenCode",
             "part",
             &["id", "message_id", "session_id", "data", "time_created"],
         )?)
@@ -499,6 +502,7 @@ pub(super) fn prepare_database(
     let modern_columns = if table_exists(db, "session_message")? {
         Some(table_columns(
             db,
+            "OpenCode",
             "session_message",
             &["id", "session_id", "type", "seq", "data", "time_created"],
         )?)
@@ -512,7 +516,7 @@ pub(super) fn prepare_database(
         );
     }
     let project_columns = if table_exists(db, "project")? {
-        Some(table_columns(db, "project", &["id", "worktree"])?)
+        Some(table_columns(db, "OpenCode", "project", &["id", "worktree"])?)
     } else {
         None
     };
