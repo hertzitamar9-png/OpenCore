@@ -53,7 +53,8 @@ def ensure_publisher_runtime(progress):
         # dependencies are already owned by the isolated Phonon environment.
         subprocess.run([sys.executable, '-m', 'pip', 'install', '--disable-pip-version-check',
                         '--no-deps', '--no-cache-dir', PUBLISHER_WHEEL],
-                       check=True, timeout=120, stdout=sys.stderr, stderr=sys.stderr)
+                       check=True, timeout=120, stdout=sys.stderr, stderr=sys.stderr,
+                       creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
 
 def extract_original_config(directory, zstandard):

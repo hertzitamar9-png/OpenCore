@@ -71,6 +71,21 @@ class OriginalRuntime(unittest.TestCase):
         self.assertEqual(config['bundle']['resources'].get('resources/speech/phonon_original.py'),
                          'speech/phonon_original.py')
 
+    def test_automatic_setup_uses_the_pinned_wheel_without_replacing_dependencies(self):
+        adapter = self.adapter()
+        stages = []
+        with patch.object(adapter.importlib.metadata, 'version', return_value='older'), \
+             patch.object(adapter.subprocess, 'run') as install:
+            adapter.ensure_publisher_runtime(stages.append)
+        self.assertEqual(stages, ['preparing-original-runtime'])
+        command = install.call_args.args[0]
+        self.assertIn('--no-deps', command)
+        self.assertIn('#sha256=', command[-1])
+        with patch.object(adapter.importlib.metadata, 'version', return_value=adapter.PUBLISHER_VERSION), \
+             patch.object(adapter.subprocess, 'run') as install:
+            adapter.ensure_publisher_runtime(stages.append)
+        install.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
