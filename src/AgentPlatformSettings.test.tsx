@@ -43,6 +43,18 @@ beforeEach(() => {
 afterEach(() => { Reflect.deleteProperty(window, "__TAURI_INTERNALS__"); });
 
 describe("AgentPlatformSettings", () => {
+  it("opens with the already loaded compact settings layout while refreshing its source", async () => {
+    let finish!: (config: PlatformConfig) => void;
+    const sourceInvoke = bridge.invoke.getMockImplementation()!;
+    bridge.invoke.mockImplementation((command, args) => command === "agent_platform_configuration"
+      ? new Promise(resolve => { finish = resolve; }) : sourceInvoke(command, args));
+    render(<AgentPlatformSettings initialConfiguration={stored} />);
+    expect(screen.getByRole("heading", { name: "Identity and instructions" })).toBeVisible();
+    expect(screen.queryByText("Loading settings from this computer…")).toBeNull();
+    await waitFor(() => expect(typeof finish).toBe("function"));
+    await act(async () => { finish(stored); });
+    expect(screen.getByRole("heading", { name: "Appearance" })).toBeVisible();
+  });
   it("refreshes testing profiles changed by the agent without reopening Settings", async () => {
     render(<AgentPlatformSettings />);
     await screen.findByRole("heading", { name: "Testing lab" });

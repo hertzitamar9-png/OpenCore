@@ -14,7 +14,7 @@ export function useInstalledModelProfiles() {
   const [error, setError] = useState(false);
   useEffect(() => {
     let active = true;
-    void modelLibrary().then(library => {
+    void modelLibrary({ fresh: true }).then(library => {
       if (active) setInstalledProfiles(library.models.filter(model => model.installed && model.selectable)
         .map(model => ({ id: model.id, label: catalogProfiles.get(model.id)?.label || model.label, description: model.description })));
     }).catch(() => { if (active) setError(true); });

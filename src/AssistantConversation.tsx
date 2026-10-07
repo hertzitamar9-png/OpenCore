@@ -24,7 +24,7 @@ import { sanitizeMessageMarkdown } from "./message-markdown";
 import { localFilePath } from "./local-file-links";
 import { COMPOSER_SKILLS, filterComposerSkills, resolveSlashSkill, availableComposerSkills, exactSlashSkill, type ComposerSkillId } from "./composer-skills";
 import { formatMessageTimestamp } from "./message-time";
-import { removePersistedOptimisticDuplicates } from "./visible-entries";
+import { removePersistedOptimisticDuplicates, retainUnchangedTimeline } from "./visible-entries";
 import { groupConversationTurns, type ConversationTurn } from "./conversation-turns";
 import { buildResponseSegments, visibleEchoReceiptGroups, type ResponseSegment, type ToolStep } from "./response-segments";
 import { ProjectPicker } from "./ProjectPicker";
@@ -359,37 +359,17 @@ function ResponseMarkdown({ content }: { content: string }) {
   }}>{displayText(content)}</ReactMarkdown></div>;
 }
 
-function actionSummary(step: ToolStep): string {
-  const payload = toolPayload(step.call.content);
-  const action = String(payload.action || "");
-  const target = toolTarget(step.call.content).split(/[\\/]/).pop() || "the current task";
-  const tool = (step.call.title || "").replace(/^mcp__opencore__/, "");
-  if (tool === "dev" && action === "read") return `I’ll read ${target} to inspect the current version before changing it.`;
-  if (tool === "dev" && ["edit", "patch", "apply_patch"].includes(action)) return `I’ll update ${target} and check the result.`;
-  if (tool === "dev" && action === "write") return `I’ll create ${target} in the workspace and verify it.`;
-  const label = toolSummary(step.call.title, step.call.content).label.toLowerCase();
-  return target === "the current task" ? `I’ll ${label} and check what happened.` : `I’ll ${label} for ${target} and check what happened.`;
-}
-
-function reasoningStepSummary(events: TimelineEntry[], segments: ResponseSegment[], index: number): string {
-  const next = segments[index + 1];
-  if (next?.type === "narration") return displayText(next.entry.content).trim();
-  const step = next?.type === "tools" ? next.steps[0] : next?.type === "inferred" ? { call: next.call } : undefined;
-  if (!step) return "I’ll use the completed steps to prepare the response.";
-
+function reasoningStepSummary(segments: ResponseSegment[], index: number): string {
   const reasoning = segments[index];
-  const reasoningId = reasoning?.type === "reasoning" ? reasoning.entries[0]?.id : undefined;
-  const reasoningPosition = events.findIndex((entry) => entry.id === reasoningId);
-  const previousFailure = reasoningPosition < 0 ? undefined : events.slice(0, reasoningPosition).reverse()
-    .find((entry) => entry.kind === "tool_result" && Boolean(toolPayload(entry.content).error));
-  const error = previousFailure ? String(toolPayload(previousFailure.content).error || "") : "";
-  const target = toolTarget(step.call.content).split(/[\\/]/).pop() || "the file";
-  const action = String(toolPayload(step.call.content).action || "");
-  if (/already exists/i.test(error) && action === "read") {
-    return `The earlier write found that ${target} already exists, so I’ll read it before editing.`;
+  const explanation = reasoning.type === "reasoning"
+    ? reasoning.entries.map((entry) => displayText(entry.content).trim()).filter(Boolean).join("\n\n") : "";
+  if (explanation) return explanation;
+  const next = segments[index + 1];
+  if (next?.type === "narration" && next.entry.metadata.source !== "tool_intent") {
+    const progress = displayText(next.entry.content).trim();
+    if (progress) return progress;
   }
-  if (error) return `The previous action failed; I’ll ${actionSummary(step).replace(/^I’ll /, "")} to recover.`;
-  return `Next: ${actionSummary(step)}`;
+  return "No reasoning text was supplied for this step.";
 }
 
 function ReasoningDisclosure({ summary, content, active }: { summary: string; content: string; active: boolean }) {
@@ -397,7 +377,7 @@ function ReasoningDisclosure({ summary, content, active }: { summary: string; co
   useEffect(() => { setExpanded(active); }, [active]);
   return <details className="assistant-disclosure kind-thinking" open={expanded} onToggle={(event) => setExpanded(event.currentTarget.open)}>
     <summary><BrainCircuit size={14} /><strong>{active ? "Reasoning summary" : "Reasoned"}</strong><span title={summary}>{summary}</span></summary>
-    <div className="reasoning-text">{content || summary}</div>
+    <div className="reasoning-text"><ResponseMarkdown content={content || summary} /></div>
   </details>;
 }
 
@@ -420,7 +400,7 @@ export function ResponseActivity({ events, active }: { events: TimelineEntry[]; 
   const segments = buildResponseSegments(events);
   return <div className="assistant-response">
     {segments.map((segment, index) => segment.type === "reasoning"
-      ? <ReasoningDisclosure key={segment.key} summary={reasoningStepSummary(events, segments, index)} content={segment.entries.map((entry) => displayText(entry.content)).join("\n\n")} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
+      ? <ReasoningDisclosure key={segment.key} summary={reasoningStepSummary(segments, index)} content={segment.entries.map((entry) => displayText(entry.content)).join("\n\n")} active={segment.entries.some((entry) => entry.metadata.live === true) || (working && latest?.kind === "thinking" && segment.entries.includes(latest))} />
       : segment.type === "narration"
         ? segment.entry.metadata.source === "tool_intent" ? null : <p key={segment.key} className="assistant-progress">{displayText(segment.entry.content)}</p>
       : segment.type === "inferred"
@@ -685,7 +665,7 @@ export const AssistantConversation = memo(function AssistantConversation({
       busy = true;
       try {
         const latest = await api.conversation(id);
-        if (!cancelled && latest.length) setLiveEntries(latest);
+        if (!cancelled && latest.length) setLiveEntries(previous => retainUnchangedTimeline(previous, latest));
       } catch { /* A transient read failure must not interrupt generation. */ }
       finally { busy = false; }
     };

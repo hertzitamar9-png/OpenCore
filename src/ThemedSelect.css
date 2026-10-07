@@ -35,12 +35,23 @@
     border-radius: 5px;
     overflow-wrap: anywhere;
     white-space: normal;
+    background: transparent;
   }
-  .app-window-frame select option:is(:hover, :focus-visible, :checked),
-  .themed-select option:is(:hover, :focus-visible, :checked) {
+  .app-window-frame select option:checked, .themed-select option:checked {
+    background: color-mix(in srgb, var(--theme-accent-ink, #3d8fe9) 12%, transparent);
+    font-weight: 600;
+  }
+  .app-window-frame select option:is(:hover, :focus-visible),
+  .themed-select option:is(:hover, :focus-visible) {
     color: var(--theme-ink, #dce9f5);
-    background: var(--theme-raised, #1a3044);
+    background: var(--theme-accent-surface, #185a9e);
+    box-shadow: inset 0 0 0 1px var(--theme-accent-border, #459cf5);
     outline: none;
+  }
+  .app-window-frame select:has(option:hover) option:focus-visible:not(:hover),
+  .themed-select:has(option:hover) option:focus-visible:not(:hover) {
+    background: transparent;
+    box-shadow: none;
   }
   .app-window-frame select::picker-icon, .themed-select::picker-icon {
     color: var(--theme-muted, #8da2b5);

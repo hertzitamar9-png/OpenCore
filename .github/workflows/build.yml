@@ -116,8 +116,10 @@ jobs:
           python -m pip install --only-binary=:all: torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
           python -m pip install --only-binary=:all: transformers==5.18.0
           python -m pip install --only-binary=:all: av==13.1.0 psutil==6.1.1 zstandard==0.25.0
+          python -c "import sys; sys.path.insert(0,'src-tauri/resources/speech'); from phonon_original import ensure_publisher_runtime; ensure_publisher_runtime(print)"
       - name: Qualify Phonon precision and exact checkpoint expansion
         env:
+          OPENCORE_PHONON_NUMERICS: '1'
           CUDA_VISIBLE_DEVICES: ''
           HF_HUB_OFFLINE: '1'
         run: python -m unittest discover -s src-tauri/resources/speech -p "test_phonon_*.py" -v
@@ -156,7 +158,7 @@ jobs:
           $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
           cargo --config $runnerConfig test --lib claude_bridge_install -- --include-ignored
       - name: Test release version ordering
-        run: node --test scripts/test-release-versioning.mjs
+        run: node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs
       - name: Save compiled native dependencies
         if: ${{ always() && steps.desktop-guard.outcome == 'success' && steps.rust-tests.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
@@ -186,6 +188,18 @@ jobs:
           updaterJsonPreferNsis: true
           retryAttempts: 3
           args: --bundles nsis
+      - name: Publish updater links for public downloads
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $tag = "app-v$version"
+          gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" > release-metadata.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/normalize-public-updater.mjs latest.json release-metadata.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release upload $tag latest.json --clobber
       - name: Preserve signed Windows installer when publishing fails
         if: ${{ failure() && steps.installer.outcome == 'failure' }}
         uses: actions/upload-artifact@v4

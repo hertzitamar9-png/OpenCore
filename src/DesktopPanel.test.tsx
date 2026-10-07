@@ -30,6 +30,40 @@ function imageBounds(image: HTMLElement) {
 }
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
+it("explains the app permission wait and captures only after that app is allowed", async () => {
+  let allowed = false;
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => action === "list"
+    ? { windows: [{ ...windows[1], application: "Notes.exe", permission: allowed ? "allow" : "ask" }] } as never
+    : screenshot(Number(args.windowId)) as never);
+  const grant = vi.spyOn(api, "allowComputerWindow").mockImplementation(async () => { allowed = true; return {} as api.ComputerAccess; });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const picker = await screen.findByLabelText("Window");
+  await screen.findByRole("option", { name: "Notes" });
+  fireEvent.change(picker, { target: { value: "10" } });
+  expect(await screen.findByText("Waiting for app permission")).toBeVisible();
+  expect(screen.queryByText("Capturing selected window…")).toBeNull();
+  expect(command.mock.calls.some(([action]) => action === "screenshot")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Allow this app" }));
+  expect(await screen.findByAltText("Selected Windows app")).toBeVisible();
+  expect(grant).toHaveBeenCalledWith(10);
+});
+
+it("shows a capture failure instead of an endless capturing message", async () => {
+  const command = desktop();
+  command.mockImplementation(async action => {
+    if (action === "list") return { windows } as never;
+    throw new Error("The selected window is minimized.");
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  await screen.findByRole("option", { name: "Notes" });
+  fireEvent.change(screen.getByLabelText("Window"), { target: { value: "10" } });
+  expect(await screen.findByText("Capture unavailable")).toBeVisible();
+  expect(screen.queryByText("Capturing selected window…")).toBeNull();
+  expect(screen.getByRole("alert")).toHaveTextContent("The selected window is minimized.");
+  expect(screen.getByRole("button", { name: "Refresh capture" })).toBeEnabled();
+});
+
 it("starts disabled and enables computer use with one click while preserving saved app permissions", async () => {
   const policy: api.ComputerAccess = { enabled: false, revision: 4, apps: [{ path: "C:\\Apps\\Notes.exe", name: "Notes", access: "allow" }] };
   let enabled = false;

@@ -31,11 +31,11 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [selectedModes, setSelectedModes] = useState<Record<string, "native" | "echo">>({});
   const [quantization, setQuantization] = useState<Record<string, string>>({});
   const [speech, setSpeech] = useState<api.SpeechStatus>({ modelId: "whisper-large-v3-turbo", installed: false, enabled: false, idleMode: "cold", workerReady: false, coldStartMs: null, warmWakeMs: null, phase: "off" });
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (fresh = true) => {
     // A slow speech worker must not block browsing the model catalog.
     void api.speechStatus().then(setSpeech).catch(() => {});
     try {
-      const models = await api.modelLibrary();
+      const models = await api.modelLibrary({ fresh });
       setLibrary(models); setError("");
     }
     catch (cause) { setError(String(cause)); }
@@ -57,7 +57,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const installing = Boolean(library?.progress && ["preparing", "downloading", "verifying", "uninstalling"].includes(library.progress.phase));
   useEffect(() => {
     if (!installing && !pending) return;
-    const timer = window.setInterval(() => void refresh(), 1000);
+    const timer = window.setInterval(() => void refresh(false), 1000);
     return () => window.clearInterval(timer);
   }, [installing, pending, refresh]);
   async function change(model: api.InstalledModel) {
@@ -173,7 +173,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       {model.runtimePrecision ? <section className="model-runtime-precision" aria-label={`${model.label} download and runtime precision`}>
         <strong>Download and runtime precision</strong>
         <p>Download: {model.runtimePrecision.sourceFormat}{model.id === 'phonon-2' ? ` · ${Math.ceil((model.weightBytes || 163515201) / 1e6)} MB` : ''}. Runtime: {selectedPhonon ? phononPrecision === 'original' ? 'Original (164 MB)' : phononPrecision.toUpperCase() : model.runtimePrecision.runtimeDtype}.</p>
-        {selectedPhonon && phononPrecision === 'original' ? <p>Uses the original checkpoint with the publisher’s packed runtime. Runtime RAM is separate from the 164 MB download.</p>
+        {selectedPhonon && phononPrecision === 'original' ? <p>Uses the original checkpoint with the publisher’s packed CPU kernels and a lightweight audio runtime. Runtime RAM is measured separately from the 164 MB download.</p>
           : model.id === 'phonon-2' && !selectedPhonon ? <p>{model.runtimePrecision.runtimeMemoryNote}</p>
           : <p>Estimated weight memory: {gb(selectedPhonon ? phononPrecision === 'bf16' ? 1_255_000_000 : 2_510_000_000 : model.runtimePrecision.estimatedRuntimeBytes)}. {selectedPhonon ? 'Buffers and runtime overhead use additional memory.' : model.runtimePrecision.runtimeMemoryNote}</p>}
         {selectedPhonon && speech.runtimeResidentBytes != null ? <p>Last measured startup RAM: {gb(speech.runtimeResidentBytes)}. Includes the worker and its loaded weights.</p> : null}

@@ -68,8 +68,10 @@ it('shares an availability request across headers and does not recheck on rerend
 
   expect(await screen.findAllByRole('button', { name: 'Update' })).toHaveLength(2);
   expect(api.checkLatestAppVersion).toHaveBeenCalledOnce();
+  expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
   rerender(<><UpdateButton /><UpdateButton /></>);
   expect(api.checkLatestAppVersion).toHaveBeenCalledOnce();
+  expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
 it('keeps header availability in sync with manual Settings checks', async () => {

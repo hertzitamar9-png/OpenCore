@@ -48,7 +48,7 @@ fn startup_progress(value:&Value) -> Option<&str> {
     value["progress"].as_str().filter(|phase| ["starting-runtime", "verifying-checkpoint", "building-model",
         "expanding-weights", "applying-weights", "preparing-processor", "activating-device",
         "verifying-dense-cache", "loading-dense-cache", "saving-dense-cache",
-        "preparing-original-runtime", "loading-packed-weights"].contains(phase))
+        "preparing-original-runtime", "loading-packed-weights", "building-speech-frontend"].contains(phase))
 }
 
 #[derive(Clone, Serialize, Deserialize)]

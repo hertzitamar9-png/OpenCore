@@ -6,7 +6,7 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-const SOURCE_CHANGED: &str = "The Hermes/OpenCode database changed while it was being copied. Retry after the current save finishes, or import a JSON/JSONL export.";
+const SOURCE_CHANGED: &str = "The source database changed while it was being copied. Retry after the current save finishes, or import a JSON/JSONL export.";
 
 pub(super) struct DatabaseSnapshot {
     root: PathBuf,
@@ -34,7 +34,7 @@ pub(super) fn snapshot_database(
     cancelled: &dyn Fn() -> bool,
 ) -> Result<DatabaseSnapshot, String> {
     check_cancelled(cancelled)?;
-    Err("Hermes/OpenCode SQLite import requires Windows snapshot locks. Use a JSON/JSONL export on this platform.".into())
+    Err("SQLite import requires Windows snapshot locks. Use a JSON/JSONL export on this platform.".into())
 }
 
 #[cfg(windows)]
@@ -161,7 +161,7 @@ mod windows {
                 source.file.read_exact(&mut prefix)?;
                 if prefix.iter().any(|byte| *byte != 0) {
                     return Err(std::io::Error::new(std::io::ErrorKind::InvalidData,
-                        "The Hermes/OpenCode database has an unfinished rollback transaction. Open it in its app to recover, or import a JSON/JSONL export."));
+                        "The source database has an unfinished rollback transaction. Open it in its app to recover, or import a JSON/JSONL export."));
                 }
             }
         }
@@ -207,10 +207,10 @@ mod windows {
                 Err(error) if is_busy(&error) && started.elapsed() < Duration::from_secs(2) => {
                     std::thread::sleep(Duration::from_millis(40));
                 }
-                Err(error) if is_busy(&error) => return Err(BUSY_CHAT_DATABASE.into()),
+                Err(error) if is_busy(&error) => return Err(format!("{BUSY_CHAT_DATABASE} Source: {}. Windows error: {error}", path.display())),
                 Err(error) => {
                     return Err(format!(
-                        "Cannot acquire a read-only Hermes/OpenCode database snapshot: {error}"
+                        "Cannot acquire a read-only database snapshot of {}: {error}", path.display()
                     ));
                 }
             }
@@ -230,7 +230,7 @@ mod windows {
                 .ok_or("Database size is outside the supported range.")
         })?;
         if total > MAX_DATABASE_BYTES {
-            return Err("The Hermes/OpenCode database and WAL exceed the 512 MiB snapshot limit. Export selected conversations as JSONL instead.".into());
+            return Err("The source database and WAL exceed the 512 MiB snapshot limit. Export selected conversations as JSONL instead.".into());
         }
         let root =
             std::env::temp_dir().join(format!("opencore-chat-snapshot-{}", uuid::Uuid::new_v4()));

@@ -147,7 +147,7 @@ export function GenerationForm({ category, onNotice, onBrowseModels }: { categor
 
   async function refreshModels() {
     const request = ++runtimeRevision.current;
-    const [library, refreshedRuntime] = await Promise.all([api.modelLibrary(), modelId ? api.studioRuntime(modelId) : Promise.resolve(null)]);
+    const [library, refreshedRuntime] = await Promise.all([api.modelLibrary({ fresh: true }), modelId ? api.studioRuntime(modelId) : Promise.resolve(null)]);
     const candidates = library.models.filter(model => model.category === category);
     setModels(candidates);
     setModelId(current => selectStudioModel(candidates, category, current));

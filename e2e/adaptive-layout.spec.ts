@@ -1,5 +1,44 @@
 import { expect, test } from '@playwright/test';
 
+for (const viewport of [{ width: 1100, height: 760 }, { width: 1920, height: 1080 }]) {
+  test(`picker hover follows the pointer and workspace tabs have four borders at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Models', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Search models' }).fill('DuoCore');
+    const select = page.getByRole('combobox', { name: 'Memory mode for DuoCore', exact: true });
+    await select.click();
+    const echo = select.getByRole('option', { name: 'ECHO', exact: true });
+    const native = select.getByRole('option', { name: 'Native', exact: true });
+    const hover = async (option: typeof echo) => {
+      const rect = (await option.boundingBox())!;
+      await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      await expect.poll(() => option.evaluate(element => element.matches(':hover'))).toBe(true);
+      return option.evaluate(element => getComputedStyle(element).boxShadow);
+    };
+    expect(await hover(echo)).not.toBe('none');
+    const nativeStroke = await hover(native);
+    expect(nativeStroke).not.toBe('none');
+    expect(await echo.evaluate(element => element.matches(':hover'))).toBe(false);
+    expect(await echo.evaluate(element => getComputedStyle(element).boxShadow)).toBe('none');
+    await select.press('Escape');
+    await expect(select).toHaveValue('echo');
+    await page.getByRole('button', { name: 'Workspace', exact: true }).click();
+    for (const name of ['Files', 'Browser', 'Computer', 'Side chat']) {
+      const tab = page.getByRole('tab', { name, exact: true });
+      await tab.click();
+      const stroke = await tab.evaluate(element => {
+        const style = getComputedStyle(element);
+        return ['Top', 'Right', 'Bottom', 'Left'].map(edge => ({
+          width: style.getPropertyValue(`border-${edge.toLowerCase()}-width`),
+          color: style.getPropertyValue(`border-${edge.toLowerCase()}-color`),
+        }));
+      });
+      expect(stroke.every(edge => edge.width === '1px' && edge.color === stroke[0].color && edge.color !== 'rgba(0, 0, 0, 0)')).toBe(true);
+    }
+  });
+}
+
 test('live resizing scales text and controls, keeps preferences and fills Jobs', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/');

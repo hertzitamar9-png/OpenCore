@@ -1246,7 +1246,10 @@ fn an_unfinished_live_transaction_is_busy_and_source_bytes_are_preserved() {
         }
     }).collect::<Vec<_>>();
     let before = read_sources();
-    assert_eq!(import_file(fixture.store(), &source, "hermes").unwrap_err(), BUSY_CHAT_DATABASE);
+    let error = import_file(fixture.store(), &source, "hermes").unwrap_err();
+    assert!(error.contains(BUSY_CHAT_DATABASE), "{error}");
+    assert!(error.contains(&source.display().to_string()), "{error}");
+    assert!(error.contains("os error 33") || error.contains("os error 32"), "{error}");
     assert!(fixture.store().list_conversations(None).unwrap().is_empty());
     assert_eq!(before, read_sources());
     writer.execute_batch("ROLLBACK;").unwrap();
@@ -1377,7 +1380,7 @@ fn live_writer_and_same_size_wal_checkpoint_reuse_never_imports_mixed_generation
                 .all(|row| row.content == item.title));
         }
         Err(error) => {
-            assert_eq!(error, BUSY_CHAT_DATABASE);
+            assert!(error.contains(BUSY_CHAT_DATABASE), "{error}");
             assert!(fixture.store().list_conversations(None).unwrap().is_empty());
         }
     }
@@ -1395,6 +1398,19 @@ fn sqlite_import_without_supported_writer_exclusion_rejects_and_leaves_source_un
         .contains("JSON/JSONL export on this platform"));
     assert_eq!(fs::read(&source).unwrap(), before);
     assert!(fixture.store().list_conversations(None).unwrap().is_empty());
+}
+
+#[test]
+fn schema_errors_identify_only_the_selected_history_source() {
+    let db = Connection::open_in_memory().unwrap();
+    db.execute_batch("CREATE TABLE invalid(data TEXT); CREATE VIEW projected AS SELECT data FROM invalid;").unwrap();
+    for (source, other) in [("Hermes", "OpenCode"), ("OpenCode", "Hermes")] {
+        for (table, cause) in [("missing", "missing missing"), ("projected", "ordinary source tables"), ("invalid", "missing required columns")] {
+            let error = table_columns(&db, source, table, &["id"]).unwrap_err();
+            assert!(error.contains(source) && error.contains(cause), "{error}");
+            assert!(!error.contains(other), "{error}");
+        }
+    }
 }
 
 #[test]
