@@ -684,3 +684,90 @@ it("captures and controls a running app without an Allow step or grant request",
   await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 10, x: 480, y: 270, directControl: true }));
   expect(grant).not.toHaveBeenCalled();
 });
+
+it("starts with direct input after upgrading an old background-only preference", async () => {
+  desktop();
+  localStorage.setItem("opencore.computer.control-mode", "background");
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  expect(screen.getByLabelText("Computer control mode")).toHaveValue("direct");
+});
+
+it("offers direct input for a non-editable background point and preserves the draft", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "interact") return { editable: true, value: "", inputMode: "accessibility" } as never;
+    if (action === "set_at") throw new Error("This point is not an editable control");
+    return { updated: true, submitted: false, inputMode: "pointer" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const input = screen.getByLabelText("Type in selected window");
+  await waitFor(() => expect(input).toBeEnabled());
+  fireEvent.change(input, { target: { value: "hi my" } });
+  fireEvent.click(await screen.findByRole("button", { name: "Switch to Direct control" }));
+  expect(input).toHaveValue("hi my");
+  await screen.findByAltText("Selected Windows app");
+  fireEvent.click(screen.getByRole("button", { name: "Apply text to selected window" }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("commit_text", {
+    windowId: 10, x: 480, y: 270, text: "hi my", submit: false, directControl: true,
+  }));
+});
+
+it("sends a preview drag once without an extra click", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { dragged: true, inputMode: "pointer" } as never;
+  });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.mouseDown(image, { button: 0, clientX: 220, clientY: 107.5 });
+  fireEvent.mouseUp(image, { button: 0, clientX: 340, clientY: 175 });
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("drag", {
+    windowId: 10, x: 240, y: 135, toX: 480, toY: 270, directControl: true,
+  }));
+  expect(command.mock.calls.filter(([action]) => action === "click")).toHaveLength(0);
+});
+
+it("sends keyboard navigation to the selected desktop point without editable metadata", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { activated: true, inputMode: "pointer", key: args.key } as never;
+  });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(0); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(screen.getByLabelText("Type in selected window")).toBeEnabled());
+  fireEvent.change(screen.getByLabelText("Keyboard key"), { target: { value: "Tab" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send key to selected window" }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("key", {
+    windowId: 0, x: 960, y: 540, key: "Tab", directControl: true,
+  }));
+});
+
+it("scrolls the actual-size app preview with direct input and reserves Shift for panning", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { scrolled: true, inputMode: "pointer" } as never;
+  });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(screen.getByRole("button", { name: "Actual size" }));
+  fireEvent.wheel(image, { clientX: 220, clientY: 107.5, deltaY: -120 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("scroll_at", {
+    windowId: 10, x: 240, y: 135, direction: "up", directControl: true,
+  }));
+  await waitFor(() => expect(screen.getByLabelText("Computer control mode")).toBeEnabled());
+  const before = command.mock.calls.filter(([action]) => action === "scroll_at").length;
+  fireEvent.wheel(image, { clientX: 220, clientY: 107.5, deltaY: -120, shiftKey: true });
+  expect(command.mock.calls.filter(([action]) => action === "scroll_at")).toHaveLength(before);
+});

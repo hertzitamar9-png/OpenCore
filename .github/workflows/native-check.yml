@@ -167,7 +167,7 @@ jobs:
         shell: pwsh
         run: |
           $previewConfig = Join-Path $env:RUNNER_TEMP 'opencore-preview.json'
-          [IO.File]::WriteAllText($previewConfig, '{"version":"0.2.143-preview.4","bundle":{"createUpdaterArtifacts":false}}', [Text.UTF8Encoding]::new($false))
+          [IO.File]::WriteAllText($previewConfig, '{"version":"0.2.143-preview.5","bundle":{"createUpdaterArtifacts":false}}', [Text.UTF8Encoding]::new($false))
           npm run tauri -- build --bundles nsis --config $previewConfig
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4

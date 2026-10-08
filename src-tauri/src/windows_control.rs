@@ -706,7 +706,97 @@ mod platform {
         Ok(json!({"dragged":true,"inputMode":"pointer","foregroundReturned":previous != hwnd}))
     }
 
-    fn foreground_type(window_id: isize, point: &Point, text: &str, allowed: bool, submit: bool) -> Result<Value, String> {
+    type InputAuthorization<'a> = Option<(&'a crate::store::EventStore, &'a crate::computer_access::WindowIdentity)>;
+
+    fn check_input_authorization(authorization: InputAuthorization<'_>) -> Result<(), String> {
+        if let Some((store, target)) = authorization { crate::computer_access::recheck_window(store, target)?; }
+        Ok(())
+    }
+
+    fn send_literal_text(hwnd: windows::Win32::Foundation::HWND, text: &str, authorization: InputAuthorization<'_>) -> Result<(), String> {
+        use windows::Win32::UI::Input::KeyboardAndMouse::{SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY};
+        use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+        // Literal text must not be translated into layout-dependent virtual keys.
+        // Windows text services can collapse rapid VK_PACKET messages to the
+        // latest character. Pace complete Unicode characters, including both
+        // surrogate units, and recheck Stop before each dispatch.
+        for character in text.chars() {
+            check_input_authorization(authorization)?;
+            let mut units = [0; 2];
+            let inputs: Vec<INPUT> = character.encode_utf16(&mut units).iter().flat_map(|unit| {
+            [KEYEVENTF_UNICODE, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP].map(|flags| INPUT {
+                r#type: INPUT_KEYBOARD,
+                Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: VIRTUAL_KEY(0), wScan: *unit,
+                    dwFlags: flags, time: 0, dwExtraInfo: 0 } },
+            })
+        }).collect();
+            if unsafe { GetForegroundWindow() } != hwnd {
+                return Err("The selected app lost keyboard focus; text entry stopped. Check the field before retrying.".into());
+            }
+            let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) } as usize;
+            if sent != inputs.len() {
+                return Err("Windows did not accept all text input. Check the field before retrying.".into());
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        // SendInput queues events; retain the target's focus while its UI drains
+        // the final batch, before returning to OpenCore.
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        if unsafe { GetForegroundWindow() } != hwnd {
+            return Err("The selected app lost keyboard focus; text entry stopped. Check the field before retrying.".into());
+        }
+        Ok(())
+    }
+
+    fn foreground_key(window_id: isize, key: &str) -> Result<Value, String> {
+        use windows::Win32::Foundation::HWND;
+        use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE};
+        let hwnd = HWND(window_id as *mut std::ffi::c_void);
+        let previous = unsafe { GetForegroundWindow() };
+        unsafe {
+            if IsIconic(hwnd).as_bool() { let _ = ShowWindow(hwnd, SW_RESTORE); }
+            let _ = SetForegroundWindow(hwnd);
+        }
+        if unsafe { GetForegroundWindow() } != hwnd { return Err("The selected app did not receive keyboard focus".into()); }
+        let sequence = if key == "Ctrl+L" { "{ctrl}l".to_string() } else { format!("{{{}}}", key.to_lowercase()) };
+        let result = Keyboard::new().send_keys(&sequence).map_err(|error| error.to_string());
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        if previous != hwnd && !previous.0.is_null() && unsafe { GetForegroundWindow() } == hwnd {
+            unsafe { let _ = SetForegroundWindow(previous); }
+        }
+        result?;
+        Ok(json!({"key":key,"inputMode":"pointer","foregroundReturned":previous != hwnd}))
+    }
+
+    // Direct input addresses the physical window even when an app exposes no
+    // accessibility tree or editable/scrollable control patterns.
+    fn direct_action(action: &str, args: &Value) -> Result<Value, String> {
+        let id = args["windowId"].as_i64().ok_or("Select an application window first")? as isize;
+        if action == "key" { return foreground_key(id, args["key"].as_str().unwrap_or("Escape")); }
+        let rect = crate::desktop_capture::physical_window_rect(id)?;
+        let point = |x: &str, y: &str| -> Result<Point,String> {
+            let x = args[x].as_f64().ok_or("A pointer position is required")?;
+            let y = args[y].as_f64().ok_or("A pointer position is required")?;
+            if x < 0.0 || y < 0.0 || x >= (rect.right - rect.left) as f64 || y >= (rect.bottom - rect.top) as f64 {
+                return Err("The pointer position is outside the selected app. Refresh its capture and try again.".into());
+            }
+            Ok(Point::new(rect.left + x.round() as i32, rect.top + y.round() as i32))
+        };
+        let at = point("x", "y")?;
+        match action {
+            "click" => foreground_pointer(id, &at, true, None,
+                if args["button"] == "right" { "right" } else if args["clickCount"] == 2 { "double" } else { "left" }),
+            "scroll_at" => {
+                let result = foreground_pointer(id, &at, true, args["direction"].as_str(), "left")?;
+                Ok(json!({"scrolled":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}))
+            }
+            "drag" => foreground_drag(id, &at, &point("toX", "toY")?),
+            "commit_text" => foreground_type(id, &at, args["text"].as_str().unwrap_or_default(), true, args["submit"].as_bool().unwrap_or(false)),
+            _ => Err("Unsupported direct input action".into()),
+        }
+    }
+
+    fn foreground_type(window_id: isize, point: &Point, text: &str, allowed: bool, submit: bool, authorization: InputAuthorization<'_>) -> Result<Value, String> {
         if !allowed { return Err("Turn off Keep my window in front to type into this control.".into()); }
         use windows::Win32::Foundation::{HWND, POINT};
         use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetForegroundWindow, GetWindowLongW, IsIconic, SetCursorPos, SetForegroundWindow, SetWindowPos, ShowWindow, WindowFromPoint, GA_ROOT, GWL_EXSTYLE, HWND_NOTOPMOST, HWND_TOP, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SW_RESTORE, WS_EX_TOPMOST};
@@ -725,10 +815,14 @@ mod platform {
             if hit != hwnd { return Err("Another window still covers the selected text control".into()); }
             mouse.click(point).map_err(|error| error.to_string())?;
             if unsafe { GetForegroundWindow() } != hwnd { return Err("The selected app did not receive keyboard focus".into()); }
-            let keyboard = Keyboard::new().interval(1);
+            check_input_authorization(authorization)?;
+            let keyboard = Keyboard::new();
             keyboard.send_keys("{ctrl}a").map_err(|error| error.to_string())?;
-            keyboard.send_text(text).map_err(|error| error.to_string())?;
-            if submit { keyboard.send_keys("{enter}").map_err(|error| error.to_string())?; }
+            send_literal_text(hwnd, text, authorization)?;
+            if submit {
+                check_input_authorization(authorization)?;
+                keyboard.send_keys("{enter}").map_err(|error| error.to_string())?;
+            }
             Ok::<_, String>(())
         })();
         if let Some(cursor) = cursor {
@@ -737,7 +831,7 @@ mod platform {
         if !was_topmost {
             unsafe { let _ = SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE); }
         }
-        if previous != hwnd && !previous.0.is_null() {
+        if previous != hwnd && !previous.0.is_null() && unsafe { GetForegroundWindow() } == hwnd {
             unsafe {
                 let _ = SetWindowPos(previous, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                 let _ = SetForegroundWindow(previous);
@@ -822,6 +916,10 @@ mod platform {
     }
 
     pub(super) fn run(action: &str, args: &Value) -> Result<Value, String> {
+        run_checked(action, args, None)
+    }
+
+    pub(super) fn run_checked(action: &str, args: &Value, authorization: InputAuthorization<'_>) -> Result<Value, String> {
         // Keep the policy at the native boundary too, including callers that do
         // not enter through the asynchronous Tauri command.
         validate_action(action, args)?;
@@ -834,7 +932,7 @@ mod platform {
             Some((unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() },
                 super::cursor_position().ok_or("Cannot verify the desktop cursor for background interaction")?))
         } else { None };
-        let result = run_action(action, args);
+        let result = run_action(action, args, authorization);
         // Desktop changes can come from the user or the provider. A successful
         // side effect must stay successful so it is not accidentally repeated.
         // Annotate the uncertainty without restoring focus or cursor position.
@@ -846,8 +944,12 @@ mod platform {
         result
     }
 
-    fn run_action(action: &str, args: &Value) -> Result<Value, String> {
+    fn run_action(action: &str, args: &Value, authorization: InputAuthorization<'_>) -> Result<Value, String> {
         let _dpi = crate::desktop_capture::PhysicalDpiScope::new()?;
+        if args["directControl"].as_bool() == Some(true) && foreground_fallback_allowed(args)
+            && matches!(action, "click" | "drag" | "scroll_at" | "commit_text" | "key") {
+            return direct_action(action, args);
+        }
         let session = automation_session(!foreground_fallback_allowed(args))?;
         let automation = &session.automation;
         if action == "list" {
@@ -930,7 +1032,7 @@ mod platform {
             }
             "commit_text" if foreground_fallback_allowed(args) => {
                 let point = window_point(&window, args)?;
-                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), true, args["submit"].as_bool().unwrap_or(true))
+                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), true, args["submit"].as_bool().unwrap_or(true), authorization)
             }
             "interact" | "set_at" | "commit_enter" | "commit_text" => {
                 use uiautomation::patterns::{UIExpandCollapsePattern, UIInvokePattern, UISelectionItemPattern, UITogglePattern, UIValuePattern};
@@ -977,7 +1079,7 @@ mod platform {
                             if GetForegroundWindow() != hwnd { return Err("Windows did not allow this app to move to the foreground".into()); }
                         }
                         element.set_focus().map_err(|e| format!("Could not focus the control: {e}"))?;
-                        Keyboard::new().interval(1).send_keys("{enter}").map_err(|e| e.to_string())?;
+                        Keyboard::new().send_keys("{enter}").map_err(|e| e.to_string())?;
                         return Ok(json!({"submitted":true}));
                     }
                 }
@@ -1024,7 +1126,7 @@ mod platform {
             }
             "type" => {
                 if id != 0 { window.set_focus().map_err(|e| format!("Could not focus the selected window: {e}"))?; }
-                Keyboard::new().interval(1).send_text(args["text"].as_str().unwrap_or_default()).map_err(|e| e.to_string())?;
+                send_literal_text(windows::Win32::Foundation::HWND(id as *mut std::ffi::c_void), args["text"].as_str().unwrap_or_default(), authorization)?;
                 Ok(json!({"typed":args["text"].as_str().unwrap_or_default().chars().count()}))
             }
             "navigate_url" => {
@@ -1032,9 +1134,9 @@ mod platform {
                     return Err("Select a Google Chrome window for navigate_url".into());
                 }
                 window.set_focus().map_err(|e| format!("Could not focus Chrome: {e}"))?;
-                let keyboard = Keyboard::new().interval(1);
+                let keyboard = Keyboard::new();
                 keyboard.send_keys("{ctrl}l").map_err(|e| e.to_string())?;
-                keyboard.send_text(args["url"].as_str().unwrap_or_default()).map_err(|e| e.to_string())?;
+                send_literal_text(windows::Win32::Foundation::HWND(id as *mut std::ffi::c_void), args["url"].as_str().unwrap_or_default(), authorization)?;
                 keyboard.send_keys("{enter}").map_err(|e| e.to_string())?;
                 Ok(json!({"windowId":id,"requestedUrl":args["url"],"submitted":true,"verified":false}))
             }
@@ -1044,7 +1146,7 @@ mod platform {
                     if args["direction"] == "up" { "PageUp" } else { "PageDown" }
                 } else { args["key"].as_str().unwrap_or("Escape") };
                 let sequence = if key == "Ctrl+L" { "{ctrl}l".to_string() } else { format!("{{{}}}", key.to_lowercase()) };
-                Keyboard::new().interval(1).send_keys(&sequence).map_err(|e| e.to_string())?;
+                Keyboard::new().send_keys(&sequence).map_err(|e| e.to_string())?;
                 Ok(json!({"key":key}))
             }
             _ => Err("Unsupported desktop action".into()),
@@ -1146,10 +1248,10 @@ pub(crate) async fn manual_preview(action: &str, store: std::sync::Arc<crate::st
 
 /// A physical desktop action, resolved to an actual application before input.
 pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
-    if !matches!(action.as_str(), "click" | "scroll_at" | "commit_text") || args["windowId"].as_i64() != Some(0) {
+    crate::computer_access::load(&store)?.require_enabled()?;
+    if !matches!(action.as_str(), "click" | "scroll_at" | "commit_text" | "drag" | "key") || args["windowId"].as_i64() != Some(0) {
         return Err("Unsupported manual desktop action".into());
     }
-    crate::computer_access::load(&store)?.require_enabled()?;
     #[cfg(windows)] {
         let point_args = args.clone();
         let target = tokio::task::spawn_blocking(move || platform::desktop_target(&point_args))
@@ -1163,6 +1265,10 @@ pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::
         let policy = crate::computer_access::load(&store)?;
         policy.require_enabled()?;
         policy.authorize(&identity.path)?;
+        if action == "drag" {
+            args["toX"] = json!(target["x"].as_f64().unwrap_or_default() + args["toX"].as_f64().unwrap_or(-1.0) - args["x"].as_f64().unwrap_or_default());
+            args["toY"] = json!(target["y"].as_f64().unwrap_or_default() + args["toY"].as_f64().unwrap_or(-1.0) - args["y"].as_f64().unwrap_or_default());
+        }
         args["windowId"] = json!(id);
         args["x"] = target["x"].clone();
         args["y"] = target["y"].clone();
@@ -1175,7 +1281,7 @@ pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::
 }
 
 pub(crate) async fn command_authorized(action: String, args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
-    if args["windowId"].as_i64() == Some(0) && matches!(action.as_str(), "click" | "scroll_at" | "commit_text") {
+    if args["windowId"].as_i64() == Some(0) && matches!(action.as_str(), "click" | "scroll_at" | "commit_text" | "drag" | "key") {
         if !foreground_fallback_allowed(&args) {
             return Err("Whole-desktop input needs Direct control. Background mode can control supported app windows.".into());
         }
@@ -1208,7 +1314,7 @@ pub(crate) async fn command_authorized(action: String, args: Value, store: std::
                 let expected = expected.clone();
                 tokio::task::spawn_blocking(move || {
                     crate::computer_access::recheck_window(&store, &expected)?;
-                    platform::run(&action, &args)
+                    platform::run_checked(&action, &args, Some((&store, &expected)))
                 }).await.map_err(|e| e.to_string())?
             }
         };
@@ -1293,6 +1399,11 @@ mod tests {
         assert!(manual_preview("click", store.clone()).await.unwrap_err().contains("cannot send input"));
         assert!(manual_desktop("click".into(), json!({"windowId":0,"x":10,"y":10}), store.clone())
             .await.unwrap_err().contains("disabled"));
+        for action in ["drag", "key"] {
+            let error = manual_desktop(action.into(), json!({"windowId":0,"x":10,"y":10,
+                "toX":20,"toY":20,"key":"Tab"}), store.clone()).await.unwrap_err();
+            assert!(error.contains("disabled"), "{action} must reach the Stop gate: {error}");
+        }
         assert!(crate::computer_access::check_window(&store, 0).unwrap_err().contains("disabled"));
         drop(store);
         std::fs::remove_file(path).unwrap();

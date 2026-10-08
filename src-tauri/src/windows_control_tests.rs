@@ -812,7 +812,7 @@ fn verify_authorized_background_controls(fixture: &Fixture, button: &Value) {
         assert_eq!(listed["computerUseEnabled"], false);
         assert!(listed["windows"].as_array().unwrap().is_empty());
         assert!(super::command_authorized("interact".into(), button.clone(), store.clone()).await.unwrap_err().contains("disabled"));
-        computer_access::save(&store, Policy { enabled: true, ..Policy::default() }).unwrap();
+        computer_access::save(&store, Policy { enabled: true, ..computer_access::load(&store).unwrap() }).unwrap();
         assert!(super::command_authorized("inspect".into(), button.clone(), store.clone()).await.is_ok());
         let listed = super::command_authorized("list".into(), json!({}), store.clone()).await.unwrap();
         let windows = listed["windows"].as_array().unwrap();

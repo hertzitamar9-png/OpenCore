@@ -27,6 +27,8 @@ type PendingEdit = { context: Context; at: Point; text: string };
 type PermissionWindow = api.DesktopWindow & { executablePath?: string };
 const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false, manualControl: true };
 const DESKTOP_VIEW_ONLY = "Entire desktop is view only. Select an app window to control it.";
+const CONTROL_MODE_SETTING = "opencore.computer.control-mode-v2";
+const KEYBOARD_KEYS = ["Enter", "Tab", "Escape", "Backspace", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown"];
 
 function requireBackgroundInput(result: BackgroundResult) {
   if (result.inputMode && !["accessibility", "window-message"].includes(result.inputMode)) {
@@ -37,7 +39,7 @@ function requireBackgroundInput(result: BackgroundResult) {
 export function DesktopPanel({ onClose, embedded = false, active = true, onExpandedChange, initialMode }: Props) {
   const [mode, setMode] = useState<"direct" | "background">(() => {
     if (initialMode) return initialMode;
-    try { if (localStorage.getItem("opencore.computer.control-mode") === "background") return "background"; } catch { /* Session-only mode. */ }
+    try { if (localStorage.getItem(CONTROL_MODE_SETTING) === "background") return "background"; } catch { /* Session-only mode. */ }
     return "direct";
   });
   const [windows, setWindows] = useState<PermissionWindow[]>([]);
@@ -49,6 +51,7 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
   const [typing, setTyping] = useState("");
   const [busy, setBusy] = useState(false);
   const [clickStyle, setClickStyle] = useState<"left" | "right" | "double">("left");
+  const [keyboardKey, setKeyboardKey] = useState("Enter");
   const [capturing, setCapturing] = useState(false);
   const [captureUnavailable, setCaptureUnavailable] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -71,6 +74,10 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
   const shotRef = useRef(shot);
   const typingRef = useRef<HTMLInputElement>(null);
   const expandButton = useRef<HTMLButtonElement>(null);
+  const captureImage = useRef<HTMLImageElement>(null);
+  const wheelHandler = useRef<(event: WheelEvent<HTMLImageElement>) => void>(() => {});
+  const dragStart = useRef<{ target: Context; at: Point; clientX: number; clientY: number } | null>(null);
+  const suppressClick = useRef(false);
   activeRef.current = active;
   modeRef.current = mode;
   shotRef.current = shot;
@@ -87,7 +94,7 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
   }, []);
   const report = useCallback((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
-    const needsDirectControl = modeRef.current === "background" && /(?:does not (?:expose|support) background|no accessible control|foreground (?:pointer|input).*disabled)/i.test(message);
+    const needsDirectControl = modeRef.current === "background" && /(?:does not (?:expose|support) background|no accessible control|not an editable control|foreground (?:pointer|input).*disabled)/i.test(message);
     setFeedback({ error: true, needsDirectControl, message: needsDirectControl
       ? "This control needs Direct control. The app will come forward briefly for input." : message });
   }, []);
@@ -99,6 +106,8 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
   };
   const select = useCallback((id: number | null) => {
     cancelPending();
+    dragStart.current = null;
+    suppressClick.current = false;
     selection.current = { windowId: id, revision: selection.current.revision + 1 };
     captureSequence.current += 1;
     controlBusy.current = false;
@@ -298,8 +307,35 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
     const captured = browserPoint(event.clientX, event.clientY, rect.left, rect.top, rect.width, rect.height, shot.bounds.width, shot.bounds.height);
     return { x: captured.x + (shot.origin?.x ?? 0), y: captured.y + (shot.origin?.y ?? 0) };
   };
+  const beginDrag = (event: MouseEvent<HTMLImageElement>) => {
+    suppressClick.current = false;
+    dragStart.current = null;
+    if (mode !== "direct" || clickStyle !== "left" || event.button !== 0 || busy || captureUnavailable) return;
+    const at = point(event);
+    if (at) dragStart.current = { target: context(), at, clientX: event.clientX, clientY: event.clientY };
+  };
+  const endDrag = (event: MouseEvent<HTMLImageElement>) => {
+    const start = dragStart.current;
+    dragStart.current = null;
+    if (!start || !current(start.target) || Math.hypot(event.clientX - start.clientX, event.clientY - start.clientY) < 4) return;
+    const end = point(event);
+    if (!end) return;
+    suppressClick.current = true;
+    void control<BackgroundResult & { dragged?: boolean }>("drag", { ...start.at, toX: end.x, toY: end.y }, (result, target) => {
+      if (!result.dragged) throw new Error(result.message || "The app did not accept the drag.");
+      setEditor({ windowId: target.windowId!, at: start.at, native: true });
+      completed(result, "Drag sent.");
+    });
+  };
+  const sendKey = () => {
+    if (!editor || mode !== "direct") return;
+    void control<BackgroundResult & { key?: string }>("key", { ...editor.at, key: keyboardKey }, result => {
+      if (!result.key) throw new Error(result.message || "The app did not accept the key.");
+      completed(result, `${keyboardKey} sent.`);
+    });
+  };
   const scroll = (event: WheelEvent<HTMLImageElement>) => {
-    if (size === "actual" || event.deltaY === 0) return;
+    if (event.deltaY === 0 || (size === "actual" && (mode === "background" || event.shiftKey))) return;
     event.preventDefault();
     const at = point(event);
     if (!at) return;
@@ -308,6 +344,14 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
       completed(result, mode === "direct" || result.backgroundVerified === false ? "App scrolled." : "App scrolled in the background.");
     });
   };
+  wheelHandler.current = scroll;
+  useEffect(() => {
+    const image = captureImage.current;
+    if (!image || !active) return;
+    const listener = (event: globalThis.WheelEvent) => wheelHandler.current(event as unknown as WheelEvent<HTMLImageElement>);
+    image.addEventListener("wheel", listener, { passive: false });
+    return () => image.removeEventListener("wheel", listener);
+  }, [Boolean(shot), active]);
 
   const setAccess = async (nextEnabled: boolean) => {
     const version = ++accessVersion.current;
@@ -326,7 +370,7 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
     const draft = localDraft.current;
     modeRef.current = nextMode;
     setMode(nextMode);
-    try { localStorage.setItem("opencore.computer.control-mode", nextMode); } catch { /* Session-only mode. */ }
+    try { localStorage.setItem(CONTROL_MODE_SETTING, nextMode); } catch { /* Session-only mode. */ }
     select(windowId);
     updates.current = Promise.resolve();
     if (draft && draft.windowId === windowId) {
@@ -354,15 +398,15 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
       <button type="button" title="Refresh capture" aria-label="Refresh capture" disabled={capturing || !active} onClick={() => void refresh(true, true)}><RefreshCw size={15} className={capturing ? "desktop-refreshing" : undefined} aria-hidden="true" /></button>
       <div className="desktop-size-controls" role="group" aria-label="Capture size">
         <button type="button" title="Fit capture; the wheel scrolls supported app controls" aria-pressed={size === "fit"} onClick={() => setSize("fit")}>Fit</button>
-        <button type="button" title="Show actual size; scroll to pan the capture" aria-pressed={size === "actual"} onClick={() => setSize("actual")}>Actual size</button>
+        <button type="button" title={mode === "direct" ? "Show actual size; Shift + wheel pans the capture" : "Show actual size; scroll to pan the capture"} aria-pressed={size === "actual"} onClick={() => setSize("actual")}>Actual size</button>
       </div>
       {mode === "direct" ? <ThemedSelect aria-label="Mouse action" value={clickStyle} disabled={busy} onChange={event => setClickStyle(event.target.value as "left" | "right" | "double")}><option value="left">Click</option><option value="right">Right click</option><option value="double">Double click</option></ThemedSelect> : null}
       <button ref={expandButton} type="button" className="desktop-expand" title={expanded ? "Restore computer view (Escape)" : "Fill the OpenCore window"} aria-label={expanded ? "Restore computer view" : "Expand computer view"} aria-expanded={expanded} disabled={!active} onClick={() => setExpanded(value => !value)}>{expanded ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}<span>{expanded ? "Restore" : "Expand"}</span></button>
     </div>
     <div className="desktop-control-status"><ShieldCheck size={14} aria-hidden="true" /><ThemedSelect aria-label="Computer control mode" value={mode} disabled={busy} onChange={event => changeMode(event.target.value as "direct" | "background")}><option value="direct">Direct control</option><option value="background">Keep OpenCore in front</option></ThemedSelect><span>{windowId === 0 && mode === "background" ? "View only" : busy ? "Applying to app…" : expanded ? "Escape restores the panel" : mode === "direct" ? windowId === 0 ? "Control the visible desktop and taskbar" : "Selected app comes forward briefly" : "Background controls only"}</span></div>
-    <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img src={shot.dataUrl} alt="Selected Windows app" aria-disabled={captureUnavailable} title={captureUnavailable ? "Last captured image. Refresh to resume background controls." : undefined} width={shot.bounds.width} height={shot.bounds.height} draggable={false} onClick={event => { const at = point(event); if (at) void interact(at); }} onWheel={scroll} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{emptyTitle}</strong><p>{emptyHelp}</p></div>}</div>
+    <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img ref={captureImage} src={shot.dataUrl} alt="Selected Windows app" aria-disabled={captureUnavailable} title={captureUnavailable ? "Last captured image. Refresh to resume controls." : mode === "direct" ? "Click, drag, or scroll the app. Shift + wheel pans an actual-size capture." : undefined} width={shot.bounds.width} height={shot.bounds.height} draggable={false} onMouseDown={beginDrag} onMouseUp={endDrag} onMouseLeave={() => { dragStart.current = null; }} onClick={event => { if (suppressClick.current) { suppressClick.current = false; return; } const at = point(event); if (at) void interact(at); }} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{emptyTitle}</strong><p>{emptyHelp}</p></div>}</div>
     {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : feedback.warning ? " desktop-feedback-warning" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.needsDirectControl ? <button type="button" disabled={busy || !active} onClick={() => changeMode("direct")}>Switch to Direct control</button> : null}{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}<button type="button" aria-label="Dismiss computer message" onClick={() => setFeedback(null)}>Dismiss</button></div> : null}
-    <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || busy || !active || captureUnavailable} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active || captureUnavailable} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button></div>
+    <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : mode === "direct" ? "Click anywhere in the app to send text or keys" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || busy || !active || captureUnavailable} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active || captureUnavailable} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button>{mode === "direct" ? <div className="desktop-keyboard"><ThemedSelect aria-label="Keyboard key" value={keyboardKey} disabled={!editor || busy || !active || captureUnavailable} onChange={event => setKeyboardKey(event.target.value)}>{KEYBOARD_KEYS.map(key => <option key={key} value={key}>{key}</option>)}</ThemedSelect><button type="button" aria-label="Send key to selected window" disabled={!editor || busy || !active || captureUnavailable} onClick={sendKey}>Send key</button></div> : null}</div>
   </>;
   const className = `desktop-panel${expanded ? " desktop-panel-expanded" : ""}`;
   return embedded ? <section className={`${className} desktop-panel-embedded`} aria-label="Windows desktop">{content}</section> : <FloatingWindow id="desktop" title="Computer" icon={<AppWindow size={17} />} status={<span className="connected">{mode === "direct" ? "Direct control" : "Background only"}</span>} onClose={onClose} className={className} ariaLabel="Windows desktop" initialWidth={790} initialHeight={720} minWidth={440} minHeight={320}>{content}</FloatingWindow>;
