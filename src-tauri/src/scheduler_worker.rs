@@ -65,6 +65,7 @@ pub struct WorkerResult {
     pub stdout_truncated: bool,
     pub stderr_truncated: bool,
     pub failure_reason: Option<String>,
+    pub output_summary: Option<String>,
 }
 
 fn drain(mut input: impl Read, path: PathBuf) -> Result<bool, String> {
@@ -305,13 +306,15 @@ pub fn run(
     let stdout_truncated = out.join().map_err(|_| "Worker stdout reader failed")??;
     let stderr_truncated = err.join().map_err(|_| "Worker stderr reader failed")??;
     let (exit_code, cancelled) = outcome?;
-    let failure_reason = if cancelled || exit_code == Some(0) { None } else { failure_reason(&log_dir) };
+    let output_summary = failure_reason(&log_dir);
+    let failure_reason = if cancelled || exit_code == Some(0) { None } else { output_summary.clone() };
     Ok(WorkerResult {
         exit_code,
         cancelled,
         stdout_truncated,
         stderr_truncated,
         failure_reason,
+        output_summary,
     })
 }
 
@@ -411,6 +414,18 @@ mod tests {
         assert!(logs["stdout"].as_str().unwrap().contains("real-output"));
         assert!(logs["stderr"].as_str().unwrap().contains("real-error"));
         let _ = std::fs::remove_dir_all(dir);
+    }
+    #[test]
+    fn a_short_successful_worker_retains_output_in_its_result() {
+        let dir=std::env::temp_dir().join(format!("worker-success-{}",uuid::Uuid::new_v4()));
+        let mut worker=config();
+        #[cfg(windows)] {worker.args=vec!["/D".into(),"/C".into(),"echo verification-passed".into()];}
+        #[cfg(not(windows))] {worker.args=vec!["-c".into(),"echo verification-passed".into()];}
+        let result=run(worker,CancellationToken::new(),dir.clone(),String::new(),String::new(),Arc::new(|_|Ok(()))).unwrap();
+        assert_eq!(result.exit_code,Some(0));
+        assert!(result.failure_reason.is_none());
+        assert!(result.output_summary.unwrap().contains("verification-passed"));
+        let _=std::fs::remove_dir_all(dir);
     }
     #[test]
     fn cancellation_stops_an_owned_worker_without_a_success_code() {

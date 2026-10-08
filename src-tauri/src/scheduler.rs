@@ -341,6 +341,9 @@ impl BackgroundManager {
                 if let Err(error) = manager.finish(&run.id, outcome, token.is_cancelled(), closing) {
                     core.store.log("error", "background", &format!("Could not persist background run {}: {error}",run.id));
                 }
+                if matches!(task.task_action, BackgroundAction::Worker { .. }) {
+                    if let Err(error) = manager.record_worker_result(&core.store, &run.id) { core.store.log("warn","background",&error); }
+                }
                 if !admission_wait {
                     if let Err(error)=core.learning.review_finished(&run.evidence,review_outcome) {core.store.log("error","learning-review",&error);}
                 }
@@ -382,13 +385,22 @@ impl BackgroundManager {
                 let manager = self.clone(); let id = run.id.clone();
                 let started = Arc::new(move |pid| manager.set_pid(&id, pid));
                 let result = tokio::task::spawn_blocking(move || scheduler_worker::run(config, token, dir, url, secret, started)).await.map_err(|error| error.to_string())??;
-                Ok(json!({"exitCode":result.exit_code,"cancelled":result.cancelled,"stdoutTruncated":result.stdout_truncated,"stderrTruncated":result.stderr_truncated,"failureReason":result.failure_reason}))
+                Ok(json!({"exitCode":result.exit_code,"cancelled":result.cancelled,"stdoutTruncated":result.stdout_truncated,"stderrTruncated":result.stderr_truncated,"failureReason":result.failure_reason,"outputSummary":result.output_summary}))
             }
         }
     }
     fn set_pid(&self, id: &str, pid: u32) -> Result<(), String> {
         let mut run = self.run(id)?; run.pid = Some(pid);
         save_run(&*self.db.lock().map_err(|error| error.to_string())?, &run)?; self.changed(); Ok(())
+    }
+    fn record_worker_result(&self, store: &crate::store::EventStore, id: &str) -> Result<(), String> {
+        let run = self.run(id)?;
+        if let Some(conversation) = run.conversation_id.as_deref() {
+            let output = run.evidence["result"]["outputSummary"].as_str().unwrap_or("");
+            let content = format!("{} · {}\n{}\n{}",run.task_name,run.status,run.error.as_deref().unwrap_or(""),output);
+            store.add_timeline(conversation,"message","assistant","Background worker",&format!("Job {}",run.status),content.trim(),&json!({"backgroundRunId":id,"backgroundTaskId":run.task_id,"exitCode":run.exit_code}))?;
+        }
+        Ok(())
     }
     fn finish(&self, id: &str, outcome: Result<Value, String>, cancelled: bool, interrupted: bool) -> Result<(), String> {
         let mut run = self.run(id)?;
@@ -454,6 +466,31 @@ impl BackgroundManager {
         save_task(&transaction, &task)?;
         if update { cancel_queued(&transaction, &task.id, "Job definition was edited")?; }
         transaction.commit().map_err(|error| error.to_string())?; drop(db); self.changed(); Ok(task)
+    }
+    /// Only the native Jobs surface may bind a previously standalone job.
+    /// Existing destinations never move, and active workers cannot race a bind.
+    pub(crate) fn assign_chat(&self, id: &str, context: BackgroundContext) -> Result<(), String> {
+        let mut db=self.db.lock().map_err(|error|error.to_string())?;
+        let tx=db.transaction_with_behavior(TransactionBehavior::Immediate).map_err(|error|error.to_string())?;
+        let payload:String=tx.query_row("SELECT payload FROM tasks WHERE id=?1 AND deleted=0",[id],|row|row.get(0)).map_err(|_|"Background job not found")?;
+        let mut task:BackgroundTask=serde_json::from_str(&payload).map_err(|error|error.to_string())?;
+        let conversation=context.request.conversation_id.clone();
+        if let Some(existing)=task.conversation_id.as_deref() {
+            return if existing==conversation {Ok(())} else {Err("This job already has a chat. Every run must continue in that same chat.".into())};
+        }
+        let running:i64=tx.query_row("SELECT COUNT(*) FROM runs WHERE task_id=?1 AND status='running'",[id],|row|row.get(0)).map_err(|error|error.to_string())?;
+        if running>0 {return Err("Wait for the current run to finish before attaching a chat.".into());}
+        task.conversation_id=Some(conversation.clone()); task.context=Some(context); task.revision+=1; task.updated_at=now();
+        save_task(&tx,&task)?;
+        let payloads={let mut statement=tx.prepare("SELECT payload FROM runs WHERE task_id=?1").map_err(|error|error.to_string())?;
+            let values=statement.query_map([id],|row|row.get::<_,String>(0)).map_err(|error|error.to_string())?;
+            values.collect::<Result<Vec<_>,_>>().map_err(|error|error.to_string())?};
+        for payload in payloads {
+            let mut run:BackgroundRun=serde_json::from_str(&payload).map_err(|error|error.to_string())?;
+            run.conversation_id=Some(conversation.clone()); save_run(&tx,&run)?;
+            if run.status=="queued" {tx.execute("UPDATE runs SET task_payload=?2 WHERE id=?1",params![run.id,serde_json::to_string(&task).map_err(|error|error.to_string())?]).map_err(|error|error.to_string())?;}
+        }
+        tx.commit().map_err(|error|error.to_string())?; drop(db); self.changed(); Ok(())
     }
     fn pause(&self, id: &str, paused: bool) -> Result<BackgroundTask, String> {
         let mut task = self.task(id)?; task.paused = paused; task.updated_at = now();
@@ -621,6 +658,39 @@ mod tests {
         drop(manager); let _=std::fs::remove_dir_all(root);
     }
     fn create(manager: &BackgroundManager, schedule: Value) -> BackgroundTask { manager.create_or_update(&json!({"task":{"name":"Scheduled review","conversationId":"chat","schedule":schedule,"taskAction":{"kind":"prompt","prompt":"Review existing evidence"}}}),Some(context("ask-every-time")),false).unwrap() }
+    #[test]
+    fn repeat_runs_and_restart_keep_one_chat_and_the_saved_approval_policy() {
+        let (root,manager)=fixture();
+        let task=create(&manager,json!({"kind":"interval","everySeconds":60}));
+        for _ in 0..2 {
+            let run=manager.run_now(&task.id).unwrap();
+            let (_,captured)=manager.claim(&run.id).unwrap().unwrap();
+            assert_eq!(captured.conversation_id.as_deref(),Some("chat"));
+            assert_eq!(captured.context.unwrap().request.approval_mode.as_str(),"ask-every-time");
+            manager.finish(&run.id,Ok(json!({"conversationId":"chat","title":"Review"})),false,false).unwrap();
+        }
+        drop(manager);
+        let manager=BackgroundManager::new(root.clone()).unwrap();
+        manager.run_now(&task.id).unwrap();
+        let runs=manager.runs(None,20).unwrap();
+        assert_eq!(runs.len(),3);
+        assert!(runs.iter().all(|run|run.conversation_id.as_deref()==Some("chat")));
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn standalone_job_can_be_bound_once_and_queued_runs_get_its_saved_chat() {
+        let (root,manager)=fixture();
+        let task=manager.create_or_update(&json!({"task":{"name":"Worker","schedule":{"kind":"event","name":"verify"},"taskAction":{"kind":"worker","worker":{"command":"unused.exe","cwd":std::env::temp_dir()}}}}),None,false).unwrap();
+        let run=manager.run_now(&task.id).unwrap();
+        manager.assign_chat(&task.id,context("ask-every-time")).unwrap();
+        assert_eq!(manager.run(&run.id).unwrap().conversation_id.as_deref(),Some("chat"));
+        let (_,captured)=manager.claim(&run.id).unwrap().unwrap();
+        assert_eq!(captured.context.unwrap().request.approval_mode.as_str(),"ask-every-time");
+        let mut another=context("allow-all"); another.request.conversation_id="another".into();
+        assert!(manager.assign_chat(&task.id,another).is_err());
+        assert_eq!(manager.task(&task.id).unwrap().conversation_id.as_deref(),Some("chat"));
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
     #[test]
     fn interval_boundaries_coalesce_missed_occurrences_and_are_durable() {
         let (root, manager) = fixture(); let task = create(&manager,json!({"kind":"interval","everySeconds":60,"startAt":"2026-01-01T00:00:00Z"}));

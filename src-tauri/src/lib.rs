@@ -8,6 +8,8 @@ mod scheduler;
 mod scheduler_cron;
 mod scheduler_worker;
 mod background_host;
+mod background_chat;
+mod gateway_service;
 mod computer_access;
 mod runtime_setup;
 mod learning;
@@ -89,6 +91,7 @@ pub struct AppCore {
     speech: speech::SpeechManager,
     store: Arc<EventStore>,
     runtime: Arc<RuntimeManager>,
+    gateway_service: Arc<gateway_service::GatewayService>,
     codex_app_server_pool: codex_app_server::CodexAppServerPool,
     codex_tool_bridges: gateway::CodexToolBridgeMap,
     active_chats: Mutex<HashMap<String, CancellationToken>>,
@@ -414,16 +417,29 @@ fn saved_background_context(core: &AppCore, app: &tauri::AppHandle, conversation
     let mut request: ChatSendRequest = serde_json::from_str(&saved).map_err(|e|e.to_string())?;
     request.files.clear(); request.submission_id = None;
     let profile = core.store.get_setting(&format!("chat_model_{conversation}"))?.unwrap_or_else(||core.runtime.profile());
-    Ok(scheduler::BackgroundContext { request, model_profile: profile, workspace: chat_workspace(core, app, conversation)? })
+    let workspace = chat_workspace(core, app, conversation)?;
+    std::fs::create_dir_all(&workspace).map_err(|error| error.to_string())?;
+    Ok(scheduler::BackgroundContext { request, model_profile: profile, workspace })
 }
 
 #[tauri::command]
-async fn background_command(core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, args: Value) -> Result<Value,String> {
+async fn background_command(webview: tauri::Webview, core: tauri::State<'_, Arc<AppCore>>, app: tauri::AppHandle, mut args: Value) -> Result<Value,String> {
     core.ensure_not_updating()?;
+    if matches!(args["action"].as_str(),Some("create"|"update")) && (args.get("newChat").is_some() || args.get("chatDefaults").is_some()) {
+        computer_access::require_settings_surface(webview.label())?;
+        let new_id = args["newChat"]["id"].as_str().map(|id|format!("background:{id}"));
+        if let Some(id) = new_id.as_ref() { args["conversationId"]=json!(id); args["task"]["conversationId"]=json!(id); }
+        if let Some(id) = args["conversationId"].as_str() {
+            background_chat::prepare(&core.store,id,args["task"]["name"].as_str().unwrap_or("Background job"),&args["chatDefaults"],new_id.is_some())?;
+        }
+    }
     let context = if matches!(args["action"].as_str(),Some("create"|"context"|"update")) {
         args["conversationId"].as_str().filter(|id| !id.trim().is_empty())
             .map(|id| saved_background_context(&core,&app,id)).transpose()?
     } else { None };
+    if args["action"]=="update" && (args.get("newChat").is_some() || args.get("chatDefaults").is_some()) {
+        if let (Some(id),Some(context))=(args["taskId"].as_str(),context.as_ref()) { core.background.assign_chat(id,context.clone())?; }
+    }
     scheduler::execute(core.inner().clone(),app,&args,context).await
 }
 
@@ -665,6 +681,7 @@ async fn get_snapshot(core: tauri::State<'_, Arc<AppCore>>) -> Result<AppSnapsho
     let core = core.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         Ok(AppSnapshot {
+            gateway: core.gateway_service.snapshot(),
             runtime: core.runtime.snapshot(),
             telemetry: core.runtime.telemetry(),
             conversations: core.store.list_conversations(None)?,
@@ -2568,6 +2585,7 @@ pub fn run() {
                 speech: speech::SpeechManager::new_with_update_gate(runtime.install_root().to_path_buf(), app.path().resource_dir()?, update_in_progress.clone()),
                 store: store.clone(),
                 runtime: runtime.clone(),
+                gateway_service: gateway_service::GatewayService::new(store.clone(), 8812),
                 codex_app_server_pool: codex_app_server::CodexAppServerPool::new(),
                 codex_tool_bridges: Arc::new(Mutex::new(HashMap::new())),
                 active_chats: Mutex::new(HashMap::new()),
@@ -2626,6 +2644,7 @@ pub fn run() {
             }
             app.manage(core);
             if let Err(error)=background_host::attach(app.handle()) { store.log("warn","background",&error); }
+            if let Err(error)=background_host::initialize(&store,&std::env::current_exe()?) { store.log("warn","background",&error); }
             let output_core=app.state::<Arc<AppCore>>().inner().clone();
             let output_app=app.handle().clone();
             tauri::async_runtime::spawn_blocking(move || {
@@ -2680,12 +2699,8 @@ pub fn run() {
             let gateway_app = app.handle().clone();
             let gateway_live_runs = app.state::<Arc<AppCore>>().live_generation_runs.clone();
             let gateway_tool_bridges = app.state::<Arc<AppCore>>().codex_tool_bridges.clone();
-            tauri::async_runtime::spawn(async move {
-                if let Err(error) = gateway::serve(GatewayState::new(runtime, gateway_store.clone(),
-                    gateway_app, gateway_live_runs, gateway_tool_bridges), 8812).await {
-                    gateway_store.log("error", "gateway", &error);
-                }
-            });
+            app.state::<Arc<AppCore>>().gateway_service.start(gateway::router(GatewayState::new(
+                runtime, gateway_store, gateway_app, gateway_live_runs, gateway_tool_bridges)));
             let arguments: Vec<String> = std::env::args().collect();
             if let Err(error)=studio_jobs::submit_cli(app.handle(),&arguments) {store.log("error","studio",&error);}
             if let Some(index) = arguments.iter().position(|value| value == "--start-profile") {
@@ -2865,6 +2880,7 @@ pub fn run() {
                             core.runtime_setup.shutdown().await;
                             core.speech.stop_for_update().await;
                             core.background.shutdown().await;
+                            core.gateway_service.shutdown().await;
                             core.learning.shutdown().await;
                             core.studios.shutdown().await;
                             if let Err(error)=core.codex_app_server_pool.shutdown_all().await {

@@ -433,15 +433,10 @@ async fn proxy(State(state): State<GatewayState>, request: Request) -> Response<
     output
 }
 
-pub async fn serve(state: GatewayState, port: u16) -> Result<(), String> {
-    let app = Router::new()
+pub fn router(state: GatewayState) -> Router {
+    Router::new()
         .route("/", any(proxy))
         .route("/{*path}", any(proxy))
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
-        .with_state(state.clone());
-    let listener = tokio::net::TcpListener::bind(("127.0.0.1", port))
-        .await
-        .map_err(|e| format!("Could not bind Control Gateway on {port}: {e}"))?;
-    state.store.log("info", "gateway", &format!("Control Gateway listening on 127.0.0.1:{port}"));
-    axum::serve(listener, app).await.map_err(|e| e.to_string())
+        .with_state(state)
 }

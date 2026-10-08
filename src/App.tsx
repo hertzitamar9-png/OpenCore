@@ -56,6 +56,7 @@ import { AssistantConversation, type ComposerDraft, type ConversationSettings } 
 import { WorkspacePanel, type WorkspacePreview, type WorkspaceTab } from "./WorkspacePanel";
 import { SideChat } from "./SideChat";
 import { BackgroundJobs } from "./BackgroundJobs";
+import { RuntimeAvailability } from './RuntimeAvailability';
 import { LearningStudio } from './LearningStudio';
 import { LearningAssistant } from './LearningAssistant';
 import { SpacesView } from "./SpacesView";
@@ -1241,7 +1242,7 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, block
   const active = ["running", "starting"].includes(snapshot.runtime.status);
   const currentProfile = active && snapshot.runtime.profile !== "stopped" ? snapshot.runtime.profile : selectedProfile;
   return <footer className={`statusbar ${className}`}>
-    <span className="statusbar-state"><StatusDot state={snapshot.runtime.status} />{active ? "Runtime active" : "Runtime stopped"}</span>
+    <RuntimeAvailability runtime={snapshot.runtime} gateway={snapshot.gateway} />
     <span>{snapshot.conversations.length} conversations</span>
     <span>Gateway :{snapshot.runtime.gatewayPort}</span>
     <span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span>
@@ -1718,7 +1719,7 @@ export default function App() {
       : view === 'music' ? <MusicStudio runtimeActive={running} onNotice={setNotice} />
       : view === 'assets' ? <GameDevStudio key={assetCategory} initialCategory={assetCategory} onNotice={setNotice} onBrowseModels={() => setView('models')} />
       : view === 'media' ? <MediaStudio category={mediaCategory} onCategoryChange={setMediaCategory} onNotice={setNotice} />
-      : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} onNotice={setNotice} />
+      : view === 'jobs' ? <BackgroundJobs conversationId={selectedConversation} conversations={snapshot.conversations} chatDefaults={{ modelProfile: selectedProfile, request: { ...parentSettings, conversationId: '', text: '', files: [], skills: defaultSkills } }} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} />
       : view === 'learning' ? <LearningStudio onNotice={setNotice} renderAssistant={(prompt,revision,onConversation,blockedReason)=><LearningAssistant initialPrompt={prompt} promptRevision={revision} onConversation={id=>{setLearningConversationId(id);onConversation(id);}} settings={learningSettings||parentSettings} onSettingsChange={setLearningSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds||[]} inferenceOwner={inferenceOwner} inferenceBlocked={runtimeTransitionReason||blockedReason||(studioActive?'A studio or training worker is using the GPU. The assistant resumes when it releases its checkpoint.':undefined)} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setMainWorkspaceObscured}/>}/>
       : view === 'spaces' ? <SpacesView onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} onOpenFile={openWorkspaceFile} onOpenExternal={async file => { await openWorkspaceFileExternal(file.id); }} />
       : <SupportingView view={view} snapshot={snapshot} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} selectedConversation={selectedConversation} onNotice={setNotice} onRefresh={refresh} onNavigate={setView} appearance={appearance} appearanceStorageError={appearanceStorageError} onAppearanceChange={changeAppearance} platformConfiguration={platform.configuration} />;

@@ -21,6 +21,8 @@ export interface RuntimeSnapshot {
   loadingElapsedMs?: number | null;
 }
 
+export interface GatewaySnapshot { status: string; port: number; restartCount: number; error?: string | null }
+
 export interface TelemetrySnapshot {
   gpuName: string;
   vramUsedMib: number;
@@ -122,6 +124,7 @@ export interface ConnectorInput {
 }
 
 export interface AppSnapshot {
+  gateway?: GatewaySnapshot;
   runtime: RuntimeSnapshot;
   telemetry: TelemetrySnapshot;
   conversations: ConversationSummary[];

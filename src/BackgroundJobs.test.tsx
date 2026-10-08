@@ -91,6 +91,62 @@ it('explains that paused event jobs only run through Run now', async () => {
   expect(screen.getByText('Runs the program below on this computer. Its exit code and output determine success.')).toBeVisible();
 });
 
+it('opens the exact originating chat from a job and from an older run', async () => {
+  const task = { id: 'task-1', name: 'Review', conversationId: 'chat-task', schedule: { kind: 'interval', everySeconds: 600 }, taskAction: { kind: 'prompt', prompt: 'Review logs' }, context: null, paused: false, nextDue: null };
+  const run = { id: 'run-1', taskId: 'deleted-task', taskName: 'Older review', conversationId: 'chat-run', occurrence: 'once', status: 'completed', queuedAt: '2026-10-08T00:00:00Z', startedAt: '2026-10-08T00:00:01Z', finishedAt: '2026-10-08T00:00:03Z', scheduledAt: null, exitCode: null, pid: null, error: null, evidence: {} };
+  vi.mocked(jobs.backgroundCommand).mockResolvedValue({ ...empty, tasks: [task], runs: [run] });
+  const opened: string[] = [];
+  render(<BackgroundJobs onNotice={vi.fn()} onOpenConversation={id => opened.push(id)} />);
+  const links = await screen.findAllByRole('button', { name: 'Open chat' });
+  fireEvent.click(links[0]);
+  fireEvent.click(links[1]);
+  expect(opened).toEqual(['chat-task', 'chat-run']);
+});
+
+it('searches chats by title and saves the selected chat rather than the search text', async () => {
+  const command = vi.mocked(jobs.backgroundCommand);
+  render(<BackgroundJobs onNotice={vi.fn()} conversations={[{ id: 'chat-a', title: 'Alpha project' }, { id: 'chat-b', title: 'Checkpoint review' }]} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'New job' }));
+  fireEvent.change(screen.getByLabelText('Chat destination'), { target: { value: 'existing' } });
+  fireEvent.change(screen.getByLabelText('Search chats'), { target: { value: 'checkpoint' } });
+  expect(screen.queryByRole('option', { name: 'Alpha project' })).toBeNull();
+  fireEvent.change(screen.getByLabelText('Originating chat'), { target: { value: 'chat-b' } });
+  fireEvent.change(screen.getByLabelText('Job name'), { target: { value: 'Review' } });
+  fireEvent.change(screen.getByLabelText('Agent prompt'), { target: { value: 'Review the checkpoint' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save job' }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith(expect.objectContaining({ action: 'create', conversationId: 'chat-b' })));
+});
+
+it('retains one new-chat identity if saving a recurring job needs a retry', async () => {
+  const requests: jobs.BackgroundCommandArgs[] = [];
+  vi.mocked(jobs.backgroundCommand).mockImplementation(async args => {
+    if (args.action === 'create') { requests.push(args); throw new Error('Disk is busy'); }
+    return empty;
+  });
+  render(<BackgroundJobs onNotice={vi.fn()} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'New job' }));
+  expect((screen.getByLabelText('Chat destination') as HTMLSelectElement).value).toBe('new');
+  fireEvent.change(screen.getByLabelText('Job name'), { target: { value: 'Daily review' } });
+  fireEvent.change(screen.getByLabelText('Agent prompt'), { target: { value: 'Review the latest logs' } });
+  fireEvent.change(screen.getByLabelText('Schedule'), { target: { value: 'interval' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save job' }));
+  await screen.findByText('Disk is busy');
+  fireEvent.click(screen.getByRole('button', { name: 'Save job' }));
+  await waitFor(() => expect(requests).toHaveLength(2));
+  expect(requests[0].newChat).toMatchObject({ id: expect.any(String) });
+  expect(requests[1].newChat).toEqual(requests[0].newChat);
+});
+
+it('explains a short standalone worker and shows its actual output', async () => {
+  const run = { id: 'run-1', taskId: 'task-1', taskName: 'Release check', conversationId: null, occurrence: 'manual:1', status: 'completed', queuedAt: '2026-10-08T00:00:00Z', startedAt: '2026-10-08T00:00:01Z', finishedAt: '2026-10-08T00:00:03Z', scheduledAt: null, exitCode: 0, pid: 123, error: null, evidence: { result: { outputSummary: 'stdout: Verification passed' } } };
+  vi.mocked(jobs.backgroundCommand).mockResolvedValue({ ...empty, runs: [run] });
+  render(<BackgroundJobs onNotice={vi.fn()} onOpenConversation={vi.fn()} />);
+  expect(await screen.findByText('Program finished successfully · 2s')).toBeVisible();
+  expect(screen.getByText('stdout: Verification passed')).toBeVisible();
+  expect(screen.getByText(/Standalone program/)).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Open chat' })).toBeNull();
+});
+
 it('rejects a malformed argument array before submitting a worker', async () => {
   const command = vi.spyOn(jobs, 'backgroundCommand').mockResolvedValue(empty);
   render(<BackgroundJobs onNotice={vi.fn()} />);

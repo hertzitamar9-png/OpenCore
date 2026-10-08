@@ -2,6 +2,11 @@ name: Check Windows native changes
 
 on:
   workflow_dispatch:
+    inputs:
+      build_preview:
+        description: Build a private review installer without publishing a release
+        type: boolean
+        default: false
   workflow_call:
 
 permissions:
@@ -9,6 +14,7 @@ permissions:
 
 jobs:
   native:
+    if: ${{ !inputs.build_preview }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,3 +115,64 @@ jobs:
             ~/.cargo/git
             src-tauri/target
           key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}
+
+  recovery-preview:
+    if: ${{ inputs.build_preview }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}
+          restore-keys: windows-native-workspace-v1-
+      - name: Prepare desktop and connector runtimes
+        shell: pwsh
+        run: |
+          ./scripts/build-desktop-focus-guard.ps1
+          npm ci
+          node scripts/prepare-claude-connector.mjs
+          node scripts/prepare-codex-harness.mjs
+      - name: Test frontend
+        run: npm test
+      - name: Test native library
+        working-directory: src-tauri
+        shell: pwsh
+        run: |
+          $runner = @('pwsh', '-NoLogo', '-NoProfile', '-File', (Resolve-Path ../scripts/prepare-windows-rust-test-manifest.ps1).Path) | ConvertTo-Json -Compress
+          $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
+          [IO.File]::WriteAllText($runnerConfig, "[target.x86_64-pc-windows-msvc]`nrunner = $runner`n", [Text.UTF8Encoding]::new($false))
+          cargo --config $runnerConfig test --lib 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'opencore-native-tests.log')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build review installer
+        shell: pwsh
+        run: |
+          $previewConfig = Join-Path $env:RUNNER_TEMP 'opencore-preview.json'
+          [IO.File]::WriteAllText($previewConfig, '{"version":"0.2.143-preview.1","bundle":{"createUpdaterArtifacts":false}}', [Text.UTF8Encoding]::new($false))
+          npm run tauri -- build --bundles nsis --config $previewConfig
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: gateway-jobs-review
+          path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            ${{ runner.temp }}/opencore-native-tests.log
+          retention-days: 3
