@@ -226,6 +226,7 @@ pub fn run(
             stdout_truncated: false,
             stderr_truncated: false,
             failure_reason: None,
+            output_summary: None,
         });
     }
     std::fs::create_dir_all(&log_dir).map_err(|e| e.to_string())?;
@@ -273,6 +274,7 @@ pub fn run(
             stdout_truncated: false,
             stderr_truncated: false,
             failure_reason: None,
+            output_summary: None,
         });
     }
     #[cfg(windows)]

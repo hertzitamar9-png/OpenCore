@@ -5,7 +5,7 @@ import * as jobs from './background-jobs';
 
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => () => {}) }));
 const empty = { tasks: [], runs: [], webhook: { url: 'http://127.0.0.1:4222/background/events', token: 'install-token' }, execution: { appMustBeOpen: true } };
-beforeEach(() => { vi.restoreAllMocks(); vi.spyOn(jobs, 'backgroundCommand').mockResolvedValue(empty); });
+beforeEach(() => { vi.restoreAllMocks(); vi.spyOn(jobs, 'backgroundCommand').mockResolvedValue(empty); vi.spyOn(jobs, 'searchJobChats').mockResolvedValue([]); });
 
 it('states execution conditions and explains the authenticated loopback event', async () => {
   render(<BackgroundJobs onNotice={vi.fn()} />);
@@ -135,6 +135,21 @@ it('retains one new-chat identity if saving a recurring job needs a retry', asyn
   await waitFor(() => expect(requests).toHaveLength(2));
   expect(requests[0].newChat).toMatchObject({ id: expect.any(String) });
   expect(requests[1].newChat).toEqual(requests[0].newChat);
+});
+
+it('finds an older chat outside the recent snapshot using backend search', async () => {
+  const search = vi.mocked(jobs.searchJobChats).mockResolvedValue([{ id: 'older-chat', title: 'Archived checkpoint review' }]);
+  render(<BackgroundJobs onNotice={vi.fn()} conversations={[{ id: 'recent-chat', title: 'Recent chat' }]} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'New job' }));
+  fireEvent.change(screen.getByLabelText('Chat destination'), { target: { value: 'existing' } });
+  fireEvent.change(screen.getByLabelText('Search chats'), { target: { value: 'Archived checkpoint' } });
+  expect(await screen.findByRole('option', { name: 'Archived checkpoint review' })).toBeInTheDocument();
+  expect(search).toHaveBeenCalledWith('Archived checkpoint');
+  fireEvent.change(screen.getByLabelText('Originating chat'), { target: { value: 'older-chat' } });
+  fireEvent.change(screen.getByLabelText('Job name'), { target: { value: 'Review old checkpoint' } });
+  fireEvent.change(screen.getByLabelText('Agent prompt'), { target: { value: 'Review logs' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save job' }));
+  await waitFor(() => expect(jobs.backgroundCommand).toHaveBeenCalledWith(expect.objectContaining({ conversationId: 'older-chat' })));
 });
 
 it('explains a short standalone worker and shows its actual output', async () => {

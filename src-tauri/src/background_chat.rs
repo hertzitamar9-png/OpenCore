@@ -14,8 +14,7 @@ pub fn prepare(
             .strip_prefix("background:")
             .ok_or("Invalid new job chat ID")?;
         uuid::Uuid::parse_str(id).map_err(|_| "Invalid new job chat ID")?;
-    } else if !store.conversation_exists(conversation)?
-    {
+    } else if !store.conversation_exists(conversation)? {
         return Err("The selected chat no longer exists. Choose another chat.".into());
     }
     let key = format!("chat_request_{conversation}");

@@ -44,6 +44,10 @@ export function describeRun(run: BackgroundRun): string {
 }
 
 const emptySnapshot: BackgroundSnapshot = { tasks: [], runs: [], webhook: { url: '', token: null }, execution: { appMustBeOpen: true } };
+export async function searchJobChats(query: string): Promise<{ id: string; title: string }[]> {
+  if (!('__TAURI_INTERNALS__' in window)) return [];
+  return invoke('list_conversations', { query });
+}
 export async function backgroundCommand(args: BackgroundCommandArgs): Promise<unknown> {
   if (!('__TAURI_INTERNALS__' in window)) {
     if (args.action === 'list' || args.action === 'status') return emptySnapshot;

@@ -2,7 +2,7 @@ import { ThemedSelect } from "./ThemedSelect";
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { Clock3, Copy, FileText, MessageSquare, Pause, Play, Plus, RefreshCw, Square, Terminal, Trash2, X } from 'lucide-react';
-import { backgroundCommand, backgroundError, describeRun, describeSchedule, type BackgroundAction, type BackgroundChatDefaults, type BackgroundLogs, type BackgroundRun, type BackgroundSchedule, type BackgroundSnapshot, type BackgroundTask } from './background-jobs';
+import { backgroundCommand, backgroundError, describeRun, describeSchedule, searchJobChats, type BackgroundAction, type BackgroundChatDefaults, type BackgroundLogs, type BackgroundRun, type BackgroundSchedule, type BackgroundSnapshot, type BackgroundTask } from './background-jobs';
 import './BackgroundJobs.css';
 import { BackgroundAgentSettings } from './BackgroundAgentSettings';
 
@@ -64,12 +64,23 @@ const active = (run: BackgroundRun) => run.status === 'queued' || run.status ===
 export function BackgroundJobs({ conversationId, conversations = [], chatDefaults, onNotice, onOpenConversation }: { conversationId?: string; conversations?: { id: string; title: string }[]; chatDefaults?: BackgroundChatDefaults; onNotice: (message: string) => void; onOpenConversation?: (id: string) => void }) {
   const [snapshot, setSnapshot] = useState<BackgroundSnapshot | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [searchedChats, setSearchedChats] = useState<{ query: string; chats: { id: string; title: string }[] }>({ query: '', chats: [] });
   const [error, setError] = useState(''); const [busy, setBusy] = useState(''); const [loading, setLoading] = useState(true);
   const [scope, setScope] = useState<'all' | 'chat'>('all');
   const [selectedRun, setSelectedRun] = useState<string | null>(null); const [logs, setLogs] = useState<BackgroundLogs | null>(null);
   const [webhook, setWebhook] = useState<{ url: string; token: string | null } | null>(null);
   const callback = useRef(onNotice); callback.current = onNotice;
   const saving = useRef(false);
+  const chatQuery = draft?.chatMode === 'existing' && !draft.chatLocked ? draft.chatSearch.trim() : '';
+  useEffect(() => {
+    if (!chatQuery) return;
+    let current = true;
+    const timer = window.setTimeout(() => {
+      void searchJobChats(chatQuery).then(chats => { if (current) setSearchedChats({ query: chatQuery, chats }); })
+        .catch(error => { if (current) setError(backgroundError(error)); });
+    }, 200);
+    return () => { current = false; window.clearTimeout(timer); };
+  }, [chatQuery]);
   const refreshVersion = useRef(0);
   const refresh = useCallback(async () => {
     const version = ++refreshVersion.current;
@@ -123,7 +134,8 @@ export function BackgroundJobs({ conversationId, conversations = [], chatDefault
   const eventExample = JSON.stringify({ id: 'training-1:checkpoint:500', name: 'training.checkpoint', data: { runId: 'training-1', step: 500, path: 'checkpoints/checkpoint-500' } }, null, 2);
   const shellExample = `Invoke-RestMethod -Method Post -Uri '${endpoint?.url ?? ''}' -Headers @{ Authorization = 'Bearer ${endpoint?.token ?? '<token>'}' } -ContentType 'application/json' -Body '${JSON.stringify(JSON.parse(eventExample))}'`;
   const selected = snapshot?.runs.find(run => run.id === selectedRun);
-  const chatOptions = conversations.filter(chat => chat.id === draft?.conversationId || `${chat.title} ${chat.id}`.toLocaleLowerCase().includes(draft?.chatSearch.toLocaleLowerCase() ?? ''));
+  const availableChats = [...new Map([...conversations, ...(searchedChats.query === chatQuery ? searchedChats.chats : [])].map(chat => [chat.id, chat])).values()];
+  const chatOptions = availableChats.filter(chat => chat.id === draft?.conversationId || `${chat.title} ${chat.id}`.toLocaleLowerCase().includes(draft?.chatSearch.toLocaleLowerCase() ?? ''));
   const openChat = (id: string | null | undefined) => id && onOpenConversation ? <button type="button" onClick={() => onOpenConversation(id)}><MessageSquare size={13} />Open chat</button> : null;
   return <div className="background-jobs">
     <div className="jobs-toolbar"><div><h2><Clock3 size={19} /> Background work</h2><p>Schedules, event triggers and owned workers.</p></div><div className="jobs-toolbar-actions">
@@ -138,9 +150,9 @@ export function BackgroundJobs({ conversationId, conversations = [], chatDefault
       <div className="jobs-section-title"><h3>{draft.id ? 'Edit job' : 'Create job'}</h3><button type="button" aria-label="Close job editor" onClick={() => setDraft(null)}><X size={16} /></button></div>
       <div className="jobs-form-grid">
         <label>Job name<input value={draft.name} onChange={event => set('name', event.target.value)} /></label>
-        <label>Action<ThemedSelect value={draft.action} onChange={event => set('action', event.target.value as Draft['action'])}><option value="prompt">Agent prompt</option><option value="worker">Command worker</option></ThemedSelect></label>
+        <label>Action<ThemedSelect value={draft.action} onChange={event => { const action = event.target.value as Draft['action']; setDraft(current => current ? { ...current, action, chatMode: action === 'prompt' && current.chatMode === 'none' ? 'new' : current.chatMode } : current); }}><option value="prompt">Agent prompt</option><option value="worker">Command worker</option></ThemedSelect></label>
         <label className="jobs-wide">Chat destination<ThemedSelect value={draft.chatMode} disabled={draft.chatLocked} onChange={event => set('chatMode', event.target.value as Draft['chatMode'])}><option value="existing">Choose an existing chat</option><option value="new">Create a new chat for this job</option>{draft.action === 'worker' && <option value="none">Standalone program (no chat)</option>}</ThemedSelect></label>
-        {draft.chatMode === 'existing' && <><label className="jobs-wide">Search chats<input type="search" value={draft.chatSearch} disabled={draft.chatLocked} placeholder="Search by chat title" onChange={event => set('chatSearch', event.target.value)} /></label><label className="jobs-wide">Originating chat<ThemedSelect value={draft.conversationId} disabled={draft.chatLocked} onChange={event => set('conversationId', event.target.value)}><option value="">Choose a chat</option>{draft.conversationId && !conversations.some(chat => chat.id === draft.conversationId) && <option value={draft.conversationId}>Current chat · {draft.conversationId}</option>}{chatOptions.map(chat => <option key={chat.id} value={chat.id}>{chat.title}</option>)}</ThemedSelect></label></>}
+        {draft.chatMode === 'existing' && <><label className="jobs-wide">Search chats<input type="search" value={draft.chatSearch} disabled={draft.chatLocked} placeholder="Search by chat title" onChange={event => set('chatSearch', event.target.value)} /></label><label className="jobs-wide">Originating chat<ThemedSelect value={draft.conversationId} disabled={draft.chatLocked} onChange={event => set('conversationId', event.target.value)}><option value="">Choose a chat</option>{draft.conversationId && !availableChats.some(chat => chat.id === draft.conversationId) && <option value={draft.conversationId}>Current chat · {draft.conversationId}</option>}{chatOptions.map(chat => <option key={chat.id} value={chat.id}>{chat.title}</option>)}</ThemedSelect></label></>}
         {draft.chatMode !== 'none' && <p className="jobs-wide jobs-help">Every run of this job continues in the same chat. {draft.chatMode === 'new' ? `The new chat is created once when you save, using ${chatDefaults?.modelProfile ?? 'doucode'} and ${chatDefaults?.request.approvalMode ?? 'ask-every-time'} approvals.` : 'Existing chats retain their saved model and permissions.'}</p>}
         {draft.action === 'prompt' ? <><label className="jobs-wide">Agent prompt<textarea rows={4} value={draft.prompt} onChange={event => set('prompt', event.target.value)} /></label><p className="jobs-wide jobs-help">When due, OpenCore loads the originating chat’s saved model automatically, runs this instruction with its saved permissions, and saves the result in that chat. Send a message in that chat first to save its settings. It waits while chat, studio or speech work uses the GPU.{draft.savedPolicy && ` Saved approval: ${draft.savedPolicy}. Model: ${draft.savedModel}.`}</p></> : <>
           <label className="jobs-wide">Executable<input value={draft.command} placeholder="python.exe" onChange={event => set('command', event.target.value)} /></label>

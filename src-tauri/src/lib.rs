@@ -427,6 +427,7 @@ async fn background_command(webview: tauri::Webview, core: tauri::State<'_, Arc<
     core.ensure_not_updating()?;
     if matches!(args["action"].as_str(),Some("create"|"update")) && (args.get("newChat").is_some() || args.get("chatDefaults").is_some()) {
         computer_access::require_settings_surface(webview.label())?;
+        scheduler::validate_definition(&args)?;
         let new_id = args["newChat"]["id"].as_str().map(|id|format!("background:{id}"));
         if let Some(id) = new_id.as_ref() { args["conversationId"]=json!(id); args["task"]["conversationId"]=json!(id); }
         if let Some(id) = args["conversationId"].as_str() {
@@ -438,7 +439,7 @@ async fn background_command(webview: tauri::Webview, core: tauri::State<'_, Arc<
             .map(|id| saved_background_context(&core,&app,id)).transpose()?
     } else { None };
     if args["action"]=="update" && (args.get("newChat").is_some() || args.get("chatDefaults").is_some()) {
-        if let (Some(id),Some(context))=(args["taskId"].as_str(),context.as_ref()) { core.background.assign_chat(id,context.clone())?; }
+        if let Some(context)=context.as_ref() { return core.background.update_from_jobs(&args,context.clone()).map(|task|json!(task)); }
     }
     scheduler::execute(core.inner().clone(),app,&args,context).await
 }
