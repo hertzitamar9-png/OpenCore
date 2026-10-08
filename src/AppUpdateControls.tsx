@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { Download } from 'lucide-react';
+import { getVersion } from '@tauri-apps/api/app';
+import { Download, RefreshCw } from 'lucide-react';
 import * as api from './api';
+import './AppUpdateControls.css';
 
 type CheckedVersion = Awaited<ReturnType<typeof api.checkLatestAppVersion>>;
 
@@ -78,7 +80,13 @@ function useManualUpdate(checkOnMount = false) {
 export function UpdateButton() {
   const [open, setOpen] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
+  const [installedVersion, setInstalledVersion] = useState<string | null>(null);
   const { checked, message, busy, check, install } = useManualUpdate(true);
+  useEffect(() => {
+    let current = true;
+    void getVersion().then(version => { if (current) setInstalledVersion(version); }).catch(() => {});
+    return () => { current = false; };
+  }, []);
   useEffect(() => {
     if (!open || !message) { setShowMessage(false); return; }
     setShowMessage(true);
@@ -90,16 +98,21 @@ export function UpdateButton() {
     if (!open) await check();
   }
 
-  if (!checked?.available) return null;
-
+  const currentVersion = installedVersion ?? checked?.currentVersion;
   return <div className="manual-update-control">
-    {open && <div className="manual-update-inline">
+    <span className="manual-update-version" title={currentVersion ? `Running OpenCore ${currentVersion}` : 'Reading the installed app version'}>
+      <span>{currentVersion === 'web' ? 'Web preview' : currentVersion ? `v${currentVersion}` : 'Reading version…'}</span>
+      {checked && !checked.available && !busy && checked.currentVersion !== 'web' && <span className="manual-update-current">Up to date</span>}
+    </span>
+    {open && (showMessage || checked?.available) && <div className="manual-update-inline">
       {showMessage && <span className="manual-update-message" role="status" aria-live="polite">{message}</span>}
-      <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>
+      {checked?.available && <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>}
     </div>}
-    <button type="button" className="manual-update-button" aria-label="Update" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}>
+    {checked?.available ? <button type="button" className="manual-update-button" aria-label="Update" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}>
       <Download size={14} /> Update
-    </button>
+    </button> : <button type="button" className="manual-update-button" aria-label="Check for updates" disabled={busy} onClick={() => { setOpen(true); void check(); }}>
+      <RefreshCw size={14} />{busy ? 'Checking…' : 'Check for updates'}
+    </button>}
   </div>;
 }
 

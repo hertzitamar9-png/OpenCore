@@ -1,0 +1,12 @@
+.manual-update-control { flex-wrap: wrap; row-gap: 4px; }
+.manual-update-version {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-muted, #a9bfd6);
+  font-size: calc(11px * var(--ui-scale, 1));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.manual-update-current { color: var(--theme-accent-ink, #8ed0ff); }
+.manual-update-current::before { content: '·'; margin-right: 6px; }
