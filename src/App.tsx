@@ -56,7 +56,7 @@ import { AssistantConversation, type ComposerDraft, type ConversationSettings } 
 import { WorkspacePanel, type WorkspacePreview, type WorkspaceTab } from "./WorkspacePanel";
 import { SideChat } from "./SideChat";
 import { BackgroundJobs } from "./BackgroundJobs";
-import { RuntimeAvailability } from './RuntimeAvailability';
+import { GatewayAvailability, RuntimeAvailability } from './RuntimeAvailability';
 import { LearningStudio } from './LearningStudio';
 import { LearningAssistant } from './LearningAssistant';
 import { SpacesView } from "./SpacesView";
@@ -225,7 +225,7 @@ function StatusDot({ state }: { state: string }) {
   return <span className={`status-dot ${kind}`} aria-label={state} />;
 }
 
-function Navigation({ active, onChange, running, compact = false }: { active: View; onChange: (view: View) => void; running: boolean; compact?: boolean }) {
+function Navigation({ active, onChange, gateway, compact = false }: { active: View; onChange: (view: View) => void; gateway: AppSnapshot['gateway']; compact?: boolean }) {
   const [appVersion, setAppVersion] = useState<string | null>(null);
   useEffect(() => {
     let mounted = true;
@@ -242,7 +242,7 @@ function Navigation({ active, onChange, running, compact = false }: { active: Vi
       </div>)}
     </nav>
     <div className="nav-footer">
-      <div><StatusDot state={running ? "running" : "stopped"} />{running ? "Runtime active" : "Runtime stopped"}</div>
+      <div><GatewayAvailability gateway={gateway} /></div>
       <small>{appVersion ? `OpenCore v${appVersion}` : "OpenCore"}</small>
     </div>
   </aside>;
@@ -440,7 +440,7 @@ function RuntimeTable({ snapshot, onRestart }: { snapshot: AppSnapshot; onRestar
   const echoStatus = runtime.echoPid ? runtime.status : !usesEcho ? 'not needed'
     : runtime.status === 'starting' ? 'waiting for model' : runtime.status === 'running' ? 'error' : 'stopped';
   const rows = [
-    { name: "Control Gateway", detail: "Starts with OpenCore and routes requests to the selected model", status: "running", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
+    { name: "Control Gateway", detail: "Starts with OpenCore and recovers automatically without loading model weights", status: snapshot.gateway?.status || "starting", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
     { name: "llama-server", detail: `${profileLabel(runtime.profile)} · loads the weights and generates answers`, status: runtime.status === 'starting' ? 'starting' : runtime.modelPid ? runtime.status : "stopped", port: runtime.backendPort, pid: runtime.modelPid || "—", observable: true, restartable: Boolean(runtime.modelPid) },
     { name: "ECHO proxy", detail: !usesEcho ? "This profile uses Native memory; no archive service is required" : runtime.status === 'starting' && !runtime.echoPid ? "Starts automatically after the model is ready" : "Retrieves saved history for the same loaded model", status: echoStatus, port: runtime.echoPort, pid: runtime.echoPid || "—", observable: usesEcho, restartable: Boolean(runtime.echoPid) },
     ...snapshot.connectors.map((item) => ({ name: item.name, detail: item.details, status: item.status, port: item.kind === "history" ? "local" : item.endpoint.split(":").pop() || "—", pid: "—", observable: item.observable, restartable: false })),
@@ -1727,7 +1727,7 @@ export default function App() {
   const workspaceConversationId = view === 'learning' ? learningConversationId : selectedConversation;
   const workspaceSettings = view === 'learning' ? learningSettings||parentSettings : parentSettings;
   return <div className={`app-window-frame ${appearance.compactMessages ? 'compact-messages' : ''}`} style={appearanceStyle}><AgentQuestions /><WindowTitleBar /><div className="opencore-shell">
-    <Navigation active={view} onChange={setView} running={running} compact />
+    <Navigation active={view} onChange={setView} gateway={snapshot.gateway} compact />
     <div className={`opencore-section ${workspaceOpen ? 'workspace-visible' : ''}`}>
       <header className="section-header"><div className="section-heading">{view === 'conversations' ? <button aria-label={hideConversationList ? 'Show conversations' : 'Hide conversations'} title={hideConversationList ? 'Show conversations' : 'Hide conversations'} aria-expanded={!hideConversationList} onClick={() => { if (workspaceOpen && viewportWidth < 1440) setWorkspaceOpen(false); setConversationsCollapsed(!hideConversationList); }}><PanelLeft size={17} /></button> : null}<strong>{nav.find(item => item.id === view)?.label}</strong></div><div className="section-header-actions"><UpdateButton />{view === 'conversations' ? <button className="chat-import-access" onClick={() => setImportOpen(true)}><FileUp size={16} /><span>Import chats</span></button> : null}<button className="workspace-access" aria-label="Workspace" title={workspaceOpen ? 'Close workspace' : 'Open workspace'} aria-expanded={workspaceOpen} aria-controls="opencore-workspace" onClick={() => setWorkspaceOpen(current => !current)}><PanelRight size={17} /></button></div></header>
       <div className="section-workspace-stage"><div className="section-main">{sectionContent}</div><WorkspacePanel open={workspaceOpen} tab={workspaceTab} onTabChange={setWorkspaceTab} width={workspaceWidth} onWidthChange={setWorkspaceWidth} snapPx={workspaceSnap} onSnapChange={setWorkspaceSnap} onClose={() => setWorkspaceOpen(false)} conversationId={workspaceConversationId} onNotice={setNotice} onOpenConversation={openConversationFromWorkspace} preview={workspacePreview} file={workspaceFile} browserLocation={browserLocation} obscured={mainWorkspaceObscured || sideWorkspaceObscured || Boolean(conversationDialog || projectDialog || importOpen || exportChatId)} sideChat={<SideChat parentId={workspaceConversationId} parentTitle={view==='learning'?'Learning assistant':selected?.title || 'New conversation'} settings={workspaceSettings} selectedProfile={selectedProfile} onSelectProfile={setSelectedProfile} runtimeSnapshot={snapshot.runtime} telemetry={snapshot.telemetry} running={running} projects={snapshot.projects} activeConversationIds={snapshot.activeConversationIds || []} inferenceOwner={inferenceOwner} studioActive={studioActive} inferenceBlocked={runtimeTransitionReason} defaultSkills={defaultSkills} onNotice={setNotice} onRefresh={refresh} onOpenConversation={openConversationFromWorkspace} onActivityChange={recordChatActivity} onOpenWorkspace={openWorkspace} onOpenPreview={openWorkspacePreview} onOpenBrowserLink={openBrowserLink} onOpenFileRecord={openWorkspaceFile} onWorkspaceObscuredChange={setSideWorkspaceObscured} />} /></div>
