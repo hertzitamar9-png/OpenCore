@@ -31,9 +31,23 @@ export interface BackgroundSnapshot {
   execution: { appMustBeOpen: boolean; agentMustBeRunning?: boolean; windowCloseRequiresBackgroundAgent?: boolean; noPermanentService?: boolean; gpuWorkersHoldReservationUntilExit?: boolean };
 }
 export interface BackgroundLogs { stdout: string; stderr: string; stdoutTruncated: boolean; stderrTruncated: boolean; limitBytesPerStream?: number }
-export interface BackgroundCommandArgs { action: string; conversationId?: string; taskId?: string; runId?: string; task?: unknown; event?: unknown }
+export interface BackgroundChatDefaults { modelProfile: string; request: BackgroundContext['request'] }
+export interface BackgroundCommandArgs { action: string; conversationId?: string; taskId?: string; runId?: string; task?: unknown; event?: unknown; newChat?: { id: string }; chatDefaults?: BackgroundChatDefaults }
+
+export function describeRun(run: BackgroundRun): string {
+  const duration = run.startedAt && run.finishedAt ? Math.max(0, (Date.parse(run.finishedAt) - Date.parse(run.startedAt)) / 1000) : null;
+  const elapsed = duration !== null && Number.isFinite(duration) ? ` · ${duration.toFixed(1).replace(/\.0$/, '')}s` : '';
+  if (run.status === 'completed') return `${run.exitCode === 0 ? 'Program finished successfully' : 'Agent run completed'}${elapsed}`;
+  if (run.status === 'queued') return 'Waiting for an available execution slot';
+  if (run.status === 'running') return run.pid ? 'Program is running' : 'Agent is working in its saved chat';
+  return `${run.status === 'failed' ? 'Run failed' : run.status === 'interrupted' ? 'Run interrupted' : 'Run cancelled'}${elapsed}`;
+}
 
 const emptySnapshot: BackgroundSnapshot = { tasks: [], runs: [], webhook: { url: '', token: null }, execution: { appMustBeOpen: true } };
+export async function searchJobChats(query: string): Promise<{ id: string; title: string }[]> {
+  if (!('__TAURI_INTERNALS__' in window)) return [];
+  return invoke('list_conversations', { query });
+}
 export async function backgroundCommand(args: BackgroundCommandArgs): Promise<unknown> {
   if (!('__TAURI_INTERNALS__' in window)) {
     if (args.action === 'list' || args.action === 'status') return emptySnapshot;

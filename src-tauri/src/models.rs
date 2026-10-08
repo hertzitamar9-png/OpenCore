@@ -142,6 +142,7 @@ pub struct ConnectorInput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSnapshot {
+    pub gateway: crate::gateway_service::GatewaySnapshot,
     pub runtime: RuntimeSnapshot,
     pub telemetry: TelemetrySnapshot,
     pub conversations: Vec<ConversationSummary>,

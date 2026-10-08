@@ -1,9 +1,11 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
+import { getVersion } from '@tauri-apps/api/app';
 import * as api from './api';
 import { UpdateButton, UpdateSettings } from './AppUpdateControls';
 
 const openUrl = vi.fn();
+vi.mock('@tauri-apps/api/app', () => ({ getVersion: vi.fn(async () => '1.2.0') }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: (...args: unknown[]) => openUrl(...args) }));
 vi.mock('./api', async (original) => ({
   ...await original<typeof api>(),
@@ -11,16 +13,27 @@ vi.mock('./api', async (original) => ({
   installLatestAppUpdate: vi.fn(),
 }));
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => { vi.resetAllMocks(); vi.mocked(getVersion).mockResolvedValue('1.2.0'); });
 
-it('keeps the header Update button absent until an available update is confirmed', async () => {
+it('always shows the running version and check action without claiming latest before a successful check', async () => {
   let completeCheck!: (value: api.AppUpdateCheck) => void;
   vi.mocked(api.checkLatestAppVersion).mockReturnValue(new Promise(resolve => { completeCheck = resolve; }));
   render(<UpdateButton />);
 
   expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(await screen.findByText('v1.2.0')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Check for updates' })).toBeDisabled();
+  expect(screen.queryByText('Up to date')).toBeNull();
   await act(async () => completeCheck({ currentVersion: '1.2.0', available: false, version: null }));
   expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  const version = screen.getByText('v1.2.0');
+  const check = screen.getByRole('button', { name: 'Check for updates' });
+  expect(version.compareDocumentPosition(check) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(check).toBeEnabled();
+  expect(screen.getByText('Up to date')).toBeVisible();
+  fireEvent.click(check);
+  expect(await screen.findByRole('status')).toHaveTextContent('OpenCore 1.2.0 is up to date.');
+  expect(version.parentElement?.nextElementSibling).toBe(check);
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
@@ -53,11 +66,30 @@ it('hides the inline update message after five seconds while retaining the insta
   } finally { vi.useRealTimers(); }
 });
 
-it('keeps the header Update button absent when availability could not be checked', async () => {
+it('keeps the running version and retry action when checking fails', async () => {
   vi.mocked(api.checkLatestAppVersion).mockRejectedValue(new Error('Feed unavailable'));
   await act(async () => { render(<UpdateButton />); });
 
   expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(screen.getByText('v1.2.0')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Check for updates' })).toBeEnabled();
+  expect(screen.queryByText('Up to date')).toBeNull();
+  vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: false, version: null });
+  fireEvent.click(screen.getByRole('button', { name: 'Check for updates' }));
+  expect(await screen.findByText('Up to date')).toBeVisible();
+  expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
+});
+
+it('rechecks from the header and changes to Update only when a newer version is found', async () => {
+  vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: false, version: null });
+  render(<UpdateButton />);
+  const check = await screen.findByRole('button', { name: 'Check for updates' });
+  await screen.findByText('Up to date');
+  vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
+  fireEvent.click(check);
+  expect(await screen.findByRole('button', { name: 'Update' })).toBeVisible();
+  expect(screen.getByText('v1.2.0')).toBeVisible();
+  expect(screen.queryByText('Up to date')).toBeNull();
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 

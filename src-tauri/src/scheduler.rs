@@ -341,6 +341,9 @@ impl BackgroundManager {
                 if let Err(error) = manager.finish(&run.id, outcome, token.is_cancelled(), closing) {
                     core.store.log("error", "background", &format!("Could not persist background run {}: {error}",run.id));
                 }
+                if matches!(task.task_action, BackgroundAction::Worker { .. }) {
+                    if let Err(error) = manager.record_worker_result(&core.store, &run.id) { core.store.log("warn","background",&error); }
+                }
                 if !admission_wait {
                     if let Err(error)=core.learning.review_finished(&run.evidence,review_outcome) {core.store.log("error","learning-review",&error);}
                 }
@@ -382,13 +385,22 @@ impl BackgroundManager {
                 let manager = self.clone(); let id = run.id.clone();
                 let started = Arc::new(move |pid| manager.set_pid(&id, pid));
                 let result = tokio::task::spawn_blocking(move || scheduler_worker::run(config, token, dir, url, secret, started)).await.map_err(|error| error.to_string())??;
-                Ok(json!({"exitCode":result.exit_code,"cancelled":result.cancelled,"stdoutTruncated":result.stdout_truncated,"stderrTruncated":result.stderr_truncated,"failureReason":result.failure_reason}))
+                Ok(json!({"exitCode":result.exit_code,"cancelled":result.cancelled,"stdoutTruncated":result.stdout_truncated,"stderrTruncated":result.stderr_truncated,"failureReason":result.failure_reason,"outputSummary":result.output_summary}))
             }
         }
     }
     fn set_pid(&self, id: &str, pid: u32) -> Result<(), String> {
         let mut run = self.run(id)?; run.pid = Some(pid);
         save_run(&*self.db.lock().map_err(|error| error.to_string())?, &run)?; self.changed(); Ok(())
+    }
+    fn record_worker_result(&self, store: &crate::store::EventStore, id: &str) -> Result<(), String> {
+        let run = self.run(id)?;
+        if let Some(conversation) = run.conversation_id.as_deref() {
+            let output = run.evidence["result"]["outputSummary"].as_str().unwrap_or("");
+            let content = format!("{} · {}\n{}\n{}",run.task_name,run.status,run.error.as_deref().unwrap_or(""),output);
+            store.add_timeline(conversation,"message","assistant","Background worker",&format!("Job {}",run.status),content.trim(),&json!({"backgroundRunId":id,"backgroundTaskId":run.task_id,"exitCode":run.exit_code}))?;
+        }
+        Ok(())
     }
     fn finish(&self, id: &str, outcome: Result<Value, String>, cancelled: bool, interrupted: bool) -> Result<(), String> {
         let mut run = self.run(id)?;
@@ -421,18 +433,24 @@ impl BackgroundManager {
         self.changed(); Ok(())
     }
     fn create_or_update(&self, args: &Value, context: Option<BackgroundContext>, update: bool) -> Result<BackgroundTask, String> {
+        self.save_definition(args,context,update,false)
+    }
+    /// Native Jobs may attach a standalone job while saving its definition.
+    /// Validation, attachment and history updates commit together.
+    pub(crate) fn update_from_jobs(&self, args: &Value, context: BackgroundContext) -> Result<BackgroundTask,String> {
+        self.save_definition(args,Some(context),true,true)
+    }
+    fn save_definition(&self, args: &Value, context: Option<BackgroundContext>, update: bool, native_bind: bool) -> Result<BackgroundTask, String> {
         command_conversation(args,context.as_ref())?;
         let input = args.get("task").ok_or("Task definition is required")?;
         let existing = if update { Some(self.task(args["taskId"].as_str().ok_or("taskId is required")?)?) } else { None };
+        let binding = native_bind && existing.as_ref().is_some_and(|task|task.conversation_id.is_none()) && context.is_some();
         // Authenticate the caller against the origin before replacing its
         // execution settings with the immutable task's saved settings.
-        if let Some(existing)=existing.as_ref() { check_task_context(existing,context.as_ref())?; }
-        let name = input["name"].as_str().map(str::trim).filter(|name| !name.is_empty() && name.len() <= 200).ok_or("Job name is required, up to 200 characters")?.to_string();
-        let schedule: Schedule = serde_json::from_value(input["schedule"].clone()).map_err(|error| format!("Invalid schedule: {error}"))?;
-        schedule.validate()?;
-        let task_action: BackgroundAction = serde_json::from_value(input["taskAction"].clone()).map_err(|error| format!("Invalid action: {error}"))?;
-        let context = if let Some(existing) = existing.as_ref() { existing.context.clone() } else { context };
-        let conversation_id = if let Some(existing) = existing.as_ref() { existing.conversation_id.clone() }
+        if let Some(existing)=existing.as_ref().filter(|_|!binding) { check_task_context(existing,context.as_ref())?; }
+        let (name,schedule,task_action)=validate_definition(args)?;
+        let context = if let Some(existing) = existing.as_ref().filter(|_|!binding) { existing.context.clone() } else { context };
+        let conversation_id = if let Some(existing) = existing.as_ref().filter(|_|!binding) { existing.conversation_id.clone() }
             else { input["conversationId"].as_str().or(args["conversationId"].as_str()).map(str::to_string).or_else(|| context.as_ref().map(|context| context.request.conversation_id.clone())) };
         if let Some(context) = context.as_ref() {
             if conversation_id.as_deref() != Some(context.request.conversation_id.as_str()) { return Err("Originating chat settings do not match this job".into()); }
@@ -451,8 +469,24 @@ impl BackgroundManager {
             paused: existing.as_ref().is_some_and(|task| task.paused), next_due, revision: existing.as_ref().map_or(1, |task| task.revision + 1), created_at: existing.as_ref().map(|task| task.created_at.clone()).unwrap_or_else(|| time.clone()), updated_at: time };
         let mut db = self.db.lock().map_err(|error| error.to_string())?;
         let transaction = db.transaction_with_behavior(TransactionBehavior::Immediate).map_err(|error| error.to_string())?;
+        if binding {
+            let payload:String=transaction.query_row("SELECT payload FROM tasks WHERE id=?1 AND deleted=0",[&task.id],|row|row.get(0)).map_err(|_|"Background job not found")?;
+            let current:BackgroundTask=serde_json::from_str(&payload).map_err(|error|error.to_string())?;
+            if current.revision!=existing.as_ref().unwrap().revision || current.conversation_id.is_some() {return Err("This job changed. Refresh it before attaching a chat.".into());}
+            let running:i64=transaction.query_row("SELECT COUNT(*) FROM runs WHERE task_id=?1 AND status='running'",[&task.id],|row|row.get(0)).map_err(|error|error.to_string())?;
+            if running>0 {return Err("Wait for the current run to finish before attaching a chat.".into());}
+        }
         save_task(&transaction, &task)?;
         if update { cancel_queued(&transaction, &task.id, "Job definition was edited")?; }
+        if binding {
+            let payloads={let mut statement=transaction.prepare("SELECT payload FROM runs WHERE task_id=?1").map_err(|error|error.to_string())?;
+                let values=statement.query_map([&task.id],|row|row.get::<_,String>(0)).map_err(|error|error.to_string())?;
+                values.collect::<Result<Vec<_>,_>>().map_err(|error|error.to_string())?};
+            for payload in payloads {
+                let mut run:BackgroundRun=serde_json::from_str(&payload).map_err(|error|error.to_string())?;
+                run.conversation_id=task.conversation_id.clone(); save_run(&transaction,&run)?;
+            }
+        }
         transaction.commit().map_err(|error| error.to_string())?; drop(db); self.changed(); Ok(task)
     }
     fn pause(&self, id: &str, paused: bool) -> Result<BackgroundTask, String> {
@@ -531,6 +565,19 @@ impl BackgroundManager {
             _=>Err("Unknown background action".into()),
         }
     }
+}
+pub(crate) fn validate_definition(args:&Value)->Result<(String,Schedule,BackgroundAction),String> {
+    let input=args.get("task").ok_or("Task definition is required")?;
+    let name=input["name"].as_str().map(str::trim).filter(|name|!name.is_empty()&&name.len()<=200).ok_or("Job name is required, up to 200 characters")?.to_string();
+    let schedule:Schedule=serde_json::from_value(input["schedule"].clone()).map_err(|error|format!("Invalid schedule: {error}"))?;
+    schedule.validate()?;
+    schedule.first_due(Utc::now().timestamp_millis())?;
+    let action:BackgroundAction=serde_json::from_value(input["taskAction"].clone()).map_err(|error|format!("Invalid action: {error}"))?;
+    match &action {
+        BackgroundAction::Prompt{prompt}=>if prompt.trim().is_empty()||prompt.len()>65_536 {return Err("Agent prompt must contain 1 to 65536 characters".into());},
+        BackgroundAction::Worker{worker}=>worker.validate()?,
+    }
+    Ok((name,schedule,action))
 }
 fn command_conversation(args:&Value,context:Option<&BackgroundContext>)->Result<Option<String>,String> {
     let Some(context)=context else {return Ok(args["conversationId"].as_str().map(str::to_string));};
@@ -621,6 +668,49 @@ mod tests {
         drop(manager); let _=std::fs::remove_dir_all(root);
     }
     fn create(manager: &BackgroundManager, schedule: Value) -> BackgroundTask { manager.create_or_update(&json!({"task":{"name":"Scheduled review","conversationId":"chat","schedule":schedule,"taskAction":{"kind":"prompt","prompt":"Review existing evidence"}}}),Some(context("ask-every-time")),false).unwrap() }
+    #[test]
+    fn repeat_runs_and_restart_keep_one_chat_and_the_saved_approval_policy() {
+        let (root,manager)=fixture();
+        let task=create(&manager,json!({"kind":"interval","everySeconds":60}));
+        for _ in 0..2 {
+            let run=manager.run_now(&task.id).unwrap();
+            let (_,captured)=manager.claim(&run.id).unwrap().unwrap();
+            assert_eq!(captured.conversation_id.as_deref(),Some("chat"));
+            assert_eq!(captured.context.unwrap().request.approval_mode.as_str(),"ask-every-time");
+            manager.finish(&run.id,Ok(json!({"conversationId":"chat","title":"Review"})),false,false).unwrap();
+        }
+        drop(manager);
+        let manager=BackgroundManager::new(root.clone()).unwrap();
+        manager.run_now(&task.id).unwrap();
+        let runs=manager.runs(None,20).unwrap();
+        assert_eq!(runs.len(),3);
+        assert!(runs.iter().all(|run|run.conversation_id.as_deref()==Some("chat")));
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn standalone_job_binding_is_atomic_with_validated_edits_and_preserves_its_chat() {
+        let (root,manager)=fixture();
+        let task=manager.create_or_update(&json!({"task":{"name":"Worker","schedule":{"kind":"event","name":"verify"},"taskAction":{"kind":"worker","worker":{"command":"unused.exe","cwd":std::env::temp_dir()}}}}),None,false).unwrap();
+        let run=manager.run_now(&task.id).unwrap();
+        let mut edit=json!({"taskId":task.id,"conversationId":"chat","task":{"name":"Worker","conversationId":"chat","schedule":{"kind":"event","name":"verify"},"taskAction":{"kind":"worker","worker":{"command":"unused.exe","cwd":std::env::temp_dir()}}}});
+        edit["task"]["taskAction"]["worker"]["cwd"]=json!("relative/invalid");
+        assert!(manager.update_from_jobs(&edit,context("ask-every-time")).is_err());
+        assert!(manager.task(&task.id).unwrap().conversation_id.is_none());
+        assert!(manager.run(&run.id).unwrap().conversation_id.is_none());
+        assert_eq!(manager.run(&run.id).unwrap().status,"queued");
+        edit["task"]["taskAction"]["worker"]["cwd"]=json!(std::env::temp_dir());
+        manager.update_from_jobs(&edit,context("ask-every-time")).unwrap();
+        assert_eq!(manager.run(&run.id).unwrap().conversation_id.as_deref(),Some("chat"));
+        assert_eq!(manager.run(&run.id).unwrap().status,"cancelled");
+        let next=manager.run_now(&task.id).unwrap();
+        let (_,captured)=manager.claim(&next.id).unwrap().unwrap();
+        assert_eq!(captured.context.unwrap().request.approval_mode.as_str(),"ask-every-time");
+        let mut another=context("allow-all"); another.request.conversation_id="another".into();
+        edit["conversationId"]=json!("another"); edit["task"]["conversationId"]=json!("another");
+        assert!(manager.update_from_jobs(&edit,another).is_err());
+        assert_eq!(manager.task(&task.id).unwrap().conversation_id.as_deref(),Some("chat"));
+        drop(manager); let _=std::fs::remove_dir_all(root);
+    }
     #[test]
     fn interval_boundaries_coalesce_missed_occurrences_and_are_durable() {
         let (root, manager) = fixture(); let task = create(&manager,json!({"kind":"interval","everySeconds":60,"startAt":"2026-01-01T00:00:00Z"}));

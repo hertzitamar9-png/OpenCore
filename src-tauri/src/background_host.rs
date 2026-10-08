@@ -11,12 +11,24 @@ const LOGIN_KEY: &str = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
 const LOGIN_VALUE: &str = "OpenCoreBackground";
 static SAVE_LOCK: Mutex<()> = Mutex::new(());
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Configuration {
     pub enabled: bool,
     pub start_at_login: bool,
     pub revision: u64,
+}
+impl Default for Configuration {
+    fn default() -> Self { Self { enabled: true, start_at_login: cfg!(windows), revision: 0 } }
+}
+/// Defaults apply once. Explicitly saved opt-outs are never overwritten.
+pub fn initialize(store: &EventStore, executable: &Path) -> Result<(), String> {
+    let saved = store.get_setting(KEY)?;
+    let configuration = configuration(store)?;
+    if saved.is_none() || (configuration.start_at_login && !registered(executable)) {
+        save(store, executable, configuration)?;
+    }
+    Ok(())
 }
 pub fn configuration(store: &EventStore) -> Result<Configuration, String> {
     store.get_setting(KEY)?.map(|value| serde_json::from_str(&value).map_err(|error| format!("Invalid background agent configuration: {error}"))).unwrap_or(Ok(Configuration::default()))
@@ -103,7 +115,7 @@ mod tests {
         assert!(should_hide(&enabled,true,false));
         assert!(!should_hide(&enabled,false,false));
         assert!(!should_hide(&enabled,true,true));
-        assert!(!should_hide(&Configuration::default(),true,false));
+        assert!(!should_hide(&Configuration{enabled:false,start_at_login:false,revision:0},true,false));
     }
     #[test]
     fn background_start_requires_the_exact_cli_flag() {
@@ -122,11 +134,22 @@ mod tests {
         let root=std::env::temp_dir().join(format!("opencore-background-settings-{}",uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let store=EventStore::open(&root.join("events.sqlite3")).unwrap();
-        let first=save(&store,&root.join("OpenCore.exe"),Configuration{enabled:true,..Default::default()}).unwrap();
+        let first=save(&store,&root.join("OpenCore.exe"),Configuration{enabled:true,start_at_login:false,revision:0}).unwrap();
         assert_eq!(first.revision,1);
         assert_eq!(configuration(&store).unwrap(),first);
         assert!(save(&store,&root.join("OpenCore.exe"),Configuration::default()).is_err());
         assert_eq!(configuration(&store).unwrap(),first);
+        drop(store); let _=std::fs::remove_dir_all(root);
+    }
+    #[test]
+    fn initialization_preserves_an_explicit_background_opt_out() {
+        let root=std::env::temp_dir().join(format!("background-opt-out-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store=EventStore::open(&root.join("events.sqlite3")).unwrap();
+        let disabled=Configuration{enabled:false,start_at_login:false,revision:4};
+        store.set_setting(KEY,&serde_json::to_string(&disabled).unwrap()).unwrap();
+        initialize(&store,&root.join("OpenCore.exe")).unwrap();
+        assert_eq!(configuration(&store).unwrap(),disabled);
         drop(store); let _=std::fs::remove_dir_all(root);
     }
 }
