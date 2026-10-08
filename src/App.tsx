@@ -440,7 +440,7 @@ function RuntimeTable({ snapshot, onRestart }: { snapshot: AppSnapshot; onRestar
   const echoStatus = runtime.echoPid ? runtime.status : !usesEcho ? 'not needed'
     : runtime.status === 'starting' ? 'waiting for model' : runtime.status === 'running' ? 'error' : 'stopped';
   const rows = [
-    { name: "Control Gateway", detail: "Starts with OpenCore and recovers automatically without loading model weights", status: snapshot.gateway?.status || "starting", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
+    { name: "Control Gateway", detail: "Starts with OpenCore and routes requests to the selected model", status: snapshot.gateway?.status || "starting", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
     { name: "llama-server", detail: `${profileLabel(runtime.profile)} · loads the weights and generates answers`, status: runtime.status === 'starting' ? 'starting' : runtime.modelPid ? runtime.status : "stopped", port: runtime.backendPort, pid: runtime.modelPid || "—", observable: true, restartable: Boolean(runtime.modelPid) },
     { name: "ECHO proxy", detail: !usesEcho ? "This profile uses Native memory; no archive service is required" : runtime.status === 'starting' && !runtime.echoPid ? "Starts automatically after the model is ready" : "Retrieves saved history for the same loaded model", status: echoStatus, port: runtime.echoPort, pid: runtime.echoPid || "—", observable: usesEcho, restartable: Boolean(runtime.echoPid) },
     ...snapshot.connectors.map((item) => ({ name: item.name, detail: item.details, status: item.status, port: item.kind === "history" ? "local" : item.endpoint.split(":").pop() || "—", pid: "—", observable: item.observable, restartable: false })),
