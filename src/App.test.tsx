@@ -529,8 +529,8 @@ describe("OpenCore", () => {
       render(<App />);
       await screen.findByText("Build a data analysis script", { selector: "h2" });
       fireEvent.click(screen.getByRole("button", { name: "Runtime & Logs" }));
-      fireEvent.click(screen.getByRole("button", { name: "Start" }));
-      const stopButton = screen.getByRole("button", { name: "Stop" });
+      fireEvent.click(screen.getByRole("button", { name: "Start model" }));
+      const stopButton = screen.getByRole("button", { name: "Stop model" });
       expect(stopButton).toBeEnabled();
       fireEvent.click(stopButton);
       await waitFor(() => expect(stop).toHaveBeenCalledOnce());
@@ -1036,6 +1036,23 @@ describe("OpenCore", () => {
     expect(screen.getByText("Runtime Topology")).toBeInTheDocument();
     expect(screen.getByText("Control Gateway")).toBeInTheDocument();
     expect(screen.getByText("Process Supervision")).toBeInTheDocument();
+  });
+
+  it.each([
+    { profile: 'echo', status: 'starting', expected: 'waiting for model', detail: 'Starts automatically after the model is ready' },
+    { profile: 'echo-native', status: 'running', expected: 'not needed', detail: 'This profile uses Native memory; no archive service is required' },
+  ] as const)('explains ECHO service state for $profile during $status', async ({ profile, status, expected, detail }) => {
+    const initial = await api.snapshot();
+    const snapshot = vi.spyOn(api, 'snapshot').mockResolvedValue({ ...initial,
+      runtime: { ...initial.runtime, profile, status, modelPid: 1234, echoPid: null } });
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Runtime & Logs' }));
+      const row = (await screen.findByText('ECHO proxy')).closest('.runtime-row') as HTMLElement;
+      expect(within(row).getByText(expected)).toBeVisible();
+      expect(within(row).getByText(detail)).toBeVisible();
+      expect(screen.getByText('Starts with OpenCore and routes requests to the selected model')).toBeVisible();
+    } finally { snapshot.mockRestore(); }
   });
 
   it("shows only downloaded models in the Runtime profile switcher", async () => {

@@ -64,6 +64,7 @@ pub struct WorkerResult {
     pub cancelled: bool,
     pub stdout_truncated: bool,
     pub stderr_truncated: bool,
+    pub failure_reason: Option<String>,
 }
 
 fn drain(mut input: impl Read, path: PathBuf) -> Result<bool, String> {
@@ -223,6 +224,7 @@ pub fn run(
             cancelled: true,
             stdout_truncated: false,
             stderr_truncated: false,
+            failure_reason: None,
         });
     }
     std::fs::create_dir_all(&log_dir).map_err(|e| e.to_string())?;
@@ -269,6 +271,7 @@ pub fn run(
             cancelled: true,
             stdout_truncated: false,
             stderr_truncated: false,
+            failure_reason: None,
         });
     }
     #[cfg(windows)]
@@ -302,12 +305,25 @@ pub fn run(
     let stdout_truncated = out.join().map_err(|_| "Worker stdout reader failed")??;
     let stderr_truncated = err.join().map_err(|_| "Worker stderr reader failed")??;
     let (exit_code, cancelled) = outcome?;
+    let failure_reason = if cancelled || exit_code == Some(0) { None } else { failure_reason(&log_dir) };
     Ok(WorkerResult {
         exit_code,
         cancelled,
         stdout_truncated,
         stderr_truncated,
+        failure_reason,
     })
+}
+
+fn failure_reason(log_dir: &Path) -> Option<String> {
+    let logs = read_logs(log_dir).ok()?;
+    let lines: Vec<String> = ["stderr", "stdout"].iter().filter_map(|stream| {
+        let line = logs[*stream].as_str()?.lines().rev().find(|line| !line.trim().is_empty())?;
+        let mut excerpt = line.chars().take(2048).collect::<String>();
+        if line.chars().nth(2048).is_some() { excerpt.push_str("… (full output in Logs)"); }
+        Some(format!("{stream}: {excerpt}"))
+    }).collect();
+    (!lines.is_empty()).then(|| lines.join("\n"))
 }
 
 pub fn read_logs(log_dir: &Path) -> Result<serde_json::Value, String> {
@@ -364,6 +380,17 @@ mod tests {
         }
     }
     #[test]
+    fn failure_excerpt_is_bounded_and_preserves_unicode() {
+        let dir = std::env::temp_dir().join(format!("background-worker-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("stderr.log"), format!("Traceback\n{}\n", "שגיאה".repeat(2000))).unwrap();
+        let detail = failure_reason(&dir).unwrap();
+        assert!(detail.starts_with("stderr: שגיאה"));
+        assert!(detail.ends_with("… (full output in Logs)"));
+        assert!(detail.chars().count() < 2100);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+    #[test]
     fn retains_stdout_stderr_and_actual_failure_code() {
         let dir = std::env::temp_dir().join(format!("background-worker-{}", uuid::Uuid::new_v4()));
         let result = run(
@@ -377,6 +404,9 @@ mod tests {
         .unwrap();
         assert_eq!(result.exit_code, Some(7));
         assert!(!result.cancelled);
+        let reason = result.failure_reason.as_deref().unwrap();
+        assert!(reason.contains("real-error"));
+        assert!(reason.contains("real-output"));
         let logs = read_logs(&dir).unwrap();
         assert!(logs["stdout"].as_str().unwrap().contains("real-output"));
         assert!(logs["stderr"].as_str().unwrap().contains("real-error"));

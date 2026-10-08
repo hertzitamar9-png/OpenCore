@@ -10,6 +10,7 @@ beforeEach(() => { vi.restoreAllMocks(); vi.spyOn(jobs, 'backgroundCommand').moc
 it('states execution conditions and explains the authenticated loopback event', async () => {
   render(<BackgroundJobs onNotice={vi.fn()} />);
   expect(await screen.findByText(/Schedules resume automatically while the agent is running/)).toBeVisible();
+  expect(screen.getByText(/Prompt jobs automatically start their saved model when due/)).toBeVisible();
   fireEvent.click(screen.getByText('Webhook setup'));
   expect(screen.getByText('http://127.0.0.1:4222/background/events')).toBeVisible();
   expect((screen.getByLabelText('Event example') as HTMLTextAreaElement).value).toContain('training.checkpoint');
@@ -76,6 +77,18 @@ it('retains the saved policy when editing and sends explicit pause, resume and r
   fireEvent.click(screen.getByRole('button', { name: 'Save job' }));
   await waitFor(() => expect(command).toHaveBeenCalledWith(expect.objectContaining({ action: 'update', taskId: 'task-1', conversationId: 'chat-1' })));
   expect(JSON.stringify(command.mock.calls.find(([args]) => args.action === 'update'))).not.toMatch(/approvalMode|allow-all/);
+});
+
+it('explains that paused event jobs only run through Run now', async () => {
+  const task = { id: 'task-1', name: 'Release check', conversationId: null,
+    schedule: { kind: 'event', name: 'platform.release.verification' }, paused: true, nextDue: null,
+    taskAction: { kind: 'worker', worker: { command: 'python.exe', args: ['verify.py'], cwd: 'C:\\project' } }, context: null };
+  vi.spyOn(jobs, 'backgroundCommand').mockResolvedValue({ ...empty, tasks: [task] });
+  render(<BackgroundJobs onNotice={vi.fn()} />);
+  expect(await screen.findByText('When event “platform.release.verification” arrives')).toBeVisible();
+  expect(screen.getByText('Automatic triggers paused · Run now starts one manual run')).toBeVisible();
+  expect(screen.queryByText('Waiting for the named event')).not.toBeInTheDocument();
+  expect(screen.getByText('Runs the program below on this computer. Its exit code and output determine success.')).toBeVisible();
 });
 
 it('rejects a malformed argument array before submitting a worker', async () => {

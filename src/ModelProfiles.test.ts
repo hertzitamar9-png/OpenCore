@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { profileLabel, selectableModelProfiles } from "./ModelProfiles";
+import { profileLabel, profileUsesEcho, selectableModelProfiles } from "./ModelProfiles";
 
 describe("model profile context claims", () => {
+  it('uses catalog memory mode for profiles whose IDs do not contain echo', () => {
+    expect(profileUsesEcho('native1m')).toBe(true);
+    expect(profileUsesEcho('neohorse-1-9b')).toBe(true);
+    expect(profileUsesEcho('underdog-saluki-27b')).toBe(true);
+    expect(profileUsesEcho('ista-qwen38-27b')).toBe(true);
+    expect(profileUsesEcho('underdog-woof-4b-11')).toBe(true);
+    expect(profileUsesEcho('underdog-saluki-27b-native')).toBe(false);
+    expect(profileUsesEcho('echo-native')).toBe(false);
+    expect(profileUsesEcho('stopped')).toBe(false);
+  });
   it("exposes the HumanEval GGUF models as selectable installed profiles", () => {
     const expected = [
       "oxcoder-9b", "nim-2-coder-7b", "ternary-bonsai-2-27b", "mimo-distill-qwen-9b",
