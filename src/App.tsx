@@ -67,7 +67,7 @@ import { openWorkspaceFileExternal, type FileRecord } from "./workspaces";
 import { WindowTitleBar } from "./WindowTitleBar";
 import { ProjectActionsMenu } from "./ProjectActionsMenu";
 import { FloatingWindow } from "./FloatingWindow";
-import { ModelProfileOptions, profileDescription, profileLabel, isSelectableModelProfile, profilesForInstalledModels, selectableModelProfiles, useInstalledModelProfiles } from "./ModelProfiles";
+import { ModelProfileOptions, profileDescription, profileLabel, profileUsesEcho, isSelectableModelProfile, profilesForInstalledModels, selectableModelProfiles, useInstalledModelProfiles } from "./ModelProfiles";
 import { ModelLibrary } from "./ModelLibrary";
 import { MusicStudio } from './MusicStudio';
 import { GameDevStudio } from './AssetsStudio';
@@ -220,7 +220,7 @@ const readProfilePreference = (): RuntimeProfile => {
 };
 
 function StatusDot({ state }: { state: string }) {
-  const kind = ["running", "ready", "detected", "configured", "observed", "stop", "active"].includes(state) ? "good" : ["error", "stopped", "off"].includes(state) ? "bad" : state === "starting" ? "warn" : "muted";
+  const kind = ["running", "ready", "detected", "configured", "observed", "stop", "active"].includes(state) ? "good" : ["error", "stopped", "off"].includes(state) ? "bad" : ["starting", "waiting for model"].includes(state) ? "warn" : "muted";
   return <span className={`status-dot ${kind}`} aria-label={state} />;
 }
 
@@ -277,8 +277,8 @@ function Header({ snapshot, busy, runtimeAction, selectedProfile, setSelectedPro
   return <header className="topbar">
     <div className="brand"><span className="brand-mark"><img src="/opencore-logo.png" alt="OpenCore" /></span><div><strong>OpenCore</strong><small>Observe · Understand · Trust</small></div></div>
     <div className="runtime-actions">
-      <button className={active ? "runtime-stop-button" : "primary"} disabled={runtimeAction === "stopping" || runtimeAction === "switching"} onClick={active ? onStop : onStart}>{active ? <CircleStop size={15} /> : <Play size={15} />}{runtimeAction === "switching" ? "Changing…" : runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button>
-      <button disabled={busy || runtimeAction !== null || !running} onClick={onRestart}><RotateCw size={15} /> Restart</button>
+      <button className={active ? "runtime-stop-button" : "primary"} title={active ? 'Unload the model; the gateway stays available' : 'Load the selected model now. Chat and scheduled prompt jobs also start it automatically.'} disabled={runtimeAction === "stopping" || runtimeAction === "switching"} onClick={active ? onStop : onStart}>{active ? <CircleStop size={15} /> : <Play size={15} />}{runtimeAction === "switching" ? "Changing…" : runtimeAction === "stopping" ? "Stopping…" : active ? "Stop model" : "Start model"}</button>
+      <button disabled={busy || runtimeAction !== null || !running} onClick={onRestart}><RotateCw size={15} /> Restart model</button>
       <div className="model-picker" ref={profilePickerRef}>
         <span className="model-picker-label">Model</span>
         <button ref={profileTriggerRef} className={`model-picker-trigger ${profileMenuOpen ? "open" : ""}`} type="button" aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={profileMenuOpen} aria-controls="model-profile-options" disabled={profileLocked} onClick={() => setProfileMenuOpen((open) => !open)}>
@@ -435,10 +435,13 @@ const Telemetry = memo(function Telemetry({ snapshot }: { snapshot: AppSnapshot 
 
 function RuntimeTable({ snapshot, onRestart }: { snapshot: AppSnapshot; onRestart: () => void }) {
   const runtime = snapshot.runtime;
+  const usesEcho = profileUsesEcho(runtime.profile);
+  const echoStatus = runtime.echoPid ? runtime.status : !usesEcho ? 'not needed'
+    : runtime.status === 'starting' ? 'waiting for model' : runtime.status === 'running' ? 'error' : 'stopped';
   const rows = [
-    { name: "Control Gateway", detail: "Captures routing and events", status: "running", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
-    { name: "llama-server", detail: profileLabel(runtime.profile), status: runtime.modelPid ? runtime.status : "stopped", port: runtime.backendPort, pid: runtime.modelPid || "—", observable: true, restartable: Boolean(runtime.modelPid) },
-    { name: "ECHO proxy", detail: "Memory control and retrieval", status: runtime.echoPid ? runtime.status : "stopped", port: runtime.echoPort, pid: runtime.echoPid || "—", observable: runtime.profile.includes("echo") || runtime.profile === "doucode", restartable: Boolean(runtime.echoPid) },
+    { name: "Control Gateway", detail: "Starts with OpenCore and routes requests to the selected model", status: "running", port: runtime.gatewayPort, pid: "this app", observable: true, restartable: false },
+    { name: "llama-server", detail: `${profileLabel(runtime.profile)} · loads the weights and generates answers`, status: runtime.status === 'starting' ? 'starting' : runtime.modelPid ? runtime.status : "stopped", port: runtime.backendPort, pid: runtime.modelPid || "—", observable: true, restartable: Boolean(runtime.modelPid) },
+    { name: "ECHO proxy", detail: !usesEcho ? "This profile uses Native memory; no archive service is required" : runtime.status === 'starting' && !runtime.echoPid ? "Starts automatically after the model is ready" : "Retrieves saved history for the same loaded model", status: echoStatus, port: runtime.echoPort, pid: runtime.echoPid || "—", observable: usesEcho, restartable: Boolean(runtime.echoPid) },
     ...snapshot.connectors.map((item) => ({ name: item.name, detail: item.details, status: item.status, port: item.kind === "history" ? "local" : item.endpoint.split(":").pop() || "—", pid: "—", observable: item.observable, restartable: false })),
   ];
   return <div className="runtime-table">
@@ -490,7 +493,7 @@ function RuntimeView({ snapshot, selectedProfile, setSelectedProfile, runtimeAct
   return <div className="workspace runtime-workspace">
     <section className="runtime-main">
       <div className="page-heading"><div><h1>Runtime & Logs</h1><p>Monitor and control OpenCore processes, routes and model runtime.</p></div><div className="profile-switch"><span>Downloaded model profiles · one runtime at a time</span>{profileLoadError ? <small role="alert">Could not check downloaded models.</small> : installedProfiles === null ? <small role="status">Checking downloaded models…</small> : availableProfiles.length === 0 ? <small role="status">No downloaded text models. Install one in Models.</small> : availableProfiles.map((model) => <button key={model.id} className={selectedProfile === model.id ? "active" : ""} onClick={() => setSelectedProfile(model.id)} disabled={active}><b>{model.label}</b><small>{model.description}</small></button>)}</div></div>
-      <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop" : "Start"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart all</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
+      <section className="topology section-frame"><div className="frame-title"><h2>Runtime Topology</h2><span><StatusDot state={runtime.status} />{profileLabel(runtime.profile)} · {runtime.status}</span><div><button className={active ? "runtime-stop-button" : "primary"} title={active ? 'Unload the model; the gateway stays available' : 'Load the selected model now. Chat and scheduled prompt jobs also start it automatically.'} onClick={active ? actions.stop : actions.start} disabled={runtimeAction === "stopping"}>{active ? <CircleStop size={14} /> : <Play size={14} />}{runtimeAction === "stopping" ? "Stopping…" : active ? "Stop model" : "Start model"}</button><button onClick={actions.restart} disabled={runtime.status !== "running" || runtimeAction !== null}><RefreshCw size={14} /> Restart model</button></div></div><RuntimeTable snapshot={snapshot} onRestart={actions.restart} /></section>
       <RuntimeLogs logs={snapshot.logs} />
     </section>
     <aside className="runtime-inspector">

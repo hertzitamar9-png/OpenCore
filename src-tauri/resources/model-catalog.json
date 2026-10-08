@@ -13139,6 +13139,114 @@
       "filename": "PentaCoder-9B.i1-Q2_K_S.gguf",
       "sha256": "4dc19b037349402e5f6748502495d63d4c4571718ac565245597e7dfe4a2e1fb",
       "bytes": 3697266400
+    },
+    {
+      "id": "underdog-saluki-27b-4a673518b11b",
+      "path": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "repo": "ConwayResearch/Underdog-Saluki-27B-1.0",
+      "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "filename": "Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "bytes": 7898369152
+    },
+    {
+      "id": "underdog-saluki-27b-f3aa57813a51",
+      "path": "models/library/underdog-saluki-27b/mmproj-Underdog-Saluki-27B-1.0-F16.gguf",
+      "repo": "ConwayResearch/Underdog-Saluki-27B-1.0",
+      "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "filename": "mmproj-Underdog-Saluki-27B-1.0-F16.gguf",
+      "sha256": "f3aa57813a513420c2ef765503b057c1946bf4c8cdf3679d266a6644fc6cfd50",
+      "bytes": 927606912
+    },
+    {
+      "id": "underdog-saluki-27b-2e0b88b680a4",
+      "path": "models/library/underdog-saluki-27b/mmproj-Underdog-Saluki-27B-1.0-Q8_0.gguf",
+      "repo": "ConwayResearch/Underdog-Saluki-27B-1.0",
+      "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "filename": "mmproj-Underdog-Saluki-27B-1.0-Q8_0.gguf",
+      "sha256": "2e0b88b680a45a58eea666b9776a89601b16f4ef575b871a686d82ee65938756",
+      "bytes": 629246976
+    },
+    {
+      "id": "ista-qwen38-27b-64b53b64c7aa",
+      "path": "models/library/ista-qwen38-27b/Qwen3.8-27B-GSQ-RCO-IQ3_S.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ3_S.gguf",
+      "sha256": "64b53b64c7aa39f20a7e54bd80582fe595b1d745624ee8a72e92508c0326d810",
+      "bytes": 11771546784
+    },
+    {
+      "id": "ista-qwen38-27b-13cb7bebccbd",
+      "path": "models/library/ista-qwen38-27b/mmproj-Qwen3.8-27B-BF16.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "mmproj-Qwen3.8-27B-BF16.gguf",
+      "sha256": "13cb7bebccbd04afc8f4090cb949ecf8937cdf7377c5799b1a0c594e7c0d3e16",
+      "bytes": 931146528
+    },
+    {
+      "id": "ista-qwen38-27b-variant-e6f4beef-16c98021",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "sha256": "16c9802111aa9ef3acde465188d6d601f8db128ee3d828ad983a5caca4135ecb",
+      "bytes": 9259510912
+    },
+    {
+      "id": "ista-qwen38-27b-variant-f48f71ed-e6406238",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "sha256": "e6406238a5cc0043775cd1963b6f9e5b8707400276e38d9fde742304906b1330",
+      "bytes": 9607981120
+    },
+    {
+      "id": "ista-qwen38-27b-variant-f16c9659-f0ae5006",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "sha256": "f0ae5006da0ce6225935339e4e989369f94de95d2263cf969519f8420c9ae02c",
+      "bytes": 8422841472
+    },
+    {
+      "id": "ista-qwen38-27b-variant-3c22ea62-f3369f8d",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "sha256": "f3369f8d36968ab7dd12f5ff11452680aef9371aa19c9922d22ccd5e58c2d9c8",
+      "bytes": 8771311680
+    },
+    {
+      "id": "ista-qwen38-27b-variant-55e42343-58fd8267",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "sha256": "58fd826723939933dc86f45b7fe04545cbc2de1c70f6fe2cdd3858c87a98c12f",
+      "bytes": 12120016960
+    },
+    {
+      "id": "ista-qwen38-27b-variant-dc96aee1-fdfcb6a2",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_XXS.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ3_XXS.gguf",
+      "sha256": "fdfcb6a29b11188956dfbfd904223588a6c1b77eb250c3e8a36e1bd269df91f7",
+      "bytes": 10094357632
+    },
+    {
+      "id": "ista-qwen38-27b-variant-879530b7-63f29a21",
+      "path": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "repo": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "revision": "d562806dbafae37109975e970aae91b43e73b440",
+      "filename": "Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "sha256": "63f29a2189a6b4cc31f81e093d3856ad293a5583114439f41ae1ed7af4093262",
+      "bytes": 10442827840
     }
   ],
   "models": [
@@ -29454,6 +29562,610 @@
       "setupUrl": "https://github.com/ggml-org/llama.cpp",
       "runtimeModelPath": "models/library/pentacoder-9b/PentaCoder-9B.i1-Q2_K_S.gguf",
       "variantOf": "pentacoder-9b"
+    },
+    {
+      "id": "underdog-saluki-27b",
+      "label": "Underdog Saluki 27B 1.0",
+      "description": "Publisher mixed 2-bit Qwen3.8-27B GGUF, tuned for tool calling and coding.",
+      "precision": "IQ2 mix",
+      "contextTokens": 32768,
+      "artifacts": [
+        "underdog-saluki-27b-4a673518b11b"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original publisher IQ2 mix checkpoint: 7.90 GB download. Native and ECHO share the same pinned weights. ECHO adds local archived-history retrieval. Images require a separate optional vision profile. Runtime memory also includes context and compute buffers.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/tree/1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "setupUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "runtimeModelPath": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "memoryMode": "echo"
+    },
+    {
+      "id": "underdog-saluki-27b-native",
+      "label": "Underdog Saluki 27B 1.0 · Native",
+      "description": "Publisher mixed 2-bit Qwen3.8-27B GGUF, tuned for tool calling and coding. Native context mode; ECHO retrieval is disabled.",
+      "precision": "IQ2 mix",
+      "contextTokens": 32768,
+      "artifacts": [
+        "underdog-saluki-27b-4a673518b11b"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original publisher IQ2 mix checkpoint: 7.90 GB download. Native and ECHO share the same pinned weights. ECHO adds local archived-history retrieval. Images require a separate optional vision profile. Runtime memory also includes context and compute buffers.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/tree/1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "setupUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "runtimeModelPath": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "memoryMode": "native",
+      "variantOf": "underdog-saluki-27b"
+    },
+    {
+      "id": "underdog-saluki-27b-vision-f16",
+      "label": "Underdog Saluki 27B 1.0",
+      "description": "Publisher Saluki IQ2 mix checkpoint with the optional F16 vision projector.",
+      "precision": "IQ2 mix + F16 vision",
+      "contextTokens": 32768,
+      "artifacts": [
+        "underdog-saluki-27b-4a673518b11b",
+        "underdog-saluki-27b-f3aa57813a51"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original 7.90 GB publisher checkpoint plus the optional F16 image projector (0.928 GB). Text and vision weights are shared between Native and ECHO. Actual runtime memory depends on context, image size and compute buffers; image quality is not measured by HumanEval.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/tree/1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "setupUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "runtimeModelPath": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "memoryMode": "echo",
+      "variantOf": "underdog-saluki-27b",
+      "visionProjectorPath": "models/library/underdog-saluki-27b/mmproj-Underdog-Saluki-27B-1.0-F16.gguf"
+    },
+    {
+      "id": "underdog-saluki-27b-vision-f16-native",
+      "label": "Underdog Saluki 27B 1.0 · Native",
+      "description": "Publisher Saluki IQ2 mix checkpoint with the optional F16 vision projector. Native context mode; ECHO retrieval is disabled.",
+      "precision": "IQ2 mix + F16 vision",
+      "contextTokens": 32768,
+      "artifacts": [
+        "underdog-saluki-27b-4a673518b11b",
+        "underdog-saluki-27b-f3aa57813a51"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original 7.90 GB publisher checkpoint plus the optional F16 image projector (0.928 GB). Text and vision weights are shared between Native and ECHO. Actual runtime memory depends on context, image size and compute buffers; image quality is not measured by HumanEval.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/tree/1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "setupUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "runtimeModelPath": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "memoryMode": "native",
+      "variantOf": "underdog-saluki-27b",
+      "visionProjectorPath": "models/library/underdog-saluki-27b/mmproj-Underdog-Saluki-27B-1.0-F16.gguf"
+    },
+    {
+      "id": "underdog-saluki-27b-vision-q8_0",
+      "label": "Underdog Saluki 27B 1.0",
+      "description": "Publisher Saluki IQ2 mix checkpoint with the optional Q8_0 vision projector.",
+      "precision": "IQ2 mix + Q8_0 vision",
+      "contextTokens": 32768,
+      "artifacts": [
+        "underdog-saluki-27b-4a673518b11b",
+        "underdog-saluki-27b-2e0b88b680a4"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original 7.90 GB publisher checkpoint plus the optional Q8_0 image projector (0.629 GB). Text and vision weights are shared between Native and ECHO. Actual runtime memory depends on context, image size and compute buffers; image quality is not measured by HumanEval.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/tree/1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "setupUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "runtimeModelPath": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "memoryMode": "echo",
+      "variantOf": "underdog-saluki-27b",
+      "visionProjectorPath": "models/library/underdog-saluki-27b/mmproj-Underdog-Saluki-27B-1.0-Q8_0.gguf"
+    },
+    {
+      "id": "underdog-saluki-27b-vision-q8_0-native",
+      "label": "Underdog Saluki 27B 1.0 · Native",
+      "description": "Publisher Saluki IQ2 mix checkpoint with the optional Q8_0 vision projector. Native context mode; ECHO retrieval is disabled.",
+      "precision": "IQ2 mix + Q8_0 vision",
+      "contextTokens": 32768,
+      "artifacts": [
+        "underdog-saluki-27b-4a673518b11b",
+        "underdog-saluki-27b-2e0b88b680a4"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original 7.90 GB publisher checkpoint plus the optional Q8_0 image projector (0.629 GB). Text and vision weights are shared between Native and ECHO. Actual runtime memory depends on context, image size and compute buffers; image quality is not measured by HumanEval.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0/tree/1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "setupUrl": "https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0",
+      "runtimeModelPath": "models/library/underdog-saluki-27b/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "memoryMode": "native",
+      "variantOf": "underdog-saluki-27b",
+      "visionProjectorPath": "models/library/underdog-saluki-27b/mmproj-Underdog-Saluki-27B-1.0-Q8_0.gguf"
+    },
+    {
+      "id": "ista-qwen38-27b",
+      "label": "ISTA Qwen3.8 27B GSQ RCO",
+      "description": "Publisher Qwen3.8-27B GSQ RCO GGUF with the original IQ3_S weights.",
+      "precision": "IQ3_S",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-64b53b64c7aa"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original publisher IQ3_S checkpoint: 11.77 GB download. Automatic GPU/RAM layer placement with F16 GPU attention cache; weights are not converted. Native and ECHO share the same pinned weights. Other published quantizations and MTP files are separate choices; speculative decoding speed and quality are unverified. Runtime memory includes context and compute buffers.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/Qwen3.8-27B-GSQ-RCO-IQ3_S.gguf",
+      "memoryMode": "echo"
+    },
+    {
+      "id": "ista-qwen38-27b-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · Native",
+      "description": "Publisher Qwen3.8-27B GSQ RCO GGUF with the original IQ3_S weights. Native context mode; ECHO retrieval is disabled.",
+      "precision": "IQ3_S",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-64b53b64c7aa"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original publisher IQ3_S checkpoint: 11.77 GB download. Automatic GPU/RAM layer placement with F16 GPU attention cache; weights are not converted. Native and ECHO share the same pinned weights. Other published quantizations and MTP files are separate choices; speculative decoding speed and quality are unverified. Runtime memory includes context and compute buffers.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/Qwen3.8-27B-GSQ-RCO-IQ3_S.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b"
+    },
+    {
+      "id": "ista-qwen38-27b-vision-bf16",
+      "label": "ISTA Qwen3.8 27B GSQ RCO",
+      "description": "Original IQ3_S text checkpoint with the optional publisher BF16 image projector.",
+      "precision": "IQ3_S + BF16 vision",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-64b53b64c7aa",
+        "ista-qwen38-27b-13cb7bebccbd"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original 11.77 GB IQ3_S checkpoint plus the optional 0.931 GB BF16 image projector. Text and image weights are shared between Native and ECHO. Image quality is not measured by HumanEval. Automatic GPU/RAM placement retains the original weight precision and F16 attention cache.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/Qwen3.8-27B-GSQ-RCO-IQ3_S.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "visionProjectorPath": "models/library/ista-qwen38-27b/mmproj-Qwen3.8-27B-BF16.gguf"
+    },
+    {
+      "id": "ista-qwen38-27b-vision-bf16-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · Native",
+      "description": "Original IQ3_S text checkpoint with the optional publisher BF16 image projector. Native context mode; ECHO retrieval is disabled.",
+      "precision": "IQ3_S + BF16 vision",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-64b53b64c7aa",
+        "ista-qwen38-27b-13cb7bebccbd"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Original 11.77 GB IQ3_S checkpoint plus the optional 0.931 GB BF16 image projector. Text and image weights are shared between Native and ECHO. Image quality is not measured by HumanEval. Automatic GPU/RAM placement retains the original weight precision and F16 attention cache.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/Qwen3.8-27B-GSQ-RCO-IQ3_S.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "visionProjectorPath": "models/library/ista-qwen38-27b/mmproj-Qwen3.8-27B-BF16.gguf"
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-s-16c980",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_S",
+      "description": "Published IQ2_S GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ2_S",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-e6f4beef-16c98021"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-e6f4beef-16c98021"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-s-16c980-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_S · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ2_S variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_S",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-e6f4beef-16c98021"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_S.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-e6f4beef-16c98021"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-s-mtp-e64062",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_S MTP",
+      "description": "Published IQ2_S MTP GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ2_S MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-f48f71ed-e6406238"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-f48f71ed-e6406238"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-s-mtp-e64062-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_S MTP · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ2_S MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_S MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-f48f71ed-e6406238"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_S-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-f48f71ed-e6406238"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-xs-f0ae50",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_XS",
+      "description": "Published IQ2_XS GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ2_XS",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-f16c9659-f0ae5006"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-f16c9659-f0ae5006"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-xs-f0ae50-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_XS · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ2_XS variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_XS",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-f16c9659-f0ae5006"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-f16c9659-f0ae5006"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-xs-mtp-f3369f",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_XS MTP",
+      "description": "Published IQ2_XS MTP GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ2_XS MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-3c22ea62-f3369f8d"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-3c22ea62-f3369f8d"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq2-xs-mtp-f3369f-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ2_XS MTP · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ2_XS MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ2_XS MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-3c22ea62-f3369f8d"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-3c22ea62-f3369f8d"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq3-s-mtp-58fd82",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ3_S MTP",
+      "description": "Published IQ3_S MTP GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ3_S MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-55e42343-58fd8267"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-55e42343-58fd8267"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq3-s-mtp-58fd82-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ3_S MTP · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ3_S MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ3_S MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-55e42343-58fd8267"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-55e42343-58fd8267"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq3-xxs-fdfcb6",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ3_XXS",
+      "description": "Published IQ3_XXS GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ3_XXS",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-dc96aee1-fdfcb6a2"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_XXS.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-dc96aee1-fdfcb6a2"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq3-xxs-fdfcb6-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ3_XXS · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ3_XXS variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ3_XXS",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-dc96aee1-fdfcb6a2"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. Exact download size is based on Hub file metadata; VRAM is an estimate.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_XXS.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-dc96aee1-fdfcb6a2"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq3-xxs-mtp-63f29a",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ3_XXS MTP",
+      "description": "Published IQ3_XXS MTP GGUF variant of ISTA Qwen3.8 27B GSQ RCO.",
+      "precision": "IQ3_XXS MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-879530b7-63f29a21"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "memoryMode": "echo",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-879530b7-63f29a21"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b-iq3-xxs-mtp-63f29a-native",
+      "label": "ISTA Qwen3.8 27B GSQ RCO · IQ3_XXS MTP · Native",
+      "description": "ISTA Qwen3.8 27B GSQ RCO IQ3_XXS MTP variant with native context; ECHO retrieval is disabled.",
+      "precision": "IQ3_XXS MTP",
+      "contextTokens": 32768,
+      "artifacts": [
+        "ista-qwen38-27b-variant-879530b7-63f29a21"
+      ],
+      "license": "apache-2.0",
+      "experimental": true,
+      "note": "Published GGUF file(s), pinned to d562806dbafae37109975e970aae91b43e73b440. MTP variants use a separate predictive format; speculative speed and quality are not verified. VRAM values are estimates; download sizes come from Hub file metadata.",
+      "selectable": true,
+      "category": "text",
+      "backend": "gguf",
+      "runtimeReady": true,
+      "installable": true,
+      "sourceUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF/tree/d562806dbafae37109975e970aae91b43e73b440",
+      "setupUrl": "https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+      "runtimeModelPath": "models/library/ista-qwen38-27b/variants/Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "memoryMode": "native",
+      "variantOf": "ista-qwen38-27b",
+      "weightArtifacts": [
+        "ista-qwen38-27b-variant-879530b7-63f29a21"
+      ]
     }
   ]
 }

@@ -4,8 +4,13 @@ import { modelLibrary } from "./api";
 import type { RuntimeProfile } from "./types";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
 
-const catalogProfiles = new Map((modelCatalog.models as { id: string; label: string; description: string; selectable: boolean }[])
-  .filter(model => model.selectable).map(model => [model.id, model]));
+const catalogModels = modelCatalog.models as { id: string; label: string; description: string; selectable: boolean; memoryMode?: string }[];
+const catalogProfiles = new Map(catalogModels.filter(model => model.selectable).map(model => [model.id, model]));
+const catalogMemoryModes = new Map(catalogModels.map(model => [model.id, model.memoryMode]));
+
+export function profileUsesEcho(profile: string): boolean {
+  return profile === 'unsloth-echo' || catalogMemoryModes.get(profile) === 'echo';
+}
 
 type InstalledModelProfile = { id: string; label: string; description: string };
 

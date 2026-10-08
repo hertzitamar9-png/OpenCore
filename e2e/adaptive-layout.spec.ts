@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-for (const viewport of [{ width: 1100, height: 760 }, { width: 1920, height: 1080 }]) {
+for (const viewport of [{ width: 1100, height: 760 }, { width: 1920, height: 1080 }, { width: 2557, height: 1430 }]) {
   test(`picker hover follows the pointer and workspace tabs have four borders at ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
@@ -27,17 +27,74 @@ for (const viewport of [{ width: 1100, height: 760 }, { width: 1920, height: 108
     for (const name of ['Files', 'Browser', 'Computer', 'Side chat']) {
       const tab = page.getByRole('tab', { name, exact: true });
       await tab.click();
-      const stroke = await tab.evaluate(element => {
+      await expect(tab).toHaveAttribute('aria-selected', 'true');
+      await expect.poll(() => tab.evaluate(element => {
         const style = getComputedStyle(element);
-        return ['Top', 'Right', 'Bottom', 'Left'].map(edge => ({
+        const stroke = ['Top', 'Right', 'Bottom', 'Left'].map(edge => ({
           width: style.getPropertyValue(`border-${edge.toLowerCase()}-width`),
           color: style.getPropertyValue(`border-${edge.toLowerCase()}-color`),
         }));
+        return stroke.every(edge => edge.width === '1px' && edge.color === stroke[0].color && edge.color !== 'rgba(0, 0, 0, 0)');
+      })).toBe(true);
+      const outline = await tab.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        const parent = element.parentElement!.getBoundingClientRect();
+        const bottomHit = document.elementFromPoint(rect.x + rect.width / 2, rect.bottom - .5);
+        return { bottomGap: parent.bottom - rect.bottom, bottomVisible: element.contains(bottomHit) };
       });
-      expect(stroke.every(edge => edge.width === '1px' && edge.color === stroke[0].color && edge.color !== 'rgba(0, 0, 0, 0)')).toBe(true);
+      expect(outline.bottomGap).toBeGreaterThanOrEqual(4);
+      expect(outline.bottomVisible).toBe(true);
     }
   });
+
+  test(`Files History controls fit without vertical scrolling at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Workspace', exact: true }).click();
+    await page.getByRole('tab', { name: 'Files', exact: true }).click();
+    const row = page.getByRole('tablist', { name: 'Files tabs', exact: true });
+    const geometry = await row.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return { overflow: element.scrollHeight - element.clientHeight,
+        buttons: [...element.querySelectorAll('button')].map(button => {
+          const child = button.getBoundingClientRect();
+          return { topGap: child.top - rect.top, bottomGap: rect.bottom - child.bottom };
+        }) };
+    });
+    expect(geometry.overflow).toBe(0);
+    for (const button of geometry.buttons) {
+      expect(button.topGap).toBeGreaterThanOrEqual(3);
+      expect(button.bottomGap).toBeGreaterThanOrEqual(3);
+    }
+    await row.evaluate(element => { element.scrollTop = 100; });
+    expect(await row.evaluate(element => element.scrollTop)).toBe(0);
+  });
 }
+
+test('many web tabs scroll horizontally without clipping their controls', async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 760 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Workspace', exact: true }).click();
+  await page.getByRole('separator', { name: 'Resize workspace', exact: true }).press('Home');
+  await page.getByRole('tab', { name: 'Browser', exact: true }).click();
+  for (let index = 0; index < 6; index++) await page.getByRole('button', { name: 'New web tab', exact: true }).click();
+  const tabs = page.getByRole('tablist', { name: 'Web tabs', exact: true });
+  const geometry = await tabs.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return { verticalOverflow: element.scrollHeight - element.clientHeight,
+      horizontalOverflow: element.scrollWidth - element.clientWidth,
+      contained: [...element.querySelectorAll('button')].every(button => {
+        const child = button.getBoundingClientRect();
+        return child.top >= rect.top + 3 && child.bottom <= rect.bottom - 3;
+      }) };
+  });
+  expect(geometry.verticalOverflow).toBe(0);
+  expect(geometry.horizontalOverflow).toBeGreaterThan(0);
+  expect(geometry.contained).toBe(true);
+  await tabs.evaluate(element => { element.scrollTop = 100; element.scrollLeft = 0; });
+  expect(await tabs.evaluate(element => element.scrollTop)).toBe(0);
+  await expect(tabs.getByRole('tab', { name: 'Web 1', exact: true })).toBeInViewport();
+});
 
 test('live resizing scales text and controls, keeps preferences and fills Jobs', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });

@@ -45,6 +45,6 @@ export function describeSchedule(schedule: BackgroundSchedule): string {
   if (schedule.kind === 'once') return `Once · ${new Date(schedule.at).toLocaleString()}`;
   if (schedule.kind === 'interval') return `Every ${schedule.everySeconds} seconds`;
   if (schedule.kind === 'cron') return `${schedule.expression} · ${schedule.timezone === 'utc' ? 'UTC' : 'Local time'}`;
-  return `${schedule.name}${schedule.stepModulo ? ` · every ${schedule.stepModulo} steps` : ''}`;
+  return `When event “${schedule.name}” arrives${schedule.stepModulo ? ` · every ${schedule.stepModulo} steps` : ''}`;
 }
 export const backgroundError = (error: unknown): string => error instanceof Error ? error.message : String(error);

@@ -37,6 +37,23 @@ pub fn supported_profile(profile: &str) -> bool {
 pub fn echo_profile(profile: &str) -> bool {
     profile == "unsloth-echo" || crate::model_catalog::model(profile).is_some_and(|model| model.memory_mode == "echo")
 }
+fn catalog_gguf_automatic_placement(model: &crate::model_catalog::Model) -> bool {
+    let family = model.variant_of.as_deref().unwrap_or(&model.id);
+    matches!(family, "underdog-saluki-27b" | "ista-qwen38-27b")
+}
+fn catalog_gguf_acceleration_args(model: &crate::model_catalog::Model) -> Vec<&'static str> {
+    if catalog_gguf_automatic_placement(model) {
+        // CPU attention cache cut Saluki decoding from 41 to 14 tokens/s on
+        // a 4070. Fit weight layers to available VRAM while keeping the original
+        // weights and F16 cache. One slot keeps the full declared context.
+        vec!["-ngl", "auto", "--fit", "on", "-np", "1", "--kv-offload",
+             "--cache-type-k", "f16", "--cache-type-v", "f16", "--flash-attn", "on"]
+    } else {
+        let family = model.variant_of.as_deref().unwrap_or(&model.id);
+        let layers = match family { "davidau-27b" => "32", "dirk-27b" => "48", _ => "99" };
+        vec!["-ngl", layers, "--no-kv-offload", "--flash-attn", "on"]
+    }
+}
 fn lfm_profile(profile: &str) -> bool { profile.starts_with("dualcore-") || profile.starts_with("fusioncore-") }
 fn nanbeige_profile(profile: &str) -> bool {
     matches!(profile, "nanbeige-bf16" | "nanbeige-bf16-echo") ||
@@ -940,12 +957,9 @@ impl RuntimeManager {
         if !server.is_file(){return self.fail_start(profile,"The bundled GGUF inference runtime is missing".into());}
         if Self::port_open(self.backend_port) && !self.reclaim_stale_opencore_port(self.backend_port,false){return self.fail_start(profile,"Chat backend port is occupied by another application".into());}
         let mut command=self.command(&server);
-        // Large optional models use bounded attention and CPU KV. CPU layer
-        // offload for DavidAU is deliberate and visible in its library card.
-        let family_id=model.variant_of.as_deref().unwrap_or(profile);
-        let layers=if family_id=="davidau-27b" {"32"} else if family_id=="dirk-27b" {"48"} else {"99"};
         command.current_dir(server.parent().unwrap_or(&self.install_root)).arg("-m").arg(&checkpoint)
-            .args(["--host","127.0.0.1","--port",&self.backend_port.to_string(),"-ngl",layers,"-c",&model.context_tokens.to_string(),"-t","4","--no-kv-offload","--flash-attn","on"])
+            .args(["--host","127.0.0.1","--port",&self.backend_port.to_string(),"-c",&model.context_tokens.to_string(),"-t","4"])
+            .args(catalog_gguf_acceleration_args(model))
             .stdout(Stdio::piped()).stderr(Stdio::piped());
         if let Some(projector)=model.vision_projector_path.as_deref(){command.arg("--mmproj").arg(crate::model_catalog::safe_path(&self.install_root,projector)?).args(["--image-max-tokens","512"]);}
         let mut child=command.spawn().map_err(|error|format!("Could not start {}: {error}",model.label))?;
@@ -1077,11 +1091,16 @@ impl RuntimeManager {
             match inner.profile.as_str() {
                 "echo" | "echo-native" | "native1m" | "native1m-native" | "doucode" | "doucode-native" => ("system RAM".to_string(), "Q4_0".to_string()),
                 profile if nanbeige_profile(profile) => ("system RAM".to_string(), "F16 KV".to_string()),
-                profile if crate::model_catalog::gguf_model(profile).is_some() => ("system RAM".to_string(), "F16 KV".to_string()),
                 "unsloth-echo" => ("backend-managed".to_string(), "backend-reported".to_string()),
                 "dualcore-kv" | "fusioncore-kv" => ("GPU".to_string(), "F16".to_string()),
                 "dualcore-echo" | "fusioncore-echo" => ("GPU".to_string(), "F16 KV; ECHO archive for long-term memory".to_string()),
-                _ => ("not loaded".to_string(), "none".to_string()),
+                profile => match crate::model_catalog::gguf_model(profile) {
+                    Some(model) => {
+                        let location = if catalog_gguf_automatic_placement(&model) { "GPU / system RAM (automatic)" } else { "system RAM" };
+                        (location.to_string(), "F16 KV".to_string())
+                    }
+                    None => ("not loaded".to_string(), "none".to_string()),
+                },
             }
         };
         let selected_profile = if matches!(inner.status.as_str(), "running" | "starting") {
@@ -1303,6 +1322,66 @@ impl Drop for RuntimeManager {
 mod tests {
     use super::*;
     use std::net::TcpListener;
+
+    #[test]
+    fn catalog_cache_snapshot_reports_the_configured_automatic_placement() {
+        let root = std::env::temp_dir().join(format!("opencore-cache-placement-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let store = Arc::new(EventStore::open(&root.join("events.sqlite3")).unwrap());
+        let manager = RuntimeManager::new(store.clone());
+        for (profile, location) in [
+            ("underdog-saluki-27b", "GPU / system RAM (automatic)"),
+            ("underdog-saluki-27b-vision-f16-native", "GPU / system RAM (automatic)"),
+            ("ista-qwen38-27b-native", "GPU / system RAM (automatic)"),
+            ("ista-qwen38-27b-vision-bf16", "GPU / system RAM (automatic)"),
+            ("swift-27b", "system RAM"),
+        ] {
+            {
+                let mut inner = manager.inner.lock().unwrap();
+                inner.profile = profile.into();
+                inner.status = "running".into();
+            }
+            let snapshot = manager.snapshot();
+            assert_eq!(snapshot.attention_kv_location, location, "{profile}");
+            assert_eq!(snapshot.attention_kv_type, "F16 KV", "{profile}");
+        }
+        drop(manager);
+        drop(store);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn new_27b_families_share_automatic_placement_across_native_echo_and_vision() {
+        let catalog: serde_json::Value = serde_json::from_str(include_str!("../resources/model-catalog.json")).unwrap();
+        for family in ["underdog-saluki-27b", "ista-qwen38-27b"] {
+            let mut modes = std::collections::HashSet::new();
+            let mut profiles = 0;
+            for row in catalog["models"].as_array().unwrap() {
+                if row["id"] != family && row["variantOf"] != family { continue; }
+                let model = crate::model_catalog::gguf_model(row["id"].as_str().unwrap()).unwrap();
+                let args = catalog_gguf_acceleration_args(&model);
+                assert!(args.windows(2).any(|pair| pair == ["-ngl", "auto"]), "{}", model.id);
+                assert!(args.windows(2).any(|pair| pair == ["--fit", "on"]), "{}", model.id);
+                assert!(args.contains(&"--kv-offload"), "{}", model.id);
+                assert!(!args.contains(&"--no-kv-offload"), "{}", model.id);
+                for option in ["--cache-type-k", "--cache-type-v"] {
+                    assert!(args.windows(2).any(|pair| pair == [option, "f16"]), "{}", model.id);
+                }
+                assert!(args.windows(2).any(|pair| pair == ["-np", "1"]), "{}", model.id);
+                assert_eq!(model.context_tokens, 32_768, "{}", model.id);
+                modes.insert(model.memory_mode);
+                profiles += 1;
+            }
+            assert!(profiles >= 4, "Must cover the parent and optional image profiles");
+            assert!(modes.contains("native") && modes.contains("echo"));
+        }
+        for (family, layers) in [("davidau-27b", "32"), ("dirk-27b", "48"), ("swift-27b", "99")] {
+            let model = crate::model_catalog::gguf_model(family).unwrap();
+            let args = catalog_gguf_acceleration_args(&model);
+            assert!(args.windows(2).any(|pair| pair == ["-ngl", layers]));
+            assert!(args.contains(&"--no-kv-offload"));
+        }
+    }
 
     #[test]
     fn hermes_connector_guidance_uses_selected_custom_home_after_observed_requests() {

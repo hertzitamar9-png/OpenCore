@@ -382,7 +382,7 @@ impl BackgroundManager {
                 let manager = self.clone(); let id = run.id.clone();
                 let started = Arc::new(move |pid| manager.set_pid(&id, pid));
                 let result = tokio::task::spawn_blocking(move || scheduler_worker::run(config, token, dir, url, secret, started)).await.map_err(|error| error.to_string())??;
-                Ok(json!({"exitCode":result.exit_code,"cancelled":result.cancelled,"stdoutTruncated":result.stdout_truncated,"stderrTruncated":result.stderr_truncated}))
+                Ok(json!({"exitCode":result.exit_code,"cancelled":result.cancelled,"stdoutTruncated":result.stdout_truncated,"stderrTruncated":result.stderr_truncated,"failureReason":result.failure_reason}))
             }
         }
     }
@@ -408,7 +408,10 @@ impl BackgroundManager {
                 run.exit_code = value["exitCode"].as_i64().map(|code| code as i32);
                 let worker_failed = value.get("exitCode").is_some() && run.exit_code != Some(0) && !cancelled;
                 run.status = if cancelled { if interrupted { "interrupted" } else { "cancelled" } } else if worker_failed { "failed" } else { "completed" }.into();
-                if worker_failed { run.error = Some(format!("Worker exited with code {}", run.exit_code.map(|code| code.to_string()).unwrap_or_else(|| "unavailable (terminated by signal)".into()))); }
+                if worker_failed {
+                    let details = value["failureReason"].as_str().filter(|value| !value.trim().is_empty()).map(|value| format!("\n{value}")).unwrap_or_default();
+                    run.error = Some(format!("Worker exited with code {}{details}", run.exit_code.map(|code| code.to_string()).unwrap_or_else(|| "unavailable (terminated by signal)".into())));
+                }
                 run.evidence["result"] = value;
             },
             Err(error) => { run.status = if cancelled { if interrupted { "interrupted" } else { "cancelled" } } else { "failed" }.into(); run.error = Some(error); }

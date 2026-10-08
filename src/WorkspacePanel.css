@@ -91,7 +91,7 @@
 .workspace-files-content > .spaces-view { flex:1; min-height:0; padding:16px 12px; overflow:auto; }
 .workspace-files-content > .file-snapshot-view { flex:1; min-height:0; overflow:auto; }
 .workspace-files-content > .workspace-browser-pages { flex:none; }
-.unified-workspace .workspace-history-tab { font-size:calc(11px * var(--ui-scale,1)); padding:0 9px; min-height:28px; border-radius:6px; border-color:var(--theme-border,#3b4651); background:var(--theme-canvas,#12171d); color:var(--theme-muted,#acbecb); }
+.unified-workspace .workspace-history-tab { flex:none; font-size:calc(11px * var(--ui-scale,1)); padding:0 9px; min-height:calc(28px * var(--ui-scale,1)); border-radius:6px; border-color:var(--theme-border,#3b4651); background:var(--theme-canvas,#12171d); color:var(--theme-muted,#acbecb); }
 .unified-workspace .workspace-history-tab[aria-selected="true"] { background:var(--theme-panel,#28313b); color:var(--theme-ink,#fff); }
 .unified-workspace .spaces-heading { align-items:flex-start; gap:8px; flex-wrap:wrap; }
 .unified-workspace .spaces-heading h2 { font-size:calc(17px * var(--ui-scale,1)); }
