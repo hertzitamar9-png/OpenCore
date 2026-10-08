@@ -58,9 +58,9 @@ The four new profiles use two complete copies of the same pinned DavidAU LFM mod
 | Profile | Inference | Active context |
 | --- | --- | --- |
 | DualCore KV | Independent drafts and blind cross-reviews | 131,072 |
-| DualCore ECHO | Independent drafts and reviews with archive retrieval; incremental F16 KV while decoding | 32,768 |
+| DualCore ECHO | Independent drafts and reviews with archive retrieval; incremental F16 KV while decoding | 131,072 |
 | FusionCore KV | One coupled token loop through two full towers | 131,072 |
-| FusionCore ECHO | Coupled loop with archive retrieval; incremental F16 KV while decoding | 8,192 |
+| FusionCore ECHO | Coupled loop with archive retrieval; incremental F16 KV while decoding | 131,072 |
 
 The supplied upstream repository has no BF16 release, so these profiles use the
 authorized Q8_0 fallback. All four share one 3.12 GB weight file on disk; two weight
