@@ -346,7 +346,7 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
   const content = <>
     <div className="desktop-access-bar"><span>{enabled ? "Control this PC" : "Computer use is disabled"}</span>{!enabled && <button type="button" disabled={accessBusy} onClick={() => void setAccess(true)}>Enable computer use</button>}<button type="button" className="automation-stop" disabled={!enabled && !accessBusy} onClick={() => void setAccess(false)}><Square size={14} aria-hidden="true" /> Stop computer use</button></div>
     <div className="desktop-toolbar" role="toolbar" aria-label="Computer view controls">
-      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><ThemedSelect truncate aria-label="Window" title={windows.find(item => item.windowId === windowId)?.title || "Select a window"} value={windowId ?? ""} onChange={event => {
+      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><ThemedSelect truncate aria-label="Window" disabled={busy} title={windows.find(item => item.windowId === windowId)?.title || "Select a window"} value={windowId ?? ""} onChange={event => {
         const id = event.target.value === "" ? null : Number(event.target.value);
         select(id);
         void refresh(true);

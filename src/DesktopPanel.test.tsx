@@ -95,8 +95,10 @@ it("pauses text editing while a direct click is selecting another field", async 
   fireEvent.click(image, { clientX: 240, clientY: 125 });
   await waitFor(() => expect(command.mock.calls.filter(([action]) => action === "click")).toHaveLength(2));
   expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
+  expect(screen.getByLabelText("Window")).toBeDisabled();
   await act(async () => finishClick({ activated: true, inputMode: "pointer" } as never));
   expect(screen.getByLabelText("Type in selected window")).toBeEnabled();
+  expect(screen.getByLabelText("Window")).toBeEnabled();
 });
 
 
