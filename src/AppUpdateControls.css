@@ -1,4 +1,5 @@
 .manual-update-control { flex-wrap: wrap; row-gap: 4px; }
+.manual-update-summary { display: inline-flex; align-items: center; flex: none; gap: 8px; white-space: nowrap; }
 .manual-update-version {
   display: inline-flex;
   align-items: center;

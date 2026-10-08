@@ -100,19 +100,21 @@ export function UpdateButton() {
 
   const currentVersion = installedVersion ?? checked?.currentVersion;
   return <div className="manual-update-control">
-    <span className="manual-update-version" title={currentVersion ? `Running OpenCore ${currentVersion}` : 'Reading the installed app version'}>
-      <span>{currentVersion === 'web' ? 'Web preview' : currentVersion ? `v${currentVersion}` : 'Reading version…'}</span>
-      {checked && !checked.available && !busy && checked.currentVersion !== 'web' && <span className="manual-update-current">Up to date</span>}
-    </span>
     {open && (showMessage || checked?.available) && <div className="manual-update-inline">
       {showMessage && <span className="manual-update-message" role="status" aria-live="polite">{message}</span>}
       {checked?.available && <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>}
     </div>}
-    {checked?.available ? <button type="button" className="manual-update-button" aria-label="Update" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}>
+    <div className="manual-update-summary">
+      <span className="manual-update-version" title={currentVersion ? `Running OpenCore ${currentVersion}` : 'Reading the installed app version'}>
+        <span>{currentVersion === 'web' ? 'Web preview' : currentVersion ? `v${currentVersion}` : 'Reading version…'}</span>
+        {checked && !checked.available && !busy && checked.currentVersion !== 'web' && <span className="manual-update-current">Up to date</span>}
+      </span>
+      {checked?.available ? <button type="button" className="manual-update-button" aria-label="Update" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}>
       <Download size={14} /> Update
     </button> : <button type="button" className="manual-update-button" aria-label="Check for updates" disabled={busy} onClick={() => { setOpen(true); void check(); }}>
       <RefreshCw size={14} />{busy ? 'Checking…' : 'Check for updates'}
     </button>}
+    </div>
   </div>;
 }
 

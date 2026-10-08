@@ -31,6 +31,9 @@ it('always shows the running version and check action without claiming latest be
   expect(version.compareDocumentPosition(check) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(check).toBeEnabled();
   expect(screen.getByText('Up to date')).toBeVisible();
+  fireEvent.click(check);
+  expect(await screen.findByRole('status')).toHaveTextContent('OpenCore 1.2.0 is up to date.');
+  expect(version.parentElement?.nextElementSibling).toBe(check);
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
