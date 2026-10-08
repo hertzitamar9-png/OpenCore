@@ -758,7 +758,7 @@ mod platform {
             let _ = SetForegroundWindow(hwnd);
         }
         if unsafe { GetForegroundWindow() } != hwnd { return Err("The selected app did not receive keyboard focus".into()); }
-        let sequence = if key == "Ctrl+L" { "{ctrl}l".to_string() } else { format!("{{{}}}", key.to_lowercase()) };
+        let sequence = if key == "Ctrl+L" { "{ctrl}l".to_string() } else { format!("{{{}}}", key.strip_prefix("Arrow").unwrap_or(key).to_lowercase()) };
         let result = Keyboard::new().send_keys(&sequence).map_err(|error| error.to_string());
         std::thread::sleep(std::time::Duration::from_millis(100));
         if previous != hwnd && !previous.0.is_null() && unsafe { GetForegroundWindow() } == hwnd {
@@ -770,7 +770,7 @@ mod platform {
 
     // Direct input addresses the physical window even when an app exposes no
     // accessibility tree or editable/scrollable control patterns.
-    fn direct_action(action: &str, args: &Value) -> Result<Value, String> {
+    fn direct_action(action: &str, args: &Value, authorization: InputAuthorization<'_>) -> Result<Value, String> {
         let id = args["windowId"].as_i64().ok_or("Select an application window first")? as isize;
         if action == "key" { return foreground_key(id, args["key"].as_str().unwrap_or("Escape")); }
         let rect = crate::desktop_capture::physical_window_rect(id)?;
@@ -791,7 +791,7 @@ mod platform {
                 Ok(json!({"scrolled":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}))
             }
             "drag" => foreground_drag(id, &at, &point("toX", "toY")?),
-            "commit_text" => foreground_type(id, &at, args["text"].as_str().unwrap_or_default(), true, args["submit"].as_bool().unwrap_or(false)),
+            "commit_text" => foreground_type(id, &at, args["text"].as_str().unwrap_or_default(), true, args["submit"].as_bool().unwrap_or(false), authorization),
             _ => Err("Unsupported direct input action".into()),
         }
     }
@@ -948,7 +948,7 @@ mod platform {
         let _dpi = crate::desktop_capture::PhysicalDpiScope::new()?;
         if args["directControl"].as_bool() == Some(true) && foreground_fallback_allowed(args)
             && matches!(action, "click" | "drag" | "scroll_at" | "commit_text" | "key") {
-            return direct_action(action, args);
+            return direct_action(action, args, authorization);
         }
         let session = automation_session(!foreground_fallback_allowed(args))?;
         let automation = &session.automation;
@@ -1145,7 +1145,7 @@ mod platform {
                 let key = if action == "scroll" {
                     if args["direction"] == "up" { "PageUp" } else { "PageDown" }
                 } else { args["key"].as_str().unwrap_or("Escape") };
-                let sequence = if key == "Ctrl+L" { "{ctrl}l".to_string() } else { format!("{{{}}}", key.to_lowercase()) };
+                let sequence = if key == "Ctrl+L" { "{ctrl}l".to_string() } else { format!("{{{}}}", key.strip_prefix("Arrow").unwrap_or(key).to_lowercase()) };
                 Keyboard::new().send_keys(&sequence).map_err(|e| e.to_string())?;
                 Ok(json!({"key":key}))
             }
