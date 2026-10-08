@@ -1,7 +1,8 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import * as api from "./api";
-import { DesktopPanel } from "./DesktopPanel";
+import { DesktopPanel as NativeDesktopPanel } from "./DesktopPanel";
+const DesktopPanel = (props: Parameters<typeof NativeDesktopPanel>[0]) => <NativeDesktopPanel initialMode="background" {...props} />;
 
 const windows: api.DesktopWindow[] = [
   { windowId: 0, title: "Entire desktop", bounds: { left: 0, top: 0, width: 1920, height: 1080 } },
@@ -28,7 +29,54 @@ async function selectWindow(id = 10) {
 function imageBounds(image: HTMLElement) {
   vi.spyOn(image, "getBoundingClientRect").mockReturnValue({ left: 100, top: 40, width: 480, height: 270, right: 580, bottom: 310, x: 100, y: 40, toJSON: () => ({}) });
 }
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
+beforeEach(() => {
+  const stored = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => stored.get(key) ?? null,
+    setItem: (key: string, value: string) => stored.set(key, value),
+    removeItem: (key: string) => stored.delete(key),
+  });
+});
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+it("lets the user choose both control modes and remembers the choice", async () => {
+  const command = desktop();
+  const view = render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  expect(screen.getByLabelText("Computer control mode")).toHaveValue("direct");
+  fireEvent.change(screen.getByLabelText("Computer control mode"), { target: { value: "background" } });
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("interact", expect.objectContaining({ backgroundOnly: true, manualControl: true, allowForegroundFallback: false })));
+  view.unmount();
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  expect(screen.getByLabelText("Computer control mode")).toHaveValue("background");
+});
+
+it("sends real manual clicks and text without the background-only restriction", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "click") return { activated: true, inputMode: "pointer" } as never;
+    return { updated: true, submitted: false, inputMode: "pointer" } as never;
+  });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 10, x: 480, y: 270, directControl: true }));
+  fireEvent.change(screen.getByLabelText("Type in selected window"), { target: { value: "Manual input works" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply text to selected window" }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("commit_text", { windowId: 10, x: 480, y: 270, text: "Manual input works", submit: false, directControl: true }));
+  expect(command.mock.calls.some(([action]) => action === "set_at")).toBe(false);
+});
+
+it("clears activity when the computer panel is closed", async () => {
+  const command = desktop();
+  const view = render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  await screen.findByLabelText("Window");
+  view.unmount();
+  expect(command).toHaveBeenCalledWith("clear_activity");
+});
 
 it("explains the app permission wait and captures only after that app is allowed", async () => {
   let allowed = false;
@@ -222,6 +270,43 @@ it("keeps the entire desktop capture view only instead of falling back to a fore
   expect(command.mock.calls.some(([action]) => ["interact", "click", "commit_text", "commit_enter"].includes(action))).toBe(false);
 });
 
+it("controls the real desktop through the explicitly selected direct mode", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "click") return { activated: true, inputMode: "pointer" } as never;
+    return { updated: true, submitted: false, inputMode: "pointer" } as never;
+  });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(0); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 0, x: 960, y: 540, directControl: true }));
+  fireEvent.change(screen.getByLabelText("Type in selected window"), { target: { value: "Real desktop field" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply text to selected window" }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("commit_text", {
+    windowId: 0, x: 960, y: 540, text: "Real desktop field", submit: false, directControl: true,
+  }));
+  expect(screen.queryByText(/Entire desktop is view only/)).toBeNull();
+});
+
+it("asks for the actual app under a desktop click without replaying the click after permission", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { permissionRequired: true, permissionWindowId: 20, application: "Calculator" } as never;
+  });
+  const grant = vi.spyOn(api, "allowComputerWindow").mockResolvedValue({ enabled: true, apps: [], revision: 1 });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(0); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  fireEvent.click(await screen.findByRole("button", { name: "Allow Calculator" }));
+  await waitFor(() => expect(grant).toHaveBeenCalledWith(20));
+  expect(command.mock.calls.filter(([action]) => action === "click")).toHaveLength(1);
+  expect(screen.getByLabelText("Window")).toHaveValue("0");
+});
+
 it("preserves the draft when native text application cannot submit the control", async () => {
   const command = desktop();
   render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
@@ -251,10 +336,47 @@ it("reports unsupported background controls without retrying through a foregroun
   const image = await selectWindow();
   imageBounds(image);
   fireEvent.click(image, { clientX: 340, clientY: 175 });
-  expect(await screen.findByRole("alert")).toHaveTextContent("This control does not support background interaction");
-  expect(notice).toHaveBeenCalledWith(expect.stringContaining("This control does not support background interaction"));
+  expect(await screen.findByRole("alert")).toHaveTextContent("This control needs Direct control");
+  expect(notice).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
   expect(command.mock.calls.filter(([action]) => action !== "list" && action !== "screenshot").map(([action]) => action)).toEqual(["interact"]);
+});
+
+it("offers direct control for an unsupported background control without sending input until the user clicks again", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "interact") throw new Error("This control does not expose background interaction. Foreground pointer and keyboard input are disabled; use the control in the application.");
+    return { activated: true, inputMode: "pointer" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const switchMode = await screen.findByRole("button", { name: "Switch to Direct control" });
+  expect(screen.getByRole("alert")).toHaveTextContent("This control needs Direct control. The app will come forward briefly for input.");
+  fireEvent.click(switchMode);
+  expect(screen.getByLabelText("Computer control mode")).toHaveValue("direct");
+  expect(command.mock.calls.some(([action]) => action === "click")).toBe(false);
+  const refreshed = await screen.findByAltText("Selected Windows app"); imageBounds(refreshed);
+  fireEvent.click(refreshed, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 10, x: 480, y: 270, directControl: true }));
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("lets the user dismiss a computer error inside the panel", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    throw new Error("The selected app is no longer available.");
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "Dismiss computer message" }));
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
 
 it("preserves a completed activation and surfaces desktop-change warnings without inviting a retry", async () => {
@@ -433,7 +555,7 @@ it("does not enable text input for an unconfirmed pointer fallback response", as
   const image = await selectWindow();
   imageBounds(image);
   fireEvent.click(image, { clientX: 340, clientY: 175 });
-  expect(await screen.findByRole("alert")).toHaveTextContent(/does not support background interaction/);
+  expect(await screen.findByRole("alert")).toHaveTextContent(/needs Direct control/);
   expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
 });
 
@@ -451,7 +573,7 @@ it.each([
   const image = await selectWindow();
   imageBounds(image);
   fireEvent.click(image, { clientX: 340, clientY: 175 });
-  expect(await screen.findByRole("alert")).toHaveTextContent(/foreground input.*disabled/i);
+  expect(await screen.findByRole("alert")).toHaveTextContent(/needs Direct control/);
   expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
   expect(command.mock.calls.filter(([action]) => action === "interact")).toHaveLength(1);
 });
@@ -471,12 +593,37 @@ it("keeps an unapplied draft and blocks activation when a text response reports 
   const input = screen.getByLabelText("Type in selected window");
   await waitFor(() => expect(input).toBeEnabled());
   fireEvent.change(input, { target: { value: "Keep this unapplied text" } });
-  expect(await screen.findByRole("alert")).toHaveTextContent(/does not support background text updates/);
+  expect(await screen.findByRole("alert")).toHaveTextContent(/needs Direct control/);
   expect(input).toHaveValue("Keep this unapplied text");
   expect(screen.getByRole("button", { name: "Discard local draft" })).toBeVisible();
   fireEvent.click(image, { clientX: 550, clientY: 250 });
   await waitFor(() => expect(screen.getByRole("button", { name: "Apply text to selected window" })).toBeEnabled());
   expect(command.mock.calls.filter(([action]) => action === "interact")).toHaveLength(1);
+});
+
+it("keeps an unapplied draft when the user switches to direct control", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "interact") return { editable: true, value: "Existing note", inputMode: "accessibility" } as never;
+    if (action === "set_at") throw new Error("This field does not support background text updates.");
+    return { updated: true, inputMode: "pointer" } as never;
+  });
+  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  const input = screen.getByLabelText("Type in selected window");
+  await waitFor(() => expect(input).toBeEnabled());
+  fireEvent.change(input, { target: { value: "Preserved draft" } });
+  fireEvent.click(await screen.findByRole("button", { name: "Switch to Direct control" }));
+  expect(input).toHaveValue("Preserved draft");
+  expect(input).toBeEnabled();
+  await screen.findByAltText("Selected Windows app");
+  fireEvent.click(screen.getByRole("button", { name: "Apply text to selected window" }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith("commit_text", {
+    windowId: 10, x: 480, y: 270, text: "Preserved draft", submit: false, directControl: true,
+  }));
 });
 
 it("holds app activation after a failed text update until the local draft is discarded", async () => {

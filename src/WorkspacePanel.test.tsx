@@ -51,5 +51,5 @@ it("pauses Computer polling while workspace content is obscured", async () => {
   render(<WorkspacePanel {...props} tab="computer" obscured />);
   await act(async () => { await Promise.resolve(); });
   expect(screen.getByLabelText("Window")).toBeInTheDocument();
-  expect(computer).not.toHaveBeenCalled();
+  expect(computer.mock.calls.filter(([action]) => action !== "clear_activity")).toHaveLength(0);
 });

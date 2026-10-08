@@ -52,7 +52,7 @@ jobs:
       - name: Verify capture borders against rendered production styles
         run: |
           npx playwright install chromium
-          node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs tests/studio-layout.test.mjs
+          node --test tests/desktop-highlight-layout.test.mjs tests/computer-picker-layout.test.mjs tests/historical-appearance.test.mjs tests/studio-layout.test.mjs
       - name: Verify live adaptive layout and keyboard controls
         run: npx playwright test --config playwright.ci.config.ts
       - name: Prepare bundled connector runtimes
@@ -165,7 +165,7 @@ jobs:
         shell: pwsh
         run: |
           $previewConfig = Join-Path $env:RUNNER_TEMP 'opencore-preview.json'
-          [IO.File]::WriteAllText($previewConfig, '{"version":"0.2.143-preview.1","bundle":{"createUpdaterArtifacts":false}}', [Text.UTF8Encoding]::new($false))
+          [IO.File]::WriteAllText($previewConfig, '{"version":"0.2.143-preview.2","bundle":{"createUpdaterArtifacts":false}}', [Text.UTF8Encoding]::new($false))
           npm run tauri -- build --bundles nsis --config $previewConfig
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
@@ -174,5 +174,6 @@ jobs:
           name: gateway-jobs-review
           path: |
             src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/OpenCore.exe
             ${{ runner.temp }}/opencore-native-tests.log
           retention-days: 3

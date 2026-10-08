@@ -289,9 +289,8 @@ mod platform {
     }
 
     fn window_by_id(automation: &UIAutomation, id: isize) -> Result<UIElement, String> {
-        windows(automation)?.into_iter().find(|window| {
-            window.get_native_window_handle().ok().map(Into::<isize>::into) == Some(id)
-        }).ok_or("Window is no longer available; choose a window again".into())
+        automation.element_from_handle(uiautomation::types::Handle::from(id))
+            .map_err(|_| "Window is no longer available; choose a window again".into())
     }
 
     fn window_point(window: &UIElement, args: &Value) -> Result<Point, String> {
@@ -300,10 +299,31 @@ mod platform {
         let y = args["y"].as_f64().unwrap_or(-1.0);
         let width = rect.get_width();
         let height = rect.get_height();
-        if width <= 0 || height <= 0 || x >= f64::from(width) || y >= f64::from(height) {
+        if width <= 0 || height <= 0 || !x.is_finite() || !y.is_finite() || x < 0.0 || y < 0.0 || x >= f64::from(width) || y >= f64::from(height) {
             return Err(format!("Pointer ({x}, {y}) is outside this {width}x{height} window. Use inspect again and copy its window-relative x,y center; screen coordinates are not accepted."));
         }
         Ok(Point::new(rect.get_left() + x.round() as i32, rect.get_top() + y.round() as i32))
+    }
+
+    /// Resolve the visible app at a physical desktop point without moving focus.
+    /// The caller must authorize this exact HWND/PID before any input is sent.
+    pub(super) fn desktop_target(args: &Value) -> Result<Value, String> {
+        use windows::Win32::Foundation::POINT;
+        use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, WindowFromPoint, GA_ROOT};
+        let _dpi = crate::desktop_capture::PhysicalDpiScope::new()?;
+        let session = automation_session(false)?;
+        let desktop = session.automation.get_root_element().map_err(|error| error.to_string())?;
+        let point = window_point(&desktop, args)?;
+        let hit = unsafe { GetAncestor(WindowFromPoint(POINT { x: point.get_x(), y: point.get_y() }), GA_ROOT) };
+        let id = hit.0 as i64;
+        if id <= 0 { return Err("No application is visible at this desktop point. Refresh the desktop and try again.".into()); }
+        let app = crate::computer_access::window_identity(id)?;
+        if app.pid == std::process::id() {
+            return Err("OpenCore covers this desktop point. Move or resize OpenCore, or select the app window in the picker to control the covered app.".into());
+        }
+        let rect = crate::desktop_capture::physical_window_rect(id as isize)?;
+        Ok(json!({"windowId":id,"x":point.get_x() - rect.left,"y":point.get_y() - rect.top,
+            "pid":app.pid,"application":app.name,"executablePath":app.path}))
     }
 
     fn inspect_tree(automation: &UIAutomation, window: &UIElement) -> Value {
@@ -584,6 +604,10 @@ mod platform {
     }
 
     fn foreground_click(window_id: isize, point: &Point, allowed: bool) -> Result<Value, String> {
+        foreground_pointer(window_id, point, allowed, None)
+    }
+
+    fn foreground_pointer(window_id: isize, point: &Point, allowed: bool, scroll: Option<&str>) -> Result<Value, String> {
         if !allowed { return Err("This control does not expose background activation. Foreground pointer input is disabled for this action; use the control in the application.".into()); }
         use windows::Win32::Foundation::{HWND, POINT};
         use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetForegroundWindow, GetWindowLongW, IsIconic, SetCursorPos, SetForegroundWindow, SetWindowPos, ShowWindow, WindowFromPoint, GA_ROOT, GWL_EXSTYLE, HWND_NOTOPMOST, HWND_TOP, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SW_RESTORE, WS_EX_TOPMOST};
@@ -599,7 +623,25 @@ mod platform {
         let hit = unsafe { GetAncestor(WindowFromPoint(POINT { x: point.get_x(), y: point.get_y() }), GA_ROOT) };
         let result = if hit != hwnd {
             Err(format!("Another window still covers the selected control (selected {window_id}, hit {})", hit.0 as isize))
-        } else { Mouse::new().move_time(0).click(point).map_err(|error| error.to_string()) };
+        } else { (|| {
+            let mouse = Mouse::new().move_time(0);
+            if let Some(direction) = scroll {
+                use windows::Win32::UI::Input::KeyboardAndMouse::{SendInput, INPUT, INPUT_0, INPUT_MOUSE, MOUSEINPUT, MOUSEEVENTF_WHEEL};
+                unsafe { let _ = SetForegroundWindow(hwnd); }
+                if unsafe { GetForegroundWindow() } != hwnd {
+                    return Err("The selected app did not receive scroll focus".into());
+                }
+                mouse.move_to(point).map_err(|error| error.to_string())?;
+                let input = INPUT { r#type: INPUT_MOUSE, Anonymous: INPUT_0 { mi: MOUSEINPUT {
+                    mouseData: if direction == "up" { 120 } else { (-120i32) as u32 },
+                    dwFlags: MOUSEEVENTF_WHEEL, ..Default::default()
+                } } };
+                if unsafe { SendInput(&[input], std::mem::size_of::<INPUT>() as i32) } != 1 {
+                    return Err("Windows did not accept the scroll input".into());
+                }
+            } else { mouse.click(point).map_err(|error| error.to_string())?; }
+            Ok(())
+        })() };
         if let Some(cursor) = cursor {
             unsafe { let _ = SetCursorPos(cursor.get_x(), cursor.get_y()); }
         }
@@ -654,7 +696,7 @@ mod platform {
         Ok(json!({"dragged":true,"inputMode":"pointer","foregroundReturned":previous != hwnd}))
     }
 
-    fn foreground_type(window_id: isize, point: &Point, text: &str, allowed: bool) -> Result<Value, String> {
+    fn foreground_type(window_id: isize, point: &Point, text: &str, allowed: bool, submit: bool) -> Result<Value, String> {
         if !allowed { return Err("Turn off Keep my window in front to type into this control.".into()); }
         use windows::Win32::Foundation::{HWND, POINT};
         use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetForegroundWindow, GetWindowLongW, IsIconic, SetCursorPos, SetForegroundWindow, SetWindowPos, ShowWindow, WindowFromPoint, GA_ROOT, GWL_EXSTYLE, HWND_NOTOPMOST, HWND_TOP, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SW_RESTORE, WS_EX_TOPMOST};
@@ -676,7 +718,7 @@ mod platform {
             let keyboard = Keyboard::new().interval(1);
             keyboard.send_keys("{ctrl}a").map_err(|error| error.to_string())?;
             keyboard.send_text(text).map_err(|error| error.to_string())?;
-            keyboard.send_keys("{enter}").map_err(|error| error.to_string())?;
+            if submit { keyboard.send_keys("{enter}").map_err(|error| error.to_string())?; }
             Ok::<_, String>(())
         })();
         if let Some(cursor) = cursor {
@@ -692,7 +734,7 @@ mod platform {
             }
         }
         result?;
-        Ok(json!({"submitted":true,"inputMode":"pointer","foregroundReturned":previous != hwnd}))
+        Ok(json!({"updated":true,"submitted":submit,"inputMode":"pointer","foregroundReturned":previous != hwnd}))
     }
 
     fn read_screen(args: &Value) -> Result<Value, String> {
@@ -860,6 +902,11 @@ mod platform {
                 Ok(json!({"windowId":id,"bounds":rect_json(&window),"dataUrl":format!("data:image/png;base64,{}",base64::engine::general_purpose::STANDARD.encode(bytes))}))
             }
             "scroll_at" => {
+                if foreground_fallback_allowed(args) {
+                    let point = window_point(&window, args)?;
+                    let result = foreground_pointer(id, &point, true, args["direction"].as_str())?;
+                    return Ok(json!({"scrolled":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}));
+                }
                 use uiautomation::patterns::UIScrollPattern;
                 use uiautomation::types::ScrollAmount;
                 let point = window_point(&window, args)?;
@@ -873,7 +920,7 @@ mod platform {
             }
             "commit_text" if foreground_fallback_allowed(args) => {
                 let point = window_point(&window, args)?;
-                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), true)
+                foreground_type(id, &point, args["text"].as_str().unwrap_or_default(), true, args["submit"].as_bool().unwrap_or(true))
             }
             "interact" | "set_at" | "commit_enter" | "commit_text" => {
                 use uiautomation::patterns::{UIExpandCollapsePattern, UIInvokePattern, UISelectionItemPattern, UITogglePattern, UIValuePattern};
@@ -994,9 +1041,45 @@ mod platform {
     }
 }
 
+#[cfg(windows)]
+pub(crate) fn validate_control_window(window_id: i64) -> Result<(), String> {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetClassNameW, GetWindowLongW,
+        GetWindowThreadProcessId, IsWindow, GA_ROOT, GWL_EXSTYLE, WS_EX_NOACTIVATE, WS_EX_TRANSPARENT};
+    let target = HWND(window_id as *mut core::ffi::c_void);
+    if window_id <= 0 || !unsafe { IsWindow(target) }.as_bool() {
+        return Err("The selected application window is no longer available.".into());
+    }
+    let root = unsafe { GetAncestor(target, GA_ROOT) };
+    let mut process = 0;
+    unsafe { GetWindowThreadProcessId(root, Some(&mut process)); }
+    if process == std::process::id() {
+        return Err("OpenCore-owned windows cannot be selected for computer control. Use their controls directly in OpenCore.".into());
+    }
+    let style = unsafe { GetWindowLongW(root, GWL_EXSTYLE) } as u32;
+    let mut class = [0u16; 256];
+    let length = unsafe { GetClassNameW(root, &mut class) } as usize;
+    let shell = matches!(String::from_utf16_lossy(&class[..length]).as_str(),
+        "Shell_TrayWnd" | "Shell_SecondaryTrayWnd" | "Progman" | "WorkerW")
+        && crate::computer_access::window_identity(window_id).is_ok_and(|identity| {
+            let expected = std::path::PathBuf::from(std::env::var_os("WINDIR").unwrap_or_default()).join("explorer.exe");
+            crate::computer_access::identity(&identity.path) == crate::computer_access::identity(&expected.to_string_lossy())
+        });
+    if process == 0 || style & WS_EX_TRANSPARENT.0 != 0 || (!shell && style & WS_EX_NOACTIVATE.0 != 0) {
+        return Err("This window is an activity overlay. Choose an application window to control.".into());
+    }
+    Ok(())
+}
+
 pub(crate) async fn available_windows() -> Result<Value, String> {
     #[cfg(windows)]
-    { tokio::task::spawn_blocking(|| platform::run("list", &json!({}))).await.map_err(|e| e.to_string())? }
+    { tokio::task::spawn_blocking(|| {
+        let mut listed = platform::run("list", &json!({}))?;
+        if let Some(rows) = listed["windows"].as_array_mut() {
+            rows.retain(|row| row["windowId"].as_i64().is_some_and(|id| id == 0 || validate_control_window(id).is_ok()));
+        }
+        Ok(listed)
+    }).await.map_err(|e| e.to_string())? }
     #[cfg(not(windows))]
     { Err("Desktop control is available on Windows".into()) }
 }
@@ -1007,30 +1090,100 @@ pub(crate) fn background_capabilities() -> Value {
         "unsupportedReason":"Windows canvases, games and custom controls without accessibility patterns cannot be controlled in the background. Use their browser CDP integration when available, or explicitly select foreground computer use."})
 }
 
+fn permissioned_windows(mut listed: Value, policy: &crate::computer_access::Policy, desktop_preview: bool) -> Value {
+    listed["computerUseEnabled"] = json!(policy.enabled);
+    listed["backgroundCapabilities"] = background_capabilities();
+    if let Some(rows) = listed["windows"].as_array_mut() {
+        rows.retain_mut(|row| {
+            if !policy.enabled { return false; }
+            let Some(id) = row["windowId"].as_i64() else { return false; };
+            if id == 0 {
+                if !desktop_preview { return false; }
+                // This grants a preview only. Input resolves and authorizes
+                // the actual app under the point on every manual action.
+                row["permission"] = json!("allowed");
+                return true;
+            }
+            let Ok(app) = crate::computer_access::window_identity(id) else { return false; };
+            if policy.access(&app.path) == Some(crate::computer_access::Access::Deny) { return false; }
+            row["permission"] = json!(if policy.access(&app.path).is_some() { "allowed" } else { "ask" });
+            row["application"] = json!(app.name);
+            row["executablePath"] = json!(app.path);
+            true
+        });
+    }
+    listed
+}
+
+/// Only the trusted main UI calls this preview route. AI tools continue through
+/// command_authorized, where the whole desktop is excluded by app permissions.
+pub(crate) async fn manual_preview(action: &str, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
+    if !matches!(action, "list" | "screenshot") { return Err("Desktop preview cannot send input".into()); }
+    let policy = crate::computer_access::load(&store)?;
+    if action == "list" {
+        if !policy.enabled { return Ok(permissioned_windows(json!({"windows":[]}), &policy, true)); }
+        let listed = available_windows().await?;
+        return Ok(permissioned_windows(listed, &crate::computer_access::load(&store)?, true));
+    }
+    policy.require_enabled()?;
+    #[cfg(windows)] {
+        tokio::task::spawn_blocking(move || {
+            crate::computer_access::load(&store)?.require_enabled()?;
+            let captured = platform::run("screenshot", &json!({"windowId":0}))?;
+            crate::computer_access::load(&store)?.require_enabled()?;
+            Ok(captured)
+        }).await.map_err(|error| error.to_string())?
+    }
+    #[cfg(not(windows))] { Err("Desktop control is available on Windows".into()) }
+}
+
+/// A human's desktop-preview action, resolved to one permitted application.
+/// No global app grant is created and no background policy is weakened.
+pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
+    if !matches!(action.as_str(), "click" | "scroll_at" | "commit_text") || args["windowId"].as_i64() != Some(0) {
+        return Err("Unsupported manual desktop action".into());
+    }
+    crate::computer_access::load(&store)?.require_enabled()?;
+    #[cfg(windows)] {
+        let point_args = args.clone();
+        let target = tokio::task::spawn_blocking(move || platform::desktop_target(&point_args))
+            .await.map_err(|error| error.to_string())??;
+        let id = target["windowId"].as_i64().ok_or("Cannot identify the desktop target")?;
+        let identity = crate::computer_access::window_identity(id)?;
+        if identity.pid != target["pid"].as_u64().unwrap_or(0) as u32
+            || crate::computer_access::identity(&identity.path) != crate::computer_access::identity(target["executablePath"].as_str().unwrap_or_default()) {
+            return Err("The desktop target changed before input. Refresh the desktop and try again.".into());
+        }
+        let policy = crate::computer_access::load(&store)?;
+        policy.require_enabled()?;
+        match policy.access(&identity.path) {
+            None => return Ok(json!({"permissionRequired":true,"permissionWindowId":id,"application":identity.name})),
+            Some(crate::computer_access::Access::Deny) => policy.authorize(&identity.path)?,
+            Some(crate::computer_access::Access::Allow) => {},
+        }
+        args["windowId"] = json!(id);
+        args["x"] = target["x"].clone();
+        args["y"] = target["y"].clone();
+        args["manualControl"] = json!(false);
+        args["backgroundOnly"] = json!(false);
+        args["allowForegroundFallback"] = json!(true);
+        command_authorized(action, args, store).await
+    }
+    #[cfg(not(windows))] { let _ = args; Err("Desktop control is available on Windows".into()) }
+}
+
 pub(crate) async fn command_authorized(action: String, args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
     validate_action(&action, &args)?;
     if action == "list" {
         let policy = crate::computer_access::load(&store)?;
         if !policy.enabled { return Ok(json!({"windows":[],"computerUseEnabled":false,"backgroundCapabilities":background_capabilities()})); }
-        let mut listed = available_windows().await?;
+        let listed = available_windows().await?;
         // Settings may have changed while Windows enumerated its providers.
         let policy = crate::computer_access::load(&store)?;
-        listed["computerUseEnabled"] = json!(policy.enabled);
-        listed["backgroundCapabilities"] = background_capabilities();
-        if let Some(rows) = listed["windows"].as_array_mut() {
-            rows.retain_mut(|row| {
-                if !policy.enabled { return false; }
-                let Some(id) = row["windowId"].as_i64() else { return false; };
-                let Ok(app) = crate::computer_access::window_identity(id) else { return false; };
-                if policy.access(&app.path) == Some(crate::computer_access::Access::Deny) { return false; }
-                row["permission"] = json!(if policy.access(&app.path).is_some() { "allowed" } else { "ask" });
-                row["application"] = json!(app.name);
-                row["executablePath"] = json!(app.path);
-                true
-            });
-        }
-        return Ok(listed);
+        return Ok(permissioned_windows(listed, &policy, false));
     }
+    #[cfg(windows)]
+    validate_control_window(args["windowId"].as_i64().ok_or("Select an application window first")?)?;
     let mut changes = crate::computer_access::subscribe();
     let expected = crate::computer_access::check_window(&store, args["windowId"].as_i64().ok_or("Select an application window first")?)?;
     #[cfg(windows)]
@@ -1110,6 +1263,55 @@ pub(crate) fn restore_cursor_if_unchanged(expected: (i32, i32), original: (i32, 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn only_manual_preview_lists_the_desktop_and_stop_removes_it() {
+        let listed = json!({"windows":[{"windowId":0,"title":"Whole desktop"}]});
+        let mut policy = crate::computer_access::Policy { enabled: true, ..Default::default() };
+        assert_eq!(permissioned_windows(listed.clone(), &policy, true)["windows"][0]["windowId"], 0);
+        assert!(permissioned_windows(listed.clone(), &policy, false)["windows"].as_array().unwrap().is_empty());
+        policy.enabled = false;
+        assert!(permissioned_windows(listed, &policy, true)["windows"].as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn manual_desktop_honors_stop_and_the_preview_route_cannot_send_input() {
+        let path = std::env::temp_dir().join(format!("opencore-manual-desktop-{}.sqlite3", uuid::Uuid::new_v4()));
+        let store = std::sync::Arc::new(crate::store::EventStore::open(&path).unwrap());
+        assert!(manual_preview("click", store.clone()).await.unwrap_err().contains("cannot send input"));
+        assert!(manual_desktop("click".into(), json!({"windowId":0,"x":10,"y":10}), store.clone())
+            .await.unwrap_err().contains("disabled"));
+        assert!(crate::computer_access::window_identity(0).unwrap_err().contains("Whole-desktop"));
+        drop(store);
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn computer_picker_excludes_its_own_windows() {
+        use windows::core::w;
+        use windows::Win32::Foundation::{HWND, WPARAM, LPARAM};
+        use windows::Win32::UI::WindowsAndMessaging::*;
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let thread = std::thread::spawn(move || unsafe {
+            let window = CreateWindowExW(WINDOW_EX_STYLE::default(), w!("BUTTON"),
+                w!("OpenCore picker ownership fixture"), WS_POPUP | WS_VISIBLE,
+                40, 40, 120, 80, None, None, None, None).unwrap();
+            sender.send(window.0 as isize).unwrap();
+            let mut message = MSG::default();
+            while GetMessageW(&mut message, None, 0, 0).0 > 0 {
+                if message.message == WM_APP { break; }
+                let _ = TranslateMessage(&message);
+                DispatchMessageW(&message);
+            }
+            let _ = DestroyWindow(window);
+        });
+        let id = receiver.recv_timeout(std::time::Duration::from_secs(5)).unwrap();
+        let listed = available_windows().await;
+        unsafe { PostMessageW(HWND(id as _), WM_APP, WPARAM(0), LPARAM(0)).unwrap(); }
+        thread.join().unwrap();
+        assert!(!listed.unwrap()["windows"].as_array().unwrap().iter().any(|row| row["windowId"] == id),
+            "OpenCore and its activity overlay must never be selectable as a computer target");
+    }
     #[test]
     fn completed_background_actions_keep_their_outcome_when_desktop_state_changes() {
         for original in [

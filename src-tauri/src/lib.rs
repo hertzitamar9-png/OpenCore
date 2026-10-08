@@ -160,8 +160,36 @@ async fn native_browser_command(webview:tauri::Webview,app: tauri::AppHandle, ac
 }
 
 #[tauri::command]
-async fn desktop_command(webview:tauri::Webview,app: tauri::AppHandle, action: String, args: serde_json::Value) -> Result<serde_json::Value, String> {
+async fn desktop_command(webview:tauri::Webview,app: tauri::AppHandle, action: String, mut args: serde_json::Value) -> Result<serde_json::Value, String> {
     computer_access::require_settings_surface(webview.label())?;
+    if action == "clear_activity" {
+        #[cfg(windows)]
+        desktop_activity::clear(&app);
+        return Ok(json!({"cleared":true}));
+    }
+    if action == "list" || (action == "screenshot" && args["windowId"].as_i64() == Some(0)) {
+        let core = app.state::<Arc<AppCore>>();
+        core.ensure_not_updating()?;
+        return windows_control::manual_preview(&action, core.store.clone()).await;
+    }
+    if args["directControl"].as_bool() == Some(true) {
+        let core = app.state::<Arc<AppCore>>();
+        core.ensure_not_updating()?;
+        // This route is explicit user input from the trusted application UI.
+        // App permissions still apply; the AI's background policy is separate.
+        if args["windowId"].as_i64() == Some(0) {
+            #[cfg(windows)]
+            desktop_activity::clear(&app);
+            return windows_control::manual_desktop(action, args, core.store.clone()).await;
+        }
+        computer_access::check_window(&core.store, args["windowId"].as_i64().ok_or("Select an application window first")?)?;
+        args["manualControl"] = json!(false);
+        args["backgroundOnly"] = json!(false);
+        args["allowForegroundFallback"] = json!(true);
+        #[cfg(windows)]
+        desktop_activity::clear(&app);
+        return windows_control::command_authorized(action, args, core.store.clone()).await;
+    }
     desktop_action(&app, action, args).await
 }
 
@@ -334,7 +362,8 @@ async fn desktop_action(app: &tauri::AppHandle, action: String, mut args: serde_
     if action!="list" {computer_access::check_window(&core.store,args["windowId"].as_i64().ok_or("Select an application window first")?)?;}
     desktop_policy::apply(&action, &mut args, KEEP_USER_WINDOW_IN_FRONT.load(Ordering::SeqCst))?;
     #[cfg(windows)]
-    let _activity = desktop_policy::shows_activity(&action).then(|| desktop_activity::begin(app, args["windowId"].as_i64().unwrap_or(0), &args));
+    let _activity = (desktop_policy::shows_activity(&action) && args["manualControl"].as_bool() != Some(true))
+        .then(|| desktop_activity::begin(app, args["windowId"].as_i64().unwrap_or(0), &args));
     #[cfg(not(windows))]
     let _ = app;
     windows_control::command_authorized(action, args,core.store.clone()).await
@@ -899,7 +928,9 @@ async fn uninstall_model(core: tauri::State<'_, Arc<AppCore>>, id: String, confi
 }
 
 #[tauri::command]
-async fn stop_runtime(core: tauri::State<'_, Arc<AppCore>>) -> Result<(), String> {
+async fn stop_runtime(app: tauri::AppHandle, core: tauri::State<'_, Arc<AppCore>>) -> Result<(), String> {
+    #[cfg(windows)]
+    desktop_activity::clear(&app);
     if let Ok(active) = core.active_chats.lock() {
         for token in active.values() { token.cancel(); }
     }
@@ -2551,7 +2582,8 @@ pub fn run() {
                         if let Err(error) = overlay.set_ignore_cursor_events(true) {
                             setup_diagnostics.record("desktop_activity_overlay", &format!("Optional overlay mouse pass-through unavailable: {error}"));
                         }
-                        if let Ok(hwnd) = overlay.hwnd() {
+                          if let Ok(hwnd) = overlay.hwnd() {
+                              unsafe { let _ = windows::Win32::UI::Input::KeyboardAndMouse::EnableWindow(windows::Win32::Foundation::HWND(hwnd.0 as _), false); }
                             unsafe { let _ = windows::Win32::UI::WindowsAndMessaging::SetWindowDisplayAffinity(windows::Win32::Foundation::HWND(hwnd.0 as _), windows::Win32::UI::WindowsAndMessaging::WDA_EXCLUDEFROMCAPTURE); }
                         }
                     }
@@ -2854,6 +2886,8 @@ pub fn run() {
             if !keep_hidden { background_host::show(app); }
         }
         if let tauri::RunEvent::WindowEvent {label,event:tauri::WindowEvent::CloseRequested {api,..},..}=&event {
+            #[cfg(windows)]
+            if label=="main" { desktop_activity::clear(app); }
             if label=="main" && app.try_state::<Arc<AppCore>>().is_some_and(|core|background_host::can_hide(app,&core.store,core.update_in_progress.load(Ordering::Acquire))) {
                 if app.get_webview_window("main").is_some_and(|window|window.hide().is_ok()) { api.prevent_close(); }
             }
@@ -2861,6 +2895,8 @@ pub fn run() {
         // The hidden computer-use overlay is also a window. Closing the
         // main window therefore must explicitly request application exit.
         if matches!(&event,tauri::RunEvent::WindowEvent {label,event:tauri::WindowEvent::Destroyed,..} if label=="main") {
+            #[cfg(windows)]
+            desktop_activity::clear(app);
             event_diagnostics.record("main_window", "Main window was destroyed; requesting application exit");
             app.exit(0);
         }
@@ -2869,6 +2905,8 @@ pub fn run() {
         static EXIT_STARTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
         static EXIT_READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
         if let tauri::RunEvent::ExitRequested {api,code,..}=event {
+            #[cfg(windows)]
+            desktop_activity::clear(app);
             if !EXIT_READY.load(std::sync::atomic::Ordering::Acquire) {
                 api.prevent_exit();
                 if !EXIT_STARTED.swap(true,std::sync::atomic::Ordering::AcqRel) {

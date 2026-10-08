@@ -80,6 +80,7 @@ test("capture and native activity frames paint all four app edges across display
           };
         });
         assert.ok(activity.widths[0] > 0 && activity.widths.every(width => width === activity.widths[0]), `activity DPR ${scale}: equal physical edge widths`);
+        assert.equal(activity.color, "rgb(18, 59, 130)", "the activity border must stay dark blue in every theme");
         assertStroke(await edgePixels(page, activity.bounds, scale, activity.widths[0] / 2), activity.color, `activity DPR ${scale}`);
       } finally {
         await context.close();

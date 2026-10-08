@@ -1162,7 +1162,7 @@ html:has(.desktop-use-overlay),body:has(.desktop-use-overlay),body:has(.desktop-
 @media (max-width:700px) { .prompt-tools-trigger { width:42px; } .prompt-tools-trigger span { display:none; } }
 
 html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.desktop-activity-frame) #root { background:transparent; overflow:hidden; pointer-events:none; }
-.desktop-activity-frame { position:fixed; inset:0; pointer-events:none; border:3px solid var(--blue,#245ca8); }
+.desktop-activity-frame { position:fixed; inset:0; pointer-events:none; border:3px solid #123b82; }
 .chat-export-options { display:grid; gap:10px; }
 .chat-export-options > button { display:flex; gap:12px; padding:12px; text-align:left; border:1px solid var(--border); border-radius:9px; background:var(--surface-2); }
 .chat-export-options > button > span { display:grid; gap:4px; }
@@ -1170,7 +1170,7 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
 .chat-export-options > button:hover:not(:disabled) { border-color:var(--theme-accent-border,#4ca1d6); background:var(--theme-panel,#122639); }
 .chat-import-access { gap:7px; }
 /* Frame the rendered app image; an inset outline preserves its click geometry. */
-.desktop-screen img { outline:2px solid var(--blue,#245ca8); outline-offset:-2px; }
+.desktop-screen img { outline:2px solid #123b82; outline-offset:-2px; }
 
 /* User-adjustable terminal/log typography. */
 .runtime-console, .runtime-console pre, .log-list, .log-row, .tool-step pre, .archive-reader pre { font-size:calc(var(--terminal-font-size,13px) * var(--ui-scale,1)); }

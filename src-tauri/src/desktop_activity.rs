@@ -4,8 +4,9 @@ use std::time::{Duration, Instant};
 use tauri::Manager;
 use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::UI::WindowsAndMessaging::{
-    IsIconic, IsWindow, SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOOWNERZORDER,
-    SWP_SHOWWINDOW,
+    GetAncestor, GetForegroundWindow, GetWindow, IsIconic, IsWindow, IsWindowVisible, SetWindowPos, ShowWindow,
+    GA_ROOT, GW_HWNDPREV, HWND_TOP, SWP_NOACTIVATE, SWP_NOOWNERZORDER,
+    SWP_SHOWWINDOW, SW_HIDE,
 };
 
 const IDLE_GRACE: Duration = Duration::from_millis(350);
@@ -23,7 +24,7 @@ pub(crate) fn build_overlay(app: &tauri::AppHandle) -> tauri::Result<tauri::Webv
     // insets. The webview's frame must fill the outer DWM-sized HWND exactly.
     .shadow(false)
     .transparent(true)
-    .always_on_top(true)
+    .always_on_top(false)
     .skip_taskbar(true)
     .focused(false)
     .focusable(false)
@@ -119,9 +120,10 @@ impl Activity {
 static ACTIVITY: Mutex<Activity> = Mutex::new(Activity::new());
 
 fn hide(app: &tauri::AppHandle, activity: &mut Activity) {
-    if activity.visible {
-        if let Some(overlay) = app.get_webview_window("desktop-activity") {
-            let _ = overlay.hide();
+    // Hide the actual HWND even if a prior interrupted update lost its state.
+    if let Some(overlay) = app.get_webview_window("desktop-activity") {
+        if let Ok(handle) = overlay.hwnd() {
+            unsafe { let _ = ShowWindow(HWND(handle.0 as _), SW_HIDE); }
         }
     }
     activity.visible = false;
@@ -165,6 +167,16 @@ fn update(app: &tauri::AppHandle, worker: u64) -> bool {
     if activity.worker != Some(worker) {
         return false;
     }
+    // Closing to the tray keeps this process and the target app alive. Check
+    // the owner at display time so held tasks and delayed actions cannot leave
+    // a border behind, or restore one after the close handler cleared it.
+    if !app.get_webview_window("main").is_some_and(|window| window.is_visible().unwrap_or(false)) {
+        activity.cancel();
+        hide(app, &mut activity);
+        activity.worker = None;
+        crate::desktop_capture::stop_capture();
+        return false;
+    }
     let Some(window_id) = activity.active_target(Instant::now()) else {
         hide(app, &mut activity);
         activity.target = None;
@@ -175,8 +187,19 @@ fn update(app: &tauri::AppHandle, worker: u64) -> bool {
     let hwnd = HWND(window_id as *mut std::ffi::c_void);
     let valid = unsafe {
         IsWindow(hwnd).as_bool()
+            && IsWindowVisible(hwnd).as_bool()
             && !IsIconic(hwnd).as_bool()
     };
+    // Recheck at display time: Stop may revoke access after an action's
+    // initial authorization but before its first UI update was dispatched.
+    if app.try_state::<std::sync::Arc<crate::AppCore>>().is_some_and(|core|
+        crate::computer_access::check_window(&core.store, window_id).is_err()
+            || crate::windows_control::validate_control_window(window_id).is_err()) {
+        activity.cancel();
+        hide(app, &mut activity);
+        activity.worker = None;
+        return false;
+    }
     let geometry = valid.then(|| crate::desktop_capture::visible_window_rect(window_id as isize).ok())
         .flatten().and_then(Geometry::from_rect);
     let Some(geometry) = geometry else {
@@ -196,18 +219,15 @@ fn update(app: &tauri::AppHandle, worker: u64) -> bool {
     // Move, resize and show together, using the exact DWM frame and physical
     // coordinates. SWP_NOACTIVATE also protects the first show and DPI changes;
     // there is no foreground handoff to this transparent overlay.
-    let placed = if activity.geometry != Some(geometry) || !activity.visible {
+    let placed = {
         (|| -> Result<(), String> {
             let _dpi = crate::desktop_capture::PhysicalDpiScope::new()?;
             let handle = overlay.hwnd().map_err(|error| error.to_string())?;
             unsafe {
-                SetWindowPos(HWND(handle.0 as _), HWND_TOPMOST,
-                    geometry.position.0, geometry.position.1,
-                    geometry.size.0 as i32, geometry.size.1 as i32,
-                    SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_SHOWWINDOW)
+                place_overlay(HWND(handle.0 as _), hwnd, geometry)
             }.map_err(|error| error.to_string())
         })()
-    } else { Ok(()) };
+    };
     if placed.is_err() {
         activity.cancel();
         hide(app, &mut activity);
@@ -215,8 +235,29 @@ fn update(app: &tauri::AppHandle, worker: u64) -> bool {
         return false;
     }
     activity.geometry = Some(geometry);
-    activity.visible = true;
+    activity.visible = overlay.is_visible().unwrap_or(false);
     true
+}
+
+// Keep the border immediately above its app, below every covering window.
+unsafe fn place_overlay(overlay: HWND, target: HWND, geometry: Geometry) -> windows::core::Result<()> {
+    place_overlay_for_foreground(overlay, target, geometry, GetForegroundWindow())
+}
+
+unsafe fn place_overlay_for_foreground(overlay: HWND, target: HWND, geometry: Geometry, foreground: HWND) -> windows::core::Result<()> {
+    // A background task can remain active while the user switches apps. Hide
+    // its indicator entirely until the target is foreground again, including
+    // when OpenCore itself covers the target. Never raise a border over it.
+    if GetAncestor(foreground, GA_ROOT) != GetAncestor(target, GA_ROOT) {
+        let _ = ShowWindow(overlay, SW_HIDE);
+        return Ok(());
+    }
+    let mut previous = GetWindow(target, GW_HWNDPREV).unwrap_or_default();
+    if previous == overlay { previous = GetWindow(overlay, GW_HWNDPREV).unwrap_or_default(); }
+    if previous.0.is_null() { previous = HWND_TOP; }
+    SetWindowPos(overlay, previous, geometry.position.0, geometry.position.1,
+        geometry.size.0 as i32, geometry.size.1 as i32,
+        SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_SHOWWINDOW)
 }
 
 async fn track(app: tauri::AppHandle, worker: u64) {
@@ -259,6 +300,143 @@ pub(crate) fn begin(app: &tauri::AppHandle, window_id: i64, args: &serde_json::V
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn closing_to_tray_prevents_held_or_delayed_actions_from_showing_the_border() {
+        use windows::core::w;
+        use windows::Win32::UI::WindowsAndMessaging::{
+            CreateWindowExW, DestroyWindow, SW_SHOWNOACTIVATE, WINDOW_EX_STYLE, WS_POPUP,
+        };
+        struct Target(HWND);
+        impl Drop for Target {
+            fn drop(&mut self) { unsafe { let _ = DestroyWindow(self.0); } }
+        }
+        let mut context = tauri::generate_context!();
+        context.config_mut().app.windows.clear();
+        let mut app = tauri::Builder::default().any_thread().build(context).unwrap();
+        let main = tauri::WebviewWindowBuilder::new(app.handle(), "main",
+            tauri::WebviewUrl::App("index.html".into()))
+            .visible(false).focused(false).focusable(false).inner_size(160.0, 100.0)
+            .build().unwrap();
+        let overlay = build_overlay(app.handle()).unwrap();
+        overlay.set_ignore_cursor_events(true).unwrap();
+        let overlay_hwnd = HWND(overlay.hwnd().unwrap().0 as _);
+        let target = Target(unsafe { CreateWindowExW(WINDOW_EX_STYLE::default(), w!("STATIC"),
+            w!("OpenCore close cleanup fixture"), WS_POPUP, 40, 40, 120, 80,
+            None, None, None, None) }.unwrap());
+        unsafe { let _ = ShowWindow(target.0, SW_SHOWNOACTIVATE); }
+        let target_id = target.0.0 as i64;
+        let worker = {
+            let mut activity = ACTIVITY.lock().unwrap_or_else(|error| error.into_inner());
+            *activity = Activity::new();
+            let (_, worker) = activity.begin(target_id, true);
+            worker.unwrap()
+        };
+        // The selected application remains open when OpenCore closes to its tray.
+        // A held action or an already queued action must not show an orphan border.
+        let tracked = update(app.handle(), worker);
+        let visible = unsafe { IsWindowVisible(overlay_hwnd) }.as_bool();
+        let delayed_worker = {
+            let mut activity = ACTIVITY.lock().unwrap_or_else(|error| error.into_inner());
+            let (_, next_worker) = activity.begin(target_id, true);
+            next_worker.or(activity.worker).unwrap()
+        };
+        let delayed_tracked = update(app.handle(), delayed_worker);
+        let delayed_visible = unsafe { IsWindowVisible(overlay_hwnd) }.as_bool();
+        // Opening OpenCore again permits a new action; closing must not disable
+        // the computer-use feature permanently.
+        unsafe { let _ = ShowWindow(HWND(main.hwnd().unwrap().0 as _), SW_SHOWNOACTIVATE); }
+        let reopened_worker = {
+            let mut activity = ACTIVITY.lock().unwrap_or_else(|error| error.into_inner());
+            let (_, next_worker) = activity.begin(target_id, true);
+            next_worker.or(activity.worker).unwrap()
+        };
+        let reopened_tracked = update(app.handle(), reopened_worker);
+        {
+            let mut activity = ACTIVITY.lock().unwrap_or_else(|error| error.into_inner());
+            activity.cancel();
+            hide(app.handle(), &mut activity);
+            activity.worker = None;
+        }
+        overlay.destroy().unwrap();
+        main.destroy().unwrap();
+        #[allow(deprecated)]
+        app.run_iteration(|_, _| {});
+        assert!(!tracked, "hidden OpenCore must reject a delayed activity update");
+        assert!(!visible, "a live target must not keep the border visible after OpenCore closes");
+        assert!(!delayed_tracked && !delayed_visible, "a later action must not restore the closed owner's border");
+        assert!(reopened_tracked, "a new action must work after OpenCore is reopened");
+    }
+    use windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST;
+
+    #[test]
+    #[ignore = "creates disposable native windows to verify compositor stacking"]
+    fn live_overlay_stays_below_covering_window() {
+        use windows::core::w;
+        use windows::Win32::Foundation::POINT;
+        use windows::Win32::UI::Input::KeyboardAndMouse::EnableWindow;
+        use windows::Win32::UI::WindowsAndMessaging::{CreateWindowExW, DestroyWindow,
+            WindowFromPoint, SetLayeredWindowAttributes, LWA_ALPHA, WINDOW_EX_STYLE,
+            WS_EX_LAYERED, WS_EX_TRANSPARENT, WS_EX_NOACTIVATE, WS_POPUP, WS_VISIBLE, SWP_NOMOVE, SWP_NOSIZE};
+        struct TestWindows(Vec<HWND>);
+        impl Drop for TestWindows {
+            fn drop(&mut self) { for hwnd in &self.0 { unsafe { let _ = DestroyWindow(*hwnd); } } }
+        }
+        let _dpi = crate::desktop_capture::PhysicalDpiScope::new().unwrap();
+        unsafe {
+            let mut windows = TestWindows(Vec::new());
+            for title in [w!("OpenCore overlay test target"), w!("OpenCore overlay test cover"), w!("OpenCore overlay test indicator")] {
+                // WindowFromPoint intentionally skips STATIC text controls.
+                let style = if windows.0.len() == 2 { WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE }
+                    else { WINDOW_EX_STYLE::default() };
+                windows.0.push(CreateWindowExW(style, w!("BUTTON"), title,
+                    WS_POPUP | WS_VISIBLE, 230, 190, 180, 180, None, None, None, None).unwrap());
+            }
+            let [target, cover, overlay] = windows.0[..] else { unreachable!() };
+            SetLayeredWindowAttributes(overlay, windows::Win32::Foundation::COLORREF(0), 255, LWA_ALPHA).unwrap();
+            let _ = EnableWindow(overlay, false);
+            SetWindowPos(target, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE).unwrap();
+            SetWindowPos(cover, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE).unwrap();
+            let geometry = Geometry { position: (230, 190), size: (180, 180) };
+            for _ in 0..3 { place_overlay_for_foreground(overlay, target, geometry, cover).unwrap(); }
+            assert!(!IsWindowVisible(overlay).as_bool(), "the indicator must hide when a covering app is foreground");
+            assert_eq!(WindowFromPoint(POINT { x: 250, y: 210 }), cover);
+            let _ = ShowWindow(cover, SW_HIDE);
+            place_overlay_for_foreground(overlay, target, geometry, target).unwrap();
+            assert!(IsWindowVisible(overlay).as_bool());
+            assert_eq!(WindowFromPoint(POINT { x: 250, y: 210 }), target, "indicator must not intercept input hit testing");
+        }
+    }
+
+    #[test]
+    fn activity_border_hides_when_another_app_is_in_front() {
+        use windows::core::w;
+        use windows::Win32::UI::WindowsAndMessaging::{CreateWindowExW, DestroyWindow,
+            WINDOW_EX_STYLE, WS_POPUP, WS_VISIBLE};
+        unsafe {
+            let target = CreateWindowExW(WINDOW_EX_STYLE::default(), w!("BUTTON"),
+                w!("Activity visibility target"), WS_POPUP | WS_VISIBLE, 40, 40, 120, 80,
+                None, None, None, None).unwrap();
+            let cover = CreateWindowExW(WINDOW_EX_STYLE::default(), w!("BUTTON"),
+                w!("Activity visibility cover"), WS_POPUP | WS_VISIBLE, 40, 40, 120, 80,
+                None, None, None, None).unwrap();
+            let overlay = CreateWindowExW(WINDOW_EX_STYLE::default(), w!("BUTTON"),
+                w!("Activity visibility indicator"), WS_POPUP, 40, 40, 120, 80,
+                None, None, None, None).unwrap();
+            let geometry = Geometry { position: (40, 40), size: (120, 80) };
+            // Use real native windows with explicit foreground snapshots. The
+            // OS may deny a background test process permission to steal focus.
+            place_overlay_for_foreground(overlay, target, geometry, target).unwrap();
+            let active_visible = IsWindowVisible(overlay).as_bool();
+            place_overlay_for_foreground(overlay, target, geometry, cover).unwrap();
+            let covered_visible = IsWindowVisible(overlay).as_bool();
+            place_overlay_for_foreground(overlay, target, geometry, target).unwrap();
+            let resumed_visible = IsWindowVisible(overlay).as_bool();
+            for window in [overlay, cover, target] { let _ = DestroyWindow(window); }
+            assert!(active_visible, "the selected foreground app should show its border");
+            assert!(!covered_visible, "switching to OpenCore or another app must hide the border entirely");
+            assert!(resumed_visible, "returning to the controlled app should restore an active task's border");
+        }
+    }
 
     #[test]
     fn hidden_overlay_paints_the_whole_physical_frame_without_native_client_insets() {

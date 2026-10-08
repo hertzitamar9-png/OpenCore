@@ -9,6 +9,9 @@
   border-radius: 7px;
   padding: calc(8px * var(--ui-scale, 1)) calc(10px * var(--ui-scale, 1));
   font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @supports (appearance: base-select) {
@@ -16,6 +19,11 @@
   .app-window-frame select, .themed-select,
   .app-window-frame select::picker(select), .themed-select::picker(select) {
     appearance: base-select;
+  }
+  .app-window-frame select {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .app-window-frame select::picker(select), .themed-select::picker(select) {
     max-height: min(360px, 60dvh);
