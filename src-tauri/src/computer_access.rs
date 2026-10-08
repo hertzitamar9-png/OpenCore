@@ -1,4 +1,4 @@
-//! Permissions follow the target executable, never a window title or basename.
+//! PC-wide computer access with a persistent Stop state and target identity checks.
 use serde::{Deserialize, Serialize};
 
 pub(crate) const SETTING: &str = "computer_access_v1";
@@ -18,13 +18,17 @@ pub(crate) struct AppPermission { pub path: String, pub name: String, pub access
 #[serde(rename_all = "lowercase")]
 pub(crate) enum Access { Allow, Deny }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Policy {
     pub enabled: bool,
     pub apps: Vec<AppPermission>,
     #[serde(default)]
     pub revision: u64,
+}
+
+impl Default for Policy {
+    fn default() -> Self { Self { enabled: true, apps: Vec::new(), revision: 0 } }
 }
 
 impl Policy {
@@ -34,22 +38,14 @@ impl Policy {
     }
     pub(crate) fn access(&self, path: &str) -> Option<Access> {
         if path.is_empty() { return None; }
-        let key = identity(path);
-        let mut allowed = false;
-        for app in &self.apps {
-            if identity(&app.path) != key { continue; }
-            if app.access == Access::Deny { return Some(Access::Deny); }
-            allowed = true;
-        }
-        allowed.then_some(Access::Allow)
+        // Legacy per-app records remain readable, but no longer gate access.
+        // Running computer use grants PC-wide access until the user stops it.
+        Some(Access::Allow)
     }
     pub(crate) fn authorize(&self, path: &str) -> Result<(), String> {
         self.require_enabled()?;
-        match self.access(path) {
-            Some(Access::Allow) => Ok(()),
-            Some(Access::Deny) => Err("Access to this application is denied in Settings > Computer use.".into()),
-            None => Err("This application requires permission. Allow it in Settings > Computer use.".into()),
-        }
+        if path.is_empty() { Err("Could not identify this application's executable".into()) }
+        else { Ok(()) }
     }
     fn validate(&self) -> Result<(), String> {
         if self.apps.len() > 256 { return Err("At most 256 app permissions are supported".into()); }
@@ -147,7 +143,10 @@ pub(crate) fn window_identity(window_id: i64) -> Result<WindowIdentity, String> 
     use windows::Win32::Foundation::{CloseHandle, HWND};
     use windows::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_NAME_WIN32};
     use windows::Win32::UI::WindowsAndMessaging::{GetWindowThreadProcessId, IsWindow};
-    if window_id <= 0 { return Err("Choose an application window. Whole-desktop access cannot enforce app permissions.".into()); }
+    if window_id == 0 {
+        return Ok(WindowIdentity { window_id: 0, path: "Windows desktop".into(), name: "Windows desktop".into(), pid: 0 });
+    }
+    if window_id < 0 { return Err("Choose a valid application window or the whole desktop".into()); }
     unsafe {
         let hwnd = HWND(window_id as *mut std::ffi::c_void);
         if !IsWindow(hwnd).as_bool() { return Err("The selected window is no longer available".into()); }
@@ -201,18 +200,19 @@ mod tests {
         assert!(policy.authorize("C:\\Apps\\Notes.exe").unwrap_err().contains("disabled"));
     }
     #[test]
-    fn permission_is_full_executable_identity_not_title_or_filename() {
+    fn running_computer_use_accepts_any_identifiable_app_without_a_grant() {
         let policy = permitted();
         assert!(policy.authorize("c:/apps/NOTES.exe").is_ok());
         assert!(policy.authorize("\\\\?\\C:\\Apps\\Notes.exe").is_ok());
-        assert!(policy.authorize("D:\\Other\\Notes.exe").is_err());
+        assert!(policy.authorize("D:\\Other\\Notes.exe").is_ok());
+        assert!(Policy::default().authorize("C:\\New App\\App.exe").is_ok());
         assert!(policy.authorize("").is_err());
     }
     #[test]
-    fn denied_identity_takes_priority_over_a_duplicate_allow() {
+    fn legacy_app_denials_do_not_gate_pc_wide_access() {
         let mut policy = permitted();
         policy.apps.push(AppPermission { path: "c:/apps/notes.exe".into(), name: "another title".into(), access: Access::Deny });
-        assert!(policy.authorize("C:\\Apps\\Notes.exe").unwrap_err().contains("denied"));
+        assert!(policy.authorize("C:\\Apps\\Notes.exe").is_ok());
     }
     #[test]
     fn saved_permissions_survive_restart_and_corruption_blocks_access() {
@@ -239,13 +239,14 @@ mod tests {
         drop(store); std::fs::remove_file(path).unwrap();
     }
     #[test]
-    fn pending_grant_cannot_overwrite_a_denial_or_reenable_access() {
+    fn pending_grant_cannot_reenable_stopped_access() {
         let (store, path) = store();
         let app = WindowIdentity { window_id: 12, path: "C:\\Apps\\Notes.exe".into(), name: "Notes".into(), pid: 42 };
+        stop(&store).unwrap();
         assert!(grant(&store, &app).unwrap_err().contains("disabled"));
-        let mut policy = permitted(); policy.apps[0].access = Access::Deny;
+        let mut policy = load(&store).unwrap(); policy.enabled = true; policy.apps = permitted().apps; policy.apps[0].access = Access::Deny;
         let saved = save(&store, policy).unwrap();
-        assert!(grant(&store, &app).unwrap_err().contains("denied"));
+        assert!(grant(&store, &app).is_ok());
         assert_eq!(load(&store).unwrap(), saved);
         drop(store); std::fs::remove_file(path).unwrap();
     }
@@ -276,14 +277,12 @@ mod tests {
         assert_eq!(target.pid, std::process::id());
         let (store, path) = store();
         let empty = save(&store, Policy { enabled: true, ..Policy::default() }).unwrap();
-        assert!(check_window(&store, target.window_id).is_err());
-        grant(&store, &target).unwrap();
+        assert!(check_window(&store, target.window_id).is_ok());
         assert!(recheck_window(&store, &target).is_ok());
         let mut reused = target.clone(); reused.pid = reused.pid.wrapping_add(1);
         assert!(recheck_window(&store, &reused).unwrap_err().contains("changed"));
-        let mut denied = load(&store).unwrap(); denied.apps[0].access = Access::Deny;
-        save(&store, denied).unwrap();
-        assert!(recheck_window(&store, &target).unwrap_err().contains("denied"));
+        stop(&store).unwrap();
+        assert!(recheck_window(&store, &target).unwrap_err().contains("disabled"));
         assert!(save(&store, empty).is_err());
         drop(fixture); drop(store); std::fs::remove_file(path).unwrap();
     }

@@ -19,6 +19,7 @@ test("long selected app titles stay on one line inside the computer picker", asy
             .desktop-window-picker select { color:#fff;background:#000;border-color:#333; }
             </style><div class="app-window-frame desktop-panel" style="--ui-scale:${scale};width:${width}px;margin:20px">
             <div class="desktop-window-picker"><select class="themed-select" aria-label="Window">
+            <button class="themed-select-button" type="button" aria-hidden="true"><selectedcontent></selectedcontent></button>
             <option>OpenCore Native Control Fixture with a long window title</option><option>Another app</option>
             </select></div></div>`);
           const select = page.getByLabel("Window");
@@ -43,6 +44,10 @@ test("long selected app titles stay on one line inside the computer picker", asy
           // A wrapped/clipped second line paints a second band of text within the 31px control.
           assert.ok(textHeight > 0 && textHeight <= Math.ceil(12 * scale * scale),
             `picker ${width}px at scale ${scale}: selected text painted ${textHeight} physical rows`);
+          const selected = await select.locator("selectedcontent").boundingBox();
+          const picker = await select.boundingBox();
+          assert.ok(selected && picker && selected.x + selected.width <= picker.x + picker.width - 18,
+            "the selected title must leave room for the dropdown arrow");
           await select.click();
           const option = page.getByRole("option", { name: /OpenCore Native Control Fixture/ });
           const bounds = await option.boundingBox();

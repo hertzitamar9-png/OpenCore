@@ -19,10 +19,10 @@ type Props = {
 type Point = { x: number; y: number };
 type Context = { windowId: number | null; revision: number; activity: number };
 type Editor = { windowId: number; at: Point; native?: boolean };
-type BackgroundResult = { message?: string; backgroundVerified?: boolean; warning?: { message?: string }; inputMode?: string; permissionRequired?: boolean; permissionWindowId?: number; application?: string };
+type BackgroundResult = { message?: string; backgroundVerified?: boolean; warning?: { message?: string }; inputMode?: string };
 type Interaction = BackgroundResult & { editable?: boolean; value?: string; activated?: boolean; inputMode?: string };
 type TextResult = BackgroundResult & { updated?: boolean; submitted?: boolean };
-type Feedback = { error: boolean; warning?: boolean; message: string; needsDirectControl?: boolean; permissionWindowId?: number; application?: string };
+type Feedback = { error: boolean; warning?: boolean; message: string; needsDirectControl?: boolean };
 type PendingEdit = { context: Context; at: Point; text: string };
 type PermissionWindow = api.DesktopWindow & { executablePath?: string };
 const BACKGROUND_CONTROL = { backgroundOnly: true, allowForegroundFallback: false, manualControl: true };
@@ -48,6 +48,7 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
   const [editor, setEditor] = useState<Editor | null>(null);
   const [typing, setTyping] = useState("");
   const [busy, setBusy] = useState(false);
+  const [clickStyle, setClickStyle] = useState<"left" | "right" | "double">("left");
   const [capturing, setCapturing] = useState(false);
   const [captureUnavailable, setCaptureUnavailable] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -134,12 +135,6 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
           ? [...listed.windows, retained] : listed.windows;
       });
       if (target.windowId == null) return;
-      if (listed.windows.find(item => item.windowId === target.windowId)?.permission === "ask") {
-        cancelPending(); shotRef.current = null; localDraft.current = null;
-        captureError.current = ""; setCaptureUnavailable(false);
-        setShot(null); setEditor(null); setTyping(""); setFeedback(null);
-        return;
-      }
       setCapturing(true);
       const captured = await api.desktopCommand<api.DesktopShot>("screenshot", { windowId: target.windowId, ...BACKGROUND_CONTROL });
       if (!latest()) return;
@@ -175,11 +170,7 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
       if (!mounted.current) return;
       const policy = event.payload;
       setEnabled(policy.enabled);
-      const path = windowsRef.current.find(item => item.windowId === selection.current.windowId)?.executablePath;
-      const identity = (value: string) => value.replaceAll("/", "\\").toLowerCase();
-      const allowed = !path || policy.apps.some(app => identity(app.path) === identity(path) && app.access === "allow");
-      const denied = path && policy.apps.some(app => identity(app.path) === identity(path) && app.access === "deny");
-      if (!policy.enabled || !allowed || denied) { select(null); if (!policy.enabled) setWindows([]); }
+      if (!policy.enabled) { select(null); setWindows([]); }
       if (activeRef.current) void refresh(true);
     }).catch(() => () => {});
     return () => { void events.then(unlisten => unlisten()); };
@@ -256,18 +247,16 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
       if (!current(target) || captureError.current) return;
       const result = await api.desktopCommand<T>(action, { windowId: target.windowId, ...args, ...(mode === "direct" ? { directControl: true } : BACKGROUND_CONTROL) });
       if (!current(target)) return;
-      if (result.permissionRequired && result.permissionWindowId) {
-        setFeedback({ error: false, permissionWindowId: result.permissionWindowId, application: result.application,
-          message: `Allow ${result.application || "this app"} to control it from the desktop. No input was sent.` });
-        return;
-      }
       if (mode === "background") requireBackgroundInput(result);
       done(result, target);
       void refresh(true);
     } catch (error) { if (current(target)) report(error); }
     finally { if (current(target)) { controlBusy.current = false; setBusy(false); } }
   };
-  const interact = (at: Point) => control<Interaction>(mode === "direct" ? "click" : "interact", at, (result, target) => {
+  const interact = (at: Point) => control<Interaction>(mode === "direct" ? "click" : "interact", {
+    ...at, ...(mode === "direct" && clickStyle === "right" ? { button: "right" } : {}),
+    ...(mode === "direct" && clickStyle === "double" ? { clickCount: 2 } : {}),
+  }, (result, target) => {
     if (result.editable || (mode === "direct" && result.inputMode === "pointer")) {
       localDraft.current = null;
       setEditor({ windowId: target.windowId!, at, native: mode === "direct" });
@@ -333,31 +322,6 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
     } catch (error) { if (mounted.current && version === accessVersion.current) report(error); }
     finally { if (mounted.current && version === accessVersion.current) setAccessBusy(false); }
   };
-  const grantSelected = async () => {
-    const selected = selection.current.windowId;
-    if (selected == null || selected <= 0 || accessBusy) return;
-    setAccessBusy(true);
-    try {
-      await api.allowComputerWindow(selected);
-      if (mounted.current && selected === selection.current.windowId) void refresh(true);
-    } catch (error) { if (mounted.current) report(error); }
-    finally { if (mounted.current) setAccessBusy(false); }
-  };
-  const grantDesktopTarget = async () => {
-    const target = feedback?.permissionWindowId;
-    if (!target || accessBusy) return;
-    setAccessBusy(true);
-    try {
-      await api.allowComputerWindow(target);
-      if (mounted.current) {
-        setFeedback({ error: false, message: "App allowed. Click the desktop control again to send input." });
-        void refresh(true);
-      }
-    } catch (error) { if (mounted.current) report(error); }
-    finally { if (mounted.current) setAccessBusy(false); }
-  };
-
-  const awaitingPermission = windows.find(item => item.windowId === windowId)?.permission === "ask";
   const changeMode = (nextMode: "direct" | "background") => {
     const draft = localDraft.current;
     modeRef.current = nextMode;
@@ -372,19 +336,17 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
     }
     void refresh(true);
   };
-  const emptyTitle = !enabled ? "Computer use is paused" : awaitingPermission ? "Waiting for app permission"
+  const emptyTitle = !enabled ? "Computer use is paused"
     : captureUnavailable ? "Capture unavailable" : windowId == null ? "Choose a window"
     : !active ? "Computer view is paused" : "Capturing selected window…";
-  const emptyHelp = !enabled ? "Enable computer use to choose an app. Your saved app permissions are kept."
-    : awaitingPermission ? "Choose Allow this app above to capture this window and use its supported controls."
+  const emptyHelp = !enabled ? "Resume computer use to control this PC."
     : captureUnavailable ? "Check the error below, restore the app window, then refresh the capture or choose another window."
     : mode === "direct" ? "Select an app to click, scroll, and apply text. It comes forward briefly for input."
     : "View an app and use its supported controls in the background.";
   const content = <>
-    <div className="desktop-access-bar"><span>{enabled ? "Only permitted apps can be controlled" : "Computer use is disabled"}</span>{!enabled && <button type="button" disabled={accessBusy} onClick={() => void setAccess(true)}>Enable computer use</button>}<button type="button" className="automation-stop" disabled={!enabled && !accessBusy} onClick={() => void setAccess(false)}><Square size={14} aria-hidden="true" /> Stop computer use</button></div>
-    {windows.find(item => item.windowId === windowId)?.permission === "ask" && <div className="desktop-access-bar"><span>Allow OpenCore to inspect and control {windows.find(item => item.windowId === windowId)?.application || windows.find(item => item.windowId === windowId)?.title}?</span><button type="button" disabled={accessBusy} onClick={() => void grantSelected()}>Allow this app</button></div>}
+    <div className="desktop-access-bar"><span>{enabled ? "Control this PC" : "Computer use is disabled"}</span>{!enabled && <button type="button" disabled={accessBusy} onClick={() => void setAccess(true)}>Enable computer use</button>}<button type="button" className="automation-stop" disabled={!enabled && !accessBusy} onClick={() => void setAccess(false)}><Square size={14} aria-hidden="true" /> Stop computer use</button></div>
     <div className="desktop-toolbar" role="toolbar" aria-label="Computer view controls">
-      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><ThemedSelect aria-label="Window" title={windows.find(item => item.windowId === windowId)?.title || "Select a window"} value={windowId ?? ""} onChange={event => {
+      <div className="desktop-window-picker"><AppWindow size={15} aria-hidden="true" /><ThemedSelect truncate aria-label="Window" title={windows.find(item => item.windowId === windowId)?.title || "Select a window"} value={windowId ?? ""} onChange={event => {
         const id = event.target.value === "" ? null : Number(event.target.value);
         select(id);
         void refresh(true);
@@ -394,12 +356,13 @@ export function DesktopPanel({ onClose, embedded = false, active = true, onExpan
         <button type="button" title="Fit capture; the wheel scrolls supported app controls" aria-pressed={size === "fit"} onClick={() => setSize("fit")}>Fit</button>
         <button type="button" title="Show actual size; scroll to pan the capture" aria-pressed={size === "actual"} onClick={() => setSize("actual")}>Actual size</button>
       </div>
+      {mode === "direct" ? <ThemedSelect aria-label="Mouse action" value={clickStyle} disabled={busy} onChange={event => setClickStyle(event.target.value as "left" | "right" | "double")}><option value="left">Click</option><option value="right">Right click</option><option value="double">Double click</option></ThemedSelect> : null}
       <button ref={expandButton} type="button" className="desktop-expand" title={expanded ? "Restore computer view (Escape)" : "Fill the OpenCore window"} aria-label={expanded ? "Restore computer view" : "Expand computer view"} aria-expanded={expanded} disabled={!active} onClick={() => setExpanded(value => !value)}>{expanded ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}<span>{expanded ? "Restore" : "Expand"}</span></button>
     </div>
     <div className="desktop-control-status"><ShieldCheck size={14} aria-hidden="true" /><ThemedSelect aria-label="Computer control mode" value={mode} disabled={busy} onChange={event => changeMode(event.target.value as "direct" | "background")}><option value="direct">Direct control</option><option value="background">Keep OpenCore in front</option></ThemedSelect><span>{windowId === 0 && mode === "background" ? "View only" : busy ? "Applying to app…" : expanded ? "Escape restores the panel" : mode === "direct" ? windowId === 0 ? "Control the visible desktop and taskbar" : "Selected app comes forward briefly" : "Background controls only"}</span></div>
     <div className={`desktop-stage desktop-stage-${size}`} aria-busy={capturing}>{shot ? <div className="desktop-screen"><img src={shot.dataUrl} alt="Selected Windows app" aria-disabled={captureUnavailable} title={captureUnavailable ? "Last captured image. Refresh to resume background controls." : undefined} width={shot.bounds.width} height={shot.bounds.height} draggable={false} onClick={event => { const at = point(event); if (at) void interact(at); }} onWheel={scroll} /></div> : <div className="desktop-empty"><AppWindow size={32} aria-hidden="true" /><strong>{emptyTitle}</strong><p>{emptyHelp}</p></div>}</div>
-    {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : feedback.warning ? " desktop-feedback-warning" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.permissionWindowId ? <button type="button" disabled={accessBusy || !active} onClick={() => void grantDesktopTarget()}>Allow {feedback.application || "this app"}</button> : null}{feedback.needsDirectControl ? <button type="button" disabled={busy || !active} onClick={() => changeMode("direct")}>Switch to Direct control</button> : null}{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}<button type="button" aria-label="Dismiss computer message" onClick={() => setFeedback(null)}>Dismiss</button></div> : null}
-    <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || !active} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active || captureUnavailable} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button></div>
+    {feedback ? <div className={`desktop-feedback${feedback.error ? " desktop-feedback-error" : feedback.warning ? " desktop-feedback-warning" : ""}`} role={feedback.error ? "alert" : "status"}><span>{feedback.message}</span>{feedback.needsDirectControl ? <button type="button" disabled={busy || !active} onClick={() => changeMode("direct")}>Switch to Direct control</button> : null}{feedback.error && localDraft.current ? <button type="button" aria-label="Discard local draft" disabled={busy || !active} onClick={discardDraft}>Discard draft</button> : null}<button type="button" aria-label="Dismiss computer message" onClick={() => setFeedback(null)}>Dismiss</button></div> : null}
+    <div className="desktop-inputbar"><input ref={typingRef} aria-label="Type in selected window" placeholder={editor ? "Type here, then apply to the selected field" : "Click a supported text field in the capture"} value={typing} onChange={event => edit(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); void applyText(); } }} disabled={!editor || busy || !active || captureUnavailable} /><button type="button" title="Apply text to selected window" aria-label="Apply text to selected window" disabled={!editor || busy || !active || captureUnavailable} onClick={() => void applyText()}><Check size={15} aria-hidden="true" /><span>Apply text</span></button></div>
   </>;
   const className = `desktop-panel${expanded ? " desktop-panel-expanded" : ""}`;
   return embedded ? <section className={`${className} desktop-panel-embedded`} aria-label="Windows desktop">{content}</section> : <FloatingWindow id="desktop" title="Computer" icon={<AppWindow size={17} />} status={<span className="connected">{mode === "direct" ? "Direct control" : "Background only"}</span>} onClose={onClose} className={className} ariaLabel="Windows desktop" initialWidth={790} initialHeight={720} minWidth={440} minHeight={320}>{content}</FloatingWindow>;

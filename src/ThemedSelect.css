@@ -25,6 +25,20 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  select.themed-select > button.themed-select-button {
+    all: unset;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .themed-select selectedcontent {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   .app-window-frame select::picker(select), .themed-select::picker(select) {
     max-height: min(360px, 60dvh);
     max-width: min(720px, calc(100vw - 24px));
@@ -62,6 +76,7 @@
     box-shadow: none;
   }
   .app-window-frame select::picker-icon, .themed-select::picker-icon {
+    flex-shrink: 0;
     color: var(--theme-muted, #8da2b5);
     margin-left: 8px;
   }

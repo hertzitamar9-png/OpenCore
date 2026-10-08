@@ -18,22 +18,19 @@ function setup() {
   return vi.mocked(api.setComputerAccess).mockImplementation(async policy => ({ ...policy, revision: (policy.revision ?? 0) + 1 }));
 }
 
-it('enables and grants the selected full executable path even when window titles match', async () => {
+it('runs PC-wide computer use without app approval controls and can still stop', async () => {
   const save = setup();
   render(<ComputerAccessSettings onNotice={() => {}} />);
   await waitFor(() => expect(screen.getByRole('switch')).toBeEnabled());
   fireEvent.click(screen.getByRole('switch', { name: 'Enable computer use' }));
   await waitFor(() => expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true'));
-  fireEvent.change(screen.getByLabelText('Application permission'), { target: { value: '14' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Allow app' }));
-  await waitFor(() => expect(save).toHaveBeenLastCalledWith({ enabled: true, revision: 1,
-    apps: [{ path: 'D:\\Other\\Notes.exe', name: 'Notes.exe', access: 'allow' }] }));
-  expect(await screen.findByText('D:\\Other\\Notes.exe')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Deny Notes.exe' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Allow Notes.exe' })).toBeEnabled());
+  expect(screen.queryByLabelText('Application permission')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Allow app' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Deny app' })).toBeNull();
+  expect(api.computerAccessWindows).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Stop computer use' }));
   await waitFor(() => expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false'));
-  expect(save.mock.calls.at(-1)?.[0].apps).toEqual([{ path: 'D:\\Other\\Notes.exe', name: 'Notes.exe', access: 'deny' }]);
+  expect(save.mock.calls.at(-1)?.[0].enabled).toBe(false);
 });
 
 it('keeps controls usable when running-app enumeration fails and never claims a failed save succeeded', async () => {

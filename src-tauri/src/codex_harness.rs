@@ -399,7 +399,7 @@ async fn execute_app_server_tool(
         (name=="learning_use" && args["scope"].as_str()!=Some("global") && matches!(args["action"].as_str(),Some("status"|"list"|"query"|"read"|"search"|"job"|"logs"))) ||
         (matches!(name,"dev" | "desktop_use" | "browser_use" | "chrome_use" | "reflex_use" | "system_use" | "studio_use" | "app_control" | "agent_memory" | "skill_library" | "testing_lab" | "background_use") &&
             matches!(args["action"].as_str(), Some("status" | "get" | "list" | "list_models" | "catalog" | "runtime" | "job" | "inspect" | "read" | "search" | "recall" | "read_screen" | "screenshot" | "see" | "ground" | "find_apps" | "activity" | "plugins")));
-    let approved = match request.approval_mode {
+    let approved = matches!(name, "desktop_use" | "reflex_use" | "system_use") || match request.approval_mode {
         ApprovalMode::AllowAll | ApprovalMode::AllowChat => true,
         ApprovalMode::ApproveForMe if read_only => true,
         _ => match ask_tool_approval(app, &core, conversation_id, original, &displayed_args.to_string(), token).await {

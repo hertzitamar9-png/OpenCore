@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppWindow, Check, Copy, Globe2, RefreshCw, ShieldOff, Square } from 'lucide-react';
+import { Check, Copy, Globe2, Square } from 'lucide-react';
 import { listen } from '@tauri-apps/api/event';
 import * as api from './api';
 import './AutomationSettings.css';
@@ -8,8 +8,6 @@ type Props = { onNotice: (message: string) => void };
 
 export function ComputerAccessSettings({ onNotice }: Props) {
   const [policy, setPolicy] = useState<api.ComputerAccess | null>(null);
-  const [apps, setApps] = useState<api.ComputerAccessWindow[]>([]);
-  const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const revision = useRef(0);
@@ -21,11 +19,9 @@ export function ComputerAccessSettings({ onNotice }: Props) {
     if (!alive.current || (next.revision ?? 0) < (applied.current?.revision ?? 0)) return;
     applied.current = next; setPolicy(next);
   };
-  const refreshApps = () => api.computerAccessWindows().then(windows => { if (alive.current) setApps(windows); }).catch(e => { if (alive.current) setError(String(e)); });
   useEffect(() => {
     alive.current = true;
     void api.computerAccess().then(accept).catch(e => { if (alive.current) setError(String(e)); });
-    void refreshApps();
     const events = listen<api.ComputerAccess>('opencore-computer-access', event => {
       revision.current++; accept(event.payload);
     }).catch(() => () => {});
@@ -49,26 +45,16 @@ export function ComputerAccessSettings({ onNotice }: Props) {
     }
     finally { if (write === saveVersion.current) { saving.current = false; if (alive.current) setBusy(false); } }
   };
-  const permission = (app: {path: string; name: string}, access: 'allow' | 'deny') => {
-    if (!policy) return;
-    const identity = (path: string) => path.replaceAll('/', '\\').toLowerCase();
-    void save({ ...policy, apps: [...policy.apps.filter(item => identity(item.path) !== identity(app.path)), { path: app.path, name: app.name, access }] });
-  };
   return <div className="automation-settings">
-    <div className="automation-heading"><div><strong>Enable computer use</strong><p className="appearance-note">Allow OpenCore to inspect and control permitted Windows apps. New apps require permission, even when tool approval is set to All.</p></div>
+    <div className="automation-heading"><div><strong>Enable computer use</strong><p className="appearance-note">OpenCore can inspect and control this PC while computer use is running. Apps do not require individual approval.</p></div>
       <button role="switch" aria-label="Enable computer use" aria-checked={policy?.enabled ?? false} className="automation-switch" disabled={!policy || busy} onClick={() => policy && void save({ ...policy, enabled: !policy.enabled })}><span /></button>
     </div>
     <button className="automation-stop" disabled={!policy || (!policy.enabled && !busy)} onClick={() => policy && void save({ ...policy, enabled: false }, true)}><Square size={14} /> Stop computer use</button>
     <p className="appearance-note">Stopping disables further desktop actions and cancels active OpenCore tasks. Press Escape twice for an emergency stop. Actions already sent to Windows may finish.</p>
-    <div className="automation-app-picker"><select aria-label="Application permission" value={selected} onChange={e => setSelected(e.target.value)}><option value="">Choose a running app</option>{apps.map(app => <option key={app.windowId} value={app.windowId}>{app.name} — {app.title}</option>)}</select><button title="Refresh running apps" onClick={() => void refreshApps()}><RefreshCw size={14} /></button></div>
-    <div className="appearance-choices"><button disabled={!policy || busy || !selected} onClick={() => { const app = apps.find(item => String(item.windowId) === selected); if (app) permission(app, 'allow'); }}><Check size={14} /> Allow app</button><button disabled={!policy || busy || !selected} onClick={() => { const app = apps.find(item => String(item.windowId) === selected); if (app) permission(app, 'deny'); }}><ShieldOff size={14} /> Deny app</button></div>
-    {(['allow', 'deny'] as const).map(access => <div className="automation-apps" key={access}><strong>{access === 'allow' ? 'Allowed apps' : 'Denied apps'}</strong>
-      {policy?.apps.some(app => app.access === access) ? policy.apps.filter(app => app.access === access).map(app => <div className="automation-app" key={app.path}><AppWindow size={16} /><div><strong>{app.name}</strong><small title={app.path}>{app.path}</small></div><button aria-label={`${access === 'allow' ? 'Deny' : 'Allow'} ${app.name}`} disabled={busy} onClick={() => permission(app, access === 'allow' ? 'deny' : 'allow')}>{access === 'allow' ? 'Deny' : 'Allow'}</button><button aria-label={`Forget permission for ${app.name}`} disabled={busy} onClick={() => policy && void save({ ...policy, apps: policy.apps.filter(item => item.path !== app.path) })}>Remove</button></div>) : <p className="appearance-note">No {access === 'allow' ? 'allowed' : 'denied'} apps.</p>}
-    </div>)}
-    <p className="appearance-note">Background control supports accessible app controls and standard Windows push buttons and text fields. Games and custom canvases without accessible controls need foreground input or a browser integration. Commands or actions in allowed apps can affect other apps indirectly.</p>
+    <p className="appearance-note">Background control supports accessible app controls and standard Windows push buttons and text fields. Games and custom canvases without accessible controls need foreground input or a browser integration.</p>
     {error && <p role="alert">{error}</p>}
-    {!policy && !error && <p className="appearance-note">Loading permissions…</p>}
-    <button className="automation-help-link" onClick={() => onNotice('Use /computer-use in a prompt after enabling access. Allow an app here or approve its first access request in the conversation.')}>How to use computer access</button>
+    {!policy && !error && <p className="appearance-note">Loading computer controls…</p>}
+    <button className="automation-help-link" onClick={() => onNotice('Use /computer-use in a prompt or open Computer to control your Windows apps and desktop. Use Stop computer use to pause access.')}>How to use computer access</button>
   </div>;
 }
 

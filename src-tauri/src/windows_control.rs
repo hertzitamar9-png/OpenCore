@@ -182,6 +182,10 @@ pub(crate) fn validate_action(action: &str, args: &Value) -> Result<(), String> 
     if action == "key" && !matches!(args.get("key").and_then(Value::as_str), Some("Enter" | "Tab" | "Escape" | "Backspace" | "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "PageUp" | "PageDown" | "Ctrl+L")) {
         return Err("Unsupported desktop key".into());
     }
+    if action == "click" && (args.get("button").is_some_and(|button| !matches!(button.as_str(), Some("left" | "right")))
+        || args.get("clickCount").is_some_and(|count| !matches!(count.as_u64(), Some(1 | 2)))) {
+        return Err("Choose a left click, right click, or double click".into());
+    }
     if action == "navigate_url" {
         let address = args.get("url").and_then(Value::as_str).ok_or("A URL is required")?;
         if address.len() > 2048 || !tauri::Url::parse(address).is_ok_and(|url| matches!(url.scheme(), "http" | "https")) {
@@ -604,10 +608,10 @@ mod platform {
     }
 
     fn foreground_click(window_id: isize, point: &Point, allowed: bool) -> Result<Value, String> {
-        foreground_pointer(window_id, point, allowed, None)
+        foreground_pointer(window_id, point, allowed, None, "left")
     }
 
-    fn foreground_pointer(window_id: isize, point: &Point, allowed: bool, scroll: Option<&str>) -> Result<Value, String> {
+    fn foreground_pointer(window_id: isize, point: &Point, allowed: bool, scroll: Option<&str>, click_style: &str) -> Result<Value, String> {
         if !allowed { return Err("This control does not expose background activation. Foreground pointer input is disabled for this action; use the control in the application.".into()); }
         use windows::Win32::Foundation::{HWND, POINT};
         use windows::Win32::UI::WindowsAndMessaging::{GetAncestor, GetForegroundWindow, GetWindowLongW, IsIconic, SetCursorPos, SetForegroundWindow, SetWindowPos, ShowWindow, WindowFromPoint, GA_ROOT, GWL_EXSTYLE, HWND_NOTOPMOST, HWND_TOP, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SW_RESTORE, WS_EX_TOPMOST};
@@ -639,7 +643,13 @@ mod platform {
                 if unsafe { SendInput(&[input], std::mem::size_of::<INPUT>() as i32) } != 1 {
                     return Err("Windows did not accept the scroll input".into());
                 }
-            } else { mouse.click(point).map_err(|error| error.to_string())?; }
+            } else {
+                match click_style {
+                    "right" => mouse.right_click(point),
+                    "double" => mouse.double_click(point),
+                    _ => mouse.click(point),
+                }.map_err(|error| error.to_string())?;
+            }
             Ok(())
         })() };
         if let Some(cursor) = cursor {
@@ -904,7 +914,7 @@ mod platform {
             "scroll_at" => {
                 if foreground_fallback_allowed(args) {
                     let point = window_point(&window, args)?;
-                    let result = foreground_pointer(id, &point, true, args["direction"].as_str())?;
+                    let result = foreground_pointer(id, &point, true, args["direction"].as_str(), "left")?;
                     return Ok(json!({"scrolled":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}));
                 }
                 use uiautomation::patterns::UIScrollPattern;
@@ -1002,7 +1012,8 @@ mod platform {
             "move" | "click" => {
                 let point = window_point(&window, args)?;
                 if action == "click" && id != 0 {
-                    let result = foreground_click(id, &point, foreground_fallback_allowed(args))?;
+                    let style = if args["button"] == "right" { "right" } else if args["clickCount"] == 2 { "double" } else { "left" };
+                    let result = foreground_pointer(id, &point, foreground_fallback_allowed(args), None, style)?;
                     return Ok(json!({"windowId":id,"x":args["x"],"y":args["y"],"action":action,
                         "activated":true,"inputMode":"pointer","foregroundReturned":result["foregroundReturned"]}));
                 }
@@ -1090,7 +1101,7 @@ pub(crate) fn background_capabilities() -> Value {
         "unsupportedReason":"Windows canvases, games and custom controls without accessibility patterns cannot be controlled in the background. Use their browser CDP integration when available, or explicitly select foreground computer use."})
 }
 
-fn permissioned_windows(mut listed: Value, policy: &crate::computer_access::Policy, desktop_preview: bool) -> Value {
+fn permissioned_windows(mut listed: Value, policy: &crate::computer_access::Policy, _desktop_preview: bool) -> Value {
     listed["computerUseEnabled"] = json!(policy.enabled);
     listed["backgroundCapabilities"] = background_capabilities();
     if let Some(rows) = listed["windows"].as_array_mut() {
@@ -1098,15 +1109,12 @@ fn permissioned_windows(mut listed: Value, policy: &crate::computer_access::Poli
             if !policy.enabled { return false; }
             let Some(id) = row["windowId"].as_i64() else { return false; };
             if id == 0 {
-                if !desktop_preview { return false; }
-                // This grants a preview only. Input resolves and authorizes
-                // the actual app under the point on every manual action.
+                // Input resolves and verifies the actual app under the point.
                 row["permission"] = json!("allowed");
                 return true;
             }
             let Ok(app) = crate::computer_access::window_identity(id) else { return false; };
-            if policy.access(&app.path) == Some(crate::computer_access::Access::Deny) { return false; }
-            row["permission"] = json!(if policy.access(&app.path).is_some() { "allowed" } else { "ask" });
+            row["permission"] = json!("allowed");
             row["application"] = json!(app.name);
             row["executablePath"] = json!(app.path);
             true
@@ -1115,8 +1123,7 @@ fn permissioned_windows(mut listed: Value, policy: &crate::computer_access::Poli
     listed
 }
 
-/// Only the trusted main UI calls this preview route. AI tools continue through
-/// command_authorized, where the whole desktop is excluded by app permissions.
+/// Read-only preview route. Computer Stop is checked before and after capture.
 pub(crate) async fn manual_preview(action: &str, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
     if !matches!(action, "list" | "screenshot") { return Err("Desktop preview cannot send input".into()); }
     let policy = crate::computer_access::load(&store)?;
@@ -1137,8 +1144,7 @@ pub(crate) async fn manual_preview(action: &str, store: std::sync::Arc<crate::st
     #[cfg(not(windows))] { Err("Desktop control is available on Windows".into()) }
 }
 
-/// A human's desktop-preview action, resolved to one permitted application.
-/// No global app grant is created and no background policy is weakened.
+/// A physical desktop action, resolved to an actual application before input.
 pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
     if !matches!(action.as_str(), "click" | "scroll_at" | "commit_text") || args["windowId"].as_i64() != Some(0) {
         return Err("Unsupported manual desktop action".into());
@@ -1156,11 +1162,7 @@ pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::
         }
         let policy = crate::computer_access::load(&store)?;
         policy.require_enabled()?;
-        match policy.access(&identity.path) {
-            None => return Ok(json!({"permissionRequired":true,"permissionWindowId":id,"application":identity.name})),
-            Some(crate::computer_access::Access::Deny) => policy.authorize(&identity.path)?,
-            Some(crate::computer_access::Access::Allow) => {},
-        }
+        policy.authorize(&identity.path)?;
         args["windowId"] = json!(id);
         args["x"] = target["x"].clone();
         args["y"] = target["y"].clone();
@@ -1173,6 +1175,12 @@ pub(crate) async fn manual_desktop(action: String, mut args: Value, store: std::
 }
 
 pub(crate) async fn command_authorized(action: String, args: Value, store: std::sync::Arc<crate::store::EventStore>) -> Result<Value, String> {
+    if args["windowId"].as_i64() == Some(0) && matches!(action.as_str(), "click" | "scroll_at" | "commit_text") {
+        if !foreground_fallback_allowed(&args) {
+            return Err("Whole-desktop input needs Direct control. Background mode can control supported app windows.".into());
+        }
+        return Box::pin(manual_desktop(action, args, store)).await;
+    }
     validate_action(&action, &args)?;
     if action == "list" {
         let policy = crate::computer_access::load(&store)?;
@@ -1183,7 +1191,11 @@ pub(crate) async fn command_authorized(action: String, args: Value, store: std::
         return Ok(permissioned_windows(listed, &policy, false));
     }
     #[cfg(windows)]
-    validate_control_window(args["windowId"].as_i64().ok_or("Select an application window first")?)?;
+    if args["windowId"].as_i64() != Some(0) {
+        validate_control_window(args["windowId"].as_i64().ok_or("Select an application window first")?)?;
+    } else if !matches!(action.as_str(), "screenshot" | "inspect" | "read_screen") {
+        return Err("Select an app window for keyboard input or dragging".into());
+    }
     let mut changes = crate::computer_access::subscribe();
     let expected = crate::computer_access::check_window(&store, args["windowId"].as_i64().ok_or("Select an application window first")?)?;
     #[cfg(windows)]
@@ -1264,11 +1276,11 @@ pub(crate) fn restore_cursor_if_unchanged(expected: (i32, i32), original: (i32, 
 mod tests {
     use super::*;
     #[test]
-    fn only_manual_preview_lists_the_desktop_and_stop_removes_it() {
+    fn pc_wide_access_lists_the_desktop_and_stop_removes_it() {
         let listed = json!({"windows":[{"windowId":0,"title":"Whole desktop"}]});
         let mut policy = crate::computer_access::Policy { enabled: true, ..Default::default() };
         assert_eq!(permissioned_windows(listed.clone(), &policy, true)["windows"][0]["windowId"], 0);
-        assert!(permissioned_windows(listed.clone(), &policy, false)["windows"].as_array().unwrap().is_empty());
+        assert_eq!(permissioned_windows(listed.clone(), &policy, false)["windows"][0]["windowId"], 0);
         policy.enabled = false;
         assert!(permissioned_windows(listed, &policy, true)["windows"].as_array().unwrap().is_empty());
     }
@@ -1277,10 +1289,11 @@ mod tests {
     async fn manual_desktop_honors_stop_and_the_preview_route_cannot_send_input() {
         let path = std::env::temp_dir().join(format!("opencore-manual-desktop-{}.sqlite3", uuid::Uuid::new_v4()));
         let store = std::sync::Arc::new(crate::store::EventStore::open(&path).unwrap());
+        crate::computer_access::stop(&store).unwrap();
         assert!(manual_preview("click", store.clone()).await.unwrap_err().contains("cannot send input"));
         assert!(manual_desktop("click".into(), json!({"windowId":0,"x":10,"y":10}), store.clone())
             .await.unwrap_err().contains("disabled"));
-        assert!(crate::computer_access::window_identity(0).unwrap_err().contains("Whole-desktop"));
+        assert!(crate::computer_access::check_window(&store, 0).unwrap_err().contains("disabled"));
         drop(store);
         std::fs::remove_file(path).unwrap();
     }

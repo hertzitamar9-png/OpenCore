@@ -78,24 +78,27 @@ it("clears activity when the computer panel is closed", async () => {
   expect(command).toHaveBeenCalledWith("clear_activity");
 });
 
-it("explains the app permission wait and captures only after that app is allowed", async () => {
-  let allowed = false;
+it("pauses text editing while a direct click is selecting another field", async () => {
   const command = desktop();
-  command.mockImplementation(async (action, args = {}) => action === "list"
-    ? { windows: [{ ...windows[1], application: "Notes.exe", permission: allowed ? "allow" : "ask" }] } as never
-    : screenshot(Number(args.windowId)) as never);
-  const grant = vi.spyOn(api, "allowComputerWindow").mockImplementation(async () => { allowed = true; return {} as api.ComputerAccess; });
-  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
-  const picker = await screen.findByLabelText("Window");
-  await screen.findByRole("option", { name: "Notes" });
-  fireEvent.change(picker, { target: { value: "10" } });
-  expect(await screen.findByText("Waiting for app permission")).toBeVisible();
-  expect(screen.queryByText("Capturing selected window…")).toBeNull();
-  expect(command.mock.calls.some(([action]) => action === "screenshot")).toBe(false);
-  fireEvent.click(screen.getByRole("button", { name: "Allow this app" }));
-  expect(await screen.findByAltText("Selected Windows app")).toBeVisible();
-  expect(grant).toHaveBeenCalledWith(10);
+  let clicks = 0;
+  let finishClick!: (value: never) => void;
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    if (action === "click" && ++clicks === 2) return new Promise(resolve => { finishClick = resolve; });
+    return { activated: true, inputMode: "pointer" } as never;
+  });
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(screen.getByLabelText("Type in selected window")).toBeEnabled());
+  fireEvent.click(image, { clientX: 240, clientY: 125 });
+  await waitFor(() => expect(command.mock.calls.filter(([action]) => action === "click")).toHaveLength(2));
+  expect(screen.getByLabelText("Type in selected window")).toBeDisabled();
+  await act(async () => finishClick({ activated: true, inputMode: "pointer" } as never));
+  expect(screen.getByLabelText("Type in selected window")).toBeEnabled();
 });
+
 
 it("shows a capture failure instead of an endless capturing message", async () => {
   const command = desktop();
@@ -129,7 +132,7 @@ it("starts disabled and enables computer use with one click while preserving sav
   fireEvent.click(enable);
   await waitFor(() => expect(save).toHaveBeenCalledWith({ ...policy, enabled: true }));
   expect(save).toHaveBeenCalledTimes(1);
-  expect(await screen.findByText("Only permitted apps can be controlled")).toBeVisible();
+  expect(await screen.findByText("Control this PC")).toBeVisible();
   await waitFor(() => expect(screen.getByRole("option", { name: "Notes" })).toBeInTheDocument());
   expect(command.mock.calls.some(([action]) => action === "screenshot")).toBe(false);
 });
@@ -152,27 +155,6 @@ it("clears the selected capture when computer access is disabled during refresh"
   expect(command.mock.calls.filter(([action]) => action === "screenshot")).toHaveLength(before);
 });
 
-it("asks permission before capturing an unknown executable", async () => {
-  const command = desktop();
-  let allowed = false;
-  command.mockImplementation(async action => action === "list"
-    ? { windows: [{ ...windows[1], permission: allowed ? "allowed" : "ask" }], computerUseEnabled: true } as never : screenshot(10) as never);
-  const grant = vi.spyOn(api, "allowComputerWindow").mockImplementation(async () => {
-    allowed = true;
-    return { enabled: true, apps: [{ path: "C:\\Apps\\Notes.exe", name: "Notes", access: "allow" }] };
-  });
-  render(<DesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
-  const picker = await screen.findByLabelText("Window");
-  await waitFor(() => expect(picker.querySelector('option[value="10"]')).not.toBeNull());
-  fireEvent.change(picker, { target: { value: "10" } });
-  expect(await screen.findByRole("button", { name: "Allow this app" })).toBeVisible();
-  expect(screen.queryByAltText("Selected Windows app")).toBeNull();
-  expect(command.mock.calls.some(([action]) => action === "screenshot")).toBe(false);
-  fireEvent.click(screen.getByRole("button", { name: "Allow this app" }));
-  expect(await screen.findByAltText("Selected Windows app")).toBeVisible();
-  expect(grant).toHaveBeenCalledWith(10);
-  expect(grant).toHaveBeenCalledTimes(1);
-});
 
 it("retains the selected app and draft when the window list temporarily omits a live capture", async () => {
   const command = desktop();
@@ -290,22 +272,24 @@ it("controls the real desktop through the explicitly selected direct mode", asyn
   expect(screen.queryByText(/Entire desktop is view only/)).toBeNull();
 });
 
-it("asks for the actual app under a desktop click without replaying the click after permission", async () => {
+it("offers native right and double clicks for desktop icons and app menus", async () => {
   const command = desktop();
   command.mockImplementation(async (action, args = {}) => {
     if (action === "list") return { windows } as never;
     if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
-    return { permissionRequired: true, permissionWindowId: 20, application: "Calculator" } as never;
+    return { activated: true, inputMode: "pointer" } as never;
   });
-  const grant = vi.spyOn(api, "allowComputerWindow").mockResolvedValue({ enabled: true, apps: [], revision: 1 });
   render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
   const image = await selectWindow(0); imageBounds(image);
+  fireEvent.change(screen.getByLabelText("Mouse action"), { target: { value: "right" } });
   fireEvent.click(image, { clientX: 340, clientY: 175 });
-  fireEvent.click(await screen.findByRole("button", { name: "Allow Calculator" }));
-  await waitFor(() => expect(grant).toHaveBeenCalledWith(20));
-  expect(command.mock.calls.filter(([action]) => action === "click")).toHaveLength(1);
-  expect(screen.getByLabelText("Window")).toHaveValue("0");
+  await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 0, x: 960, y: 540, button: "right", directControl: true }));
+  await waitFor(() => expect(screen.getByLabelText("Mouse action")).not.toBeDisabled());
+  fireEvent.change(screen.getByLabelText("Mouse action"), { target: { value: "double" } });
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 0, x: 960, y: 540, clickCount: 2, directControl: true }));
 });
+
 
 it("preserves the draft when native text application cannot submit the control", async () => {
   const command = desktop();
@@ -681,4 +665,20 @@ it("applies a preserved local draft before activating an app control after reope
   await act(async () => { await Promise.resolve(); });
   expect(order).toEqual(["set_at", "interact"]);
   expect(command).toHaveBeenCalledWith("set_at", { windowId: 10, x: 480, y: 270, text: "Preserved local draft", backgroundOnly: true, allowForegroundFallback: false, manualControl: true });
+});
+
+it("captures and controls a running app without an Allow step or grant request", async () => {
+  const command = desktop();
+  command.mockImplementation(async (action, args = {}) => {
+    if (action === "list") return { windows: [{ ...windows[1], permission: "ask" }], computerUseEnabled: true } as never;
+    if (action === "screenshot") return screenshot(Number(args.windowId)) as never;
+    return { activated: true, inputMode: "pointer" } as never;
+  });
+  const grant = vi.spyOn(api, "allowComputerWindow");
+  render(<NativeDesktopPanel embedded onClose={() => {}} onNotice={() => {}} />);
+  const image = await selectWindow(); imageBounds(image);
+  expect(screen.queryByRole("button", { name: /Allow/ })).toBeNull();
+  fireEvent.click(image, { clientX: 340, clientY: 175 });
+  await waitFor(() => expect(command).toHaveBeenCalledWith("click", { windowId: 10, x: 480, y: 270, directControl: true }));
+  expect(grant).not.toHaveBeenCalled();
 });

@@ -176,7 +176,7 @@ async fn desktop_command(webview:tauri::Webview,app: tauri::AppHandle, action: S
         let core = app.state::<Arc<AppCore>>();
         core.ensure_not_updating()?;
         // This route is explicit user input from the trusted application UI.
-        // App permissions still apply; the AI's background policy is separate.
+        // The persistent Stop state still applies; the AI's focus policy is separate.
         if args["windowId"].as_i64() == Some(0) {
             #[cfg(windows)]
             desktop_activity::clear(&app);
@@ -220,10 +220,8 @@ fn cancel_computer_tasks(app: &tauri::AppHandle,core:&AppCore) {
 #[tauri::command]
 fn set_computer_access(webview: tauri::Webview, app: tauri::AppHandle,core: tauri::State<'_,Arc<AppCore>>,policy:computer_access::Policy) -> Result<computer_access::Policy,String> {
     computer_access::require_settings_surface(webview.label())?;
-    let previous=computer_access::load(&core.store)?;
     let saved=computer_access::save(&core.store,policy)?;
-    let revoked=previous.apps.iter().any(|target|target.access==computer_access::Access::Allow && saved.access(&target.path)!=Some(computer_access::Access::Allow));
-    if !saved.enabled || revoked { cancel_computer_tasks(&app,&core); }
+    if !saved.enabled { cancel_computer_tasks(&app,&core); }
     let _=app.emit("opencore-computer-access",&saved);
     Ok(saved)
 }
@@ -248,16 +246,10 @@ fn set_browser_enabled(core:&AppCore,enabled:bool)->Result<(),String> {
     core.browser.set_enabled(enabled);
     Ok(())
 }
-async fn request_computer_app(app:&tauri::AppHandle,core:&AppCore,conversation:&str,args:&Value,token:&CancellationToken)->Result<(),String> {
-    let policy=computer_access::load(&core.store)?; policy.require_enabled()?;
-    let target=computer_access::window_identity(args["windowId"].as_i64().ok_or("Select an application window first")?)?;
-    if policy.access(&target.path).is_some() { return policy.authorize(&target.path); }
-    let approved=ask_tool_approval(app,core,conversation,"Allow computer access to app",&json!({"application":target.name,"executable":target.path,"permission":"Inspect and control this app until revoked in Settings"}).to_string(),token).await?;
-    if !approved || token.is_cancelled() { return Err("Application access was not approved or the task was stopped".into()); }
-    let current=computer_access::window_identity(target.window_id)?;
-    if current.pid!=target.pid || computer_access::identity(&current.path)!=computer_access::identity(&target.path) { return Err("The selected window changed while permission was pending".into()); }
-    computer_access::grant(&core.store,&current)?;
-    let _=app.emit("opencore-computer-access",computer_access::load(&core.store)?);
+async fn request_computer_app(_app:&tauri::AppHandle,core:&AppCore,_conversation:&str,args:&Value,token:&CancellationToken)->Result<(),String> {
+    computer_access::load(&core.store)?.require_enabled()?;
+    if token.is_cancelled() { return Err("Computer use was stopped".into()); }
+    computer_access::check_window(&core.store,args["windowId"].as_i64().ok_or("Select an application window first")?)?;
     Ok(())
 }
 
@@ -272,6 +264,15 @@ fn set_computer_focus_mode(webview:tauri::Webview,keep_user_window_in_front: boo
 /// other windows cover it, so looking never moves focus.
 #[cfg(windows)]
 async fn vision_frame(window_id: i64,store:Arc<EventStore>) -> Result<vision::Frame, String> {
+    if window_id == 0 {
+        let capture = windows_control::command_authorized("screenshot".into(), json!({"windowId":0}), store).await?;
+        return Ok(vision::Frame {
+            data_url: capture["dataUrl"].as_str().ok_or("Desktop capture has no image")?.to_owned(),
+            width: capture["bounds"]["width"].as_u64().and_then(|value| u32::try_from(value).ok()).filter(|value| *value > 0).ok_or("Desktop capture has invalid width")?,
+            height: capture["bounds"]["height"].as_u64().and_then(|value| u32::try_from(value).ok()).filter(|value| *value > 0).ok_or("Desktop capture has invalid height")?,
+            origin: (0, 0),
+        });
+    }
     tokio::task::spawn_blocking(move || {
         let target=computer_access::check_window(&store,window_id)?;
         let frame = desktop_capture::frame_for_window(window_id as isize)?;
