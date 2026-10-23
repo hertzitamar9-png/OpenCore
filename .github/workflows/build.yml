@@ -37,6 +37,8 @@ jobs:
           $version = node --input-type=module -e "import {releaseVersion} from './scripts/release-version.mjs'; console.log(releaseVersion(process.env.GITHUB_RUN_NUMBER));"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "OPENCORE_RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+      - name: Apply the official OpenCore logo to browser-extension surfaces
+        run: python distribution/sync-branding.py
       - name: Test manual update controls and release version ordering
         run: |
           npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx
@@ -44,6 +46,8 @@ jobs:
           npx tsc --noEmit
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs distribution/test-manual-update-policy.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test tests/chrome-dom.test.mjs tests/chrome-connection.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Test isolated runtime setup and download admission
         working-directory: distribution
@@ -84,6 +88,8 @@ jobs:
           node qa-footer.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-updates.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-branding.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build OpenCore Setup with the official app logo and complete runtime
         run: |
@@ -126,6 +132,8 @@ jobs:
           path: |
             distribution/.output/update-controls.png
             distribution/.output/update-controls-qa.json
+            distribution/.output/browser-branding.png
+            distribution/.output/browser-branding-qa.json
             distribution/.output/release/*verification.json
             distribution/executable-patch.json
             distribution/candidate-dist-qa.json

@@ -7,6 +7,7 @@ const source = readFileSync(new URL("../chrome-extension/background.js", import.
 const popupSource = readFileSync(new URL("../chrome-extension/popup.js", import.meta.url), "utf8");
 const FIRST = "11111111-1111-4111-8111-111111111111";
 const SECOND = "22222222-2222-4222-8222-222222222222";
+const EXTENSION_ID = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const flush = () => new Promise(resolve => setImmediate(resolve));
 const test = (name, run) => nodeTest(name, { timeout: 2000 }, run);
 
@@ -35,15 +36,15 @@ function worker(initialToken = "", setStorage = null) {
     action: { setBadgeText: async ({ text }) => badges.push(text) },
     debugger: { onDetach: { addListener() {} } },
     alarms: { create() {}, onAlarm: { addListener(value) { alarmListener = value; } } },
-    runtime: { onMessage: { addListener(value) { listener = value; } } },
+    runtime: { id: EXTENSION_ID, getURL: name => `chrome-extension://${EXTENSION_ID}/${name}`, onMessage: { addListener(value) { listener = value; } } },
     tabs: { query: async () => [{ id: 7, title: "Fixture tab", url: "https://example.test", active: true }] },
   };
   const context = vm.createContext({ chrome, WebSocket: Socket, URL, console,
     setTimeout(callback, ms) { const id = ++timerId; timers.set(id, { callback, ms }); return id; },
     clearTimeout(id) { timers.delete(id); }, setInterval() {} });
   vm.runInContext(source, context);
-  const message = (value, replies = []) => new Promise(resolve => {
-    listener(value, {}, result => { replies.push(result); resolve(result); });
+  const message = (value, replies = [], sender = { id: EXTENSION_ID, url: chrome.runtime.getURL('popup.html') }) => new Promise(resolve => {
+    listener(value, sender, result => { replies.push(result); resolve(result); });
   });
   function timer(ms) {
     const entry = [...timers.entries()].find(([, value]) => value.ms === ms);
@@ -53,6 +54,15 @@ function worker(initialToken = "", setStorage = null) {
   }
   return { sockets, badges, storage, message, timer, alarm() { alarmListener({ name: "opencore-reconnect" }); } };
 }
+
+test('pairing rejects a sender outside the OpenCore extension', async () => {
+  const harness = worker();
+  await flush();
+  const result = await harness.message({ type: 'pair', token: FIRST }, [], { id: 'another-extension', url: 'https://example.test' });
+  assert.equal(result.ok, false);
+  assert.equal(harness.storage.pairingToken, '');
+  assert.equal(harness.sockets.length, 0);
+});
 
 test("pair reports success only after the actual handshake opens", async () => {
   const harness = worker();

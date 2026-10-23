@@ -12,7 +12,7 @@ class RuntimeSafetyTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name)
+        self.root = Path(self.tmp.name).resolve()
         self.resources = self.root / 'resources'
         self.folder = self.root / 'models/hub/hf-fixture'
         self.folder.mkdir(parents=True)

@@ -141,5 +141,9 @@
   "text-runtime/spark/configuration_spark.py": "src-tauri/resources/text-runtime/spark/configuration_spark.py",
   "text-runtime/spark/modeling_spark.py": "src-tauri/resources/text-runtime/spark/modeling_spark.py",
   "text-runtime/spark/OPENCORE-NOTICE.txt": "src-tauri/resources/text-runtime/spark/OPENCORE-NOTICE.txt",
-  "text-runtime/spark/__init__.py": "src-tauri/resources/text-runtime/spark/__init__.py"
+  "text-runtime/spark/__init__.py": "src-tauri/resources/text-runtime/spark/__init__.py",
+  "chrome-extension/popup.html": "chrome-extension/popup.html",
+  "chrome-extension/pair.html": "chrome-extension/pair.html",
+  "chrome-extension/icons/opencore-32.png": "chrome-extension/icons/opencore-32.png",
+  "chrome-extension/icons/opencore-128.png": "chrome-extension/icons/opencore-128.png"
 }

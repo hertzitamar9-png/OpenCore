@@ -4,6 +4,8 @@ Every successful push to `main` runs `.github/workflows/build.yml`, verifies the
 
 The installer filename and caption do not contain a version. Internal release versions are `0.3.<Actions run number>` so all new releases are newer than existing `0.2.305` installations. Windows Apps shows the distribution version, and the app header compares that version with the signed update feed. Checking metadata never downloads or installs a package. The user opens **Update ready**, then chooses **Download update**. The app reopens after an updater installation.
 
+Setup, uninstaller, app shortcuts and the browser extension use the official OpenCore logo. `sync-branding.py` copies the canonical 32/128px icon assets into the extension and refreshes the pairing page logo and favicon before packaging.
+
 ## Recovery boundary
 
 The newer native checkout was lost before this recovery. The repository's historical native source was last published as 0.2.142 and cannot replace the newer installed native behavior. `baseline.json` therefore pins the verified original 0.2.305 native executable and clean runtime resources as GitHub release inputs. No chats, credentials, browser profiles, accounts, managed environments or downloaded model weights are included.
