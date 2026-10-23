@@ -13,7 +13,7 @@ export function releaseVersion(value) {
   if (!Number.isSafeInteger(runNumber) || runNumber < 1) {
     throw new TypeError('GitHub Actions run number must be a positive safe integer');
   }
-  return `0.2.${runNumber}`;
+  return `0.3.${runNumber}`;
 }
 
 function updateConfig(runNumber) {

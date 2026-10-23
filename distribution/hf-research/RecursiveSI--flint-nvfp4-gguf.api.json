@@ -1,0 +1,106 @@
+{
+  "_id": "6ad8c35277b51a56bca57075",
+  "id": "RecursiveSI/flint-nvfp4-gguf",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "nvfp4",
+    "text-generation",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 4669,
+  "likes": 13,
+  "modelId": "RecursiveSI/flint-nvfp4-gguf",
+  "author": "RecursiveSI",
+  "sha": "6ec43e19b565fc8d560e2d04985d7724f20673bf",
+  "lastModified": "2026-10-21T15:44:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "nvfp4"
+    ]
+  },
+  "gguf": {
+    "total": 39785323896,
+    "architecture": "flint",
+    "context_length": 262144,
+    "chat_template": "{%- macro flint_text(t) -%}\n{%- if t is string -%}\n{{- t | replace(\"\\x00\", \"\") | replace(\"<think>\", \"\") | replace(\"</think>\", \"\") | replace(\"<|begin_of_text|>\", \"&lt;|begin_of_text|&gt;\") | replace(\"<|end_of_text|>\", \"&lt;|end_of_text|&gt;\") | replace(\"<|system|>\", \"&lt;|system|&gt;\") | replace(\"<|developer|>\", \"&lt;|developer|&gt;\") | replace(\"<|user|>\", \"&lt;|user|&gt;\") | replace(\"<|assistant|>\", \"&lt;|assistant|&gt;\") | replace(\"<|observation|>\", \"&lt;|observation|&gt;\") -}}\n{%- else -%}\n{{- t -}}\n{%- endif -%}\n{%- endmacro -%}\n{%- set tool_preamble -%}\n{%- if tools %}<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{%- for tool in tools %}\n{%- set fn = tool.function if tool.function is defined else tool %}\n{{ fn | tojson(ensure_ascii=False) }}\n{%- endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value>...</tool_call>\n{% endif -%}\n{%- endset -%}\n{%- set ns = namespace(tools_pending=true) -%}\n{%- for m in messages -%}\n{%- if ns.tools_pending and m.role != 'system' -%}\n{{ tool_preamble }}\n{%- set ns.tools_pending = false -%}\n{%- endif -%}\n{%- if m.role == 'system' -%}\n<|system|>{{ flint_text(m.content) }}\n{%- elif m.role == 'developer' -%}\n<|developer|>{{ flint_text(m.content) }}\n{%- elif m.role == 'user' -%}\n<|user|>{{ flint_text(m.content) }}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- if m.reasoning_content %}<think>{{ m.reasoning_content }}</think>{% endif -%}\n{%- if m.content %}{{ m.content }}{% endif -%}\n{%- if m.tool_calls -%}\n{%- for tc in m.tool_calls -%}\n{%- set fn = tc.function if tc.function is defined else tc -%}\n<tool_call>{{ fn.name }}\n{%- for k, v in fn.arguments.items() -%}\n<arg_key>{{ k }}</arg_key><arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>\n{%- endfor -%}\n</tool_call>\n{%- endfor -%}\n{%- endif -%}\n{%- elif m.role == 'tool' -%}\n<|observation|><tool_response>{{ flint_text(m.content) }}</tool_response>\n{%- endif -%}\n{%- endfor -%}\n{%- if ns.tools_pending -%}\n{{ tool_preamble }}\n{%- endif -%}\n{%- if add_generation_prompt -%}\n<|assistant|>\n{%- endif -%}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|end_of_text|>",
+    "totalFileSize": 22863084160
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "949d5f6dee5ccc4ab23d0105362bea1a5802e79d",
+      "size": 1630
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f49a4e16e68b128803cc2dcea614603632b04eac",
+      "size": 11356
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "035362760c015f31774ff6606b57d4f8ee1eb4d2",
+      "size": 3322
+    },
+    {
+      "rfilename": "assets/flint-logo.png",
+      "blobId": "277944eddceffd95aa7c4a27ab8bd7172eff0b32",
+      "size": 410238,
+      "lfs": {
+        "sha256": "b95290bec100def989fd410999f8129d43068900705a0609a78cdbafa930ad61",
+        "size": 410238,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "flint-nvfp4.gguf",
+      "blobId": "40d309b877833a6ad25264d5e43407a3f7fec86c",
+      "size": 22863084160,
+      "lfs": {
+        "sha256": "97cc8009ff9b132d5cf3c488e6767962bb5a5dc158a90ed661bbbddf876b8bde",
+        "size": 22863084160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "opencode.json",
+      "blobId": "04245ca13610829a96f33f0b3cdde4b9e7a31811",
+      "size": 779
+    },
+    {
+      "rfilename": "pi-models.json",
+      "blobId": "2e33da0639f8966ce005b1fe05bb5a81e83f8bf9",
+      "size": 569
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-21T13:51:14.000Z",
+  "usedStorage": 22863494398
+}

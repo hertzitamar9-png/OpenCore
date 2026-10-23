@@ -31,6 +31,7 @@ byte-for-byte. Consumers must not execute provisional tool arguments.
 from __future__ import annotations
 
 import argparse
+import base64
 from collections import OrderedDict
 import hashlib
 import json
@@ -47,9 +48,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-# Works from the repo (evoagent under src/) and from the shipped package, where
-# evoagent/ sits next to this file.
-for candidate in (Path(__file__).resolve().parent, ROOT / "src"):
+# Desktop startup can materialize the helpers into a fresh package directory so
+# Python never imports bytecode left by an older in-place app update. Direct
+# runs still use the adjacent source package or the repository's src/ package.
+runtime_modules = os.environ.get("OPENCORE_ECHO_RUNTIME_MODULES", "").strip()
+candidates = ([Path(runtime_modules)] if runtime_modules else []) + [
+    Path(__file__).resolve().parent,
+    ROOT / "src",
+]
+for candidate in candidates:
     if (candidate / "evoagent" / "echo_memory.py").exists():
         sys.path.insert(0, str(candidate))
         break
@@ -194,23 +201,9 @@ def tool_call_error(message, declared_tools):
                 return 'Invalid %s for %s; allowed values: %s' % (key, name, prop['enum'])
     return None
 
-# Reasoning effort. The server takes reasoning_budget_tokens per request, so
-# the level is chosen per message rather than fixed when the server starts.
-#
-# "off" is a real setting, not budget 1: the thinking channel is disabled
-# entirely, which makes short factual answers faster. Legacy "fast" and
-# "speed" labels resolve to this mode. At the other end,
-# "ultra" is not a bigger budget - past a point more thinking on one pass stops
-# helping - it is several passes that check each other.
-REASONING_LEVELS = {
-    "off":        {"budget": 0,     "passes": 1},
-    "low":        {"budget": 512,   "passes": 1},
-    "medium":     {"budget": 1500,  "passes": 1},
-    "high":       {"budget": 3000,  "passes": 1},
-    "extra-high": {"budget": 6000,  "passes": 1},
-    "max":        {"budget": 12000, "passes": 1},
-    "ultra":      {"budget": 6000,  "passes": 3},
-}
+# Adaptive effort steers deliberation without thinking-length quotas or review templates.
+REASONING_LEVELS = {name: {"budget": 0 if name == "off" else -1, "minimum": 0, "passes": 1}
+                    for name in ("off", "low", "medium", "high", "extra-high", "max", "ultra")}
 REASONING_ALIASES = {
     "fast": "off", "speed": "off",
     "none": "off", "minimal": "low", "med": "medium", "normal": "medium",
@@ -219,6 +212,50 @@ REASONING_ALIASES = {
     "subagents": "ultra", "opencore": "ultra",
 }
 DEFAULT_REASONING = "high"
+
+
+def load_reasoning_policy(path=None):
+    """Keep standalone ECHO and the native adapter on the same effort policy."""
+    path = Path(path) if path is not None else Path(__file__).resolve().parent / "reasoning-policy.json"
+    try:
+        policy = json.loads(path.read_text(encoding="utf-8"))
+        assert isinstance(policy["version"], int) and policy["version"] > 0, "invalid version"
+        for effort in ("off", "low", "medium", "high", "extra-high", "max", "opencore"):
+            level = policy["levels"][effort]
+            assert level["nativeEffort"] in ("none", "low", "medium", "high"), "invalid native effort: " + effort
+            assert isinstance(level["minimumTokens"], int) and isinstance(level["maximumTokens"], int), "invalid token bounds: " + effort
+            assert level["minimumTokens"] == 0 and level["maximumTokens"] in (-1, 0), "adaptive thinking must have no forced bounds: " + effort
+            assert isinstance(level["guidance"], str), "invalid effort guidance: " + effort
+        assert policy["levels"]["off"]["maximumTokens"] == 0, "off must have zero thinking"
+        return policy
+    except (OSError, ValueError, KeyError, TypeError, AssertionError) as error:
+        raise RuntimeError("Cannot load OpenCore reasoning policy at %s. Keep echo_server.py and "
+                           "reasoning-policy.json from the same release together. Details: %s" % (path, error)) from error
+
+
+REASONING_POLICY = load_reasoning_policy()
+
+
+# Derive runtime levels from the same numeric resource embedded by Rust.
+for _level in REASONING_LEVELS:
+    _bounds = REASONING_POLICY["levels"]["opencore" if _level == "ultra" else _level]
+    REASONING_LEVELS[_level].update(budget=_bounds["maximumTokens"], minimum=_bounds["minimumTokens"])
+
+
+def ensure_reasoning_capability(upstream, headers, payload, props=None):
+    """A positive floor must be enforced by the decoder, never silently ignored."""
+    if int(payload.get("reasoning_min_tokens") or 0) <= 0:
+        return
+    if props is None or props.get("reasoning_min_tokens") is not True:
+        try:
+            request = urllib.request.Request(upstream.rstrip("/") + "/props", headers=headers)
+            with urllib.request.urlopen(request, timeout=15) as response:
+                props = json.loads(response.read())
+        except Exception as error:
+            raise ValueError("Cannot verify reasoning_min_tokens support: %s" % error) from error
+    if props.get("reasoning_min_tokens") is not True:
+        raise ValueError("This backend does not support reasoning_min_tokens. Use the updated bundled runtime; "
+                         "the requested thinking minimum was not silently ignored.")
 
 CRITIQUE_PROMPT = (
     "You are reviewing a draft answer. List only concrete problems: factual "
@@ -444,6 +481,14 @@ class EchoState:
         # ECHO generations so different conversations cannot interleave their
         # append-only suffixes into that state.
         self._backend_lock = threading.RLock()
+        # A primitive lock may be acquired/released by separate local HTTP
+        # handler threads. Auxiliary native inference holds it across its
+        # save/extract/restore transaction; normal ECHO generation uses it too.
+        self._backend_auxiliary_lock = threading.Lock()
+        self._backend_lease_guard = threading.Lock()
+        self._backend_lease_token = None
+        self._backend_lease_conversation = None
+        self._backend_lease_timer = None
         self._backend_conversation = None
         self._backend_needs_reset = False
         self._backend_append_disabled = set()
@@ -505,6 +550,56 @@ class EchoState:
                 self._memory_adapter = None
                 self._backend_needs_reset = True
                 self._backend_conversation = None
+
+    def invalidate_backend_session(self, conversation):
+        """Auxiliary inference could not restore KV; never append into its state."""
+        if not isinstance(conversation, str) or not conversation.strip() or len(conversation) > 256:
+            raise ValueError("Expected the active conversation ID")
+        with self._backend_lock:
+            if self._backend_conversation not in (None, conversation):
+                return {"invalidated": False, "reason": "another-conversation-owns-backend"}
+            self._backend_conversation = None
+            self._backend_needs_reset = True
+            with self._backend_metrics_lock:
+                self._backend_metrics_key = None
+                self._backend_metrics_time = 0.0
+                self._backend_metrics_value = {}
+            return {"invalidated": True, "nextTurn": "full-transcript-reset"}
+
+    def acquire_backend_lease(self, conversation):
+        if not isinstance(conversation, str) or not conversation.strip() or len(conversation) > 256:
+            raise ValueError("Expected the active conversation ID")
+        if not self._backend_auxiliary_lock.acquire(blocking=False):
+            return {"acquired": False, "reason": "backend-busy"}
+        with self._backend_lease_guard:
+            nonce = uuid.uuid4().hex
+            self._backend_lease_token = nonce
+            self._backend_lease_conversation = conversation
+            # All native requests have 30 s deadlines; expiry is only a crash
+            # recovery path and invalidates ownership before allowing a suffix.
+            timer = threading.Timer(180, lambda: self.release_backend_lease(nonce, True))
+            timer.daemon = True
+            self._backend_lease_timer = timer
+            timer.start()
+            return {"acquired": True, "nonce": nonce, "expiresInSeconds": 180}
+
+    def release_backend_lease(self, nonce, invalidate):
+        if not isinstance(nonce, str) or len(nonce) > 64 or not isinstance(invalidate, bool):
+            raise ValueError("Expected a bounded lease nonce and invalidate boolean")
+        with self._backend_lease_guard:
+            if self._backend_lease_token is None or nonce != self._backend_lease_token:
+                return {"released": False, "reason": "lease-nonce-mismatch"}
+            result = {"released": True}
+            if invalidate:
+                result["invalidation"] = self.invalidate_backend_session(self._backend_lease_conversation)
+            timer = self._backend_lease_timer
+            self._backend_lease_token = None
+            self._backend_lease_conversation = None
+            self._backend_lease_timer = None
+            if timer is not None:
+                timer.cancel()
+            self._backend_auxiliary_lock.release()
+            return result
 
     def begin_context(self, conversation: str) -> None:
         """Mark an active or queued request without rejecting same-chat work."""
@@ -938,12 +1033,14 @@ class EchoState:
 def resolve_reasoning(payload: dict, headers, default: str) -> tuple[str, dict]:
     """Pick the effort level for this request.
 
-    Accepted, in order: the OpenAI-style `reasoning_effort` field, an
+    Accepted, in order: the retained OpenCore selector, the OpenAI-style
+    `reasoning_effort` field, an
     X-Echo-Reasoning header, and a suffix on the model name ("opencore:max").
     The model-name route exists because several chat clients let you type a
     model string but expose no way to send an extra field.
     """
-    raw = (payload.get("reasoning_effort")
+    raw = (payload.get("opencore_reasoning_effort")
+           or payload.get("reasoning_effort")
            or headers.get("X-Echo-Reasoning")
            or "")
     model = str(payload.get("model") or "")
@@ -959,14 +1056,54 @@ def resolve_reasoning(payload: dict, headers, default: str) -> tuple[str, dict]:
 
 def apply_reasoning(payload: dict, headers, default: str) -> tuple[str, dict]:
     """Apply per-request thinking settings before either ECHO context path runs."""
+    # OpenCore's own selector is an adaptive policy, not a legacy token cap.
+    # A stale intermediary may still attach a former positive budget; retaining
+    # it would silently turn the selected effort into a truncation boundary.
+    # Keep explicit native budgets available to external clients that only send
+    # `reasoning_effort`, while making the in-app selector authoritative.
+    app_selected_effort = bool(str(payload.get("opencore_reasoning_effort") or "").strip())
     level, settings = resolve_reasoning(payload, headers, default)
-    payload.pop("reasoning_effort", None)
-    payload["reasoning_budget_tokens"] = settings["budget"]
+    effort = "opencore" if level == "ultra" else level
+    payload["opencore_reasoning_effort"] = effort
+    payload["reasoning_effort"] = REASONING_POLICY["levels"][effort]["nativeEffort"]
+    requested_cap = int(payload.get("reasoning_budget_tokens", settings["budget"]))
+    requested_floor = int(payload.get("reasoning_min_tokens", settings["minimum"]))
+    cap = 0 if settings["budget"] == 0 else (-1 if app_selected_effort or requested_cap < 0 else requested_cap)
+    output = payload.get("max_completion_tokens", payload.get("max_tokens"))
+    if isinstance(output, int):
+        cap = reasoning_budget_for_output(cap, output)
+    payload["reasoning_budget_tokens"] = cap
+    payload["reasoning_min_tokens"] = max(0, requested_floor) if cap < 0 else min(max(0, requested_floor), cap)
+    payload["reasoning_control"] = cap != 0
+    messages = [message for message in payload.get("messages", []) if not message.get("opencore_effort_control")]
+    if cap != 0:
+        messages.insert(0, {"role": "system", "content": REASONING_POLICY["levels"][effort]["guidance"], "opencore_effort_control": True})
+    payload["messages"] = messages
     kwargs = dict(payload.get("chat_template_kwargs") or {})
-    kwargs["enable_thinking"] = settings["budget"] > 0
+    kwargs["enable_thinking"] = cap != 0
     payload["chat_template_kwargs"] = kwargs
-    payload["reasoning_format"] = "deepseek" if settings["budget"] > 0 else "none"
+    payload["reasoning_format"] = "deepseek" if cap != 0 else "none"
     return level, settings
+
+
+def generation_reserve(asked: int, room: int, window: int, reasoning_budget: int) -> int:
+    """Fit total output alongside source memory in the finite context window."""
+    if reasoning_budget < 0:
+        # Unlimited thinking is a sampler setting, not permission to reserve
+        # every prompt slot for output and evict all retrieved source evidence.
+        # This shared context allocation does not vary with effort.
+        memory_room = min(4096, max(0, room // 4))
+        return max(0, min(asked, room - memory_room))
+    per_pass = max(1024, window // 4, max(0, reasoning_budget) + 2048)
+    return max(0, min(asked, room, per_pass))
+
+
+def reasoning_budget_for_output(requested: int, output_limit: int) -> int:
+    """Clamp the ceiling and leave answer room; the decoder clamps its floor to it."""
+    if requested < 0:
+        return -1
+    answer_reserve = min(1024, max(0, output_limit // 4))
+    return min(max(0, requested), max(0, output_limit - answer_reserve))
 
 
 def review_draft(question: str, draft: str, ask) -> tuple[str, int]:
@@ -1036,7 +1173,69 @@ class Handler(BaseHTTPRequestHandler):
 
     # -- plumbing ----------------------------------------------------------
 
+    def _begin_generation_log(self, conversation, effort, budget):
+        safe = re.sub(r"[^A-Za-z0-9_-]", "", conversation)[:32] or "conversation"
+        directory = self.state.archives.directory / "raw-generations"
+        self._raw_generation_file = directory / (safe + "-" + uuid.uuid4().hex + ".jsonl")
+        self._raw_generation_count = 0
+        self._raw_generation_effort = effort
+        self._raw_requested_budget = budget
+        self._raw_effective_budget = None
+        self._raw_generation_error = None
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            self._raw_generation_error = str(error)
+            self.state.log("  echo: could not create raw generation log: " + str(error))
+
+    def _append_raw_record(self, record):
+        path = getattr(self, "_raw_generation_file", None)
+        if path is None:
+            return False
+        try:
+            with path.open("a", encoding="utf-8", newline="\n") as stream:
+                stream.write(json.dumps(record, ensure_ascii=False) + "\n")
+            return True
+        except OSError as error:
+            self._raw_generation_error = str(error)
+            self.state.log("  echo: could not retain raw generation: " + str(error))
+            return False
+
+    def _retain_stream_chunk(self, chunk, phase, generation):
+        # Keep the source bytes, including non-data events, unknown provider
+        # fields and line endings, before any SSE interpretation or rewriting.
+        self._append_raw_record({"record_type": "raw_sse", "phase": phase, "generation": generation,
+                                 "raw_sse_base64": base64.b64encode(chunk).decode("ascii")})
+
+    def _retain_generation(self, response, request, phase):
+        # Append before ECHO rewrites/combines an answer or discards a critique.
+        # Keeping complete passes on disk preserves unlimited continuations
+        # without making the request's in-memory working set grow with output.
+        path = getattr(self, "_raw_generation_file", None)
+        if path is not None:
+            record = {"phase": phase, "request": {key: request.get(key) for key in (
+                "max_tokens", "max_completion_tokens", "reasoning_effort", "opencore_reasoning_effort",
+                "reasoning_budget_tokens", "reasoning_min_tokens", "chat_template_kwargs", "reasoning_format")}, "response": response,
+                "reasoning_bounds_version": REASONING_POLICY["version"]}
+            if self._append_raw_record(record):
+                self._raw_generation_count += 1
+                if self._raw_effective_budget is None:
+                    self._raw_effective_budget = request.get("reasoning_budget_tokens")
+        return response
+
+    def _generation_log_status(self):
+        path = getattr(self, "_raw_generation_file", None)
+        if path is None:
+            return {}
+        return {"generation_file": str(path), "generation_count": self._raw_generation_count,
+                "reasoning_effort": self._raw_generation_effort,
+                "requested_reasoning_budget": self._raw_requested_budget,
+                "effective_reasoning_budget": self._raw_effective_budget,
+                **({"generation_log_error": self._raw_generation_error} if self._raw_generation_error else {})}
+
     def _send_json(self, code: int, obj: dict) -> None:
+        if getattr(self, "_raw_generation_file", None) is not None:
+            obj["echo"] = {**(obj.get("echo") or {}), **self._generation_log_status()}
         if getattr(self, '_live_stream', False):
             self._live_event(obj)
             self.wfile.write(b'data: [DONE]\n\n')
@@ -1050,6 +1249,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _upstream(self, path: str, payload: dict, stream: bool):
+        if path.startswith("/v1/chat/completions"):
+            output = payload.get("max_completion_tokens", payload.get("max_tokens"))
+            if isinstance(output, int):
+                payload["reasoning_budget_tokens"] = reasoning_budget_for_output(
+                    int(payload.get("reasoning_budget_tokens") or 0), output)
+            payload["reasoning_min_tokens"] = min(max(0, int(payload.get("reasoning_min_tokens") or 0)),
+                                                   max(0, int(payload.get("reasoning_budget_tokens") or 0)))
+            ensure_reasoning_capability(self.state.upstream, self.state.upstream_headers(), payload,
+                                        getattr(self.state, "_model_props", None))
         request = urllib.request.Request(
             self.state.upstream + path,
             data=json.dumps(payload).encode(),
@@ -1124,8 +1332,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)
-        if self.path == "/echo/config" and (self.headers.get("Origin") or length > 4096):
+        if self.path in ("/echo/config", "/echo/kv/invalidate", "/echo/kv/lease") and (self.headers.get("Origin") or length < 0 or length > 4096):
             return self._send_json(403, {"error": "ECHO configuration is a local app control"})
+        if self.path in ("/echo/kv/invalidate", "/echo/kv/lease") and self.client_address[0] not in ("127.0.0.1", "::1"):
+            return self._send_json(403, {"error": "ECHO cache ownership is a loopback app control"})
         if self.path == "/echo/import" and (length <= 0 or length > 16 * 1024 * 1024):
             return self._send_json(413, {"error": {"message": "ECHO import batch must be 1-16 MiB"}})
         raw = self.rfile.read(length) if length else b"{}"
@@ -1137,6 +1347,26 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/echo/config":
             try:
                 return self._send_json(200, self.state.configure_memory(payload))
+            except ValueError as error:
+                return self._send_json(400, {"error": str(error)})
+
+        if self.path == "/echo/kv/invalidate":
+            try:
+                if not isinstance(payload, dict) or set(payload) != {"conversation_id"}:
+                    raise ValueError("Expected only conversation_id")
+                return self._send_json(200, self.state.invalidate_backend_session(payload["conversation_id"]))
+            except ValueError as error:
+                return self._send_json(400, {"error": str(error)})
+
+        if self.path == "/echo/kv/lease":
+            try:
+                if not isinstance(payload, dict):
+                    raise ValueError("Expected a lease control object")
+                if payload.get("action") == "acquire" and set(payload) == {"action", "conversation_id"}:
+                    return self._send_json(200, self.state.acquire_backend_lease(payload["conversation_id"]))
+                if payload.get("action") == "release" and set(payload) == {"action", "nonce", "invalidate"}:
+                    return self._send_json(200, self.state.release_backend_lease(payload["nonce"], payload["invalidate"]))
+                raise ValueError("Expected acquire conversation_id or release nonce/invalidate")
             except ValueError as error:
                 return self._send_json(400, {"error": str(error)})
 
@@ -1156,7 +1386,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if not self.path.startswith("/v1/chat/completions"):
             # Anything else is proxied untouched; ECHO only understands chat.
-            return self._passthrough(payload)
+            with self.state._backend_auxiliary_lock:
+                with self.state._backend_lock:
+                    return self._passthrough(payload)
 
         conversation = _conversation_id(payload, self.headers)
         messages = payload.get("messages") or []
@@ -1165,11 +1397,16 @@ class Handler(BaseHTTPRequestHandler):
 
         command = question.strip().lower()
         if command.startswith("/trim"):
-            return self._compact(question, conversation, payload)
+            with self.state._backend_auxiliary_lock:
+                with self.state._backend_lock:
+                    return self._compact(question, conversation, payload)
         if command.startswith("/compact") or command.startswith("/summarize"):
-            return self._summarize(question, conversation, payload)
+            with self.state._backend_auxiliary_lock:
+                with self.state._backend_lock:
+                    return self._summarize(question, conversation, payload)
 
         level, settings = apply_reasoning(payload, self.headers, self.state.reasoning)
+        self._begin_generation_log(conversation, level, settings["budget"])
         if level != self.state.reasoning:
             self.state.log("  echo: reasoning=%s (budget %d, %d pass(es))"
                            % (level, settings["budget"], settings["passes"]))
@@ -1185,6 +1422,12 @@ class Handler(BaseHTTPRequestHandler):
             finally:
                 self.state.end_context(conversation)
 
+        with self.state._backend_auxiliary_lock:
+            with self.state._backend_lock:
+                return self._legacy_chat(payload, question, conversation, settings, app_owns_timeline)
+
+    def _legacy_chat(self, payload, question, conversation, settings, app_owns_timeline):
+        messages = payload.get("messages") or []
         try:
             messages = self.state.prepare_messages(
                 messages, conversation, int(payload.get("max_tokens") or 2048),
@@ -1194,7 +1437,7 @@ class Handler(BaseHTTPRequestHandler):
         payload["messages"] = messages
 
         stream = bool(payload.get("stream"))
-        if settings["passes"] > 1 and not stream:
+        if payload.get("echo_review") is True and not stream:
             return self._ultra(payload, question, conversation, settings)
         try:
             if stream:
@@ -1206,6 +1449,8 @@ class Handler(BaseHTTPRequestHandler):
         except urllib.error.URLError as error:
             return self._send_json(502, {"error": {"message":
                 "cannot reach OpenCore at %s (%s)" % (self.state.upstream, error)}})
+        except ValueError as error:
+            return self._send_json(400, {"error": {"message": str(error)}})
 
     def _live_status(self, session, live, window):
         return {**session.status(), "live_tokens": live.tokens, "window_tokens": window,
@@ -1256,8 +1501,9 @@ class Handler(BaseHTTPRequestHandler):
                            % (len(tail), len(found)))
 
     def _controlled_context(self, payload, conversation, level="off", archive_input=True):
-        with self.state._backend_lock:
-            return self._controlled_context_serial(payload, conversation, level, archive_input)
+        with self.state._backend_auxiliary_lock:
+            with self.state._backend_lock:
+                return self._controlled_context_serial(payload, conversation, level, archive_input)
 
     def _controlled_context_serial(self, payload, conversation, level="off", archive_input=True):
         """Answer one request against the conversation's live transcript.
@@ -1389,7 +1635,7 @@ class Handler(BaseHTTPRequestHandler):
             raise ValueError(
                 "the question and its instructions alone do not leave room to "
                 "answer in a %d-token window" % window)
-        reserve = min(asked, max(1024, room), max(1024, window // 4))
+        reserve = generation_reserve(asked, room, window, int(payload.get("reasoning_budget_tokens") or 0))
         if reserve < asked:
             self.state.log("  echo: %s tokens requested, %s fit per pass - "
                            "continuing across passes" % (f"{asked:,}", f"{reserve:,}"))
@@ -1445,6 +1691,7 @@ class Handler(BaseHTTPRequestHandler):
             body["id_slot"] = 0
             same_backend_session = self.state._backend_conversation == conversation
             append_live = (same_backend_session
+                           and not self.state._backend_needs_reset
                            and conversation not in self.state._backend_append_disabled)
             if append_live and not self.state.backend_session_metrics(conversation).get("modelSessionTokens"):
                 # Only send a suffix after the backend proves that it still
@@ -1475,15 +1722,15 @@ class Handler(BaseHTTPRequestHandler):
                 body["echo_reset"] = True
             # Thinking and the completed action share the output budget. Reserve
             # enough space to finish the JSON rather than exhausting it on reasoning.
-            body['reasoning_budget_tokens'] = min(int(body.get('reasoning_budget_tokens') or 0), reserve // 3)
+            body['reasoning_budget_tokens'] = reasoning_budget_for_output(int(body.get('reasoning_budget_tokens') or 0), reserve)
             if total_output_budget is not None:
                 remaining_output = total_output_budget - generated_tokens
                 if remaining_output <= 0:
                     break
                 body["max_tokens"] = min(reserve, remaining_output)
                 body.pop("max_completion_tokens", None)
-                body['reasoning_budget_tokens'] = min(
-                    body['reasoning_budget_tokens'], max(0, body["max_tokens"] // 3))
+                body['reasoning_budget_tokens'] = reasoning_budget_for_output(
+                    body['reasoning_budget_tokens'], body["max_tokens"])
             live.prompt_tokens = system_tokens + live.tokens
             live.save()
 
@@ -1671,7 +1918,7 @@ class Handler(BaseHTTPRequestHandler):
             session.save()
             review = None
             draft_artifact = None
-            if level == "ultra":
+            if payload.get("echo_review") is True:
                 review = {"status": "skipped", "reason": "answer exceeds review window"}
                 if head and count(head) <= min(12000, window // 2):
                     # A reviewer must see the actual tool receipts. Reviewing only
@@ -1776,15 +2023,19 @@ class Handler(BaseHTTPRequestHandler):
         the critic finds nothing the draft is returned unchanged, so the third
         pass is only paid for when it has something to fix.
         """
-        def ask(messages, budget, max_tokens=None):
+        def ask(messages, budget, max_tokens=None, phase="working"):
             body = dict(payload)
             body["messages"] = messages
             body["reasoning_budget_tokens"] = budget
             body.pop("stream", None)
             if max_tokens:
                 body["max_tokens"] = max_tokens
+                body.pop("max_completion_tokens", None)
+            body["reasoning_budget_tokens"] = reasoning_budget_for_output(
+                budget, int(body.get("max_completion_tokens") or body.get("max_tokens") or 2048))
             with self._upstream("/v1/chat/completions", body, stream=False) as r:
                 parsed = json.loads(r.read())
+            self._retain_generation(parsed, body, phase)
             recover_embedded_tool_call(parsed["choices"][0]["message"], payload.get("tools"))
             return parsed, (parsed["choices"][0]["message"].get("content") or "")
 
@@ -1802,7 +2053,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.state.log("  echo: ultra pass 2/3 - critiquing")
                 review, issues = ask([{"role": "user",
                                        "content": CRITIQUE_PROMPT % (question, draft)}],
-                                     settings["budget"], max_tokens=1500)
+                                     settings["budget"], max_tokens=1500, phase="reviewing")
                 for key, value in (review.get("usage") or {}).items():
                     if isinstance(value, (int, float)):
                         usage[key] = usage.get(key, 0) + value
@@ -1813,7 +2064,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.state.log("  echo: ultra pass 3/3 - revising")
                     revision, revised = ask([{"role": "user",
                                               "content": REVISE_PROMPT % (question, draft, issues)}],
-                                            settings["budget"])
+                                            settings["budget"], phase="revising")
                     for key, value in (revision.get("usage") or {}).items():
                         if isinstance(value, (int, float)):
                             usage[key] = usage.get(key, 0) + value
@@ -1823,6 +2074,7 @@ class Handler(BaseHTTPRequestHandler):
                 parsed["choices"][0]["message"]["content"] = final
                 parsed["choices"][0]["finish_reason"] = "stop"
             parsed["usage"] = usage
+            parsed["echo"] = {**(parsed.get("echo") or {}), **self._generation_log_status()}
             body = json.dumps(parsed).encode()
         except Exception as error:
             return self._send_json(502, {"error": {"message":
@@ -2004,6 +2256,7 @@ class Handler(BaseHTTPRequestHandler):
                 body = response.read()
             try:
                 parsed = json.loads(body)
+                self._retain_generation(parsed, payload, "working")
                 choice = parsed["choices"][0]
                 piece = choice["message"].get("content") or ""
                 finish = choice.get("finish_reason") or "stop"
@@ -2102,6 +2355,9 @@ class Handler(BaseHTTPRequestHandler):
                 body = json.dumps(parsed).encode()
             except Exception:
                 pass
+        if parsed and getattr(self, "_raw_generation_file", None) is not None:
+            parsed["echo"] = {**(parsed.get("echo") or {}), **self._generation_log_status()}
+            body = json.dumps(parsed).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -2132,19 +2388,22 @@ class Handler(BaseHTTPRequestHandler):
             body = dict(body, stream_options={'include_usage': True})
         with self._upstream('/v1/chat/completions', body, stream=streaming) as response:
             if not streaming:
-                return json.load(response)
+                return self._retain_generation(json.load(response), body, phase)
             generation = uuid.uuid4().hex
+            self._append_raw_record({"record_type": "stream_start", "phase": phase, "generation": generation,
+                                     "request": {key: body.get(key) for key in ("max_tokens", "max_completion_tokens", "reasoning_effort", "opencore_reasoning_effort", "reasoning_budget_tokens", "reasoning_min_tokens", "chat_template_kwargs", "reasoning_format")}})
             message = {'role': 'assistant', 'content': '', 'reasoning_content': ''}
             calls = {}
             result = {'choices': [{'message': message, 'finish_reason': None}]}
             finished = False
             for line in response:
+                self._retain_stream_chunk(line, phase, generation)
                 if not line.startswith(b'data:'):
                     continue
                 data = line[5:].strip()
                 if data == b'[DONE]':
                     finished = True
-                    break
+                    continue
                 if not data:
                     continue
                 event = json.loads(data)
@@ -2162,7 +2421,7 @@ class Handler(BaseHTTPRequestHandler):
                     # TwinCore previews are provisional drafts. Forward them to
                     # the UI, but keep them out of the committed assistant turn.
                     continue
-                for key in ('id', 'model', 'usage', 'timings'):
+                for key in ('id', 'model', 'usage', 'timings', 'reasoning_budget'):
                     if event.get(key) is not None:
                         result[key] = event[key]
                 for choice in event.get('choices', []):
@@ -2188,14 +2447,15 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('Upstream stream ended before completion; partial output is unverified')
             if calls:
                 message['tool_calls'] = [calls[key] for key in sorted(calls)]
-            return result
+            return self._retain_generation(result, body, phase)
 
     def _finish_live(self, parsed):
+        parsed["echo"] = {**(parsed.get("echo") or {}), **self._generation_log_status()}
         choice = parsed['choices'][0]
         self._live_event({'id': parsed.get('id', 'echo'), 'object': 'chat.completion.chunk',
                          'choices': [{'index': 0, 'delta': choice['message'],
                                       'finish_reason': choice.get('finish_reason') or 'stop'}],
-                         **{key: parsed[key] for key in ('echo', 'usage', 'timings') if key in parsed}})
+                         **{key: parsed[key] for key in ('echo', 'usage', 'timings', 'reasoning_budget') if key in parsed}})
         self.wfile.write(b'data: [DONE]\n\n')
         self.wfile.flush()
 
@@ -2232,6 +2492,9 @@ class Handler(BaseHTTPRequestHandler):
                 continue_after_length = False
                 retry_with_larger_budget = False
                 with self._upstream("/v1/chat/completions", payload, stream=True) as response:
+                    generation = uuid.uuid4().hex
+                    self._append_raw_record({"record_type":"stream_start","phase":"working","generation":generation,
+                        "request":{key:payload.get(key) for key in ("max_tokens","max_completion_tokens","reasoning_effort","opencore_reasoning_effort","reasoning_budget_tokens","reasoning_min_tokens","chat_template_kwargs","reasoning_format")}})
                     while True:
                         chunk = response.read1(65536) if hasattr(response, "read1") \
                             else response.read(65536)
@@ -2239,6 +2502,8 @@ class Handler(BaseHTTPRequestHandler):
                             if not pending:
                                 break
                             chunk = b"\n"
+                        else:
+                            self._retain_stream_chunk(chunk, "working", generation)
                         pending += chunk
                         while b"\n" in pending:
                             line, pending = pending.split(b"\n", 1)
@@ -2315,6 +2580,7 @@ class Handler(BaseHTTPRequestHandler):
                             self.wfile.write(b"data: " + json.dumps(event, ensure_ascii=False).encode("utf-8") + b"\n\n")
                             self.wfile.flush()
 
+                self._retain_generation({"generation":generation,"finish_reason":finish,"raw_sse_recorded":True},payload,"working")
                 if continue_after_length and current_piece:
                     messages = list(payload.get("messages") or [])
                     messages.append({"role": "assistant", "content": "".join(current_piece)})

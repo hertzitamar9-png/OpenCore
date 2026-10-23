@@ -4,7 +4,7 @@ The installed reference decoder remains authoritative. FP32 preserves its values
 BF16 explicitly rounds those values to the selected runtime precision.
 """
 from contextlib import contextmanager
-from threading import RLock
+from threading import RLock, Thread
 
 _EXPANSION_LOCK = RLock()
 
@@ -88,27 +88,54 @@ def materialize_model(config, state, dtype):
     return model
 
 
-def load_model(container, base_dir, dtype, progress, cache_dir=None):
-    import torch
-    from reference_transformers import container_state_dict
-    from transformers import AutoProcessor, GenerationConfig, ParakeetTDTConfig
+def prepare_cache(cache, state, receipt, deferred=False):
+    def write():
+        try:
+            cache.write(state, dict(receipt))
+            cache.reason = 'Prepared from the installed container at the selected runtime precision'
+        except (OSError, ValueError, RuntimeError) as error:
+            cache.reason = f'Optional dense cache was not saved: {error}'
+    if deferred:
+        # State holds the original CPU tensors while model.to(cuda) replaces
+        # its parameter storage. Disk preparation cannot delay recording.
+        worker=Thread(target=write,name='phonon-cache',daemon=True)
+        worker.start()
+        return worker
+    write()
 
+
+def load_model(container, base_dir, dtype, progress, cache_dir=None, defer_cache_write=False, before_expand=None,
+               expected_checkpoint=None):
+    # Imports can dominate a cold start. Publish their phase before importing;
+    # the reference decoder is only needed when prepared tensors are absent.
     progress('building-model')
+    import torch
+    from transformers import ParakeetProcessor, GenerationConfig, ParakeetTDTConfig
+
     config = ParakeetTDTConfig.from_pretrained(base_dir, local_files_only=True)
     if dtype not in (torch.float32, torch.bfloat16):
         raise ValueError('Phonon-2 runtime precision must be BF16 or FP32.')
     cache, cached, receipt = None, None, {}
     if cache_dir is not None:
         from phonon_cache import DenseCache, source_identity, expected_tensors
+        progress('verifying-checkpoint')
+        identity = source_identity(container, base_dir, config, dtype, expected_checkpoint=expected_checkpoint)
         progress('verifying-dense-cache')
         cache = DenseCache(cache_dir, 'bf16' if dtype == torch.bfloat16 else 'fp32',
-                           source_identity(container, base_dir, config, dtype), expected_tensors(config, dtype))
+                           identity, expected_tensors(config, dtype))
         cached = cache.read()
+    elif expected_checkpoint is not None:
+        from phonon_cache import checkpoint_identity
+        progress('verifying-checkpoint')
+        checkpoint_identity(container, expected_checkpoint)
     if cached is not None:
         progress('loading-dense-cache')
         state, receipt = cached
     else:
+        if before_expand is not None:
+            before_expand()
         progress('expanding-weights')
+        from reference_transformers import container_state_dict
         with accelerated_five_value_expansion():
             state, index = container_state_dict(container)
         receipt = {'container_records': len(index)}
@@ -118,15 +145,13 @@ def load_model(container, base_dir, dtype, progress, cache_dir=None):
     receipt.update(params=sum(p.numel() for p in model.parameters()), state_dict_keys=len(state))
     if cache is not None:
         if cached is None:
-            progress('saving-dense-cache')
-            try:
-                cache.write(state, receipt)
-                cache.reason = 'Prepared from the installed container at the selected runtime precision'
-            except (OSError, ValueError, RuntimeError) as error:
-                cache.reason = f'Optional dense cache was not saved: {error}'
+            if not defer_cache_write:
+                progress('saving-dense-cache')
+            prepare_cache(cache, state, receipt, deferred=defer_cache_write)
         receipt['denseCache'] = cache.details(cached is not None)
+        receipt['denseCache']['preparingInBackground'] = cached is None and defer_cache_write
     del state, cached
     progress('preparing-processor')
     model.generation_config = GenerationConfig.from_pretrained(base_dir, local_files_only=True)
-    processor = AutoProcessor.from_pretrained(base_dir, local_files_only=True)
+    processor = ParakeetProcessor.from_pretrained(base_dir, local_files_only=True)
     return model, processor, receipt

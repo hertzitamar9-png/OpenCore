@@ -13,7 +13,8 @@ export const codingBoundaryGuidance =
   'For coding verification, choose checks from the actual contract. Reuse existing tests; add a small regression check when they miss the observed bug. ' +
   'Vary independent lengths or dimensions independently: square-only examples can miss rectangular or ragged-input failures. ' +
   'Use valid arguments matching the function signature, and calculate expected values from the contract, not from the implementation. ' +
-  'A malformed test is a test-authoring error; inspect it before changing working code. Keep additional checks focused.';
+  'A malformed test is a test-authoring error; inspect it before changing working code. Keep additional checks focused. ' +
+  'For HTML games, use dev test_browser with the real entry path and representative click/key steps. Inspect browser exceptions, console errors and failed requests, fix them, and rerun the affected interaction before publishing. A terminal exit code alone does not test gameplay.';
 
 export function toolFailed(value) {
   return Boolean(value?.error) || (typeof value?.exitCode === 'number' && value.exitCode !== 0);
@@ -59,9 +60,10 @@ export class CodingVerification {
       const file = this.file(result?.path ?? input.path);
       if (file) this.changed.set(file.path, file.hash);
     }
-    if (input?.action !== 'run' || !input.verifyPaths?.length) return;
+    const verificationPaths = input?.action === 'test_browser' ? [input.path] : input?.verifyPaths;
+    if (!['run', 'test_browser'].includes(input?.action) || !verificationPaths?.length) return;
     if (toolFailed(result)) {
-      const paths = input.verifyPaths.map(name => this.file(name)?.path ?? name);
+      const paths = verificationPaths.map(name => this.file(name)?.path ?? name);
       this.lastFailure = { exitCode: result.exitCode,
         paths: [...new Set([...(this.lastFailure?.paths ?? []), ...paths])] };
       for (const path of paths) this.checked.delete(path);

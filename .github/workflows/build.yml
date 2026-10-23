@@ -8,206 +8,129 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: opencore-main-release
+  cancel-in-progress: false
+
 jobs:
-  native-check:
-    if: github.ref != 'refs/heads/main'
-    uses: ./.github/workflows/native-check.yml
   windows:
-    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
-      - name: Test GGUF quantization catalog refresh
-        run: python -m unittest scripts.test_sync_gguf_variants -v
-      - name: Refresh published GGUF quantizations
-        run: python scripts/sync_gguf_variants.py
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-      - uses: actions/cache/restore@v4
-        id: native-cache
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}
-          restore-keys: windows-native-workspace-v1-
-      - name: Build and verify desktop focus guard DLL before Cargo
-        id: desktop-guard
-        shell: pwsh
-        run: ./scripts/build-desktop-focus-guard.ps1
-      - name: Verify installed Rust toolchain
-        shell: powershell
+      - name: Install build dependencies
         run: |
-          $ErrorActionPreference = 'Stop'
-          rustup show active-toolchain
+          npm ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          rustc --version
+          npm --prefix distribution ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo --version
+      - name: Assign a release newer than existing installed builds
+        run: |
+          $version = node --input-type=module -e "import {releaseVersion} from './scripts/release-version.mjs'; console.log(releaseVersion(process.env.GITHUB_RUN_NUMBER));"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Install JavaScript dependencies
-        run: npm ci
-      - name: Prepare external Claude Code connector runtime
-        run: node scripts/prepare-claude-connector.mjs
-      - name: Prepare pinned OpenAI Codex app-server runtime
-        run: node scripts/prepare-codex-harness.mjs
-      - name: Probe packaged Codex app-server with read-only initialize
-        run: node scripts/test-codex-app-server-schema.mjs
-      - name: Test packaged Codex app-server, local inference, MCP tools, cancellation, and resume
-        run: node scripts/test-codex-agent-runtime.mjs
-      - name: Benchmark exact ECHO archive scaling
-        if: ${{ !contains(github.event.head_commit.message, '[skip-archive-scale]') }}
-        run: python scripts/echo_archive_scale.py
-      - name: Test ECHO cross-turn archive continuity
+          "OPENCORE_RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+      - name: Test manual update controls and release version ordering
         run: |
-          python src-tauri/resources/echo/test_echo_memory_continuity.py
-          python src-tauri/resources/echo/test_echo_virtual.py
-      - name: Test ECHO conversation and archive runtime
-        run: python scripts/test_echo_live.py
-      - name: Verify bundled DuoCore runtime
-        run: node scripts/verify-doucode-runtime.mjs
-      - name: Test DuoCore context API
+          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx tsc --noEmit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs distribution/test-manual-update-policy.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test isolated runtime setup and download admission
+        working-directory: distribution
         run: |
-          python scripts/test_duocore_server.py
-          python scripts/test_duocore_sampling.py
-      - name: Verify LFM native runtime and tool boundaries
-        run: |
-          node scripts/verify-lfm-runtime.mjs
-          python scripts/test_lfm_protocol.py
-          python scripts/test_lfm_sampling.py
-      - name: Test frontend
-        run: npm test
-      - name: Test connector persistence
-        run: python -m unittest discover -s tests -p "test_configure_unsloth.py" -v
-      - name: Test managed runtime and testing environment setup
-        run: python -m unittest discover -s src-tauri/resources/runtime-setup -p "test_*.py" -v
-      - name: Test Learning Studio data, training policy and checkpoint worker
-        run: python -m unittest discover -s src-tauri/resources/learning -p "test_*.py" -v
-      - name: Verify capture borders against rendered production styles
-        run: |
-          npx playwright install chromium
-          node --test tests/desktop-highlight-layout.test.mjs tests/historical-appearance.test.mjs tests/studio-layout.test.mjs
-      - name: Verify live adaptive layout and keyboard controls
-        run: npx playwright test --config playwright.ci.config.ts
-      - name: Test resumable evaluation and isolated training transport
-        run: |
-          python -m unittest discover -s scripts/evaluation -p "test_gsm8k_echo.py"
-          python -m unittest discover -s scripts/training -p "test_mimo_verifier.py"
-          python -m unittest discover -s scripts/training -p "test_native_echo_backend.py"
-          python -m unittest discover -s scripts/training -p "test_echo_shared_data.py"
-          python -m unittest discover -s scripts/training -p "test_rl_verifier.py"
-      - name: Test speech language routing and safe checkpoint preparation
-        run: python -m unittest discover -s src-tauri/resources/speech -p "test*.py"
-      - name: Install prebuilt CPU runtime for Phonon precision qualification
-        run: |
-          python -m pip install --only-binary=:all: torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install --only-binary=:all: transformers==5.18.0
-          python -m pip install --only-binary=:all: av==13.1.0 psutil==6.1.1 zstandard==0.25.0
-          python -c "import sys; sys.path.insert(0,'src-tauri/resources/speech'); from phonon_original import ensure_publisher_runtime; ensure_publisher_runtime(print)"
-      - name: Qualify Phonon precision and exact checkpoint expansion
+          python -m unittest -v test_setup_repair
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test-install-coordinator.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test Hugging Face metadata, token protection, downloads and runtime isolation
         env:
-          OPENCORE_PHONON_NUMERICS: '1'
-          CUDA_VISIBLE_DEVICES: ''
-          HF_HUB_OFFLINE: '1'
-        run: python -m unittest discover -s src-tauri/resources/speech -p "test_phonon_*.py" -v
-      - name: Qualify original Phonon checkpoint with publisher Windows kernels
-        run: python scripts/qualify-phonon-original.py
-      - name: Preserve original Phonon runtime evidence
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: phonon-original-runtime
-          path: artifacts/phonon-original-qualification.json
-          retention-days: 7
-      - name: Test studio worker bounds
-        run: python -m unittest discover -s src-tauri/resources/studio -p "test*.py"
-      - name: Test Rust
-        id: rust-tests
-        working-directory: src-tauri
-        shell: pwsh
+          PYTHONPATH: ${{ github.workspace }}/src-tauri/resources/runtime-setup/hf-extension
         run: |
-          $runner = @('pwsh', '-NoLogo', '-NoProfile', '-File', (Resolve-Path ../scripts/prepare-windows-rust-test-manifest.ps1).Path) | ConvertTo-Json -Compress
-          $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
-          [IO.File]::WriteAllText($runnerConfig, "[target.x86_64-pc-windows-msvc]`nrunner = $runner`n", [Text.UTF8Encoding]::new($false))
-          cargo --config $runnerConfig test --lib 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'opencore-native-tests.log')
+          python -m unittest discover -s distribution/hf-extension/tests -p "test_*.py" -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Preserve native assertion diagnostics before cache operations
-        if: ${{ failure() && steps.rust-tests.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: native-assertion-diagnostics
-          path: ${{ runner.temp }}/opencore-native-tests.log
-          retention-days: 7
-      - name: Test automatic Claude bridge installation with isolated settings
-        working-directory: src-tauri
-        shell: pwsh
+          python -m unittest discover -s distribution/hf-extension -p "test_hf_runtime.py" -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify the pinned model catalog
         run: |
-          $runnerConfig = Join-Path $env:RUNNER_TEMP 'opencore-native-test-runner.toml'
-          cargo --config $runnerConfig test --lib claude_bridge_install -- --include-ignored
-      - name: Test release version ordering
-        run: node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs
-      - name: Save compiled native dependencies
-        if: ${{ always() && steps.desktop-guard.outcome == 'success' && steps.rust-tests.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: windows-native-workspace-v1-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'src-tauri/native/desktop_focus_guard.c', 'scripts/build-desktop-focus-guard.ps1') }}
-      - name: Version this push
-        shell: powershell
-        run: |
-          node scripts/release-version.mjs $env:GITHUB_RUN_NUMBER
-      - uses: tauri-apps/tauri-action@v1
-        id: installer
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        with:
-          tagName: app-v__VERSION__
-          releaseName: OpenCore v__VERSION__
-          releaseBody: Windows installer built from this main branch push.
-          releaseDraft: false
-          prerelease: false
-          uploadUpdaterJson: true
-          updaterJsonPreferNsis: true
-          retryAttempts: 3
-          args: --bundles nsis
-      - name: Publish updater links for public downloads
-        shell: pwsh
+          python -m unittest discover -s distribution/hf-research -p test_build_catalog.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python distribution/hf-research/build_catalog.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare the verified newer native baseline and current committed frontend
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python distribution/prepare.py --inputs distribution/.output/inputs
+      - name: Install the rendered-test browser
+        run: npx playwright install chromium
+      - name: Verify rendered downloads, connectors, footer and manual updates
+        working-directory: distribution
         run: |
-          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
-          $tag = "app-v$version"
-          gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" > release-metadata.json
+          node qa-model-install.cjs candidate-dist
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node scripts/normalize-public-updater.mjs latest.json release-metadata.json
+          node qa-hub.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          gh release upload $tag latest.json --clobber
-      - name: Preserve signed Windows installer when publishing fails
-        if: ${{ failure() && steps.installer.outcome == 'failure' }}
+          node connector-research/qa-connectors.cjs --patched
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-footer.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-updates.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build OpenCore Setup with the official app logo and complete runtime
+        run: |
+          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
+          if (!(Test-Path -LiteralPath $nsis)) {
+            choco install nsis --version 3.11 --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          python distribution/package.py --app distribution/.output/inputs/app --python distribution/.output/inputs/app/test-python --output distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION --commit $env:GITHUB_SHA --icon src-tauri/icons/icon.ico --logo src-tauri/icons/icon.png --webview distribution/.output/inputs/MicrosoftEdgeWebview2Setup.exe --nsis $nsis
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify an isolated install and the packaged Python and helpers
+        run: |
+          $installer = (Resolve-Path -LiteralPath 'distribution/.output/release/OpenCore Setup.exe').Path
+          $testRoot = Join-Path $env:RUNNER_TEMP 'opencore-installer-check'
+          if (Test-Path -LiteralPath $testRoot) { throw 'Isolated test folder already exists' }
+          $process = Start-Process -FilePath $installer -ArgumentList @('/S','/TEST',('/D=' + $testRoot)) -WindowStyle Hidden -Wait -PassThru
+          if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+          python distribution/qa-share-installer.py --root $testRoot --manifest distribution/.output/release/package-manifest.json --output distribution/.output/release/installer-verification.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$testRoot/test-python/python.exe" -I -B distribution/qa-portable-runtime.py --root $testRoot --output distribution/.output/release/runtime-verification.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Sign the verified installer for existing OpenCore installations
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          npx tauri signer sign 'distribution/.output/release/OpenCore Setup.exe'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Setup.exe' 'distribution/.output/release/OpenCore Setup.exe.sig' src-tauri/tauri.conf.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Publish the completed signed manual update
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python distribution/publish.py --directory distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION --commit $env:GITHUB_SHA
+      - name: Keep verification evidence and failed build diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: signed-windows-installer-${{ github.run_number }}
+          name: opencore-release-checks-${{ github.run_number }}
           path: |
-            src-tauri/target/release/bundle/nsis/*-setup.exe
-            src-tauri/target/release/bundle/nsis/*-setup.exe.sig
+            distribution/.output/update-controls.png
+            distribution/.output/update-controls-qa.json
+            distribution/.output/release/*verification.json
+            distribution/executable-patch.json
+            distribution/candidate-dist-qa.json
+            distribution/hub-qa.json
+            distribution/statusbar-qa.json
+            distribution/connector-research/qa-patched.json
           if-no-files-found: ignore
-          compression-level: 0
-          retention-days: 1
+          retention-days: 7

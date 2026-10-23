@@ -23,6 +23,7 @@
 !/docs/echo-virtual-execution.md
 !/docs/platform-models-music-and-training.md
 !/.github/
+!/distribution/
 
 **/node_modules/
 **/target/

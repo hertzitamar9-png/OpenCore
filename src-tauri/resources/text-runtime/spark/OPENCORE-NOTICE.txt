@@ -1,0 +1,2 @@
+Spark-X2.5 architecture from XHToken/Spark-X2.5-1.7B revision 14d6e83c13c7add2b62a7c39b2131f4ed1cddcf8. Apache-2.0. Bundled explicitly; downloaded repository Python is not executed.
+OpenCore adaptation: express tied language head / input embeddings as the explicit mapping required by the pinned Transformers 5 runtime; use the renamed inputs_embeds masking argument and omit its removed cache_position argument. Spark-X2.6-4B revision 66e3ae7bee54e0a523d692cb8ef841f35409807b publishes the same original architecture files; no remote Python is executed.

@@ -11,11 +11,57 @@ from pathlib import Path
 import sys
 import time
 
-from whisper_worker import emit, gpu_free, load_audio, require_ram
+from whisper_worker import emit, gpu_error, load_audio, release_cuda_cache, require_cuda, require_ram
 from prepare_phonon_runtime import CONTAINER_SHA, CONTAINER_BYTES, digest
 
 MIN_GPU_FREE = 3 * 1024**3
 MIN_RAM_FREE = 8 * 1024**3
+
+
+def runtime_dtype(precision, torch):
+    # Original is the same compact downloaded checkpoint. Windows GPU execution
+    # reconstructs its learned levels in BF16; packed CPU kernels cannot run CUDA.
+    return torch.float32 if precision == 'fp32' else torch.bfloat16
+
+
+def runtime_description(precision):
+    return ('Original checkpoint · GPU BF16 runtime' if precision == 'original'
+            else f'Dense {precision.upper()} GPU reference runtime')
+
+
+class PhononDevice:
+    def __init__(self, model, processor, torch, dtype):
+        self.model, self.processor, self.torch, self.dtype = model, processor, torch, dtype
+        self.device = 'cpu'
+
+    def activate(self):
+        begin = time.monotonic()
+        require_cuda(self.torch, MIN_GPU_FREE, 'Phonon-2 dictation')
+        if self.dtype == self.torch.bfloat16 and not self.torch.cuda.is_bf16_supported():
+            raise RuntimeError('This GPU does not support Phonon-2 BF16. Choose FP32 in Models.')
+        self.torch.cuda.reset_peak_memory_stats()
+        try:
+            self.model.to('cuda:0')
+            self.device = 'cuda:0'
+        except Exception as error:
+            self.sleep()
+            raise gpu_error(error) from error
+        return round((time.monotonic() - begin) * 1000)
+
+    def sleep(self):
+        self.model.to('cpu')
+        self.device = 'cpu'
+        release_cuda_cache(self.torch)
+
+    def transcribe(self, audio, np):
+        if self.device != 'cuda:0':
+            self.activate()
+        try:
+            return transcribe(self.model, self.processor, audio, np, self.torch, self.device)
+        except Exception as error:
+            raise gpu_error(error) from error
+        finally:
+            self.sleep()
 
 
 def audio_blocks(audio, np, sample_rate=16000, seconds=20):
@@ -61,9 +107,6 @@ def main():
     directory = Path(args.model).resolve()
     started = time.monotonic()
     emit({'progress': 'starting-runtime'})
-    if args.precision == 'original':
-        from phonon_original import run_worker
-        return run_worker(args, started, emit)
     try:
         import av
         import numpy as np
@@ -71,7 +114,7 @@ def main():
         import torch
         torch.set_num_threads(2)
         torch.set_num_interop_threads(1)
-        dtype = torch.bfloat16 if args.precision == 'bf16' else torch.float32
+        dtype = runtime_dtype(args.precision, torch)
         emit({'progress': 'verifying-checkpoint'})
         container = directory / 'model.fermion'
         if not container.is_file() or container.stat().st_size != CONTAINER_BYTES or digest(container) != CONTAINER_SHA:
@@ -87,40 +130,17 @@ def main():
             progress=lambda stage: emit({'progress': stage}),
             cache_dir=cache_dir)
         gc.collect()
-        device = 'cpu'
-
-        def activate():
-            nonlocal device
-            begin = time.monotonic()
-            if torch.cuda.is_available() and gpu_free(torch) >= MIN_GPU_FREE:
-                if dtype == torch.bfloat16 and not torch.cuda.is_bf16_supported():
-                    raise RuntimeError('This GPU does not support Phonon-2 BF16. Choose FP32 in Models.')
-                try:
-                    model.to('cuda:0')
-                    device = 'cuda:0'
-                except torch.cuda.OutOfMemoryError:
-                    model.to('cpu')
-                    torch.cuda.empty_cache()
-                    device = 'cpu'
-            return round((time.monotonic() - begin) * 1000)
-
-        def sleep():
-            nonlocal device
-            model.to('cpu')
-            device = 'cpu'
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            gc.collect()
+        engine = PhononDevice(model, processor, torch, dtype)
 
         if args.awake:
             emit({'progress': 'activating-device'})
-        wake_ms = activate() if args.awake else None
-        emit({'ready':True,'modelId':'phonon-2','language':'en','device':device,
+        wake_ms = engine.activate() if args.awake else None
+        emit({'ready':True,'modelId':'phonon-2','language':'en','device':engine.device,
             'coldStartMs':round((time.monotonic()-started)*1000),'wakeMs':wake_ms,
             'params':receipt['params'],'weightDtype':str(dtype).removeprefix('torch.'),
             'runtimePrecision':args.precision, 'denseCache':receipt.get('denseCache'),
             'runtimeResidentBytes':psutil.Process().memory_info().rss,
-            'runtimeDescription':f'Dense {args.precision.upper()} reference runtime'})
+            'runtimeDescription':runtime_description(args.precision)})
         for line in sys.stdin:
             try:
                 request = json.loads(line)
@@ -128,33 +148,34 @@ def main():
                 if action == 'shutdown':
                     break
                 if action == 'wake':
-                    elapsed = activate()
-                    emit({'awake':True,'wakeMs':elapsed,'device':device})
+                    elapsed = engine.activate()
+                    emit({'awake':True,'wakeMs':elapsed,'device':engine.device,
+                        'weightDtype':str(dtype).removeprefix('torch.')})
                 elif action == 'transcribe':
                     audio = load_audio(request['audio'], av, np)
-                    try:
-                        text = transcribe(model,processor,audio,np,torch,device)
-                    except torch.cuda.OutOfMemoryError:
-                        sleep()
-                        text = transcribe(model,processor,audio,np,torch,device)
-                    used_device = device
-                    sleep()
-                    emit({'text':text,'language':'en','device':used_device,'standbyDevice':device,
+                    text = engine.transcribe(audio,np)
+                    emit({'text':text,'language':'en','device':'cuda:0','standbyDevice':engine.device,
+                        'weightDtype':str(dtype).removeprefix('torch.'),
+                        'peakGpuBytes':torch.cuda.max_memory_allocated(),
                         'gpuModelBytes':sum(t.numel()*t.element_size() for t in list(model.parameters())+list(model.buffers()) if t.is_cuda),
-                        'torchGpuBytes':torch.cuda.memory_allocated() if torch.cuda.is_available() else 0})
+                        'torchGpuBytes':torch.cuda.memory_allocated() if torch.cuda.is_available() else 0,
+                        'torchReservedBytes':torch.cuda.memory_reserved() if torch.cuda.is_available() else 0})
                 else:
                     emit({'error':f'Unknown speech action: {action}'})
             except Exception as error:
-                if args.idle_mode == 'ram':
-                    sleep()
+                try:
+                    engine.sleep()
+                except Exception as cleanup_error:
+                    emit({'error':f'{error}; GPU offload failed: {cleanup_error}'})
+                    return 1
                 detail = str(error)
                 if dtype == torch.bfloat16 and ('not implemented' in detail.lower() or 'unsupported' in detail.lower()):
-                    detail = f'Phonon-2 BF16 is unsupported by this {device} runtime: {detail}. Choose FP32 in Models.'
+                    detail = f'Phonon-2 BF16 is unsupported by this GPU runtime: {detail}. Choose FP32 in Models.'
                 emit({'error':detail})
-        sleep()
+        engine.sleep()
         return 0
     except Exception as error:
-        emit({'error':str(error)})
+        emit({'error':f'Speech CUDA runtime could not start: {error}. Prepare or repair speech in Models.'})
         return 1
 
 

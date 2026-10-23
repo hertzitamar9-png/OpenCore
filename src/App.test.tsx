@@ -99,8 +99,8 @@ describe("OpenCore", () => {
     const start = vi.spyOn(api, 'startProfile').mockResolvedValue();
     try {
       render(<App />);
-      fireEvent.click(await screen.findByRole('button', { name: 'Update' }));
-      const installButton = await screen.findByRole('button', { name: 'Install update' });
+      fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
+      const installButton = await screen.findByRole('button', { name: 'Download update' });
       await waitFor(() => expect(installButton).toBeEnabled());
       fireEvent.click(installButton);
       fireEvent.click(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));

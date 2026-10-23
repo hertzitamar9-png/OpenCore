@@ -22,18 +22,19 @@ class ReasoningOffAliasTests(unittest.TestCase):
         level, settings = echo_server.apply_reasoning(payload, {}, "medium")
         self.assertEqual(level, "off")
         self.assertEqual(settings["budget"], 0)
-        self.assertNotIn("reasoning_effort", payload)
+        self.assertEqual(payload["reasoning_effort"], "none")
+        self.assertEqual(payload["opencore_reasoning_effort"], "off")
         self.assertEqual(payload["reasoning_budget_tokens"], 0)
         self.assertFalse(payload["chat_template_kwargs"]["enable_thinking"])
         self.assertEqual(payload["chat_template_kwargs"]["other"], True)
         self.assertEqual(payload["reasoning_format"], "none")
 
-    def test_low_remains_a_512_token_reasoning_mode(self):
+    def test_low_is_adaptive_without_a_thinking_cutoff(self):
         level, settings = echo_server.resolve_reasoning(
             {"reasoning_effort": "low"}, {}, "medium"
         )
         self.assertEqual(level, "low")
-        self.assertEqual(settings["budget"], 512)
+        self.assertEqual(settings["budget"], -1)
 
 
 if __name__ == "__main__":

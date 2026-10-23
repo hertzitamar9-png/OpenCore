@@ -1474,3 +1474,6 @@ html:has(.desktop-activity-frame),body:has(.desktop-activity-frame),body:has(.de
   .section-main .jobs-form-grid > * { grid-column:1; }
   .section-main .jobs-toolbar { align-items:flex-start; }
 }
+:root .manual-update-summary{display:flex;align-items:center;gap:8px}
+:root .manual-update-version{display:flex;align-items:center;gap:6px;color:var(--theme-muted,#aeb9c4);font-size:12px}
+:root .manual-update-current{color:var(--theme-muted,#aeb9c4)}

@@ -4,6 +4,7 @@ import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import threading
@@ -257,6 +258,11 @@ def main():
     children = []
     engine = None
     try:
+        if os.environ.get('OPENCORE_FAST_MODE')=='1':
+            import torch
+            torch.set_num_threads(max(1,min(6,(os.cpu_count() or 4)//2)))
+            torch.set_float32_matmul_precision('high')
+            torch.backends.cuda.matmul.allow_tf32=True
         engine = create_engine(args.profile, args.checkpoint, args.runtime, context, args.port)
         if kind == 'dual':
             for brain in engine.brains:

@@ -94,3 +94,8 @@ The bundled `runtime\llama-server.exe` serves them on port 8816 only after a `de
 - `reflex/eval_grounding.py` measures grounding on ScreenSpot-v2, ScreenSpot-Pro, OSWorld-G and the held-out Hebrew sets.
 - `reflex/collect_web_grounding.mjs` and `reflex/collect_desktop_grounding.py` collect grounding data without clicking anything.
 - `reflex/train_vision.py` fine-tunes the model with LoRA.
+# Windows installer and updates
+
+The current main-branch release produces **OpenCore Setup.exe** with the official OpenCore branding and all core Python/Node helpers. OpenCore checks the public GitHub release feed without downloading updates. Choose **Update ready**, then **Download update** to update and reopen the app.
+
+The newer native checkout was lost. The current distribution preserves the verified 0.2.305 native baseline and builds the recovered frontend, catalog and managed runtime changes from the committed sources in [`distribution/`](distribution/README.md). That document explains the recovery boundary and reproducible release workflow. The historical native source in this repository must not replace the newer baseline until its missing changes have been restored.

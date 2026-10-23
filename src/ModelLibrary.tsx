@@ -10,6 +10,7 @@ import "./ModelLibrary.css";
 
 const gb = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`;
 const exactFileSize = (bytes: number) => `${gb(bytes)} · ${bytes.toLocaleString("en-US")} bytes`;
+const MODEL_PAGE_SIZE = 7;
 const downloadLabel = (model: api.InstalledModel) => model.totalBytes > 0
   ? model.id === 'phonon-2' && model.weightBytes ? `${Math.ceil(model.weightBytes / 1e6)} MB weights + ${((model.totalBytes - model.weightBytes) / 1e6).toFixed(1)} MB support files`
     : model.externalManaged ? `Existing weights · ${exactFileSize(model.totalBytes)}` : `${exactFileSize(model.totalBytes)} download`
@@ -25,6 +26,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const [error, setError] = useState("");
   const [category, setCategory] = useState('all');
   const [query, setQuery] = useState('');
+  const [visibleLimit, setVisibleLimit] = useState(MODEL_PAGE_SIZE);
   const [memoryMode, setMemoryMode] = useState<"all" | "native" | "echo">("all");
   const [pending, setPending] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<api.InstalledModel | null>(null);
@@ -110,6 +112,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const visibleModels = categoryGroups.filter(group => categoryMatches(group, category)
     && words.every(word => `${group.model.label} ${group.model.description} ${group.variants.map(model => `${model.id} ${model.label} ${model.precision}`).join(' ')}`.toLowerCase().includes(word)));
+  useEffect(() => { setVisibleLimit(MODEL_PAGE_SIZE); }, [query, category, memoryMode]);
   return <section className="model-library" aria-label="Install local models">
     <div className="model-library-heading"><div><h2>Model library</h2><p>Browse and install models for local use.</p></div>
       {library ? <span className="model-storage"><HardDrive size={16} /> {gb(library.diskFreeBytes)} free</span> : null}
@@ -127,7 +130,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
     <div className="model-filter-row"><span className="model-filter-label">Memory mode</span><div className="model-category-tabs model-mode-tabs" role="group" aria-label="Model modes">{([['all','All modes'],['native','Native models'],['echo','ECHO models']] as const).map(([id,label]) => <button key={id} aria-pressed={memoryMode === id} onClick={() => setMemoryMode(id)}>{label}<span>{filterGroupsByMemoryMode(allModelGroups, id).filter(group => categoryMatches(group, category)).length}</span></button>)}</div></div>
     <div className="model-library-search"><Search size={17} aria-hidden="true" /><input aria-label="Search models" placeholder="Find a model or quantization…" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') setQuery(''); }} />{query ? <button onClick={() => setQuery('')}>Clear search</button> : null}<span>{visibleModels.length} models</span></div>
     {library && visibleModels.length === 0 ? <p role="status">No models match these filters.</p> : null}
-    <div className="model-library-grid">{visibleModels.map((group) => {
+    <div className="model-library-grid">{visibleModels.slice(0, visibleLimit).map((group) => {
       const remembered = modelById.get(quantization[group.id]);
       const selected = modelById.get(selectedProfile);
       // Work within both active filters so Installed never offers missing deliveries.
@@ -210,6 +213,7 @@ export function ModelLibrary({ selectedProfile, onSelect, runtimeActive, onNotic
       </button> : null}{model.setupUrl && <a href={model.setupUrl} target="_blank" rel="noreferrer" className="model-setup-link"><ExternalLink size={15} />Setup</a>}{model.installed ? <button className="model-delete-button" disabled={installing || Boolean(pending)} aria-label={`Uninstall ${model.label}`} onClick={() => setDeleting(model)}><PackageMinus size={15} />Uninstall</button> : null}</footer>
       <span className="model-license">{model.experimental ? "Experimental · " : ""}{model.license}</span>
     </article>; })}</div>
+    {visibleModels.length > visibleLimit && <button type="button" onClick={() => setVisibleLimit(limit => limit + MODEL_PAGE_SIZE)}>Show next {Math.min(MODEL_PAGE_SIZE, visibleModels.length - visibleLimit)} models · {Math.min(visibleLimit, visibleModels.length)} of {visibleModels.length} shown</button>}
     {deleting ? <ModelDeleteDialog model={deleting} runtimeActive={runtimeActive} onCancel={() => setDeleting(null)} onDelete={deleteModel} /> : null}
   </section>;
 }

@@ -1,0 +1,47 @@
+{
+  "version": 4,
+  "levels": {
+    "off": {
+      "nativeEffort": "none",
+      "minimumTokens": 0,
+      "maximumTokens": 0,
+      "guidance": ""
+    },
+    "low": {
+      "nativeEffort": "low",
+      "minimumTokens": 0,
+      "maximumTokens": -1,
+      "guidance": "Use brief, focused deliberation and avoid redundant rechecking. Finish the current step when it is sufficiently worked out. Complete and present each independently deliverable part before working on the next when the request calls for sequential parts. Choose your reasoning method freely; there is no required outline, token quota, or mandatory repeat count."
+    },
+    "medium": {
+      "nativeEffort": "medium",
+      "minimumTokens": 0,
+      "maximumTokens": -1,
+      "guidance": "Use a moderate amount of deliberation and rechecking where helpful, then finish the current step naturally. Complete and present each independently deliverable part before working on the next when the request calls for sequential parts. Choose your reasoning method freely; there is no required outline, token quota, or mandatory repeat count."
+    },
+    "high": {
+      "nativeEffort": "high",
+      "minimumTokens": 0,
+      "maximumTokens": -1,
+      "guidance": "Use substantial deliberation and revisit assumptions or results where useful before completing the current step. Complete and present each independently deliverable part before working on the next when the request calls for sequential parts. Choose your reasoning method freely; there is no required outline, token quota, or mandatory repeat count."
+    },
+    "extra-high": {
+      "nativeEffort": "high",
+      "minimumTokens": 0,
+      "maximumTokens": -1,
+      "guidance": "Spend additional time exploring relevant alternatives and rechecking the current step. Finish naturally when ready. Complete and present each independently deliverable part before working on the next when the request calls for sequential parts. Choose your reasoning method freely; there is no required outline, token quota, or mandatory repeat count."
+    },
+    "max": {
+      "nativeEffort": "high",
+      "minimumTokens": 0,
+      "maximumTokens": -1,
+      "guidance": "Allow extensive deliberation and rechecking wherever useful for the current step. Finish naturally when ready. Complete and present each independently deliverable part before working on the next when the request calls for sequential parts. Choose your reasoning method freely; there is no required outline, token quota, or mandatory repeat count."
+    },
+    "opencore": {
+      "nativeEffort": "high",
+      "minimumTokens": 0,
+      "maximumTokens": -1,
+      "guidance": "Use as much deliberation and rechecking as the current step needs, with no preference for saving thinking tokens. Choose when to finish. Complete and present each independently deliverable part before working on the next when the request calls for sequential parts. Choose your reasoning method freely; there is no required outline, token quota, or mandatory repeat count."
+    }
+  }
+}

@@ -53,7 +53,10 @@ function useManualUpdate(checkOnMount = false) {
   }, []);
 
   useEffect(() => {
-    if (checkOnMount) void check();
+    if (!checkOnMount) return;
+    void check();
+    const timer = window.setInterval(() => { if (!installingUpdate) void check(); }, 300_000);
+    return () => window.clearInterval(timer);
   }, [checkOnMount, check]);
 
   async function install() {
@@ -90,16 +93,20 @@ export function UpdateButton() {
     if (!open) await check();
   }
 
-  if (!checked?.available) return null;
-
   return <div className="manual-update-control">
-    {open && <div className="manual-update-inline">
+    {open && (showMessage || checked?.available) && <div className="manual-update-inline">
       {showMessage && <span className="manual-update-message" role="status" aria-live="polite">{message}</span>}
-      <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Install update'}</button>
+      {checked?.available && <button type="button" disabled={busy} onClick={() => void install()}>{busy ? 'Updating…' : 'Download update'}</button>}
     </div>}
-    <button type="button" className="manual-update-button" aria-label="Update" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}>
-      <Download size={14} /> Update
-    </button>
+    <div className="manual-update-summary">
+      <span className="manual-update-version" title={checked ? `Running OpenCore ${checked.currentVersion}` : 'Reading the installed app version'}>
+        <span>{checked ? `v${checked.currentVersion}` : 'Reading version…'}</span>
+        {checked && !checked.available && !busy && <span className="manual-update-current" role="status">Up to date</span>}
+      </span>
+      {checked?.available
+        ? <button type="button" className="manual-update-button" aria-label="Update ready" aria-expanded={open} disabled={busy} onClick={() => void openUpdate()}><Download size={14} /> Update ready</button>
+        : (!checked || busy) && <button type="button" className="manual-update-button" aria-label="Check for updates" disabled={busy} onClick={() => { setOpen(true); void check(); }}>{busy ? 'Checking…' : 'Check for updates'}</button>}
+    </div>
   </div>;
 }
 

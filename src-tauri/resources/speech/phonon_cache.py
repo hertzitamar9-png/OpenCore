@@ -25,7 +25,32 @@ def fingerprint(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
-def source_identity(container, base_dir, config, dtype):
+def source_digest(path):
+    path = Path(path)
+    if path.suffix != '.py':
+        return digest(path)
+    # Python's parser treats LF, CRLF and CR identically. Git/Windows packaging
+    # may rewrite only those separators; still hash every byte of the complete
+    # source, and keep checkpoint/tensor/config-file checksums byte-exact.
+    source = path.read_bytes().replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+    return hashlib.sha256(source).hexdigest()
+
+
+def checkpoint_identity(container, expected=None):
+    """One full byte check per cold load, also used to bind the dense cache."""
+    container = Path(container)
+    before = container.stat()
+    checksum = digest(container)
+    after = container.stat()
+    signature = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+    if signature(before) != signature(after):
+        raise ValueError('Phonon-2 checkpoint changed while verifying it. Retry dictation.')
+    if expected is not None and (checksum, after.st_size) != expected:
+        raise ValueError('Phonon-2 container is missing or corrupted. Reinstall the speech model.')
+    return {'checkpointSha256': checksum, 'checkpointBytes': after.st_size}
+
+
+def source_identity(container, base_dir, config, dtype, expected_checkpoint=None):
     import torch
     import transformers
     container, base_dir = Path(container).resolve(), Path(base_dir).resolve()
@@ -33,8 +58,9 @@ def source_identity(container, base_dir, config, dtype):
                Path(__file__).resolve(), Path(__file__).with_name('phonon_loading.py').resolve()]
     # Processor files are small and include both generation and network config.
     sources.extend(path for path in sorted(base_dir.rglob('*')) if path.is_file() and path.suffix in ('.json', '.txt', '.model'))
-    return {'schema': SCHEMA, 'checkpointSha256': digest(container), 'checkpointBytes': container.stat().st_size,
-            'sources': {str(path.relative_to(base_dir)) if path.is_relative_to(base_dir) else path.name: digest(path) for path in sources},
+    return {'schema': SCHEMA, **checkpoint_identity(container, expected_checkpoint),
+            'sourceHashFormat': 'python-universal-newlines-v1',
+            'sources': {str(path.relative_to(base_dir)) if path.is_relative_to(base_dir) else path.name: source_digest(path) for path in sources},
             'configSha256': fingerprint(config.to_dict()), 'precision': str(dtype).removeprefix('torch.'),
             'torchVersion': str(torch.__version__), 'transformersVersion': str(transformers.__version__)}
 

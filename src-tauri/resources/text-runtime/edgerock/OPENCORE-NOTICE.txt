@@ -1,0 +1,3 @@
+EdgeRock portable text runtime from rockmatrix-ai/EdgeRock, Git revision e1ab6108c68b8288c561a97ebb2ec8fce7ed0b05.
+Bundled configuration and modeling sources are unmodified. Apache-2.0 code; separate publisher model license applies to weights. No downloaded checkpoint Python is executed. CUDA-optimized Hopper code is not enabled.
+The app modifies the supplied chat template to close the thinking segment when reasoning is disabled. The model and configuration source files remain unchanged.

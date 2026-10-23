@@ -1,0 +1,200 @@
+{
+  "_id": "6ad806ff761a57d56bbf2fcc",
+  "id": "KRAFTON/Raon-1-mini-preview-mlx",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "safetensors",
+    "raon1_mini",
+    "raon",
+    "nvfp4",
+    "text-generation",
+    "conversational",
+    "base_model:KRAFTON/Raon-1-mini-preview",
+    "base_model:quantized:KRAFTON/Raon-1-mini-preview",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 269,
+  "likes": 24,
+  "modelId": "KRAFTON/Raon-1-mini-preview-mlx",
+  "author": "KRAFTON",
+  "sha": "2474b55299c6446a51a342da332bd13cf869dfa1",
+  "lastModified": "2026-10-22T11:51:39.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Raon1MiniForCausalLM"
+    ],
+    "model_type": "raon1_mini",
+    "num_experts": 128,
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|endoftext|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- set truncate_history_thinking = truncate_history_thinking if truncate_history_thinking is defined else true %}\n{%- macro render_content(content, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Only text content is supported.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- macro render_assistant_body(message, content, reasoning_content, preserve_reasoning) %}\n    {%- if preserve_reasoning and reasoning_content|trim %}\n        {{- '<think>\\n' + reasoning_content|trim + '\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think></think>\\n\\n' }}\n    {%- endif %}\n    {{- content }}\n    {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {%- if loop.first %}\n                {%- if content|trim %}\n                    {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- else %}\n                    {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n            {%- else %}\n                {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n            {%- endif %}\n            {%- if tool_call.arguments is defined %}\n                {%- for args_name, args_value in tool_call.arguments|items %}\n                    {{- '<parameter=' + args_name + '>\\n' }}\n                    {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                    {{- args_value }}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n            {%- endif %}\n            {{- '</function>\\n</tool_call>' }}\n        {%- endfor %}\n    {%- endif %}\n    {{- '<|im_end|>' }}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- '# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>' }}\n    {%- for tool in tools %}\n        {{- '\\n' }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- '\\n</tools>' }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- elif messages[0].role == 'system' %}\n    {%- set content = render_content(messages[0].content, true)|trim %}\n    {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == 'user' %}\n        {%- set content = render_content(message.content)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content)|trim %}\n    {%- if message.role == 'system' %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == 'user' %}\n        {{- '<|im_start|>user\\n' + content + '<|im_end|>\\n' }}\n    {%- elif message.role == 'assistant' %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- elif '</think>' in content %}\n            {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n            {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n        {%- endif %}\n        {{- '<|im_start|>assistant\\n' }}\n        {%- set preserve_reasoning = (not truncate_history_thinking) or (loop.index0 > ns.last_query_index) %}\n        {%- generation %}\n        {{- render_assistant_body(message, content, reasoning_content, preserve_reasoning) }}\n        {%- endgeneration %}\n        {{- '\\n' }}\n    {%- elif message.role == 'tool' %}\n        {%- if loop.previtem and loop.previtem.role != 'tool' %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' + content + '\\n</tool_response>' }}\n        {%- if loop.last or loop.nextitem.role != 'tool' %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think></think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}\n"
+  },
+  "cardData": {
+    "library_name": "mlx",
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "base_model": "KRAFTON/Raon-1-mini-preview",
+    "base_model_relation": "quantized",
+    "tags": [
+      "raon",
+      "mlx",
+      "nvfp4"
+    ],
+    "extra_gated_heading": "Request access to Raon-1 mini preview",
+    "extra_gated_prompt": "Raon-1 mini preview is an open-weight model. Access is granted on request.",
+    "extra_gated_fields": {
+      "Full name": "text",
+      "Affiliation": "text",
+      "Job title": "text",
+      "Country": "country",
+      "Intended use": {
+        "type": "select",
+        "options": [
+          "Research",
+          "Education",
+          "Commercial",
+          "Personal",
+          {
+            "label": "Other",
+            "value": "other"
+          }
+        ]
+      },
+      "I agree to use this model in accordance with the Apache License, Version 2": "checkbox"
+    },
+    "extra_gated_button_content": "Request access"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ececece27a4987752be292df3b2b0c84ed41ac84",
+      "size": 54592
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "fee682ed6d778dca6ff0a0325525d674a71003cc",
+      "size": 6518
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "c0b7854f03674380bfdcbfa67a4190269e93a155",
+      "size": 24432
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "b57682f5419e4704aaa2c4244e8005ef5a2b8068",
+      "size": 77
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "006c724adff66942b72c61f056d09808cd46d046",
+      "size": 4908088916,
+      "lfs": {
+        "sha256": "bdbcb33054bb19f004e02ab45c74a2a186c60593bcd8d71f034b575d4a6ea97d",
+        "size": 4908088916,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "c75c43120ba591252950a73887ffa6634804f464",
+      "size": 4945820408,
+      "lfs": {
+        "sha256": "3c150311354d14e105c07ad1787d76bcc65dc119532920d0d754ff78672a810e",
+        "size": 4945820408,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "6d3cb29643673cf5d328e1b3cf6b1e847852a30d",
+      "size": 4893777576,
+      "lfs": {
+        "sha256": "a0c5ca1f7dff9c805eecae73e5b0cb31d5b027adb2846bd7ed6392fc766edd7a",
+        "size": 4893777576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "d1dd07cefc32698a46a88df0887ee949e9d37728",
+      "size": 2789832092,
+      "lfs": {
+        "sha256": "8eba6e246ec19b7eb0dcd00e3f949d4956c13bb4c18862d5bbd421b01775e999",
+        "size": 2789832092,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "e50f9ea6f37a72cb934237a4ca0c446612e0e514",
+      "size": 146603
+    },
+    {
+      "rfilename": "raon_mlx_model.py",
+      "blobId": "dff4b3a383b90acb0ca6f6b03108211e6e7e4028",
+      "size": 75755
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "197bb8689bbcc64ea59f124ffadaca8cfb8a9693",
+      "size": 48
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "81b6ea1d59602dfd5e6cb53a30b8b0610cab4d58",
+      "size": 21576473,
+      "lfs": {
+        "sha256": "d6f3eafdda18a7b39b6152c62d54c417faca4bd89b17c8b8800d8bf221394930",
+        "size": 21576473,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "57f9058e9ebd90f266c73491d0996f5ca305c143",
+      "size": 253
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-21T00:27:43.000Z",
+  "safetensors": {
+    "parameters": {
+      "U32": 28063416320,
+      "BF16": 719706130,
+      "F32": 105168
+    },
+    "total": 28783227618
+  },
+  "usedStorage": 17559095465
+}

@@ -74,8 +74,17 @@ def emit(stage, **values):
     print(json.dumps({"stage": stage, **values}, ensure_ascii=True), flush=True)
 
 
-def recipe_for(target):
+def recipe_for(target, recipe_id=None):
     recipe = next((item for item in MANIFEST["recipes"] if target in item["modelIds"]), None)
+    if recipe_id is not None:
+        approved=next((item for item in MANIFEST['recipes'] if item['id']==recipe_id),None)
+        if approved is None or (recipe is not None and recipe['id']!=recipe_id):
+            return {'supported':False,'reason':'The approved recipe does not match this setup target'}
+        # Native admission resolves newer catalog text entries. Only select an
+        # existing bundled recipe; callers cannot supply packages or commands.
+        if recipe is None and approved['kind']!='text':
+            return {'supported':False,'reason':'This target is not supported by the approved recipe'}
+        recipe=approved
     if recipe is None:
         return {"supported": False, "reason": "Automatic setup has no verified publisher-compatible worker recipe for this architecture. Connect the publisher runtime explicitly."}
     return {"supported": True, **recipe}
@@ -83,6 +92,7 @@ def recipe_for(target):
 
 def recipe_fingerprint(recipe):
     bare = {key: value for key, value in recipe.items() if key != "supported"}
+    if bare.get('kind')=='gguf':bare['modelIds']=[]
     return hashlib.sha256(json.dumps(bare, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode('utf-8')).hexdigest()
 
 
@@ -97,6 +107,35 @@ def atomic_json(path, value):
     temporary.replace(path)
 
 
+def retain_verified_inference(root, receipt, runner):
+    """Dependency preparation must not erase still-current model execution proof."""
+    try:
+        root = Path(root).resolve()
+        previous = json.loads((root / "runtime-setup/receipts" / f"{receipt['targetId']}.json").read_text(encoding="utf-8"))
+        if previous.get("dependenciesVerified") is not True or previous.get("inferenceVerified") is not True:
+            return receipt
+        for key in ("schema", "targetId", "recipeId", "recipeFingerprint", "python", "runner", "packages", "hardware"):
+            if previous.get(key) != receipt.get(key):
+                return receipt
+        proof = previous["inferenceProof"]
+        if proof.get("executionVerified") is not True or not proof.get("jobId") or type(proof.get("generatedTokens")) is not int or proof["generatedTokens"] < 1:
+            return receipt
+        pin = proof["modelPin"]
+        files = json.loads(pin["packageIdentity"])
+        if not isinstance(files, list) or not files or not pin.get("artifacts"):
+            return receipt
+        for relative, _repo, _revision, _filename, digest, size in files:
+            runner.check_cancel()
+            path = (root / relative).resolve()
+            if not path.is_relative_to(root / "models") or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                return receipt
+            if type(size) is not int or size < 1 or not path.is_file() or path.stat().st_size != size or file_hash(path, runner) != digest:
+                return receipt
+        return {**receipt, "inferenceVerified": True, "inferenceProof": proof}
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return receipt
+
+
 def read_receipt(path, recipe):
     try:
         receipt = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -104,6 +143,10 @@ def read_receipt(path, recipe):
             return None
         if not receipt.get("dependenciesVerified"):
             return None
+        if recipe.get('kind')=='speech' and recipe.get('requiresCuda'):
+            hardware=receipt.get('hardware',{})
+            if not hardware.get('cudaBuild') or hardware.get('cudaAvailable') is not True or hardware.get('kernelVerified') is not True:
+                return None
         executable = receipt.get("python") or receipt.get("executable")
         if not executable or not Path(executable).is_file():
             return None
@@ -212,12 +255,19 @@ def create_environment(root, recipe_id, python, runner):
     target = python_in(environment)
     if not target.is_file():
         runner.reporter("creating-environment", detail=str(environment))
-        runner.run([python, "-m", "venv", str(environment)])
+        # CPython's automatic ensurepip can fail with the extended Windows paths
+        # supplied by the desktop. Bootstrap explicitly with isolated imports.
+        runner.run([python, "-I", "-m", "venv", "--without-pip", str(environment)])
     # Existing environments must still be isolated; never install into a base Python.
     info = runner.run([target, "-I", "-c", "import json,sys;print(json.dumps({'prefix':sys.prefix,'base':sys.base_prefix}))"])
     value = json.loads(info.stdout.splitlines()[-1])
     if Path(value["prefix"]).resolve() != environment or value["prefix"] == value["base"]:
         raise RuntimeError("The managed environment resolves to an external Python installation")
+    pip = runner.run([target, "-I", "-m", "pip", "--version"], check=False, timeout=30)
+    if pip.returncode:
+        runner.reporter("creating-environment", detail="Repairing pip in the isolated model environment")
+        runner.run([target, "-I", "-m", "ensurepip", "--upgrade", "--default-pip"], timeout=120)
+        runner.run([target, "-I", "-m", "pip", "--version"], timeout=30)
     return target
 
 
@@ -236,7 +286,7 @@ for module,names in imports.items():
     for name in names:
         getattr(loaded,name)
 hardware={}
-if 'torch' in packages:
+if 'torch' in packages or require_cuda:
     import torch
     hardware={'torch':torch.__version__,'cudaBuild':torch.version.cuda,'cudaAvailable':torch.cuda.is_available()}
     if require_cuda and not torch.cuda.is_available():
@@ -302,9 +352,17 @@ def download(url, target, sha256, runner, max_bytes=500_000_000):
     return target
 
 
-def file_hash(path):
+def file_hash(path, runner=None):
     with Path(path).open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
+        if runner is None:
+            return hashlib.file_digest(stream, "sha256").hexdigest()
+        digest = hashlib.sha256()
+        while True:
+            runner.check_cancel()
+            block = stream.read(1024 * 1024)
+            if not block:
+                return digest.hexdigest()
+            digest.update(block)
 
 
 def memory_total():
@@ -320,6 +378,16 @@ def memory_total():
         return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
     except (ValueError, OSError, AttributeError):
         return None
+
+
+def memory_available():
+    if os.name=='nt':
+        class Memory(ctypes.Structure):
+            _fields_=[('length',ctypes.c_ulong),('load',ctypes.c_ulong),*[(name,ctypes.c_ulonglong) for name in ('total','available','page','pageFree','virtual','virtualFree','extended')]]
+        value=Memory();value.length=ctypes.sizeof(value)
+        return value.available if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(value)) else None
+    try:return os.sysconf('SC_PAGE_SIZE')*os.sysconf('SC_AVPHYS_PAGES')
+    except (ValueError,OSError,AttributeError):return None
 
 
 def probe(root):
@@ -379,14 +447,21 @@ def android_plan(root, accept_licenses):
             "createAvd": ["create", "avd", "--name", "OpenCore_API_36", "--package", "system-images;android-36;google_apis;x86_64", "--path", str(home / "avd" / "OpenCore_API_36.avd")]}
 
 
-def install(root, resources, target, options, runner):
+def install(root, resources, target, options, runner, recipe_id=None):
     root, resources = Path(root).resolve(), Path(resources).resolve()
-    recipe = recipe_for(target)
+    recipe = recipe_for(target,recipe_id=recipe_id)
+    if not recipe['supported']:
+        packages=root/'models/publisher-packages.json'
+        if packages.is_file() and any(package.get('model_id')==target and any(file.get('filename','').endswith('.safetensors') for file in package.get('files',[])) for package in json.loads(packages.read_text(encoding='utf-8'))):
+            recipe={'supported':True,**next(item for item in MANIFEST['recipes'] if item['id']=='managed-transformers-text-v1')}
     if not recipe["supported"]:
         raise ValueError(recipe["reason"])
     ram = memory_total()
     if ram and ram < recipe["minimumRamBytes"]:
         raise RuntimeError(f"This recipe needs at least {recipe['minimumRamBytes'] / 1e9:g} GB host RAM; {ram / 1e9:g} GB was detected")
+    available=memory_available()
+    if available is not None and available<recipe.get('minimumAvailableRamBytes',0):
+        raise RuntimeError(f"This model preparation needs {recipe['minimumAvailableRamBytes']/1e9:g} GB available RAM; {available/1e9:.1f} GB is available. Close other applications and retry. Disk weight offload is disabled.")
     if shutil.disk_usage(root).free < recipe["minimumDiskBytes"]:
         raise RuntimeError(f"Not enough disk space: dependency/tool setup needs {recipe['minimumDiskBytes'] / 1e9:g} GB free, plus the selected checkpoint")
     if recipe.get("requiresLicenseAcceptance") and not options.get("acceptLicenses"):
@@ -394,18 +469,70 @@ def install(root, resources, target, options, runner):
     runner.reporter("checking-hardware", detail="Checking host memory, disk and supported worker requirements")
     kind = recipe["kind"]
     if kind == "studio":
+        from managed_model_sources import shared_torch_source,attach_shared_packages,prepare_comfy_source,runtime_package_pins
+        shared=shared_torch_source(root,recipe,runner)
+        runtime_peak=recipe['minimumDiskBytes'] if shared or not recipe.get('shareManagedTorch') else recipe.get('fallbackDiskBytes',recipe['minimumDiskBytes'])
+        required=options.get('minimumFreeBytes',0)+options.get('remainingWeightBytes',0)+runtime_peak
+        if shutil.disk_usage(root).free<required:
+            raise RuntimeError(f"Not enough disk space for dependencies and the selected weights with reserved free space intact: {required/1e9:.2f} GB required before preparation")
         inventory = probe(root)
         if recipe.get("requiresCuda") and not inventory["gpus"]:
             raise RuntimeError("No NVIDIA GPU/driver was detected. This built-in image worker requires CUDA; setup did not download packages.")
-        python = create_environment(root, recipe["id"], sys.executable, runner)
+        python = create_environment(root, recipe["id"], shared['python'] if shared else sys.executable, runner)
+        if shared:attach_shared_packages(root,Path(python).parent.parent,shared['site'])
         environment = dict(os.environ, PIP_CONFIG_FILE=os.devnull, PIP_INDEX_URL="https://pypi.org/simple", PIP_EXTRA_INDEX_URL="", PYTHONIOENCODING="utf-8")
+        pins=runtime_package_pins(recipe)
+        constraints=Path(python).parent.parent/'opencore-runtime-constraints.txt'
+        constraints.write_text(''.join(f'{name}=={version}\n' for name,version in pins.items()),encoding='utf-8')
         runner.reporter("installing-dependencies", detail="Installing pinned CUDA runtime in the managed environment")
-        runner.run([python, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", "--index-url", recipe["torchIndex"], *[f"{name}=={version}" for name, version in recipe["torchPackages"].items()]], env=environment)
+        runner.run([python, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir",'--only-binary=:all:','--constraint',constraints, "--index-url", recipe["torchIndex"],'--extra-index-url','https://pypi.org/simple', *[f"{name}=={pins[name]}" for name in recipe["torchPackages"]]], env=environment)
         runner.reporter("installing-dependencies", detail="Installing pinned model worker packages")
-        runner.run([python, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", *[f"{name}=={version}" for name, version in recipe["packages"].items()]], env=environment)
+        runner.run([python, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir",'--only-binary=:all:','--constraint',constraints, *[f"{name}=={version}" for name, version in recipe["packages"].items()]], env=environment)
+        source_dir=prepare_comfy_source(root,resources,recipe,runner) if recipe.get('engine') in ('comfyui-moss-v1','comfyui-qwen21-v1') else None
         runner.reporter("verifying-runtime", detail="Checking exact versions, worker pipeline imports and CUDA execution")
         verification = verify_environment(python, {**recipe["torchPackages"], **recipe["packages"]}, recipe["imports"], runner, require_cuda=True)
         result = {"python": str(python), "runner": str(resources / "studio" / "asset_worker.py"), **verification}
+        if source_dir:result['sourceDir']=str(source_dir)
+        if shared:result['sharedPackageRoot']=str(shared['site'])
+    elif kind == "text":
+        from managed_model_sources import shared_torch_source,attach_shared_packages
+        shared=None
+        for flavor in ('cpu','cu126'):
+            candidate=dict(recipe,torchIndex='https://download.pytorch.org/whl/'+flavor)
+            shared=shared_torch_source(root,candidate,runner)
+            if shared:break
+        required=(recipe['minimumDiskBytes'] if shared else recipe['fallbackDiskBytes'])+options.get('remainingWeightBytes',0)
+        if shutil.disk_usage(root).free<required:raise RuntimeError(f'Not enough storage for this model and runtime: {required/1e9:.2f} GB required')
+        python=create_environment(root,recipe['id'],shared['python'] if shared else sys.executable,runner)
+        if shared:attach_shared_packages(root,Path(python).parent.parent,shared['site'])
+        environment=dict(os.environ,PIP_CONFIG_FILE=os.devnull,PIP_INDEX_URL='https://pypi.org/simple',PIP_EXTRA_INDEX_URL='',PYTHONIOENCODING='utf-8')
+        runner.reporter('installing-dependencies',detail='Preparing the isolated text generation runtime')
+        if not shared:
+            runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:','--index-url',recipe['torchIndex'],'torch=='+recipe['torchPackages']['torch']],env=environment)
+        wheel=recipe.get('transformersWheel')
+        packages={name:version for name,version in recipe['packages'].items() if not (wheel and name=='transformers')}
+        runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:',*[f'{name}=={version}' for name,version in packages.items()]],env=environment)
+        if wheel:
+            archive=download(wheel['url'],root/'runtime-setup/downloads'/wheel['filename'],wheel['sha256'],runner,max_bytes=wheel['bytes'])
+            runner.run([python,'-m','pip','install','--no-cache-dir','--only-binary=:all:',archive],env=environment)
+        verification=verify_environment(python,{**recipe['torchPackages'],**recipe['packages']},recipe['imports'],runner)
+        model_type=options.get('modelType')
+        if model_type and model_type not in ('gptx3','edgerock','spark2_5'):
+            runner.run([python,'-I','-c',"import sys;from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES;assert sys.argv[1] in CONFIG_MAPPING_NAMES,'The current text runtime does not support architecture '+sys.argv[1]",model_type],timeout=30)
+        result={'python':str(python),'runner':str(resources/'text-runtime/serve_text.py'),**verification}
+    elif kind == "memory":
+        python=create_environment(root,recipe['id'],sys.executable,runner)
+        environment=dict(os.environ,PIP_CONFIG_FILE=os.devnull,PIP_INDEX_URL='https://pypi.org/simple',PIP_EXTRA_INDEX_URL='',PYTHONIOENCODING='utf-8')
+        runner.reporter('installing-dependencies',detail='Installing the isolated CPU embedding and syntax runtime')
+        runner.run([python,'-m','pip','install','--disable-pip-version-check','--no-cache-dir','--only-binary=:all:',*[f'{name}=={version}' for name,version in recipe['packages'].items()]],env=environment)
+        folder=root/'memory-knowledge/embedding';folder.mkdir(parents=True,exist_ok=True)
+        for pin in recipe['embeddingFiles']:
+            download(f"https://huggingface.co/{recipe['embeddingRepo']}/resolve/{recipe['embeddingRevision']}/{pin['filename']}",folder/pin['path'],pin['sha256'],runner,max_bytes=pin['bytes'])
+        verification=verify_environment(python,recipe['packages'],recipe['imports'],runner)
+        checked=runner.run([python,'-I',resources/'memory/embedding_worker.py','--root',folder,'--verify'],timeout=120)
+        proof=json.loads(checked.stdout.splitlines()[-1])
+        if proof.get('embeddingVerified') is not True or proof.get('syntaxVerified') is not True or proof.get('dimensions')!=384 or proof.get('revision')!=recipe['embeddingRevision']:raise RuntimeError('Memory embedding/syntax verification did not succeed')
+        result={'python':str(python),'runner':str(resources/'memory/embedding_worker.py'),'embeddingDir':str(folder),**verification,**proof}
     elif kind == "speech":
         name = "prepare_phonon_runtime.py" if target == "phonon-2" else "prepare_runtime.py"
         environment = dict(os.environ, PYTHONIOENCODING="utf-8", PIP_CONFIG_FILE=os.devnull, PIP_INDEX_URL="https://pypi.org/simple", PIP_EXTRA_INDEX_URL="")
@@ -416,7 +543,7 @@ def install(root, resources, target, options, runner):
         python = python_in(root / "speech" / ("phonon-venv" if target == "phonon-2" else "whisper-venv"))
         imports = {"transformers": ["ParakeetForTDT", "ParakeetTDTConfig", "AutoProcessor"]} if target == "phonon-2" else {"transformers": ["WhisperForConditionalGeneration"]}
         runner.reporter("verifying-runtime", detail="Checking speech worker imports and pinned dependency versions")
-        verification = verify_environment(python, recipe["packages"], imports, runner)
+        verification = verify_environment(python, recipe["packages"], imports, runner, require_cuda=recipe.get('requiresCuda',False))
         result = {"python": str(python), **verification}
     else:
         from provision_testing import provision_android, provision_virtualbox, provision_vm
@@ -426,8 +553,12 @@ def install(root, resources, target, options, runner):
     receipt = {"schema": 1, "targetId": target, "recipeId": recipe["id"], "recipeFingerprint": recipe_fingerprint(recipe),
                "verifiedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sourceUrls": recipe["sourceUrls"],
                "dependenciesVerified": True, "inferenceVerified": False, **result}
+    if kind == "text":
+        receipt = retain_verified_inference(root, receipt, runner)
+    runner.check_cancel()
     atomic_json(root / "runtime-setup" / "receipts" / f"{target}.json", receipt)
-    runner.reporter("dependencies-verified", receipt=receipt, detail="Dependencies verified. A completed model job is required to verify inference.")
+    detail = "Dependencies verified. The previous model generation proof still matches the installed files." if receipt.get("inferenceVerified") else "Dependencies verified. A completed model job is required to verify inference."
+    runner.reporter("dependencies-verified", receipt=receipt, detail=detail)
     return receipt
 
 
@@ -436,18 +567,27 @@ def main():
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--resources", type=Path)
     parser.add_argument("--target")
+    parser.add_argument("--recipe-id")
     parser.add_argument("--cancel-file", type=Path)
     parser.add_argument("--options-file", type=Path)
     parser.add_argument("--probe", action="store_true")
     args = parser.parse_args()
     try:
         if args.probe:
-            emit("inventory", inventory=probe(args.root))
+            inventory=probe(args.root)
+            try:
+                extension=Path(__file__).resolve().parent/'hf-extension'
+                sys.path.insert(0,str(extension))
+                from hf_bridge import ensure_service
+                inventory['hubBridge']=ensure_service(args.root,Path(__file__).resolve().parent.parent)
+            except Exception:
+                inventory['hubBridge']={'available':False,'reason':'The managed Hugging Face service could not start'}
+            emit("inventory", inventory=inventory)
         else:
             if not args.target or not args.resources:
                 parser.error("--target and --resources are required for setup")
             options = json.loads(args.options_file.read_text(encoding="utf-8")) if args.options_file else {}
-            install(args.root, args.resources, args.target, options, Runner(args.cancel_file))
+            install(args.root, args.resources, args.target, options, Runner(args.cancel_file),recipe_id=args.recipe_id)
         return 0
     except Cancelled as error:
         emit("cancelled", error=str(error))

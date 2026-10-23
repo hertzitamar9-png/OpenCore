@@ -27,6 +27,7 @@ Neither omission can lose data, because neither is a copy of anything.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import bisect
 import base64
 import hashlib
@@ -729,6 +730,26 @@ class EchoArchive:
             self.db.commit()
         return summary_id
 
+    @contextmanager
+    def source_event_batch(self):
+        """Commit a bounded offline import batch once, retaining event savepoints."""
+        self.ensure_awake()
+        with self._lock:
+            if getattr(self, '_source_batch', False):
+                yield
+                return
+            self.db.execute('SAVEPOINT echo_source_batch')
+            self._source_batch = True
+            try:
+                yield
+                self.db.execute('RELEASE echo_source_batch')
+            except BaseException:
+                self.db.execute('ROLLBACK TO echo_source_batch')
+                self.db.execute('RELEASE echo_source_batch')
+                raise
+            finally:
+                self._source_batch = False
+
     def record_source_event(self, message: dict, conversation_id: str) -> bool:
         """Keep a typed event and its available image bytes in the exact archive.
 
@@ -747,8 +768,13 @@ class EchoArchive:
         source_id = message.get("source_event_id")
         content = message.get("content")
         raw_content = content if isinstance(content, str) else "" if content is None else json.dumps(content, ensure_ascii=False, sort_keys=True)
+        tool_identity = ''
+        if message.get('tool_calls') or message.get('tool_call_id'):
+            tool_fields = {key: message[key] for key in ('tool_calls', 'tool_call_id') if key in message}
+            tool_identity = '\0' + json.dumps(tool_fields, ensure_ascii=False, sort_keys=True)
+            metadata.update(tool_fields)
         identity = str(source_id) if source_id is not None else hashlib.sha256(
-            (role + "\0" + kind + "\0" + raw_content).encode()).hexdigest()
+            (role + "\0" + kind + "\0" + raw_content + tool_identity).encode()).hexdigest()
         event_id = hashlib.sha256((conversation_id + "\0" + identity).encode()).hexdigest()
 
         def preserve_image(data_url: str) -> str:
@@ -803,9 +829,11 @@ class EchoArchive:
                         prior["assets"] = prior_assets
                         self.db.execute("UPDATE source_events SET metadata=? WHERE event_id=?",
                                         (json.dumps(prior, ensure_ascii=False, sort_keys=True), event_id))
-                        self.db.commit()
+                        if not getattr(self, '_source_batch', False):
+                            self.db.commit()
                     link_assets(inline_assets)
-                    self.db.commit()
+                    if not getattr(self, '_source_batch', False):
+                        self.db.commit()
                 return False
             if isinstance(content, list):
                 clean_parts = []
@@ -858,8 +886,10 @@ class EchoArchive:
                     if not self.db.execute("SELECT 1 FROM imported_messages WHERE fingerprint=?", (text_fingerprint,)).fetchone():
                         self.append(page_text, conversation_id, stamp)
                     self.db.execute("INSERT INTO imported_messages VALUES (?)", (fingerprint,))
-            self.db.commit()
+            if not getattr(self, '_source_batch', False):
+                self.db.commit()
         return True
+
 
     def delete_conversation(self, conversation_id: str) -> int:
         """Remove every exact and derived record for one conversation."""
@@ -952,7 +982,8 @@ class EchoArchive:
             parent = page.page_id
             offset += len(raw)
             written.append(page)
-        self.db.commit()
+        if not getattr(self, '_source_batch', False):
+            self.db.commit()
         return written
 
     # ---------------------------------------------------------------- reading

@@ -12,12 +12,12 @@ function compareVersions(left, right) {
   return 0;
 }
 
-test('each release is newer than the installed 0.2.0 app', () => {
+test('each release is newer than the preserved 0.2.305 native baseline', () => {
   const next = releaseVersion(39);
-  assert.equal(next, '0.2.39');
-  assert.equal(compareVersions(next, '0.2.0'), 1);
-  assert.equal(releaseVersion(38), '0.2.38');
-  assert.equal(releaseVersion('39'), '0.2.39');
+  assert.equal(next, '0.3.39');
+  assert.equal(compareVersions(next, '0.2.305'), 1);
+  assert.equal(releaseVersion(38), '0.3.38');
+  assert.equal(releaseVersion('39'), '0.3.39');
 });
 
 test('release run number must be a positive safe integer', () => {

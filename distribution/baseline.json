@@ -1,0 +1,20 @@
+{
+  "repository": "hertzitamar9-png/OpenCore",
+  "tag": "recovery-base-20261024",
+  "nativeVersion": "0.2.305",
+  "assets": {
+    "installer": {
+      "name": "OpenCore-runtime-base.exe",
+      "sha256": "3e0287b593beb07ca022f2f677448599aaf40d74dc2f15db32b751a563d5c653"
+    },
+    "native": {
+      "name": "OpenCore-native-base.exe",
+      "sha256": "292e69af0e6e4881a9da7783c13086a205667b608b8676d529f022e88ecb7309"
+    },
+    "webview": {
+      "name": "MicrosoftEdgeWebview2Setup.exe",
+      "sha256": "f414de01c4680f0bb0694d1ea7803c6968f3a81bf6bad01b89bfc65dce14c2a2"
+    }
+  },
+  "historicalNativeSourceTree": "17a21e43cf8545ae288fce3fbf72c713a88040ff"
+}

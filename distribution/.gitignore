@@ -1,0 +1,11 @@
+node_modules/
+.output/
+candidate-dist/
+*.br
+*-qa.json
+*-qa.png
+candidate-ui.json
+candidate-dist-models.png
+executable-patch.json
+connector-research/qa-*.json
+connector-research/*-patched.png

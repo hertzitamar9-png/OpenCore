@@ -40,6 +40,29 @@ def gpu_free(torch):
         return 0
 
 
+def require_cuda(torch, required, purpose):
+    if not torch.cuda.is_available():
+        raise RuntimeError(f"CUDA is unavailable for {purpose}. Prepare the CUDA speech runtime and check the NVIDIA driver in Models.")
+    available = gpu_free(torch)
+    if available < required:
+        raise RuntimeError(f"Not enough free VRAM for {purpose}: need {memory_gib(required)}, have {memory_gib(available)}. Stop other GPU work and try again.")
+
+
+def gpu_error(error):
+    return RuntimeError(f"Speech GPU inference failed: {error}. Free VRAM or repair the CUDA speech runtime in Models; CPU inference is disabled.")
+
+
+def release_cuda_cache(torch):
+    gc.collect()
+    if torch.cuda.is_available():
+        # empty_cache alone retains cuBLAS workspaces on supported Torch builds:
+        # https://docs.pytorch.org/docs/stable/notes/cuda.html#cublas-workspaces
+        clear_blas = getattr(getattr(torch, '_C', None), '_cuda_clearCublasWorkspaces', None)
+        if clear_blas is not None:
+            clear_blas()
+        torch.cuda.empty_cache()
+
+
 def load_audio(path, av, np):
     chunks = []
     try:
@@ -100,57 +123,55 @@ class CTranslateWhisper:
         self.model = None
         self.origin = None
         self.device = "cpu"
-        self.load("cuda" if awake and gpu_free(torch) >= self.minimum_gpu else "cpu")
+        if awake:
+            require_cuda(torch, self.minimum_gpu, "Whisper dictation")
+        self.load("cuda" if awake else "cpu")
 
     def load(self, device):
         if device == "cpu":
-            require_ram(self.psutil, 8 * 1024**3, "full Whisper CPU transcription")
-        if self.model is not None:
-            self.model.model.unload_model()
-            self.model = None
-            gc.collect()
+            require_ram(self.psutil, 8 * 1024**3, "full Whisper RAM standby")
         try:
-            self.model = self.factory(str(self.directory), device=device,
+            candidate = self.factory(str(self.directory), device=device,
                 compute_type="float16" if device == "cuda" else "float32",
                 cpu_threads=2, num_workers=1, local_files_only=True)
         except RuntimeError as error:
-            if device != "cuda" or "out of memory" not in str(error).lower():
-                raise
-            self.load("cpu")
-            return
+            if device == "cuda":
+                raise gpu_error(error) from error
+            raise
+        if self.model is not None:
+            self.model.model.unload_model()
+        self.model = candidate
+        gc.collect()
         self.origin = device
         self.device = "cuda:0" if device == "cuda" else "cpu"
 
     def activate(self):
         started = time.monotonic()
-        if gpu_free(self.torch) >= self.minimum_gpu:
-            try:
-                if self.origin == "cuda":
-                    self.model.model.load_model()
-                    self.device = "cuda:0"
-                else:
-                    self.load("cuda")
-            except RuntimeError as error:
-                if "out of memory" not in str(error).lower():
-                    raise
-                self.load("cpu")
-        elif self.origin != "cpu":
-            self.load("cpu")
+        require_cuda(self.torch, self.minimum_gpu, "Whisper dictation")
+        try:
+            if self.origin == "cuda":
+                self.model.model.load_model()
+                self.device = "cuda:0"
+            else:
+                self.load("cuda")
+        except RuntimeError as error:
+            self.sleep()
+            raise gpu_error(error) from error
         return round((time.monotonic() - started) * 1000)
 
     def sleep(self):
-        if self.device.startswith("cuda"):
+        if self.origin == "cuda":
             self.model.model.unload_model(to_cpu=True)
         self.device = "cpu"
 
     def transcribe(self, audio):
+        if self.device != "cuda:0":
+            self.activate()
         try:
             return transcribe_ct2(self.model, audio)
         except RuntimeError as error:
-            if self.device != "cuda:0" or "out of memory" not in str(error).lower():
-                raise
-            self.load("cpu")
-            return transcribe_ct2(self.model, audio)
+            self.sleep()
+            raise gpu_error(error) from error
 
 
 class TransformersWhisper:
@@ -176,37 +197,30 @@ class TransformersWhisper:
 
     def activate(self):
         started = time.monotonic()
-        if gpu_free(self.torch) >= self.minimum_gpu:
-            try:
-                self.model.to(device="cuda:0", dtype=self.torch.float16)
-                self.recognizer.device = self.torch.device("cuda:0")
-                self.device = "cuda:0"
-                return round((time.monotonic() - started) * 1000)
-            except self.torch.cuda.OutOfMemoryError:
-                self.sleep()
-        self.use_cpu()
+        require_cuda(self.torch, self.minimum_gpu, "Whisper dictation")
+        try:
+            self.model.to(device="cuda:0", dtype=self.torch.float16)
+            self.recognizer.device = self.torch.device("cuda:0")
+            self.device = "cuda:0"
+        except Exception as error:
+            self.sleep()
+            raise gpu_error(error) from error
         return round((time.monotonic() - started) * 1000)
-
-    def use_cpu(self):
-        require_ram(self.psutil, self.cpu_ram, "Whisper CPU fallback")
-        self.model.to(device="cpu", dtype=self.torch.float32)
-        self.recognizer.device = self.torch.device("cpu")
-        self.device = "cpu"
-        self.torch.cuda.empty_cache()
 
     def sleep(self):
         self.model.to(device="cpu", dtype=self.torch.float16)
         self.device = "cpu"
         self.recognizer.device = self.torch.device("cpu")
-        self.torch.cuda.empty_cache()
-        gc.collect()
+        release_cuda_cache(self.torch)
 
     def transcribe(self, audio):
+        if self.device != "cuda:0":
+            self.activate()
         try:
             return transcribe_code_switched(self.recognizer, audio)
-        except self.torch.cuda.OutOfMemoryError:
-            self.use_cpu()
-            return transcribe_code_switched(self.recognizer, audio)
+        except Exception as error:
+            self.sleep()
+            raise gpu_error(error) from error
 
 
 def main():
@@ -263,23 +277,22 @@ def main():
                             for t in list(engine.model.parameters())+list(engine.model.buffers()) if t.is_cuda)
                             if isinstance(engine,TransformersWhisper) else
                             (0 if engine.origin=="cpu" or not engine.model.model.model_is_loaded else None),
-                        "torchGpuBytes": torch.cuda.memory_allocated() if torch.cuda.is_available() else 0})
+                        "torchGpuBytes": torch.cuda.memory_allocated() if torch.cuda.is_available() else 0,
+                        "torchReservedBytes": torch.cuda.memory_reserved() if torch.cuda.is_available() else 0})
                     continue
                 emit({"error": f"Unknown speech action: {action}"})
             except Exception as error:
-                if args.idle_mode == "ram":
-                    try:
-                        engine.sleep()
-                    except Exception:
-                        pass
+                try:
+                    engine.sleep()
+                except Exception as cleanup_error:
+                    emit({"error": f"{error}; GPU offload failed: {cleanup_error}"})
+                    return 1
                 emit({"error": str(error)})
 
         del engine
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        gc.collect()
+        release_cuda_cache(torch)
     except Exception as error:
-        emit({"error": str(error)})
+        emit({"error": f"Speech CUDA runtime could not start: {error}. Prepare or repair speech in Models."})
         return 1
     return 0
 

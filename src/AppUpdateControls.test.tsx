@@ -18,9 +18,9 @@ it('keeps the header Update button absent until an available update is confirmed
   vi.mocked(api.checkLatestAppVersion).mockReturnValue(new Promise(resolve => { completeCheck = resolve; }));
   render(<UpdateButton />);
 
-  expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Update ready' })).not.toBeInTheDocument();
   await act(async () => completeCheck({ currentVersion: '1.2.0', available: false, version: null }));
-  expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Update ready' })).not.toBeInTheDocument();
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
@@ -28,10 +28,10 @@ it('shows a confirmed update and requires a second click to install', async () =
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
   render(<UpdateButton />);
 
-  fireEvent.click(await screen.findByRole('button', { name: 'Update' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
   expect(await screen.findByText('OpenCore 1.3.0 is available.')).toBeVisible();
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Install update' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Download update' }));
   expect(api.installLatestAppUpdate).toHaveBeenCalledOnce();
   expect(await screen.findByText('The installer is starting. OpenCore will reopen after the update.')).toBeVisible();
 });
@@ -39,7 +39,7 @@ it('shows a confirmed update and requires a second click to install', async () =
 it('hides the inline update message after five seconds while retaining the install action', async () => {
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
   render(<UpdateButton />);
-  const update = await screen.findByRole('button', { name: 'Update' });
+  const update = await screen.findByRole('button', { name: 'Update ready' });
   vi.useFakeTimers();
   try {
     await act(async () => { fireEvent.click(update); });
@@ -49,7 +49,7 @@ it('hides the inline update message after five seconds while retaining the insta
     expect(message).toBeVisible();
     act(() => vi.advanceTimersByTime(1));
     expect(message).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Install update' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Download update' })).toBeVisible();
   } finally { vi.useRealTimers(); }
 });
 
@@ -57,7 +57,7 @@ it('keeps the header Update button absent when availability could not be checked
   vi.mocked(api.checkLatestAppVersion).mockRejectedValue(new Error('Feed unavailable'));
   await act(async () => { render(<UpdateButton />); });
 
-  expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Update ready' })).not.toBeInTheDocument();
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
@@ -66,7 +66,7 @@ it('shares an availability request across headers and does not recheck on rerend
   const headers = <><UpdateButton /><UpdateButton /></>;
   const { rerender } = render(headers);
 
-  expect(await screen.findAllByRole('button', { name: 'Update' })).toHaveLength(2);
+  expect(await screen.findAllByRole('button', { name: 'Update ready' })).toHaveLength(2);
   expect(api.checkLatestAppVersion).toHaveBeenCalledOnce();
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
   rerender(<><UpdateButton /><UpdateButton /></>);
@@ -78,17 +78,17 @@ it('keeps header availability in sync with manual Settings checks', async () => 
   const current = { currentVersion: '1.2.0', available: false, version: null };
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue(current);
   await act(async () => { render(<><UpdateButton /><UpdateSettings /></>); });
-  expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Update ready' })).not.toBeInTheDocument();
 
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
   fireEvent.click(screen.getByRole('button', { name: 'Check latest version' }));
   expect(await screen.findByText('OpenCore 1.3.0 is available.')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Update' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Update ready' })).toBeVisible();
 
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue(current);
   fireEvent.click(screen.getByRole('button', { name: 'Check latest version' }));
   expect(await screen.findByText('OpenCore 1.2.0 is up to date.')).toBeVisible();
-  expect(screen.queryByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Update ready' })).not.toBeInTheDocument();
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
@@ -97,9 +97,9 @@ it('tells the user active model work is stopped before installation begins', asy
   let complete!: () => void;
   vi.mocked(api.installLatestAppUpdate).mockReturnValue(new Promise<void>(resolve => { complete = resolve; }));
   render(<UpdateButton />);
-  fireEvent.click(await screen.findByRole('button', { name: 'Update' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
   await screen.findByText('OpenCore 1.3.0 is available.');
-  fireEvent.click(screen.getByRole('button', { name: 'Install update' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Download update' }));
   expect(await screen.findByText('Stopping active model work, then installing OpenCore 1.3.0…')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Updating…' })).toBeDisabled();
   await act(async () => complete());

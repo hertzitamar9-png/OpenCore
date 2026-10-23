@@ -1,7 +1,8 @@
 """Index imported client transcripts in ECHO without starting model inference.
 
 Reads one JSON object per stdin line: {conversation_id, messages}. Writes one
-aggregate JSON result on stdout. Exact source text stays in EchoArchive pages;
+aggregate JSON result on stdout. With --progress, emits committed-batch JSONL
+receipts followed by a kind=result aggregate. Exact source text stays in EchoArchive pages;
 source_event_id makes repeated imports idempotent.
 """
 from __future__ import annotations
@@ -32,7 +33,7 @@ def path_for(root: Path, conversation_id: str) -> Path:
     return root / f"{safe}-{digest}.db"
 
 
-def import_stream(root: Path, lines) -> dict:
+def import_stream(root: Path, lines, on_progress=None) -> dict:
     current_id = None
     archive = None
     imported = skipped = failed = 0
@@ -62,21 +63,35 @@ def import_stream(root: Path, lines) -> dict:
                 if len(errors) < 20:
                     errors.append(f"batch {line_number}: messages must be a list")
                 continue
-            for message_index, message in enumerate(messages, start=1):
-                try:
-                    if not isinstance(message, dict):
-                        raise ValueError("event must be an object")
-                    if archive.record_source_event(message, conversation_id):
-                        imported += 1
-                    else:
-                        skipped += 1
-                except Exception as error:
-                    # One malformed legacy record must not close stdin and fail
-                    # every later conversation with a broken-pipe error.
-                    archive.db.rollback()
-                    failed += 1
-                    if len(errors) < 20:
-                        errors.append(f"batch {line_number}, event {message_index}: {type(error).__name__}: {str(error)[:160]}")
+            batch_failed = failed
+            with archive.source_event_batch():
+                for message_index, message in enumerate(messages, start=1):
+                    archive.db.execute("SAVEPOINT echo_source_event")
+                    try:
+                        if not isinstance(message, dict):
+                            raise ValueError("event must be an object")
+                        if archive.record_source_event(message, conversation_id):
+                            imported += 1
+                        else:
+                            skipped += 1
+                        archive.db.execute("RELEASE echo_source_event")
+                    except Exception as error:
+                        # One malformed legacy record must not close stdin and fail
+                        # every later conversation with a broken-pipe error.
+                        archive.db.execute("ROLLBACK TO echo_source_event")
+                        archive.db.execute("RELEASE echo_source_event")
+                        failed += 1
+                        if len(errors) < 20:
+                            errors.append(f"batch {line_number}, event {message_index}: {type(error).__name__}: {str(error)[:160]}")
+            # Acknowledge only after RELEASE has committed the batch. Queuing a
+            # line to stdin is not evidence that the archive saved its events.
+            if on_progress is not None:
+                on_progress({"kind": "progress", "conversation_id": conversation_id,
+                             "after_id": payload.get("after_id", 0),
+                             "conversation_index": payload.get("conversation_index", 0),
+                             "conversation_total": payload.get("conversation_total", 0),
+                             "imported": imported, "skipped": skipped, "failed": failed,
+                             "batch_failed": failed - batch_failed})
     finally:
         if archive is not None:
             archive.close()
@@ -114,10 +129,19 @@ def delete_stream(root: Path, lines) -> dict:
 
 
 if __name__ == "__main__":
+    # Rust writes UTF-8 JSON. Windows pipe streams must not use the ANSI code page.
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8", errors="strict")
+        sys.stdout.reconfigure(encoding="utf-8", errors="strict")
+
     if len(sys.argv) == 2:
         result = import_stream(Path(sys.argv[1]), sys.stdin)
+    elif len(sys.argv) == 3 and sys.argv[2] == "--progress":
+        result = import_stream(Path(sys.argv[1]), sys.stdin,
+                               lambda progress: print(json.dumps(progress), flush=True))
+        result["kind"] = "result"
     elif len(sys.argv) == 3 and sys.argv[2] == "--delete":
         result = delete_stream(Path(sys.argv[1]), sys.stdin)
     else:
-        raise SystemExit("usage: echo_import.py ARCHIVE_DIRECTORY [--delete]")
+        raise SystemExit("usage: echo_import.py ARCHIVE_DIRECTORY [--delete|--progress]")
     print(json.dumps(result))

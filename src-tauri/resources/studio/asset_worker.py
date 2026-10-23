@@ -16,6 +16,8 @@ DIFFUSERS_IMAGE_MODELS = {
     "animation-diffusion-2d": None,
     "sana-16": "fp16",
     "hunyuan-dit-v12-distilled": None,
+    "moss-image-sft": None,
+    "kromoss": None,
 }
 
 
@@ -96,6 +98,28 @@ def validate_output_format(value, allowed, label):
     return value.lower()
 
 
+def load_moss_pipeline(model,torch,diffusers):
+    required=['model_index.json','pipeline_moss_image.py','scheduler/scheduler_config.json',
+              'text_encoder/config.json','tokenizer/tokenizer.json','tokenizer/tokenizer_config.json',
+              'transformer/config.json','vae/config.json']
+    missing=[name for name in required if not (model/name).is_file()]
+    if missing:raise RuntimeError('incomplete MOSS package: '+', '.join(missing))
+    if tuple(int(part) for part in torch.__version__.split('+')[0].split('.')[:2])<(2,9):
+        raise RuntimeError('MOSS requires PyTorch 2.9 or later in its managed runtime')
+    if tuple(int(part) for part in diffusers.__version__.split('.')[:2])<(0,38):
+        raise RuntimeError('MOSS requires Diffusers 0.38 or later')
+    pipeline=diffusers.DiffusionPipeline.from_pretrained(str(model),
+        custom_pipeline=str(model/'pipeline_moss_image.py'),local_files_only=True,
+        trust_remote_code=True,torch_dtype={'default':torch.bfloat16,'vae':torch.float32})
+    pipeline.scheduler=type(pipeline.scheduler).from_config(pipeline.scheduler.config)
+    # Detach CPU storage from safetensors file mappings before repeated inference.
+    # The model's memory preflight must succeed; no disk-backed weight offload.
+    for component in pipeline.components.values():
+        if hasattr(component,'_apply'):component._apply(lambda tensor:tensor.clone())
+    pipeline.enable_sequential_cpu_offload()
+    return pipeline
+
+
 def generate(request, output):
     settings = request.get("settings") or {}
     model_id = request["modelId"]
@@ -106,7 +130,11 @@ def generate(request, output):
         raise RuntimeError("The installed model folder is missing")
     output.mkdir(parents=True, exist_ok=True)
     progress(output, "Loading model")
-    if model_id == "triposr":
+    from comfy_worker import QWEN_VARIANTS
+    if model_id in ('moss-image-sft-int8-convrot','moss-image-sft-int4-convrot') or model_id in QWEN_VARIANTS:
+        from comfy_worker import generate_comfy
+        generate_comfy(request,output)
+    elif model_id == "triposr":
         source = request.get("sourceDir")
         if not source or not (Path(source) / "tsr" / "system.py").is_file():
             raise RuntimeError("Connect the official TripoSR source folder in Game Dev Studio")
@@ -137,17 +165,24 @@ def generate(request, output):
         from diffusers import DiffusionPipeline
         if tuple(int(n) for n in diffusers.__version__.split('.')[:2]) < (0, 35):
             raise RuntimeError("This worker requires Diffusers 0.35 or later for component-specific precision")
-        # Keep the shipped precision; bounded CPU offload lowers VRAM residency.
-        formats = {"F32": torch.float32, "F16": torch.float16, "BF16": torch.bfloat16}
-        dtypes = {name: formats[dtype] for name, dtype in checkpoint_dtypes(model).items()}
-        load_options = {"torch_dtype": dtypes, "local_files_only": True}
-        variant = DIFFUSERS_IMAGE_MODELS[model_id]
-        if variant:
-            load_options["variant"] = variant
-        generator = DiffusionPipeline.from_pretrained(str(model), **load_options)
-        generator.enable_model_cpu_offload()
+        if model_id in ('moss-image-sft','kromoss'):
+            for dimension in ('width','height'):
+                if bounded_integer(settings,dimension,1024,128,2048)%16:
+                    raise ValueError('MOSS image dimensions must be multiples of 16')
+            settings={'steps':50,'width':1024,'height':1024,'guidanceScale':3.0,**settings}
+            generator=load_moss_pipeline(model,torch,diffusers)
+        else:
+            # Keep the shipped precision; bounded CPU offload lowers VRAM residency.
+            formats = {"F32": torch.float32, "F16": torch.float16, "BF16": torch.bfloat16}
+            dtypes = {name: formats[dtype] for name, dtype in checkpoint_dtypes(model).items()}
+            load_options = {"torch_dtype": dtypes, "local_files_only": True}
+            variant = DIFFUSERS_IMAGE_MODELS[model_id]
+            if variant:load_options["variant"] = variant
+            generator = DiffusionPipeline.from_pretrained(str(model), **load_options)
+            generator.enable_model_cpu_offload()
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
         args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
+        if model_id in ('moss-image-sft','kromoss'):args['uncond_skip_layers']=[22]
         # The catalog's animation-diffusion-2d is a plain Stable Diffusion
         # checkpoint for animation-style still images, without a motion adapter.
         progress(output, "Generating image", steps=args["num_inference_steps"])

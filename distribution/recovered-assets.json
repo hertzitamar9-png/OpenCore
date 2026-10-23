@@ -1,0 +1,61 @@
+{
+  "source": "OpenCore native baseline 0.2.305",
+  "sourceSha256": "292e69af0e6e4881a9da7783c13086a205667b608b8676d529f022e88ecb7309",
+  "base": 5368709120,
+  "assets": [
+    {
+      "name": "/assets/App-C9duitZV.css",
+      "raw": 35999392,
+      "length": 15853,
+      "address": 5404715168,
+      "reference": 37072800,
+      "bytes": 90174,
+      "sha256": "7d0fa5e9b24af9089ff6788c578db11256077c676c16aa0e4f773a9783485ff4"
+    },
+    {
+      "name": "/assets/index-CD0EH-dA.js",
+      "raw": 36015787,
+      "length": 77142,
+      "address": 5404731563,
+      "reference": 37072864,
+      "bytes": 271092,
+      "sha256": "14f9e8240641e27051667165802341825a7b0bedd886629ccbcdea9fb6e26a85"
+    },
+    {
+      "name": "/assets/App-kNA9sRUP.js",
+      "raw": 36354184,
+      "length": 314878,
+      "address": 5405069960,
+      "reference": 37072928,
+      "bytes": 1673163,
+      "sha256": "685cf956f4ee3c3f8ca98ec2acf7f8e5b972a6dc32370d3b793a87b49f530420"
+    },
+    {
+      "name": "/index.html",
+      "raw": 36669073,
+      "length": 227,
+      "address": 5405384849,
+      "reference": 37072960,
+      "bytes": 505,
+      "sha256": "37f44a475667298b155c929ba1289026e1e4d35a02713d2042b6ef3631e77417"
+    },
+    {
+      "name": "/assets/model-catalog-B8SfuDgQ.js",
+      "raw": 36669333,
+      "length": 364753,
+      "address": 5405385109,
+      "reference": 37072992,
+      "bytes": 4270055,
+      "sha256": "212682c0961daccb76c0641929d53a37f5a8a7675138b12ec5f5321026fa95dd"
+    },
+    {
+      "name": "/assets/index-CsoxYKnK.css",
+      "raw": 37034112,
+      "length": 38200,
+      "address": 5405749888,
+      "reference": 37073024,
+      "bytes": 261148,
+      "sha256": "1c3bd8fcd023d4b2f167fd1b8c2d145234520065868addf7481886197142ecf2"
+    }
+  ]
+}

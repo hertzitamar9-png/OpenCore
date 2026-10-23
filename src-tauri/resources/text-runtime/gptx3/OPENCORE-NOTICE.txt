@@ -1,0 +1,6 @@
+GPT-X3 implementation from AxiomicLabs/GPT-X3-150M, revision 46407499ecaf5f0e81f2798aa302c5641f36d4b1.
+Publisher model-card license: apache-2.0
+OpenCore disables optional FLA on unsupported platforms and uses the publisher PyTorch recurrence. Downloaded repository Python is never executed.
+configuration_gptx3.py SHA256 6553dde9c07fa6e98c5c7dc7baebdc630f07f30a9d46593a4aff76780da0d8bc
+modeling_gptx3.py SHA256 21d99f8cdeffdbe95d06220009090272aaf39da0c24701af52b185a166fa13bb
+OpenCore adds optional experimental runtime-only recurrent block skipping. This changes the inference graph and may reduce output quality; disabling it restores the complete graph. The original published source hashes above remain attribution, not hashes of this derived file.

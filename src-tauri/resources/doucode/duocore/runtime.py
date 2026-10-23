@@ -561,7 +561,8 @@ def launch_llama_server(
     # Both model servers share the host CPU for any layers that do not fit in VRAM.
     # Keep each backend to one quarter of the logical processors, capped at four.
     logical_cpus = os.cpu_count() or 8
-    cpu_threads = max(1, min(4, logical_cpus // 4))
+    fast_mode=os.environ.get('OPENCORE_FAST_MODE')=='1'
+    cpu_threads = max(1, min(6 if fast_mode else 4, logical_cpus // (3 if fast_mode else 4)))
     if reasoning not in {"off", "on", "auto"}:
         raise ValueError("reasoning must be off, on, or auto")
     if reasoning_budget is not None and (
@@ -573,8 +574,8 @@ def launch_llama_server(
         "--host", "127.0.0.1", "--port", str(backbone.spec.port),
         "--threads", str(cpu_threads), "--threads-batch", str(cpu_threads),
         "-c", str(context), "-ngl", str(gpu_layers), "-np", "1", "-b", "512", "-ub", "512",
-        "--flash-attn", "on", "--cache-type-k", "f16" if gpu_kv else "q4_0",
-        "--cache-type-v", "f16" if gpu_kv else "q4_0", "--reasoning", reasoning, "--no-webui",
+        "--flash-attn", "on", "--cache-type-k", ("q8_0" if fast_mode else "f16") if gpu_kv else "q4_0",
+        "--cache-type-v", ("q8_0" if fast_mode else "f16") if gpu_kv else "q4_0", "--reasoning", reasoning, "--no-webui",
     ]
     if reasoning_budget is not None:
         args.extend(["--reasoning-budget", str(reasoning_budget)])
@@ -596,7 +597,11 @@ def launch_llama_server(
     log_path = Path(raw_log_path)
     log_handle = os.fdopen(fd, "w+b")
     try:
-        process = subprocess.Popen(args, stdout=log_handle, stderr=subprocess.STDOUT)
+        # This backend is a managed child of the hidden desktop app, not a
+        # user-facing terminal. Python's CREATE_NO_WINDOW flag must be applied
+        # here too because the child is launched by Python rather than Rust.
+        options = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
+        process = subprocess.Popen(args, stdout=log_handle, stderr=subprocess.STDOUT, **options)
     except Exception:
         log_handle.close()
         log_path.unlink(missing_ok=True)

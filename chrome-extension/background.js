@@ -332,13 +332,27 @@ function connect() {
   return attempt;
 }
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+function trustedPairingSender(sender) {
+  if (sender.id !== chrome.runtime.id) return false;
+  if (sender.url === chrome.runtime.getURL('popup.html')) return true;
+  if (!sender.tab || sender.frameId !== 0) return false;
+  try {
+    const url = new URL(sender.url);
+    return url.origin === `http://127.0.0.1:${PORT}` && url.pathname === '/pair' && !url.search;
+  } catch { return false; }
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "connection_status") {
     sendResponse({ connected: socket?.readyState === WebSocket.OPEN,
       connecting: socket?.readyState === WebSocket.CONNECTING, error: connectionError });
     return false;
   }
   if (message?.type !== "pair") return;
+  if (!trustedPairingSender(sender)) {
+    sendResponse({ ok: false, error: 'Start pairing from OpenCore or the extension popup.' });
+    return false;
+  }
   const token = String(message.token || "").trim();
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
     sendResponse({ ok: false, error: "Paste the pairing code shown in OpenCore." });

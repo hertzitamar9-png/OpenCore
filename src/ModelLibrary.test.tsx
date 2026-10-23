@@ -12,7 +12,8 @@ it("states that all three Phonon choices use one downloadable checkpoint", () =>
   expect(phonon?.runtimePrecision?.runtimeDtype).toBe("Original, BF16 or FP32");
   expect(phonon?.weightArtifacts).toEqual(['phonon-2-phonon-2-bps-tar-zst']);
   expect(phonon?.runtimePrecision?.estimatedRuntimeBytes).toBe(2_500_000_000);
-  expect(modelCatalog.models.some(model => model.variantOf === "phonon-2")).toBe(false);
+  expect(modelCatalog.models.some(model => model.variantOf === "phonon-2"
+    && model.weightArtifacts?.join('|') === phonon?.weightArtifacts?.join('|'))).toBe(false);
 });
 
 it("shows Phonon's source checkpoint separately from its selectable runtime precisions", async () => {

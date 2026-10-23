@@ -50,6 +50,20 @@ class VirtualMemoryTests(unittest.TestCase):
         self.assertTrue(result["pages"])
         self.assertLessEqual(result["tokens"], 2048)
 
+    def test_unlimited_thinking_allocation_still_recalls_exact_source(self):
+        import echo_server
+        fact = "AdaptiveMemoryFixture.py uses bounded CUDA pools."
+        self.archive.append(fact, "a", 1)
+        live = LiveTranscript(self.archive, "a")
+        room = 8192 - 256 - 2560 - live.tokens
+        reserve = echo_server.generation_reserve(64000, room, 8192, -1)
+        result = self.controller.refresh(live, "Recall AdaptiveMemoryFixture.py", [self.archive],
+                                         self.adapter, 8192, 256, reserve)
+        self.assertTrue(result["pages"])
+        self.assertIn(fact, " ".join(message["content"] for message in live.messages))
+        self.assertLessEqual(256 + live.tokens + reserve + 2560, 8192)
+        self.assertEqual(echo_server.reasoning_budget_for_output(-1, reserve), -1)
+
     def test_explicit_project_allowlist_reuses_related_conversation_only(self):
         self.archive.append("PhysicsController chosen swept capsules RELATED_PROJECT", "related", 1)
         self.archive.append("PhysicsController unrelated PRIVATE_OTHER_PROJECT", "other", 2)

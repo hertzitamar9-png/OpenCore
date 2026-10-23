@@ -1,0 +1,11 @@
+const fs=require('node:fs'),path=require('node:path');
+const [directory,releaseFile,version]=process.argv.slice(2);
+const release=JSON.parse(fs.readFileSync(releaseFile,'utf8').replace(/^\uFEFF/,''));
+if(release.tag_name!==`app-v${version}`||!/^\d+\.\d+\.\d+$/.test(version))throw Error('Release identity mismatch');
+const asset=release.assets.find(asset=>['OpenCore Setup.exe','OpenCore.Setup.exe','OpenCore-Setup.exe'].includes(asset.name));
+const signature=fs.readFileSync(path.join(directory,'OpenCore Setup.exe.sig'),'utf8').trim();
+if(!asset||!asset.browser_download_url.startsWith(`https://github.com/hertzitamar9-png/OpenCore/releases/download/app-v${version}/`)||!signature)throw Error('Release has no signed OpenCore Setup installer');
+const entry={url:asset.browser_download_url,signature};
+const manifest={version,notes:'OpenCore update from the main branch. Download and install only when you choose Update ready.',pub_date:new Date().toISOString(),platforms:{'windows-x86_64':entry,'windows-x86_64-nsis':entry}};
+fs.writeFileSync(path.join(directory,'latest.json'),JSON.stringify(manifest,null,2)+'\n');
+console.log(`Public signed update manifest ready for ${version}`);

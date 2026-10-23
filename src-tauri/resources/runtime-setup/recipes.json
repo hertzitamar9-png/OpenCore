@@ -5,80 +5,705 @@
       "id": "diffusers-images-v1",
       "label": "Isolated image runtime",
       "kind": "studio",
-      "modelIds": ["qwen-image-21", "animation-diffusion-2d", "sana-16", "hunyuan-dit-v12-distilled"],
-      "packages": {"diffusers": "0.41.0", "transformers": "5.18.0", "accelerate": "1.12.0", "safetensors": "0.6.2", "sentencepiece": "0.2.1", "pillow": "11.3.0", "numpy": "2.2.6", "protobuf": "6.33.5"},
-      "torchPackages": {"torch": "2.7.1", "torchvision": "0.22.1"},
+      "modelIds": [
+        "qwen-image-21",
+        "animation-diffusion-2d",
+        "sana-16",
+        "hunyuan-dit-v12-distilled"
+      ],
+      "packages": {
+        "diffusers": "0.41.0",
+        "transformers": "5.18.0",
+        "accelerate": "1.12.0",
+        "safetensors": "0.6.2",
+        "sentencepiece": "0.2.1",
+        "pillow": "11.3.0",
+        "numpy": "2.2.6",
+        "protobuf": "6.33.5"
+      },
+      "torchPackages": {
+        "torch": "2.7.1",
+        "torchvision": "0.22.1"
+      },
       "torchIndex": "https://download.pytorch.org/whl/cu128",
-      "imports": {"diffusers": ["DiffusionPipeline", "QwenImage21Pipeline", "SanaPipeline", "HunyuanDiTPipeline", "StableDiffusionPipeline"], "accelerate": ["cpu_offload_with_hook"], "PIL.Image": ["Image"]},
+      "imports": {
+        "diffusers": [
+          "DiffusionPipeline",
+          "QwenImage21Pipeline",
+          "SanaPipeline",
+          "HunyuanDiTPipeline",
+          "StableDiffusionPipeline"
+        ],
+        "accelerate": [
+          "cpu_offload_with_hook"
+        ],
+        "PIL.Image": [
+          "Image"
+        ]
+      },
       "minimumDiskBytes": 9000000000,
       "minimumRamBytes": 8000000000,
       "requiresCuda": true,
-      "sourceUrls": ["https://huggingface.co/docs/diffusers/v0.41.0/installation", "https://pytorch.org/get-started/previous-versions/", "https://pypi.org/project/transformers/5.18.0/"],
+      "sourceUrls": [
+        "https://huggingface.co/docs/diffusers/v0.41.0/installation",
+        "https://pytorch.org/get-started/previous-versions/",
+        "https://pypi.org/project/transformers/5.18.0/"
+      ],
       "limitations": "Exact dependency versions and worker pipeline imports are checked, then a CUDA kernel is executed. Model inference is verified only by a real completed generation. CPU offload still requires enough host RAM for the selected published checkpoint."
     },
     {
       "id": "whisper-reference-v1",
       "label": "Isolated Whisper runtime",
       "kind": "speech",
-      "modelIds": ["whisper-large-v3-turbo", "whisper-large-v3"],
-      "packages": {"transformers": "4.48.3", "accelerate": "1.2.1", "av": "13.1.0", "psutil": "6.1.1", "faster-whisper": "1.2.1", "ctranslate2": "4.8.2"},
+      "modelIds": [
+        "whisper-large-v3-turbo",
+        "whisper-large-v3"
+      ],
+      "packages": {
+        "transformers": "4.48.3",
+        "accelerate": "1.2.1",
+        "av": "13.1.0",
+        "psutil": "6.1.1",
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.2"
+      },
       "minimumDiskBytes": 7000000000,
       "minimumRamBytes": 6000000000,
-      "requiresCuda": false,
-      "sourceUrls": ["https://huggingface.co/openai/whisper-large-v3-turbo", "https://pytorch.org/get-started/previous-versions/"],
-      "limitations": "Uses the existing pinned speech preparation script and verifies its isolated interpreter. CPU inference is allowed; CUDA is checked when available. No checkpoint is downloaded by dependency preparation."
+      "requiresCuda": true,
+      "sourceUrls": [
+        "https://huggingface.co/openai/whisper-large-v3-turbo",
+        "https://pytorch.org/get-started/previous-versions/"
+      ],
+      "limitations": "Uses the pinned speech preparation script and verifies a real CUDA kernel in its isolated interpreter. Active inference requires CUDA; RAM standby keeps weights on the CPU. No checkpoint is downloaded by dependency preparation."
     },
     {
       "id": "phonon-reference-v1",
       "label": "Isolated Phonon reference runtime",
       "kind": "speech",
-      "modelIds": ["phonon-2"],
-      "packages": {"transformers": "5.18.0", "zstandard": "0.25.0", "av": "13.1.0", "psutil": "6.1.1", "librosa": "0.11.0"},
+      "modelIds": [
+        "phonon-2"
+      ],
+      "packages": {
+        "transformers": "5.18.0",
+        "zstandard": "0.25.0",
+        "av": "13.1.0",
+        "psutil": "6.1.1",
+        "librosa": "0.11.0"
+      },
       "minimumDiskBytes": 7000000000,
       "minimumRamBytes": 8000000000,
-      "requiresCuda": false,
-      "sourceUrls": ["https://pypi.org/project/transformers/5.18.0/", "https://pytorch.org/get-started/previous-versions/"],
-      "limitations": "Preserves the installed Fermion checkpoint and both BF16/FP32 choices. Derived dense runtime caches remain separate and precision specific. Inference is verified only by transcription."
+      "requiresCuda": true,
+      "sourceUrls": [
+        "https://pypi.org/project/transformers/5.18.0/",
+        "https://pytorch.org/get-started/previous-versions/"
+      ],
+      "limitations": "Preserves the installed Fermion checkpoint and Original/BF16/FP32 choices. Original executes as GPU BF16. Verifies a real CUDA kernel; CPU inference is disabled. Derived runtime caches remain separate and precision specific. Model inference is verified only by transcription."
     },
     {
       "id": "android-sdk-api36-v1",
       "label": "Managed Android SDK and emulator",
       "kind": "android",
-      "modelIds": ["testing-android"],
+      "modelIds": [
+        "testing-android"
+      ],
       "packages": {},
       "minimumDiskBytes": 16000000000,
       "minimumRamBytes": 8000000000,
       "requiresCuda": false,
       "requiresLicenseAcceptance": true,
-      "sourceUrls": ["https://developer.android.com/studio", "https://developer.android.com/tools/sdkmanager", "https://developer.android.com/tools/avdmanager", "https://developer.android.com/studio/run/emulator-acceleration"],
+      "sourceUrls": [
+        "https://developer.android.com/studio",
+        "https://developer.android.com/tools/sdkmanager",
+        "https://developer.android.com/tools/avdmanager",
+        "https://developer.android.com/studio/run/emulator-acceleration"
+      ],
       "limitations": "The command-line tools archive is SHA-256 pinned. Google resolves stable SDK package revisions; installed revisions are recorded. Requires an existing Java 17+ runtime and working hardware virtualization. The setup never enables Windows features or reboots the host."
     },
     {
       "id": "virtualbox-tools-v1",
       "label": "VirtualBox host tools",
       "kind": "virtualbox",
-      "modelIds": ["testing-virtualbox"],
+      "modelIds": [
+        "testing-virtualbox"
+      ],
       "packages": {},
       "minimumDiskBytes": 2000000000,
       "minimumRamBytes": 8000000000,
       "requiresCuda": false,
       "requiresAdministrator": true,
       "requiresLicenseAcceptance": true,
-      "sourceUrls": ["https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/installation.html", "https://download.virtualbox.org/virtualbox/7.2.20/SHA256SUMS"],
+      "sourceUrls": [
+        "https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/installation.html",
+        "https://download.virtualbox.org/virtualbox/7.2.20/SHA256SUMS"
+      ],
       "limitations": "Reuses installed VirtualBox when present. Otherwise downloads the SHA-256 pinned Windows x64 installer and requests Windows administrator permission. A host installation and a working guest OS are separate checks. No Extension Pack or operating system is downloaded."
     },
     {
       "id": "virtualbox-guest-v1",
       "label": "Managed PC testing VM from a licensed ISO",
       "kind": "virtualbox-guest",
-      "modelIds": ["testing-pc-vm"],
+      "modelIds": [
+        "testing-pc-vm"
+      ],
       "packages": {},
       "minimumDiskBytes": 24000000000,
       "minimumRamBytes": 12000000000,
       "requiresCuda": false,
       "requiresLicenseAcceptance": true,
-      "sourceUrls": ["https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/vboxmanage.html"],
+      "sourceUrls": [
+        "https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/vboxmanage.html"
+      ],
       "limitations": "Creates a new managed VM using an existing user-selected licensed ISO and a password held in a named environment variable. Existing VMs are not changed. Guest readiness requires Guest Additions and a successful guest command after unattended installation; unsupported ISOs fail explicitly."
+    },
+    {
+      "id": "moss-image-diffusers-v1",
+      "label": "MOSS image runtime",
+      "kind": "studio",
+      "modelIds": [
+        "moss-image-sft",
+        "kromoss"
+      ],
+      "packages": {
+        "diffusers": "0.41.0",
+        "transformers": "5.18.0",
+        "accelerate": "1.12.0",
+        "safetensors": "0.6.2",
+        "sentencepiece": "0.2.1",
+        "pillow": "11.3.0",
+        "numpy": "2.2.6",
+        "protobuf": "6.33.5"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cu128",
+      "imports": {
+        "diffusers": [
+          "DiffusionPipeline",
+          "QwenImage21Pipeline",
+          "SanaPipeline",
+          "HunyuanDiTPipeline",
+          "StableDiffusionPipeline"
+        ],
+        "accelerate": [
+          "cpu_offload_with_hook"
+        ],
+        "PIL.Image": [
+          "Image"
+        ]
+      },
+      "minimumDiskBytes": 9000000000,
+      "minimumRamBytes": 40000000000,
+      "requiresCuda": true,
+      "sourceUrls": [
+        "https://huggingface.co/OpenMOSS-Team/MOSS-Image-SFT",
+        "https://github.com/OpenMOSS/MOSS-Image"
+      ],
+      "limitations": "Full original weights are copied into RAM before sequential CPU/GPU offload. Requires at least 40 GB physical RAM plus sufficient free RAM for all weights; does not use disk weight offload. Download and dependency verification alone do not mark it Ready."
+    },
+    {
+      "id": "moss-comfy-convrot-v1",
+      "label": "MOSS ConvRot Windows runtime",
+      "kind": "studio",
+      "modelIds": [
+        "moss-image-sft-int8-convrot",
+        "moss-image-sft-int4-convrot"
+      ],
+      "engine": "comfyui-moss-v1",
+      "packages": {
+        "einops": "0.8.2",
+        "aiohttp": "3.14.5",
+        "yarl": "1.25.1",
+        "PyYAML": "6.0.3",
+        "alembic": "1.20.0",
+        "SQLAlchemy": "2.1.5",
+        "filelock": "4.2.0",
+        "requests": "2.34.2",
+        "simpleeval": "1.0.8",
+        "blake3": "1.0.11",
+        "kornia": "0.8.3",
+        "spandrel": "0.4.2",
+        "pydantic": "2.14.1",
+        "pydantic-settings": "2.16.0",
+        "PyOpenGL": "3.1.10",
+        "comfy-angle": "0.1.1",
+        "numpy": "2.2.6",
+        "transformers": "5.18.0",
+        "safetensors": "0.6.2",
+        "sentencepiece": "0.2.1",
+        "pillow": "11.3.0",
+        "scipy": "1.15.3",
+        "tqdm": "4.67.1",
+        "psutil": "6.1.1",
+        "av": "17.0.0",
+        "comfy-kitchen": "0.2.37",
+        "comfy-aimdo": "0.5.6",
+        "torchsde": "0.2.6",
+        "comfyui-frontend-package": "1.55.17",
+        "comfyui-workflow-templates": "0.11.86",
+        "comfyui-embedded-docs": "0.5.14"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cu126",
+      "shareManagedTorch": true,
+      "imports": {
+        "PIL.Image": [
+          "Image"
+        ],
+        "psutil": [
+          "Process"
+        ],
+        "comfy_kitchen": []
+      },
+      "minimumDiskBytes": 2000000000,
+      "fallbackDiskBytes": 9000000000,
+      "minimumRamBytes": 24000000000,
+      "minimumAvailableRamBytes": 16000000000,
+      "requiresCuda": true,
+      "sourceArchive": {
+        "url": "https://codeload.github.com/Comfy-Org/ComfyUI/zip/fc04da91b2ab12f99e4716371a7e4f98ac982597",
+        "revision": "fc04da91b2ab12f99e4716371a7e4f98ac982597",
+        "prefix": "ComfyUI-fc04da91b2ab12f99e4716371a7e4f98ac982597",
+        "sha256": "69c895a499e975d6a6e23e25b571e3b6b6fd265b00d290f0c9bad4c532bfa1eb"
+      },
+      "pluginFiles": [
+        {
+          "path": "__init__.py",
+          "sha256": "c222ad151562acb05c6106f19571b1d8eab514b3b6985995b90ade6ef1489716"
+        },
+        {
+          "path": "hf.py",
+          "sha256": "92646e2fa41f1a67d26217be878c1e4398ca1b1a6c7fe04fe53fdb6bb86762c4"
+        },
+        {
+          "path": "loaders.py",
+          "sha256": "ce69fb72a0e319c2ee3d4cfc372c36caa055903cbd246c050f06619e74e2839b"
+        },
+        {
+          "path": "model.py",
+          "sha256": "9ea7e073d180664dd410c16ec33a2eee1aa0b715474878eafaa434ec99eebf77"
+        },
+        {
+          "path": "nodes.py",
+          "sha256": "2c4b1e884c828446a537633fafa572029681f5e8b120a542cd6c225f001fe9cf"
+        },
+        {
+          "path": "text_encoder.py",
+          "sha256": "3f205d536630043e1180be609cb7ae6da71383817979ebbd74b22ca36e800f8f"
+        },
+        {
+          "path": "LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ],
+      "sourceUrls": [
+        "https://huggingface.co/Abiray/MOSS-Image-SFT-INT8-convrot",
+        "https://huggingface.co/toxicdog/MOSS-Image-SFT-INT4-ConvRot-ComfyUI",
+        "https://github.com/OpenMOSS/MOSS-Image/tree/c1355e6b1986dfe8fba3c0455783a05899212342/comfyui/moss-image",
+        "https://github.com/Comfy-Org/ComfyUI/tree/fc04da91b2ab12f99e4716371a7e4f98ac982597"
+      ],
+      "limitations": "Windows ConvRot worker with pinned ComfyUI and official MOSS nodes. Uses existing compatible app-managed Torch read-only when available; otherwise checks space for a fresh isolated runtime. Requires enough available RAM for the selected components; disk-backed weight mapping is disabled. A real generated image is required before Ready."
+    },
+    {
+      "id": "qwen-image-21-comfy-v1",
+      "label": "Qwen Image 2.1 quantized Windows runtime",
+      "kind": "studio",
+      "modelIds": [
+        "qwen-image-21-uc",
+        "qwen-image-21-uc-bf16",
+        "qwen-image-21-uc-q8-0",
+        "qwen-image-21-uc-q6-k",
+        "qwen-image-21-uc-q5-k-m",
+        "qwen-image-21-uc-q4-0",
+        "qwen-image-21-uc-fp8",
+        "qwen-image-21-uc-int8-convrot",
+        "qwen-image-21-uc-nvfp4"
+      ],
+      "engine": "comfyui-qwen21-v1",
+      "packages": {
+        "einops": "0.8.2",
+        "aiohttp": "3.14.5",
+        "yarl": "1.25.1",
+        "PyYAML": "6.0.3",
+        "alembic": "1.20.0",
+        "SQLAlchemy": "2.1.5",
+        "filelock": "4.2.0",
+        "requests": "2.34.2",
+        "simpleeval": "1.0.8",
+        "blake3": "1.0.11",
+        "kornia": "0.8.3",
+        "spandrel": "0.4.2",
+        "pydantic": "2.14.1",
+        "pydantic-settings": "2.16.0",
+        "PyOpenGL": "3.1.10",
+        "comfy-angle": "0.1.1",
+        "numpy": "2.2.6",
+        "transformers": "5.18.0",
+        "safetensors": "0.6.2",
+        "sentencepiece": "0.2.1",
+        "pillow": "11.3.0",
+        "scipy": "1.15.3",
+        "tqdm": "4.67.1",
+        "psutil": "6.1.1",
+        "av": "17.0.0",
+        "comfy-kitchen": "0.2.37",
+        "comfy-aimdo": "0.5.6",
+        "torchsde": "0.2.6",
+        "comfyui-frontend-package": "1.55.17",
+        "comfyui-workflow-templates": "0.11.86",
+        "comfyui-embedded-docs": "0.5.14",
+        "gguf": "0.19.0"
+      },
+      "torchPackages": {
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cu126",
+      "shareManagedTorch": true,
+      "imports": {
+        "PIL.Image": [
+          "Image"
+        ],
+        "psutil": [
+          "Process"
+        ],
+        "comfy_kitchen": []
+      },
+      "minimumDiskBytes": 2000000000,
+      "fallbackDiskBytes": 9000000000,
+      "minimumRamBytes": 24000000000,
+      "minimumAvailableRamBytes": 18000000000,
+      "requiresCuda": true,
+      "sourceArchive": {
+        "url": "https://codeload.github.com/Comfy-Org/ComfyUI/zip/fc04da91b2ab12f99e4716371a7e4f98ac982597",
+        "revision": "fc04da91b2ab12f99e4716371a7e4f98ac982597",
+        "prefix": "ComfyUI-fc04da91b2ab12f99e4716371a7e4f98ac982597",
+        "sha256": "69c895a499e975d6a6e23e25b571e3b6b6fd265b00d290f0c9bad4c532bfa1eb"
+      },
+      "pluginFiles": [
+        {
+          "path": "__init__.py",
+          "sha256": "7ba473d8254a2867534565bb0b2ae194f1c55d5c2c00e30b6dbaf76be7d7a6b7"
+        },
+        {
+          "path": "nodes.py",
+          "sha256": "16be3b08b13de6279fc432addc628320019fcb24963cbc6b52b248de8f06316e"
+        },
+        {
+          "path": "loader.py",
+          "sha256": "0eccc5baa1b3ac88e6db38aac87879c34beb411c0f3319e20be29397f585b51d"
+        },
+        {
+          "path": "dequant.py",
+          "sha256": "215369438d96c372c09eb8701eec3c3b0348084c96dd3ea83872601ebed42017"
+        },
+        {
+          "path": "ops.py",
+          "sha256": "b927e24a7b00c181e9511900fb5afde45464793cf460e1d39a5e736ba093ce64"
+        },
+        {
+          "path": "LICENSE.txt",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "OPENCORE-NOTICE.txt",
+          "sha256": "1bac91108008df2a4b4508e2ace4a917e1d2961e5c394bb4eb7ece2fc2555968"
+        }
+      ],
+      "sourceUrls": [
+        "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized",
+        "https://github.com/leejet/ComfyUI-GGUF/tree/373048b8403a7820620065210a691263d4da0a61",
+        "https://github.com/Comfy-Org/workflow_templates/blob/main/templates/image_qwen_image_2_1_t2i.json"
+      ],
+      "limitations": "Pinned Windows ComfyUI workflow and Qwen-Image-2.1 GGUF loader. Active GGUF tensors are copied into RAM; safetensors mmap is disabled. Available RAM is checked against the complete chosen package before startup. Only a real generated verification image marks Ready. Apple MLX checkpoints are not compatible with this Windows adapter.",
+      "pluginName": "qwen-image-gguf",
+      "pluginSource": "qwen-image-gguf"
+    },
+    {
+      "id": "memory-semantic-v1",
+      "label": "Local multilingual memory search",
+      "kind": "memory",
+      "modelIds": [
+        "memory-semantic"
+      ],
+      "packages": {
+        "onnxruntime": "1.23.2",
+        "tokenizers": "0.22.2",
+        "numpy": "2.2.6",
+        "tree-sitter": "0.25.2",
+        "tree-sitter-python": "0.25.0",
+        "tree-sitter-rust": "0.24.0",
+        "tree-sitter-javascript": "0.25.0",
+        "tree-sitter-typescript": "0.23.2"
+      },
+      "imports": {
+        "onnxruntime": [
+          "InferenceSession"
+        ],
+        "tokenizers": [
+          "Tokenizer"
+        ],
+        "tree_sitter": [
+          "Parser"
+        ]
+      },
+      "minimumDiskBytes": 600000000,
+      "minimumRamBytes": 4000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+        "https://github.com/tree-sitter/tree-sitter"
+      ],
+      "limitations": "Offline multilingual CPU embeddings, two inference threads. A small embedding worker stays in RAM until memory is paused or the app exits. Syntax relationships are evidence, not guaranteed dynamic call targets.",
+      "embeddingFiles": [
+        {
+          "filename": "onnx/model_quantized.onnx",
+          "path": "model_quantized.onnx",
+          "sha256": "66fc00f5f29afcaff34092e1bdd20008ca3918265a82fb9695a551e510cc4ebc",
+          "bytes": 118308126
+        },
+        {
+          "filename": "tokenizer.json",
+          "path": "tokenizer.json",
+          "sha256": "b60b6b43406a48bf3638526314f3d232d97058bc93472ff2de930d43686fa441",
+          "bytes": 17082913
+        }
+      ],
+      "embeddingRepo": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      "embeddingRevision": "2c4055b12046f11709e9df2c122e59ffbdc2f900"
+    },
+    {
+      "id": "managed-transformers-text-v1",
+      "label": "Managed text generation",
+      "kind": "text",
+      "modelIds": [
+        "hf-axiomiclabs-gpt-x3-150m",
+        "hf-zai-org-glm-5-3",
+        "hf-zai-org-glm-5-3-flash",
+        "hf-qwen-qwen3-8-flash-next",
+        "hf-inclusionai-ling-3-1-flash",
+        "hf-reflection-beam-1-0-501b-a23b"
+      ],
+      "packages": {
+        "transformers": "5.20.1",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "psutil": "6.1.1",
+        "sentencepiece": "0.2.1"
+      },
+      "torchPackages": {
+        "torch": "2.11.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cpu",
+      "shareManagedTorch": true,
+      "imports": {
+        "transformers": [
+          "AutoTokenizer",
+          "AutoModelForCausalLM",
+          "AutoModelForImageTextToText"
+        ],
+        "accelerate": [],
+        "safetensors": [],
+        "psutil": []
+      },
+      "minimumDiskBytes": 400000000,
+      "fallbackDiskBytes": 2200000000,
+      "minimumRamBytes": 2000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/docs/transformers",
+        "https://huggingface.co/AxiomicLabs/GPT-X3-150M"
+      ],
+      "limitations": "Offline CPU or GPU execution. The selected checkpoint must fit available memory; disk offload is disabled. Installation verifies a real generated token before reporting Ready. Base language models are not instruction-tuned agents."
+    },
+    {
+      "id": "managed-gguf-v1",
+      "label": "Native local model runtime",
+      "kind": "gguf",
+      "modelIds": [
+        "hybridagent-8b-agentic",
+        "hybridagent-8b-agentic-q5_k_m",
+        "hybridagent-8b-agentic-q6_k",
+        "hybridagent-8b-agentic-q8_0",
+        "hybridagent-8b-agentic-q3_k_m",
+        "hybridagent-8b-agentic-q2_k",
+        "hybridagent-8b-agentic-f16",
+        "hybridagent-14b-agentic",
+        "hybridagent-14b-agentic-q5_k_m",
+        "hybridagent-14b-agentic-q6_k",
+        "hybridagent-14b-agentic-q8_0",
+        "hybridagent-14b-agentic-q3_k_m",
+        "hybridagent-14b-agentic-q2_k",
+        "hf-liquidai-lfm2-5-24b-a2b-gguf",
+        "hf-liquidai-lfm2-5-24b-a2b-gguf-q5_k_m",
+        "hf-liquidai-lfm2-5-24b-a2b-gguf-q6_k",
+        "hf-liquidai-lfm2-5-24b-a2b-gguf-q8_0",
+        "hf-liquidai-lfm2-5-24b-a2b-gguf-f16",
+        "hf-liquidai-lfm2-5-24b-a2b-gguf-bf16",
+        "hybridagent-8b-agentic-iq4_xs",
+        "hybridagent-14b-agentic-iq4_xs",
+        "mellum21-12b-thinking",
+        "mellum21-12b-thinking-q6_k",
+        "mellum21-12b-thinking-q8_0",
+        "mellum21-12b-thinking-bf16",
+        "mellum21-12b-thinking-mxfp4_moe",
+        "lfm25-24b-uncensored",
+        "lfm25-24b-uncensored-q5_k_m",
+        "lfm25-24b-uncensored-q6_k",
+        "lfm25-24b-uncensored-q8_0",
+        "lfm25-24b-uncensored-iq3_m",
+        "lfm25-24b-uncensored-iq4_xs",
+        "lfm25-24b-turbo-neo",
+        "lfm25-24b-turbo-neo-q8_0",
+        "lfm25-24b-turbo-neo-iq3_m",
+        "lfm25-24b-turbo-neo-iq4_xs",
+        "qwen35-9b-c3sm-sdm-coder",
+        "ozygram-neural-7b-coder",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q2-lynnstyle-q8mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q3-lynnstyle-mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q3-lynnstyle-q8mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q4-lynnstyle-mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q4-lynnstyle-q8mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q6-k-mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q8-0-mtp",
+        "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer-q3-lynnstyle-16g-mtp",
+        "nerkyor-efficientthink-27b",
+        "nerkyor-efficientthink-27b-q3-lynnstyle",
+        "nerkyor-efficientthink-27b-q4-lynnstyle",
+        "nerkyor-efficientthink-27b-q5-lynnstyle",
+        "nerkyor-efficientthink-27b-q6-k",
+        "nerkyor-efficientthink-27b-q8-0",
+        "orcacyber-nano-1",
+        "orcacyber-nano-1-mix-15-7g",
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0",
+        "sage-a15-q4-k-m",
+        "sage-a15-q6-k"
+      ],
+      "packages": {},
+      "minimumDiskBytes": 0,
+      "minimumRamBytes": 1000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://github.com/ggml-org/llama.cpp"
+      ],
+      "limitations": "Uses the bundled native engine. The selected GGUF is loaded and must generate test output before installation is reported Ready. Hardware checks are model-specific."
+    },
+    {
+      "id": "edgerock-portable-v1",
+      "label": "EdgeRock portable text runtime",
+      "kind": "text",
+      "modelIds": [
+        "edgerock-4b"
+      ],
+      "packages": {
+        "transformers": "5.7.0.dev0",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "psutil": "6.1.1",
+        "sentencepiece": "0.2.1"
+      },
+      "torchPackages": {
+        "torch": "2.11.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cpu",
+      "shareManagedTorch": true,
+      "imports": {
+        "transformers": [
+          "AutoTokenizer",
+          "AutoModelForCausalLM",
+          "AutoModelForImageTextToText"
+        ],
+        "accelerate": [],
+        "safetensors": [],
+        "psutil": []
+      },
+      "minimumDiskBytes": 500000000,
+      "fallbackDiskBytes": 2500000000,
+      "minimumRamBytes": 12000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://github.com/rockmatrix-ai/EdgeRock",
+        "https://huggingface.co/rockmatrix-ai/EdgeRock"
+      ],
+      "limitations": "Portable text inference on CPU or compatible CUDA. Fixed-size history is selective, not exact full-context attention. Optimized Hopper performance is not claimed.",
+      "transformersWheel": {
+        "url": "https://huggingface.co/rockmatrix-ai/EdgeRock/resolve/a2a3374d303d81fbe994d6a27a23245b45c0d1ff/wheels/transformers-5.7.0.dev0-py3-none-any.whl",
+        "filename": "transformers-5.7.0.dev0-py3-none-any.whl",
+        "bytes": 11509186,
+        "sha256": "452e59dade6c4b9e767b85897e33cfc2d3b09c987d8ae84e5ee014f2ebb8b037"
+      }
+    },
+    {
+      "id": "spark-portable-v1",
+      "label": "Spark-X2.5 portable text runtime",
+      "kind": "text",
+      "modelIds": [
+        "spark-x25-1-7b",
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "packages": {
+        "transformers": "4.57.1",
+        "accelerate": "1.13.0",
+        "safetensors": "0.8.0",
+        "psutil": "6.1.1",
+        "sentencepiece": "0.2.1"
+      },
+      "torchPackages": {
+        "torch": "2.11.0"
+      },
+      "torchIndex": "https://download.pytorch.org/whl/cpu",
+      "shareManagedTorch": true,
+      "imports": {
+        "transformers": [
+          "AutoTokenizer",
+          "AutoModelForCausalLM",
+          "AutoModelForImageTextToText"
+        ],
+        "accelerate": [],
+        "safetensors": [],
+        "psutil": []
+      },
+      "minimumDiskBytes": 400000000,
+      "fallbackDiskBytes": 2200000000,
+      "minimumRamBytes": 2000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/XHToken/Spark-X2.5-1.7B",
+        "https://huggingface.co/XHToken/Spark-X2.5-4B"
+      ],
+      "limitations": "Bundled Apache-2.0 Spark architecture. Portable Torch text generation with a bounded ECHO working window; not a promise of one million attended tokens or under 2 GB VRAM."
+    },
+    {
+      "id": "managed-dory-gguf-v1",
+      "label": "Dory native CPU runtime",
+      "kind": "gguf",
+      "modelIds": [
+        "dory-4b",
+        "dory-4b-q8_0",
+        "dory-4b-q6_k",
+        "dory-4b-q5_k_m",
+        "dory-4b-q4_k_m",
+        "dory-4b-q3_k_m",
+        "dory-4b-q2_k",
+        "dory-4b-iq3_m"
+      ],
+      "packages": {},
+      "minimumDiskBytes": 0,
+      "minimumRamBytes": 1000000000,
+      "requiresCuda": false,
+      "sourceUrls": [
+        "https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+        "https://huggingface.co/cloudnathan5/Dory1.0-4B-GGUF",
+        "https://github.com/ggml-org/llama.cpp/pull/30306"
+      ],
+      "limitations": "Bundled Dory engine built from pinned NVIDIA contributor source. CPU execution, two recurrent loops and an 8K ECHO working context. No CUDA or native unlimited rolling-cache claim. All selected weights are checked; installation verifies actual token generation."
     }
   ],
   "pythonBootstrap": {

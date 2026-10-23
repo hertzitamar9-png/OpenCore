@@ -17,9 +17,20 @@ let toolDefinitions = JSON.parse(toolDefinitionsBytes.toString('utf8'));
 if (!Array.isArray(toolDefinitions)) throw new Error('OpenCore tool definitions must be an array');
 
 async function callTool(name, args) {
-  const response = await fetch(bridgeUrl, {
+  // The MCP process survives turns; its environment does not. Capture this
+  // turn's capability once, before starting the request. An in-flight old call
+  // must never borrow a later turn's authorization.
+  let relay = { bridge, token };
+  try { relay = JSON.parse(readFileSync(`${toolsPath}.relay.json`, 'utf8')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const currentUrl = new URL(relay.bridge);
+  if (currentUrl.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(currentUrl.hostname)
+      || typeof relay.token !== 'string' || relay.token.length < 24) {
+    throw new Error('OpenCore turn relay configuration is invalid');
+  }
+  const response = await fetch(currentUrl, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${relay.token}` },
     body: JSON.stringify({ name, arguments: args }),
     signal: AbortSignal.timeout(600_000),
   });
