@@ -107,6 +107,16 @@ def atomic_json(path, value):
     temporary.replace(path)
 
 
+def plain_path(value):
+    text = os.fspath(value)
+    if os.name == 'nt':
+        if text[:8].lower() == '\\\\?\\unc\\':
+            text = '\\\\' + text[8:]
+        elif text.startswith('\\\\?\\'):
+            text = text[4:]
+    return Path(text)
+
+
 def retain_verified_inference(root, receipt, runner):
     """Dependency preparation must not erase still-current model execution proof."""
     try:
@@ -114,8 +124,12 @@ def retain_verified_inference(root, receipt, runner):
         previous = json.loads((root / "runtime-setup/receipts" / f"{receipt['targetId']}.json").read_text(encoding="utf-8"))
         if previous.get("dependenciesVerified") is not True or previous.get("inferenceVerified") is not True:
             return receipt
-        for key in ("schema", "targetId", "recipeId", "recipeFingerprint", "python", "runner", "packages", "hardware"):
+        for key in ("schema", "targetId", "recipeId", "recipeFingerprint", "packages", "hardware"):
             if previous.get(key) != receipt.get(key):
+                return receipt
+        for key in ('python', 'runner'):
+            old_path, new_path = plain_path(previous.get(key)), plain_path(receipt.get(key))
+            if old_path.drive.casefold() != new_path.drive.casefold() or plain_path(old_path.resolve()) != plain_path(new_path.resolve()):
                 return receipt
         proof = previous["inferenceProof"]
         if proof.get("executionVerified") is not True or not proof.get("jobId") or type(proof.get("generatedTokens")) is not int or proof["generatedTokens"] < 1:

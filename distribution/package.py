@@ -114,6 +114,14 @@ Function .onInit
   ${{IfNot}} ${{Errors}}
     StrCpy $UpdateInstall "1"
     ReadRegStr $3 HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "InstallLocation"
+    StrCpy $4 $3 1
+    StrCpy $5 $3 1 -1
+    ${{If}} $4 == '"'
+    ${{AndIf}} $5 == '"'
+      StrLen $4 $3
+      IntOp $4 $4 - 2
+      StrCpy $3 $3 $4 1
+    ${{EndIf}}
     ${{If}} $3 != ""
       StrCpy $INSTDIR $3
     ${{EndIf}}

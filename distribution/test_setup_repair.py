@@ -85,6 +85,34 @@ class ReceiptRepairTests(unittest.TestCase):
         self.assertIs(saved["inferenceVerified"], True)
         self.assertEqual(saved["inferenceProof"], self.previous["inferenceProof"])
 
+    def test_equivalent_worker_path_with_parent_segment_keeps_proof(self):
+        self.previous['runner'] = str(self.root / 'resources/text-runtime/../text-runtime/serve_text.py')
+        self.assertIs(self.run_preparation()['inferenceVerified'], True)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows path spelling regression')
+    def test_extended_windows_python_and_worker_paths_keep_proof(self):
+        self.previous['python'] = '\\\\?\\' + str(self.python)
+        self.previous['runner'] = '\\\\?\\' + self.previous['runner']
+        self.assertIs(self.run_preparation()['inferenceVerified'], True)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows short path regression')
+    def test_windows_short_paths_keep_proof(self):
+        import ctypes
+        from ctypes import wintypes
+        get_short_path = ctypes.windll.kernel32.GetShortPathNameW
+        get_short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        get_short_path.restype = wintypes.DWORD
+        size = get_short_path(str(self.root), None, 0)
+        if not size:
+            self.skipTest('Short path aliases are unavailable on this volume')
+        buffer = ctypes.create_unicode_buffer(size)
+        if not get_short_path(str(self.root), buffer, size) or buffer.value == str(self.root):
+            self.skipTest('This directory has no short path alias')
+        short_root = Path(buffer.value)
+        self.previous['python'] = str(short_root / self.python.relative_to(self.root))
+        self.previous['runner'] = str(short_root / 'resources/text-runtime/serve_text.py')
+        self.assertIs(self.run_preparation()['inferenceVerified'], True)
+
     def test_cancel_during_proof_hashing_does_not_publish_a_new_receipt(self):
         class CancellingRunner(FixtureRunner):
             cancelled = False
