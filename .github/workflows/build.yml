@@ -47,6 +47,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test scripts/test-release-versioning.mjs scripts/test-normalize-public-updater.mjs distribution/test-manual-update-policy.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test distribution/test-update-manifest.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Push-Location distribution
+          python -m unittest -v test_publish
+          $publishTestsExit = $LASTEXITCODE
+          Pop-Location
+          if ($publishTestsExit -ne 0) { exit $publishTestsExit }
           node --test tests/chrome-dom.test.mjs tests/chrome-connection.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Test isolated runtime setup and download admission
