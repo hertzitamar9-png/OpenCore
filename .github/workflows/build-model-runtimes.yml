@@ -1,0 +1,50 @@
+name: Build publisher model runtimes
+
+on:
+  push:
+    branches: [codex-bootstrap-runtimes]
+    paths: [.github/workflows/build-model-runtimes.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  raon-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the pinned publisher runtime
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/krafton-ai/llama.cpp.git publisher-runtime
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C publisher-runtime checkout fb895662d25868756a19253ca5e0688f99b18994
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ((git -C publisher-runtime rev-parse HEAD) -ne 'fb895662d25868756a19253ca5e0688f99b18994') { throw 'Publisher revision mismatch' }
+      - name: Build the Windows CPU server with processor dispatch
+        run: |
+          cmake -S publisher-runtime -B publisher-runtime/build -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=OFF -DGGML_OPENMP=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build publisher-runtime/build --config Release --target llama-server --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check and archive the publisher server
+        run: |
+          New-Item -ItemType Directory -Path runtime-package | Out-Null
+          Copy-Item publisher-runtime/build/bin/Release/*.dll runtime-package/
+          Copy-Item publisher-runtime/build/bin/Release/llama-server.exe runtime-package/
+          Copy-Item publisher-runtime/LICENSE runtime-package/
+          @{id='raon-cpu-v1';source='https://github.com/krafton-ai/llama.cpp';commit='fb895662d25868756a19253ca5e0688f99b18994';architecture='raon1_mini';platform='windows-x86_64';cpuDispatch=$true} | ConvertTo-Json | Set-Content runtime-package/runtime-info.json -Encoding utf8
+          & ./runtime-package/llama-server.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Compress-Archive -Path runtime-package/* -DestinationPath raon-windows-x64-fb895662.zip
+          Get-FileHash raon-windows-x64-fb895662.zip -Algorithm SHA256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: raon-windows-runtime
+          path: raon-windows-x64-fb895662.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
