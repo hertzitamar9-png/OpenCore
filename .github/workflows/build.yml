@@ -15,6 +15,8 @@ concurrency:
 jobs:
   windows:
     runs-on: windows-latest
+    outputs:
+      release_version: ${{ steps.version.outputs.version }}
     defaults:
       run:
         shell: pwsh
@@ -33,10 +35,12 @@ jobs:
           npm --prefix distribution ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Assign a release newer than existing installed builds
+        id: version
         run: |
           $version = node --input-type=module -e "import {releaseVersion} from './scripts/release-version.mjs'; console.log(releaseVersion(process.env.GITHUB_RUN_NUMBER));"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "OPENCORE_RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Apply the official OpenCore logo to browser-extension surfaces
         run: python distribution/sync-branding.py
       - name: Test manual update controls and release version ordering
@@ -127,10 +131,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Setup.exe' 'distribution/.output/release/OpenCore Setup.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Publish the completed signed manual update
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python distribution/publish.py --directory distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION --commit $env:GITHUB_SHA
+      - name: Retain the verified signed installer for independent publication retries
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencore-signed-release-${{ github.run_id }}
+          path: distribution/.output/release/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+          overwrite: true
       - name: Keep verification evidence and failed build diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -149,3 +158,24 @@ jobs:
             distribution/connector-research/qa-patched.json
           if-no-files-found: ignore
           retention-days: 7
+
+  publish:
+    needs: windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: opencore-signed-release-${{ github.run_id }}
+          path: distribution/.output/release/
+      - name: Publish the completed signed manual update
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCORE_RELEASE_VERSION: ${{ needs.windows.outputs.release_version }}
+        run: python distribution/publish.py --directory distribution/.output/release --version "$OPENCORE_RELEASE_VERSION" --commit "$GITHUB_SHA"

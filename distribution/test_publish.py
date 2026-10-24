@@ -13,6 +13,14 @@ import publish
 
 
 class DraftLookupTests(unittest.TestCase):
+    def test_creation_reads_the_json_response_without_shell_quoting(self):
+        payload = {'tag_name': 'app-v0.3.145', 'draft': True, 'body': 'Two lines\nwith "quotes" and $()'}
+        with patch.object(publish.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                [], 0, stdout='{"id":145,"draft":true}', stderr='')) as run:
+            self.assertEqual(publish.api('repos/example/app/releases', data=payload)['id'], 145)
+        self.assertIn('--input', run.call_args.args[0])
+        self.assertEqual(json.loads(run.call_args.kwargs['input']), payload)
+
     def test_draft_absent_from_tag_endpoint_is_found_in_paginated_releases(self):
         draft = {'id': 145, 'tag_name': 'app-v0.3.145', 'draft': True}
         with patch.object(publish, 'api', side_effect=[None, [{'tag_name': 'older'}] * 100, [draft]]) as api:
@@ -59,7 +67,7 @@ class ReleasePublicationTests(unittest.TestCase):
             'digest': 'sha256:' + publish.file_hash(path),
             'browser_download_url': f'https://github.com/{publish.REPOSITORY}/releases/download/untagged-abc123/{name}'})
 
-    def api(self, endpoint, allow_missing=False):
+    def api(self, endpoint, allow_missing=False, data=None):
         if '/releases/tags/' in endpoint:
             return None  # The real GitHub failure: no Git tag exists while the release is a draft.
         if '/releases?' in endpoint:
@@ -111,26 +119,25 @@ class ReleasePublicationTests(unittest.TestCase):
         api = self.api
         command = self.command
 
-        def initially_missing(endpoint, allow_missing=False):
-            if not created and '/releases/tags/' in endpoint:
+        def initially_missing(endpoint, allow_missing=False, data=None):
+            if data is not None:
+                nonlocal created
+                self.assertTrue(endpoint.endswith('/releases'))
+                self.assertEqual(data['target_commitish'], self.commit)
+                self.assertTrue(data['draft'])
+                created = True
+                return copy.deepcopy(self.release)
+            if '/releases/tags/' in endpoint:
                 return None
-            if not created and '/releases?' in endpoint:
+            if '/releases?' in endpoint:
+                self.assertFalse(created, 'Do not re-read a stale release listing after creation')
                 return []
             return api(endpoint, allow_missing)
 
-        def create_then_upload(*args):
-            nonlocal created
-            if args[2] == 'create':
-                created = True
-                self.commands.append(args)
-                return 'temporary-draft-url'
-            return command(*args)
-
         self.api = initially_missing
-        self.command = create_then_upload
         self.run_publication()
         self.assertFalse(self.release['draft'])
-        self.assertEqual(sum(command[2] == 'create' for command in self.commands), 1)
+        self.assertTrue(created)
         self.assertTrue(any(command[2] == 'upload' and any(
             Path(argument).resolve() == (self.folder / 'OpenCore Setup.exe').resolve() for argument in command[7:])
             for command in self.commands))

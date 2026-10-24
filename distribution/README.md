@@ -23,3 +23,5 @@ The installer includes a clean Python 3.12.10 standard library and ensurepip, bu
 `/S /TEST /D=<new-absolute-folder>` extracts app and clean Python into an isolated verification directory. It skips user-profile runtime writes, registry, shortcuts, WebView2 installation, app launch and uninstaller creation. `qa-share-installer.py` compares all extracted files to the package manifest and runs the clean interpreter. The regular installer and uninstaller use the official logo from `src-tauri/icons/`.
 
 Updater behavior follows the [Tauri updater protocol](https://v2.tauri.app/plugin/updater/). Release publication occurs only after the artifact signature and isolated extraction checks pass.
+
+The Windows build retains its verified signed installer as an Actions artifact for seven days. A separate publication job consumes those exact bytes. If GitHub publication fails, rerun only that failed job to reuse the tested installer. Draft creation uses the release ID returned by the API, and draft metadata is refreshed by ID because the release list can remain stale immediately after creation.

@@ -14,8 +14,13 @@ def command(*args):
     return subprocess.run(list(args), check=True, capture_output=True, text=True).stdout
 
 
-def api(path, allow_missing=False):
-    result = subprocess.run(['gh', 'api', path], capture_output=True, text=True)
+def api(path, allow_missing=False, data=None):
+    arguments = ['gh', 'api', path]
+    options = {'capture_output': True, 'text': True}
+    if data is not None:
+        arguments += ['--method', 'POST', '--input', '-']
+        options['input'] = json.dumps(data)
+    result = subprocess.run(arguments, **options)
     if result.returncode:
         if allow_missing and 'HTTP 404' in result.stderr:
             return None
@@ -77,9 +82,12 @@ def publish(folder, version, commit):
     if release and not release['draft']:
         raise ValueError('This release is already public; never replace a published installer')
     if not release:
-        command('gh', 'release', 'create', tag, '--repo', REPOSITORY, '--target', commit,
-                '--draft', '--latest=false', '--title', 'OpenCore', '--notes-file', str(HERE / 'release-notes.md'))
-        release = find_release(tag)
+        # Use the POST response: the release listing can remain stale after draft creation.
+        release = api(f'repos/{REPOSITORY}/releases', data={
+            'tag_name': tag, 'target_commitish': commit, 'draft': True, 'prerelease': False,
+            'make_latest': 'false', 'name': 'OpenCore',
+            'body': (HERE / 'release-notes.md').read_text(encoding='utf-8'),
+        })
     if not release:
         raise RuntimeError('GitHub did not create the release draft')
     release_id = release['id']
