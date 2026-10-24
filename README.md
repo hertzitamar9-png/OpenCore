@@ -6,25 +6,17 @@ This repository contains the OpenCore Windows desktop app, its browser extension
 
 Download the Windows installer from [OpenCore releases](https://github.com/hertzitamar9-png/OpenCore/releases/latest). Model downloads are selected inside the app after installation.
 
+**OpenCore Setup.exe** uses the official OpenCore logo and includes Python, pip bootstrapping, Node helpers and the native inference engine. It installs WebView2 when needed. Supported model-specific dependencies prepare inside the app when a model is installed.
+
 ## Build locally
 
-Install Node.js, Rust, and the Windows prerequisites for Tauri 2. Then run:
+Follow the current [Windows distribution build instructions](distribution/README.md). The release workflow is the complete reference for preparing the pinned native baseline, building the recovered frontend, testing the bundled runtime and creating the branded NSIS installer.
 
-```powershell
-npm ci
-npm test
-npm run build
-Set-Location src-tauri
-cargo test --lib
-Set-Location ..
-npm run desktop:build
-```
-
-The NSIS installer is written under `src-tauri/target/release/bundle/nsis/`.
+The newer native checkout was lost. The current distribution preserves the verified 0.2.305 native baseline and builds the recovered frontend, catalog and managed runtime changes from committed sources in `distribution/`. The historical native source in this repository must not replace the newer baseline until its missing changes have been restored. The distribution instructions explain this recovery boundary and the source files used by releases.
 
 ## Build on each push
 
-`.github/workflows/build.yml` tests and builds a Windows installer and its updater signature on every push to `main`, then publishes a versioned GitHub Release. Installed copies check the update feed on startup and show **Update** only when a newer version is available. You can also check through **Settings → Updates → Check latest version**. Feed checks do not interrupt work. Choosing to install an update stops active model and studio work, then closes OpenCore briefly while Windows replaces its files and reopens it. Chats and local model files are preserved. A separate **Download installer again** action opens the official releases page for repair or reinstall. Public releases need no GitHub account or CLI. For private releases, authentication uses the GitHub CLI when installed and signed in (`gh auth login`); credentials remain in Rust memory and are never exposed to the webview.
+`.github/workflows/build.yml` tests and builds **OpenCore Setup.exe** and its updater signature on every push to `main`, then publishes the completed GitHub Release after verification passes. Installed copies check the public update feed on startup and every five minutes. They display **Update ready** when a newer distribution is available. Choose it, then **Download update** to download and install. Checking for updates never downloads or installs a package. The app closes briefly while Windows replaces its files and then reopens. Chats and local model files are preserved. Public releases need no GitHub account or CLI. The installer title and filename stay unversioned; internal versions order updates correctly.
 
 The runtime looks for model assets under `OPENCORE_HOME` or the user's OpenCore installation directory. A successful app build verifies the desktop code and installer packaging, not model inference quality.
 
@@ -49,9 +41,11 @@ Open **Models** to install, uninstall, or select a model. Nothing downloads on s
 Downloads use immutable Hugging Face revisions, check file sizes and SHA-256 hashes,
 and stop before free disk space falls below 100 GB. Shared weights are removed only
 after the last installed variant is uninstalled. Chats and ECHO archives are preserved.
-Private model repositories require an existing Hugging Face token (`HF_TOKEN` or
-the token saved by `hf auth login`). Python is required for the local runtime scripts;
-Whisper and Reflex additionally require their Python inference dependencies.
+Public Hugging Face repositories need no token. For private or gated repositories,
+add a read token in Settings; your Hugging Face account must have access to the model.
+Core Python is bundled, and supported model-specific dependencies prepare automatically.
+Runtime compatibility depends on the model and device. Flint and Raon packages remain
+download-only until their publisher runtimes are integrated.
 
 The four new profiles use two complete copies of the same pinned DavidAU LFM model:
 
@@ -94,8 +88,3 @@ The bundled `runtime\llama-server.exe` serves them on port 8816 only after a `de
 - `reflex/eval_grounding.py` measures grounding on ScreenSpot-v2, ScreenSpot-Pro, OSWorld-G and the held-out Hebrew sets.
 - `reflex/collect_web_grounding.mjs` and `reflex/collect_desktop_grounding.py` collect grounding data without clicking anything.
 - `reflex/train_vision.py` fine-tunes the model with LoRA.
-# Windows installer and updates
-
-The current main-branch release produces **OpenCore Setup.exe** with the official OpenCore branding and all core Python/Node helpers. OpenCore checks the public GitHub release feed without downloading updates. Choose **Update ready**, then **Download update** to update and reopen the app.
-
-The newer native checkout was lost. The current distribution preserves the verified 0.2.305 native baseline and builds the recovered frontend, catalog and managed runtime changes from the committed sources in [`distribution/`](distribution/README.md). That document explains the recovery boundary and reproducible release workflow. The historical native source in this repository must not replace the newer baseline until its missing changes have been restored.

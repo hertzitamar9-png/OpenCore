@@ -34,7 +34,7 @@ class ReleasePublicationTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.folder = Path(self.temporary.name)
+        self.folder = Path(self.temporary.name).resolve()
         self.version = '0.3.145'
         self.commit = 'a' * 40
         (self.folder / 'OpenCore Setup.exe').write_bytes(b'verified-installer-fixture')
@@ -131,8 +131,9 @@ class ReleasePublicationTests(unittest.TestCase):
         self.run_publication()
         self.assertFalse(self.release['draft'])
         self.assertEqual(sum(command[2] == 'create' for command in self.commands), 1)
-        self.assertTrue(any(command[2] == 'upload' and str(self.folder / 'OpenCore Setup.exe') in command
-                            for command in self.commands))
+        self.assertTrue(any(command[2] == 'upload' and any(
+            Path(argument).resolve() == (self.folder / 'OpenCore Setup.exe').resolve() for argument in command[7:])
+            for command in self.commands))
 
     def test_existing_public_installer_cannot_be_replaced(self):
         self.release['draft'] = False
