@@ -26,7 +26,7 @@ jobs:
           if ((git -C publisher-runtime rev-parse HEAD) -ne 'fb895662d25868756a19253ca5e0688f99b18994') { throw 'Publisher revision mismatch' }
       - name: Build the Windows CPU server with processor dispatch
         run: |
-          cmake -S publisher-runtime -B publisher-runtime/build -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=OFF -DGGML_OPENMP=OFF -DGGML_BLAS=OFF -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
+          cmake -S publisher-runtime -B publisher-runtime/build -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=OFF -DGGML_OPENMP=OFF -DGGML_BLAS=OFF -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cmake --build publisher-runtime/build --config Release --target llama-server --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -36,15 +36,20 @@ jobs:
           Copy-Item publisher-runtime/build/bin/Release/*.dll runtime-package/
           Copy-Item publisher-runtime/build/bin/Release/llama-server.exe runtime-package/
           Copy-Item publisher-runtime/LICENSE runtime-package/
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $visualStudio = & $vswhere -latest -products '*' -property installationPath
+          $redist = Get-ChildItem (Join-Path $visualStudio 'VC/Redist/MSVC') -Directory -Recurse | Where-Object { $_.FullName -match '\\x64\\Microsoft\.VC.*\.CRT$' } | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $redist) { throw 'The compiler app-local x64 CRT was not found' }
+          Copy-Item (Join-Path $redist.FullName '*.dll') runtime-package/
           @{id='raon-cpu-v1';source='https://github.com/krafton-ai/llama.cpp';commit='fb895662d25868756a19253ca5e0688f99b18994';architecture='raon1_mini';platform='windows-x86_64';cpuDispatch=$true} | ConvertTo-Json | Set-Content runtime-package/runtime-info.json -Encoding utf8
           & ./runtime-package/llama-server.exe --version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Compress-Archive -Path runtime-package/* -DestinationPath raon-windows-x64-fb895662.zip
-          Get-FileHash raon-windows-x64-fb895662.zip -Algorithm SHA256
+          Compress-Archive -Path runtime-package/* -DestinationPath raon-windows-x64-fb895662-crt.zip
+          Get-FileHash raon-windows-x64-fb895662-crt.zip -Algorithm SHA256
       - uses: actions/upload-artifact@v4
         with:
           name: raon-windows-runtime
-          path: raon-windows-x64-fb895662.zip
+          path: raon-windows-x64-fb895662-crt.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
