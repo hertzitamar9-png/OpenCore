@@ -156,22 +156,22 @@ function $HubSettings() {
       h('button',{disabled:busy||!token},busy?'Saving…':'Save token')),state.tokenConfigured?h('button',{disabled:busy,onClick:remove},'Remove token'):null,message?h('p',{role:'status'},message):null);
 }
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,selectedProfile}) {
-  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false);
+  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false);
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],entry=state.catalog.find(v=>v.id===model.id)||model.hubEntry;
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function prepare(){setError('');try{await Ue('hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function uninstall(){setBusy(true);try{await $hubRequest('/uninstall',{id:entry.id});await $hubRefresh(true);await onChanged?.();setRemoving(false);}catch(e){setError(String(e));}finally{setBusy(false);}}
-  return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',null,entry.runtimeReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
-    h('p',null,entry.repository),h('p',null,'ECHO · Text model'),h('label',null,'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
+  return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
+    h('p',null,entry.repository),h('p',null,'ECHO · Text model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',(v.totalBytes/1e9).toFixed(3),' GB')))),
     h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
     h('small',null,entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):
       entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
       h('button',{disabled:locked||!entry.runtime?.adapter,onClick:prepare},active?'Preparing…':'Prepare runtime'),
-      entry.status==='installed'?h('button',{disabled:locked,onClick:()=>setRemoving(true)},'Uninstall'):null),
+      entry.status==='installed'?h('button',{className:'model-delete-button',disabled:locked,onClick:()=>setRemoving(true)},'Uninstall'):null),
     removing?h('section',{role:'dialog','aria-label':'Uninstall '+entry.name},h('p',null,'Remove this downloaded package? Conversation history is kept.'),h('button',{disabled:busy,onClick:uninstall},'Remove downloaded files'),h('button',{disabled:busy,onClick:()=>setRemoving(false)},'Cancel')):null,
     active?h('p',{role:'status'},shared.progress?.currentFile||'Starting installation…'):null,error?h('p',{role:'alert'},error):null,
     entry.downloadProgress?.status==='failed'?h('p',{role:'alert'},entry.downloadProgress.error):null);

@@ -40,6 +40,7 @@ record('repo metadata exposes both real quantization choices',await page.locator
 record('metadata check does not download weights',await page.evaluate(()=>!fixture.calls.some(c=>c.route==='/install')));
 await page.getByRole('button',{name:'Add 2 variants',exact:true}).click();await page.getByRole('heading',{name:'tiny-model',exact:true}).waitFor();
 record('all variants share a regular library card',await page.getByRole('article').count()===1&&await page.getByLabel('Quantization for fixture/tiny-model').locator('option').count()===2);
+record('imported models use the regular card and quantization field styling',await page.getByRole('article').evaluate(card=>card.classList.contains('model-library-card')&&parseFloat(getComputedStyle(card).borderTopWidth)>=1&&parseFloat(getComputedStyle(card.querySelector('select')).minHeight)>=36));
 await page.getByRole('button',{name:'Install',exact:true}).click();await page.getByRole('button',{name:'Installing…',exact:true}).waitFor();
 record('install immediately locks its card',await page.getByRole('button',{name:'Installing…',exact:true}).isDisabled());
 await page.waitForTimeout(1400);record('Hub progress uses the shared top panel',await page.locator('.model-install-progress progress').getAttribute('value')==='30');
