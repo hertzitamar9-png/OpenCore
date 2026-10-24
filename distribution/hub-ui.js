@@ -58,14 +58,15 @@ function $useHub() {
 }
 function $hubProgress() {
   const job=$hubState.progress;if(!job)return null;
-  const phase=job.status==='running'||job.status==='pausing'?job.kind==='prepare'?'preparing':/verif/.test(job.stage)?'verifying':'downloading':
+  const preparing=job.kind==='prepare'||/^(installing-runtime|installing-dependencies|checking-hardware|loading-model|verifying-files|verifying-inference|preparing-echo|verifying-echo)$/.test(job.stage);
+  const phase=job.status==='running'||job.status==='pausing'?preparing?'preparing':/verif/.test(job.stage)?'verifying':'downloading':
     job.status==='paused'?'paused':job.status==='failed'?'failed':job.status==='ready'||job.status==='installed'?'ready':null;
-  return phase?{modelId:job.id,operationId:job.jobId,phase,downloadedBytes:job.bytesDone||0,totalBytes:job.kind==='prepare'?0:job.bytesTotal||0,
+  return phase?{modelId:job.id,operationId:job.jobId,phase,downloadedBytes:job.bytesDone||0,totalBytes:preparing?0:job.bytesTotal||0,
     currentFile:job.detail||job.currentFile||String(job.stage||'').replaceAll('-',' '),error:job.status==='failed'?job.error:null}:null;
 }
 function $hubModel(entry) {
-  return {id:entry.id,label:entry.repository.split('/').at(-1),description:entry.repository,precision:entry.quantization,
-    variantOf:'hub-family-'+entry.repository.toLowerCase().replace(/[^a-z0-9]+/g,'-'),memoryMode:'echo',backend:'hub',hubModel:true,hubEntry:entry,
+  return {id:entry.id,label:entry.familyLabel||entry.repository.split('/').at(-1),description:entry.repository,precision:entry.quantization,
+    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:'echo',backend:'hub',hubModel:true,hubEntry:entry,
     selectable:!!entry.runtimeReady,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
     category:'text',contextTokens:entry.contextTokens||32768,totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
     weightBytes:entry.files.filter(f=>f.role==='model').reduce((n,f)=>n+f.bytes,0),experimental:false,sourceUrl:entry.sourceUrl,
@@ -73,21 +74,20 @@ function $hubModel(entry) {
 }
 function $hubAugment(library) {
   if(!library?.models)return library;
-  const models=[...library.models];
+  const replaced=new Set($hubState.catalog.flatMap(entry=>entry.nativeModelIds||[]));
+  const models=library.models.filter(model=>!replaced.has(model.id));
+  const roots=new Map();
   for(const entry of $hubState.catalog){
-    const model=$hubModel(entry);const family=models.find(m=>m.hubModel&&m.variantOf===model.variantOf);
-    if(!family)delete model.variantOf;
-    else model.variantOf=family.variantOf||family.id;
-    // All variant rows use the first stable profile as their family root.
-    const root=models.find(m=>m.hubModel&&m.hubEntry.repository.toLowerCase()===entry.repository.toLowerCase());
-    if(root)model.variantOf=root.id;
+    const model=$hubModel(entry),family=entry.familyId||entry.repository.toLowerCase(),root=roots.get(family);
+    if(root)model.variantOf=root;
+    else {delete model.variantOf;roots.set(family,model.id);}
     models.push(model);
   }
   return {...library,models};
 }
 async function $hubRegister(entry) {
   const descriptor=await $hubConnect();
-  const input={...(entry.providerId?{id:entry.providerId}:{}),name:'Local · '+entry.repository.split('/').at(-1),baseUrl:descriptor.url+'/v1',model:entry.id,
+  const input={...(entry.providerId?{id:entry.providerId}:{}),name:'Local · '+(entry.familyLabel||entry.repository.split('/').at(-1))+' · '+entry.quantization,baseUrl:descriptor.url+'/v1',model:entry.id,
     contextTokens:Math.max(8192,Math.min(entry.runtimePreparation?.contextTokens||entry.contextTokens||32768,32768)),apiKey:descriptor.secret};
   let provider=await window.__TAURI_INTERNALS__.invoke('api_provider_save',{input});
   provider=await window.__TAURI_INTERNALS__.invoke('api_provider_model',{id:provider.id,model:entry.id,enabled:true,manual:true});
@@ -161,13 +161,13 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,selectedProfile}) 
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function prepare(){setError('');try{await Ue('hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
-  async function use(){setBusy(true);setError('');try{await Ks();const profile=await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function uninstall(){setBusy(true);try{await $hubRequest('/uninstall',{id:entry.id});await $hubRefresh(true);await onChanged?.();setRemoving(false);}catch(e){setError(String(e));}finally{setBusy(false);}}
-  return h('article',{'aria-label':entry.repository,className:'hub-model-card'},h('header',null,h('h3',null,entry.repository.split('/').at(-1)),h('span',null,entry.runtimeReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
+  return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',null,entry.runtimeReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
     h('p',null,entry.repository),h('p',null,'ECHO · Text model'),h('label',null,'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',(v.totalBytes/1e9).toFixed(3),' GB')))),
     h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
-    h('small',null,'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
+    h('small',null,entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):
       entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
       h('button',{disabled:locked||!entry.runtime?.adapter,onClick:prepare},active?'Preparing…':'Prepare runtime'),

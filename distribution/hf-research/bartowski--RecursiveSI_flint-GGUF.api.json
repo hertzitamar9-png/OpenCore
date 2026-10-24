@@ -1,0 +1,558 @@
+{
+  "_id": "6ad9a9901d67b0a5a12d4088",
+  "id": "bartowski/RecursiveSI_flint-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:RecursiveSI/flint",
+    "base_model:quantized:RecursiveSI/flint",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 9091,
+  "likes": 3,
+  "modelId": "bartowski/RecursiveSI_flint-GGUF",
+  "author": "bartowski",
+  "sha": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+  "lastModified": "2026-10-22T07:41:08.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model": "RecursiveSI/flint",
+    "base_model_relation": "quantized",
+    "license": "apache-2.0"
+  },
+  "gguf": {
+    "total": 39785287456,
+    "architecture": "flint",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/flint-GGUF/RecursiveSI_flint-imatrix.gguf",
+    "chat_template": "{%- macro flint_text(t) -%}\n{%- if t is string -%}\n{{- t | replace(\"\\x00\", \"\") | replace(\"<think>\", \"\") | replace(\"</think>\", \"\") | replace(\"<|begin_of_text|>\", \"&lt;|begin_of_text|&gt;\") | replace(\"<|end_of_text|>\", \"&lt;|end_of_text|&gt;\") | replace(\"<|system|>\", \"&lt;|system|&gt;\") | replace(\"<|developer|>\", \"&lt;|developer|&gt;\") | replace(\"<|user|>\", \"&lt;|user|&gt;\") | replace(\"<|assistant|>\", \"&lt;|assistant|&gt;\") | replace(\"<|observation|>\", \"&lt;|observation|&gt;\") -}}\n{%- else -%}\n{{- t -}}\n{%- endif -%}\n{%- endmacro -%}\n{%- set tool_preamble -%}\n{%- if tools %}<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{%- for tool in tools %}\n{%- set fn = tool.function if tool.function is defined else tool %}\n{{ fn | tojson(ensure_ascii=False) }}\n{%- endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value>...</tool_call>\n{% endif -%}\n{%- endset -%}\n{%- set ns = namespace(tools_pending=true) -%}\n{%- for m in messages -%}\n{%- if ns.tools_pending and m.role != 'system' -%}\n{{ tool_preamble }}\n{%- set ns.tools_pending = false -%}\n{%- endif -%}\n{%- if m.role == 'system' -%}\n<|system|>{{ flint_text(m.content) }}\n{%- elif m.role == 'developer' -%}\n<|developer|>{{ flint_text(m.content) }}\n{%- elif m.role == 'user' -%}\n<|user|>{{ flint_text(m.content) }}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- if m.reasoning_content %}<think>{{ m.reasoning_content }}</think>{% endif -%}\n{%- if m.content %}{{ m.content }}{% endif -%}\n{%- if m.tool_calls -%}\n{%- for tc in m.tool_calls -%}\n{%- set fn = tc.function if tc.function is defined else tc -%}\n<tool_call>{{ fn.name }}\n{%- for k, v in fn.arguments.items() -%}\n<arg_key>{{ k }}</arg_key><arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>\n{%- endfor -%}\n</tool_call>\n{%- endfor -%}\n{%- endif -%}\n{%- elif m.role == 'tool' -%}\n<|observation|><tool_response>{{ flint_text(m.content) }}</tool_response>\n{%- endif -%}\n{%- endfor -%}\n{%- if ns.tools_pending -%}\n{{ tool_preamble }}\n{%- endif -%}\n{%- if add_generation_prompt -%}\n<|assistant|>\n{%- endif -%}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|end_of_text|>",
+    "totalFileSize": 14883566816
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ff3c6cedb578169c9bae7f804ef9a734c63ce725",
+      "size": 3363
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "e75fc81445e527be6456780c40489ff4c8fcf7d1",
+      "size": 18243
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ2_M.gguf",
+      "blobId": "6f63b9b755bbbb3873c3886d3321f4cd4fb6fdea",
+      "size": 14883566816,
+      "lfs": {
+        "sha256": "b20cb8ffea1db8adc2d12bf0f55cf944e5ef560983e3e06ba37bf08c4262ab7b",
+        "size": 14883566816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ2_S.gguf",
+      "blobId": "5c69767d56c92247fdd01e1b203f0afc96a2a4b9",
+      "size": 13394982112,
+      "lfs": {
+        "sha256": "adf57124462dd1e02ab9e320a47d4eaa3c64e2158d4016c6829cb20332fd606f",
+        "size": 13394982112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ2_XS.gguf",
+      "blobId": "30b65e62a2fda430c5a8d3a9f8a6ee463c950c8f",
+      "size": 12742325472,
+      "lfs": {
+        "sha256": "2783d75881c251b74891ca118985a429a1b57003bbff50af5bfccd6dc272a616",
+        "size": 12742325472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ2_XXS.gguf",
+      "blobId": "be400b813b7be61cbd8c7ac43fed909028a0d0ce",
+      "size": 12029007072,
+      "lfs": {
+        "sha256": "a013a40f43b462554c31b113aef9d8f6cf768639fd164492c55c5a651783ad47",
+        "size": 12029007072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ3_M.gguf",
+      "blobId": "2ca3f6b2e45a853c3425349c5c416229bab67eb2",
+      "size": 21051684064,
+      "lfs": {
+        "sha256": "b32d65a853d24f8bfaa5b1146d25836270df907fe391ae2cd4b2e61453ade35b",
+        "size": 21051684064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ3_XS.gguf",
+      "blobId": "30c83924925f0678e3944209314719f9fb43788b",
+      "size": 18315457760,
+      "lfs": {
+        "sha256": "8f05fe66920253ed699a5988894b15f2a031d8f18b82e28e61e1c9c64915be40",
+        "size": 18315457760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ3_XXS.gguf",
+      "blobId": "93d5f919479e1d3470a0ea4d8b3cc5ad8068755f",
+      "size": 17492718816,
+      "lfs": {
+        "sha256": "77edb9893c32f6d2600af7d68c1fddb477a836d96d836b079535e4b9cdef2dfd",
+        "size": 17492718816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ4_NL.gguf",
+      "blobId": "e6a6b4a18b6ef9d6eeb0bac7c84cac78a81a882e",
+      "size": 25317291232,
+      "lfs": {
+        "sha256": "8fe0bcc0f02ac15b61886ed12c0ffaf4ba2f8d765146e3a4457cef4bd8290e6d",
+        "size": 25317291232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-IQ4_XS.gguf",
+      "blobId": "63afaa3b48ce47421b3503152c114c23ad57194f",
+      "size": 22446290144,
+      "lfs": {
+        "sha256": "4f1fd7e09c225a4eecd257df99d0ba5ce1657add86ec608c8bc554151660fb2b",
+        "size": 22446290144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q2_K.gguf",
+      "blobId": "f48f1fc6b8f40cbacdb0f31651626c0c3a14d11c",
+      "size": 15480337632,
+      "lfs": {
+        "sha256": "44c699015fd53a077e1c924032ca94ce60ea574bb57b91cc495373ab2c934e06",
+        "size": 15480337632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q3_K_L.gguf",
+      "blobId": "b6b890356494951a738ce6b6b2a2c8a568c0a0db",
+      "size": 20594504928,
+      "lfs": {
+        "sha256": "cb71dbc8c75c775b2c155e21c78d62c81a54d8efecbdd7005beac39e066b0459",
+        "size": 20594504928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q3_K_M.gguf",
+      "blobId": "67edceb68f13b0dc99fe656c6e71930e4970a4ab",
+      "size": 19529151712,
+      "lfs": {
+        "sha256": "1d6d5800dbed15e60c6ca8b3af9f131a5570bae3f1b85a552632930dc033a7ea",
+        "size": 19529151712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q3_K_S.gguf",
+      "blobId": "593a35c308f45c9a1187cb30ba30a6d8f9391d03",
+      "size": 18443810016,
+      "lfs": {
+        "sha256": "890a593c14b6cb6c1ae55d3afc316e803115f37cda1a49bbca5494c97b5e9cbc",
+        "size": 18443810016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q4_0.gguf",
+      "blobId": "9139d3c0a24ce4e8eeedec04395904a9a763fa37",
+      "size": 22831553760,
+      "lfs": {
+        "sha256": "2f260aab89cafe1ed8a9f4658becff2ea8161064a88d4a7986322b23996e7b80",
+        "size": 22831553760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q4_1.gguf",
+      "blobId": "1662ebb417beab3ddf93b77cd827e35307a13364",
+      "size": 25183329504,
+      "lfs": {
+        "sha256": "3c193ab1054787cd7b8f4eb9e13be47273695ff6089a172429762958a7441444",
+        "size": 25183329504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q4_K_L.gguf",
+      "blobId": "d03beea79df19cc97abc2402ceef30ca42045bc6",
+      "size": 27288614112,
+      "lfs": {
+        "sha256": "1c9a996d9cf80c177ee83df84805c387b941a5c782945621ce2e52fc14f2f191",
+        "size": 27288614112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q4_K_M.gguf",
+      "blobId": "60f922f14d8ab36fd7dea39456959bb115991e53",
+      "size": 25346651360,
+      "lfs": {
+        "sha256": "ceec8347ea357b862cf4577c7a38b7cdad407b94278bb39b6b72e3cfc1d242ac",
+        "size": 25346651360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q4_K_S.gguf",
+      "blobId": "e9f89af8687d5aefa9e34c8b011a76ee58b896f2",
+      "size": 23828313312,
+      "lfs": {
+        "sha256": "70b1c7874f9c0b07a55a338ea439a70a0648393fe055b9b5223e45db7296bd05",
+        "size": 23828313312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q5_K_M.gguf",
+      "blobId": "6dd421011a1d10d14bf3fe0d8b6933d40122224f",
+      "size": 30809732320,
+      "lfs": {
+        "sha256": "d10c43fe31d4dfd353bf4f6977710098d1e63c943653ad102b564a65161e9f65",
+        "size": 30809732320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q5_K_S.gguf",
+      "blobId": "8f9415863dc03c5a19216ff5ffbeca5ed3e2aa61",
+      "size": 28595139808,
+      "lfs": {
+        "sha256": "34941d109ff6203c32f5f80fd8294d46a54a46ab3eddedece33e7e43d99b6a9a",
+        "size": 28595139808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q6_K.gguf",
+      "blobId": "00760e58e6bb3c58f579f87beb007b4c1653ac2c",
+      "size": 35199071456,
+      "lfs": {
+        "sha256": "3e63200237417394d0dca0581fe30346460bb095f00920adcbcdceab53101b7a",
+        "size": 35199071456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q6_K_L.gguf",
+      "blobId": "6f9cc04d69f861fbe190e5e9bcfa3cb5192e6c46",
+      "size": 36954387680,
+      "lfs": {
+        "sha256": "5f1027ea99d96d700a2a4f91442c573f26e0d9e561c5e04fe7c5293edc2e8129",
+        "size": 36954387680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q6_K_S.gguf",
+      "blobId": "2870e430428efee6892f1f0506e40904be6c1915",
+      "size": 33573778656,
+      "lfs": {
+        "sha256": "d8d80e6e97599642aed6d7fffafd4eb8838749d288d619709e28acd3a8e9bc6d",
+        "size": 33573778656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-Q8_0.gguf",
+      "blobId": "02e2f07eb03b60a8d01d8da44d65afa0a51e5ec1",
+      "size": 42350359776,
+      "lfs": {
+        "sha256": "c52380f5ec61e3ba753646efca70f9cd1d770896f16827dfa697d367ad28a7bb",
+        "size": 42350359776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-bf16/RecursiveSI_flint-bf16-00001-of-00002.gguf",
+      "blobId": "01b4f45cf502c67162fb85a15bee2e7fa12c6074",
+      "size": 39750651424,
+      "lfs": {
+        "sha256": "748b2af95caa2276a39bc9296b6b5c41e8d2b2df526ec7ff791a71eb0b185b73",
+        "size": 39750651424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-bf16/RecursiveSI_flint-bf16-00002-of-00002.gguf",
+      "blobId": "dd767ed67f53d04a1987d9697008b76d2d9c2383",
+      "size": 39875110496,
+      "lfs": {
+        "sha256": "96c690d12b51b8a6bca45d2aa5405d73ad50d11b44f0f3c5710de95f5c91128c",
+        "size": 39875110496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RecursiveSI_flint-calibration-v6.txt",
+      "blobId": "c2e5eb2572ac9219d9e6159c24dcfa466947579c",
+      "size": 1130642
+    },
+    {
+      "rfilename": "RecursiveSI_flint-imatrix.gguf",
+      "blobId": "dd6d81c5ad8decbeb970677e3460aa589c29f5d2",
+      "size": 450750208,
+      "lfs": {
+        "sha256": "b8f0ec28a8715d71e9a5ede70d512a77100003fda58a27e390da2d054152c6a0",
+        "size": 450750208,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_M.layout.json",
+      "blobId": "fb151c8b1a5687782d43c717c8fc56e6cf0db87e",
+      "size": 2209
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_M.tensor-types.txt",
+      "blobId": "9cd4214c7c2dda26db94b7f41088f6189e9a3ffa",
+      "size": 17283
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_S.layout.json",
+      "blobId": "ab01bd8a26577b620e506ea373aacf4285c21f1a",
+      "size": 2305
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_S.tensor-types.txt",
+      "blobId": "70626e45db3cfb5c6e1d5983e482c6a2a4a1df43",
+      "size": 17433
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_XS.layout.json",
+      "blobId": "afc06522b223688543f738fe3b76bab1d440b56a",
+      "size": 2224
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_XS.tensor-types.txt",
+      "blobId": "d6d6d56e78c031c2938b3bf646bea5f18f66270a",
+      "size": 17418
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_XXS.layout.json",
+      "blobId": "fa375fcbd15eb37d1582669b97fd05ed860dad2d",
+      "size": 2335
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ2_XXS.tensor-types.txt",
+      "blobId": "40e37676de512b1ac5c7e6ffe43e8d2ec85b66d7",
+      "size": 17616
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ3_M.layout.json",
+      "blobId": "7d37135b8a0683c4a7e7d7014cc371aa35da7426",
+      "size": 2187
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ3_M.tensor-types.txt",
+      "blobId": "871149aa347d50b49130a15f8ac683310329c394",
+      "size": 17228
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ3_XS.layout.json",
+      "blobId": "b8431c56c5763d5ba9418d45053734c21919d738",
+      "size": 2172
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ3_XS.tensor-types.txt",
+      "blobId": "ad73f0703cf85c9a135a163d1f6912619159ddc7",
+      "size": 17281
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ3_XXS.layout.json",
+      "blobId": "906cdef922b1e289d175bc364f0fb4d9d7e45706",
+      "size": 2219
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ3_XXS.tensor-types.txt",
+      "blobId": "545f2bd52840f81149b68724a4f580520037f8b5",
+      "size": 17532
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ4_NL.layout.json",
+      "blobId": "a92abbab00829f2a96a2a6f01acaf58f5668bc7f",
+      "size": 2173
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ4_NL.tensor-types.txt",
+      "blobId": "e0ebf8d63fb2ec87fa5384b3948315c47c17a2e0",
+      "size": 17366
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ4_XS.layout.json",
+      "blobId": "eba999cd578dffad2d09efbf16b61b7a80d9e720",
+      "size": 2140
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-IQ4_XS.tensor-types.txt",
+      "blobId": "c4a771821b8f9b8cf5d65792e35a110c31d76c38",
+      "size": 17412
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q2_K.layout.json",
+      "blobId": "5d683b984284917932bc11fab54f1640b572ad8e",
+      "size": 2156
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q2_K.tensor-types.txt",
+      "blobId": "ab5cbb146d8afabcac73e5f30de2c7c82f6c3eab",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q3_K_L.layout.json",
+      "blobId": "38127b87e0240cdf8f1de23fe10720d8469c9a18",
+      "size": 2146
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q3_K_L.tensor-types.txt",
+      "blobId": "2d47153eb564490035ba8b7df1e24f0d74d7e3ef",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q3_K_M.layout.json",
+      "blobId": "212559b8ac3fb62d2adb057df3478914745b8eab",
+      "size": 2148
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q3_K_M.tensor-types.txt",
+      "blobId": "a47968457f7711a58a08758044a9846a84e23709",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q3_K_S.layout.json",
+      "blobId": "1205f9e3b0b446de03985677e1655faf5e91db21",
+      "size": 2128
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q3_K_S.tensor-types.txt",
+      "blobId": "22f921be96f827a6a0b36e598413e19385419b57",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q4_K_L.layout.json",
+      "blobId": "9f2d764e1a9edcc5e1842eb7f15c3df9a94b80d2",
+      "size": 2149
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q4_K_L.tensor-types.txt",
+      "blobId": "4503e7c3ebd70456e2ac2c0a5f32e4623cb38450",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q4_K_M.layout.json",
+      "blobId": "9c1cb19a5e63a16685a87b8679201b458ea49dd9",
+      "size": 2164
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q4_K_M.tensor-types.txt",
+      "blobId": "5c6469dc86d6ff743126fc5b6f81bb8cb0a2ba10",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q4_K_S.layout.json",
+      "blobId": "bec5c97df5aea08d138b4edb3e69ed43822a5e9a",
+      "size": 2112
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q4_K_S.tensor-types.txt",
+      "blobId": "7d047cce7a8902871c8b5034062c2993703377b9",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q5_K_M.layout.json",
+      "blobId": "68a0f9170941e37b6573e86666b33fc7d34a74fa",
+      "size": 2128
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q5_K_M.tensor-types.txt",
+      "blobId": "a2b42803b0a7aa2be4698ae4e27bcff4989ac9d0",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q5_K_S.layout.json",
+      "blobId": "e5d5c3458e97c810aaea3c6d7f72fe86f3002a2c",
+      "size": 2130
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q5_K_S.tensor-types.txt",
+      "blobId": "36fdfd3b7764000100cbcccc5d09333f0df53c6e",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q6_K.layout.json",
+      "blobId": "26d906a953b0bc969665d0d24022e3245b9fbd2b",
+      "size": 2109
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q6_K.tensor-types.txt",
+      "blobId": "9fc97b71aa72e366d1275aefbfdce57146396221",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q6_K_L.layout.json",
+      "blobId": "71715041fd2cbf3dde6dff9f0cc950156f5b8b20",
+      "size": 2112
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q6_K_L.tensor-types.txt",
+      "blobId": "4d5b581ee7bd1418fd19b80d020514975659c7c9",
+      "size": 17138
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q6_K_S.layout.json",
+      "blobId": "0a3c75e62a9ad583d4d8954e94cfd9dfaf3b1d7b",
+      "size": 2110
+    },
+    {
+      "rfilename": "layouts/RecursiveSI_flint-Q6_K_S.tensor-types.txt",
+      "blobId": "19bc0d747bee62faa50fc23df6151239b3600407",
+      "size": 17138
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-22T06:13:36.000Z",
+  "usedStorage": 643758571648
+}

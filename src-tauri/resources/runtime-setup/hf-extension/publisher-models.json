@@ -1,0 +1,2424 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "hf-d4da95ee529be1205ac9b027",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ2_XXS.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ2_XXS",
+      "quantization": "IQ2_XXS",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 12029007072,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ2_XXS.gguf",
+          "bytes": 12029007072,
+          "sha256": "a013a40f43b462554c31b113aef9d8f6cf768639fd164492c55c5a651783ad47",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-d6759e4dd04fa6af9759a400",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ2_XS.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ2_XS",
+      "quantization": "IQ2_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 12742325472,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ2_XS.gguf",
+          "bytes": 12742325472,
+          "sha256": "2783d75881c251b74891ca118985a429a1b57003bbff50af5bfccd6dc272a616",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-a34e77336aacbe9f73b4e5b0",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ2_S.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ2_S",
+      "quantization": "IQ2_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 13394982112,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ2_S.gguf",
+          "bytes": 13394982112,
+          "sha256": "adf57124462dd1e02ab9e320a47d4eaa3c64e2158d4016c6829cb20332fd606f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-6b8d5f6709f7af3c2fa414a5",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ2_M.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ2_M",
+      "quantization": "IQ2_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 14883566816,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ2_M.gguf",
+          "bytes": 14883566816,
+          "sha256": "b20cb8ffea1db8adc2d12bf0f55cf944e5ef560983e3e06ba37bf08c4262ab7b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-ecc16f8b0143ba59f8687c15",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q2_K.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 15480337632,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q2_K.gguf",
+          "bytes": 15480337632,
+          "sha256": "44c699015fd53a077e1c924032ca94ce60ea574bb57b91cc495373ab2c934e06",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-7718091446f23d402af75135",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ3_XXS.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ3_XXS",
+      "quantization": "IQ3_XXS",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 17492718816,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ3_XXS.gguf",
+          "bytes": 17492718816,
+          "sha256": "77edb9893c32f6d2600af7d68c1fddb477a836d96d836b079535e4b9cdef2dfd",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-3331b5307f0aac1685c9e2ac",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ3_XS.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ3_XS",
+      "quantization": "IQ3_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 18315457760,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ3_XS.gguf",
+          "bytes": 18315457760,
+          "sha256": "8f05fe66920253ed699a5988894b15f2a031d8f18b82e28e61e1c9c64915be40",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-7f55cae81c8e958e87337bc6",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q3_K_S.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 18443810016,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q3_K_S.gguf",
+          "bytes": 18443810016,
+          "sha256": "890a593c14b6cb6c1ae55d3afc316e803115f37cda1a49bbca5494c97b5e9cbc",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-2c04c80ffa03087328835022",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q3_K_M.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 19529151712,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q3_K_M.gguf",
+          "bytes": 19529151712,
+          "sha256": "1d6d5800dbed15e60c6ca8b3af9f131a5570bae3f1b85a552632930dc033a7ea",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-17f48aebcbdba5caa4eaf2fe",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q3_K_L.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 20594504928,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q3_K_L.gguf",
+          "bytes": 20594504928,
+          "sha256": "cb71dbc8c75c775b2c155e21c78d62c81a54d8efecbdd7005beac39e066b0459",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-07e99956415eb65ecc93ab9e",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ3_M.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ3_M",
+      "quantization": "IQ3_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 21051684064,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ3_M.gguf",
+          "bytes": 21051684064,
+          "sha256": "b32d65a853d24f8bfaa5b1146d25836270df907fe391ae2cd4b2e61453ade35b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-bbd299fb2ac7bad6f0304b19",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ4_XS.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 22446290144,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ4_XS.gguf",
+          "bytes": 22446290144,
+          "sha256": "4f1fd7e09c225a4eecd257df99d0ba5ce1657add86ec608c8bc554151660fb2b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-de13baee493bd2c7f4f09d2d",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q4_0.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q4_0",
+      "quantization": "Q4_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 22831553760,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q4_0.gguf",
+          "bytes": 22831553760,
+          "sha256": "2f260aab89cafe1ed8a9f4658becff2ea8161064a88d4a7986322b23996e7b80",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-449af5faefc74cc79b8bab6e",
+      "repository": "RecursiveSI/flint-nvfp4-gguf",
+      "revision": "6ec43e19b565fc8d560e2d04985d7724f20673bf",
+      "variantKey": "gguf:flint-nvfp4.gguf",
+      "name": "Flint 40B A2.5B · NVFP4 GGUF",
+      "quantization": "NVFP4 GGUF",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "flint",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/RecursiveSI/flint-nvfp4-gguf",
+      "files": [
+        {
+          "repository": "RecursiveSI/flint-nvfp4-gguf",
+          "revision": "6ec43e19b565fc8d560e2d04985d7724f20673bf",
+          "filename": "flint-nvfp4.gguf",
+          "bytes": 22863084160,
+          "sha256": "97cc8009ff9b132d5cf3c488e6767962bb5a5dc158a90ed661bbbddf876b8bde",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-nvfp4-gguf",
+          "revision": "6ec43e19b565fc8d560e2d04985d7724f20673bf",
+          "filename": "LICENSE",
+          "bytes": 11356,
+          "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-nvfp4-gguf",
+          "revision": "6ec43e19b565fc8d560e2d04985d7724f20673bf",
+          "filename": "README.md",
+          "bytes": 3322,
+          "sha256": "8a1a130252d03f22883e1aa52aa5f6f90374f85fd80477ebd7b7eaf2602dfbcc",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 22863098838
+    },
+    {
+      "id": "hf-8d948bfd513460a5fc1e9afb",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q4_K_S.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 23828313312,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q4_K_S.gguf",
+          "bytes": 23828313312,
+          "sha256": "70b1c7874f9c0b07a55a338ea439a70a0648393fe055b9b5223e45db7296bd05",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-bf74e5788c096f6db66a43fd",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q4_1.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q4_1",
+      "quantization": "Q4_1",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 25183329504,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q4_1.gguf",
+          "bytes": 25183329504,
+          "sha256": "3c193ab1054787cd7b8f4eb9e13be47273695ff6089a172429762958a7441444",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-7003011652848153dc5144ac",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-IQ4_NL.gguf",
+      "name": "RecursiveSI_flint-GGUF · IQ4_NL",
+      "quantization": "IQ4_NL",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 25317291232,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-IQ4_NL.gguf",
+          "bytes": 25317291232,
+          "sha256": "8fe0bcc0f02ac15b61886ed12c0ffaf4ba2f8d765146e3a4457cef4bd8290e6d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-bd69b21eac4b67e761607ac5",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q4_K_M.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 25346651360,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q4_K_M.gguf",
+          "bytes": 25346651360,
+          "sha256": "ceec8347ea357b862cf4577c7a38b7cdad407b94278bb39b6b72e3cfc1d242ac",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-38b5ed0ac1ad8ad61493587b",
+      "repository": "RecursiveSI/flint-int4-gguf",
+      "revision": "9c47151036bc2c34331142dda04488bceab2bc9f",
+      "variantKey": "gguf:flint-int4-q4_1.gguf",
+      "name": "Flint 40B A2.5B · Q4_1",
+      "quantization": "Q4_1",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "flint",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/RecursiveSI/flint-int4-gguf",
+      "files": [
+        {
+          "repository": "RecursiveSI/flint-int4-gguf",
+          "revision": "9c47151036bc2c34331142dda04488bceab2bc9f",
+          "filename": "flint-int4-q4_1.gguf",
+          "bytes": 25992966976,
+          "sha256": "43c07baccdba42eb7528a9630ee15699b1942c297291dc1b39a061f508ee1a4b",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4-gguf",
+          "revision": "9c47151036bc2c34331142dda04488bceab2bc9f",
+          "filename": "LICENSE",
+          "bytes": 11356,
+          "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4-gguf",
+          "revision": "9c47151036bc2c34331142dda04488bceab2bc9f",
+          "filename": "README.md",
+          "bytes": 3524,
+          "sha256": "652b61b6d681331f2c6954ccd359c6a575c0779895a54b6284bbc37804cb70af",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 25992981856
+    },
+    {
+      "id": "hf-42c085989e0479fae1727e2a",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q4_K_L.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q4_K_L",
+      "quantization": "Q4_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 27288614112,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q4_K_L.gguf",
+          "bytes": 27288614112,
+          "sha256": "1c9a996d9cf80c177ee83df84805c387b941a5c782945621ce2e52fc14f2f191",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-0e73b2f1029f3db6a34fd3cf",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q5_K_S.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 28595139808,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q5_K_S.gguf",
+          "bytes": 28595139808,
+          "sha256": "34941d109ff6203c32f5f80fd8294d46a54a46ab3eddedece33e7e43d99b6a9a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-582eaf0d9c8c8f524b0ed2e3",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q5_K_M.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 30809732320,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q5_K_M.gguf",
+          "bytes": 30809732320,
+          "sha256": "d10c43fe31d4dfd353bf4f6977710098d1e63c943653ad102b564a65161e9f65",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-31e83162ffd518c982fa75ff",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q6_K_S.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q6_K_S",
+      "quantization": "Q6_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 33573778656,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q6_K_S.gguf",
+          "bytes": 33573778656,
+          "sha256": "d8d80e6e97599642aed6d7fffafd4eb8838749d288d619709e28acd3a8e9bc6d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-26e6eacbc9051afb63ff749a",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q6_K.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 35199071456,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q6_K.gguf",
+          "bytes": 35199071456,
+          "sha256": "3e63200237417394d0dca0581fe30346460bb095f00920adcbcdceab53101b7a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-aa831cb90c76665680a3805d",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q6_K_L.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q6_K_L",
+      "quantization": "Q6_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 36954387680,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q6_K_L.gguf",
+          "bytes": 36954387680,
+          "sha256": "5f1027ea99d96d700a2a4f91442c573f26e0d9e561c5e04fe7c5293edc2e8129",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-0de05dbb6f72638218cf4297",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-Q8_0.gguf",
+      "name": "RecursiveSI_flint-GGUF · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "bytes": 42350359776,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-Q8_0.gguf",
+          "bytes": 42350359776,
+          "sha256": "c52380f5ec61e3ba753646efca70f9cd1d770896f16827dfa697d367ad28a7bb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-3fe64693a188290802e96234",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "variantKey": "gguf:RecursiveSI_flint-bf16/RecursiveSI_flint-bf16.gguf",
+      "name": "RecursiveSI_flint-GGUF · BF16 · RecursiveSI_flint-bf16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "RecursiveSI_flint-bf16",
+      "bytes": 79625761920,
+      "files": [
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-bf16/RecursiveSI_flint-bf16-00001-of-00002.gguf",
+          "bytes": 39750651424,
+          "sha256": "748b2af95caa2276a39bc9296b6b5c41e8d2b2df526ec7ff791a71eb0b185b73",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/RecursiveSI_flint-GGUF",
+          "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+          "filename": "RecursiveSI_flint-bf16/RecursiveSI_flint-bf16-00002-of-00002.gguf",
+          "bytes": 39875110496,
+          "sha256": "96c690d12b51b8a6bca45d2aa5405d73ad50d11b44f0f3c5710de95f5c91128c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "flint",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ]
+    },
+    {
+      "id": "hf-2a933ccb721dfcb5910db112",
+      "repository": "RecursiveSI/flint-int4",
+      "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+      "variantKey": "safetensors:.",
+      "name": "Flint 40B A2.5B · MLX INT4",
+      "quantization": "MLX INT4",
+      "format": "safetensors",
+      "subdirectory": "",
+      "modelType": "flint",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/RecursiveSI/flint-int4",
+      "files": [
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "model-00000.safetensors",
+          "bytes": 4745746152,
+          "sha256": "1a362742a0136c95ed751e2c56d83e63d4ed9ac674984b23b368f105d16cfe7a",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "model-00001.safetensors",
+          "bytes": 4682022280,
+          "sha256": "12979140fa019042ff5cdec4c0237cc87db13b56428ce7fe093dd9d33893ea32",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "model-00002.safetensors",
+          "bytes": 4682022280,
+          "sha256": "01805c6b882fdec008b0184ec68e7516102205b521e63ca5126f9d52b9aed87b",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "model-00003.safetensors",
+          "bytes": 4682022280,
+          "sha256": "9380ed032d90e0ff566d49672faf292f354b3b0e7320820c150eeed8c75e9d42",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "model-00004.safetensors",
+          "bytes": 3777099608,
+          "sha256": "c1ba12d2c2a80feb5e554554a01cfde2b71c2638e27fc0ee597b4121399eff99",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "LICENSE",
+          "bytes": 11356,
+          "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "README.md",
+          "bytes": 1621,
+          "sha256": "8041980cec84805c27acd78aa918f3e9d8cadeb0e1668e0841abacb5aea225ac",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "chat_template.jinja",
+          "bytes": 2328,
+          "sha256": "7940f4ffa3275c36caa4a582f845aaad79da11018b3961e8fbcad6ae29733466",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "config.json",
+          "bytes": 3082,
+          "sha256": "80f577a984db1bd40dfff88457b611d4c13e807704a945616be27f28809eed21",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "generation_config.json",
+          "bytes": 202,
+          "sha256": "a499c71895e008abd572558a5ad5904feaed92cf2a3b6e2cb0e9cabf03b96ed3",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "special_tokens_map.json",
+          "bytes": 20192,
+          "sha256": "be37b302338dda189bc70bfbe902d8faebeb5986d60c1342713439eefc4ca182",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "tokenizer.json",
+          "bytes": 10879128,
+          "sha256": "a263cce0b7e2b03f7ee07ce809783ef4b47f160c3f268a4ea1524f638da45b68",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint-int4",
+          "revision": "3b93f9053b530488405ae9fca51d4900d6ce21f0",
+          "filename": "tokenizer_config.json",
+          "bytes": 30439,
+          "sha256": "159ac88217e90ffd0a4a294726048bb302829e82e1958dc85bb203aa79138fbf",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Choose a GGUF variant for the managed Windows runtime. This publisher format needs a different runtime."
+      },
+      "bytes": 22579860948
+    },
+    {
+      "id": "hf-8ef17dfbbf0d4a9e2dbde688",
+      "repository": "RecursiveSI/flint",
+      "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+      "variantKey": "safetensors:.",
+      "name": "Flint 40B A2.5B · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "modelType": "flint",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-flint",
+      "familyLabel": "Flint 40B A2.5B",
+      "nativeModelIds": [
+        "flint",
+        "flint-q4-1",
+        "flint-mlx-int4",
+        "flint-nvfp4-gguf"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/RecursiveSI/flint",
+      "files": [
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00001-of-00015.safetensors",
+          "bytes": 5369025064,
+          "sha256": "68cd9eaa364a7d72216972f96cde0c308167779e70237e5912ef74aeab758007",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00002-of-00015.safetensors",
+          "bytes": 5369025168,
+          "sha256": "73c8cab39d0eee3c90bbcf2ed521895434dab3dd624943b3f91507cfabc5c311",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00003-of-00015.safetensors",
+          "bytes": 5369026736,
+          "sha256": "ce22b7f058fdf8911c5a5aa851cd497b6bb804587398b1e3294e427d4bdd1052",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00004-of-00015.safetensors",
+          "bytes": 5369027984,
+          "sha256": "f1d4f30d95f889e7e1a20cfa13ee43745a240b3e80ae60c9464eea3207ca4e51",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00005-of-00015.safetensors",
+          "bytes": 5369027520,
+          "sha256": "fbf98aef1c1a1b125d49e65b73330f1c00b64f0256edd871d4926f9c73685397",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00006-of-00015.safetensors",
+          "bytes": 5369027848,
+          "sha256": "842c5070e8fc19b97575b14ec152cca9fd57a248fb0e21c7b53a50f019372ab4",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00007-of-00015.safetensors",
+          "bytes": 5369027984,
+          "sha256": "b41e9e17f6b992b383a171d5a3b32efbb624cb3a8cece1ca925c06c339d7aa17",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00008-of-00015.safetensors",
+          "bytes": 5369027632,
+          "sha256": "8c791da3f5e8dab4700f76725e6d235f8e7125ea09ce927a11c5261df17a65e6",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00009-of-00015.safetensors",
+          "bytes": 5369027848,
+          "sha256": "73b01b243634f802f8945717bbebd4df625dd55de3b5ce392469f0b4fe7f15f2",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00010-of-00015.safetensors",
+          "bytes": 5369027984,
+          "sha256": "bc105215b9a6061bca130fbda3d566b9597eaf5b1bf51316da81e624085460bb",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00011-of-00015.safetensors",
+          "bytes": 5369027632,
+          "sha256": "2105fde6c535b135fc95413279e69016a28569a08e992eb8fea17bad385d9349",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00012-of-00015.safetensors",
+          "bytes": 5367976344,
+          "sha256": "ae1d074ba5ca8b456251eaac9d7b54ab0c7c1121821a4abb4a78cceb2ad9641f",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00013-of-00015.safetensors",
+          "bytes": 5368466032,
+          "sha256": "e91ccbbe2d681c2c128298700595d8c6ac6764ef88b7ff8c6327a6e5cfa5ef8c",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00014-of-00015.safetensors",
+          "bytes": 5369027736,
+          "sha256": "5c6801977bd0bf6822befa658e490cbf37c81ab4190cdcc72839aac72329b2a8",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model-00015-of-00015.safetensors",
+          "bytes": 4410368544,
+          "sha256": "58635712b79734cbcad6324157606c674d12303665badc2965955496bb8263bc",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "LICENSE",
+          "bytes": 11356,
+          "sha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "README.md",
+          "bytes": 6250,
+          "sha256": "43244381065d603bbfc650e399bb67aef8166a01675b2446ad552d680b1058dc",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "chat_template.jinja",
+          "bytes": 2328,
+          "sha256": "7940f4ffa3275c36caa4a582f845aaad79da11018b3961e8fbcad6ae29733466",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "config.json",
+          "bytes": 2451,
+          "sha256": "a57c33d11f725099105b657043c113149763066d204fd472d0b2ee399abc2ba7",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "generation_config.json",
+          "bytes": 202,
+          "sha256": "a499c71895e008abd572558a5ad5904feaed92cf2a3b6e2cb0e9cabf03b96ed3",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "model.safetensors.index.json",
+          "bytes": 3329405,
+          "sha256": "e5e9c492685f84c8d2d8369f36c74674b03410715f23f6179313f6f1feb90311",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "tokenizer.json",
+          "bytes": 10879128,
+          "sha256": "a263cce0b7e2b03f7ee07ce809783ef4b47f160c3f268a4ea1524f638da45b68",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "RecursiveSI/flint",
+          "revision": "2a247be0c0aec895ccb0ac7ca92229ec6df37288",
+          "filename": "tokenizer_config.json",
+          "bytes": 30439,
+          "sha256": "159ac88217e90ffd0a4a294726048bb302829e82e1958dc85bb203aa79138fbf",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Choose a GGUF variant for the managed Windows runtime. This publisher format needs a different runtime."
+      },
+      "bytes": 79589399615
+    },
+    {
+      "id": "hf-d655a33d8e474c636317fe0b",
+      "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+      "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+      "variantKey": "gguf:raon-1-mini-preview-IQ4_XS.gguf",
+      "name": "Raon 1 mini · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-gguf",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "raon-1-mini-preview-IQ4_XS.gguf",
+          "bytes": 16071801344,
+          "sha256": "85570a704f9adc0df8b5b64c4e74ce956a5519e4868636d5daa00a84eb30696f",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "README.md",
+          "bytes": 55781,
+          "sha256": "6b8461e9ff5ceafaa2707a67bf1e708093fd81c0019bf1b0e909e890ac989357",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 16071857125
+    },
+    {
+      "id": "hf-083d70c5babbee298af96693",
+      "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+      "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+      "variantKey": "gguf:raon-1-mini-preview-Q4_K_M.gguf",
+      "name": "Raon 1 mini · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-gguf",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "raon-1-mini-preview-Q4_K_M.gguf",
+          "bytes": 19686434304,
+          "sha256": "bedbd8a35de6242c686bbbcdc6e8caac1920423e1dd320616ba14b1a04fe1705",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "README.md",
+          "bytes": 55781,
+          "sha256": "6b8461e9ff5ceafaa2707a67bf1e708093fd81c0019bf1b0e909e890ac989357",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 19686490085
+    },
+    {
+      "id": "hf-7f2f2482c8c9d2c81f44a9e0",
+      "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+      "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+      "variantKey": "gguf:raon-1-mini-preview-Q5_K_M.gguf",
+      "name": "Raon 1 mini · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-gguf",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "raon-1-mini-preview-Q5_K_M.gguf",
+          "bytes": 22183765504,
+          "sha256": "77580fd24505cf441ef0ed3e1a77f09014c796feb147455ea03de35ba563b6ca",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "README.md",
+          "bytes": 55781,
+          "sha256": "6b8461e9ff5ceafaa2707a67bf1e708093fd81c0019bf1b0e909e890ac989357",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 22183821285
+    },
+    {
+      "id": "hf-dfeb6e422a4f44a8b1426686",
+      "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+      "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+      "variantKey": "gguf:raon-1-mini-preview-Q6_K.gguf",
+      "name": "Raon 1 mini · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-gguf",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "raon-1-mini-preview-Q6_K.gguf",
+          "bytes": 25839462144,
+          "sha256": "e911feace2244fe26a2b7478ca785494b4b0af8aedefac07ef06ef69c3f5b6a3",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "README.md",
+          "bytes": 55781,
+          "sha256": "6b8461e9ff5ceafaa2707a67bf1e708093fd81c0019bf1b0e909e890ac989357",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 25839517925
+    },
+    {
+      "id": "hf-bced78ba05c6b35e8c90a881",
+      "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+      "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+      "variantKey": "gguf:raon-1-mini-preview-Q8_0.gguf",
+      "name": "Raon 1 mini · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-gguf",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "raon-1-mini-preview-Q8_0.gguf",
+          "bytes": 30693556000,
+          "sha256": "c09eabcdc8336b123246de0e3189f39388a98cdf6da66ab6c0a752f713f4d003",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+          "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+          "filename": "README.md",
+          "bytes": 55781,
+          "sha256": "6b8461e9ff5ceafaa2707a67bf1e708093fd81c0019bf1b0e909e890ac989357",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Managed Windows CPU runtime; generation is checked after installation"
+      },
+      "bytes": 30693611781
+    },
+    {
+      "id": "hf-3ddf59b492fcbb157f6772b6",
+      "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+      "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+      "variantKey": "safetensors:.",
+      "name": "Raon 1 mini · MLX 4-bit",
+      "quantization": "MLX 4-bit",
+      "format": "safetensors",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-mlx",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "model-00001-of-00004.safetensors",
+          "bytes": 4908088916,
+          "sha256": "bdbcb33054bb19f004e02ab45c74a2a186c60593bcd8d71f034b575d4a6ea97d",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "model-00002-of-00004.safetensors",
+          "bytes": 4945820408,
+          "sha256": "3c150311354d14e105c07ad1787d76bcc65dc119532920d0d754ff78672a810e",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "model-00003-of-00004.safetensors",
+          "bytes": 4893777576,
+          "sha256": "a0c5ca1f7dff9c805eecae73e5b0cb31d5b027adb2846bd7ed6392fc766edd7a",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "model-00004-of-00004.safetensors",
+          "bytes": 2789832092,
+          "sha256": "8eba6e246ec19b7eb0dcd00e3f949d4956c13bb4c18862d5bbd421b01775e999",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "README.md",
+          "bytes": 54592,
+          "sha256": "f2bb57d7d5a8c5743a1c9407ab4f34c9e6104359eabf24b631889f6a19ff1211",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "chat_template.jinja",
+          "bytes": 6518,
+          "sha256": "46cd7169192e47317e2feb95e00070bc075a7175d5ac398abe37ce784235d198",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "config.json",
+          "bytes": 24432,
+          "sha256": "fef0416c243d95a3e8b2c0606eef9a97c5591bb33a479ea3f0240eee11b1fe06",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "generation_config.json",
+          "bytes": 77,
+          "sha256": "ed96b758a8ece362cc9e88baebb6e46b9303560dbda39bf7e9f12ced10743ed6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "model.safetensors.index.json",
+          "bytes": 146603,
+          "sha256": "2f0481df188d7825784ff7d7bfdca11934f393edeae53b0e7926bcadf164f663",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "tokenizer.json",
+          "bytes": 21576473,
+          "sha256": "d6f3eafdda18a7b39b6152c62d54c417faca4bd89b17c8b8800d8bf221394930",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-mlx",
+          "revision": "2474b55299c6446a51a342da332bd13cf869dfa1",
+          "filename": "tokenizer_config.json",
+          "bytes": 253,
+          "sha256": "c784255e6f9ac759ad0173dac2fa41362d10bbd6cbad59d4462ef3c141b2d0f2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Choose a GGUF variant for the managed Windows runtime. This publisher format needs a different runtime."
+      },
+      "bytes": 17559327940
+    },
+    {
+      "id": "hf-a435a3e3f6ce05d4863f7cea",
+      "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+      "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+      "variantKey": "safetensors:.",
+      "name": "Raon 1 mini · NVFP4",
+      "quantization": "NVFP4",
+      "format": "safetensors",
+      "subdirectory": "",
+      "modelType": "raon1_mini",
+      "architectures": [],
+      "contextTokens": 8192,
+      "familyId": "publisher-raon-1-mini",
+      "familyLabel": "Raon 1 mini",
+      "nativeModelIds": [
+        "raon-1-mini",
+        "raon-1-mini-iq4-xs",
+        "raon-1-mini-q5-k-m",
+        "raon-1-mini-q6-k",
+        "raon-1-mini-q8-0",
+        "raon-1-mini-nvfp4",
+        "raon-1-mini-mlx"
+      ],
+      "license": "apache-2.0",
+      "sourceUrl": "https://huggingface.co/KRAFTON/Raon-1-mini-preview-nvfp4",
+      "files": [
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-01.safetensors",
+          "bytes": 601802664,
+          "sha256": "b64a0dd7e5d5dfefaca024c1b02997fe7a28eb49793b5f4ed66e234cce7c956f",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-02.safetensors",
+          "bytes": 601802664,
+          "sha256": "f378cfa5c49eb8b2ee97f7fd5784d973e8819c7d74a145c3a49b3c08462d9fa9",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-03.safetensors",
+          "bytes": 601802664,
+          "sha256": "68c321381cb3fb841b85e65c076d253b0d60783eddef504ab7f8107cd334f122",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-04.safetensors",
+          "bytes": 601802664,
+          "sha256": "5132de2c0a8583a253e7f386fbfa8f10ed56aba83b20afced3b1bb95208cd7db",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-05.safetensors",
+          "bytes": 601802664,
+          "sha256": "67d06c02b7834831cf01df76c107af96380f10f5506077739ccb653bf9d61bfd",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-06.safetensors",
+          "bytes": 601802664,
+          "sha256": "986bf37f249bde70701bd8c6f616e1c742866ca54fca89a04342d7a3431e21ae",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-07.safetensors",
+          "bytes": 601802664,
+          "sha256": "b1650de9d29e36ba0b7417482d9d9f15c2ea4cca450e3ac4c13af7551de6368d",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-08.safetensors",
+          "bytes": 601802664,
+          "sha256": "cebe5adc8c79c1fe81744871dfb0b093b01c7724e7f11a29a7ac176b4067b598",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-09.safetensors",
+          "bytes": 601802664,
+          "sha256": "3817962282565c78afc9c122b59b05dd832bdde63b22c7825b3d3ae2cfd92c96",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-10.safetensors",
+          "bytes": 601804200,
+          "sha256": "91f579411663164c49440ea98d08476a46fb764e9a2c39b4e80a8f6ee189e25d",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-11.safetensors",
+          "bytes": 601804200,
+          "sha256": "f940eccbe1ae5f4cddae960d14cc26b30226aab80c1ee90784fb309144e7cc9c",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-12.safetensors",
+          "bytes": 601804200,
+          "sha256": "a73fea9a6c48fe5ca1482e8b3b1b95b3c5d0bf3bb1d85427c7f18ec4b4c14b79",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-13.safetensors",
+          "bytes": 601804200,
+          "sha256": "68cc99429d9ede06179aa2293948ed31217bbb09a697c88712fb22ae4b4eb5c6",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-14.safetensors",
+          "bytes": 601804200,
+          "sha256": "96ceb8fcc35923dfb9e7850ebb04cb4c27c3c899ae602d93c8af9bcabd2185ca",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-15.safetensors",
+          "bytes": 601804200,
+          "sha256": "47049802be24b24b7060d56c6a0adf666a08fcd86ce1c24dadb3cad50cf9eae2",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-16.safetensors",
+          "bytes": 601804200,
+          "sha256": "7304a17cc73835f157242d786427ed73571aab1124e0ebe4565a21e657e4f619",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-17.safetensors",
+          "bytes": 601804200,
+          "sha256": "9d344689a4f5209eb09e89376a50524d3f0f9856a4bbe0e921b87b7a303a538f",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-18.safetensors",
+          "bytes": 601804200,
+          "sha256": "4f3441ec6d33c8beb0b535fd2e149515d5770a2c1ea1137efa8bdf4b45df7da1",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-19.safetensors",
+          "bytes": 601804200,
+          "sha256": "4468296d9afc64706afbab7c60d10621c2deee2d9e1b8f00f3e537e14d3c7ccf",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-20.safetensors",
+          "bytes": 601804200,
+          "sha256": "74db62ce79e6d1b5c7c11a053fd771118562ff424795a0d6deb9803e1befce2c",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-21.safetensors",
+          "bytes": 601804200,
+          "sha256": "f93126a521c216354649f1e9122afa2e80b422df8084b45c923c463c14e7f569",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-22.safetensors",
+          "bytes": 601804200,
+          "sha256": "4b09d771c045329f075ac103109c4dd768cdced7b22aca0dda3759fddf2d7876",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-23.safetensors",
+          "bytes": 601804200,
+          "sha256": "db806e2f28957ec3b6cb52732eb11fa724ef93cdfba6b3589d4a19c6c187b21c",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-moe-24.safetensors",
+          "bytes": 601804200,
+          "sha256": "ddd00a5ab23461988bf980091bc58fc1f7ee98b5133364371e68dcf6ec7a3caa",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model-unquantized.safetensors",
+          "bytes": 3098595048,
+          "sha256": "88c1db0223c2e48ce59f4876f1691e7b768065a1890808dce2d81695842e1d1d",
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "LICENSE",
+          "bytes": 11358,
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "README.md",
+          "bytes": 55591,
+          "sha256": "6a4e077157b0ba6a4eb07998aadee944574cbc08128e7772a709697bbd92adc2",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "chat_template.jinja",
+          "bytes": 6801,
+          "sha256": "0fa3ab8b29a608e16d5550d2131e57daf325db231cc1a0f9db71b978a0a26cfa",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "config.json",
+          "bytes": 1112100,
+          "sha256": "80e784352e79c467ad7731a7eeb1a4584084d9fa149faa33acf0cb7b7196b36e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "generation_config.json",
+          "bytes": 167,
+          "sha256": "9480ec0f58bcbb8df2050aa8312b3fdd7248792c4b0e861582feeb75fdfe71f5",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "model.safetensors.index.json",
+          "bytes": 3356418,
+          "sha256": "a1e8faed958b78ae8594f87c9fb79638590fa7ffa2d7fe031bbefaf3aa590541",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "tokenizer.json",
+          "bytes": 21576473,
+          "sha256": "d6f3eafdda18a7b39b6152c62d54c417faca4bd89b17c8b8800d8bf221394930",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "KRAFTON/Raon-1-mini-preview-nvfp4",
+          "revision": "c80918df38e527fcfac63523c3319e4b7af80c87",
+          "filename": "tokenizer_config.json",
+          "bytes": 299,
+          "sha256": "4fdb51c3ae8fdc72a269964fdec16d57910cb687a79d94c7530bbd9497698888",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "status": "not-installed",
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Choose a GGUF variant for the managed Windows runtime. This publisher format needs a different runtime."
+      },
+      "bytes": 17568001231
+    }
+  ]
+}

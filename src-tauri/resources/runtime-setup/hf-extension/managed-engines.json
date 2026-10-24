@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "engines": {
+    "flint-cpu-v1": {
+      "label": "Flint",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11860/llama-b11860-bin-win-cpu-x64.zip",
+      "sha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
+      "bytes": 24178326,
+      "source": "https://github.com/ggml-org/llama.cpp",
+      "revision": "df9beac71",
+      "version": "b11860"
+    },
+    "raon-cpu-v1": {
+      "label": "Raon",
+      "url": "https://github.com/hertzitamar9-png/OpenCore/releases/download/recovery-base-20261024/raon-windows-x64-fb895662-crt.zip",
+      "sha256": "188d4d0741a3d9760317094315dd9878e92191cc7e3285bf2951b0e79c81971e",
+      "bytes": 12920473,
+      "source": "https://github.com/krafton-ai/llama.cpp",
+      "revision": "fb895662d25868756a19253ca5e0688f99b18994"
+    }
+  }
+}

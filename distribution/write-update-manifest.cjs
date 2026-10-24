@@ -4,7 +4,7 @@ const repository='hertzitamar9-png/OpenCore';
 function createUpdateManifest(release,version,signature){
   const tag=`app-v${version}`;
   if(release.tag_name!==tag||!/^\d+\.\d+\.\d+$/.test(version))throw Error('Release identity mismatch');
-  const assets=release.assets.filter(asset=>['OpenCore Setup.exe','OpenCore.Setup.exe','OpenCore-Setup.exe'].includes(asset.name));
+  const assets=release.assets.filter(asset=>['OpenCore Package.exe','OpenCore.Package.exe','OpenCore-Package.exe'].includes(asset.name));
   const asset=assets[0];
   if(assets.length!==1||asset.state!=='uploaded'||!signature.trim())throw Error('Release has no signed OpenCore Setup installer');
   const prefix=`https://github.com/${repository}/releases/download/`;
@@ -19,7 +19,7 @@ function createUpdateManifest(release,version,signature){
 if(require.main===module){
   const [directory,releaseFile,version]=process.argv.slice(2);
   const release=JSON.parse(fs.readFileSync(releaseFile,'utf8').replace(/^\uFEFF/,''));
-  const signature=fs.readFileSync(path.join(directory,'OpenCore Setup.exe.sig'),'utf8');
+  const signature=fs.readFileSync(path.join(directory,'OpenCore Package.exe.sig'),'utf8');
   fs.writeFileSync(path.join(directory,'latest.json'),JSON.stringify(createUpdateManifest(release,version,signature),null,2)+'\n');
   console.log(`Public signed update manifest ready for ${version}`);
 }

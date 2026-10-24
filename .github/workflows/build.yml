@@ -81,6 +81,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python distribution/hf-research/build_catalog.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python distribution/build-publisher-catalog.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Prepare the verified newer native baseline and current committed frontend
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -113,7 +115,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify an isolated install and the packaged Python and helpers
         run: |
-          $installer = (Resolve-Path -LiteralPath 'distribution/.output/release/OpenCore Setup.exe').Path
+          $installer = (Resolve-Path -LiteralPath 'distribution/.output/release/OpenCore Package.exe').Path
           $testRoot = Join-Path $env:RUNNER_TEMP 'opencore-installer-check'
           if (Test-Path -LiteralPath $testRoot) { throw 'Isolated test folder already exists' }
           $process = Start-Process -FilePath $installer -ArgumentList @('/S','/TEST',('/D=' + $testRoot)) -WindowStyle Hidden -Wait -PassThru
@@ -122,15 +124,23 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$testRoot/test-python/python.exe" -I -B distribution/qa-portable-runtime.py --root $testRoot --output distribution/.output/release/runtime-verification.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Sign the verified installer for existing OpenCore installations
+      - name: Build the small setup downloader
+        run: python distribution/build-bootstrap.py --output distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION
+      - name: Sign the verified app package and small setup
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
+          npx tauri signer sign 'distribution/.output/release/OpenCore Package.exe'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Package.exe' 'distribution/.output/release/OpenCore Package.exe.sig' src-tauri/tauri.conf.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx tauri signer sign 'distribution/.output/release/OpenCore Setup.exe'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Setup.exe' 'distribution/.output/release/OpenCore Setup.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify the small setup accepts only genuine signed packages
+        run: python distribution/qa-bootstrap.py --exe 'distribution/.output/release/OpenCore Setup.exe' --package 'distribution/.output/release/OpenCore Package.exe' --signature 'distribution/.output/release/OpenCore Package.exe.sig'
       - name: Retain the verified signed installer for independent publication retries
         uses: actions/upload-artifact@v4
         with:

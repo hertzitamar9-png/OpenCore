@@ -145,5 +145,8 @@
   "chrome-extension/popup.html": "chrome-extension/popup.html",
   "chrome-extension/pair.html": "chrome-extension/pair.html",
   "chrome-extension/icons/opencore-32.png": "chrome-extension/icons/opencore-32.png",
-  "chrome-extension/icons/opencore-128.png": "chrome-extension/icons/opencore-128.png"
+  "chrome-extension/icons/opencore-128.png": "chrome-extension/icons/opencore-128.png",
+  "runtime-setup/hf-extension/managed_engines.py": "src-tauri/resources/runtime-setup/hf-extension/managed_engines.py",
+  "runtime-setup/hf-extension/managed-engines.json": "src-tauri/resources/runtime-setup/hf-extension/managed-engines.json",
+  "runtime-setup/hf-extension/publisher-models.json": "src-tauri/resources/runtime-setup/hf-extension/publisher-models.json"
 }

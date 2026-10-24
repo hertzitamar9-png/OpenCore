@@ -45,8 +45,13 @@ class ReleasePublicationTests(unittest.TestCase):
         self.folder = Path(self.temporary.name).resolve()
         self.version = '0.3.145'
         self.commit = 'a' * 40
-        (self.folder / 'OpenCore Setup.exe').write_bytes(b'verified-installer-fixture')
-        (self.folder / 'OpenCore Setup.exe.sig').write_text('signature-fixture', encoding='utf-8')
+        (self.folder / 'OpenCore Package.exe').write_bytes(b'verified-installer-fixture')
+        (self.folder / 'OpenCore Package.exe.sig').write_text('signature-fixture', encoding='utf-8')
+        (self.folder / 'OpenCore Setup.exe').write_bytes(b'verified-bootstrap-fixture')
+        (self.folder / 'OpenCore Setup.exe.sig').write_text('bootstrap-signature-fixture', encoding='utf-8')
+        (self.folder / 'bootstrap-verification.json').write_text(json.dumps({
+            'passed': True, 'version': self.version, 'sha256': publish.file_hash(self.folder / 'OpenCore Setup.exe'),
+            'signatureVerificationPassed': True, 'tamperedSignatureRejected': True, 'tamperedHashRejected': True}))
         for name, value in {
             'package-manifest.json': {'build': self.version, 'commit': self.commit, 'appExeSha256': 'app-hash'},
             'installer-verification.json': {'passed': True, 'build': self.version, 'exactAppSha256': 'app-hash'},
@@ -111,7 +116,7 @@ class ReleasePublicationTests(unittest.TestCase):
         self.assertEqual({Path(name).name for name in uploads[0][7:]}, {'latest.json', 'SHA256SUMS.txt'})
         manifest = json.loads((self.folder / 'latest.json').read_text())
         self.assertEqual(manifest['platforms']['windows-x86_64']['url'],
-                         f'https://github.com/{publish.REPOSITORY}/releases/download/app-v0.3.145/OpenCore.Setup.exe')
+                         f'https://github.com/{publish.REPOSITORY}/releases/download/app-v0.3.145/OpenCore.Package.exe')
 
     def test_first_publication_creates_a_draft_then_refreshes_it_by_id(self):
         self.release['assets'] = []
@@ -139,7 +144,7 @@ class ReleasePublicationTests(unittest.TestCase):
         self.assertFalse(self.release['draft'])
         self.assertTrue(created)
         self.assertTrue(any(command[2] == 'upload' and any(
-            Path(argument).resolve() == (self.folder / 'OpenCore Setup.exe').resolve() for argument in command[7:])
+            Path(argument).resolve() == (self.folder / 'OpenCore Package.exe').resolve() for argument in command[7:])
             for command in self.commands))
 
     def test_existing_public_installer_cannot_be_replaced(self):
@@ -163,13 +168,21 @@ class ReleasePublicationTests(unittest.TestCase):
         self.assertFalse(self.commands)
 
     def test_unconfirmed_remote_installer_hash_blocks_publication(self):
-        installer = next(asset for asset in self.release['assets'] if asset['name'].endswith('.exe'))
+        installer = next(asset for asset in self.release['assets'] if asset['name'] == 'OpenCore.Package.exe')
         installer['digest'] = 'sha256:wrong'
         self.command = lambda *args: self.commands.append(args)  # Upload never becomes verified on the server.
         with self.assertRaisesRegex(ValueError, 'asset hashes'):
             self.run_publication()
         self.assertTrue(self.release['draft'])
         self.assertFalse(any(command[2] == 'edit' for command in self.commands))
+
+    def test_setup_size_limit_blocks_publication(self):
+        setup = self.folder / 'OpenCore Setup.exe'
+        with setup.open('wb') as output:
+            output.truncate(2_000_001)
+        with self.assertRaisesRegex(ValueError, 'small setup'):
+            self.run_publication()
+        self.assertFalse(self.commands)
 
 
 if __name__ == '__main__':

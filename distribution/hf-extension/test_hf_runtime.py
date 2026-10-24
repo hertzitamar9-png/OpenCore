@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from hf_runtime import RuntimeManager, checked_model_files, conversation_key, runtime_plan
+from hf_runtime import RuntimeManager, checked_model_files, conversation_key, runtime_plan, system_prefix
 
 
 class RuntimeSafetyTests(unittest.TestCase):
@@ -113,6 +113,20 @@ class RuntimeSafetyTests(unittest.TestCase):
         runtime.stop()
         self.assertTrue(child.stopped)
         self.assertIsNone(runtime._context)
+
+    def test_echo_memory_and_policy_share_one_initial_system_without_reordering_turns(self):
+        payload = {'messages': [{'role': 'system', 'content': 'Policy'},
+            {'role': 'user', 'content': 'Earlier question'},
+            {'role': 'assistant', 'content': 'Earlier answer'},
+            {'role': 'system', 'content': 'Retrieved archive'},
+            {'role': 'developer', 'content': 'Developer context'},
+            {'role': 'user', 'content': 'Current question'}]}
+        adapted = system_prefix(payload)
+        self.assertEqual([x['role'] for x in adapted['messages']], ['system', 'user', 'assistant', 'user'])
+        self.assertEqual(adapted['messages'][0]['content'], 'Policy\n\nRetrieved archive\n\nDeveloper context')
+        self.assertEqual(adapted['messages'][-1]['content'], 'Current question')
+        self.assertEqual(len(payload['messages']), 6)
+        self.assertEqual(system_prefix(adapted), adapted)
 
 
 if __name__ == '__main__':

@@ -70,6 +70,7 @@ class BridgeState:
         self.progress, self.worker = None, None
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
+        self._seed_publisher_catalog()
         try:
             saved = _read_json(self.job_path, 1024 * 1024)
             if isinstance(saved, dict) and isinstance(saved.get("progress"), dict):
@@ -105,6 +106,31 @@ class BridgeState:
     def persist_catalog(self):
         atomic_json(self.catalog_path, {"schema": 1, "entries": list(self.entries.values())})
 
+    def _seed_publisher_catalog(self):
+        source = self.resources / 'runtime-setup/hf-extension/publisher-models.json'
+        if not source.is_file():
+            return
+        seed = _read_json(source)
+        if seed.get('schema') != 1 or not isinstance(seed.get('entries'), list):
+            raise ValueError('The bundled publisher catalog is invalid')
+        changed = False
+        for value in seed['entries']:
+            if value.get('installable'):
+                validate_entry(value)
+            else:
+                parse_repository(value.get('repository'))
+            existing = self.entries.get(value['id'])
+            entry = copy.deepcopy(value)
+            if existing and existing['revision'] == value['revision']:
+                for key in ('providerId', 'profileId', 'runtimePreparation'):
+                    if key in existing:
+                        entry[key] = copy.deepcopy(existing[key])
+            if existing != entry:
+                self.entries[value['id']] = entry
+                changed = True
+        if changed:
+            self.persist_catalog()
+
     def _receipt(self, entry):
         directory = managed_path(managed_path(self.root, "models", "hub"), entry["id"])
         path = managed_path(directory, "install-receipt.json")
@@ -138,6 +164,11 @@ class BridgeState:
         result["status"] = "installed" if receipt else "not-installed"
         preparation = entry.get("runtimePreparation") or {}
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
+        if result['runtimeReady']:
+            from managed_engines import engine_for, definition
+            selected = engine_for(entry)
+            if selected and (preparation.get('engineArchiveSha256') != definition(selected)['sha256'] or preparation.get('echoMode') != 'archive-retrieval'):
+                result['runtimeReady'] = False
         if receipt:
             result.update(localDirectory=receipt["localDirectory"], receiptPath=receipt["receiptPath"], installReceipt=copy.deepcopy(receipt))
         if self.progress and self.progress.get("id") == entry["id"] and self.progress.get("status") in ACTIVE | {"paused", "failed"}:
@@ -181,7 +212,7 @@ class BridgeState:
                 raise Conflict("Wait for or pause the active model job before updating its metadata")
             for entry in variants:
                 previous = self.entries.get(entry["id"], {})
-                for field in ("profileId", "providerId"):
+                for field in ("profileId", "providerId", "familyId", "familyLabel", "nativeModelIds"):
                     if previous.get(field):
                         entry[field] = previous[field]
                 if previous.get("revision") == entry["revision"] and previous.get("files") == entry["files"] and previous.get("runtimePreparation"):

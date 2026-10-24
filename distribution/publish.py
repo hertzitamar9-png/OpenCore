@@ -74,10 +74,19 @@ def publish(folder, version, commit):
             or installer_check['build'] != version or installer_check['exactAppSha256'] != package['appExeSha256']
             or not runtime_check['passed']):
         raise ValueError('A release requires matching completed installer and runtime checks')
-    installer = folder / 'OpenCore Setup.exe'
-    signature = folder / 'OpenCore Setup.exe.sig'
-    subprocess.run(['node', str(HERE / 'verify-signature.cjs'), str(installer), str(signature),
-                    str(HERE.parent / 'src-tauri/tauri.conf.json')], check=True)
+    installer = folder / 'OpenCore Package.exe'
+    signature = folder / 'OpenCore Package.exe.sig'
+    bootstrap = folder / 'OpenCore Setup.exe'
+    bootstrap_check = json.loads((folder / 'bootstrap-verification.json').read_text(encoding='utf-8'))
+    if (not bootstrap_check.get('passed') or bootstrap_check.get('version') != version
+            or not 0 < bootstrap.stat().st_size <= 2_000_000
+            or bootstrap_check.get('sha256') != file_hash(bootstrap)
+            or not all(bootstrap_check.get(key) for key in
+                       ['signatureVerificationPassed', 'tamperedSignatureRejected', 'tamperedHashRejected'])):
+        raise ValueError('The small setup downloader has not passed its size and signature checks')
+    for signed in [installer, bootstrap]:
+        subprocess.run(['node', str(HERE / 'verify-signature.cjs'), str(signed), str(signed) + '.sig',
+                        str(HERE.parent / 'src-tauri/tauri.conf.json')], check=True)
     release = find_release(tag)
     if release and not release['draft']:
         raise ValueError('This release is already public; never replace a published installer')
@@ -94,7 +103,8 @@ def publish(folder, version, commit):
     release = checked_release(release_id, tag, commit)
     if not release['draft']:
         raise ValueError('This release is already public; never replace a published installer')
-    initial = [installer, signature, folder / 'package-manifest.json',
+    initial = [installer, signature, bootstrap, folder / 'OpenCore Setup.exe.sig',
+               folder / 'bootstrap-verification.json', folder / 'package-manifest.json',
                folder / 'installer-verification.json', folder / 'runtime-verification.json']
     pending = [local for local in initial if not asset_matches(remote_asset(release, local), local)]
     if pending:
@@ -107,7 +117,8 @@ def publish(folder, version, commit):
     subprocess.run(['node', str(HERE / 'write-update-manifest.cjs'), str(folder), str(metadata), version], check=True)
     remote_installer = remote_asset(release, installer)
     digest = file_hash(installer)
-    (folder / 'SHA256SUMS.txt').write_text(digest + '  ' + remote_installer['name'] + '\n', encoding='ascii')
+    (folder / 'SHA256SUMS.txt').write_text(digest + '  ' + remote_installer['name'] + '\n' +
+        file_hash(bootstrap) + '  ' + remote_asset(release, bootstrap)['name'] + '\n', encoding='ascii')
     command('gh', 'release', 'upload', tag, '--repo', REPOSITORY, '--clobber',
             str(folder / 'latest.json'), str(folder / 'SHA256SUMS.txt'))
     release = checked_release(release_id, tag, commit)
@@ -124,6 +135,8 @@ def publish(folder, version, commit):
         raise RuntimeError('The completed signed update was not published')
     print(json.dumps({'published': True, 'version': version, 'commit': commit,
                       'installerSha256': digest, 'url': published['html_url'],
+                      'setupBytes': bootstrap.stat().st_size,
+                      'setupUrl': remote_asset(published, bootstrap)['browser_download_url'],
                       'installerUrl': remote_asset(published, installer)['browser_download_url']}))
 
 

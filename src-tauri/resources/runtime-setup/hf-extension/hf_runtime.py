@@ -93,15 +93,24 @@ def runtime_plan(entry, root, resources):
         raise ValueError('No model weights are present for the runtime adapter')
     context = max(8192, min(int(entry.get('contextTokens') or 8192), 32768))
     if fmt == 'gguf':
-        engine = root / 'runtime/llama-server.exe'
-        if not engine.is_file():
-            engine=resources/'opencore/runtime/llama-server.exe'
-        if not engine.is_file():
-            raise ValueError('The bundled GGUF runtime is missing. Reinstall OpenCore to restore it.')
+        from managed_engines import engine_for, executable
+        publisher_engine = engine_for(entry)
+        engine = executable(root, publisher_engine) if publisher_engine else root / 'runtime/llama-server.exe'
+        if not publisher_engine:
+            if not engine.is_file():
+                engine=resources/'opencore/runtime/llama-server.exe'
+            if not engine.is_file():
+                raise ValueError('The bundled GGUF runtime is missing. Reinstall OpenCore to restore it.')
         model = sorted(models, key=lambda p: p.name)[0]
         command = [str(engine), '--model', str(model), '--host', '127.0.0.1', '--port', '{port}',
                    '--ctx-size', str(context), '--threads', '2', '--threads-batch', '2',
                    '--gpu-layers', 'auto', '--fit', 'on', '--no-webui', '--api-key-file', '{keyfile}']
+        if publisher_engine:
+            # The publisher CPU builds work without a CUDA SDK or a particular GPU.
+            command[command.index('--gpu-layers') + 1] = '0'
+            command[command.index('--fit') + 1] = 'off'
+            command += ['--no-repack', '--cache-ram', '0', '--parallel', '1', '--no-warmup', '--jinja',
+                        '--batch-size', '64', '--ubatch-size', '16']
         companions = [folder / f['filename'] for f in entry['files'] if f.get('role') == 'companion' and f['filename'].lower().endswith('.gguf')]
         if companions:
             command += ['--mmproj', str(companions[0])]
@@ -117,7 +126,8 @@ def runtime_plan(entry, root, resources):
         command = [_python(root), '-I', str(Path(__file__).resolve()), '--worker', 'text',
                    '--resources', str(resources), '--model-dir', str(directory), '--model-id', entry['id'],
                    '--context', str(context), '--port', '{port}']
-    return {'command': command, 'context': context, 'format': fmt, 'folder': str(folder)}
+    return {'command': command, 'context': context, 'format': fmt, 'folder': str(folder),
+            **({'publisherEngine': publisher_engine} if fmt == 'gguf' and publisher_engine else {})}
 
 
 def _port():
@@ -144,10 +154,12 @@ class RuntimeManager:
         self._children, self._logs = [], []
         self._context = None
         self._active = None
+        self._memory_watchers = []
         self._state_lock = threading.RLock()
         self._generation = threading.Lock()
         self._preparation = threading.Lock()
         self._cancel = threading.Event()
+        self._stop_reason = ''
         self.on_progress = lambda **values: None
 
     def models(self, catalog):
@@ -182,24 +194,47 @@ class RuntimeManager:
             detail = error.read(2048).decode('utf-8', 'replace')
             raise RuntimeError(f'The local runtime returned HTTP {error.code}: {detail}') from None
 
-    def _spawn(self, command, environment, log_path):
+    def _spawn(self, command, environment, log_path, cwd=None):
         log = Path(log_path).open('ab', buffering=0)
         self._logs.append(log)
+        if os.name == 'nt':
+            ctypes.windll.kernel32.SetErrorMode(0x8003)  # Report loader errors through exit status, not a blocking dialog.
+        flags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+        if cwd is not None:
+            flags |= getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)
         child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=environment,
-            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), cwd=str(self.root))
+            creationflags=flags, cwd=str(cwd or self.root))
         self._children.append(child)
+        if cwd is not None:
+            def protect_available_memory():
+                while child.poll() is None and not self._cancel.wait(1):
+                    available = _available_memory()
+                    if available is not None and available < 3 * 1024 ** 3:
+                        self._stop_reason = 'Available host memory became too low. The managed runtime was stopped; choose a smaller quantization.'
+                        self._cancel.set()
+                        try:
+                            child.terminate()
+                        except OSError:
+                            pass
+                        return
+            watcher = threading.Thread(target=protect_available_memory, daemon=True)
+            watcher.start()
+            self._memory_watchers.append(watcher)
         return child
 
     def _wait_health(self, child, url, key, log_path, deadline=300):
         end = time.monotonic() + deadline
         while time.monotonic() < end:
             if self._cancel.is_set():
-                raise RuntimeError('Runtime preparation paused; downloaded files were retained.')
+                raise RuntimeError(self._stop_reason or 'Runtime preparation paused; downloaded files were retained.')
+            available = _available_memory()
+            if available is not None and available < 3 * 1024 ** 3:
+                raise RuntimeError('Available host memory became too low. The managed runtime was stopped; choose a smaller quantization.')
             if child.poll() is not None:
                 with Path(log_path).open('rb') as log:
                     log.seek(max(0, log.seek(0, 2) - 5000))
                     detail = log.read().decode('utf-8', 'replace')
-                raise RuntimeError('The managed runtime could not load this architecture: ' + detail[-2500:])
+                raise RuntimeError('The managed runtime exited with code ' + str(child.returncode) + ': ' + detail[-2500:])
             try:
                 with self._request(url + '/health', key=key, timeout=1) as response:
                     if response.status == 200:
@@ -245,16 +280,25 @@ class RuntimeManager:
             return self._active['proof']
         self.stop(clear_context=False)
         self._cancel.clear()
+        self._stop_reason = ''
         plan = runtime_plan(entry, self.root, self.resources)
         self.on_progress(stage='verifying-files', detail='Checking the installed checkpoint before execution')
         files = checked_model_files(entry, self.root, self._cancel)
         available = _available_memory()
         weight_bytes = sum(path.stat().st_size for path in files)
+        if plan.get('publisherEngine') and available and weight_bytes + 3 * 1024 ** 3 > available:
+            raise RuntimeError(f'This CPU package needs about {(weight_bytes + 3 * 1024 ** 3) / 1e9:.1f} GB of available host RAM including working space. Choose a smaller quantization or close other applications.')
         if available and weight_bytes > available + 8 * 1024**3:
             raise RuntimeError(f'This checkpoint has {weight_bytes / 1e9:.1f} GB of weights; there is not enough available host/GPU memory for this managed runtime. Choose a smaller quantization.')
         run_dir = self.root / 'runtime-setup/hub-runs' / (entry['id'] + '-' + uuid.uuid4().hex[:12])
         run_dir.mkdir(parents=True)
         log_path = run_dir / 'runtime.log'
+        if plan.get('publisherEngine'):
+            from managed_engines import ensure
+            def check_cancel():
+                if self._cancel.is_set():
+                    raise RuntimeError('Runtime preparation paused; downloaded files were retained.')
+            ensure(self.root, plan['publisherEngine'], self.on_progress, check_cancel)
         if plan['format'] == 'safetensors':
             self._ensure_transformers(entry, log_path)
             plan = runtime_plan(entry, self.root, self.resources)
@@ -266,7 +310,8 @@ class RuntimeManager:
         environment = dict(os.environ, PYTHONIOENCODING='utf-8', OPENCORE_HF_INTERNAL_KEY=key,
                            PATH=str(self.resources/'doucode/runtime')+os.pathsep+os.environ.get('PATH',''))
         self.on_progress(stage='loading-model', detail='Loading the selected checkpoint in its managed runtime')
-        child = self._spawn(command, environment, log_path)
+        child = self._spawn(command, environment, log_path,
+                            cwd=Path(command[0]).parent if plan.get('publisherEngine') else None)
         upstream = f'http://127.0.0.1:{port}'
         self._wait_health(child, upstream, key, log_path)
         self.on_progress(stage='verifying-inference', detail='Checking an actual short generation')
@@ -288,13 +333,29 @@ class RuntimeManager:
         echo_child = self._spawn(echo_command, dict(environment, ECHO_UPSTREAM_API_KEY=key), log_path)
         echo_url = f'http://127.0.0.1:{echo_port}'
         self._wait_health(echo_child, echo_url, key, log_path, deadline=60)
+        self.on_progress(stage='verifying-echo', detail='Checking a generated reply through the ECHO endpoint')
+        with self._request(echo_url + '/v1/chat/completions', {
+                'model': entry['id'], 'messages': [{'role': 'user', 'content': 'Say hello.'}],
+                'max_tokens': 16, 'temperature': 0, 'stream': False,
+                'conversation_id': 'installation-check-' + uuid.uuid4().hex,
+                'chat_template_kwargs': {'enable_thinking': False}}, key, timeout=180) as response:
+            echo_result = json.load(response)
+        echo_choices = echo_result.get('choices', [])
+        echo_message = echo_choices[0].get('message', {}) if echo_choices else {}
+        if not (echo_message.get('content') or echo_message.get('reasoning_content')):
+            raise RuntimeError('The ECHO endpoint did not return an actual generated reply')
         stats = [{'filename': str(path.relative_to(Path(plan['folder']))), 'bytes': path.stat().st_size,
                   'modifiedNs': path.stat().st_mtime_ns} for path in files]
         proof = {'runtimeReady': True, 'inferenceVerified': True, 'echoReady': True, 'contextTokens': plan['context'],
+                 'echoMode': 'archive-retrieval',
                  'verifiedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'repository': entry['repository'],
                  'revision': entry['revision'], 'receiptSha256': _hash(entry['receiptPath']),
                  'generatedTokens': proof_result.get('usage', {}).get('completion_tokens'),
                  'sampleSha256': hashlib.sha256(str(sample).encode()).hexdigest(), 'files': stats, 'logPath': str(log_path)}
+        if plan.get('publisherEngine'):
+            from managed_engines import definition
+            proof['engineId'] = plan['publisherEngine']
+            proof['engineArchiveSha256'] = definition(plan['publisherEngine'])['sha256']
         (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
         self._active = {'id': entry['id'], 'url': echo_url, 'key': key, 'proof': proof}
         return proof
@@ -348,6 +409,9 @@ class RuntimeManager:
             except OSError:
                 pass
         self._children.clear()
+        for watcher in self._memory_watchers:
+            watcher.join(timeout=1)
+        self._memory_watchers.clear()
         for log in self._logs:
             log.close()
         self._logs.clear()
@@ -381,6 +445,34 @@ def _authorized_handler(parent):
     return Authorized
 
 
+def system_prefix(payload):
+    """Adapt ECHO's late memory blocks to templates accepting one initial system message."""
+    messages = payload.get('messages') or []
+    pinned = [message for message in messages if message.get('role') in ('system', 'developer')]
+    if not pinned:
+        return payload
+    content = [message.get('content') or '' for message in pinned]
+    if all(isinstance(value, str) for value in content):
+        combined = '\n\n'.join(content)
+    else:
+        combined = []
+        for value in content:
+            if isinstance(value, list):
+                combined.extend(value)
+            else:
+                combined.append({'type': 'text', 'text': str(value)})
+    prefix = {**pinned[0], 'role': 'system', 'content': combined}
+    return {**payload, 'messages': [prefix] + [message for message in messages
+            if message.get('role') not in ('system', 'developer')]}
+
+
+def _echo_handler(parent):
+    class Compatible(_authorized_handler(parent)):
+        def _upstream(self, path, payload, stream):
+            return super()._upstream(path, system_prefix(payload), stream)
+    return Compatible
+
+
 def _worker_main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--worker', choices=['text', 'echo'], required=True)
@@ -394,9 +486,10 @@ def _worker_main():
     args = parser.parse_args()
     if args.worker == 'echo':
         module = _load('opencore_hub_echo', args.resources / 'echo/echo_server.py')
-        module.Handler = _authorized_handler(module.Handler)
+        module.Handler = _echo_handler(module.Handler)
         sys.argv = ['echo_server.py', '--port', str(args.port), '--host', '127.0.0.1', '--upstream', args.upstream,
-                    '--archive', str(args.archive), '--context-size', str(args.context), '--no-console', '--quiet']
+                    '--archive', str(args.archive), '--context-size', str(args.context),
+                    '--legacy-context', '--no-model-search', '--no-console', '--quiet']
         return module.main()
     module = _load('opencore_hub_text', args.resources / 'text-runtime/serve_text.py')
     original_server = module.ThreadingHTTPServer

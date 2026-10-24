@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "passed": true,
+  "platform": "Windows x64",
+  "hostRamGiB": 32,
+  "verification": "Actual pinned checkpoints, non-streamed and SSE replies through ECHO; no model weights are included in the app package.",
+  "runtimeSourceSha256": "add9344f01901a61706abc54c2cc1bfc70e8482c8ed4bb1d689250e21a70eb27",
+  "checks": [
+    {
+      "model": "flint-iq2-xxs",
+      "repository": "bartowski/RecursiveSI_flint-GGUF",
+      "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
+      "quantization": "IQ2_XXS",
+      "realCheckpoint": true,
+      "cpuThreads": 2,
+      "echoResponse": {
+        "role": "assistant",
+        "content": "<think></think>Hello! Sapphire."
+      },
+      "streamResponse": "<think></think>Stream verified.",
+      "streamingVerified": true,
+      "reasoningOffVerified": true,
+      "elapsedSeconds": 27.76600000000326,
+      "verifiedAt": "2026-10-24T20:33:35Z",
+      "engineId": "flint-cpu-v1",
+      "engineArchiveSha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
+      "echoMode": "archive-retrieval",
+      "contextTokens": 8192,
+      "checkpointBytes": 12029007072
+    },
+    {
+      "model": "raon-1-mini-iq4-xs",
+      "repository": "KRAFTON/Raon-1-mini-preview-gguf",
+      "revision": "3afcfcdb462ec3995e48099257143c3e352a4471",
+      "quantization": "IQ4_XS",
+      "realCheckpoint": true,
+      "cpuThreads": 2,
+      "echoResponse": {
+        "role": "assistant",
+        "content": "<think></think>\n\nHello! The verification word is sapphire."
+      },
+      "streamResponse": "<think></think>\n\nStream verified.",
+      "streamingVerified": true,
+      "reasoningOffVerified": true,
+      "elapsedSeconds": 37.187000000005355,
+      "verifiedAt": "2026-10-24T20:33:01Z",
+      "engineId": "raon-cpu-v1",
+      "engineArchiveSha256": "188d4d0741a3d9760317094315dd9878e92191cc7e3285bf2951b0e79c81971e",
+      "echoMode": "archive-retrieval",
+      "contextTokens": 8192,
+      "checkpointBytes": 16071801344
+    }
+  ]
+}

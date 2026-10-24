@@ -63,7 +63,7 @@ def installer_script(*, app, python, output, version, icon, branding, webview):
 !include "x64.nsh"
 Name "OpenCore"
 Caption "OpenCore Setup"
-OutFile "{nsis_literal(output / 'OpenCore Setup.exe')}"
+OutFile "{nsis_literal(output / 'OpenCore Package.exe')}"
 InstallDir "$LOCALAPPDATA\\OpenCore"
 InstallDirRegKey HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "InstallLocation"
 RequestExecutionLevel user
@@ -108,6 +108,14 @@ Function .onInit
   ${{IfNot}} ${{Errors}}
     StrCpy $TestInstall "1"
     Return
+  ${{EndIf}}
+  StrCpy $4 $INSTDIR 1
+  StrCpy $5 $INSTDIR 1 -1
+  ${{If}} $4 == '"'
+  ${{AndIf}} $5 == '"'
+    StrLen $4 $INSTDIR
+    IntOp $4 $4 - 2
+    StrCpy $INSTDIR $INSTDIR $4 1
   ${{EndIf}}
   ClearErrors
   ${{GetOptions}} $0 "/UPDATE" $1
@@ -262,8 +270,8 @@ def main():
     source.write_text(script, encoding='utf-8-sig')
     if args.nsis:
         subprocess.run([str(args.nsis.resolve()), '/V2', str(source)], check=True)
-        installer = args.output / 'OpenCore Setup.exe'
-        (args.output / 'SHA256SUMS.txt').write_text(file_hash(installer) + '  OpenCore Setup.exe\n', encoding='ascii')
+        installer = args.output / 'OpenCore Package.exe'
+        (args.output / 'SHA256SUMS.txt').write_text(file_hash(installer) + '  OpenCore Package.exe\n', encoding='ascii')
     print(json.dumps({'build': args.version, 'files': len(files), 'bytes': manifest['bytes'], 'output': str(args.output)}))
 
 

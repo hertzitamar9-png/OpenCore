@@ -172,7 +172,7 @@ def build_plan(metadata):
             "name": repo.split("/", 1)[1] + " · " + quant + (" · " + subdir if subdir else ""),
             "quantization": quant, "format": format_name, "subdirectory": subdir,
             "bytes": sum(p["bytes"] for p in pins), "files": pins, "installable": reason is None,
-            "reason": reason, "modelType": config.get("model_type"), "architectures": config.get("architectures", []),
+            "reason": reason, "modelType": config.get("model_type") or (metadata.get("gguf") or {}).get("architecture"), "architectures": config.get("architectures", []),
             "runtime": runtime, "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),
             "sourceUrl": HUB + "/" + repo, "status": "not-installed"})
     # Key and commit pin bind Add to the metadata that was actually reviewed.
