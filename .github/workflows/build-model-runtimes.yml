@@ -26,7 +26,7 @@ jobs:
           if ((git -C publisher-runtime rev-parse HEAD) -ne 'fb895662d25868756a19253ca5e0688f99b18994') { throw 'Publisher revision mismatch' }
       - name: Build the Windows CPU server with processor dispatch
         run: |
-          cmake -S publisher-runtime -B publisher-runtime/build -DGGML_NATIVE=OFF -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=OFF -DGGML_OPENMP=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
+          cmake -S publisher-runtime -B publisher-runtime/build -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=OFF -DGGML_OPENMP=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cmake --build publisher-runtime/build --config Release --target llama-server --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
