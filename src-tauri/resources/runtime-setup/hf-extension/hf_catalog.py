@@ -9,7 +9,7 @@ HUB = "https://huggingface.co"
 HEX40 = re.compile(r"[0-9a-fA-F]{40}\Z")
 HEX64 = re.compile(r"[0-9a-fA-F]{64}\Z")
 REPO_PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,95}\Z")
-QUANT = re.compile(r"(?<![A-Z0-9])((?:IQ|Q)[1-9][0-9]?(?:_[A-Z0-9]+)*|(?:NV|MX)FP4(?:_[A-Z0-9]+)*|FP8(?:_[A-Z0-9]+)*|BF16|FP16|F16|FP32|F32|MIX[-_ ]\d+(?:\.\d+)?G)(?![A-Z0-9])", re.I)
+QUANT = re.compile(r"(?<![A-Z0-9])((?:IQ|PTQ|PQ|TQ|Q)[1-9][0-9]?(?:_[A-Z0-9]+)*|(?:NV|MX)FP4(?:_[A-Z0-9]+)*|FP8(?:_[A-Z0-9]+)*|BF16|FP16|F16|FP32|F32|MIX[-_ ]\d+(?:\.\d+)?G)(?![A-Z0-9])", re.I)
 SHARD = re.compile(r"[-_](\d{1,6})-of-(\d{1,6})(?=\.[^.]+$)", re.I)
 AUXILIARY = re.compile(r"(?:^|[/_.-])(mmproj|imatrix|importance[-_]?matrix|draft|dflash\d*|optimizer|optim|training|trainer|checkpoint[-_]?step|scheduler|rng[-_]?state)(?:[/_.-]|$)", re.I)
 RESERVED = {"CON", "PRN", "AUX", "NUL", *("COM" + str(i) for i in range(1, 10)), *("LPT" + str(i) for i in range(1, 10))}

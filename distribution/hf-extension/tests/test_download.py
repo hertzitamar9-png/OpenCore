@@ -7,6 +7,8 @@ import threading
 import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest.mock import patch
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
@@ -194,6 +196,23 @@ class DownloadTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'checksum'):
             self.parallel_downloader().install(self.entry(), threading.Event(), lambda _: None)
         self.assertFalse((self.parallel_downloader().directory(self.entry()) / 'install-receipt.json').exists())
+
+    def test_disk_preflight_rejects_before_network_activity(self):
+        with patch.object(transfer.shutil, 'disk_usage', return_value=SimpleNamespace(free=1)):
+            with self.assertRaisesRegex(transfer.HubError, 'free disk'):
+                transfer.Downloader(self.root, self.client).install(self.entry(), threading.Event(), lambda _: None)
+        self.assertEqual(self.server.requests, [])
+
+    def test_verified_cached_checkpoint_does_not_reserve_another_download_copy(self):
+        downloader = transfer.Downloader(self.root, self.client)
+        entry = self.entry()
+        target = downloader.directory(entry) / 'dir/model-F16.gguf'
+        target.parent.mkdir(parents=True)
+        target.write_bytes(DATA)
+        with patch.object(transfer.shutil, 'disk_usage', return_value=SimpleNamespace(free=1)):
+            receipt = downloader.install(entry, threading.Event(), lambda _: None)
+        self.assertTrue(Path(receipt['receiptPath']).exists())
+        self.assertEqual(self.server.requests, [])
 
     def test_git_blob_checksum_and_private_weight_authorization_are_verified(self):
         self.server.private = True

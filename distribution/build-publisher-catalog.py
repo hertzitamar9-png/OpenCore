@@ -60,6 +60,19 @@ def build():
                             if m['id'] == 'flint' or m.get('variantOf') == 'flint'])
             entries.append(entry)
             seen.add(entry['id'])
+    for repository, family, label in [
+            ('hkust-aaron/EdgeRock-4B-GGUF', 'edgerock-4b', 'EdgeRock-4B'),
+            ('bartowski/migtissera_Tess-4.5-27B-GGUF', 'tess-45-27b', 'Tess 4.5 27B')]:
+        metadata = json.loads((HERE / 'hf-research' / (repository.replace('/', '--') + '.api.json')).read_text(encoding='utf-8'))
+        native_ids = [model['id'] for model in catalog['models'] if model['id'] == family or model.get('variantOf') == family]
+        for value in build_plan(metadata)['variants']:
+            if value['format'] != 'gguf' or value['id'] in seen:
+                continue
+            entry = copy.deepcopy(value)
+            entry.update(familyId='publisher-' + family, familyLabel=label, contextTokens=8192,
+                         nativeModelIds=native_ids, originalRepository='rockmatrix-ai/EdgeRock' if family == 'edgerock-4b' else 'migtissera/Tess-4.5-27B')
+            entries.append(entry)
+            seen.add(entry['id'])
     entries.sort(key=lambda e: (e['familyId'], e['format'] != 'gguf', e['bytes'], e['id']))
     return {'schema': 1, 'entries': entries}
 

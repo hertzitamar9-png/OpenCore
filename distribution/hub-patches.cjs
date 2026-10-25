@@ -9,8 +9,9 @@ module.exports=function(app,{editFunction,replaceOnce}){
     text=replaceOnce(text,'return i.jsxs("article",{','return de.hubModel?i.jsx($HubCard,{group:se,disabled:n||B||!!O,onSelect:e,onNotice:r,onChanged:J,selectedProfile:t},se.id):i.jsxs("article",{');
     // References without a native adapter can still enter the same verified Hub import flow.
     text=replaceOnce(text,'disabled:de.runtimeReady===!1||n||B||!!O,title:de.runtimeReady===!1?"This catalogue entry has no integrated execution runtime. Choose Available for automatic installation.":void 0,onClick:()=>w(de)',
-      'disabled:n||B||!!O,title:"Choose a published package and verify runtime support",onClick:()=>{const source=de.sourceUrl||de.setupUrl;if(source){const input=document.querySelector("[aria-label=\\\"Hugging Face repository\\\"]");if(input){const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(input,source);input.dispatchEvent(new Event("input",{bubbles:true}));input.focus();input.scrollIntoView({block:"center"});}}else w(de)}');
-    text=replaceOnce(text,'de.runtimeReady===!1?"Install unavailable · runtime not integrated":"Install"','"Choose package"');
+      'disabled:n||B||!!O,title:"Find published packages and verify runtime support",onClick:()=>{const source=de.sourceUrl||de.setupUrl;if(source)$hubOpenRepository(source);else w(de)}');
+    text=replaceOnce(text,'de.runtimeReady===!1?"Install unavailable · runtime not integrated":"Install"','"Find quantizations"');
+    text=replaceOnce(text,'i.jsxs("footer",{children:[','i.jsxs("footer",{children:[de.runtimeReady!==!1&&de.installable!==!1&&i.jsx("button",{disabled:n||B||!!O||!(de.sourceUrl||de.setupUrl),onClick:()=>$hubOpenRepository(de.sourceUrl||de.setupUrl),children:"Find more quantizations"}),');
     return text;
   });
   app=editFunction(app,'h8',text=>{

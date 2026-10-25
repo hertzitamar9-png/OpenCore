@@ -41,6 +41,20 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_catalog_roundtrip_supports_five_variants_for_hundreds_of_families(self):
+        import copy
+        base = self.entry()
+        for index in range(3000):
+            entry = copy.deepcopy(base)
+            entry['id'] = 'hf-' + format(index, '024x')
+            self.state.entries[entry['id']] = entry
+        self.state.persist_catalog()
+        restored = bridge.BridgeState(self.root, self.root, runtime=FakeRuntime())
+        try:
+            self.assertEqual(len(restored.entries), 3000)
+        finally:
+            restored.close()
+
     def test_automatic_runtime_preparation_follows_verified_download(self):
         self.runtime.automatic_preparation=True
         entry=self.seed()

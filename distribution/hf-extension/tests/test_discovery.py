@@ -17,6 +17,19 @@ def metadata(name, quants=('Q4_K_M',), base=None, relation=None):
 
 
 class DiscoveryTests(unittest.TestCase):
+    def test_community_outage_preserves_the_publishers_pinned_packages(self):
+        class Client:
+            def metadata(self, name):
+                return metadata('owner/Model', ('Q4_K_M', 'Q8_0'))
+            def quantization_derivatives(self, name):
+                raise OSError('index unavailable')
+            def search_quantizations(self, query):
+                raise RuntimeError('search unavailable')
+        plan = discover(Client(), 'owner/Model')
+        self.assertEqual(plan['quantizationCount'], 2)
+        self.assertEqual(len(plan['discoveryErrors']), 2)
+        self.assertTrue(all(v['installable'] for v in plan['variants']))
+
     def test_quantized_publisher_repo_can_resolve_its_exact_original(self):
         self.assertEqual(source_identity(metadata('owner/Model-GGUF', base='owner/Model')),
                          ('owner/model', {'owner/model', 'owner/model-gguf'}))

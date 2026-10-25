@@ -2,6 +2,366 @@
   "schema": 1,
   "entries": [
     {
+      "id": "hf-0983ef279a405884e4bdbd4f",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-Q3_K_M.gguf",
+      "name": "EdgeRock-4B-GGUF · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2440995712,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-Q3_K_M.gguf",
+          "bytes": 2440995712,
+          "sha256": "b036b84a5b4354a5a78afaae2c2a139f728dc5eb72634dba603a5f07c87fbdb1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-1ea7682a20a16bc4e764545e",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-Q4_0.gguf",
+      "name": "EdgeRock-4B-GGUF · Q4_0",
+      "quantization": "Q4_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2771573632,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-Q4_0.gguf",
+          "bytes": 2771573632,
+          "sha256": "e4f0607ff840aaebaabaa7f447eff5f020ad43073d88599aeebeb443c2cc8f07",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-e69eda1111705aa1412e1276",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-Q4_K_S.gguf",
+      "name": "EdgeRock-4B-GGUF · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2791562112,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-Q4_K_S.gguf",
+          "bytes": 2791562112,
+          "sha256": "8da33df6a19ef737b25a5de2d73f55f8284258109d133ca2e38522c918f0ab4d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-01e6032903772aab9cdda721",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-Q4_K_M.gguf",
+      "name": "EdgeRock-4B-GGUF · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2936478592,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-Q4_K_M.gguf",
+          "bytes": 2936478592,
+          "sha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-de49ddea7dd65a3b1baf06bc",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-Q5_K_M.gguf",
+      "name": "EdgeRock-4B-GGUF · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3348536192,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-Q5_K_M.gguf",
+          "bytes": 3348536192,
+          "sha256": "e28bdcad77680459d2f704783f3748eac7694c3ee6e40f8fd9cedbaa6b90c233",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-671bb81ebc15aebf4cbf81f1",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-Q6_K.gguf",
+      "name": "EdgeRock-4B-GGUF · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3786347392,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-Q6_K.gguf",
+          "bytes": 3786347392,
+          "sha256": "fb690a8aaa181c1bb4dbd7cb6da7d9e7d2da6f9691f6647d643a15d73ae6dcdf",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-eb173b423c58c88c884cf957",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-q8_0.gguf",
+      "name": "EdgeRock-4B-GGUF · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 4893578112,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-q8_0.gguf",
+          "bytes": 4893578112,
+          "sha256": "4f45b25b10e5e0145e784c0dc2eadf7a68f06d8962f30db19ed2a1d30d732434",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
+      "id": "hf-12a1b4d4087fc03ff9ca6907",
+      "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "variantKey": "gguf:EdgeRock-4B-BF16.gguf",
+      "name": "EdgeRock-4B-GGUF · BF16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 9179632512,
+      "files": [
+        {
+          "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+          "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+          "filename": "EdgeRock-4B-BF16.gguf",
+          "bytes": 9179632512,
+          "sha256": "22d49ab15bc6eef4efef67f00414208b2aec6b74e79d498d502688e455063850",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "edgerock",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-edgerock-4b",
+      "familyLabel": "EdgeRock-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "edgerock-4b"
+      ],
+      "originalRepository": "rockmatrix-ai/EdgeRock"
+    },
+    {
       "id": "hf-d4da95ee529be1205ac9b027",
       "repository": "bartowski/RecursiveSI_flint-GGUF",
       "revision": "a04b26fbb0f68a0ab21ff6dc062f9119700267c7",
@@ -10,6 +370,7 @@
       "quantization": "IQ2_XXS",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 12029007072,
       "files": [
         {
@@ -56,6 +417,7 @@
       "quantization": "IQ2_XS",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 12742325472,
       "files": [
         {
@@ -102,6 +464,7 @@
       "quantization": "IQ2_S",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 13394982112,
       "files": [
         {
@@ -148,6 +511,7 @@
       "quantization": "IQ2_M",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 14883566816,
       "files": [
         {
@@ -194,6 +558,7 @@
       "quantization": "Q2_K",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 15480337632,
       "files": [
         {
@@ -240,6 +605,7 @@
       "quantization": "IQ3_XXS",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 17492718816,
       "files": [
         {
@@ -286,6 +652,7 @@
       "quantization": "IQ3_XS",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 18315457760,
       "files": [
         {
@@ -332,6 +699,7 @@
       "quantization": "Q3_K_S",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 18443810016,
       "files": [
         {
@@ -378,6 +746,7 @@
       "quantization": "Q3_K_M",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 19529151712,
       "files": [
         {
@@ -424,6 +793,7 @@
       "quantization": "Q3_K_L",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 20594504928,
       "files": [
         {
@@ -470,6 +840,7 @@
       "quantization": "IQ3_M",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 21051684064,
       "files": [
         {
@@ -516,6 +887,7 @@
       "quantization": "IQ4_XS",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 22446290144,
       "files": [
         {
@@ -562,6 +934,7 @@
       "quantization": "Q4_0",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 22831553760,
       "files": [
         {
@@ -669,6 +1042,7 @@
       "quantization": "Q4_K_S",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 23828313312,
       "files": [
         {
@@ -715,6 +1089,7 @@
       "quantization": "Q4_1",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 25183329504,
       "files": [
         {
@@ -761,6 +1136,7 @@
       "quantization": "IQ4_NL",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 25317291232,
       "files": [
         {
@@ -807,6 +1183,7 @@
       "quantization": "Q4_K_M",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 25346651360,
       "files": [
         {
@@ -914,6 +1291,7 @@
       "quantization": "Q4_K_L",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 27288614112,
       "files": [
         {
@@ -960,6 +1338,7 @@
       "quantization": "Q5_K_S",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 28595139808,
       "files": [
         {
@@ -1006,6 +1385,7 @@
       "quantization": "Q5_K_M",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 30809732320,
       "files": [
         {
@@ -1052,6 +1432,7 @@
       "quantization": "Q6_K_S",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 33573778656,
       "files": [
         {
@@ -1098,6 +1479,7 @@
       "quantization": "Q6_K",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 35199071456,
       "files": [
         {
@@ -1144,6 +1526,7 @@
       "quantization": "Q6_K_L",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 36954387680,
       "files": [
         {
@@ -1190,6 +1573,7 @@
       "quantization": "Q8_0",
       "format": "gguf",
       "subdirectory": "",
+      "category": "text",
       "bytes": 42350359776,
       "files": [
         {
@@ -1236,6 +1620,7 @@
       "quantization": "BF16",
       "format": "gguf",
       "subdirectory": "RecursiveSI_flint-bf16",
+      "category": "text",
       "bytes": 79625761920,
       "files": [
         {
@@ -2419,6 +2804,1431 @@
         "reason": "Choose a GGUF variant for the managed Windows runtime. This publisher format needs a different runtime."
       },
       "bytes": 17568001231
+    },
+    {
+      "id": "hf-9298c010237c9b3e5c824496",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ2_XXS.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ2_XXS",
+      "quantization": "IQ2_XXS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 9812415264,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ2_XXS.gguf",
+          "bytes": 8881268928,
+          "sha256": "8f4a567ac897dc6731aced0b9e81daba2e00442041a0448a5132723befee5512",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-eee59f2afc8c02ac6e5b6cde",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ2_XS.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ2_XS",
+      "quantization": "IQ2_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 10019672864,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ2_XS.gguf",
+          "bytes": 9088526528,
+          "sha256": "e4216d01bfefde57a5d86cb2c30ffb275d795ef3b99bb6e5ea14f90691b2101f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-10d43f289f33ee27e8406c64",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ2_S.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ2_S",
+      "quantization": "IQ2_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 10615190304,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ2_S.gguf",
+          "bytes": 9684043968,
+          "sha256": "2f3b712a3c310dab393449c30fcf86aa71ffb3759375a65d5ecad6066fa3f8ff",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-98888764808cdb43f338fd20",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ2_M.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ2_M",
+      "quantization": "IQ2_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 11453395744,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ2_M.gguf",
+          "bytes": 10522249408,
+          "sha256": "de11a112497fa0d633d1025b22eb320201c09f01050ed6c6baff488ed4a38721",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-0f6c17ed37ad0b55441bf182",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q2_K.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 11752690464,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q2_K.gguf",
+          "bytes": 10821544128,
+          "sha256": "43124c1986a073cc4420c70653f5f929e71c0e94b20c8e9b53c8e6b4157f2f8b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-185191aa4a0bb0816f94ef52",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ3_XXS.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ3_XXS",
+      "quantization": "IQ3_XXS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 13251314464,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ3_XXS.gguf",
+          "bytes": 12320168128,
+          "sha256": "5551f2a35908cdb903417082398b5ccd3fc4678ac5e6c6d0ec6aa751aecbad22",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-dc73cf9e84d2c7ad3883d068",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q3_K_S.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 13671031584,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q3_K_S.gguf",
+          "bytes": 12739885248,
+          "sha256": "1f22a7b673c300112e215666b6cb9333b4d979488a76d528cb77dcf252a27707",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-d1e31ef22c26e035d7e89e8e",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ3_XS.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ3_XS",
+      "quantization": "IQ3_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 13730751264,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ3_XS.gguf",
+          "bytes": 12799604928,
+          "sha256": "c96b6d5aaba2a16cb54d5bb1d84d860b724f73976a0ddbe2310253d8ee94b82a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-d41cdc50cc84bf4516f8b6c4",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q3_K_M.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 14335197984,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q3_K_M.gguf",
+          "bytes": 13404051648,
+          "sha256": "a12619fa8d418fd22c5258f7391e22265f5d205574669fe2282992f3409e2b10",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-82d8e1faf3f0d9f7fb969103",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q3_K_L.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 15053964064,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q3_K_L.gguf",
+          "bytes": 14122817728,
+          "sha256": "6533a2e5f3f6011d4425e90959e67c2b72582a5a06ba75bbff19f350bf9d32c0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-271006601216515c3d796364",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ3_M.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ3_M",
+      "quantization": "IQ3_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 15791776544,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ3_M.gguf",
+          "bytes": 14860630208,
+          "sha256": "44942450e2c2e333f7ea2124ff5ce612e818bc4bca79ed6a34c0a554dc13e38e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-3901ad5ce5d7713a35da7f08",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ4_XS.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 16407098144,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ4_XS.gguf",
+          "bytes": 15475951808,
+          "sha256": "46ac6c3be737cfdab3e7752c88f85f6fd823d5c5431abc750bd3796d5e0b4935",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-cccf1173bb95ae7108f83554",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q4_0.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q4_0",
+      "quantization": "Q4_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 17279914784,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q4_0.gguf",
+          "bytes": 16348768448,
+          "sha256": "20c170f6cb36501da4561e04a109c3a658e189eaaca6cfae2acbb20534684363",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-ab6f7f2e5bc072ea0842ecf3",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q4_K_S.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 17294660384,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q4_K_S.gguf",
+          "bytes": 16363514048,
+          "sha256": "e2c9984c73da2e898fa3c98a9bd41240b1016af67330c2751326c28b75461e50",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-c4b9c830891681edbc19908f",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-IQ4_NL.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · IQ4_NL",
+      "quantization": "IQ4_NL",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 18373546784,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-IQ4_NL.gguf",
+          "bytes": 17442400448,
+          "sha256": "ede9aeaa63bb0e24eefe426e85fd1d08984b0b490d2fc4a4049a63b2e3691dbb",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-fd111c48c24833dd78e04385",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q4_K_M.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 18373546784,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q4_K_M.gguf",
+          "bytes": 17442400448,
+          "sha256": "c291cbba809a06e25e5feb0c93e7e4e7eb8f1d3ed01a081467767ad6dfe361cc",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-c87116d37bf008f76c3493f5",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q4_1.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q4_1",
+      "quantization": "Q4_1",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 18756604704,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q4_1.gguf",
+          "bytes": 17825458368,
+          "sha256": "f946c6369e1fec5053acf0e29b553ea44f9012dd67b9eb2e41cbc9dc3152ead0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-6ab80125cc5aac7376fe59b3",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q4_K_L.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q4_K_L",
+      "quantization": "Q4_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 19751850784,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q4_K_L.gguf",
+          "bytes": 18820704448,
+          "sha256": "9fa0485f02f700d9dfd74cbc0ef92016f9fb9bb927c84720f8006e9bbe056db9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-6c0bc898f09256ed725a8bf7",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q5_K_S.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 20498060064,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q5_K_S.gguf",
+          "bytes": 19566913728,
+          "sha256": "d8291e75a04f4af4765643391fbbffd362dfe1ac44080cf7790de637464980be",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-5420ba6ceca7fe6f07c6950b",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q5_K_M.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 21855023904,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q5_K_M.gguf",
+          "bytes": 20923877568,
+          "sha256": "f0c6698b079fe14b6da4adf48eecb000b1aec0ef59dd2aaa27d04b8002de35f1",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-ffcf463cd483aabfdfad57e4",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q6_K_S.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q6_K_S",
+      "quantization": "Q6_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 23788602144,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q6_K_S.gguf",
+          "bytes": 22857455808,
+          "sha256": "9c7cf0367c868c79513ba774b0eee263cb0b33d9e7d92e3cfac469f55fc6f574",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-a90b959a9bfa57ef6c8f4169",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q6_K.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 24791712544,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q6_K.gguf",
+          "bytes": 23860566208,
+          "sha256": "fc3096a78d019cb1d4524bf77a6adf292c09087b6e6894049e6201172821ef3f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-a0ab8e1f9f178fcb94aa0f23",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q6_K_L.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q6_K_L",
+      "quantization": "Q6_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 25890054944,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q6_K_L.gguf",
+          "bytes": 24958908608,
+          "sha256": "3dd43eab8ecaaabded7d644e929fbf5ba893c05f073f1ddd172feafd01ce29cc",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-b1e7f62a272b2b1343b18c05",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-Q8_0.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 30047535904,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-Q8_0.gguf",
+          "bytes": 29116389568,
+          "sha256": "61669f8127561ba6b89a9e1de1adddc4b54148f56af85c0247dcfda689c22d7b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+          "bytes": 931146336,
+          "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
+    },
+    {
+      "id": "hf-7194793341b4eec0787eedf4",
+      "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+      "variantKey": "gguf:migtissera_Tess-4.5-27B-bf16/migtissera_Tess-4.5-27B-bf16.gguf",
+      "name": "migtissera_Tess-4.5-27B-GGUF · BF16 · migtissera_Tess-4.5-27B-bf16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "migtissera_Tess-4.5-27B-bf16",
+      "category": "text",
+      "bytes": 54657734720,
+      "files": [
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-bf16/migtissera_Tess-4.5-27B-bf16-00001-of-00002.gguf",
+          "bytes": 39960210048,
+          "sha256": "6f2e6f81e626a45588be70b0eda9e9b71eca255415d5541a8761a4909e20c657",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+          "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+          "filename": "migtissera_Tess-4.5-27B-bf16/migtissera_Tess-4.5-27B-bf16-00002-of-00002.gguf",
+          "bytes": 14697524672,
+          "sha256": "0c90c552fb33893012ce3d84d99fe63c1b3386b5711c811f7782742d740e94d7",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/migtissera_Tess-4.5-27B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tess-45-27b",
+      "familyLabel": "Tess 4.5 27B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "tess-45-27b",
+        "tess-45-27b-q6-k",
+        "tess-45-27b-q8-0"
+      ],
+      "originalRepository": "migtissera/Tess-4.5-27B"
     }
   ]
 }

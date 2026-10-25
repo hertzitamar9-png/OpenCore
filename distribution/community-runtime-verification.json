@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "passed": true,
+  "verification": "Actual pinned checkpoints generated non-streamed and SSE responses through ECHO. Metadata discovery is separate from execution verification. This report does not claim that untested quantizations or formats work.",
+  "runtimeSourceSha256": "288e9f63899966c22b4adb2cda5c6a2b111bd59f77939b59d26c0cde43255351",
+  "edgeRockWindowsFiveQuants": {
+    "workflow": "https://github.com/hertzitamar9-png/OpenCore/actions/runs/40169203956",
+    "sourceCommit": "fe6bd173cdccf52361b5f5b3873a80bf677cd643",
+    "passed": true,
+    "platform": "Windows x64 CPU",
+    "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+    "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+    "runtimeSourceSha256": "288e9f63899966c22b4adb2cda5c6a2b111bd59f77939b59d26c0cde43255351",
+    "checks": [
+      {
+        "quantization": "Q3_K_M",
+        "passed": true,
+        "realCheckpoint": true,
+        "checkpointSha256": "b036b84a5b4354a5a78afaae2c2a139f728dc5eb72634dba603a5f07c87fbdb1",
+        "checkpointBytes": 2440995712,
+        "reply": {
+          "role": "assistant",
+          "content": "391"
+        },
+        "streamReply": "Streaming confirmed.",
+        "engineArchiveSha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+        "echoMode": "archive-retrieval",
+        "contextTokens": 8192,
+        "cpuThreads": 2,
+        "elapsedSeconds": 106.04699999999997
+      },
+      {
+        "quantization": "Q4_0",
+        "passed": true,
+        "realCheckpoint": true,
+        "checkpointSha256": "e4f0607ff840aaebaabaa7f447eff5f020ad43073d88599aeebeb443c2cc8f07",
+        "checkpointBytes": 2771573632,
+        "reply": {
+          "role": "assistant",
+          "content": "391"
+        },
+        "streamReply": "Streaming confirmed.",
+        "engineArchiveSha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+        "echoMode": "archive-retrieval",
+        "contextTokens": 8192,
+        "cpuThreads": 2,
+        "elapsedSeconds": 62.29699999999997
+      },
+      {
+        "quantization": "Q4_K_S",
+        "passed": true,
+        "realCheckpoint": true,
+        "checkpointSha256": "8da33df6a19ef737b25a5de2d73f55f8284258109d133ca2e38522c918f0ab4d",
+        "checkpointBytes": 2791562112,
+        "reply": {
+          "role": "assistant",
+          "content": "391"
+        },
+        "streamReply": "Streaming confirmed.",
+        "engineArchiveSha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+        "echoMode": "archive-retrieval",
+        "contextTokens": 8192,
+        "cpuThreads": 2,
+        "elapsedSeconds": 68.406
+      },
+      {
+        "quantization": "Q4_K_M",
+        "passed": true,
+        "realCheckpoint": true,
+        "checkpointSha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+        "checkpointBytes": 2936478592,
+        "reply": {
+          "role": "assistant",
+          "content": "391"
+        },
+        "streamReply": "Streaming confirmed.",
+        "engineArchiveSha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+        "echoMode": "archive-retrieval",
+        "contextTokens": 8192,
+        "cpuThreads": 2,
+        "elapsedSeconds": 120.82799999999997
+      },
+      {
+        "quantization": "Q5_K_M",
+        "passed": true,
+        "realCheckpoint": true,
+        "checkpointSha256": "e28bdcad77680459d2f704783f3748eac7694c3ee6e40f8fd9cedbaa6b90c233",
+        "checkpointBytes": 3348536192,
+        "reply": {
+          "role": "assistant",
+          "content": "391"
+        },
+        "streamReply": "Streaming confirmed.",
+        "engineArchiveSha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+        "echoMode": "archive-retrieval",
+        "contextTokens": 8192,
+        "cpuThreads": 2,
+        "elapsedSeconds": 85.78200000000004
+      }
+    ]
+  },
+  "edgeRockLocalQ3": {
+    "passed": true,
+    "platform": "Windows x64 CPU",
+    "repository": "hkust-aaron/EdgeRock-4B-GGUF",
+    "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+    "runtimeSourceSha256": "288e9f63899966c22b4adb2cda5c6a2b111bd59f77939b59d26c0cde43255351",
+    "checks": [
+      {
+        "quantization": "Q3_K_M",
+        "passed": true,
+        "realCheckpoint": true,
+        "checkpointSha256": "b036b84a5b4354a5a78afaae2c2a139f728dc5eb72634dba603a5f07c87fbdb1",
+        "checkpointBytes": 2440995712,
+        "reply": {
+          "role": "assistant",
+          "content": "391"
+        },
+        "streamReply": "Streaming confirmed.",
+        "engineArchiveSha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+        "echoMode": "archive-retrieval",
+        "contextTokens": 8192,
+        "cpuThreads": 2,
+        "elapsedSeconds": 24.26600000000326
+      }
+    ]
+  },
+  "tessLocalIq2Xxs": {
+    "model": "tess-iq2-xxs",
+    "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+    "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",
+    "quantization": "IQ2_XXS",
+    "realCheckpoint": true,
+    "cpuThreads": 2,
+    "echoResponse": {
+      "role": "assistant",
+      "content": "<think>\n\n</think>\n\nHello!"
+    },
+    "streamResponse": "<think>\n\n</think>\n\nStream verified.",
+    "reasoningOffVerified": true,
+    "streamingVerified": true,
+    "usage": {
+      "completion_tokens": 3,
+      "prompt_tokens": 70,
+      "total_tokens": 73,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "elapsedSeconds": 39.07799999997951,
+    "passed": true,
+    "platform": "Windows x64, automatic GPU offload, two CPU threads",
+    "echoMode": "archive-retrieval",
+    "contextTokens": 8192,
+    "verifiedAt": "2026-10-25T06:38:41Z",
+    "files": [
+      {
+        "filename": "migtissera_Tess-4.5-27B-IQ2_XXS.gguf",
+        "bytes": 8881268928,
+        "sha256": "8f4a567ac897dc6731aced0b9e81daba2e00442041a0448a5132723befee5512"
+      },
+      {
+        "filename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+        "bytes": 931146336,
+        "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6"
+      }
+    ]
+  }
+}

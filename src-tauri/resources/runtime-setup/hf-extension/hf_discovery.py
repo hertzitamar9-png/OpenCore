@@ -92,13 +92,19 @@ def discover(client, repository):
                    if isinstance(tag, str) and tag.startswith('base_model:quantized:')]
     spelling = next((value for value in references if isinstance(value, str) and value.lower() == canonical), canonical)
     query = spelling.split('/')[-1]
-    candidates = []
+    candidates, discovery_errors = [], []
     derivatives = getattr(client, 'quantization_derivatives', None)
     if derivatives:
-        candidates = [candidate for candidate in derivatives(spelling) if isinstance(candidate, dict) and (
-                      candidate.get('library_name') == 'gguf' or 'gguf' in (candidate.get('tags') or [])
-                      or 'gguf' in str(candidate.get('id', '')).lower())]
-    candidates += client.search_quantizations(query)
+        try:
+            candidates = [candidate for candidate in derivatives(spelling) if isinstance(candidate, dict) and (
+                          candidate.get('library_name') == 'gguf' or 'gguf' in (candidate.get('tags') or [])
+                          or 'gguf' in str(candidate.get('id', '')).lower())]
+        except (OSError, ValueError, RuntimeError):
+            discovery_errors.append('The related-model index could not be checked. Try again to find more packages.')
+    try:
+        candidates += client.search_quantizations(query)
+    except (OSError, ValueError, RuntimeError):
+        discovery_errors.append('Community search could not be completed. The publisher packages are still available.')
     names, seen = [], set(identities)
     for candidate in candidates:
         try:
@@ -139,6 +145,7 @@ def discover(client, repository):
     identity = json.dumps(variants, sort_keys=True, separators=(',', ':'))
     return {**primary, 'variants': variants, 'planId': hashlib.sha256(identity.encode()).hexdigest(),
             'originalRepository': spelling, 'relatedRepositories': [plan['repository'] for plan in accepted],
+            'discoveryErrors': discovery_errors,
             'rejectedRepositories': rejected, 'searchedRepositories': len(names),
             'quantizationCount': len({entry['quantization'] for entry in variants if entry['installable']}),
             'warning': 'These published files require compatible hardware and runtime verification before use.'}

@@ -22,8 +22,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('models', nargs='*')
 selected = parser.parse_args().models or ['flint-nvfp4-gguf', 'raon-1-mini-iq4-xs']
 for model_id in selected:
-    if model_id == 'flint-iq2-xxs':
-        metadata = json.loads((HERE / '.output/runtime-research/bartowski-flint.api.json').read_text())
+    if model_id in ('flint-iq2-xxs', 'tess-iq2-xxs'):
+        snapshot = 'bartowski--RecursiveSI_flint-GGUF.api.json' if model_id == 'flint-iq2-xxs' else 'bartowski--migtissera_Tess-4.5-27B-GGUF.api.json'
+        metadata = json.loads((HERE / 'hf-research' / snapshot).read_text(encoding='utf-8'))
         entry = next(v for v in build_plan(metadata)['variants'] if v['quantization'] == 'IQ2_XXS')
         entry['contextTokens'] = 8192
         pin = entry['files'][0]

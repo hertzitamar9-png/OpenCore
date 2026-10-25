@@ -53,7 +53,8 @@ class CatalogTests(unittest.TestCase):
     def test_quant_suffix_wins_over_model_version_and_mixed_packages_stay_distinct(self):
         for filename, expected in [('LFM-Q3.8-TBrilliance-Q8_0.gguf', 'Q8_0'),
                                    ('model-Mix-13G.gguf', 'Mix 13G'), ('model-Mix-15.7G.gguf', 'Mix 15.7G'),
-                                   ('Sage.MXFP4_MOE.gguf', 'MXFP4_MOE')]:
+                                   ('Sage.MXFP4_MOE.gguf', 'MXFP4_MOE'),
+                                   ('model-TQ1_0.gguf', 'TQ1_0'), ('model-PQ2_0.gguf', 'PQ2_0')]:
             with self.subTest(filename=filename):
                 entry = catalog.build_plan(metadata([file(filename)]))['variants'][0]
                 self.assertEqual(entry['quantization'], expected)

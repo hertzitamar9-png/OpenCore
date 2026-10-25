@@ -1,0 +1,355 @@
+{
+  "_id": "6ad394f03d44494c7f0d3233",
+  "id": "hkust-aaron/EdgeRock-4B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "edgerock",
+    "quantized",
+    "ollama",
+    "custom_code",
+    "text-generation",
+    "arxiv:2610.10118",
+    "base_model:rockmatrix-ai/EdgeRock",
+    "base_model:quantized:rockmatrix-ai/EdgeRock",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 982,
+  "likes": 1,
+  "modelId": "hkust-aaron/EdgeRock-4B-GGUF",
+  "author": "hkust-aaron",
+  "sha": "a5e045c646b70303156394d52c2ca1e415ec1544",
+  "lastModified": "2026-10-23T03:30:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "edgerock-model-license-1.0",
+    "license_link": "LICENSE",
+    "base_model": "rockmatrix-ai/EdgeRock",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "edgerock",
+      "quantized",
+      "gguf",
+      "ollama",
+      "custom_code"
+    ]
+  },
+  "gguf": {
+    "total": 4578061568,
+    "architecture": "edgerock",
+    "context_length": 262144,
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 9179632512
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "75934c1deb099b14a90f169a7babf965f74f53ae",
+      "size": 1991
+    },
+    {
+      "rfilename": "EdgeRock-4B-BF16.gguf",
+      "blobId": "d058b7a46f581226707c122e41a5c1a165eae7af",
+      "size": 9179632512,
+      "lfs": {
+        "sha256": "22d49ab15bc6eef4efef67f00414208b2aec6b74e79d498d502688e455063850",
+        "size": 9179632512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-Q3_K_M.gguf",
+      "blobId": "95dbf843b680bee4d3e195b0881e6566846f58b8",
+      "size": 2440995712,
+      "lfs": {
+        "sha256": "b036b84a5b4354a5a78afaae2c2a139f728dc5eb72634dba603a5f07c87fbdb1",
+        "size": 2440995712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-Q4_0.gguf",
+      "blobId": "49b2c1bd0a6f0988b979c6bbf883192b9bfa1d55",
+      "size": 2771573632,
+      "lfs": {
+        "sha256": "e4f0607ff840aaebaabaa7f447eff5f020ad43073d88599aeebeb443c2cc8f07",
+        "size": 2771573632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-Q4_K_M.gguf",
+      "blobId": "6414d7454eff0ebf77ea7cbb6e83cfc8ebe93b3e",
+      "size": 2936478592,
+      "lfs": {
+        "sha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+        "size": 2936478592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-Q4_K_S.gguf",
+      "blobId": "e2b6bb264506455e7088355db607df06eca4b51d",
+      "size": 2791562112,
+      "lfs": {
+        "sha256": "8da33df6a19ef737b25a5de2d73f55f8284258109d133ca2e38522c918f0ab4d",
+        "size": 2791562112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-Q5_K_M.gguf",
+      "blobId": "0795a26c8553d5a314eedbfffab07499eb9e566f",
+      "size": 3348536192,
+      "lfs": {
+        "sha256": "e28bdcad77680459d2f704783f3748eac7694c3ee6e40f8fd9cedbaa6b90c233",
+        "size": 3348536192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-Q6_K.gguf",
+      "blobId": "300e372704601cc7ab2c1399f97ac6dd689773e5",
+      "size": 3786347392,
+      "lfs": {
+        "sha256": "fb690a8aaa181c1bb4dbd7cb6da7d9e7d2da6f9691f6647d643a15d73ae6dcdf",
+        "size": 3786347392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "EdgeRock-4B-q8_0.gguf",
+      "blobId": "5084a37692c260cd8e9876280e1be8d517a3c78e",
+      "size": 4893578112,
+      "lfs": {
+        "sha256": "4f45b25b10e5e0145e784c0dc2eadf7a68f06d8962f30db19ed2a1d30d732434",
+        "size": 4893578112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d57cf5997d524172ae635b88d7fa8d41c9d3f3df",
+      "size": 18033
+    },
+    {
+      "rfilename": "LICENSE-CODE",
+      "blobId": "e259753a61ea7ab8bc9cd65651b2c1acd677131d",
+      "size": 11388
+    },
+    {
+      "rfilename": "Modelfile.BF16",
+      "blobId": "8db87b752120da3e3aa86ec73be0bbfbb49be0f6",
+      "size": 18338
+    },
+    {
+      "rfilename": "Modelfile.Q3_K_M",
+      "blobId": "40434a89aa7aa17c4178bd43f25fa63d4d69866c",
+      "size": 290
+    },
+    {
+      "rfilename": "Modelfile.Q4_0",
+      "blobId": "6f8d629606de51378c1cce16229a94c0ff5cfdd8",
+      "size": 288
+    },
+    {
+      "rfilename": "Modelfile.Q4_K_M",
+      "blobId": "38dfee9f77b7857be519997afbcaae8794910840",
+      "size": 290
+    },
+    {
+      "rfilename": "Modelfile.Q4_K_S",
+      "blobId": "784fa674e2b9cf0c08d7787a5f02022951275967",
+      "size": 290
+    },
+    {
+      "rfilename": "Modelfile.Q5_K_M",
+      "blobId": "a8ba461b932eaa07a5bfe5dc098760bc2719eae9",
+      "size": 290
+    },
+    {
+      "rfilename": "Modelfile.Q6_K",
+      "blobId": "078827d84ba4e43406abe22f10b44411c51954a6",
+      "size": 288
+    },
+    {
+      "rfilename": "Modelfile.q8_0",
+      "blobId": "6aa91940fe4ac892517563ffc0ade2753848f2db",
+      "size": 288
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "6bd70fe3358c082f2e177f95e77e9f0a3070365a",
+      "size": 3607
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "11d6d5b538e149c308862a68b00e667d049ee334",
+      "size": 40184
+    },
+    {
+      "rfilename": "WEIGHTS.json",
+      "blobId": "533fdca2856b3f9f80aaaee59aba75022bb7d5c3",
+      "size": 1389
+    },
+    {
+      "rfilename": "backend/edgerock-rma-graph.inc",
+      "blobId": "aa710cc076a74d5aa124f8eb1c473a3e302bf8da",
+      "size": 4322
+    },
+    {
+      "rfilename": "backend/edgerock-rma.h",
+      "blobId": "67532dc461d5270d862aafc87c46b24b0840babb",
+      "size": 7319
+    },
+    {
+      "rfilename": "backend/llama-cpp-LICENSE",
+      "blobId": "e7dca554bcb802f98408383a864404e3aa4eacca",
+      "size": 1078
+    },
+    {
+      "rfilename": "backend/llama-cpp-runtime.patch",
+      "blobId": "9febdd36875f504d5196b58875d45405e6137468",
+      "size": 17062
+    },
+    {
+      "rfilename": "backend/ollama-LICENSE",
+      "blobId": "8e3dc978a7ca8c53f56bbedc5b558116140fc02e",
+      "size": 1058
+    },
+    {
+      "rfilename": "backend/ollama-cluster-config.patch",
+      "blobId": "e2942d1546b7a68ce9fe671357deda7a37c82143",
+      "size": 2017
+    },
+    {
+      "rfilename": "backend/ollama-runtime.patch",
+      "blobId": "e2942d1546b7a68ce9fe671357deda7a37c82143",
+      "size": 2017
+    },
+    {
+      "rfilename": "backend/patch_llama.py",
+      "blobId": "0e488038912707e2ef66b51f39f7dc2867720936",
+      "size": 11432
+    },
+    {
+      "rfilename": "edgerock-native-linux-sm90.tar.gz",
+      "blobId": "48bebccec01d7ff7b997c54b8c5860785a89a7da",
+      "size": 73027133,
+      "lfs": {
+        "sha256": "53e8c90c45cec4261c28c3b9e02f60f72ea08e546fdb12eeb4c28ab2eb5eb98e",
+        "size": 73027133,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "receipts/BF16-conversion.json",
+      "blobId": "a71087f77116c7dc90000da594c63b0434c9fc0f",
+      "size": 877
+    },
+    {
+      "rfilename": "receipts/BF16-llama.json",
+      "blobId": "90c795d04b10bdcff4baa25ed19248978fdcb880",
+      "size": 135251
+    },
+    {
+      "rfilename": "receipts/BF16-ollama.json",
+      "blobId": "2821d20ad37c171b960d5d84a88ef9411fc61c37",
+      "size": 133200
+    },
+    {
+      "rfilename": "receipts/GGUF-Q3_K_M.json",
+      "blobId": "c3e5a213fc0e931f1e88dc49348aea85ffa10e6f",
+      "size": 135128
+    },
+    {
+      "rfilename": "receipts/GGUF-Q4_0.json",
+      "blobId": "b07eedbb65039349fdb38604c0b83c02f6a510cc",
+      "size": 134850
+    },
+    {
+      "rfilename": "receipts/GGUF-Q4_K_M.json",
+      "blobId": "77074fc339718e7a2e73eb611b02db486284a751",
+      "size": 135448
+    },
+    {
+      "rfilename": "receipts/GGUF-Q4_K_S.json",
+      "blobId": "230c2d3dd0da699ee465ac78537913f1df45443b",
+      "size": 134686
+    },
+    {
+      "rfilename": "receipts/GGUF-Q5_K_M.json",
+      "blobId": "863100e0f876ca612c08d0fa59e7c37166ef01ab",
+      "size": 135495
+    },
+    {
+      "rfilename": "receipts/GGUF-Q6_K.json",
+      "blobId": "e8d7b254e817bfc70735795c485531868b68240c",
+      "size": 135318
+    },
+    {
+      "rfilename": "receipts/GGUF-q8_0.json",
+      "blobId": "3ef0fcb12c796392f92728683d237f308d0aa9ef",
+      "size": 135282
+    },
+    {
+      "rfilename": "receipts/Ollama-Q3_K_M.json",
+      "blobId": "6f9328f1b3d9cbdc79f634d515fe07a028187fbc",
+      "size": 132784
+    },
+    {
+      "rfilename": "receipts/Ollama-Q4_0.json",
+      "blobId": "98b841f4007ece92fd04af7738be28489bb813ae",
+      "size": 132760
+    },
+    {
+      "rfilename": "receipts/Ollama-Q4_K_M.json",
+      "blobId": "66ed16a3360fedb42af5b3fd472f04c11348c9fd",
+      "size": 133185
+    },
+    {
+      "rfilename": "receipts/Ollama-Q4_K_S.json",
+      "blobId": "1633e38712ce1dff97a3314584a8449d8a88fa98",
+      "size": 132935
+    },
+    {
+      "rfilename": "receipts/Ollama-Q5_K_M.json",
+      "blobId": "98ffade597055da28733114c9417a0a176fec1dc",
+      "size": 133425
+    },
+    {
+      "rfilename": "receipts/Ollama-Q6_K.json",
+      "blobId": "e85b900d91b15f8362b2f75ae3796a88b72d6555",
+      "size": 133305
+    },
+    {
+      "rfilename": "receipts/Ollama-q8_0.json",
+      "blobId": "c1d6d3417de02ef1ba7a0a39d5c3a4a359dce0f1",
+      "size": 133206
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-17T15:32:00.000Z",
+  "usedStorage": 32221731389
+}

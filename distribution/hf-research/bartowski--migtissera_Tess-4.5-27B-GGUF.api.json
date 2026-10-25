@@ -1,0 +1,596 @@
+{
+  "_id": "6ad5695679bd246cc1b22726",
+  "id": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "tess",
+    "agentic",
+    "coding",
+    "reasoning",
+    "tool-use",
+    "qwen3.8",
+    "image-text-to-text",
+    "en",
+    "base_model:migtissera/Tess-4.5-27B",
+    "base_model:quantized:migtissera/Tess-4.5-27B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 6091,
+  "likes": 4,
+  "modelId": "bartowski/migtissera_Tess-4.5-27B-GGUF",
+  "author": "bartowski",
+  "sha": "f4a96f1f94febb0763c422273c451291e071ba9c",
+  "lastModified": "2026-10-19T01:54:43.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en"
+    ],
+    "base_model_relation": "quantized",
+    "tags": [
+      "tess",
+      "agentic",
+      "coding",
+      "reasoning",
+      "tool-use",
+      "qwen3.8"
+    ],
+    "base_model": "migtissera/Tess-4.5-27B",
+    "license": "apache-2.0"
+  },
+  "gguf": {
+    "total": 27320697856,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/Tess-4.5-27B-GGUF/migtissera_Tess-4.5-27B-imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 10522249408
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "3523a67868ea18a1caadf41fb58e53e7ba1d4bfc",
+      "size": 3690
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "741f586300ccc0da0421d27dbce4b9ced23b1dc8",
+      "size": 21507
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_M.layout.json",
+      "blobId": "4984d25408b6cb575ad9c0fb3e903bbff021455f",
+      "size": 13042
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_M.tensor-types.txt",
+      "blobId": "4bb372fb5392e1213b1f59ab89555255eb07a548",
+      "size": 16588
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_S.layout.json",
+      "blobId": "64cef1e4590fd3970b45fd5b0c64a12d4923c7b2",
+      "size": 13117
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_S.tensor-types.txt",
+      "blobId": "2921fa3ec2298373bc43db6c83c356a8bcc4ffda",
+      "size": 16803
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_XS.layout.json",
+      "blobId": "cf53d3f09b1032101ae4554ded1f39768e94da1b",
+      "size": 13015
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_XS.tensor-types.txt",
+      "blobId": "fc6b3a93cb776cd1da87f7fab7c2f4ca3947b9aa",
+      "size": 16900
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_XXS.layout.json",
+      "blobId": "9a7593c65bcdf64684ff545eeda401b94c05a242",
+      "size": 13106
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ2_XXS.tensor-types.txt",
+      "blobId": "52066b1e770bd09ae36b825b1c19d7b9c499972a",
+      "size": 17164
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ3_M.layout.json",
+      "blobId": "b65c822385fbaf302c1a643e19184289eeb33299",
+      "size": 12973
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ3_M.tensor-types.txt",
+      "blobId": "9a65b06c30b24f309a2692f14914887649d44ed2",
+      "size": 16331
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ3_XS.layout.json",
+      "blobId": "99cb83402e1908263a4d515d38e0e177a301461b",
+      "size": 13025
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ3_XS.tensor-types.txt",
+      "blobId": "cc7800e51acc901327792b6b9db4c40e017cfced",
+      "size": 16463
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ3_XXS.layout.json",
+      "blobId": "325dd541e570d95a97746ffc59cd677977777376",
+      "size": 13087
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ3_XXS.tensor-types.txt",
+      "blobId": "d06505011c06b0097ab3893395cd4871e9b99296",
+      "size": 16983
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ4_NL.layout.json",
+      "blobId": "abfb8b3a8798db6cd13bd85cffe3b1b7b95fa593",
+      "size": 13038
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ4_NL.tensor-types.txt",
+      "blobId": "6b817062b2822319dd20f73ee541bfbff492606e",
+      "size": 16644
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ4_XS.layout.json",
+      "blobId": "98541f0c94b32ae2ce99826ba8e0a3ed6848d36f",
+      "size": 13001
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-IQ4_XS.tensor-types.txt",
+      "blobId": "d0a1af4ca43f1350c091a2e95bad7e425e45517e",
+      "size": 16788
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q2_K.layout.json",
+      "blobId": "d5e36e2312d2a7ddd603ec3a1c80bcabec8842d6",
+      "size": 13028
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q2_K.tensor-types.txt",
+      "blobId": "fb1295120732ef58e7835ebd352f5d4c8130a2fe",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q3_K_L.layout.json",
+      "blobId": "0f6b11351d802dfe4a85cf3218ce274da84fb939",
+      "size": 13069
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q3_K_L.tensor-types.txt",
+      "blobId": "1aea2cdddda33c9ae6cc8d7cc983e24f1cc17991",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q3_K_M.layout.json",
+      "blobId": "4a9bea8ec12875a2d09fa85b6939703678acbb84",
+      "size": 13070
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q3_K_M.tensor-types.txt",
+      "blobId": "b11c07de3526c54592d9416791a2090b1a6dbf9c",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q3_K_S.layout.json",
+      "blobId": "127b9f3f0c716fba86e2ed4c8cd1f1f68eac84f0",
+      "size": 12946
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q3_K_S.tensor-types.txt",
+      "blobId": "70ae59d65312c5f0f0f73e336b18f4a514576e6f",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q4_K_L.layout.json",
+      "blobId": "31b2549cc49ce119df34cf1aec6c851d109374ba",
+      "size": 13018
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q4_K_L.tensor-types.txt",
+      "blobId": "23f7d93566dedc8ac9a537c58ae51203d2c87cee",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q4_K_M.layout.json",
+      "blobId": "7f053da61ee7bb279120ee04a4df549c7fff47dd",
+      "size": 13017
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q4_K_M.tensor-types.txt",
+      "blobId": "a553a5f0a64506a36c543eb72e0a6683d9dd4b84",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q4_K_S.layout.json",
+      "blobId": "23a3447f66e54961d41416caf4fcfe718272ed3b",
+      "size": 12965
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q4_K_S.tensor-types.txt",
+      "blobId": "9245b4ee7cca62ac19b1beddca07b516ec9710db",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q5_K_M.layout.json",
+      "blobId": "440f14d7f5ac4a23a9f5a357b54f0a60c106f30a",
+      "size": 12950
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q5_K_M.tensor-types.txt",
+      "blobId": "096687320b7f7b7569249c794ec20084e5560c22",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q5_K_S.layout.json",
+      "blobId": "35795fa832cf1baee5456be530613a58a396e61c",
+      "size": 12930
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q5_K_S.tensor-types.txt",
+      "blobId": "c4fe55afc1dc4facc84a89cafed9487c5ed89cd2",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q6_K.layout.json",
+      "blobId": "2b973813fadf477c5f53efee8f27719e406fefb3",
+      "size": 12911
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q6_K.tensor-types.txt",
+      "blobId": "3bee009e4ba2b10145aa6597a1c947818643856e",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q6_K_L.layout.json",
+      "blobId": "b71e98867d883381ebeb6fc1f5dbaeec3bfca362",
+      "size": 12917
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q6_K_L.tensor-types.txt",
+      "blobId": "c626e736121c29329f5ea99f8bc5905e3df93c8f",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q6_K_S.layout.json",
+      "blobId": "bfe229b1e58c97dd74b2ad70de173528aabddc2c",
+      "size": 12913
+    },
+    {
+      "rfilename": "layouts/migtissera_Tess-4.5-27B-Q6_K_S.tensor-types.txt",
+      "blobId": "433ad5cfba5692299b6878b5655d2f58ad66b25a",
+      "size": 16130
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ2_M.gguf",
+      "blobId": "084041663ca126793f61ccd3fbba6f4010391387",
+      "size": 10522249408,
+      "lfs": {
+        "sha256": "de11a112497fa0d633d1025b22eb320201c09f01050ed6c6baff488ed4a38721",
+        "size": 10522249408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ2_S.gguf",
+      "blobId": "d2595ca61214d5316a22d51e29ac515063ec1435",
+      "size": 9684043968,
+      "lfs": {
+        "sha256": "2f3b712a3c310dab393449c30fcf86aa71ffb3759375a65d5ecad6066fa3f8ff",
+        "size": 9684043968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ2_XS.gguf",
+      "blobId": "a9b9e3b3d598c3855c588523f5059dfa83ab9185",
+      "size": 9088526528,
+      "lfs": {
+        "sha256": "e4216d01bfefde57a5d86cb2c30ffb275d795ef3b99bb6e5ea14f90691b2101f",
+        "size": 9088526528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ2_XXS.gguf",
+      "blobId": "9ad78e605ad35ee27148cef5bf9f7acc3939c88f",
+      "size": 8881268928,
+      "lfs": {
+        "sha256": "8f4a567ac897dc6731aced0b9e81daba2e00442041a0448a5132723befee5512",
+        "size": 8881268928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ3_M.gguf",
+      "blobId": "22f8cecd1ab020d436162cd3bf6dcaa229830053",
+      "size": 14860630208,
+      "lfs": {
+        "sha256": "44942450e2c2e333f7ea2124ff5ce612e818bc4bca79ed6a34c0a554dc13e38e",
+        "size": 14860630208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ3_XS.gguf",
+      "blobId": "4d40327e7df2d51b572bdfd1cbb17da136105989",
+      "size": 12799604928,
+      "lfs": {
+        "sha256": "c96b6d5aaba2a16cb54d5bb1d84d860b724f73976a0ddbe2310253d8ee94b82a",
+        "size": 12799604928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ3_XXS.gguf",
+      "blobId": "7368970f921a1d8178ac731a3fe766a4cc011eb6",
+      "size": 12320168128,
+      "lfs": {
+        "sha256": "5551f2a35908cdb903417082398b5ccd3fc4678ac5e6c6d0ec6aa751aecbad22",
+        "size": 12320168128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ4_NL.gguf",
+      "blobId": "55ddcd8dd7dea351d489477c1cae8303e68a5fb5",
+      "size": 17442400448,
+      "lfs": {
+        "sha256": "ede9aeaa63bb0e24eefe426e85fd1d08984b0b490d2fc4a4049a63b2e3691dbb",
+        "size": 17442400448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-IQ4_XS.gguf",
+      "blobId": "c7905a9e0bbd0c7492569e1cf5c1f18e116b8ea1",
+      "size": 15475951808,
+      "lfs": {
+        "sha256": "46ac6c3be737cfdab3e7752c88f85f6fd823d5c5431abc750bd3796d5e0b4935",
+        "size": 15475951808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q2_K.gguf",
+      "blobId": "7e34e59b2f8dc7d547cc774f79c90dff3827abe5",
+      "size": 10821544128,
+      "lfs": {
+        "sha256": "43124c1986a073cc4420c70653f5f929e71c0e94b20c8e9b53c8e6b4157f2f8b",
+        "size": 10821544128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q3_K_L.gguf",
+      "blobId": "afbc95e28a80f8a42cf2996ccabf6c1a13502142",
+      "size": 14122817728,
+      "lfs": {
+        "sha256": "6533a2e5f3f6011d4425e90959e67c2b72582a5a06ba75bbff19f350bf9d32c0",
+        "size": 14122817728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q3_K_M.gguf",
+      "blobId": "e5dd88616570d6b84429144c517b708af99ecf01",
+      "size": 13404051648,
+      "lfs": {
+        "sha256": "a12619fa8d418fd22c5258f7391e22265f5d205574669fe2282992f3409e2b10",
+        "size": 13404051648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q3_K_S.gguf",
+      "blobId": "1c0fa85495df83ec1f96659058ad21f6b3461198",
+      "size": 12739885248,
+      "lfs": {
+        "sha256": "1f22a7b673c300112e215666b6cb9333b4d979488a76d528cb77dcf252a27707",
+        "size": 12739885248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q4_0.gguf",
+      "blobId": "9e417a26083de7830185b72da2e3362458fde816",
+      "size": 16348768448,
+      "lfs": {
+        "sha256": "20c170f6cb36501da4561e04a109c3a658e189eaaca6cfae2acbb20534684363",
+        "size": 16348768448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q4_1.gguf",
+      "blobId": "d8b851d61494e0a579029e3860435c05079befe7",
+      "size": 17825458368,
+      "lfs": {
+        "sha256": "f946c6369e1fec5053acf0e29b553ea44f9012dd67b9eb2e41cbc9dc3152ead0",
+        "size": 17825458368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q4_K_L.gguf",
+      "blobId": "82212765eae3362c13eb16ee417f3f252dd47126",
+      "size": 18820704448,
+      "lfs": {
+        "sha256": "9fa0485f02f700d9dfd74cbc0ef92016f9fb9bb927c84720f8006e9bbe056db9",
+        "size": 18820704448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q4_K_M.gguf",
+      "blobId": "3d0f47bea5d0704d29b1d7c3ef5aa8d2ff2a91a8",
+      "size": 17442400448,
+      "lfs": {
+        "sha256": "c291cbba809a06e25e5feb0c93e7e4e7eb8f1d3ed01a081467767ad6dfe361cc",
+        "size": 17442400448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q4_K_S.gguf",
+      "blobId": "a5d17023e07fcc10dcc012e20fd0c49c12a278a7",
+      "size": 16363514048,
+      "lfs": {
+        "sha256": "e2c9984c73da2e898fa3c98a9bd41240b1016af67330c2751326c28b75461e50",
+        "size": 16363514048,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q5_K_M.gguf",
+      "blobId": "551d2d27b47465d0c8794c0f844ef232b4fb7bbc",
+      "size": 20923877568,
+      "lfs": {
+        "sha256": "f0c6698b079fe14b6da4adf48eecb000b1aec0ef59dd2aaa27d04b8002de35f1",
+        "size": 20923877568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q5_K_S.gguf",
+      "blobId": "cc4f3a09ecd32ff3f9f846ff2973ab6a6d34dda6",
+      "size": 19566913728,
+      "lfs": {
+        "sha256": "d8291e75a04f4af4765643391fbbffd362dfe1ac44080cf7790de637464980be",
+        "size": 19566913728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q6_K.gguf",
+      "blobId": "e0c912ed9e84313722424880a195af20f5487b72",
+      "size": 23860566208,
+      "lfs": {
+        "sha256": "fc3096a78d019cb1d4524bf77a6adf292c09087b6e6894049e6201172821ef3f",
+        "size": 23860566208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q6_K_L.gguf",
+      "blobId": "69516bf1186c37373a45448173e265f36ce969dc",
+      "size": 24958908608,
+      "lfs": {
+        "sha256": "3dd43eab8ecaaabded7d644e929fbf5ba893c05f073f1ddd172feafd01ce29cc",
+        "size": 24958908608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q6_K_S.gguf",
+      "blobId": "e68c18f75cb922a02056a0797d9d5bb00a476636",
+      "size": 22857455808,
+      "lfs": {
+        "sha256": "9c7cf0367c868c79513ba774b0eee263cb0b33d9e7d92e3cfac469f55fc6f574",
+        "size": 22857455808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-Q8_0.gguf",
+      "blobId": "bb889d137869675d33d90b13cb361f000ca9faea",
+      "size": 29116389568,
+      "lfs": {
+        "sha256": "61669f8127561ba6b89a9e1de1adddc4b54148f56af85c0247dcfda689c22d7b",
+        "size": 29116389568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-bf16/migtissera_Tess-4.5-27B-bf16-00001-of-00002.gguf",
+      "blobId": "deb43372af5ba39c6b9f9faffed61525f1585d35",
+      "size": 39960210048,
+      "lfs": {
+        "sha256": "6f2e6f81e626a45588be70b0eda9e9b71eca255415d5541a8761a4909e20c657",
+        "size": 39960210048,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-bf16/migtissera_Tess-4.5-27B-bf16-00002-of-00002.gguf",
+      "blobId": "a21c994298a2c1b972cae4f4a85ae8eda7c66899",
+      "size": 14697524672,
+      "lfs": {
+        "sha256": "0c90c552fb33893012ce3d84d99fe63c1b3386b5711c811f7782742d740e94d7",
+        "size": 14697524672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-calibration-v6.txt",
+      "blobId": "ae31ba58ff794d7dacb49555270dafb1343a80bd",
+      "size": 1258850
+    },
+    {
+      "rfilename": "migtissera_Tess-4.5-27B-imatrix.gguf",
+      "blobId": "f8df31bb744e0bac62185b41b486c183901cbbef",
+      "size": 27300224,
+      "lfs": {
+        "sha256": "135f0f63f655a3ec77f3c1e8354911c77a9063750ca15e4fa32fbc9664b3fb58",
+        "size": 27300224,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "mmproj-migtissera_Tess-4.5-27B-bf16.gguf",
+      "blobId": "f8f222aad48e2f04b3c452322a046fb0f71719fa",
+      "size": 931146336,
+      "lfs": {
+        "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6",
+        "size": 931146336,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-migtissera_Tess-4.5-27B-f16.gguf",
+      "blobId": "00ebcff7e181e7592c5106611ed00f07a1e9f87f",
+      "size": 927607392,
+      "lfs": {
+        "sha256": "a8c4d4d438a69fa060d579d90496a9b853a1dff34ae6a2be4aa207fc83dea75c",
+        "size": 927607392,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-19T00:50:30.000Z",
+  "usedStorage": 446791889024
+}

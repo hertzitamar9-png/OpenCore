@@ -66,16 +66,19 @@ function $hubProgress() {
 }
 function $hubModel(entry) {
   return {id:entry.id,label:entry.familyLabel||entry.repository.split('/').at(-1),description:entry.repository,precision:entry.quantization,
-    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:'echo',backend:'hub',hubModel:true,hubEntry:entry,
+    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:!entry.category||entry.category==='text'?'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
     selectable:!!entry.runtimeReady,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
-    category:'text',contextTokens:entry.contextTokens||32768,totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
+    category:entry.category||'text',contextTokens:entry.contextTokens||32768,totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
     weightBytes:entry.files.filter(f=>f.role==='model').reduce((n,f)=>n+f.bytes,0),experimental:false,sourceUrl:entry.sourceUrl,
     note:'Hugging Face checkpoint. Download, runtime preparation and actual generation are verified separately.',license:entry.license||'Publisher terms'};
 }
 function $hubAugment(library) {
   if(!library?.models)return library;
   const replaced=new Set($hubState.catalog.flatMap(entry=>entry.nativeModelIds||[]));
-  const models=library.models.filter(model=>!replaced.has(model.id));
+  const imported=new Set($hubState.catalog.map(entry=>entry.repository.toLowerCase())),parents=new Set(library.models.map(model=>model.variantOf).filter(Boolean));
+  const models=library.models.filter(model=>{if(replaced.has(model.id))return false;
+    if(model.backend==='external'&&!model.installed&&!parents.has(model.id)){try{const url=new URL(model.sourceUrl||model.setupUrl);if(['huggingface.co','hf.co'].includes(url.hostname)&&imported.has(url.pathname.split('/').filter(Boolean).slice(0,2).join('/').toLowerCase()))return false;}catch{}}
+    return true;});
   const roots=new Map();
   for(const entry of $hubState.catalog){
     const model=$hubModel(entry),family=entry.familyId||entry.repository.toLowerCase(),root=roots.get(family);
@@ -128,25 +131,33 @@ async function $hubInvoke(command,args,run) {
   return run();
 }
 function $HubBrowser({onChanged,onNotice}) {
-  const state=$useHub(),[repository,setRepository]=p.useState(''),[plan,setPlan]=p.useState(null),[selected,setSelected]=p.useState([]),[busy,setBusy]=p.useState(false),[error,setError]=p.useState('');
+  const state=$useHub(),[repository,setRepository]=p.useState(''),[plan,setPlan]=p.useState(null),[selected,setSelected]=p.useState([]),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[community,setCommunity]=p.useState(true),checking=p.useRef(false);
   const h=p.createElement;
-  async function inspect(event){event.preventDefault();if(busy)return;setBusy(true);setError('');setPlan(null);
-    try{const value=await $hubRequest('/plan',{repository});setPlan(value);setSelected(value.variants.filter(v=>v.installable).map(v=>v.id));}
-    catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function inspectRepository(value,includeCommunity){if(checking.current)return;checking.current=true;setBusy(true);setError('');setPlan(null);setRepository(value);
+    try{const plan=await $hubRequest('/plan',{repository:value,includeCommunity});setPlan(plan);const seen=new Set();setSelected(plan.variants.filter(v=>{if(!v.installable||seen.has(v.quantization))return false;seen.add(v.quantization);return true;}).map(v=>v.id));}
+    catch(e){setError(String(e));}finally{checking.current=false;setBusy(false);}}
+  async function inspect(event){event.preventDefault();await inspectRepository(repository,community);}
+  p.useEffect(()=>{function open(event){const value=event.detail?.repository;if(typeof value!=='string'||!value)return;setCommunity(true);void inspectRepository(value,true);document.querySelector('[aria-label="Add from Hugging Face"]')?.scrollIntoView({block:'start'});}
+    window.addEventListener('opencore-find-quantizations',open);return()=>window.removeEventListener('opencore-find-quantizations',open);},[]);
   async function add(){setBusy(true);setError('');try{const value=await $hubRequest('/catalog/add',{planId:plan.planId,variantIds:selected});await $hubRefresh(true);await onChanged?.();onNotice?.(`Added ${value.added.length} published variants. Choose a quantization to install.`);setPlan(null);}
     catch(e){setError(String(e));}finally{setBusy(false);}}
   return h('section',{className:'hub-browser','aria-label':'Add from Hugging Face'},
     h('h3',null,'Add from Hugging Face'),h('p',null,'Enter a public model repository or link. For private or gated models, add your access token in Settings.'),
     h('form',{onSubmit:inspect,className:'hub-repository-form'},h('input',{'aria-label':'Hugging Face repository',placeholder:'owner/model or https://huggingface.co/owner/model',value:repository,onChange:e=>setRepository(e.target.value)}),
       h('button',{type:'submit',disabled:busy||!repository.trim()},busy?'Checking…':'Check repository')),
+    h('label',null,h('input',{type:'checkbox',checked:community,disabled:busy,onChange:e=>setCommunity(e.target.checked)}),' Include community quantizations of this checkpoint'),
     error?h('p',{role:'alert'},error):null,
     plan?h('div',{className:'hub-plan'},h('strong',null,plan.repository),h('p',null,`${plan.variants.length} published model variants · Revision ${plan.revision.slice(0,8)}`),
       h('p',null,'Select quantizations to add. Weights download only when you press Install on a card.'),
+      h('p',{role:'status'},`${plan.quantizationCount??new Set(plan.variants.map(v=>v.quantization)).size} distinct quantizations · ${plan.relatedRepositories?.length||0} community repositories with matching checkpoint metadata`),
+      plan.discoveryErrors?.length?h('p',{role:'status'},plan.discoveryErrors.join(' ')):null,
+      (plan.quantizationCount??new Set(plan.variants.map(v=>v.quantization)).size)<5?h('p',null,'Fewer than five verified quantizations were found in this search. You can also check another publisher repository.'):null,
       h('div',{className:'hub-variant-list'},...plan.variants.map(v=>h('label',{key:v.id},h('input',{type:'checkbox',checked:selected.includes(v.id),disabled:busy||!v.installable,onChange:e=>setSelected(s=>e.target.checked?[...s,v.id]:s.filter(id=>id!==v.id))}),
-        h('span',null,v.quantization,' · ',(v.bytes/1e9).toFixed(3),' GB',v.reason?' · '+v.reason:'')))),
+        h('span',null,v.quantization,' · ',(v.bytes/1e9).toFixed(3),' GB · ',v.repository,v.reason?' · '+v.reason:'')))),
       h('button',{disabled:busy||!selected.length,onClick:add},busy?'Adding…':`Add ${selected.length} variants`)):null,
     state.error&&!state.available?h('p',{role:'status'},state.error):null);
 }
+function $hubOpenRepository(repository){window.dispatchEvent(new CustomEvent('opencore-find-quantizations',{detail:{repository}}));}
 function $HubSettings() {
   const state=$useHub(),[token,setToken]=p.useState(''),[busy,setBusy]=p.useState(false),[message,setMessage]=p.useState('');const h=p.createElement;
   async function save(event){event.preventDefault();setBusy(true);setMessage('');try{await $hubRequest('/token',{token},'PUT');setToken('');await $hubRefresh(true);setMessage('Hugging Face token saved securely for this Windows user.');}catch(e){setMessage(String(e).replaceAll(token||'\u0000','[redacted]'));}finally{setBusy(false);}}
@@ -164,8 +175,9 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,selectedProfile}) 
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function uninstall(){setBusy(true);try{await $hubRequest('/uninstall',{id:entry.id});await $hubRefresh(true);await onChanged?.();setRemoving(false);}catch(e){setError(String(e));}finally{setBusy(false);}}
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
-    h('p',null,entry.repository),h('p',null,'ECHO · Text model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
-      ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',(v.totalBytes/1e9).toFixed(3),' GB')))),
+    h('p',null,entry.repository),h('p',null,!entry.category||entry.category==='text'?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
+      ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',(v.totalBytes/1e9).toFixed(3),' GB · ',v.hubEntry?.repository.split('/')[0])))),
+    h('button',{disabled:locked,onClick:()=>$hubOpenRepository(entry.originalRepository||entry.repository)},'Find more quantizations'),
     h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
     h('small',null,entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):

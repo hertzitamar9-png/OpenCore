@@ -11,7 +11,7 @@ sys.path.insert(0, str(HERE.parent / 'src-tauri/resources/runtime-setup/hf-exten
 from hf_runtime import RuntimeManager
 
 parser = argparse.ArgumentParser()
-parser.add_argument('model', choices=['flint-nvfp4-gguf', 'flint-iq2-xxs', 'raon-1-mini-iq4-xs'])
+parser.add_argument('model', choices=['flint-nvfp4-gguf', 'flint-iq2-xxs', 'raon-1-mini-iq4-xs', 'tess-iq2-xxs'])
 args = parser.parse_args()
 root = HERE / '.output/publisher-live'
 entry = json.loads((root / (args.model + '-entry.json')).read_text())

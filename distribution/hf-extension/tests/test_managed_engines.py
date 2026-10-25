@@ -85,7 +85,7 @@ class PublisherCatalogTests(unittest.TestCase):
             kept = state.entries[entry['id']]
             self.assertEqual(kept['profileId'], 'kept-profile')
             self.assertEqual(kept['runtimePreparation'], {'runtimeReady': True})
-            self.assertEqual(len({x['familyId'] for x in state.entries.values()}), 2)
+            self.assertEqual(len({x['familyId'] for x in state.entries.values()}), 4)
             self.assertEqual(len({x['id'] for x in state.entries.values()}), count)
 
     def test_ready_requires_current_engine_and_successful_echo_proof(self):

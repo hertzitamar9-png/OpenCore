@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import shutil
 import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlsplit
@@ -178,6 +179,7 @@ def validate_entry(entry):
 
 
 class Downloader:
+    disk_reserve = 2 * 1024 ** 3
     parallel_threshold = 128 * 1024 * 1024
     parallel_chunk_bytes = 8 * 1024 * 1024
     parallel_workers = 8
@@ -282,6 +284,21 @@ class Downloader:
         directory = self.directory(entry)
         directory.mkdir(parents=True, exist_ok=True)
         total, completed, verified = entry["bytes"], 0, []
+        needed = 0
+        for pin in entry['files']:
+            target = managed_path(directory, pin['filename'])
+            if target.is_file() and target.stat().st_size == pin['bytes']:
+                continue
+            partial = managed_path(directory, pin['filename'] + '.partial')
+            marker = managed_path(directory, pin['filename'] + '.partial.json')
+            try:
+                matching = marker.is_file() and marker.stat().st_size <= 65536 and json.loads(marker.read_text(encoding='utf-8')) == pin
+                offset = min(partial.stat().st_size, pin['bytes']) if matching and partial.is_file() else 0
+            except (OSError, ValueError):
+                offset = 0
+            needed += pin['bytes'] - offset
+        if needed and shutil.disk_usage(directory).free < needed + self.disk_reserve:
+            raise HubError(f'This model needs {(needed + self.disk_reserve) / 1e9:.1f} GB of free disk space, including a 2 GB reserve. Existing files were retained.')
         for pin in entry["files"]:
             self._pause(pause)
             target = managed_path(directory, safe_filename(pin["filename"]))
@@ -302,6 +319,8 @@ class Downloader:
                     marker.unlink(missing_ok=True)
                 offset = partial.stat().st_size if partial.is_file() else 0
                 atomic_json(marker, pin)
+                if offset < pin['bytes'] and shutil.disk_usage(directory).free < pin['bytes'] - offset + self.disk_reserve:
+                    raise HubError('Not enough free disk space to finish or repair this checkpoint. Existing files were retained.')
                 if offset < pin['bytes'] and pin['bytes'] >= self.parallel_threshold:
                     self._download_ranges(pin, partial, offset, pause, progress)
                     offset = partial.stat().st_size if partial.is_file() else 0
