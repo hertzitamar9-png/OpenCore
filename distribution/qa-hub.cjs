@@ -13,7 +13,7 @@ case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.
 case 'runtime_setup_status':return{jobs:[],receipts:[],recipes:[],activeJobId:null};
 case 'model_install_progress':return null;
 case 'list_model_library':return{models:fixture.nativeModels||[],progress:null,diskFreeBytes:100e9,minimumFreeBytes:0};
-case 'model_removal_plan':return{confirmationToken:'verified-native-removal-plan'};
+case 'model_removal_plan':return{modelId:args.id,label:'Existing Q4 profile',scope:'verified-native-scope',confirmationToken:'verified-native-removal-plan',profiles:[],files:[{path:'fixture/models/native.gguf',bytes:100,external:!!fixture.nativeExternal}],retainedFiles:[{path:'fixture/shared/tokenizer.json',bytes:50,sharedWith:['another-profile']}],totalBytes:100};
 case 'uninstall_model':fixture.nativeModels=[];return null;
 case 'install_model':{const model=(fixture.nativeModels||[]).find(model=>model.id===args.id);if(model)model.installed=true;return null;}
 case 'speech_status':return{enabled:false,installed:false,modelId:'whisper-large-v3-turbo',phase:'off'};
@@ -80,10 +80,12 @@ try{await preset.locator('option[value="native-existing"]').waitFor({state:'atta
 record('an existing installed native profile remains in the same card without a duplicate Q4 choice',await preset.locator('select option').count()===5&&await preset.locator('option[value="native-existing"]').innerText().then(t=>t.includes('Installed')));
 await preset.locator('select').selectOption('native-existing');const providersBefore=await page.evaluate(()=>fixture.calls.filter(c=>c.command==='api_provider_save').length);await preset.getByRole('button',{name:'Use model',exact:true}).click();
 record('existing native selection preserves its profile and does not create a replacement API provider',await page.evaluate(()=>window.selected==='native-existing'&&fixture.calls.filter(c=>c.command==='api_provider_save').length)===providersBefore);
-await preset.getByRole('button',{name:'Uninstall',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
+await page.evaluate(()=>fixture.nativeExternal=true);await preset.getByRole('button',{name:'Uninstall',exact:true}).click();
+record('native removal uses the original shared-file and external-checkpoint review',await page.getByRole('dialog').getByRole('button',{name:'Uninstall model',exact:true}).isDisabled()&&await page.getByText('1 shared files will be kept',{exact:true}).isVisible()&&await page.getByText('I also want to remove these existing checkpoint files.',{exact:true}).isVisible());
+await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
 record('cancelling native removal does not uninstall the existing model',await page.evaluate(()=>!fixture.calls.some(c=>c.command==='uninstall_model')));
-await preset.getByRole('button',{name:'Uninstall',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Remove downloaded files',exact:true}).click();
-record('native removal retains the backend confirmation token and variant scope',await page.evaluate(()=>fixture.calls.some(c=>c.command==='uninstall_model'&&c.args.confirmationToken==='verified-native-removal-plan'&&c.args.scope==='variant')));
+await page.evaluate(()=>fixture.nativeExternal=false);await preset.getByRole('button',{name:'Uninstall',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Uninstall model',exact:true}).click();
+record('native removal retains the backend confirmation token and returned scope',await page.evaluate(()=>fixture.calls.some(c=>c.command==='uninstall_model'&&c.args.confirmationToken==='verified-native-removal-plan'&&c.args.scope==='verified-native-scope')&&fixture.calls.filter(c=>c.command==='model_removal_plan').every(c=>!c.args.scope)));
 await page.evaluate(async()=>{fixture.catalog.forEach(entry=>entry.nativeModelIds.push('native-extra'));fixture.nativeModels=[{id:'native-extra',label:'Original Q8 option',precision:'Q8_0',memoryMode:'native',category:'text',contextTokens:8192,installed:false,selectable:true,runtimeReady:true,installable:true,totalBytes:200}];const {TestInvoke}=await import('/assets/App-kNA9sRUP.js');const library=await TestInvoke('list_model_library',{},()=>window.__TAURI_INTERNALS__.invoke('list_model_library'));window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));});
 await preset.locator('option[value="native-extra"]').waitFor({state:'attached'});await preset.locator('select').selectOption('native-extra');
 record('an original native quant outside the five presets remains available to install',await preset.locator('select option').count()===6&&await preset.getByRole('button',{name:'Install',exact:true}).isEnabled());

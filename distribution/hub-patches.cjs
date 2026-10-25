@@ -8,7 +8,7 @@ module.exports=function(app,{editFunction,replaceOnce}){
     text=replaceOnce(text,'i.jsx(mj,{})','i.jsx($HubBrowser,{onChanged:J,onNotice:r}),i.jsx(mj,{})');
     text=replaceOnce(text,'z=se=>f==="all"||Ve(se)','z=se=>true');
     text=replaceOnce(text,'children:ie','children:ke.length');
-    text=replaceOnce(text,'return i.jsxs("article",{','return de.hubModel?i.jsx($HubCard,{group:se,disabled:n||B||!!O,onSelect:e,onNotice:r,onChanged:J,selectedProfile:t},se.id):i.jsxs("article",{');
+    text=replaceOnce(text,'return i.jsxs("article",{','return de.hubModel?i.jsx($HubCard,{group:se,disabled:n||B||!!O,onSelect:e,onNotice:r,onChanged:J,onNativeRemove:model=>M(model),selectedProfile:t},se.id):i.jsxs("article",{');
     return text;
   });
   app=editFunction(app,'h8',text=>{
