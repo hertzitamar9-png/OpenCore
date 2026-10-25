@@ -2,7 +2,7 @@ name: Build publisher model runtimes
 
 on:
   push:
-    branches: [codex-bootstrap-runtimes]
+    branches: [codex-bootstrap-runtimes, codex-community-quants]
     paths: [.github/workflows/build-model-runtimes.yml]
   workflow_dispatch:
 
@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   raon-windows:
+    if: github.ref != 'refs/heads/codex-community-quants'
     runs-on: windows-latest
     defaults:
       run:
@@ -50,6 +51,66 @@ jobs:
         with:
           name: raon-windows-runtime
           path: raon-windows-x64-fb895662-crt.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  edgerock-windows:
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the pinned upstream and reviewed EdgeRock port
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/ggml-org/llama.cpp.git publisher-edgerock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C publisher-edgerock checkout 62318cd57dc63900ecb153272c0b10f78550855d
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory edgerock-port | Out-Null
+          $pins = @{
+            'patch_llama.py'='27d67a401e1a8ec505794444d77c8d39a014231df29503bfc99844123093cfa8'
+            'edgerock-rma.h'='4018dd0a6d8368673eb9019df4cbde6721213b0d1ecc2063407bd3eb1ab4a058'
+            'edgerock-rma-graph.inc'='35a01ac0aa9c68d40055d844354d785383c5a4a8851efa436970ea6fd00adfbb'
+          }
+          foreach ($name in $pins.Keys) {
+            Invoke-WebRequest ('https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF/resolve/a5e045c646b70303156394d52c2ca1e415ec1544/backend/' + $name) -OutFile ('edgerock-port/' + $name)
+            if ((Get-FileHash ('edgerock-port/' + $name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pins[$name]) { throw 'EdgeRock port hash mismatch' }
+          }
+          python edgerock-port/patch_llama.py publisher-edgerock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build a portable Windows CPU engine
+        run: |
+          cmake -S publisher-edgerock -B publisher-edgerock/build -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_CUDA=OFF -DGGML_OPENMP=OFF -DGGML_BLAS=OFF -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build publisher-edgerock/build --config Release --target llama-server --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package and check the EdgeRock engine
+        run: |
+          New-Item -ItemType Directory runtime-edgerock | Out-Null
+          Copy-Item publisher-edgerock/build/bin/Release/*.dll runtime-edgerock/
+          Copy-Item publisher-edgerock/build/bin/Release/llama-server.exe runtime-edgerock/
+          Copy-Item publisher-edgerock/LICENSE runtime-edgerock/
+          foreach ($name in @('LICENSE-CODE','NOTICE')) {
+            Invoke-WebRequest ('https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF/resolve/a5e045c646b70303156394d52c2ca1e415ec1544/' + $name) -OutFile ('runtime-edgerock/' + $name)
+          }
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $visualStudio = & $vswhere -latest -products '*' -property installationPath
+          $redist = Get-ChildItem (Join-Path $visualStudio 'VC/Redist/MSVC') -Directory -Recurse | Where-Object { $_.FullName -match '\\x64\\Microsoft\.VC.*\.CRT$' } | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $redist) { throw 'Matching x64 CRT not found' }
+          Copy-Item (Join-Path $redist.FullName '*.dll') runtime-edgerock/
+          @{id='edgerock-cpu-v1';upstream='62318cd57dc63900ecb153272c0b10f78550855d';port='a5e045c646b70303156394d52c2ca1e415ec1544';architecture='edgerock';platform='windows-x86_64'} | ConvertTo-Json | Set-Content runtime-edgerock/runtime-info.json -Encoding utf8
+          & ./runtime-edgerock/llama-server.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Compress-Archive -Path runtime-edgerock/* -DestinationPath edgerock-windows-x64-a5e045c6.zip
+          Get-FileHash edgerock-windows-x64-a5e045c6.zip -Algorithm SHA256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: edgerock-windows-runtime
+          path: edgerock-windows-x64-a5e045c6.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
