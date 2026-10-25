@@ -9,6 +9,8 @@ def metadata(name, quants=('Q4_K_M',), base=None, relation=None):
         card['base_model'] = base
     if relation is not None:
         card['base_model_relation'] = relation
+    elif base is not None:
+        card['base_model_relation'] = 'quantized'
     return {'id': name, 'sha': 'a' * 40, 'config': {'model_type': 'llama'}, 'cardData': card,
             'siblings': [{'rfilename': 'model-' + q + '.gguf', 'size': 7,
                           'lfs': {'sha256': 'b' * 64, 'size': 7}} for q in quants]}
@@ -27,6 +29,7 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_wrong_checkpoint_finetunes_merges_and_missing_lineage_are_rejected(self):
         for value in [metadata('community/copy'), metadata('community/copy', base='owner/Other'),
+                      metadata('community/copy', base='owner/Model', relation=''),
                       metadata('community/copy', base='owner/Model', relation='finetune'),
                       metadata('community/copy', base=['owner/Model', 'owner/Other'], relation='merge')]:
             self.assertFalse(same_checkpoint(value, {'owner/model'}))

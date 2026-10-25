@@ -7,6 +7,17 @@ import re
 from hf_catalog import build_plan, parse_repository
 
 
+def quantized_relation(metadata):
+    card = metadata.get('cardData') or {}
+    relation = str(card.get('base_model_relation') or '').lower() if isinstance(card, dict) else ''
+    tags = [tag for tag in metadata.get('tags') or [] if isinstance(tag, str)]
+    if relation and relation != 'quantized':
+        return False
+    if any(tag.startswith(('base_model:finetune:', 'base_model:merge:', 'base_model:adapter:')) for tag in tags):
+        return False
+    return relation == 'quantized' or any(tag.startswith('base_model:quantized:') for tag in tags)
+
+
 def bases(metadata):
     card = metadata.get('cardData') or {}
     card = card if isinstance(card, dict) else {}
@@ -43,7 +54,7 @@ def source_identity(metadata):
         return source, {source}
     # A matching checkpoint name plus explicit lineage can resolve an original
     # publisher's GGUF repository. Never replace a finetune by its training base.
-    if len(declared) == 1:
+    if len(declared) == 1 and quantized_relation(metadata):
         base = next(iter(declared))
         if checkpoint_name(source) == checkpoint_name(base):
             return base, {source, base}
@@ -58,7 +69,7 @@ def same_checkpoint(metadata, identities):
         return False
     declared = bases(metadata)
     # Multi-model merges are distinct models, even when one constituent matches.
-    return len(declared) == 1 and declared.issubset(identities)
+    return quantized_relation(metadata) and len(declared) == 1 and declared.issubset(identities)
 
 
 def discover(client, repository):
@@ -80,9 +91,9 @@ def discover(client, repository):
     candidates = []
     derivatives = getattr(client, 'quantization_derivatives', None)
     if derivatives:
-        candidates = [candidate for candidate in derivatives(spelling)
-                      if candidate.get('library_name') == 'gguf' or 'gguf' in (candidate.get('tags') or [])
-                      or 'gguf' in str(candidate.get('id', '')).lower()]
+        candidates = [candidate for candidate in derivatives(spelling) if isinstance(candidate, dict) and (
+                      candidate.get('library_name') == 'gguf' or 'gguf' in (candidate.get('tags') or [])
+                      or 'gguf' in str(candidate.get('id', '')).lower())]
     candidates += client.search_quantizations(query)
     names, seen = [], set(identities)
     for candidate in candidates:

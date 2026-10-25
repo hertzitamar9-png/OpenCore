@@ -1,6 +1,9 @@
 name: Verify community model runtimes
 
 on:
+  push:
+    branches: [codex-community-quants]
+    paths: [.github/workflows/verify-community-models.yml, distribution/qa-edgerock-quants.py]
   workflow_dispatch:
 
 permissions:
