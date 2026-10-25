@@ -144,6 +144,17 @@ def coverage(catalog, entries):
                            quantizations=count, readyToInstallChoices=count >= 5,
                            source='bundled packages' if replacements else 'native catalog',
                            repositories=sorted({entry['repository'] for entry in replacements})))
+    native_ids = {model['id'] for model in catalog['models']}
+    represented = {entry['familyId'] for entry in entries if native_ids.intersection(entry.get('nativeModelIds', []))}
+    extra = {}
+    for entry in entries:
+        if entry['familyId'] not in represented:
+            extra.setdefault(entry['familyId'], []).append(entry)
+    for identity, variants in sorted(extra.items()):
+        count = quantization_count(variants)
+        result.append(dict(id=identity, label=variants[0]['familyLabel'], category=variants[0].get('libraryCategory', 'text'),
+                           quantizations=count, readyToInstallChoices=count >= 5, source='bundled packages',
+                           repositories=sorted({entry['repository'] for entry in variants})))
     return dict(schema=1, requirement='At least five distinct named published packages per built-in checkpoint',
                 allModelsMeetMinimum=all(row['readyToInstallChoices'] for row in result),
                 families=len(result), withFive=sum(row['readyToInstallChoices'] for row in result), models=result)

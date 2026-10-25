@@ -1,0 +1,501 @@
+{
+  "_id": "6adb27a15d99a6315827f1e3",
+  "id": "Hobbylm/hobbylm-1B-computer-use",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "peft",
+  "tags": [
+    "peft",
+    "safetensors",
+    "lora",
+    "mlx",
+    "mixture-of-experts",
+    "hobbylm",
+    "agent",
+    "macos",
+    "tool-use",
+    "computer-use",
+    "on-device",
+    "text-generation",
+    "en",
+    "base_model:harims95/hobbylm-1B-instruct",
+    "base_model:adapter:harims95/hobbylm-1B-instruct",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 78,
+  "likes": 25,
+  "modelId": "Hobbylm/hobbylm-1B-computer-use",
+  "author": "Hobbylm",
+  "sha": "4ea1389b68f5a6f7ec72200543fd8374c14d4526",
+  "lastModified": "2026-10-23T10:24:56.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "peft": {
+      "task_type": "CAUSAL_LM",
+      "base_model_name_or_path": "harims95/hobbylm-1B-instruct"
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "peft",
+    "pipeline_tag": "text-generation",
+    "base_model": "harims95/hobbylm-1B-instruct",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "lora",
+      "mlx",
+      "mixture-of-experts",
+      "hobbylm",
+      "agent",
+      "macos",
+      "tool-use",
+      "computer-use",
+      "on-device"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "df39e0c196e50b98d9c93c6dbfe90a164238f1a0",
+      "size": 1686
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "506c8c95f30bc8ce96a7bada2a20b261d0ed0553",
+      "size": 15908
+    },
+    {
+      "rfilename": "SHA256SUMS.txt",
+      "blobId": "2443d8c564fb56dfc7f112279b9527d760e27ff3",
+      "size": 7125
+    },
+    {
+      "rfilename": "adapter_config.json",
+      "blobId": "2ac76bce5d7c0b284764c25f37b8986bf4cc587e",
+      "size": 429
+    },
+    {
+      "rfilename": "adapter_model.safetensors",
+      "blobId": "e7211ccb86ac2c3de413d04483bc4299d62db4e9",
+      "size": 13866560,
+      "lfs": {
+        "sha256": "01108f7004e9ecbcd5926b1864263faf6c59ba0d6bbd6fec24f841d418258beb",
+        "size": 13866560,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "assets/hero.png",
+      "blobId": "1857aa864c53613f555a2fc2f74df0da20fdaded",
+      "size": 146202,
+      "lfs": {
+        "sha256": "deba3ffd1c471d1e1c1366d1b032aceb8757d19e3901ac3d0f0a6b5a43ee62ba",
+        "size": 146202,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/how-it-works.png",
+      "blobId": "6cb4d34df49f7d9de2566a2a70bce74a456dd6b7",
+      "size": 127541,
+      "lfs": {
+        "sha256": "53dd62f34102c647b89043233bc6674b92439caeb93597cf6091f28cf38e977b",
+        "size": 127541,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/results.png",
+      "blobId": "0f0fd86c21a06d37003db41dca067b86d16389bd",
+      "size": 164833,
+      "lfs": {
+        "sha256": "b385e5aaa0b85335a686c4ccc9f393d25fd9e1d1a6faf12289b0227b564405a0",
+        "size": 164833,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/speed.png",
+      "blobId": "1ff040c492a931c33d4e9ee251491cfb3a5f6f85",
+      "size": 80229
+    },
+    {
+      "rfilename": "data/frozen/calc-prompt.json",
+      "blobId": "44fdfa907ac78b4022529148f9b1ca3bd85b625b",
+      "size": 1549
+    },
+    {
+      "rfilename": "data/frozen/calc-tasks.json",
+      "blobId": "e27a4908eecef8a41f417580a3ffea5062ae7b95",
+      "size": 3756
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-pass-bar-amendment-1.json",
+      "blobId": "2ff32c51779dbee449b72cdf719e729496f7d22e",
+      "size": 1138
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-pass-bar-amendment-2-owner-75.json",
+      "blobId": "3a5709231a75ca108e7624080b2e0af824ecec9e",
+      "size": 560
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-pass-bar.json",
+      "blobId": "2d7e5970e2c24dd2c814c693fdc28ef16f20257d",
+      "size": 1417
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-round2-note.json",
+      "blobId": "51274176122e224aedb80b8e7e68ae39abad6927",
+      "size": 1039
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-round3-note.json",
+      "blobId": "da1ecc1d64623a47c76ad349933157792675e8c0",
+      "size": 1110
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-round4-note.json",
+      "blobId": "3a51cfcd5a3c19a964f425a0f27dd65eea9ff54d",
+      "size": 832
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-sealed-test-r2.tsv",
+      "blobId": "a9f79e4b4e110c274c79f99df3b7de0abcae58f2",
+      "size": 4403
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-sealed-test-r3.tsv",
+      "blobId": "d433c9f0121ff806f155d0e0560526cf7c310296",
+      "size": 5733
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-sealed-test-r4.tsv",
+      "blobId": "b9b4fa51519f8284529cdfec5410bf6307a6cdab",
+      "size": 7540
+    },
+    {
+      "rfilename": "data/frozen/hobbymac-sealed-test.tsv",
+      "blobId": "1d9e8766f73e891b6f8784dd4bc9a0506c575910",
+      "size": 4359
+    },
+    {
+      "rfilename": "data/frozen/prompt.json",
+      "blobId": "7280dd2e12554e38f565ec65806d65161773e2ec",
+      "size": 2695
+    },
+    {
+      "rfilename": "data/frozen/tasks-amendment-1.json",
+      "blobId": "17abeb696cdea809cf8b92b33035faae9366a7fd",
+      "size": 779
+    },
+    {
+      "rfilename": "data/frozen/tasks.json",
+      "blobId": "4ebe06f5b86bd4f25bedd17e2be876b00d2fc225",
+      "size": 3542
+    },
+    {
+      "rfilename": "data/hobbymac-lora-r4-ab.npz",
+      "blobId": "c02549f499acb675c29d55c0af155af9e3e58644",
+      "size": 13896996,
+      "lfs": {
+        "sha256": "8ede6b43f3e4a6ad2f18e60a4c47defbb9442fbf1b51806e0e85cb7202a7d212",
+        "size": 13896996,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "data/hobbymac-regex-sealed-r2.json",
+      "blobId": "c546e8120179c3a03ec66c5743e32c13bedb4801",
+      "size": 29
+    },
+    {
+      "rfilename": "data/hobbymac-regex-sealed-r3.json",
+      "blobId": "c441187a7a0db3708bd80cb9b3d5cfb8b379e2d2",
+      "size": 29
+    },
+    {
+      "rfilename": "data/hobbymac-regex-sealed-r4.json",
+      "blobId": "c546e8120179c3a03ec66c5743e32c13bedb4801",
+      "size": 29
+    },
+    {
+      "rfilename": "data/hobbymac-regex-sealed.json",
+      "blobId": "b011f4d6327624d9a7e28c9f5718f40b35d8ac48",
+      "size": 29
+    },
+    {
+      "rfilename": "data/observations/dev-open-1.txt",
+      "blobId": "7f756e95438131e6175d7c6abbef2b7582995c69",
+      "size": 12517
+    },
+    {
+      "rfilename": "docs/DEMO_SCRIPT_FINAL_2026-10-22.md",
+      "blobId": "2711a3acf342afa0eb5cbaefa09fbda7ce366cb6",
+      "size": 3135
+    },
+    {
+      "rfilename": "docs/HOBBYLM_MACOS_CALCULATOR_2026-10-20.md",
+      "blobId": "3a74372f418ff60154de1f51460f0df57e3b8168",
+      "size": 3509
+    },
+    {
+      "rfilename": "docs/HOBBYLM_MAC_HELPER_TRAINING_2026-10-20.md",
+      "blobId": "0001e3a7fd478fb3d85fd1ecbf552c237d7a1234",
+      "size": 12480
+    },
+    {
+      "rfilename": "docs/HOBBY_ENGINEERING_EFFICIENCY_2026-10-21.md",
+      "blobId": "a742ca82f987c916de93ab218fc193b0d1c84ad8",
+      "size": 9223
+    },
+    {
+      "rfilename": "hobby/README_experiment_settings.md",
+      "blobId": "6be5ea0a0d2ef007a08f66f52820f5e267742df7",
+      "size": 4359
+    },
+    {
+      "rfilename": "hobby/agent.py",
+      "blobId": "7dffb4b3588bdc59e62d89a0fc00d4257eeb230e",
+      "size": 11961
+    },
+    {
+      "rfilename": "hobby/brightness.swift",
+      "blobId": "42bcd184f82afa0350b76597bc7430d775091029",
+      "size": 1332
+    },
+    {
+      "rfilename": "hobby/calc_checker.swift",
+      "blobId": "1a22a696b8456ed7b22858ffa0a3b9531c3fc82b",
+      "size": 1517
+    },
+    {
+      "rfilename": "hobby/calc_regex.py",
+      "blobId": "43b7b2dc119e311540e397a6b79c1e514cc96227",
+      "size": 1681
+    },
+    {
+      "rfilename": "hobby/calc_run.py",
+      "blobId": "aeb1c8a5cf878eead186860ea93319a59a490be4",
+      "size": 9366
+    },
+    {
+      "rfilename": "hobby/calendar_tool.py",
+      "blobId": "84a863512af3b8dae3b8b6a518cb5480103e3218",
+      "size": 13058
+    },
+    {
+      "rfilename": "hobby/checker.swift",
+      "blobId": "b2f47a189a9bd922ef45d2d2b4110137efd052b6",
+      "size": 2161
+    },
+    {
+      "rfilename": "hobby/hobby_demo.py",
+      "blobId": "3806d14c733b10dfc91cd178ffaf7ed7259dcbb1",
+      "size": 8580
+    },
+    {
+      "rfilename": "hobby/hobby_runtime.py",
+      "blobId": "cc6f3ab997aacda7c88e020f848addc4bf05eaea",
+      "size": 3921
+    },
+    {
+      "rfilename": "hobby/hobbymac_data.py",
+      "blobId": "681dfd83bd594f48e6497d060a84343185aeb370",
+      "size": 24359
+    },
+    {
+      "rfilename": "hobby/hobbymac_modal.py",
+      "blobId": "01a172bc58c8a5f6eb8a367365677181c06342f5",
+      "size": 8585
+    },
+    {
+      "rfilename": "hobby/hobbymac_run.py",
+      "blobId": "292b5a66031137cf6148f94713aac7cf5b366d28",
+      "size": 19080
+    },
+    {
+      "rfilename": "hobby/hobbymac_score.py",
+      "blobId": "49dc62c0b5d06a88fe8f06f144505f46160b14f7",
+      "size": 3259
+    },
+    {
+      "rfilename": "hobby/mcp_client.py",
+      "blobId": "a5250735881063ffb5d6a128cab03492f558c33f",
+      "size": 3424
+    },
+    {
+      "rfilename": "hobby/media_key.swift",
+      "blobId": "4b727eb7cfa6f878c499253d2cd4c2ea05cfdaa4",
+      "size": 946
+    },
+    {
+      "rfilename": "hobby/mlx_runtime.py",
+      "blobId": "b928485a443e20436a27b13fed2aa3b2a526ec2b",
+      "size": 3210
+    },
+    {
+      "rfilename": "hobby/order_test.py",
+      "blobId": "893a6e8e45f1263dd49d4719386d2f61cefa6f68",
+      "size": 2779
+    },
+    {
+      "rfilename": "hobby/run.py",
+      "blobId": "3423ba0aa771f885703a0e1a1bd68e73ddd11419",
+      "size": 11968
+    },
+    {
+      "rfilename": "hobby/score.py",
+      "blobId": "b17b40fd1792bfd777af0cbd3113a944f37f30b3",
+      "size": 4839
+    },
+    {
+      "rfilename": "hobby/test_harness.py",
+      "blobId": "a6b108ad870b7a1cb30364f17d2b662624f36264",
+      "size": 2801
+    },
+    {
+      "rfilename": "hobby/test_offline.py",
+      "blobId": "fe241940fa93c9fa82f5031700af5b45a81933b5",
+      "size": 2367
+    },
+    {
+      "rfilename": "hobby/torch_runtime.py",
+      "blobId": "ebae3e34b5c911d9f5e7987210101d7f39f9991e",
+      "size": 3884
+    },
+    {
+      "rfilename": "mlx/hobby-lora-r4-ab.npz",
+      "blobId": "c02549f499acb675c29d55c0af155af9e3e58644",
+      "size": 13896996,
+      "lfs": {
+        "sha256": "8ede6b43f3e4a6ad2f18e60a4c47defbb9442fbf1b51806e0e85cb7202a7d212",
+        "size": 13896996,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "scripts/setup.sh",
+      "blobId": "65cc3f8c289c99f97d35c7651de779b070df8ddd",
+      "size": 1847
+    },
+    {
+      "rfilename": "validation/hobbymac-train-results-r2.json",
+      "blobId": "6a34cc793c9b33c27331a017308ea186a6e3631c",
+      "size": 2199
+    },
+    {
+      "rfilename": "validation/hobbymac-train-results-r3.json",
+      "blobId": "0eeb3ce1fa1e0ff08a0257eb820bf4cf3e6fd62f",
+      "size": 2526
+    },
+    {
+      "rfilename": "validation/hobbymac-train-results-r4.json",
+      "blobId": "c2a7f694345650d8d94c1dbb3e5f868500ff5b92",
+      "size": 2643
+    },
+    {
+      "rfilename": "validation/hobbymac-train-results.json",
+      "blobId": "85666995c4cba4c9d8ac2d87513ec2643225c8c4",
+      "size": 1733
+    },
+    {
+      "rfilename": "validation/mlx-parity-r2.json",
+      "blobId": "6fc433eca7574e9114d46d27792919067b44cb70",
+      "size": 84
+    },
+    {
+      "rfilename": "validation/mlx-speed-r4.json",
+      "blobId": "e36240c5a4ff1e850f7645d66654c5cea3cb90e8",
+      "size": 1644
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-r2-trained-r1-20261020-210940.json",
+      "blobId": "fa3db21dee5e2c2b2a5dd2516bf920e4ef0f5469",
+      "size": 2133
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-r2-trained-r2-20261020-213151.json",
+      "blobId": "6e4a34df7358c90f2c3cd9542253b688eb611f67",
+      "size": 2131
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-r3-trained-r1-mlx-20261021-145806.json",
+      "blobId": "1d09891b19e5fadd1accf56bf31b07baa6a6c0ff",
+      "size": 2120
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-r3-trained-r3-mlx-20261021-152357.json",
+      "blobId": "3bd9bd6eef733a3de3ded9e6d2426209cc84bf80",
+      "size": 2317
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-r4-trained-r3-mlx-20261021-161852.json",
+      "blobId": "d90543fdbc865e1891aa78ff7bbf90ffc5a18e92",
+      "size": 2321
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-r4-trained-r4-mlx-20261021-163850.json",
+      "blobId": "2d999c6335cc963f52eb947fc4a588712b937c01",
+      "size": 2323
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-trained-20261020-203356.json",
+      "blobId": "612cc739c837de1b21b9db169b0c441e817c35ce",
+      "size": 1866
+    },
+    {
+      "rfilename": "validation/score-hobbymac-sealed-untrained-20261020-200140.json",
+      "blobId": "6b2b49b8f8a25221cc2e15c68ada0fa5a3c3c12d",
+      "size": 1769
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-23T09:23:45.000Z",
+  "usedStorage": 28518733,
+  "adapterConfig": {
+    "peft_type": "LORA",
+    "task_type": "CAUSAL_LM",
+    "base_model_name_or_path": "harims95/hobbylm-1B-instruct",
+    "revision": "8a90f6eb6a3d7c7eb952fd01b512a406821366ab",
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "bias": "none",
+    "inference_mode": true,
+    "fan_in_fan_out": false
+  }
+}

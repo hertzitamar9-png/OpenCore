@@ -95,9 +95,11 @@ def build():
                 quantizations.add(entry['quantization'])
     from bundled_catalog import append_presets
     entries = append_presets(catalog, entries, HERE / 'hf-research/bundled-quantizations.json', HERE / 'hf-research/bundled-quants')
+    from requested_catalog import append_requested
+    entries = append_requested(entries, HERE / 'hf-research/requested-models.json', HERE / 'hf-research/requested-models')
     for entry in entries:
         entry['builtIn'] = True
-    entries.sort(key=lambda e: (e['familyId'], e['format'] != 'gguf', e['bytes'], e['id']))
+    entries.sort(key=lambda e: (e['familyId'], e.get('catalogOrder', 0), e['format'] != 'gguf', e['bytes'], e['id']))
     return {'schema': 1, 'entries': entries}
 
 
@@ -117,4 +119,5 @@ if __name__ == '__main__':
         else:
             target.write_text(source, encoding='utf-8')
     print(json.dumps({'families': len({e['familyId'] for e in result['entries']}), 'variants': len(result['entries']),
-                      'windowsGgufVariants': sum(e['format'] == 'gguf' for e in result['entries'])}))
+                      'ggufVariants': sum(e['format'] == 'gguf' for e in result['entries']),
+                      'windowsGgufVariants': sum(e['format'] == 'gguf' and e['runtime'].get('adapter') == 'gguf' for e in result['entries'])}))

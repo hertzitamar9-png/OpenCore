@@ -1,0 +1,347 @@
+{
+  "_id": "6adb375ab45e8b8fbee311c1",
+  "id": "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "safetensors",
+    "qwen3_5",
+    "nvfp4",
+    "fp4",
+    "quantized",
+    "4-bit",
+    "apple-silicon",
+    "terminal-agent",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "zh",
+    "base_model:Teriminal-RSI/Terminal-RSI-27B",
+    "base_model:quantized:Teriminal-RSI/Terminal-RSI-27B",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 26,
+  "likes": 0,
+  "modelId": "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
+  "author": "klcharizardqwq",
+  "sha": "19134f346ec12d2a7d54710151d6b0cfb8c77080",
+  "lastModified": "2026-10-23T11:18:54.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5ForConditionalGeneration"
+    ],
+    "do_sample": true,
+    "eos_token_id": [
+      248046,
+      248044
+    ],
+    "generation_config": {
+      "bos_token_id": 248044,
+      "do_sample": true,
+      "eos_token_id": [
+        248046,
+        248044
+      ],
+      "pad_token_id": 248044,
+      "temperature": 1.0,
+      "top_k": 20,
+      "top_p": 0.95
+    },
+    "image_token_id": 248056,
+    "language_model_only": false,
+    "model_type": "qwen3_5",
+    "quantization": {
+      "group_size": 16,
+      "bits": 4,
+      "mode": "nvfp4"
+    },
+    "quantization_config": {
+      "group_size": 16,
+      "bits": 4,
+      "mode": "nvfp4"
+    },
+    "temperature": 1.0,
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "attn_output_gate": true,
+      "bos_token_id": 248044,
+      "dtype": "bfloat16",
+      "eos_token_id": 248044,
+      "full_attention_interval": 4,
+      "head_dim": 256,
+      "hidden_act": "silu",
+      "hidden_size": 5120,
+      "initializer_range": 0.02,
+      "intermediate_size": 17408,
+      "layer_types": [
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention"
+      ],
+      "linear_conv_kernel_dim": 4,
+      "linear_key_head_dim": 128,
+      "linear_num_key_heads": 16,
+      "linear_num_value_heads": 48,
+      "linear_value_head_dim": 128,
+      "mamba_ssm_dtype": "float32",
+      "max_position_embeddings": 262144,
+      "model_type": "qwen3_5_text",
+      "mtp_num_hidden_layers": 1,
+      "mtp_use_dedicated_embeddings": false,
+      "num_attention_heads": 24,
+      "num_hidden_layers": 64,
+      "num_key_value_heads": 4,
+      "output_gate_type": "swish",
+      "pad_token_id": null,
+      "partial_rotary_factor": 0.25,
+      "rms_norm_eps": 1e-06,
+      "rope_parameters": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          11,
+          11,
+          10
+        ],
+        "partial_rotary_factor": 0.25,
+        "rope_theta": 10000000,
+        "rope_type": "default"
+      },
+      "tie_word_embeddings": false,
+      "use_cache": true,
+      "vocab_size": 248320
+    },
+    "tie_word_embeddings": false,
+    "top_k": 20,
+    "top_p": 0.95,
+    "transformers_version": "5.8.0.dev0",
+    "video_token_id": 248057,
+    "vision_config": {
+      "deepstack_visual_indexes": [],
+      "depth": 27,
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1152,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4304,
+      "model_type": "qwen3_5",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 5120,
+      "patch_size": 16,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 248054,
+    "vision_start_token_id": 248053
+  },
+  "cardData": {
+    "language": [
+      "en",
+      "zh"
+    ],
+    "license": "apache-2.0",
+    "library_name": "mlx",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "Teriminal-RSI/Terminal-RSI-27B",
+    "tags": [
+      "mlx",
+      "nvfp4",
+      "fp4",
+      "quantized",
+      "4-bit",
+      "apple-silicon",
+      "qwen3_5",
+      "terminal-agent",
+      "image-text-to-text"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "fd95602626e9893794aec7d2a4e08b87a4422f26",
+      "size": 6808
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "c0c686f9c38d70d179fb7b5f5aa7530bc913dda3",
+      "size": 8952
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "4702084429822c9cae0faba93fecde8f6992be7a",
+      "size": 4930
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "023756cfadf88e5bf69eefeee3e172f38c448d64",
+      "size": 202
+    },
+    {
+      "rfilename": "model-00001-of-00003.safetensors",
+      "blobId": "e9978e1f48536c4f9ba9d757f51dfd448c0a18f0",
+      "size": 5343250458,
+      "lfs": {
+        "sha256": "ad9d1b1af4c1aceb04d59b5fce687fef01c1878bd2aa7d12b702e51914185e1e",
+        "size": 5343250458,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00003.safetensors",
+      "blobId": "37bf2a6237f64686df5b25f83ea6edb429551487",
+      "size": 5354159381,
+      "lfs": {
+        "sha256": "af5183c41999d47e912782b84707f399105e59e4db045f5e784f6c499457ab1f",
+        "size": 5354159381,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00003.safetensors",
+      "blobId": "e4f19f4403b086e33dc98942cfb588add24cae10",
+      "size": 5357065565,
+      "lfs": {
+        "sha256": "d03ff631dcab8aa2a80b57f3a8b2aee0fdca13118d7315405f8b9977641a6a77",
+        "size": 5357065565,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "b2e43bc2a344cb03a29a2d430ead748c1eca775f",
+      "size": 167058
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+      "size": 390
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "8f29fe38a79a9d8367009ebebd25c35b1f3c4e40",
+      "size": 991
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "a200a8dd650a52c17957673398767ac34b96dbeb",
+      "size": 19989339,
+      "lfs": {
+        "sha256": "a5cd9732badce41de57e6efce8302930ded1c1188c5f81feb2bd6c24c4a1941f",
+        "size": 19989339,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "a60ae1a905ad7a2edaa995dbb0fc81a1c4fc42ee",
+      "size": 1505
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+      "size": 385
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "0aa0ce0658d60ac4a5d609f4eadb0e8e43514176",
+      "size": 6722759
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-23T10:30:50.000Z",
+  "safetensors": {
+    "parameters": {
+      "U32": 26893352960,
+      "BF16": 463375600
+    },
+    "total": 27356728560
+  },
+  "usedStorage": 16074464743
+}

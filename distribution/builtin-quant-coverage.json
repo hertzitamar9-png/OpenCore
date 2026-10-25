@@ -2,8 +2,8 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 526,
-  "withFive": 205,
+  "families": 530,
+  "withFive": 208,
   "models": [
     {
       "id": "qwen-image-21",
@@ -5231,6 +5231,59 @@
         "KRAFTON/Raon-1-mini-preview-gguf",
         "KRAFTON/Raon-1-mini-preview-mlx",
         "KRAFTON/Raon-1-mini-preview-nvfp4"
+      ]
+    },
+    {
+      "id": "publisher-discoveryrsi-27b",
+      "label": "DiscoveryRSI 27B",
+      "category": "text",
+      "quantizations": 28,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Gen-Verse/DiscoveryRSI-27B",
+        "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF",
+        "mkurman/DiscoveryRSI-27B-GGUF",
+        "mradermacher/DiscoveryRSI-27B-i1-GGUF",
+        "nonkronk/DiscoveryRSI-27B-EXL3-4.0bpw"
+      ]
+    },
+    {
+      "id": "publisher-hobbylm-1b-computer-use",
+      "label": "HobbyLM 1B Computer Use",
+      "category": "computer-use",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Hobbylm/hobbylm-1B-computer-use"
+      ]
+    },
+    {
+      "id": "publisher-mano-cua-2-0-4b",
+      "label": "Mano-CUA 2.0 4B",
+      "category": "computer-use",
+      "quantizations": 14,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Mininglamp-2718/Mano-CUA-2.0-4B",
+        "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
+        "mradermacher/Mano-CUA-2.0-4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-terminal-rsi-27b",
+      "label": "Terminal-RSI 27B",
+      "category": "text",
+      "quantizations": 27,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Teriminal-RSI/Terminal-RSI-27B",
+        "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF",
+        "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
+        "mradermacher/Terminal-RSI-27B-i1-GGUF"
       ]
     }
   ]

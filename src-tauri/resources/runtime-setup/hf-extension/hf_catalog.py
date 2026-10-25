@@ -15,7 +15,8 @@ AUXILIARY = re.compile(r"(?:^|[/_.-])(mmproj|imatrix|importance[-_]?matrix|draft
 RESERVED = {"CON", "PRN", "AUX", "NUL", *("COM" + str(i) for i in range(1, 10)), *("LPT" + str(i) for i in range(1, 10))}
 SUPPORT = {"config.json", "generation_config.json", "tokenizer.json", "tokenizer.model", "tokenizer_config.json",
            "special_tokens_map.json", "added_tokens.json", "vocab.json", "vocab.txt", "merges.txt",
-           "preprocessor_config.json", "processor_config.json", "image_processor_config.json", "chat_template.jinja"}
+           "preprocessor_config.json", "processor_config.json", "image_processor_config.json", "chat_template.jinja",
+           "adapter_config.json"}
 
 
 def parse_repository(value):
@@ -137,6 +138,8 @@ def build_plan(metadata):
     config = metadata.get("config") or {}
     if not isinstance(config, dict):
         config = {}
+    adapter_only = any(PurePosixPath(item['rfilename']).name == 'adapter_config.json' for item in files) and not any(
+        PurePosixPath(item['rfilename']).name == 'config.json' for item in files)
     groups = {}
     companions = [i for i in files if "mmproj" in PurePosixPath(i["rfilename"]).name.lower() and i["rfilename"].lower().endswith(".gguf")]
     for item in files:
@@ -184,8 +187,12 @@ def build_plan(metadata):
                     'image-classification': 'classification'}.get(task, 'text' if task in (
                         '', 'text-generation', 'text2text-generation', 'image-text-to-text', 'conversational') else 'omni')
         runtime_kind = ("gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None) if category == 'text' else None
+        if adapter_only and format_name != 'gguf':
+            runtime_kind = None
         runtime = {"adapter": runtime_kind, "available": False, "inferenceVerified": False,
-                   "reason": "Runtime discovery and an actual generation are required" if runtime_kind else "No verified managed runtime adapter supports this format"}
+                   "reason": "Runtime discovery and an actual generation are required" if runtime_kind else
+                             "Adapter package only; the base model and a compatible adapter runtime are required" if adapter_only else
+                             "No verified managed runtime adapter supports this format"}
         variants.append({"id": stable_id(repo, key), "repository": repo, "revision": revision, "variantKey": key,
             "name": repo.split("/", 1)[1] + " · " + quant + (" · " + subdir if subdir else ""),
             "quantization": quant, "format": format_name, "subdirectory": subdir, 'category': category,

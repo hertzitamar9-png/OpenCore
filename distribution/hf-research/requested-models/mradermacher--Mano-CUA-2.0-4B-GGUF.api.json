@@ -1,0 +1,218 @@
+{
+  "_id": "6a3cb6bd62e91cb05c04a634",
+  "id": "mradermacher/Mano-CUA-2.0-4B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "vla",
+    "cua",
+    "computer-use",
+    "qwen3-vl",
+    "en",
+    "zh",
+    "base_model:Mininglamp-2718/Mano-CUA-2.0-4B",
+    "base_model:quantized:Mininglamp-2718/Mano-CUA-2.0-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1400,
+  "likes": 0,
+  "modelId": "mradermacher/Mano-CUA-2.0-4B-GGUF",
+  "author": "mradermacher",
+  "sha": "639f9a5263a7cd54f240f8d15ed1184867ab2cf7",
+  "lastModified": "2026-10-16T17:15:47.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "Mininglamp-2718/Mano-CUA-2.0-4B",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "vla",
+      "cua",
+      "computer-use",
+      "qwen3-vl"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 4022468096,
+    "architecture": "qwen3vl",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- else %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                <|vision_start|><|image_pad|><|vision_end|>\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                <|vision_start|><|video_pad|><|vision_end|>\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- endif %}\n        {%- endfor %}\n    {%- endif %}\n{%- endmacro %}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- render_content(messages[0].content, false) + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + render_content(messages[0].content, false) + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false) %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, True) %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n<think>\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 8051286912
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e460a8292cac1b2d8a6a8f2f2df63d1f40a20394",
+      "size": 2415
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.IQ4_XS.gguf",
+      "blobId": "bb0154633770833d4dbe6df6baa38a610e144820",
+      "size": 2286317952,
+      "lfs": {
+        "sha256": "0b4b28f093fa1937d6d7f59181e65e36d553170b4a4822df0822bdb07046a67b",
+        "size": 2286317952,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q2_K.gguf",
+      "blobId": "cd1f2c385f3b2fce8bda7dde745e346aefe35891",
+      "size": 1669501312,
+      "lfs": {
+        "sha256": "18cdde324e194427d4076d874288bed2ce74749c2229f1ba5ed5d582d42e5d2c",
+        "size": 1669501312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q3_K_L.gguf",
+      "blobId": "d4c0c0b8f3577478abef0c9b9772f167a973cc6d",
+      "size": 2239787392,
+      "lfs": {
+        "sha256": "f0c6c65760206fac4a69636eb6c02f608885577432d8b9b6571198dd34d9c9e7",
+        "size": 2239787392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q3_K_M.gguf",
+      "blobId": "58043a60074ff01bfee09516d2bdc520c4ee537a",
+      "size": 2075619712,
+      "lfs": {
+        "sha256": "d850c728bf9372a5be4b9cc0c75134293e420ec19ea4f3a0c3714e02a58f6d0c",
+        "size": 2075619712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q3_K_S.gguf",
+      "blobId": "d182f7fde9d3d6d02f3ad93e12bf6b6805c1441d",
+      "size": 1886998912,
+      "lfs": {
+        "sha256": "98d60236fb22906a2576df583afce126210ed4a8c3b32dc9b486667cda3a7961",
+        "size": 1886998912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q4_K_M.gguf",
+      "blobId": "03658205fceb1ef80e135232ac0ff95abec6c3a1",
+      "size": 2497282432,
+      "lfs": {
+        "sha256": "288a7713827126e319efd13a1f19b9065dce4aa6fefef48abfb9a8fbd0d36343",
+        "size": 2497282432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q4_K_S.gguf",
+      "blobId": "505d3a888ffa233ec731786f8022d1370caea05f",
+      "size": 2383311232,
+      "lfs": {
+        "sha256": "73fe08d7650e8b2dcd9765e1b4e08db82bc18968a4d9e5ff658f423fd33d6551",
+        "size": 2383311232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q5_K_M.gguf",
+      "blobId": "324c95af28b8d9ac581c6e459e32c2c984fb3cb2",
+      "size": 2889515392,
+      "lfs": {
+        "sha256": "7db0cf41ab31e7d0d675c11a4596d7a46aa21a0711335925b43d17357e02aa71",
+        "size": 2889515392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q5_K_S.gguf",
+      "blobId": "a3bf4f8eced68e7e611742ae812ab08ddfdc33ab",
+      "size": 2823713152,
+      "lfs": {
+        "sha256": "447e1d41a14d64b21680c7c2ad46cb8b6ee70cb15d01fa3d7760998562f163e1",
+        "size": 2823713152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q6_K.gguf",
+      "blobId": "66ec1e5456e2e3840137423857cf74f643440bf0",
+      "size": 3306262912,
+      "lfs": {
+        "sha256": "674e33aff147444a27aba1e7178065dda8fe91305ec7724e0feba373e3b86a6b",
+        "size": 3306262912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.Q8_0.gguf",
+      "blobId": "94d8371bdb6adc9a8edfa5386a62aaf488fda3b7",
+      "size": 4280406912,
+      "lfs": {
+        "sha256": "bd8810ba51a0a8478f5f6320c5a6d11fb260bec14596719dd531d147075896a2",
+        "size": 4280406912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.f16.gguf",
+      "blobId": "f0f960f80e29598c7b026a6e7b28ff53c197e154",
+      "size": 8051286912,
+      "lfs": {
+        "sha256": "1783a4417025dd8aec1c5e95c7f3e5bef84a513b24508f50d3bcd2f0095e54e9",
+        "size": 8051286912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.mmproj-Q8_0.gguf",
+      "blobId": "a058a42d2e21727d4e79529b17720762db9e4c7d",
+      "size": 453974720,
+      "lfs": {
+        "sha256": "e4bd4110fa439936fdf53d92841af2c14da02fdc51009aafe0d74d6a41688437",
+        "size": 453974720,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Mano-CUA-2.0-4B.mmproj-f16.gguf",
+      "blobId": "8fac43d5e98a744cb844d914d10b28168aaef69d",
+      "size": 836180672,
+      "lfs": {
+        "sha256": "d6aaba156a0dd4940d4919fd91009c21491937a5e7946ee0e0d87c5fa7ff4f2b",
+        "size": 836180672,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "25c0c00e5e927f4dfac11b07f0c010130b74e00d",
+      "size": 4225
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-06-25T05:03:57.000Z",
+  "usedStorage": 37680159616
+}

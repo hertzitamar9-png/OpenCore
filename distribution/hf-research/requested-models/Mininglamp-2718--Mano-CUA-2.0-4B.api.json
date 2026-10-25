@@ -1,0 +1,248 @@
+{
+  "_id": "6a1d48cd447ed909ef8444c6",
+  "id": "Mininglamp-2718/Mano-CUA-2.0-4B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3_vl",
+    "image-text-to-text",
+    "vla",
+    "cua",
+    "computer-use",
+    "qwen3-vl",
+    "conversational",
+    "en",
+    "zh",
+    "arxiv:2509.17336",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 84,
+  "likes": 4,
+  "modelId": "Mininglamp-2718/Mano-CUA-2.0-4B",
+  "author": "Mininglamp-2718",
+  "sha": "3b3173712a855f1556ee2d41d2c622b91deb7649",
+  "lastModified": "2026-06-24T11:49:40.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3VLForConditionalGeneration"
+    ],
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "hidden_size": 2560,
+    "image_token_id": 151655,
+    "model_type": "qwen3_vl",
+    "pad_token_id": 151643,
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "bos_token_id": 151643,
+      "dtype": "bfloat16",
+      "eos_token_id": 151645,
+      "head_dim": 128,
+      "hidden_act": "silu",
+      "hidden_size": 2560,
+      "initializer_range": 0.02,
+      "intermediate_size": 9728,
+      "max_position_embeddings": 262144,
+      "model_type": "qwen3_vl_text",
+      "num_attention_heads": 32,
+      "num_hidden_layers": 36,
+      "num_key_value_heads": 8,
+      "pad_token_id": 151643,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          24,
+          20,
+          20
+        ],
+        "rope_type": "default"
+      },
+      "rope_theta": 5000000,
+      "tie_word_embeddings": true,
+      "use_cache": false,
+      "vocab_size": 151936
+    },
+    "tie_word_embeddings": true,
+    "transformers_version": "4.57.3",
+    "video_token_id": 151656,
+    "vision_config": {
+      "deepstack_visual_indexes": [
+        5,
+        11,
+        17
+      ],
+      "depth": 24,
+      "dtype": "bfloat16",
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1024,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4096,
+      "model_type": "qwen3_vl",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 2560,
+      "patch_size": 16,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 151653,
+    "vision_start_token_id": 151652
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "pipeline_tag": "image-text-to-text",
+    "license": "apache-2.0",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "vla",
+      "cua",
+      "computer-use",
+      "qwen3-vl"
+    ],
+    "base_model": "Qwen/Qwen3-VL-4B"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": ".ms_upload_cache",
+      "blobId": "5f7bb1797ae2d210de9483ae5a1de991cf5d5351",
+      "size": 2310
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "badfbdd2f73434973781adb458b4f1b7ca7f2b53",
+      "size": 7509
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+      "size": 707
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "551cd6a9b1eebc0158c571fc747215db769b9d62",
+      "size": 5199
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "f71a7150871c5354e1ec82552a50c7a789cc0cec",
+      "size": 1652
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "5f378475344593a80a92c7cfe48e420d61b0a135",
+      "size": 192
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "b5fd77602b9ea25708ab476c6ab64d7f812bcda3",
+      "size": 4990497880,
+      "lfs": {
+        "sha256": "0b7ee1d3fa37954e26d6921b040394cdce9678a505037126b2c94e291617fd87",
+        "size": 4990497880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "76668f6226e1999a760ae63a8339fda3d7255f64",
+      "size": 3885221448,
+      "lfs": {
+        "sha256": "cbadff579f56f18122fee8dfc14c25025d24283c56470247a30a7abc78af63fe",
+        "size": 3885221448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "4e7d3ece346299490c53408afe44cdbd9cde5d77",
+      "size": 64777
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+      "size": 390
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "cd71f61a15a522601badb3dc960d800d9cb3766c",
+      "size": 11422654,
+      "lfs": {
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "size": 11422654,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "fec7f182135c384a08ea2fc9635566ca79c45afc",
+      "size": 5445
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "e32b1d90356f74457edbfca27aa1e121dab7cdc7",
+      "size": 817
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-06-01T08:54:37.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 4437815808
+    },
+    "total": 4437815808
+  },
+  "usedStorage": 8887141982
+}

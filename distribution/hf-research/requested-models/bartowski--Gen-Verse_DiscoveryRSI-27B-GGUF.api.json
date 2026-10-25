@@ -1,0 +1,596 @@
+{
+  "_id": "6adc35ec11a15376ccd6b5e3",
+  "id": "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "discoveryrsi",
+    "scientific-research",
+    "research-agent",
+    "instruction-tuning",
+    "biomedical-research",
+    "hypothesis-generation",
+    "image-text-to-text",
+    "en",
+    "base_model:Gen-Verse/DiscoveryRSI-27B",
+    "base_model:quantized:Gen-Verse/DiscoveryRSI-27B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 2262,
+  "likes": 0,
+  "modelId": "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF",
+  "author": "bartowski",
+  "sha": "e0bb3117febac7127429fa5c5739b3f0b2eee273",
+  "lastModified": "2026-10-24T05:41:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0",
+    "tags": [
+      "discoveryrsi",
+      "scientific-research",
+      "research-agent",
+      "instruction-tuning",
+      "biomedical-research",
+      "hypothesis-generation"
+    ],
+    "base_model_relation": "quantized",
+    "base_model": "Gen-Verse/DiscoveryRSI-27B"
+  },
+  "gguf": {
+    "total": 27320697856,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/DiscoveryRSI-27B-GGUF/Gen-Verse_DiscoveryRSI-27B-imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 10522249536
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a47fa5a1fdf03b655168386a360cc4f31592d84b",
+      "size": 3783
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ2_M.gguf",
+      "blobId": "ec472114ac1dbfe84d715174cf2461eec32a6202",
+      "size": 10522249536,
+      "lfs": {
+        "sha256": "2240570e3a47cd2b7dbce2b5eae9e9ee4538a687b847591a504c553bb3a62c5f",
+        "size": 10522249536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ2_S.gguf",
+      "blobId": "c65f931699b072cce2252b6ecdf2d4a77bcf8bdb",
+      "size": 9684044096,
+      "lfs": {
+        "sha256": "35b08dce65c9cfb3829a1779c4fc12c7c832846dec512adefa08c4a1f82bb52e",
+        "size": 9684044096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ2_XS.gguf",
+      "blobId": "a7965e6ae6daf8839e2666993f8bf99d81a06117",
+      "size": 9088526656,
+      "lfs": {
+        "sha256": "053e3095fa0bac015e7969b0394da65f6bd7be33568cec8fd37d6c96b8512cad",
+        "size": 9088526656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ2_XXS.gguf",
+      "blobId": "949a2b9ef145448dc88d81a70f3c4151454fa6cd",
+      "size": 8881269056,
+      "lfs": {
+        "sha256": "8f96150c8cbbe47de8708195ce8a1a860026895dc453154660d8c4381ff5fed6",
+        "size": 8881269056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ3_M.gguf",
+      "blobId": "31d203df4a5b8491d7f50d8efdac330ad444c172",
+      "size": 14860630336,
+      "lfs": {
+        "sha256": "2f1fd15b5afbe3b909a29323d979048e704123781332d2c1ea57185304efa1ed",
+        "size": 14860630336,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ3_XS.gguf",
+      "blobId": "f27d8dba500d109012a2f59c09407ecec6796156",
+      "size": 12799605056,
+      "lfs": {
+        "sha256": "0203de6e26b13edbb66130f1ead395e5b74f832d4981584031001bda76f5d0a8",
+        "size": 12799605056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ3_XXS.gguf",
+      "blobId": "9816c49fa44f279047e1e2f2573c33c53cea72b0",
+      "size": 12320168256,
+      "lfs": {
+        "sha256": "062add49b02b50c0a2b30478cf02a5975104bedd44f9595b5ff128822afb9c25",
+        "size": 12320168256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ4_NL.gguf",
+      "blobId": "eb59427dc9e37ad3a30f1f7b746c2a1e506e4d54",
+      "size": 17442400576,
+      "lfs": {
+        "sha256": "dc3898b213a199beb323d6a6d75a65a1e11e146f11a1c72a8bea1899c4a65f66",
+        "size": 17442400576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-IQ4_XS.gguf",
+      "blobId": "29718fd2d4390d6a58e7f81b89e88a57d254a24b",
+      "size": 15475951936,
+      "lfs": {
+        "sha256": "ee7f310d39c0c4941d0fd989ff14772ccb886f6bc206e66ada41a1beebfdd8a4",
+        "size": 15475951936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q2_K.gguf",
+      "blobId": "ca254c335e7be40ce9d372ebc55003303cf06fd6",
+      "size": 10821544256,
+      "lfs": {
+        "sha256": "6e59721df1eee712e2d99e0940d15467a327bdd1d822042c13e7bd8abb48e0b9",
+        "size": 10821544256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q3_K_L.gguf",
+      "blobId": "a861b84dbe2aade2b06b322a0b14bf32ec92e312",
+      "size": 14122817856,
+      "lfs": {
+        "sha256": "293d67826447969d8b3325ed69ef79a659cd9e44af20bc72fd4ace57693cdf85",
+        "size": 14122817856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q3_K_M.gguf",
+      "blobId": "275dd8c90cb269a0e70f61e5af743ee4f5ad2a0a",
+      "size": 13404051776,
+      "lfs": {
+        "sha256": "5fcfa1c1cb5e66dfa9f8b715314b5a240b5f8b9e31ab8f28f4fd8dd9d84a1f07",
+        "size": 13404051776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q3_K_S.gguf",
+      "blobId": "69fd9bd961c66889fc14c52877e10d53642c6e91",
+      "size": 12739885376,
+      "lfs": {
+        "sha256": "6aef3c18273bae4dabfce2474051aff9189183d1aa26e2b98561b55f11b47194",
+        "size": 12739885376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q4_0.gguf",
+      "blobId": "c253fa316d255b46686fd41eb25896dbc34dabce",
+      "size": 16348768576,
+      "lfs": {
+        "sha256": "e41a6bf1ed6f43047b5ebabfc6c812521fb7f1d77d7022eb0e0c8512b7223456",
+        "size": 16348768576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q4_1.gguf",
+      "blobId": "3a07c7db8fdebe80d0f10d9f035dbf92fc89f6d9",
+      "size": 17825458496,
+      "lfs": {
+        "sha256": "4b6e37ce97d3a47b0c97188e0dd5f6fc511b4e240e91f7327b449cc733fe787a",
+        "size": 17825458496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q4_K_L.gguf",
+      "blobId": "cb2372795a22a645c3be809297d05bb99c8bc8ec",
+      "size": 18820704576,
+      "lfs": {
+        "sha256": "1c38511e23e9e9a4ba035cf7fdfc1c95ea626e2b84b6315af00803e38178cbed",
+        "size": 18820704576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q4_K_M.gguf",
+      "blobId": "478d8000bf50bb647a0cf0839251f0042f395539",
+      "size": 17442400576,
+      "lfs": {
+        "sha256": "bb0a2cb2e7d514a94c2f2d7544b7c189765673a6ebd9f39e14f59efc2fbc73ed",
+        "size": 17442400576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q4_K_S.gguf",
+      "blobId": "ffe65822c506c1a3948bd750e24cb95783465a3e",
+      "size": 16363514176,
+      "lfs": {
+        "sha256": "42e120fffbfe3680a543f72d9b68bffddc3dda1f5006351324d9a3e803b97a41",
+        "size": 16363514176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q5_K_M.gguf",
+      "blobId": "baea9af30d824faafa81fd60a9282432a3526965",
+      "size": 20923877696,
+      "lfs": {
+        "sha256": "595ce3dd2c5bdf23ac9f3977d32595f1600c9632f3bc4c89abb9fefc4b04ec5b",
+        "size": 20923877696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q5_K_S.gguf",
+      "blobId": "5bc5f2b86b442eb1dee7003dd0c599c718534f6a",
+      "size": 19566913856,
+      "lfs": {
+        "sha256": "9945b4cd4761cfbf47f0a7594b0cc7fdf555dbfad828b337328736c9f1971684",
+        "size": 19566913856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q6_K.gguf",
+      "blobId": "6d5ff1dbae5ae6788d9cbd3eddda8427d7f57ead",
+      "size": 23860566336,
+      "lfs": {
+        "sha256": "ec45c959297a4e1b4f9560d799d410b99084cb53ed47e511f9f2953dd9566b54",
+        "size": 23860566336,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q6_K_L.gguf",
+      "blobId": "8d65516ae2f54ed86b58ebe8285f98cc889df8f5",
+      "size": 24958908736,
+      "lfs": {
+        "sha256": "d1a16a6ae9c0f17600fe612423a0b49979da3007f9c1c824dd82ca103f4df212",
+        "size": 24958908736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q6_K_S.gguf",
+      "blobId": "196663732ef2e6480d5924953daa43533f1515c9",
+      "size": 22857455936,
+      "lfs": {
+        "sha256": "e0621b79240380e3842bc5ca93f701c5c60dfddf31fda04102cb6abc89ce345f",
+        "size": 22857455936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-Q8_0.gguf",
+      "blobId": "a587e26a89e6a9a02b24e448d0f159e62551c0be",
+      "size": 29116389696,
+      "lfs": {
+        "sha256": "f8f7f9f97f5a10e16e90f21a141c34b46c776e27cdeabb6f55ba8b5000ed241d",
+        "size": 29116389696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-bf16/Gen-Verse_DiscoveryRSI-27B-bf16-00001-of-00002.gguf",
+      "blobId": "fb56ff2ae6012c6158a50f46ac83f2bcd772329c",
+      "size": 39946945472,
+      "lfs": {
+        "sha256": "c76a110569045072a0e091518ea4f91e2aadb5339525dd9b0988b9b4cb587f48",
+        "size": 39946945472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-bf16/Gen-Verse_DiscoveryRSI-27B-bf16-00002-of-00002.gguf",
+      "blobId": "0975c3c34fe6714dd6b0c4751cb9c162ad88a8d1",
+      "size": 14710789376,
+      "lfs": {
+        "sha256": "3f0769d1236b91e895b9bcc364b046b71811dec830b0e809e49be565dda4ad9e",
+        "size": 14710789376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-calibration-v6.txt",
+      "blobId": "ae31ba58ff794d7dacb49555270dafb1343a80bd",
+      "size": 1258850
+    },
+    {
+      "rfilename": "Gen-Verse_DiscoveryRSI-27B-imatrix.gguf",
+      "blobId": "a0dc27e6b741fa3c08cf0c96a5f6f2a221730340",
+      "size": 27300224,
+      "lfs": {
+        "sha256": "b1b6f4fb56052ea7f99fd226d0645ffbd673aa1fc66c1522f83cf05a4ade3b53",
+        "size": 27300224,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "554247b18a37d9a68ae9eb73c65495a6f6eb9d7b",
+      "size": 21873
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_M.layout.json",
+      "blobId": "4e635a645989c5720a62511718eb8b6ef702a1f0",
+      "size": 13056
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_M.tensor-types.txt",
+      "blobId": "4bb372fb5392e1213b1f59ab89555255eb07a548",
+      "size": 16588
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_S.layout.json",
+      "blobId": "f1c7708295a3e43fd65f0859f426eb424026377d",
+      "size": 13131
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_S.tensor-types.txt",
+      "blobId": "2921fa3ec2298373bc43db6c83c356a8bcc4ffda",
+      "size": 16803
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_XS.layout.json",
+      "blobId": "25e945ee2c626b6a321f27afc4486eff92b4d5ee",
+      "size": 13029
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_XS.tensor-types.txt",
+      "blobId": "fc6b3a93cb776cd1da87f7fab7c2f4ca3947b9aa",
+      "size": 16900
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_XXS.layout.json",
+      "blobId": "afaeae4b9500d2fca63b2372287a1434c6c13b8b",
+      "size": 13120
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ2_XXS.tensor-types.txt",
+      "blobId": "52066b1e770bd09ae36b825b1c19d7b9c499972a",
+      "size": 17164
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ3_M.layout.json",
+      "blobId": "5253d73a7b10ab289abc0e88a3ca615e1c0e9797",
+      "size": 12987
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ3_M.tensor-types.txt",
+      "blobId": "9a65b06c30b24f309a2692f14914887649d44ed2",
+      "size": 16331
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ3_XS.layout.json",
+      "blobId": "2dfe4df4fb34f30d7f69d39ba2bbf280e18e33a0",
+      "size": 13039
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ3_XS.tensor-types.txt",
+      "blobId": "cc7800e51acc901327792b6b9db4c40e017cfced",
+      "size": 16463
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ3_XXS.layout.json",
+      "blobId": "7cb39d25857f077e30e0e4efe291d89d41182c0f",
+      "size": 13101
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ3_XXS.tensor-types.txt",
+      "blobId": "d06505011c06b0097ab3893395cd4871e9b99296",
+      "size": 16983
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ4_NL.layout.json",
+      "blobId": "c86144d4aedb4342b595e22fb2415c04dc995e2c",
+      "size": 13052
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ4_NL.tensor-types.txt",
+      "blobId": "6b817062b2822319dd20f73ee541bfbff492606e",
+      "size": 16644
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ4_XS.layout.json",
+      "blobId": "aa9bbe06717ef15a45f5bf208edd6828a2c4a543",
+      "size": 13015
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-IQ4_XS.tensor-types.txt",
+      "blobId": "d0a1af4ca43f1350c091a2e95bad7e425e45517e",
+      "size": 16788
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q2_K.layout.json",
+      "blobId": "a13927f3b19f19699e32f1f3169c038c4ae46d46",
+      "size": 13042
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q2_K.tensor-types.txt",
+      "blobId": "fb1295120732ef58e7835ebd352f5d4c8130a2fe",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q3_K_L.layout.json",
+      "blobId": "e35015de8ae2ad9d7edc753282fef862e98c6099",
+      "size": 13083
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q3_K_L.tensor-types.txt",
+      "blobId": "1aea2cdddda33c9ae6cc8d7cc983e24f1cc17991",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q3_K_M.layout.json",
+      "blobId": "5ddb959a372d02d9317b368a315b70ae3f4f914e",
+      "size": 13084
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q3_K_M.tensor-types.txt",
+      "blobId": "b11c07de3526c54592d9416791a2090b1a6dbf9c",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q3_K_S.layout.json",
+      "blobId": "2afefb1776b85517bdf410735092ae9e071b9509",
+      "size": 12960
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q3_K_S.tensor-types.txt",
+      "blobId": "70ae59d65312c5f0f0f73e336b18f4a514576e6f",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q4_K_L.layout.json",
+      "blobId": "72d3a0cad3256f761465e4384713db2a3f8c1ada",
+      "size": 13032
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q4_K_L.tensor-types.txt",
+      "blobId": "23f7d93566dedc8ac9a537c58ae51203d2c87cee",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q4_K_M.layout.json",
+      "blobId": "dd01b07be1f61dc3ac6bd6f8a91e12cd01065467",
+      "size": 13031
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q4_K_M.tensor-types.txt",
+      "blobId": "a553a5f0a64506a36c543eb72e0a6683d9dd4b84",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q4_K_S.layout.json",
+      "blobId": "016344464d03df104fcfae2928d11d58683c69e9",
+      "size": 12979
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q4_K_S.tensor-types.txt",
+      "blobId": "9245b4ee7cca62ac19b1beddca07b516ec9710db",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q5_K_M.layout.json",
+      "blobId": "41cae99db5037f586feec672a9e63d2ae7a68165",
+      "size": 12964
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q5_K_M.tensor-types.txt",
+      "blobId": "096687320b7f7b7569249c794ec20084e5560c22",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q5_K_S.layout.json",
+      "blobId": "601bf05df352c8324ba79ae873e406389c9955c1",
+      "size": 12944
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q5_K_S.tensor-types.txt",
+      "blobId": "c4fe55afc1dc4facc84a89cafed9487c5ed89cd2",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q6_K.layout.json",
+      "blobId": "9b0ce49b3dc53c9c29cf485209b69ff7640131a8",
+      "size": 12925
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q6_K.tensor-types.txt",
+      "blobId": "3bee009e4ba2b10145aa6597a1c947818643856e",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q6_K_L.layout.json",
+      "blobId": "86390b52d8543ad645abad07f58829f0e2c09054",
+      "size": 12931
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q6_K_L.tensor-types.txt",
+      "blobId": "c626e736121c29329f5ea99f8bc5905e3df93c8f",
+      "size": 16130
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q6_K_S.layout.json",
+      "blobId": "18ffcccc659327e975da730b5499e2d63cd4d2a6",
+      "size": 12927
+    },
+    {
+      "rfilename": "layouts/Gen-Verse_DiscoveryRSI-27B-Q6_K_S.tensor-types.txt",
+      "blobId": "433ad5cfba5692299b6878b5655d2f58ad66b25a",
+      "size": 16130
+    },
+    {
+      "rfilename": "mmproj-Gen-Verse_DiscoveryRSI-27B-bf16.gguf",
+      "blobId": "49bdf68ed06294a42fd7fe7a156ac93f60a96bca",
+      "size": 931146400,
+      "lfs": {
+        "sha256": "c968aee1e377db3f30868730e0b6933fe15289cf5497f4e7d0b4fe02299ec67e",
+        "size": 931146400,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-Gen-Verse_DiscoveryRSI-27B-f16.gguf",
+      "blobId": "e862745fbd39488b04804eb1071f0ba3f4e1d702",
+      "size": 927607456,
+      "lfs": {
+        "sha256": "deb16f3bb7e931825969a437ea4240b531aa75210bb52ec5cdb9e5cb8da4eaba",
+        "size": 927607456,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-24T04:37:00.000Z",
+  "usedStorage": 446791892352
+}

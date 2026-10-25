@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "scope": "Four model names copied from WhatsApp on 2026-10-25. Other pasted text is excluded. Quantizations are frozen build inputs, never searched from built-in cards.",
+  "models": [
+    {
+      "repository": "Hobbylm/hobbylm-1B-computer-use",
+      "familyId": "publisher-hobbylm-1b-computer-use",
+      "label": "HobbyLM 1B Computer Use",
+      "category": "computer-use",
+      "description": "LoRA adapter that turns text requests into macOS actions. Requires HobbyLM 1B Instruct; the published workflow uses Apple MLX and a macOS action harness.",
+      "baseRepository": "harims95/hobbylm-1B-instruct",
+      "sources": [
+        {
+          "repository": "Hobbylm/hobbylm-1B-computer-use",
+          "runtimeReason": "Adapter package only. Requires harims95/hobbylm-1B-instruct plus the publisher's compatible MLX/macOS runtime and action harness. Base weights are separate; no OpenCore Windows adapter is integrated."
+        }
+      ]
+    },
+    {
+      "repository": "Mininglamp-2718/Mano-CUA-2.0-4B",
+      "familyId": "publisher-mano-cua-2-0-4b",
+      "label": "Mano-CUA 2.0 4B",
+      "category": "computer-use",
+      "description": "Qwen3-VL model trained for screenshot understanding and GUI action prediction. GGUF packages include the published vision projector. Desktop action execution requires an action harness.",
+      "sources": [
+        {"repository": "mradermacher/Mano-CUA-2.0-4B-GGUF"},
+        {"repository": "Mininglamp-2718/Mano-CUA-2.0-4B"},
+        {
+          "repository": "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
+          "publisherEvidence": "3b3173712a855f1556ee2d41d2c622b91deb7649",
+          "quantization": "MLX 8-bit",
+          "runtimeReason": "Official Apple Silicon MLX 8-bit package. No OpenCore Windows MLX runtime is integrated; choose a GGUF variant for the managed Windows runtime."
+        }
+      ]
+    },
+    {
+      "repository": "Teriminal-RSI/Terminal-RSI-27B",
+      "familyId": "publisher-terminal-rsi-27b",
+      "label": "Terminal-RSI 27B",
+      "category": "text",
+      "description": "Qwen3.8 27B checkpoint trained for terminal-agent tasks and recursive self-improvement. ECHO archives and retrieves conversation history within the runtime's working context.",
+      "sources": [
+        {"repository": "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF"},
+        {"repository": "mradermacher/Terminal-RSI-27B-i1-GGUF"},
+        {"repository": "Teriminal-RSI/Terminal-RSI-27B"},
+        {
+          "repository": "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
+          "quantization": "MLX NVFP4",
+          "runtimeReason": "Publisher conversion for an NVFP4-capable Apple Silicon MLX runtime. No matching OpenCore Windows adapter is integrated; choose a GGUF variant for the managed Windows runtime."
+        }
+      ]
+    },
+    {
+      "repository": "Gen-Verse/DiscoveryRSI-27B",
+      "familyId": "publisher-discoveryrsi-27b",
+      "label": "DiscoveryRSI 27B",
+      "category": "text",
+      "description": "Qwen3.8 27B instruction model for scientific hypotheses, evidence-grounded research planning and experiment critique. ECHO archives and retrieves conversation history within the runtime's working context.",
+      "sources": [
+        {"repository": "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF"},
+        {"repository": "mradermacher/DiscoveryRSI-27B-i1-GGUF"},
+        {
+          "repository": "mkurman/DiscoveryRSI-27B-GGUF",
+          "runtimeReason": "This publisher's Q2_0 conversion requires a compatible runtime. Its quantization is not verified with the integrated Windows engine."
+        },
+        {"repository": "Gen-Verse/DiscoveryRSI-27B"},
+        {
+          "repository": "nonkronk/DiscoveryRSI-27B-EXL3-4.0bpw",
+          "quantization": "EXL3 4.0 bpw",
+          "runtimeReason": "EXL3 4.0 bpw requires a compatible ExLlamaV3 runtime and sufficient GPU memory. No OpenCore managed adapter for this format is integrated."
+        }
+      ]
+    }
+  ]
+}

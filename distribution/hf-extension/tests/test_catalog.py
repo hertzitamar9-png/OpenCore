@@ -87,6 +87,15 @@ class CatalogTests(unittest.TestCase):
         self.assertNotIn("remote_model.py", [x["filename"] for x in bf16["files"]])
         self.assertEqual({x["role"] for x in bf16["files"]}, {"model", "support"})
 
+    def test_lora_download_keeps_its_config_without_claiming_a_full_model_runtime(self):
+        plan = catalog.build_plan(metadata([file('adapter_model.safetensors'), file('adapter_config.json'),
+                                            file('remote_model.py')], library_name='peft'))
+        entry = plan['variants'][0]
+        self.assertTrue(entry['installable'])
+        self.assertEqual({pin['filename'] for pin in entry['files']}, {'adapter_model.safetensors', 'adapter_config.json'})
+        self.assertIsNone(entry['runtime']['adapter'])
+        self.assertIn('base model', entry['runtime']['reason'])
+
     def test_git_blob_pin_and_stable_card_id_survive_new_commit(self):
         data = metadata([{"rfilename": "model-F16.gguf", "size": 6, "blobId": "d" * 40}])
         first = catalog.build_plan(data)["variants"][0]

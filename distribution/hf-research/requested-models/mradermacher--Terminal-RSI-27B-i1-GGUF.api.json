@@ -1,0 +1,239 @@
+{
+  "_id": "6ada6d225416942401155eed",
+  "id": "mradermacher/Terminal-RSI-27B-i1-GGUF",
+  "private": false,
+  "pipeline_tag": "reinforcement-learning",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "terminal-rsi",
+    "terminal-agent",
+    "reinforcement-learning",
+    "recursive-self-improvement",
+    "code",
+    "long-context",
+    "qwen3_5",
+    "arxiv:2610.22192",
+    "en",
+    "zh",
+    "base_model:Teriminal-RSI/Terminal-RSI-27B",
+    "base_model:quantized:Teriminal-RSI/Terminal-RSI-27B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 1416,
+  "likes": 1,
+  "modelId": "mradermacher/Terminal-RSI-27B-i1-GGUF",
+  "author": "mradermacher",
+  "sha": "0992305ce4bbe9667fdcdcc3c789bd4a66102c0b",
+  "lastModified": "2026-10-23T07:55:19.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "Teriminal-RSI/Terminal-RSI-27B",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "terminal-rsi",
+      "terminal-agent",
+      "reinforcement-learning",
+      "recursive-self-improvement",
+      "code",
+      "long-context",
+      "qwen3_5",
+      "arxiv:2610.22192"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 27320697856,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "quantize_imatrix_file": "Terminal-RSI-27B-i1-GGUF/Terminal-RSI-27B.imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 12768332224
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "d90963fc58c9621f461f9ee7c0a7a0919bc52766",
+      "size": 2527
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "275cf15efe903c00cdb6ac0d0026d7e33a3b5a1e",
+      "size": 4806
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-IQ3_M.gguf",
+      "blobId": "813cc75ba9b6eb23275d35f1523f6efc88f92f98",
+      "size": 12768332224,
+      "lfs": {
+        "sha256": "5abc788c022b7eb17c09cfd4b5f3462bfc729d24c8a6a622cdc0da0be2505462",
+        "size": 12768332224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-IQ3_S.gguf",
+      "blobId": "686d4f97fbc80ebcd961c06de0fbe53ee13e13b2",
+      "size": 12602608064,
+      "lfs": {
+        "sha256": "7cbfcdf5c9e356511472de85be3eb7bfa13fbeb6cc4a8a173147bdb2adbd7df2",
+        "size": 12602608064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-IQ4_XS.gguf",
+      "blobId": "eee3e376fa1d427d1b592e1ad78b7aa0862c3b38",
+      "size": 15309040064,
+      "lfs": {
+        "sha256": "9e84065d592c9d04ca4db03c3cdfd7cc1eb0e88c4397c97c51e804da44a924de",
+        "size": 15309040064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q2_K.gguf",
+      "blobId": "c045496df6c8c30ef360c3a398575c411d681b2d",
+      "size": 10864593344,
+      "lfs": {
+        "sha256": "5fba3222c828aa1fa98487dccce7c3f2f27e695faa1ce807b7ea890dcc5e3d28",
+        "size": 10864593344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q3_K_L.gguf",
+      "blobId": "3eeabbaaa5be00f582888ac4107dd301bc144cb8",
+      "size": 14559799744,
+      "lfs": {
+        "sha256": "e4005b8bda0a127c86d37d34baff968ed396acb10fcd6fb8c006825f731211c3",
+        "size": 14559799744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q3_K_M.gguf",
+      "blobId": "1c8c528aa4452be97fd930176015cb2809f2a9c1",
+      "size": 13500737984,
+      "lfs": {
+        "sha256": "d362c527d624ee9ef822b243c57ace8ef7d94209a9e30ff48159f4c58d828519",
+        "size": 13500737984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q3_K_S.gguf",
+      "blobId": "1b41f1b1824118ce498616cf5888299ee9356260",
+      "size": 12256537024,
+      "lfs": {
+        "sha256": "d4f602f625bce822c22ca2cfc9fd79d9457b2e89053a7abae1f2656d34b50c51",
+        "size": 12256537024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q4_0.gguf",
+      "blobId": "9a1e0c5920a5977e4444741d598df81fff742786",
+      "size": 15760419264,
+      "lfs": {
+        "sha256": "14602b6a8fb8fac1410ae0b2529127962b711c52290d386fa20e2a4d184c25ec",
+        "size": 15760419264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q4_1.gguf",
+      "blobId": "c3658ef36c6b6af2f115942529a0bea58db843cb",
+      "size": 17343769024,
+      "lfs": {
+        "sha256": "64cedabbcaeb72b4443ab2964c458163a0145ca056cc6a1fce324b7f0e02d42b",
+        "size": 17343769024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q4_K_M.gguf",
+      "blobId": "e70044b98bf8736af049ce7eba2ecd65a069ab8a",
+      "size": 16810715584,
+      "lfs": {
+        "sha256": "f12cbf08dbc39c6a0ccde7abe46103586d6d02784b7728f7d95231003e31211d",
+        "size": 16810715584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q4_K_S.gguf",
+      "blobId": "74ca556d7c2e744aed8a076821f7752827c70b82",
+      "size": 15825299904,
+      "lfs": {
+        "sha256": "d8a70ea30294f50aa00fd6e349aa4d71f1c8dc21e93a7258ee77c43e88de5f9f",
+        "size": 15825299904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q5_K_M.gguf",
+      "blobId": "bd2fbe17edea882048379796c03a439cfe5aec57",
+      "size": 19535702464,
+      "lfs": {
+        "sha256": "c8e5545f0a5171100f9805b1e8d2f5d7a561e51b7c242227f21d9fbfe0c17a08",
+        "size": 19535702464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q5_K_S.gguf",
+      "blobId": "2a3b967b4a5acb35b4644443d4c58a98c2c3dcaa",
+      "size": 18971683264,
+      "lfs": {
+        "sha256": "6ae5a5fcec40410299a065bd9644f8c8dbfb18ac8be1a5d33ccaa63a3cb7f62f",
+        "size": 18971683264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.i1-Q6_K.gguf",
+      "blobId": "23e355ebe9fd31fcbcd731d82389b9a1bdcb7a38",
+      "size": 22431001024,
+      "lfs": {
+        "sha256": "593103fcfda8ec3605a1396c7464a60789d5be2f98dfaea4ebb579891b59a80c",
+        "size": 22431001024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Terminal-RSI-27B.imatrix.gguf",
+      "blobId": "25ee61cf4b07ad0caf73d71ac833e682f98cd9e0",
+      "size": 27300160,
+      "lfs": {
+        "sha256": "6db185492c9a42abfebb7ff071070a160cc05d73fb267d7ae262551e04ebb8ea",
+        "size": 27300160,
+        "pointerSize": 133
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-22T20:08:02.000Z",
+  "usedStorage": 218567539136
+}

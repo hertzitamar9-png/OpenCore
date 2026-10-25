@@ -1,0 +1,354 @@
+{
+  "_id": "6ad826eafb6699eecb9a26c0",
+  "id": "nonkronk/DiscoveryRSI-27B-EXL3-4.0bpw",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "exllamav3",
+  "tags": [
+    "exllamav3",
+    "safetensors",
+    "qwen3_5",
+    "exl3",
+    "quantized",
+    "4bpw",
+    "qwen3.8",
+    "discoveryrsi",
+    "27b",
+    "text-generation",
+    "conversational",
+    "en",
+    "base_model:Gen-Verse/DiscoveryRSI-27B",
+    "base_model:quantized:Gen-Verse/DiscoveryRSI-27B",
+    "license:apache-2.0",
+    "4-bit",
+    "region:us"
+  ],
+  "downloads": 231,
+  "likes": 1,
+  "modelId": "nonkronk/DiscoveryRSI-27B-EXL3-4.0bpw",
+  "author": "nonkronk",
+  "sha": "3f797dd52dc26c532a4504a975b6d5f2cfd79c25",
+  "lastModified": "2026-10-21T14:50:12.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5ForConditionalGeneration"
+    ],
+    "image_token_id": 248056,
+    "language_model_only": false,
+    "model_type": "qwen3_5",
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "attn_output_gate": true,
+      "bos_token_id": 248044,
+      "dtype": "bfloat16",
+      "eos_token_id": 248044,
+      "full_attention_interval": 4,
+      "head_dim": 256,
+      "hidden_act": "silu",
+      "hidden_size": 5120,
+      "initializer_range": 0.02,
+      "intermediate_size": 17408,
+      "layer_types": [
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention"
+      ],
+      "linear_conv_kernel_dim": 4,
+      "linear_key_head_dim": 128,
+      "linear_num_key_heads": 16,
+      "linear_num_value_heads": 48,
+      "linear_value_head_dim": 128,
+      "mamba_ssm_dtype": "float32",
+      "max_position_embeddings": 262144,
+      "model_type": "qwen3_5_text",
+      "mtp_num_hidden_layers": 1,
+      "mtp_use_dedicated_embeddings": false,
+      "num_attention_heads": 24,
+      "num_hidden_layers": 64,
+      "num_key_value_heads": 4,
+      "output_gate_type": "swish",
+      "pad_token_id": null,
+      "partial_rotary_factor": 0.25,
+      "rms_norm_eps": 1e-06,
+      "rope_parameters": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          11,
+          11,
+          10
+        ],
+        "partial_rotary_factor": 0.25,
+        "rope_theta": 10000000,
+        "rope_type": "default"
+      },
+      "tie_word_embeddings": false,
+      "use_cache": true,
+      "vocab_size": 248320
+    },
+    "tie_word_embeddings": false,
+    "transformers_version": "5.8.0.dev0",
+    "video_token_id": 248057,
+    "vision_config": {
+      "deepstack_visual_indexes": [],
+      "depth": 27,
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1152,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4304,
+      "model_type": "qwen3_5",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 5120,
+      "patch_size": 16,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 248054,
+    "vision_start_token_id": 248053,
+    "quantization_config": {
+      "quant_method": "exl3",
+      "version": "1.6.4",
+      "bits": 4.0,
+      "head_bits": 6,
+      "calibration": {
+        "rows": 250,
+        "cols": 2048
+      },
+      "out_scales": "auto",
+      "codebook": "mul1",
+      "mtp_bits": 4
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "base_model": "Gen-Verse/DiscoveryRSI-27B",
+    "base_model_relation": "quantized",
+    "library_name": "exllamav3",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "exl3",
+      "exllamav3",
+      "quantized",
+      "4bpw",
+      "qwen3.8",
+      "discoveryrsi",
+      "27b"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f938136e3adacfd92be087f6e113b5d6d97f678f",
+      "size": 11544
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "3f2ec122764c637e28e417da119499e4ee69b276",
+      "size": 2025
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "c0c686f9c38d70d179fb7b5f5aa7530bc913dda3",
+      "size": 8952
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "669c3b2de4e47de929a6f0d5fa005e534f44d66a",
+      "size": 4619
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "023756cfadf88e5bf69eefeee3e172f38c448d64",
+      "size": 202
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "a494e019ca1502219fd0128658b979e5f05ae8e8",
+      "size": 3353259
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "36eb9b14a2dc3a613255e2b227afdf6f85bc9f68",
+      "size": 4264188757,
+      "lfs": {
+        "sha256": "9e0217a5f58cad3f114cae1119f2bf64ddcbbfb7c1d4aa41668a8daefc656347",
+        "size": 4264188757,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "d78a55c21ccf26b157bb6c2ae93e1f76c33a391a",
+      "size": 4207146849,
+      "lfs": {
+        "sha256": "e36bd4b64a945f36bfe09b43e4f079dc19749ecce4856c1dc65fd76ad43c5e92",
+        "size": 4207146849,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "2274c3bafdeab557efdc5f63704c67614912b397",
+      "size": 4200845658,
+      "lfs": {
+        "sha256": "4ce73d36518a366ae2179b1f343e5519c322d8a4410d83bb9dc055290b23182c",
+        "size": 4200845658,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "f8fbab37d96fe02241ca9c10a285b1f8cb7319bf",
+      "size": 4188627731,
+      "lfs": {
+        "sha256": "bea6c3b27faacdbfae571e687725a0043cd76f98a91b07de64d232898005d5e3",
+        "size": 4188627731,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "c3656653fb23c3dc72f5b5cb4f3c90747d64987c",
+      "size": 238664
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+      "size": 390
+    },
+    {
+      "rfilename": "quantization_config.json",
+      "blobId": "bf3dc6141110521e22091a49ba13b8d85e702d5e",
+      "size": 629043
+    },
+    {
+      "rfilename": "release_manifest.json",
+      "blobId": "081a870946aa8ec80ff36794ae724161eb088443",
+      "size": 22411
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "9328ce9c41e80f6dd7bc2c66d8ae1fc93bf87440",
+      "size": 12809320,
+      "lfs": {
+        "sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+        "size": 12809320,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "5de744b3fca2129d7186979ae47c06be33903243",
+      "size": 17928
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+      "size": 385
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "0aa0ce0658d60ac4a5d609f4eadb0e8e43514176",
+      "size": 6722759
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-21T02:43:54.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1734800112,
+      "F16": 30769664,
+      "I16": 6664683520
+    },
+    "total": 8430253296
+  },
+  "usedStorage": 16873618315
+}
