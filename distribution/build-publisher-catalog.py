@@ -60,19 +60,38 @@ def build():
                             if m['id'] == 'flint' or m.get('variantOf') == 'flint'])
             entries.append(entry)
             seen.add(entry['id'])
+    spark_communities = {
+        'spark-x26-4b': 'bartowski/Spark-X2.6-4B-GGUF',
+        'spark-x25-4b': 'mradermacher/Spark-X2.5-4B-GGUF',
+        'spark-x25-1-7b': 'ngquocvinh/Spark-X2.5-1.7B-GGUF',
+    }
     for repository, family, label in [
             ('hkust-aaron/EdgeRock-4B-GGUF', 'edgerock-4b', 'EdgeRock-4B'),
-            ('bartowski/migtissera_Tess-4.5-27B-GGUF', 'tess-45-27b', 'Tess 4.5 27B')]:
-        metadata = json.loads((HERE / 'hf-research' / (repository.replace('/', '--') + '.api.json')).read_text(encoding='utf-8'))
-        native_ids = [model['id'] for model in catalog['models'] if model['id'] == family or model.get('variantOf') == family]
-        for value in build_plan(metadata)['variants']:
-            if value['format'] != 'gguf' or value['id'] in seen:
-                continue
-            entry = copy.deepcopy(value)
-            entry.update(familyId='publisher-' + family, familyLabel=label, contextTokens=8192,
-                         nativeModelIds=native_ids, originalRepository='rockmatrix-ai/EdgeRock' if family == 'edgerock-4b' else 'migtissera/Tess-4.5-27B')
-            entries.append(entry)
-            seen.add(entry['id'])
+            ('bartowski/migtissera_Tess-4.5-27B-GGUF', 'tess-45-27b', 'Tess 4.5 27B'),
+            ('XHToken/Spark-X2.6-4B-GGUF', 'spark-x26-4b', 'Spark X2.6 4B'),
+            ('XHToken/Spark-X2.5-4B-GGUF', 'spark-x25-4b', 'Spark-X2.5-4B'),
+            ('XHToken/Spark-X2.5-1.7B-GGUF', 'spark-x25-1-7b', 'Spark-X2.5-1.7B')]:
+        native_root = 'hf-xhtoken-spark-x2-5-4b' if family == 'spark-x25-4b' else family
+        native_ids = [model['id'] for model in catalog['models'] if model['id'] == native_root or model.get('variantOf') == native_root]
+        original = {'edgerock-4b': 'rockmatrix-ai/EdgeRock', 'tess-45-27b': 'migtissera/Tess-4.5-27B'}.get(family, repository.removesuffix('-GGUF'))
+        quantizations = set()
+        for source_repository in [repository] + ([spark_communities[family]] if family in spark_communities else []):
+            metadata = json.loads((HERE / 'hf-research' / (source_repository.replace('/', '--') + '.api.json')).read_text(encoding='utf-8'))
+            if source_repository != repository:
+                from hf_discovery import same_checkpoint
+                if not same_checkpoint(metadata, {original.lower()}):
+                    raise ValueError('Community checkpoint lineage differs: ' + source_repository)
+            for value in build_plan(metadata)['variants']:
+                if value['format'] != 'gguf' or value['id'] in seen or value['quantization'] in quantizations:
+                    continue
+                entry = copy.deepcopy(value)
+                entry.update(familyId='publisher-' + family, familyLabel=label, contextTokens=8192,
+                             nativeModelIds=native_ids, originalRepository=original)
+                if family in spark_communities:
+                    entry['modelType'] = 'spark2_5'
+                entries.append(entry)
+                seen.add(entry['id'])
+                quantizations.add(entry['quantization'])
     entries.sort(key=lambda e: (e['familyId'], e['format'] != 'gguf', e['bytes'], e['id']))
     return {'schema': 1, 'entries': entries}
 

@@ -33,6 +33,8 @@ class DiscoveryTests(unittest.TestCase):
     def test_quantized_publisher_repo_can_resolve_its_exact_original(self):
         self.assertEqual(source_identity(metadata('owner/Model-GGUF', base='owner/Model')),
                          ('owner/model', {'owner/model', 'owner/model-gguf'}))
+        self.assertEqual(source_identity(metadata('community/owner_Model-GGUF', base='owner/Model'))[0], 'owner/model')
+        self.assertEqual(source_identity(metadata('owner/OrcaCyber-Nano-1.0', base='owner/OrcaCyber-Nano-1.0-AI-Defense'))[0], 'owner/orcacyber-nano-1.0-ai-defense')
 
     def test_finetune_does_not_resolve_to_training_base(self):
         self.assertEqual(source_identity(metadata('owner/Custom-Model', base='Qwen/Qwen3.8-27B'))[0],
@@ -44,6 +46,7 @@ class DiscoveryTests(unittest.TestCase):
         for value in [metadata('community/copy'), metadata('community/copy', base='owner/Other'),
                       metadata('community/copy', base='owner/Model', relation=''),
                       metadata('community/Model-Uncensored-Heretic-GGUF', base='owner/Model'),
+                      metadata('community/Renamed-Finetune-GGUF', base='owner/Model'),
                       metadata('community/copy', base='owner/Model', relation='finetune'),
                       metadata('community/copy', base=['owner/Model', 'owner/Other'], relation='merge')]:
             self.assertFalse(same_checkpoint(value, {'owner/model'}))

@@ -168,5 +168,122 @@
         "sha256": "2d0c78d58b288050cbc9246e82dc0ce84bc2db854c48327ee5d13164ef58ceb6"
       }
     ]
-  }
+  },
+  "sparkLocalQ4Km": [
+    {
+      "passed": true,
+      "model": "spark-x26-q4-km",
+      "repository": "XHToken/Spark-X2.6-4B-GGUF",
+      "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+      "quantization": "Q4_K_M",
+      "realCheckpoint": true,
+      "cpuThreads": 2,
+      "echoResponse": {
+        "role": "assistant",
+        "content": "Hello!"
+      },
+      "streamResponse": "Stream verified.",
+      "reasoningOffVerified": true,
+      "streamingVerified": true,
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 73,
+        "total_tokens": 76,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "elapsedSeconds": 23.5,
+      "platform": "Windows x64 CPU",
+      "verifiedAt": "2026-10-25T07:22:19Z",
+      "engineId": "flint-cpu-v1",
+      "engineArchiveSha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
+      "echoMode": "archive-retrieval",
+      "contextTokens": 8192,
+      "files": [
+        {
+          "filename": "Spark-X2.6-4B-Q4_K_M.gguf",
+          "bytes": 3543441312,
+          "sha256": "91cb2811aebb47ac916aa619d27d4cdd7f4143106b7917accb8ead4cd7f5cbd9"
+        }
+      ]
+    },
+    {
+      "passed": true,
+      "model": "spark-x25-4b-q4-km",
+      "repository": "XHToken/Spark-X2.5-4B-GGUF",
+      "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+      "quantization": "Q4_K_M",
+      "realCheckpoint": true,
+      "cpuThreads": 2,
+      "echoResponse": {
+        "role": "assistant",
+        "content": "Sapphire."
+      },
+      "streamResponse": "Stream verified.",
+      "reasoningOffVerified": true,
+      "streamingVerified": true,
+      "usage": {
+        "completion_tokens": 4,
+        "prompt_tokens": 73,
+        "total_tokens": 77,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "elapsedSeconds": 27.125,
+      "platform": "Windows x64 CPU",
+      "verifiedAt": "2026-10-25T07:29:04Z",
+      "engineId": "flint-cpu-v1",
+      "engineArchiveSha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
+      "echoMode": "archive-retrieval",
+      "contextTokens": 8192,
+      "files": [
+        {
+          "filename": "Spark-X2.5-4B-Q4_K_M.gguf",
+          "bytes": 2600224352,
+          "sha256": "adfcfa19a4ed6a5985da8bf565fe15f8e1a7e131d79bae2d19d48d1c40109428"
+        }
+      ]
+    },
+    {
+      "passed": true,
+      "model": "spark-x25-17b-q4-km",
+      "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+      "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+      "quantization": "Q4_K_M",
+      "realCheckpoint": true,
+      "cpuThreads": 2,
+      "echoResponse": {
+        "role": "assistant",
+        "content": "Sapphire"
+      },
+      "streamResponse": "Stream verified.",
+      "reasoningOffVerified": true,
+      "streamingVerified": true,
+      "usage": {
+        "completion_tokens": 3,
+        "prompt_tokens": 73,
+        "total_tokens": 76,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "elapsedSeconds": 31.875,
+      "platform": "Windows x64 CPU",
+      "verifiedAt": "2026-10-25T07:28:39Z",
+      "engineId": "flint-cpu-v1",
+      "engineArchiveSha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
+      "echoMode": "archive-retrieval",
+      "contextTokens": 8192,
+      "files": [
+        {
+          "filename": "Spark-X2.5-1.7B-Q4_K_M.gguf",
+          "bytes": 1107457856,
+          "sha256": "902bde2522394954ac17821b3e5fd0df02defbc6944f122253f2580acf0503f4"
+        }
+      ]
+    }
+  ],
+  "engineSelectionSourceSha256": "7fe1c5d13243dc38877bb3742b7d8bec89ee8b3f988a107cbe3f37d671d9e1ba"
 }

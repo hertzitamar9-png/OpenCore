@@ -49,7 +49,7 @@ def engine_for(entry):
     repository = str(entry.get('repository') or '').lower()
     if model_type == 'edgerock' or repository == 'hkust-aaron/edgerock-4b-gguf':
         return 'edgerock-cpu-v1'
-    if model_type == 'flint' or repository.startswith('recursivesi/flint'):
+    if model_type in ('flint', 'spark2_5', 'sparkx2_5') or repository.startswith(('recursivesi/flint', 'xhtoken/spark-x2')):
         return 'flint-cpu-v1'
     if model_type in ('raon1_mini', 'raon', 'raon1') or repository.startswith('krafton/raon-1-mini-preview'):
         return 'raon-cpu-v1'

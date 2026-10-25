@@ -12,6 +12,12 @@ from hf_bridge import BridgeState
 
 
 class ManagedEngineTests(unittest.TestCase):
+    def test_spark_gguf_selects_the_pinned_engine_that_supports_its_architecture(self):
+        for fields in ({'modelType': 'spark2_5'}, {'modelType': 'sparkx2_5'},
+                       {'repository': 'XHToken/Spark-X2.6-4B-GGUF'}):
+            self.assertEqual(engines.engine_for({'format': 'gguf', **fields}), 'flint-cpu-v1')
+        self.assertIsNone(engines.engine_for({'format': 'safetensors', 'modelType': 'spark2_5'}))
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -85,7 +91,7 @@ class PublisherCatalogTests(unittest.TestCase):
             kept = state.entries[entry['id']]
             self.assertEqual(kept['profileId'], 'kept-profile')
             self.assertEqual(kept['runtimePreparation'], {'runtimeReady': True})
-            self.assertEqual(len({x['familyId'] for x in state.entries.values()}), 4)
+            self.assertEqual(len({x['familyId'] for x in state.entries.values()}), 7)
             self.assertEqual(len({x['id'] for x in state.entries.values()}), count)
 
     def test_ready_requires_current_engine_and_successful_echo_proof(self):

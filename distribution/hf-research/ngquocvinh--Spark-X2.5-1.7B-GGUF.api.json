@@ -1,0 +1,251 @@
+{
+  "_id": "6a9d6cd2189479d6b37448a6",
+  "id": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "llama.cpp",
+  "tags": [
+    "llama.cpp",
+    "gguf",
+    "spark2_5",
+    "quantized",
+    "text-generation",
+    "conversational",
+    "base_model:XHToken/Spark-X2.5-1.7B",
+    "base_model:quantized:XHToken/Spark-X2.5-1.7B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix"
+  ],
+  "downloads": 1283,
+  "likes": 1,
+  "modelId": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+  "author": "ngquocvinh",
+  "sha": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+  "lastModified": "2026-09-13T13:28:38.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "chat_template_jinja": "{#- 0826\u7248\u672c -#}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set enable_thinking = enable_thinking | default(true) %}\n\n{#- Render a string or a list of text blocks. -#}\n{%- macro render_content(content, context_name) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for block in content %}\n            {%- if block.type == 'text' %}\n                {{- block.text }}\n            {%- else %}\n                {{- raise_exception('Unsupported ' ~ context_name ~ ' content block type: ' ~ (block.type | string)) }}\n            {%- endif %}\n        {%- endfor %}\n    {%- else %}\n        {{- raise_exception(context_name ~ ' content must be a string or a list of text blocks') }}\n    {%- endif %}\n{%- endmacro %}\n\n{#- Default system prompt -#}\n{%- set default_system = \"you are a helpful assistant.\" %}\n\n{#- The first message-level system is placed in the initial system block. -#}\n{%- set ns = namespace(initial_system='') %}\n{%- if messages[0].role == \"system\" %}\n    {%- set ns.initial_system = render_content(messages[0].content, 'system') %}\n{%- endif %}\n\n{#- System block -#}\n{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>' + '\\n' + default_system }}\n{%- if tools %}\n    {{- '## Tools' + '\\n' + 'You have access to the following functions:' + '\\n' + '<tools>' }}\n    {%- for tool in tools %}\n        {{- '\\n' + tool.function | tojson}}\n    {%- endfor %}\n    {{- '\\n' + '</tools>' }}\n{%- endif %}\n{%- if ns.initial_system %}\n    {{- '\\n\\n' + ns.initial_system }}\n{%- endif %}\n{{- '<\uff5cend\u2581of\u2581sentence\uff5c>'}}\n\n{#- Conversation turns -#}\n{%- for message in messages %}\n    {%- if message.role == \"system\" %}\n        {#- The first system message was consumed by the initial block. -#}\n        {%- if not loop.first %}\n            {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>\\n' + render_content(message.content, 'system') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|User|>' + render_content(message.content, 'user') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set assistant_content = render_content(message.content, 'assistant') %}\n        {%- if message.reasoning_content is defined and message.reasoning_content %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- set reasoning_content = '' %}\n        {%- endif %}\n        {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>'}}\n        {%- if reasoning_content %}\n            {{- '<think>' + reasoning_content + '</think>'}}\n        {%- else %}\n            {{- '</think>' }}\n        {%- endif %}\n        {%- if assistant_content %}\n            {{- assistant_content }}\n        {%- endif %}\n        {%- if message.tool_calls is defined and message.tool_calls is not none %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function.arguments is not mapping %}\n                    {{- raise_exception('tool_call.function.arguments must be a dictionary; normalize JSON strings before apply_chat_template') }}\n                {%- endif %}\n                {%- set args = tool_call.function.arguments %}\n                {{- '<tool_call>' + tool_call.function.name }}\n                {%- for k, v in args.items() %}\n                    {{- '<arg_key>' ~ k ~ '</arg_key><arg_value>' ~ (v if v is string else v | tojson) ~ '</arg_value>' }}\n                {%- endfor %}\n                {{- '</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem is undefined or loop.previtem.role != \"tool\" %}\n            {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Tool|>' }}\n        {%- endif %}\n        {{- '<tool_response>' ~ message.content ~ '</tool_response>' }}\n        {%- if loop.nextitem is undefined or loop.nextitem.role != \"tool\" %}\n            {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unsupported message role: ' ~ message.role) }}\n    {%- endif %}\n{%- endfor %}\n\n{#- Generation prompt -#}\n{%- if add_generation_prompt %}\n    {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>' }}\n    {%- if enable_thinking is defined and enable_thinking %}\n        {{- '<think>' }}\n    {%- endif %}\n    {%- if enable_thinking is defined and not enable_thinking %}\n        {{- '</think>' }}\n    {%- endif %}\n{%- endif %}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "XHToken/Spark-X2.5-1.7B",
+    "base_model_relation": "quantized",
+    "library_name": "llama.cpp",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "spark2_5",
+      "quantized",
+      "text-generation"
+    ]
+  },
+  "gguf": {
+    "total": 1707657216,
+    "architecture": "spark2_5",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "/root/workspace/HF/reproducibility-1.7b/spark25_1.7b_combined.imatrix.gguf",
+    "chat_template": "{%- if not messages %}{{- raise_exception('No messages provided.') }}{%- endif %}{%- set enable_thinking = enable_thinking | default(true) %}{#- Render a string or a list of text blocks. -#}{%- macro render_content(content, context_name) %}{%- if content is string %}{{- content }}{%- elif content is none or content is undefined %}{{- '' }}{%- elif content is iterable and content is not mapping %}{%- for block in content %}{%- if block.type == 'text' %}{{- block.text }}{%- else %}{{- raise_exception('Unsupported ' ~ context_name ~ ' content block type: ' ~ (block.type | string)) }}{%- endif %}{%- endfor %}{%- else %}{{- raise_exception(context_name ~ ' content must be a string or a list of text blocks') }}{%- endif %}{%- endmacro %}{#- Default system prompt -#}{%- set default_system = 'you are a helpful assistant.' %}{#- The first message-level system is placed in the initial system block. -#}{%- set ns = namespace(initial_system='') %}{%- if messages[0].role == 'system' %}{%- set ns.initial_system = render_content(messages[0].content, 'system') %}{%- endif %}{#- System block -#}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>' + '\n' + default_system }}{%- if tools %}{{- '## Tools' + '\n' + 'You have access to the following functions:' + '\n' + '<tools>' }}{%- for tool in tools %}{{- '\n' + tool.function | tojson}}{%- endfor %}{{- '\n' + '</tools>' }}{%- endif %}{%- if ns.initial_system %}{{- '\n\n' + ns.initial_system }}{%- endif %}{{- '<\uff5cend\u2581of\u2581sentence\uff5c>'}}{#- Conversation turns -#}{%- for message in messages %}{%- if message.role == 'system' %}{#- The first system message was consumed by the initial block. -#}{%- if not loop.first %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>\n' + render_content(message.content, 'system') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- endif %}{%- elif message.role == 'user' %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|User|>' + render_content(message.content, 'user') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- elif message.role == 'assistant' %}{%- set assistant_content = render_content(message.content, 'assistant') %}{%- if message.reasoning_content is defined and message.reasoning_content %}{%- set reasoning_content = message.reasoning_content %}{%- else %}{%- set reasoning_content = '' %}{%- endif %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>'}}{%- if reasoning_content %}{{- '<think>' + reasoning_content + '</think>'}}{%- else %}{{- '</think>' }}{%- endif %}{%- if assistant_content %}{{- assistant_content }}{%- endif %}{%- if message.tool_calls is defined and message.tool_calls is not none %}{%- for tool_call in message.tool_calls %}{%- if tool_call.function.arguments is not mapping %}{{- raise_exception('tool_call.function.arguments must be a dictionary; normalize JSON strings before apply_chat_template') }}{%- endif %}{%- set args = tool_call.function.arguments %}{{- '<tool_call>' + tool_call.function.name }}{%- for k, v in args.items() %}{{- '<arg_key>' ~ k ~ '</arg_key><arg_value>' ~ (v if v is string else v | tojson) ~ '</arg_value>' }}{%- endfor %}{{- '</tool_call>' }}{%- endfor %}{%- endif %}{{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- elif message.role == 'tool' %}{%- if loop.previtem is undefined or loop.previtem.role != 'tool' %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Tool|>' }}{%- endif %}{{- '<tool_response>' ~ message.content ~ '</tool_response>' }}{%- if loop.nextitem is undefined or loop.nextitem.role != 'tool' %}{{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- endif %}{%- else %}{{- raise_exception('Unsupported message role: ' ~ message.role) }}{%- endif %}{%- endfor %}{#- Generation prompt -#}{%- if add_generation_prompt %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>' }}{%- if enable_thinking is defined and enable_thinking %}{{- '<think>' }}{%- endif %}{%- if enable_thinking is defined and not enable_thinking %}{{- '</think>' }}{%- endif %}{%- endif %}",
+    "bos_token": "<\uff5cstart\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 574820096
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "79db19e809c03501cdc3f20068c4026677b90f74",
+      "size": 2348
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "b7456707c547e5df6a88ee0255ad9c422ac52f9b",
+      "size": 11338
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "dc20dff01eb8258d511e2b253b5db1e258592698",
+      "size": 2247
+    },
+    {
+      "rfilename": "SHA256SUMS.txt",
+      "blobId": "e02fbe862bfb4aaa5344b72368b1238c9df350ab",
+      "size": 837
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-IQ1_M.gguf",
+      "blobId": "9d4a988005a79419173c184040d841f864848850",
+      "size": 574820096,
+      "lfs": {
+        "sha256": "09ca0c14edf63de5f903569082b21151413bbded716218fc4b8a6e2932c743de",
+        "size": 574820096,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-IQ2_XS.gguf",
+      "blobId": "25226474cc66ee16453da1c78df9f166b9eee2d3",
+      "size": 656157952,
+      "lfs": {
+        "sha256": "e74f48b63553292b39e84af754d5f0b46eec794e17a8ec98f5df0aaf10b020c3",
+        "size": 656157952,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q1_0.gguf",
+      "blobId": "edc64865103e45c2664925929f038b610e109a76",
+      "size": 428425984,
+      "lfs": {
+        "sha256": "ac3774c91e8cd21134a25f6fe528b81eb134f5da9b97f5f947e75f0de73a6e07",
+        "size": 428425984,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q2_K.gguf",
+      "blobId": "208527126c1a34310083846ca2afa7d95bb441fe",
+      "size": 790237952,
+      "lfs": {
+        "sha256": "7da639353647e73533422484e21b074e5ac0eb6a7de6827bf716105a5b1aee59",
+        "size": 790237952,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q3_K_M.gguf",
+      "blobId": "6f7e67b0b78de7d74a022353103c4b7536fa8a32",
+      "size": 937380096,
+      "lfs": {
+        "sha256": "18a86766ed0c2ed91ac265b2871641b638ce40e8084132df483e315e1ef86060",
+        "size": 937380096,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q4_K_M.gguf",
+      "blobId": "63482eceeb765e5ba9e4c4b9045e9e1a66065e56",
+      "size": 1107457792,
+      "lfs": {
+        "sha256": "bddd0ac6f86f67280dc6a9c79eb3bb739bb3d63b050dffc908fcc3d6728b2d0d",
+        "size": 1107457792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q5_K_M.gguf",
+      "blobId": "a9fbd0c98ec627895e14f0c2d26385ef8d1a6912",
+      "size": 1252480768,
+      "lfs": {
+        "sha256": "7d25d301cc02b5c9603f35ddd9d80e74ea9926ae3312b52eb509e7c89f862a66",
+        "size": 1252480768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q6_K.gguf",
+      "blobId": "7de931f5d47eb212a215f650a42c6c3057b09416",
+      "size": 1406567680,
+      "lfs": {
+        "sha256": "551a8627287e2f99a257fe9f27d44e7553088c0e4e07da7ef0a1c13b60f7db70",
+        "size": 1406567680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Spark-X2.5-1.7B-Q8_0.gguf",
+      "blobId": "878429397d27831a68a39bb6164ffebc3f8603f1",
+      "size": 1820112352,
+      "lfs": {
+        "sha256": "c81e5c973366cbd12472d66992e629352a9d0c304633b9f1c917297a05bb30ae",
+        "size": 1820112352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "6c6617eeee158db844c3b0157a1c38604b395bb4",
+      "size": 4648
+    },
+    {
+      "rfilename": "reproducibility/README.md",
+      "blobId": "542a725014c8614c493397218d685f0807c42be0",
+      "size": 1293
+    },
+    {
+      "rfilename": "reproducibility/benchmark_gpu0.sh",
+      "blobId": "89b72319effa5325e513220b7c34c93aa5d71947",
+      "size": 1629
+    },
+    {
+      "rfilename": "reproducibility/gpu_smoke_test_ladder.sh",
+      "blobId": "e864e470688e5b50a32bb1db6e66cd83ca7fd103",
+      "size": 1397
+    },
+    {
+      "rfilename": "reproducibility/perplexity_ladder.sh",
+      "blobId": "53182ab7c4b9e45e0997f5ac4f1a8ab34fa6230b",
+      "size": 1820
+    },
+    {
+      "rfilename": "reproducibility/quantize_ladder.sh",
+      "blobId": "c89fcb3519837f6ce1977da4f785d88bb12bbea9",
+      "size": 1549
+    },
+    {
+      "rfilename": "reproducibility/smoke_test_ladder.sh",
+      "blobId": "568331e50763e6bcb7396af3822406e1d2083b70",
+      "size": 1350
+    },
+    {
+      "rfilename": "reproducibility/spark25_1.7b_combined.imatrix.gguf",
+      "blobId": "fa6978ac970bbc628e022e47aa9413ebb46f6c41",
+      "size": 1918688,
+      "lfs": {
+        "sha256": "59825b29e1f0f956f903b74483635dad888b92a7539666adb280414a0a97d4f6",
+        "size": 1918688,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "reproducibility/spark25_1.7b_vn_code_agent.imatrix.gguf",
+      "blobId": "03dabd08fce7398cd03dece88b365a75e6409e53",
+      "size": 1918624,
+      "lfs": {
+        "sha256": "0714c70a5e8646afd87a83cc62255aed90568c75a674cc5c9a5f691dd39480a8",
+        "size": 1918624,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "reproducibility/spark25_1.7b_wiki.imatrix.gguf",
+      "blobId": "da1333f78c8a6e9b843329abaccdfd26f5f2be37",
+      "size": 1918624,
+      "lfs": {
+        "sha256": "c861c45a059447a8a94b1d74e7557c675cc9d2daa8b68c4c88c5f26fd70ae89a",
+        "size": 1918624,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-06T13:38:26.000Z",
+  "usedStorage": 8979396608
+}

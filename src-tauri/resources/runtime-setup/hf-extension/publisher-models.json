@@ -2806,6 +2806,2076 @@
       "bytes": 17568001231
     },
     {
+      "id": "hf-d094192e81bcfc8ad80eacd1",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q1_0.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q1_0",
+      "quantization": "Q1_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 428425984,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-Q1_0.gguf",
+          "bytes": 428425984,
+          "sha256": "ac3774c91e8cd21134a25f6fe528b81eb134f5da9b97f5f947e75f0de73a6e07",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-bdd80c40c80a1a89335a14f4",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-IQ1_M.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · IQ1_M",
+      "quantization": "IQ1_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 574820096,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-IQ1_M.gguf",
+          "bytes": 574820096,
+          "sha256": "09ca0c14edf63de5f903569082b21151413bbded716218fc4b8a6e2932c743de",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-9b9f771adfa651c54e1162dc",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-IQ2_XS.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · IQ2_XS",
+      "quantization": "IQ2_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 656157952,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-IQ2_XS.gguf",
+          "bytes": 656157952,
+          "sha256": "e74f48b63553292b39e84af754d5f0b46eec794e17a8ec98f5df0aaf10b020c3",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-f7d1526b006102a7ab21efa4",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q2_K.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 790237952,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-Q2_K.gguf",
+          "bytes": 790237952,
+          "sha256": "7da639353647e73533422484e21b074e5ac0eb6a7de6827bf716105a5b1aee59",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-3a92af3979327bb3483e741d",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q3_K_M.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 937380096,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-Q3_K_M.gguf",
+          "bytes": 937380096,
+          "sha256": "18a86766ed0c2ed91ac265b2871641b638ce40e8084132df483e315e1ef86060",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-f350a41a89552f94628a5e34",
+      "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+      "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q4_K_M.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1107457856,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+          "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+          "filename": "Spark-X2.5-1.7B-Q4_K_M.gguf",
+          "bytes": 1107457856,
+          "sha256": "902bde2522394954ac17821b3e5fd0df02defbc6944f122253f2580acf0503f4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-935a99d9c830d82cc7f807a1",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q5_K_M.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1252480768,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-Q5_K_M.gguf",
+          "bytes": 1252480768,
+          "sha256": "7d25d301cc02b5c9603f35ddd9d80e74ea9926ae3312b52eb509e7c89f862a66",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-6ff214fe0a31ba74d59f832b",
+      "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q6_K.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1406567680,
+      "files": [
+        {
+          "repository": "ngquocvinh/Spark-X2.5-1.7B-GGUF",
+          "revision": "1cc70b9e6452cd60d417f7cc667da9758a7be816",
+          "filename": "Spark-X2.5-1.7B-Q6_K.gguf",
+          "bytes": 1406567680,
+          "sha256": "551a8627287e2f99a257fe9f27d44e7553088c0e4e07da7ef0a1c13b60f7db70",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ngquocvinh/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-cf4f10779c6f47249cd538d4",
+      "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+      "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+      "variantKey": "gguf:Spark-X2.5-1.7B-Q8_0.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1820112704,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+          "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+          "filename": "Spark-X2.5-1.7B-Q8_0.gguf",
+          "bytes": 1820112704,
+          "sha256": "cd77c03185a834bb1162a4b7713520be5838058bfc54873645beff470bb24442",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-f74017296735c7f08d352fc9",
+      "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+      "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+      "variantKey": "gguf:Spark-X2.5-1.7B.gguf",
+      "name": "Spark-X2.5-1.7B-GGUF · GGUF",
+      "quantization": "GGUF",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3420931904,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+          "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+          "filename": "Spark-X2.5-1.7B.gguf",
+          "bytes": 3420931904,
+          "sha256": "67d5f2f06e6d898efcf0dc40cab8528bc82b871c8dafb0936784183d2c10cdd9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.5-1.7B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-1-7b",
+      "familyLabel": "Spark-X2.5-1.7B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x25-1-7b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-1.7B"
+    },
+    {
+      "id": "hf-6c7e2958a9560f181db657eb",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q2_K.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1787396320,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q2_K.gguf",
+          "bytes": 1787396320,
+          "sha256": "5db56c4f723644c5f0f6d1a94c928b4aa067ca66e5e0bbc3401ca232da5851b9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-ed7d3f7bf929105ad705cce1",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q3_K_S.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1904036320,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q3_K_S.gguf",
+          "bytes": 1904036320,
+          "sha256": "a89ac9022f2a2203354c91d00a242097c22334c45809dce20a45eb866ad1def6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-8474e18e38ba3ea7d18ed725",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q3_K_M.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2165197280,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q3_K_M.gguf",
+          "bytes": 2165197280,
+          "sha256": "d6c7cfb0e644c9170e51a55bf17560cb48e3c1fa35cc6aa58cb0406014f6b4be",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-7074fc0c9b0fc6b47958a319",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q3_K_L.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2390641120,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q3_K_L.gguf",
+          "bytes": 2390641120,
+          "sha256": "733e9320cf5acb5a0d8d812d98b6de4a2895026e3af1ff59fba591cbcab2e2e4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-d406109e6d644439c15e78ad",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.IQ4_XS.gguf",
+      "name": "Spark-X2.5-4B-GGUF · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2392429280,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.IQ4_XS.gguf",
+          "bytes": 2392429280,
+          "sha256": "1346cec62413dd452838879287897d24123492359efbf240efc32b876a7fc7b4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-b3c69e718ab36fafbdbaac70",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q4_K_S.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2426554080,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q4_K_S.gguf",
+          "bytes": 2426554080,
+          "sha256": "545cf72992c43ca337c7060b99a2e3751299910679c628a30179a453f55f8690",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-ae54d532837abed140a4f073",
+      "repository": "XHToken/Spark-X2.5-4B-GGUF",
+      "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+      "variantKey": "gguf:Spark-X2.5-4B-Q4_K_M.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2600224352,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.5-4B-GGUF",
+          "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+          "filename": "Spark-X2.5-4B-Q4_K_M.gguf",
+          "bytes": 2600224352,
+          "sha256": "adfcfa19a4ed6a5985da8bf565fe15f8e1a7e131d79bae2d19d48d1c40109428",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-33ed66921f1b92fef00525d1",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q5_K_S.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2877626080,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q5_K_S.gguf",
+          "bytes": 2877626080,
+          "sha256": "39151b7bf3be82f8d5d734ee0ae3dd114dd45899205cd9e68cf38635fc0d4a04",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-34f268dc9af13979aef33c8b",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q5_K_M.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2977896160,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q5_K_M.gguf",
+          "bytes": 2977896160,
+          "sha256": "ad464c4c8211c2d0bb8afcd022866132022c838d8c62c02f39f7bfe42657923c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-530b6d151c18b2cd55c04f97",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.Q6_K.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3379172320,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.Q6_K.gguf",
+          "bytes": 3379172320,
+          "sha256": "7cf608c94bd1d8eaf85ee315218ada76ce1373cd4e21b5d916f0f110ea9012c4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-2c80ed25200bab86224ed2be",
+      "repository": "XHToken/Spark-X2.5-4B-GGUF",
+      "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+      "variantKey": "gguf:Spark-X2.5-4B-Q8_0.gguf",
+      "name": "Spark-X2.5-4B-GGUF · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 4375021152,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.5-4B-GGUF",
+          "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+          "filename": "Spark-X2.5-4B-Q8_0.gguf",
+          "bytes": 4375021152,
+          "sha256": "5c2c3c190e4337e1016b8593ca8e26e8b18c972200b107385d4ec61a25d9dea2",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-0865cfc7f640b4c64c6115e0",
+      "repository": "XHToken/Spark-X2.5-4B-GGUF",
+      "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+      "variantKey": "gguf:Spark-X2.5-4B.gguf",
+      "name": "Spark-X2.5-4B-GGUF · GGUF",
+      "quantization": "GGUF",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 8229920352,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.5-4B-GGUF",
+          "revision": "9826e0be84e6e6e8b9668abc91421109a1df1e2d",
+          "filename": "Spark-X2.5-4B.gguf",
+          "bytes": 8229920352,
+          "sha256": "8cecf405a41a4a10f833530910c2e13fde9fb39c325c8afc3c5d10e4181e1a14",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-57978bc12561057e32fa3191",
+      "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+      "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+      "variantKey": "gguf:Spark-X2.5-4B.f16.gguf",
+      "name": "Spark-X2.5-4B-GGUF · F16",
+      "quantization": "F16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 8229920480,
+      "files": [
+        {
+          "repository": "mradermacher/Spark-X2.5-4B-GGUF",
+          "revision": "d1751e1278ac500e657ac9e37b4e0ffca5e8f796",
+          "filename": "Spark-X2.5-4B.f16.gguf",
+          "bytes": 8229920480,
+          "sha256": "47b4e9b86d1dbe421b4da7576605a62fce894e553372f2f4e244061b764553d0",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/mradermacher/Spark-X2.5-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x25-4b",
+      "familyLabel": "Spark-X2.5-4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "hf-xhtoken-spark-x2-5-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.5-4B"
+    },
+    {
+      "id": "hf-404a506755d0db55bb82aeb6",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-IQ2_M.gguf",
+      "name": "Spark-X2.6-4B-GGUF · IQ2_M",
+      "quantization": "IQ2_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1565852288,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-IQ2_M.gguf",
+          "bytes": 1565852288,
+          "sha256": "ddff7a7313225abd6b139309599f70c8fb705550360681167967ecee63bac80c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-1daabc171f2ed515b93b638c",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q2_K.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q2_K",
+      "quantization": "Q2_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1610457728,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q2_K.gguf",
+          "bytes": 1610457728,
+          "sha256": "cf1682cf43e6e4e368e177bdf6ec68e40785652d6f485362055cff2301c936d9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-b5578d6aaa32e900c14d8906",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-IQ3_XXS.gguf",
+      "name": "Spark-X2.6-4B-GGUF · IQ3_XXS",
+      "quantization": "IQ3_XXS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1802396288,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-IQ3_XXS.gguf",
+          "bytes": 1802396288,
+          "sha256": "cc1b0bde185f0705f91845872bf6a250653f9f694a69d96413031eac871cc604",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-58c3c6015201aa94d01d58df",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q3_K_S.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q3_K_S",
+      "quantization": "Q3_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1903731328,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q3_K_S.gguf",
+          "bytes": 1903731328,
+          "sha256": "6b66788a6ce826f1558b58d6ac61b205fbba6270f717ce9780a124e5e41a7a2c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-cf06b8057d1407101c9422ed",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-IQ3_XS.gguf",
+      "name": "Spark-X2.6-4B-GGUF · IQ3_XS",
+      "quantization": "IQ3_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1912128128,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-IQ3_XS.gguf",
+          "bytes": 1912128128,
+          "sha256": "28074059732872711064bd197a45fb25a3978091ffbeb2b9d9b0c8aabfe42862",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-a34b3e848d3d4e7c70edcddf",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q3_K_M.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q3_K_M",
+      "quantization": "Q3_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 1992532608,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q3_K_M.gguf",
+          "bytes": 1992532608,
+          "sha256": "8d1b680a697cb3d082f6f5adc9d051a7a412e01f801f34cb43e2c0701685b2d6",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-96aa091d1d5ed22897abbcaf",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q3_K_L.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q3_K_L",
+      "quantization": "Q3_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2093662848,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q3_K_L.gguf",
+          "bytes": 2093662848,
+          "sha256": "ec0fa433ca05fd02319743a582b92ef2a1750926594c0884c05ba9a5ca537c07",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-69078a1d76b762e09c02cdff",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-IQ3_M.gguf",
+      "name": "Spark-X2.6-4B-GGUF · IQ3_M",
+      "quantization": "IQ3_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2233950848,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-IQ3_M.gguf",
+          "bytes": 2233950848,
+          "sha256": "2799d4390a37291e337557149f80a7bc13ee8dbfb4924aed67dee788dc1578e7",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-de718cd0e698cf8dff1cd63d",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-IQ4_XS.gguf",
+      "name": "Spark-X2.6-4B-GGUF · IQ4_XS",
+      "quantization": "IQ4_XS",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2338275968,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-IQ4_XS.gguf",
+          "bytes": 2338275968,
+          "sha256": "83a6ede7deb5a25617648cd289959c67ff8870bfc972274439f519c75bae1276",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-86262cd8197e73a1b1e77739",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q4_0.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q4_0",
+      "quantization": "Q4_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2412137088,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q4_0.gguf",
+          "bytes": 2412137088,
+          "sha256": "11cb688da063865c23bf8e0a40e2ad1e30af26ba5545e8e3c4d48367a76edc26",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-7110c2a91d496d0b094f9ca4",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q4_K_S.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q4_K_S",
+      "quantization": "Q4_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2461975168,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q4_K_S.gguf",
+          "bytes": 2461975168,
+          "sha256": "c0311ab12a1d95180621e931ffd723f695c6dd8db13e5ab623159663c2a6955b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-772ce477f490b8115737c03a",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-IQ4_NL.gguf",
+      "name": "Spark-X2.6-4B-GGUF · IQ4_NL",
+      "quantization": "IQ4_NL",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2621104768,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-IQ4_NL.gguf",
+          "bytes": 2621104768,
+          "sha256": "d5cbdd1998cc551bce0f6bc411a0229985b3dd4f89222df64e8249cd9c33efb3",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-1a400b1b87429361cff3a24b",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q4_1.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q4_1",
+      "quantization": "Q4_1",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2641605248,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q4_1.gguf",
+          "bytes": 2641605248,
+          "sha256": "f56d3b7df075862f2b4b632c700f2c999a385ae60a512f1372e105ba7b443015",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-26762812c51843ca3571e6d4",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q4_K_L.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q4_K_L",
+      "quantization": "Q4_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2811732608,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q4_K_L.gguf",
+          "bytes": 2811732608,
+          "sha256": "a77088810c2e346ea3f8df8cada26402e5b2a7b2c0861b4be45e204f52dc0c93",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-07ef51826601c853eb09de06",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q5_K_S.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q5_K_S",
+      "quantization": "Q5_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2954396288,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q5_K_S.gguf",
+          "bytes": 2954396288,
+          "sha256": "0fcf2b5740ff4a35aefc684bb642f0889e4abeae668472fc0d6348b584c60968",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-ea1da68734e9b2e79eedfe8d",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q5_K_M.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q5_K_M",
+      "quantization": "Q5_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3164766848,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q5_K_M.gguf",
+          "bytes": 3164766848,
+          "sha256": "8f4aabaf93cdc374366aa236f45b160fcf4ac1ee88b34e4979ffcc90c18cd645",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-bce475ffe3ed33dd502fa278",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q6_K_S.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q6_K_S",
+      "quantization": "Q6_K_S",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3454968448,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q6_K_S.gguf",
+          "bytes": 3454968448,
+          "sha256": "c3042954a6c5395090435875cd6c5b5c6ccf349a6a9bb4a10e6c2886cdfd266f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-de76167453cb77186a053045",
+      "repository": "XHToken/Spark-X2.6-4B-GGUF",
+      "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q4_K_M.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3543441312,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.6-4B-GGUF",
+          "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+          "filename": "Spark-X2.6-4B-Q4_K_M.gguf",
+          "bytes": 3543441312,
+          "sha256": "91cb2811aebb47ac916aa619d27d4cdd7f4143106b7917accb8ead4cd7f5cbd9",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-b68adadee0c96ba70fc4ba39",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q6_K.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q6_K",
+      "quantization": "Q6_K",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3611148928,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q6_K.gguf",
+          "bytes": 3611148928,
+          "sha256": "3a57c7c781fa8faa3ff20dc144acc04c2d63a3a01ad8a5504ed97655169db3a3",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-f38057b63541fc7009417a5c",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q6_K_L.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q6_K_L",
+      "quantization": "Q6_K_L",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 3780027008,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-Q6_K_L.gguf",
+          "bytes": 3780027008,
+          "sha256": "fef06a2ed67c97c373a3c2f5b3bc7fea49f6b7c8f08db4489fb65f11c4b6cc70",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-2e9325fe48183a6b65d430b5",
+      "repository": "XHToken/Spark-X2.6-4B-GGUF",
+      "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+      "variantKey": "gguf:Spark-X2.6-4B-Q8_0.gguf",
+      "name": "Spark-X2.6-4B-GGUF · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 4375021824,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.6-4B-GGUF",
+          "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+          "filename": "Spark-X2.6-4B-Q8_0.gguf",
+          "bytes": 4375021824,
+          "sha256": "145c2aa606820663f26ad530b8fc141ed885e2e9ca29f9be7c3bfe8931d58b81",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-070a7578b0f8272b68ebda78",
+      "repository": "XHToken/Spark-X2.6-4B-GGUF",
+      "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+      "variantKey": "gguf:Spark-X2.6-4B.gguf",
+      "name": "Spark-X2.6-4B-GGUF · GGUF",
+      "quantization": "GGUF",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 8229921024,
+      "files": [
+        {
+          "repository": "XHToken/Spark-X2.6-4B-GGUF",
+          "revision": "83b47fda018fd14f51aa63341f78266f628af5a5",
+          "filename": "Spark-X2.6-4B.gguf",
+          "bytes": 8229921024,
+          "sha256": "1fcf934d5baab142ea66a508e0ef423854659f223f72248d2de31476ff6954a7",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/XHToken/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
+      "id": "hf-9c451a89469f7dda215c05d8",
+      "repository": "bartowski/Spark-X2.6-4B-GGUF",
+      "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+      "variantKey": "gguf:Spark-X2.6-4B-bf16.gguf",
+      "name": "Spark-X2.6-4B-GGUF · BF16",
+      "quantization": "BF16",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 8229921120,
+      "files": [
+        {
+          "repository": "bartowski/Spark-X2.6-4B-GGUF",
+          "revision": "17682e38297a4510899b12a95ab3d8dcebc674e5",
+          "filename": "Spark-X2.6-4B-bf16.gguf",
+          "bytes": 8229921120,
+          "sha256": "874a8e72f893549bcf3de7cc0e26ef4f423584c1eb38eb3b38538d197ebbc71a",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "spark2_5",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Runtime discovery and an actual generation are required"
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/bartowski/Spark-X2.6-4B-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-spark-x26-4b",
+      "familyLabel": "Spark X2.6 4B",
+      "contextTokens": 8192,
+      "nativeModelIds": [
+        "spark-x26-4b"
+      ],
+      "originalRepository": "XHToken/Spark-X2.6-4B"
+    },
+    {
       "id": "hf-9298c010237c9b3e5c824496",
       "repository": "bartowski/migtissera_Tess-4.5-27B-GGUF",
       "revision": "f4a96f1f94febb0763c422273c451291e071ba9c",

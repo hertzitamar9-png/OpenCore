@@ -56,7 +56,8 @@ def source_identity(metadata):
     # publisher's GGUF repository. Never replace a finetune by its training base.
     if len(declared) == 1 and quantized_relation(metadata):
         base = next(iter(declared))
-        if checkpoint_name(source) == checkpoint_name(base):
+        source_name, base_name = checkpoint_name(source), checkpoint_name(base)
+        if source_name == base_name or source_name.endswith(base_name) or (len(source_name) >= 6 and base_name.startswith(source_name)):
             return base, {source, base}
     return source, {source}
 
@@ -69,6 +70,8 @@ def same_checkpoint(metadata, identities):
         return False
     declared = bases(metadata)
     name = str(metadata.get('id') or '').lower().split('/')[-1]
+    if not any(checkpoint_name(identity) in checkpoint_name(name) for identity in identities):
+        return False
     modifiers = ('uncensored', 'heretic', 'abliterat', 'finetune', 'distill', 'lora', 'merged')
     if any(word in name and not any(word in identity.split('/')[-1] for identity in identities) for word in modifiers):
         return False
