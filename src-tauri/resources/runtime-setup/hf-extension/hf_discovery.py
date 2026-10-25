@@ -68,6 +68,10 @@ def same_checkpoint(metadata, identities):
     if relation and relation != 'quantized':
         return False
     declared = bases(metadata)
+    name = str(metadata.get('id') or '').lower().split('/')[-1]
+    modifiers = ('uncensored', 'heretic', 'abliterat', 'finetune', 'distill', 'lora', 'merged')
+    if any(word in name and not any(word in identity.split('/')[-1] for identity in identities) for word in modifiers):
+        return False
     # Multi-model merges are distinct models, even when one constituent matches.
     return quantized_relation(metadata) and len(declared) == 1 and declared.issubset(identities)
 

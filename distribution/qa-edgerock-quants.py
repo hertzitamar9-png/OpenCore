@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import shutil
 import sys
@@ -59,7 +60,9 @@ for quant in args.quants:
                 'opencore_reasoning_effort': 'off', 'max_tokens': 32, 'temperature': 0, 'stream': False}
         response, _ = runtime.chat(entry, body)
         reply = json.loads(response)['choices'][0]['message']
-        if '391' not in str(reply.get('content')) or reply.get('reasoning_content') or reply.get('reasoning'):
+        content = str(reply.get('content') or '')
+        thoughts = re.findall(r'<think>(.*?)</think>', content, flags=re.I | re.S)
+        if '391' not in content or any(value.strip() for value in thoughts) or reply.get('reasoning_content') or reply.get('reasoning'):
             raise RuntimeError('The real checkpoint did not return the expected arithmetic response with reasoning Off')
         chunks, kind = runtime.chat(entry, dict(body, stream=True,
             messages=[{'role': 'user', 'content': 'Reply with the words: streaming confirmed.'}]))
@@ -74,7 +77,8 @@ for quant in args.quants:
                 delta = choice.get('delta') or {}
                 text += delta.get('content') or ''
                 reasoning += delta.get('reasoning_content') or delta.get('reasoning') or ''
-        if kind != 'text/event-stream' or 'confirmed' not in text.lower() or reasoning:
+        if kind != 'text/event-stream' or 'confirmed' not in text.lower() or reasoning or any(
+                value.strip() for value in re.findall(r'<think>(.*?)</think>', text, flags=re.I | re.S)):
             raise RuntimeError('The actual streaming ECHO check failed')
         checks.append({'quantization': quant, 'passed': True, 'realCheckpoint': True,
             'checkpointSha256': entry['files'][0]['sha256'], 'checkpointBytes': entry['bytes'],

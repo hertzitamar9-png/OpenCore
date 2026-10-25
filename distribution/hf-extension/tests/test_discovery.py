@@ -30,6 +30,7 @@ class DiscoveryTests(unittest.TestCase):
     def test_wrong_checkpoint_finetunes_merges_and_missing_lineage_are_rejected(self):
         for value in [metadata('community/copy'), metadata('community/copy', base='owner/Other'),
                       metadata('community/copy', base='owner/Model', relation=''),
+                      metadata('community/Model-Uncensored-Heretic-GGUF', base='owner/Model'),
                       metadata('community/copy', base='owner/Model', relation='finetune'),
                       metadata('community/copy', base=['owner/Model', 'owner/Other'], relation='merge')]:
             self.assertFalse(same_checkpoint(value, {'owner/model'}))

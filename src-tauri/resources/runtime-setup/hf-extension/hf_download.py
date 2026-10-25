@@ -143,9 +143,9 @@ class HubClient:
             raise ValueError("Hugging Face did not validate this token")
         return {"valid": True}
 
-    def open_file(self, pin, offset=0):
+    def open_file(self, pin, offset=0, end=None):
         path = "/" + quote(pin["repository"], safe="/") + "/resolve/" + pin["revision"] + "/" + quote(pin["filename"], safe="/")
-        return self.open(path, headers={"Range": "bytes=" + str(offset) + "-"} if offset else {})
+        return self.open(path, headers={"Range": "bytes=" + str(offset) + "-" + (str(end) if end is not None else '')} if offset or end is not None else {})
 
 
 def validate_entry(entry):
@@ -178,6 +178,9 @@ def validate_entry(entry):
 
 
 class Downloader:
+    parallel_threshold = 128 * 1024 * 1024
+    parallel_chunk_bytes = 8 * 1024 * 1024
+    parallel_workers = 8
     def __init__(self, root, client):
         self.root, self.client = Path(root).resolve(), client
 
@@ -209,6 +212,71 @@ class Downloader:
             return None
         return actual
 
+    def _download_ranges(self, pin, partial, offset, pause, progress):
+        from collections import deque
+        from concurrent.futures import ThreadPoolExecutor
+        import threading
+        class RangeUnavailable(Exception):
+            pass
+        stopped = threading.Event()
+        def fetch(start):
+            end = min(start + self.parallel_chunk_bytes, pin['bytes']) - 1
+            self._pause(pause)
+            with self.client.open_file(pin, start, end) as response:
+                if response.status == 200:
+                    raise RangeUnavailable()
+                expected = (start, end, pin['bytes'])
+                match = re.fullmatch(r'bytes (\d+)-(\d+)/(\d+)', response.headers.get('Content-Range', ''))
+                if response.status != 206 or not match or tuple(map(int, match.groups())) != expected:
+                    raise HubError('The Hub returned an inconsistent parallel byte range')
+                length = response.headers.get('Content-Length')
+                if length and (not length.isdigit() or int(length) != end - start + 1):
+                    raise HubError('A model download range has the wrong byte count')
+                data = bytearray()
+                while len(data) < end - start + 1:
+                    self._pause(pause)
+                    if stopped.is_set():
+                        raise HubError('Parallel transfer stopped')
+                    block = response.read(min(65536, end - start + 1 - len(data)))
+                    if not block:
+                        raise HubError('A model download range ended early')
+                    data.extend(block)
+                if response.read(1):
+                    raise HubError('A model download range exceeded its pinned size')
+                return data
+        starts = iter(range(offset, pin['bytes'], self.parallel_chunk_bytes))
+        pending = deque()
+        pool = ThreadPoolExecutor(max_workers=self.parallel_workers)
+        def schedule():
+            start = next(starts, None)
+            if start is not None:
+                pending.append(pool.submit(fetch, start))
+        try:
+            for _ in range(self.parallel_workers):
+                schedule()
+            # Commit only a contiguous prefix. Existing partial files and resume
+            # markers stay valid, with at most eight bounded chunks held in RAM.
+            with partial.open('ab' if offset else 'wb') as output:
+                current = offset
+                while pending:
+                    data = pending.popleft().result()
+                    self._pause(pause)
+                    output.write(data)
+                    current += len(data)
+                    progress('downloading', current)
+                    del data
+                    schedule()
+                output.flush()
+                os.fsync(output.fileno())
+            return True
+        except RangeUnavailable:
+            return False  # The existing sequential path handles servers without Range support.
+        finally:
+            stopped.set()
+            for future in pending:
+                future.cancel()
+            pool.shutdown(wait=True, cancel_futures=True)
+
     def install(self, entry, pause, report):
         validate_entry(entry)
         directory = self.directory(entry)
@@ -234,6 +302,9 @@ class Downloader:
                     marker.unlink(missing_ok=True)
                 offset = partial.stat().st_size if partial.is_file() else 0
                 atomic_json(marker, pin)
+                if offset < pin['bytes'] and pin['bytes'] >= self.parallel_threshold:
+                    self._download_ranges(pin, partial, offset, pause, progress)
+                    offset = partial.stat().st_size if partial.is_file() else 0
                 if offset < pin["bytes"]:
                     self._pause(pause)
                     with self.client.open_file(pin, offset) as response:

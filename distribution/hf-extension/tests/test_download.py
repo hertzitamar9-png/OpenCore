@@ -40,18 +40,20 @@ class Fixture(BaseHTTPRequestHandler):
                 self.send_error(403)
                 return
             data = DATA if not server.corrupt else b"x" * len(DATA)
-            offset = 0
+            offset, end = 0, len(data) - 1
             requested = self.headers.get("Range")
             if requested and not server.ignore_range:
-                offset = int(requested.split("=")[1].split("-")[0])
-            self.send_response(206 if offset else 200)
-            self.send_header("Content-Length", str(len(data) - offset))
-            if offset:
-                self.send_header("Content-Range", f"bytes {offset}-{len(data)-1}/{len(data)}")
+                first, last = requested.split('=')[1].split('-')
+                offset, end = int(first), int(last) if last else len(data) - 1
+            ranged = bool(requested and not server.ignore_range)
+            self.send_response(206 if ranged else 200)
+            self.send_header("Content-Length", str(end - offset + 1))
+            if ranged:
+                self.send_header("Content-Range", f"bytes {offset}-{end}/{len(data)}")
             self.end_headers()
             try:
-                for index in range(offset, len(data), 8192):
-                    self.wfile.write(data[index:index + 8192])
+                for index in range(offset, end + 1, 8192):
+                    self.wfile.write(data[index:min(index + 8192, end + 1)])
                     self.wfile.flush()
                     if server.slow:
                         time.sleep(0.003)
@@ -153,6 +155,45 @@ class DownloadTests(unittest.TestCase):
         directory = downloader.directory(entry)
         self.assertFalse((directory / "dir/model-F16.gguf").exists())
         self.assertFalse((directory / "install-receipt.json").exists())
+
+    def parallel_downloader(self):
+        downloader = transfer.Downloader(self.root, self.client)
+        downloader.parallel_threshold = 0
+        downloader.parallel_chunk_bytes = 32768
+        downloader.parallel_workers = 3
+        return downloader
+
+    def test_parallel_ranges_preserve_order_and_exact_checksum(self):
+        downloader = self.parallel_downloader()
+        receipt = downloader.install(self.entry(), threading.Event(), lambda _: None)
+        self.assertEqual(Path(receipt['files'][0]['localPath']).read_bytes(), DATA)
+        self.assertEqual(receipt['files'][0]['actualSha256'], hashlib.sha256(DATA).hexdigest())
+        self.assertTrue(all(request[2] and request[2].split('-')[-1] for request in self.server.requests))
+
+    def test_parallel_pause_keeps_a_contiguous_prefix_and_resumes(self):
+        self.server.slow = True
+        downloader, pause = self.parallel_downloader(), threading.Event()
+        def progress(value):
+            if value['stage'] == 'downloading' and value['bytesDone'] >= 65536:
+                pause.set()
+        with self.assertRaises(transfer.Paused):
+            downloader.install(self.entry(), pause, progress)
+        partial = downloader.directory(self.entry()) / 'dir/model-F16.gguf.partial'
+        self.assertEqual(partial.read_bytes(), DATA[:partial.stat().st_size])
+        pause.clear()
+        receipt = downloader.install(self.entry(), pause, lambda _: None)
+        self.assertEqual(Path(receipt['files'][0]['localPath']).read_bytes(), DATA)
+
+    def test_parallel_falls_back_safely_if_server_ignores_ranges(self):
+        self.server.ignore_range = True
+        receipt = self.parallel_downloader().install(self.entry(), threading.Event(), lambda _: None)
+        self.assertEqual(Path(receipt['files'][0]['localPath']).read_bytes(), DATA)
+
+    def test_parallel_corruption_never_publishes_a_receipt(self):
+        self.server.corrupt = True
+        with self.assertRaisesRegex(ValueError, 'checksum'):
+            self.parallel_downloader().install(self.entry(), threading.Event(), lambda _: None)
+        self.assertFalse((self.parallel_downloader().directory(self.entry()) / 'install-receipt.json').exists())
 
     def test_git_blob_checksum_and_private_weight_authorization_are_verified(self):
         self.server.private = True
