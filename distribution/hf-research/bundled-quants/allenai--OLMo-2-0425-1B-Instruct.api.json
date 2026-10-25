@@ -1,0 +1,216 @@
+{
+  "_id": "6811210db946c0939d9ce46f",
+  "id": "allenai/OLMo-2-0425-1B-Instruct",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "olmo2",
+    "text-generation",
+    "conversational",
+    "en",
+    "dataset:allenai/RLVR-MATH",
+    "arxiv:2501.00656",
+    "arxiv:2411.15124",
+    "base_model:allenai/OLMo-2-0425-1B-RLVR1",
+    "base_model:finetune:allenai/OLMo-2-0425-1B-RLVR1",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 47588,
+  "likes": 58,
+  "modelId": "allenai/OLMo-2-0425-1B-Instruct",
+  "author": "allenai",
+  "sha": "48d788eca847d4d7548f375ad03d3c9312f6139e",
+  "lastModified": "2025-04-30T22:32:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Olmo2ForCausalLM"
+    ],
+    "model_type": "olmo2",
+    "tokenizer_config": {
+      "bos_token": "<|endoftext|>",
+      "chat_template": "{{ bos_token }}{% for message in messages %}{% if message['role'] == 'system' %}{{ '<|system|>\n' + message['content'] + '\n' }}{% elif message['role'] == 'user' %}{{ '<|user|>\n' + message['content'] + '\n' }}{% elif message['role'] == 'assistant' %}{% if not loop.last %}{{ '<|assistant|>\n'  + message['content'] + eos_token + '\n' }}{% else %}{{ '<|assistant|>\n'  + message['content'] + eos_token }}{% endif %}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|assistant|>\n' }}{% endif %}{% endfor %}",
+      "eos_token": "<|endoftext|>",
+      "pad_token": "<|pad|>",
+      "unk_token": "<|endoftext|>"
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "datasets": [
+      "allenai/RLVR-MATH"
+    ],
+    "base_model": [
+      "allenai/OLMo-2-0425-1B-RLVR1"
+    ],
+    "pipeline_tag": "text-generation",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "80ab37293236987d7106c848f690542e99a83d9e",
+      "size": 6161
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "8270c25100714b935d5f538f06e90b4dd18418d3",
+      "size": 625
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "bfdadfedab612dd93776ee6547bcdbc11d0c78ab",
+      "size": 121
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "354558edcdbd64ca7abd407b8be3d5d09d39d781",
+      "size": 916646
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "df1e30783ca1acd7c9079b8c7be6ad2d746582ac",
+      "size": 2969854224,
+      "lfs": {
+        "sha256": "36d044c73655bb904f822915e6294ba3dae8e6e1af5e703e9d452f2d6a3a294f",
+        "size": 2969854224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "9d133a8f4995ff315a8a3e68dbba03409d214a8e",
+      "size": 581
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "5fe172127988c3709a49d8d2ce20e11bb266cd57",
+      "size": 7137177
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "6a68ef73052b644e4a32208ae0114236db221028",
+      "size": 4884
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "51135344eec01a62fc4deaca39c72ac08f5b9709",
+      "size": 1611056
+    }
+  ],
+  "spaces": [
+    "aizip-dev/SLM-RAG-Arena",
+    "pliny-the-prompter/obliteratus",
+    "aquanode/gpu-vram-calculator",
+    "bkhmsi/cognitive-reasoners",
+    "dumbordumber/obliteratus",
+    "Kodacoda/obliteratus",
+    "dromero14521/obliteratus",
+    "rbinrs/obliteratus",
+    "kicfk/obliteratus",
+    "aaahmet/obliteratus",
+    "Deadmon/obliteratus",
+    "Ngixdev/obliteratus",
+    "RavichandranJ/obliteratus",
+    "S-Dreamer/obliteratus",
+    "AlanaSky/asgaard",
+    "marchkamal51/obliteratus",
+    "cw4444/obliteratus",
+    "kalmuahlaunda/obliteratus",
+    "sub314xxl/obliteratus",
+    "mastodonitis/obliteratus",
+    "GrozniMilitq/obliteratus",
+    "liminal4423/obliteratus",
+    "duarffodog/obliteratus",
+    "cypher109/obliteratus",
+    "milkygingers/obliteratus",
+    "TOpNeT7/obliteratus",
+    "kirikir13/obliteratus",
+    "RaccoonStampede/obliteratus",
+    "impresionist/OBLITERATUS",
+    "bresseporix22/obliteratus",
+    "Sendpns/obliteratus",
+    "jessy38472/obliteratus",
+    "epixdonkey/obliteratus",
+    "ymonoce/obliteratus",
+    "jb1999/lap-steering-demo",
+    "Jjopajd1334/obliteratus",
+    "dryouviavant/obliteratus",
+    "minta27/obliteratus",
+    "profanitys/obliteratus",
+    "CandelaGreen/obliteratus",
+    "steindev/obliteratus",
+    "wickywickyyeah/obliteratus",
+    "jussix/obliteratus",
+    "gbenga-face/obliteratus",
+    "eeshaAI/Zeeb",
+    "nosdxh/obliteratus",
+    "Sixiong33/obliter8",
+    "acnmc/obliteratus",
+    "jannat2363/obliteratus",
+    "Johnblick187/obliteratus",
+    "gianface/obliteratus",
+    "bloodymatzohball/obliteratus",
+    "michaelshapkin/obliteratus",
+    "johndeadlock/obliteratus",
+    "Xhaheen/obliteratus",
+    "DannyBrennan1995/obliteratus",
+    "Mspanz88/obliteratus",
+    "Zmu/obliteratus",
+    "lactroiii/obliteratus",
+    "0xSojalSec/obliteratus",
+    "Justik4/obliteratus",
+    "AlphaBlogduckcom/obliteratus",
+    "Vineethsain/defenseclaw-slm-toolcall",
+    "mkmckay/obliteratus",
+    "robertbschuette/obliteratus",
+    "petra312/obliteratus",
+    "tiagoatdeveloph/obliteratus",
+    "egonR/obliteratus",
+    "JCdaGoat/obliteratus",
+    "sudoscorp/obliteratus",
+    "sudoscorp/obliteratus28sudo"
+  ],
+  "createdAt": "2025-04-29T18:57:17.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1484916736
+    },
+    "total": 1484916736
+  },
+  "usedStorage": 38608104912
+}

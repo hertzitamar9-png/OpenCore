@@ -1,0 +1,950 @@
+{
+  "_id": "6a6a2648551c461c73e174ba",
+  "id": "Cactus-Compute/needle2",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "cactus-needle",
+  "tags": [
+    "cactus-needle",
+    "needle",
+    "tool-calling",
+    "function-calling",
+    "on-device",
+    "edge",
+    "quantization",
+    "webassembly",
+    "text-generation",
+    "arxiv:2607.18363",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 2224,
+  "likes": 336,
+  "modelId": "Cactus-Compute/needle2",
+  "author": "Cactus-Compute",
+  "sha": "32e9e3a93b205f786929697446ae669cf0a84579",
+  "lastModified": "2026-09-03T09:49:08.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "model_type": "needle",
+    "architectures": [
+      "NeedleForToolCalling"
+    ]
+  },
+  "cardData": {
+    "library_name": "cactus-needle",
+    "pipeline_tag": "text-generation",
+    "license": "apache-2.0",
+    "tags": [
+      "tool-calling",
+      "function-calling",
+      "on-device",
+      "edge",
+      "quantization",
+      "webassembly"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "08605db236c27605e1cf2b72bbe482fb52d69e72",
+      "size": 6978
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6cc7862cb6215088d6e52ace942b789e891be792",
+      "size": 17197
+    },
+    {
+      "rfilename": "android-arm64/libneedle.a",
+      "blobId": "4ab3eda3c6be1fa680c719c1005f293e88d642fd",
+      "size": 20729982,
+      "lfs": {
+        "sha256": "93738ae3a9488cbc3104eb65bf49093683c26eb01b0d257e980e499d1d06a9f4",
+        "size": 20729982,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "android-arm64/needle",
+      "blobId": "86ca3f24c957e013e7536ee135158a97c7154f2c",
+      "size": 14824824,
+      "lfs": {
+        "sha256": "8c2915dd5024948d0efa5dc277d2688166761f17138cc648783f7782b369de81",
+        "size": 14824824,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "android-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "android-armv7/libneedle.a",
+      "blobId": "1720886f4620d229a0dfae774c55a45b6292e55d",
+      "size": 17965132,
+      "lfs": {
+        "sha256": "9b5a7354f3ba5263b0821c348da82c13937798da4f28d266a06927dde84c8c7f",
+        "size": 17965132,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "android-armv7/needle",
+      "blobId": "15d914f843eb383cd3234b11490964a02f7e79ec",
+      "size": 14461036,
+      "lfs": {
+        "sha256": "4bea93efca1dabd03d90ace2ce9facd12ae5c2f55fa6e9b74bd0728ded19eecf",
+        "size": 14461036,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "android-armv7/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "android-riscv64/libneedle.a",
+      "blobId": "4afda345bb89348d17e6f871e03cc13028eed785",
+      "size": 29161064,
+      "lfs": {
+        "sha256": "812cc5268f91b0fd7ee5fccb4df95840e7be327677d2b6ce02c7d8a5b2ee6815",
+        "size": 29161064,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "android-riscv64/needle",
+      "blobId": "0efce2b2b4cfe6b4b8cdac39db498261fdac5656",
+      "size": 14818400,
+      "lfs": {
+        "sha256": "af5d3328c3599d45e2304fabeb6a19d7bc876358273b32d53bdf9bb8f527ce26",
+        "size": 14818400,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "android-riscv64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "assets/architecture.png",
+      "blobId": "8b8b171baf45ba8840e3cbcd7e70d13d6f2046c5",
+      "size": 115793,
+      "lfs": {
+        "sha256": "81b0f6e886f7566eac5d69d3457f8388262383b80baf797749bec4bbbad72d32",
+        "size": 115793,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/banner.png",
+      "blobId": "f14a11b3132918964010a7462e09c09fc9fc7fb1",
+      "size": 954950,
+      "lfs": {
+        "sha256": "74c5537f42c4dffecdd319f6c03b9d5c0abb45e0ebbe65118fc222dd27bf70fa",
+        "size": 954950,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/frontier.png",
+      "blobId": "8e79d6c628e7136ee6ba379520cf311616a770e1",
+      "size": 59302
+    },
+    {
+      "rfilename": "banner.png",
+      "blobId": "f14a11b3132918964010a7462e09c09fc9fc7fb1",
+      "size": 954950,
+      "lfs": {
+        "sha256": "74c5537f42c4dffecdd319f6c03b9d5c0abb45e0ebbe65118fc222dd27bf70fa",
+        "size": 954950,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "checkpoints/needle2.pkl",
+      "blobId": "34c0c13f7aab7e78caa62093c76569c158bae79d",
+      "size": 90426504,
+      "lfs": {
+        "sha256": "4b0a972d163ffc7678fb3c36bace508114872e9d2ce9e10f225825752d3795bc",
+        "size": 90426504,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "7bbce5aa2a63a3919ac49e26eeeeade92fec2415",
+      "size": 1087
+    },
+    {
+      "rfilename": "frontier.svg",
+      "blobId": "f00812cd14042dc75edb265c43ce9cdd389536d5",
+      "size": 2959
+    },
+    {
+      "rfilename": "ios-arm64/libneedle.a",
+      "blobId": "c5bed76a9f561313f0979b560e5470e935389c12",
+      "size": 14193792,
+      "lfs": {
+        "sha256": "d650326b0526cbae6a9b90cd29c630785c1f84448123b5cc519309b28c9d2d01",
+        "size": 14193792,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "ios-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "ios-sim-arm64/libneedle.a",
+      "blobId": "2a909b25c9bd2c00b8617ad97dfd9bb7b0336f1f",
+      "size": 14202640,
+      "lfs": {
+        "sha256": "53c9f666df634697f9f484454ca1b5dcbf5e9630a0b7b710e2e00ce1630028fc",
+        "size": 14202640,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "ios-sim-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "linux-arm64/libneedle.a",
+      "blobId": "2a8000f2c2aaf2c1c86e1060070a9f29745c36ad",
+      "size": 20258346,
+      "lfs": {
+        "sha256": "daea5a6610ec5872c9e5c4b4751f4edf00bf8774493e34b7726e5cf2f9be6285",
+        "size": 20258346,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-arm64/needle",
+      "blobId": "e0a5de9c6dd0ad95c9c19b4b00168888734eabe1",
+      "size": 14819576,
+      "lfs": {
+        "sha256": "6af0e3e75b28bdda7c325e5b609655a47eee72a9492a9f4d5a050f8cf163aff1",
+        "size": 14819576,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "linux-armv7/libneedle.a",
+      "blobId": "112f16878ad358e3c5ff50915e0ce60aa19d87b6",
+      "size": 17805476,
+      "lfs": {
+        "sha256": "473ef9eab0995b25f4551d442fdd2361bb79ee4783d9450b408575d14ac012c8",
+        "size": 17805476,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-armv7/needle",
+      "blobId": "5e27e7da6850e10de7b9d21d6ea51a082c496d1c",
+      "size": 14736172,
+      "lfs": {
+        "sha256": "88156316b66ff6a12507b5ef9ae22fbc1c8d04a58bc1f3becdd4db2f3b29e2dc",
+        "size": 14736172,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-armv7/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "linux-mipsel/libneedle.a",
+      "blobId": "0a38a48f60724e15f71c5ea38726d2dc08ea7bdd",
+      "size": 17582994,
+      "lfs": {
+        "sha256": "8177df6fa2b1281bbb756e588db44d488ad254ff5a03d23de2c9cd617b6c530c",
+        "size": 17582994,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-mipsel/needle",
+      "blobId": "c09c006128ebb06216c76c405011cdf17ee98c15",
+      "size": 15289308,
+      "lfs": {
+        "sha256": "9bce297d8ded1784f9ae0dfa466bad55cc4437bf74a4fa96aab60293d8ec79e7",
+        "size": 15289308,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-mipsel/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "linux-riscv64/libneedle.a",
+      "blobId": "71c26a78373eb7b980943677a8a0199f25113519",
+      "size": 21658700,
+      "lfs": {
+        "sha256": "a046ae48030bf5d7114d0a9b3a10f5694c9ea2ddeeda5ef90ef6b52546d79983",
+        "size": 21658700,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-riscv64/needle",
+      "blobId": "88ed8bf70d49b639f75db4f5895d0c79c1c002e2",
+      "size": 14771536,
+      "lfs": {
+        "sha256": "5160df8a548d982399c32ed40b920376819754ba3870978fb83b5de414facb86",
+        "size": 14771536,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-riscv64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "linux-x86_64/libneedle.a",
+      "blobId": "48a92aacf3a5e6dda1ebe3c36d295d5382449885",
+      "size": 19683700,
+      "lfs": {
+        "sha256": "39b4e5448ff5b803c02c5cdbbd514fabe94b543755c84f82bbaa0236d7afcb4e",
+        "size": 19683700,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-x86_64/needle",
+      "blobId": "4cd62449ea0bec9bbdc3486d885fe2d76f7f94a2",
+      "size": 14888896,
+      "lfs": {
+        "sha256": "a2df5d661606957d2ff0e8abd4af31ee2953e759ce84e8e5921b6e8d13bd0e16",
+        "size": 14888896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "linux-x86_64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "macos-arm64/libneedle.a",
+      "blobId": "6ef36f14f5281fecc100a73ea95d92b4605976b7",
+      "size": 14206056,
+      "lfs": {
+        "sha256": "5b59f1281f9a25a99c5f32dd3c3b0fdb794fec17a375cb05b64a815c05d24019",
+        "size": 14206056,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "macos-arm64/needle",
+      "blobId": "ec9a523a049b62f2c7a5646ce694f3961131502b",
+      "size": 14610568,
+      "lfs": {
+        "sha256": "81c37bcef61ac9b1f8c844e1ef2a4d0094eaba99df1536cf19d229f6f7a049d3",
+        "size": 14610568,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "macos-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "needle2.cact",
+      "blobId": "67fb63f999b52204f0482ede4d31f9f5c019c772",
+      "size": 13737807,
+      "lfs": {
+        "sha256": "b43aabfcaf1a6db6acf488076eab71d823c08697c7af4521fc1d174b60ede5ba",
+        "size": 13737807,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-any.whl",
+      "blobId": "80660ba86b9ae73f858dbc71e7417c14ea667133",
+      "size": 6330
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-macosx_11_0_arm64.whl",
+      "blobId": "63d2081ba4da8f6cf11829bffe663c4c7b34a008",
+      "size": 13314602,
+      "lfs": {
+        "sha256": "c5571e3649c88997c2373d6dcb54801b1d9674826c97b58fb1dc7e122df932bc",
+        "size": 13314602,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-macosx_11_0_x86_64.whl",
+      "blobId": "dbc6910bca1a7b5dd84524e24549c95f266f5fe0",
+      "size": 13206788,
+      "lfs": {
+        "sha256": "2f7c10b474696d2c5d8d5c107596aa2e0282f55d1faf9a843980e969b3c1f65d",
+        "size": 13206788,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-manylinux2014_aarch64.whl",
+      "blobId": "538bc0707a55c19e8d55d5f0cb8401dcf9f01ba4",
+      "size": 13281360,
+      "lfs": {
+        "sha256": "6660386292916935188edfe8eef94fbf24712085d7c84f80b0698f79509edde3",
+        "size": 13281360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-manylinux2014_x86_64.whl",
+      "blobId": "42438082b85963ac00558c94c911977c09d773dc",
+      "size": 13273360,
+      "lfs": {
+        "sha256": "f44f2a87f9989c185ed1a22adbbcd8f6ecf04ec5ce7b0acc7dbf5146e6a38ff7",
+        "size": 13273360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-musllinux_1_2_aarch64.whl",
+      "blobId": "95b4591b4aa22c1219ebdeb038937519fcec4388",
+      "size": 13284229,
+      "lfs": {
+        "sha256": "1dd5686fba83507fc167d0d371c869bf8948b8fd41bf8fc2c0dd1be24eaeb46a",
+        "size": 13284229,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-musllinux_1_2_x86_64.whl",
+      "blobId": "2eda3cd5355cea571f0d202292b078004171b6a2",
+      "size": 13275775,
+      "lfs": {
+        "sha256": "64e6dc706b0a9daaf971af4738ee45b862635aae44e6907385cf2a9c30ca31b5",
+        "size": 13275775,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-win_amd64.whl",
+      "blobId": "46e47b220cbc2a4b75967f54b69c2440e4adbcc5",
+      "size": 13291496,
+      "lfs": {
+        "sha256": "5c35e1f2ffcdf088bbe6e4b0d30394a5c69efbcf229783f169f31942bedc79e2",
+        "size": 13291496,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.0-py3-none-win_arm64.whl",
+      "blobId": "c7276515089001c5bad3bc80b88297d8b1ffd44a",
+      "size": 13262285,
+      "lfs": {
+        "sha256": "80b91dbe44c83afde6176c2a1973d19c9421b0c7f80e5d981de9a7bc0b5f4fab",
+        "size": 13262285,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-any.whl",
+      "blobId": "4ce221f70133f0ee36ace0965cf805fc1d966276",
+      "size": 6329
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-macosx_11_0_arm64.whl",
+      "blobId": "ef12d6396523fd1169a67ea595a996ce84bdf510",
+      "size": 13321015,
+      "lfs": {
+        "sha256": "f014f5d63f2508e18300459fa928fe6d96982ffacec42e3c58f705478c2fae6e",
+        "size": 13321015,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-macosx_11_0_x86_64.whl",
+      "blobId": "6de6e1b8c5970ecb519a4e2d15fcbbea9e7c3609",
+      "size": 13214210,
+      "lfs": {
+        "sha256": "da8e215cfbbd38013b3c6c60de66eb566d3fc0dd9c71c19e264fc79ebea1795c",
+        "size": 13214210,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-manylinux2014_aarch64.whl",
+      "blobId": "1221f617c7cbb878f42ea8c8d3c9416ac6af34fe",
+      "size": 13288481,
+      "lfs": {
+        "sha256": "44b13fde3f7f27cc41a16cb5781e1cbd311aad97e1a5b5fb699235a335eb2595",
+        "size": 13288481,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-manylinux2014_x86_64.whl",
+      "blobId": "a53f837a8981d8ad7e2d6cf74a8fce15d6b7bb05",
+      "size": 13281953,
+      "lfs": {
+        "sha256": "41bc2075062dadadbf0c8bcfd1a06c84e29e245ae06742f1ddd0e4bab5fd4d12",
+        "size": 13281953,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-musllinux_1_2_aarch64.whl",
+      "blobId": "243eb2da393ed0910113e9dae492dffe6a73eecb",
+      "size": 13290815,
+      "lfs": {
+        "sha256": "fd63241dba31ebbb95dbdeac914e1372ce546d5c1fc2c575b6c158451438a4d1",
+        "size": 13290815,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-musllinux_1_2_x86_64.whl",
+      "blobId": "7557caa2991c026cfc6436681710206a1029eba3",
+      "size": 13284322,
+      "lfs": {
+        "sha256": "2162f5e49a91f50adaebebf81877a28ed08dcc291a940cc6a0360f54a8cb89db",
+        "size": 13284322,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-win_amd64.whl",
+      "blobId": "4ed597a48c50ef51653aa882aa106becbb8cdac9",
+      "size": 13299310,
+      "lfs": {
+        "sha256": "6e99530c2c4e904fc5c04e0803d6c480a68bcf3d724efda26b890026820f8d58",
+        "size": 13299310,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.1-py3-none-win_arm64.whl",
+      "blobId": "ab8366501a9d5295e492eeaff6042e3231485655",
+      "size": 13268855,
+      "lfs": {
+        "sha256": "ee9029aacb449ea966b09371e2398cd5b90a46d31dfb40d8159681ed53adbf12",
+        "size": 13268855,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-any.whl",
+      "blobId": "7e82cb2460a1c655cfb8076ae849dcfce073f2d4",
+      "size": 6329
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-macosx_11_0_arm64.whl",
+      "blobId": "16affd2b22c2ebf3487b85cd02dc7aa6253ebeed",
+      "size": 13321714,
+      "lfs": {
+        "sha256": "5ef0caf9b1bbef91e3e6c3eef180440a4d53e4a06dda7b409247efcc4cb55ad8",
+        "size": 13321714,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-macosx_11_0_x86_64.whl",
+      "blobId": "5df594130ab8cd433dc6661821dcd99dedb45ce9",
+      "size": 13214496,
+      "lfs": {
+        "sha256": "ceb0cd52abf3a20c0e5196c2e09a55532fc1bf6a931aca02d133c4bf1883b7e2",
+        "size": 13214496,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-manylinux2014_aarch64.whl",
+      "blobId": "91022389d568dacefedca510fa3703457f47a8f1",
+      "size": 13289151,
+      "lfs": {
+        "sha256": "002aa4653a2152725ad040289915912dd62afedfbb485b7ffd73cd9ce7abe82a",
+        "size": 13289151,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-manylinux2014_x86_64.whl",
+      "blobId": "1b7fc164f43e8cdcab963861a1f8b1f16f96ec3f",
+      "size": 13282585,
+      "lfs": {
+        "sha256": "ba42809fadb7b2fe1aebc0af6c7560ddbe5ddea84b7875d12c0750770eb39f14",
+        "size": 13282585,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-musllinux_1_2_aarch64.whl",
+      "blobId": "3073c9103a66427b4062e1862cbab3907b4b7038",
+      "size": 13291402,
+      "lfs": {
+        "sha256": "7135f89d4d1586e3034c3f59dcbc76a3e4e5b3b3d142f5c7fc54c65f5adaf732",
+        "size": 13291402,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-musllinux_1_2_x86_64.whl",
+      "blobId": "9c72d6a9fa7a2395cb052e1900622d5383130d9d",
+      "size": 13284784,
+      "lfs": {
+        "sha256": "c48873e3c2a19d4c421b48b2bcb6ae7ff7001d2ae705f6cb3508e8784c4a994b",
+        "size": 13284784,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-win_amd64.whl",
+      "blobId": "bfe374d8e20a2b267a9ae32e39ad5260beb87ddd",
+      "size": 13299821,
+      "lfs": {
+        "sha256": "718955a433f4c16c193266a37627dd34167389fa55d0c385a2a38064a5691403",
+        "size": 13299821,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.2-py3-none-win_arm64.whl",
+      "blobId": "fddaa7705186f1ed0090352dd44bb470faec8f85",
+      "size": 13268828,
+      "lfs": {
+        "sha256": "a4b13c0959c7dac5e789cd9da1a09a76fa6b19be570fa17556e869300872bd6e",
+        "size": 13268828,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-macosx_11_0_arm64.whl",
+      "blobId": "91915ff48bdcca55b5fcf8e6f600ee2e7987d35f",
+      "size": 13322818,
+      "lfs": {
+        "sha256": "17c2b9ff3c3f1238e0a26385cfda0780d120cda390594d7fc7e5b7f2a970ce95",
+        "size": 13322818,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-macosx_11_0_x86_64.whl",
+      "blobId": "526b25d4d290e67e87950420d38df8b8aea8d905",
+      "size": 13217044,
+      "lfs": {
+        "sha256": "dc55a60b6803fbfd73fa50c09803df54bb47155dcdec74e5988c21838d5cc070",
+        "size": 13217044,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-manylinux2014_aarch64.whl",
+      "blobId": "89e0c13b73e1c701cfb379d492140c23958186f8",
+      "size": 13289275,
+      "lfs": {
+        "sha256": "0e6f0d04e42ac16f34661c7eaab027c87e1fdac294b3dbdb6ca5c9d0597398ab",
+        "size": 13289275,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-manylinux2014_x86_64.whl",
+      "blobId": "ed81444ca529bdd5aacd02efd84e49b8c0df8ee4",
+      "size": 13283220,
+      "lfs": {
+        "sha256": "d23df1d0babeb7323dcaf860dfaf833bbd7d2229b205f691c05c9cbc6d3d3653",
+        "size": 13283220,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-musllinux_1_2_aarch64.whl",
+      "blobId": "b3737fa23107298a322cd47f0d4e794734fa43a0",
+      "size": 13291760,
+      "lfs": {
+        "sha256": "89ae29fb3f3dabd46e374581bd87f71b7d044a95b9bd65ede2b42688ade632f0",
+        "size": 13291760,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-musllinux_1_2_x86_64.whl",
+      "blobId": "94d9fc8db8f133eb789237e2326f4012fd790780",
+      "size": 13285543,
+      "lfs": {
+        "sha256": "1a3558242d7f252255efff3258fc81b2d47ea74eace862fda60f16fe684caa53",
+        "size": 13285543,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-win_amd64.whl",
+      "blobId": "84cfcd81a41d42006ec3d2b718fd578e2e9200c3",
+      "size": 13299800,
+      "lfs": {
+        "sha256": "3c012603a6bc5d7f36aa26da3d0819a8fa226dd40c7f242013b5e214a51168c7",
+        "size": 13299800,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.3-py3-none-win_arm64.whl",
+      "blobId": "016c62e1739fe2cc89bfccd88ee1e7391b6e8dd3",
+      "size": 13268140,
+      "lfs": {
+        "sha256": "cadcd8ff7f18b47046c547cbc450dabe607c197db2855eb6497d615ff551db0f",
+        "size": 13268140,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-macosx_11_0_arm64.whl",
+      "blobId": "99d1881372e688b697daed7e095d6dba5319de0a",
+      "size": 13323841,
+      "lfs": {
+        "sha256": "abae4cca0a4d84ec73da4bde18803b9be812a9209e48fb7fa372002ebaa60265",
+        "size": 13323841,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-macosx_11_0_x86_64.whl",
+      "blobId": "9db58b5fff7d99432676aafc582da01e270e5e82",
+      "size": 13217806,
+      "lfs": {
+        "sha256": "071e93d996021b4f6b5bee055777cd81be9f6963d2565115ec461b9f71c7245e",
+        "size": 13217806,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-manylinux2014_aarch64.whl",
+      "blobId": "51907ae3cb1b25b6eab356e63ce0a6a46a906655",
+      "size": 13290005,
+      "lfs": {
+        "sha256": "e655a13f9d3239e601936ff2d0f6acafd8f6020aaf7b1862ce4fceefacfd6556",
+        "size": 13290005,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-manylinux2014_x86_64.whl",
+      "blobId": "bb2d3b4346fdd6906f5f598cbfd8670a5c0202c5",
+      "size": 13283977,
+      "lfs": {
+        "sha256": "13a84e6c73095fd175b11d46a30a984b62123d94421b769c107074aff7f65c2b",
+        "size": 13283977,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-musllinux_1_2_aarch64.whl",
+      "blobId": "2c4d3164998278d65fa8ec93e12a7970fe586857",
+      "size": 13292645,
+      "lfs": {
+        "sha256": "eaacaf7925e596fd7d18814bece02770b250039c0b92bbdd899967beb012c114",
+        "size": 13292645,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-musllinux_1_2_x86_64.whl",
+      "blobId": "a79c4a711b8df0e5d23e0f6a875d797dec566c5d",
+      "size": 13286334,
+      "lfs": {
+        "sha256": "f94633df433643a3b9b20b84ea19f12b423809d112ba2421d87aad8b07ca3277",
+        "size": 13286334,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-win_amd64.whl",
+      "blobId": "80e4255ac5b85fe5cd758247fd8bc67d11633f82",
+      "size": 13300371,
+      "lfs": {
+        "sha256": "b4803501a109af3782efe112be27515947c108ecec3bf85703ae6b97bb7210e1",
+        "size": 13300371,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "python/cactus_needle-2.0.4-py3-none-win_arm64.whl",
+      "blobId": "286290e62fde5d08fcd7900a0476be9ad2dd17af",
+      "size": 13269152,
+      "lfs": {
+        "sha256": "e03d1301f37dccd468a9b6619c31f82e2c428465ea7c055bf21214feff9b7869",
+        "size": 13269152,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer/tokenizer.model",
+      "blobId": "d552e081b302786e8728024139235ad3a828dd81",
+      "size": 132396,
+      "lfs": {
+        "sha256": "0871b8e3df78e0dd7ccc236e187fc055f75cd57ebe3bec76ca8103030b8fe659",
+        "size": 132396,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenizer/tokenizer.vocab",
+      "blobId": "a11b5974ef0eda8f78ac45d3dc36d0e981d02d93",
+      "size": 113001
+    },
+    {
+      "rfilename": "tvos-arm64/libneedle.a",
+      "blobId": "5c9284380d25d008755b14d0196ec4188f8d19de",
+      "size": 14193968,
+      "lfs": {
+        "sha256": "ed228b903dd276c9f8901ab132a76d23d2b42c8c2ab81fb976a9ea07c7ed5eb7",
+        "size": 14193968,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tvos-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "wasm-component/needle.component.wasm",
+      "blobId": "3456b292f694b9d011b97de55d24d8ce3f217385",
+      "size": 1930627,
+      "lfs": {
+        "sha256": "420f28a06001927d9eb3b9bea4455bd0da6b0eafbddca82d5f2fcd728822e671",
+        "size": 1930627,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "wasm-component/needle.wit",
+      "blobId": "046f1a2dd811169266e67936f95abd63b375a46d",
+      "size": 457
+    },
+    {
+      "rfilename": "wasm/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "wasm/needle.js",
+      "blobId": "8a6142ce0c84c187510e535b3745a341a1b19ec2",
+      "size": 62433
+    },
+    {
+      "rfilename": "wasm/needle.wasm",
+      "blobId": "a6b2f41c7584b1266317478a866967dc4e206dd6",
+      "size": 334418,
+      "lfs": {
+        "sha256": "cf2f9120b414f63fe918fc571f04a7a4992b81591f6b39b5658aa13b9870d4f9",
+        "size": 334418,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "watchos-arm64/libneedle.a",
+      "blobId": "ad5389a3df13970b5aa6b68727c1a0404e7f4abc",
+      "size": 14194056,
+      "lfs": {
+        "sha256": "de484418c381381214a97c57f08b826748fc8e6c6ebbcbe3aa9d4258de25369d",
+        "size": 14194056,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "watchos-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "windows-arm64/libneedle.a",
+      "blobId": "8f799c04e02b99edfe22b4ade677320ba2441613",
+      "size": 17449162,
+      "lfs": {
+        "sha256": "d01ea0a3d4b8dfc2328a77e34a115c6afe519a57bf9e5e9bbe1fe1cf01c96e2e",
+        "size": 17449162,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "windows-arm64/needle.exe",
+      "blobId": "006a3d8dc41272f6436976dd27a116ceb41861de",
+      "size": 14779392,
+      "lfs": {
+        "sha256": "8714eeebd6d3ccb6570a0a52f2197e2ec75c92e8a11a7f2ed0402380547bd73e",
+        "size": 14779392,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "windows-arm64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    },
+    {
+      "rfilename": "windows-x86_64/libneedle.a",
+      "blobId": "c3b3ea4652b5d3ceff92bb8581e820454197c734",
+      "size": 17427342,
+      "lfs": {
+        "sha256": "69f67056fed158f155f40ea50c14c64f52290ac253261703a0c40b75a134c474",
+        "size": 17427342,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "windows-x86_64/needle.exe",
+      "blobId": "9b1aee30aa1da20ef26884c95e7c19817a723df2",
+      "size": 14929408,
+      "lfs": {
+        "sha256": "93ea7ae8c9ea92b746f41668d87597463bee0d6f6ae8ab4e855ec8b396556740",
+        "size": 14929408,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "windows-x86_64/needle.h",
+      "blobId": "cda89a889621c88556b6492c622453077df52851",
+      "size": 562
+    }
+  ],
+  "spaces": [
+    "Qrzysztof/get-name-demo"
+  ],
+  "createdAt": "2026-07-29T16:11:52.000Z",
+  "usedStorage": 6463014302
+}

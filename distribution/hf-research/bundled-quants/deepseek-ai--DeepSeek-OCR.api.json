@@ -1,0 +1,317 @@
+{
+  "_id": "68f1e08ddba20aca9c602acb",
+  "id": "deepseek-ai/DeepSeek-OCR",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "deepseek_vl_v2",
+    "feature-extraction",
+    "deepseek",
+    "vision-language",
+    "ocr",
+    "custom_code",
+    "image-text-to-text",
+    "multilingual",
+    "arxiv:2510.18234",
+    "license:mit",
+    "eval-results",
+    "deploy:sagemaker",
+    "region:us"
+  ],
+  "downloads": 2072209,
+  "likes": 3457,
+  "modelId": "deepseek-ai/DeepSeek-OCR",
+  "author": "deepseek-ai",
+  "sha": "9f30c71f441d010e5429c532364a86705536c53a",
+  "lastModified": "2025-11-04T02:36:12.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "DeepseekOCRForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "modeling_deepseekocr.DeepseekOCRConfig",
+      "AutoModel": "modeling_deepseekocr.DeepseekOCRForCausalLM"
+    },
+    "model_type": "deepseek_vl_v2",
+    "num_experts_per_tok": 6,
+    "tokenizer_config": {
+      "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+      "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+      "pad_token": "<\uff5c\u2581pad\u2581\uff5c>",
+      "unk_token": null,
+      "use_default_system_prompt": false
+    }
+  },
+  "cardData": {
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "multilingual"
+    ],
+    "tags": [
+      "deepseek",
+      "vision-language",
+      "ocr",
+      "custom_code"
+    ],
+    "license": "mit",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "custom_class": "modeling_deepseekocr.DeepseekOCRForCausalLM",
+    "pipeline_tag": "feature-extraction"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "12296852e0362bac092cd2a53bb676d7af4023be",
+      "size": 1783
+    },
+    {
+      "rfilename": ".ipynb_checkpoints/README-checkpoint.md",
+      "blobId": "e0795e7c5455a8de9151974fdaa4871946b2021a",
+      "size": 4342
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d62e3bef9f054f21b7fc616365850fbf879a99ff",
+      "size": 1084
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c6b3fb147ef7261513f4f76020def3e73f9a75ae",
+      "size": 6308
+    },
+    {
+      "rfilename": "assets/fig1.png",
+      "blobId": "9937780b9a8cd530be1ae33cc4b00f313c201e99",
+      "size": 396104,
+      "lfs": {
+        "sha256": "3a709eb3fdb51cf6d8a546ffb8efe3c80bef61ae0183c2c8476a4c4a41efa3f1",
+        "size": 396104,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/show1.jpg",
+      "blobId": "3e9526e74962ee95176042294acc7dd575fbce2f",
+      "size": 116813,
+      "lfs": {
+        "sha256": "887e88e60e5833bc10a2cd7edb89ea7e6992abaae5e1550b027c611b8b8456f2",
+        "size": 116813,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/show2.jpg",
+      "blobId": "28ce3f260c9fdf4b1eae8250293650e2b4a0dbdb",
+      "size": 216011,
+      "lfs": {
+        "sha256": "81d08f7f33d9d39b95dd9b8162506659e6822d621b9829a208f3830c34c2b4d0",
+        "size": 216011,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/show3.jpg",
+      "blobId": "a1f677d796ff2f959615b67f2bf282f8943794d7",
+      "size": 247052,
+      "lfs": {
+        "sha256": "cd24b0cfc7b6c0b1b34bd1aa55bc385e746298fdd82410db6c0d4e0bf69085c0",
+        "size": 247052,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/show4.jpg",
+      "blobId": "d07c98c1f61f1095edd44265d24dae64ef65b455",
+      "size": 268763,
+      "lfs": {
+        "sha256": "2fe88eacc470c34d00225151372d3770948864f3d9cfaae16afa15b2432d7793",
+        "size": 268763,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "0bc764cb729cfad6649038ce3b5fa6c29e0c5b34",
+      "size": 2666
+    },
+    {
+      "rfilename": "configuration_deepseek_v2.py",
+      "blobId": "a8622c20101ed06940eb7fb6164babbc499bc524",
+      "size": 10646
+    },
+    {
+      "rfilename": "conversation.py",
+      "blobId": "65c295e81cd804080ec238b31d1922f33e1f9405",
+      "size": 9253
+    },
+    {
+      "rfilename": "deepencoder.py",
+      "blobId": "de1687dfec3a4a8a00980a8444baba0082ce779b",
+      "size": 38008
+    },
+    {
+      "rfilename": "model-00001-of-000001.safetensors",
+      "blobId": "a97d0091e7982ff888b6c5379bedfae9e5457a2a",
+      "size": 6672547120,
+      "lfs": {
+        "sha256": "1169e7cdc28ff2fb6186556acb2175db148ad26a62097df4c45a17e523180d3f",
+        "size": 6672547120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "76a9e9987d31aec961c934257dc0159b295fdaa6",
+      "size": 246759
+    },
+    {
+      "rfilename": "modeling_deepseekocr.py",
+      "blobId": "05ebf949161b9e0684a676de9526089b1deaa636",
+      "size": 40133
+    },
+    {
+      "rfilename": "modeling_deepseekv2.py",
+      "blobId": "ff008470d58b98d3f8304ecfb6ee1bd04c877739",
+      "size": 82224
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "9153af2ad5e59ad9cf24fed29cf286fcf10d389a",
+      "size": 460
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "d59d312be868edc63b195e19e256c730dba685ad",
+      "size": 801
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "c93a1c4d2ecf31bb5a9ec39eb73dfbf915aaf77e",
+      "size": 9979544
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "ba9d4175d69cde58ad9f68a76a4758df091eaffa",
+      "size": 165938
+    }
+  ],
+  "spaces": [
+    "embedl/hfviewer",
+    "finebooks/bhl-ocr-leaderboard",
+    "fastgpu/vram-and-gpu-cost-calculator",
+    "khang119966/DeepSeek-OCR-DEMO",
+    "aquanode/gpu-vram-calculator",
+    "prithivMLmods/Super-OCRs-Demo",
+    "akhaliq/DeepSeek-OCR",
+    "hfmlsoc/different-flops",
+    "prithivMLmods/DeepSeek-OCR-experimental",
+    "emanforhelp/model-pulse",
+    "erow/OCR-DEMO",
+    "Andertseng/DeepSeek-OCR",
+    "codemo/deepseek-ocr",
+    "martintaki/rp-chatbot",
+    "make789/OCRdeepSeekService",
+    "mcp-tools/DeepSeek-OCR-experimental",
+    "khoaliamle/DeepseekOCR",
+    "whn09/DeepSeek-OCR-webui",
+    "KhacHuy/deep_seek_ocr",
+    "YagndeepKukadiya/Deepseek-OCR-TUL",
+    "Aid3445/DeepSeek-OCR-Demo",
+    "fuaadabdullah1/GradeM8",
+    "AdithyaSK/NayanaOCRBench",
+    "bor/counting_words",
+    "Illia56/DeepSeek-OCR-PDF",
+    "gakwayaremy/DeepSeek-OCR-DEMO",
+    "applesandgri/deepseek-ocr-test",
+    "pengyunchou/deepseekocr",
+    "alfonsovelp/deepseek-ocr",
+    "CassianK/deepseek-ocr-test",
+    "monsieurfnw/deepseek-ocr-demo",
+    "1oscon/deepspeek",
+    "vIVANsy/DeepSeek0CR",
+    "MIAAUTH/DeepSeek-OCR-DEMO",
+    "hugow0528/Deepseekocr",
+    "wangmumu12345/DeepSeek-OCR-DEMO",
+    "fabiodr/DeepSeek-OCR-Demo",
+    "inoksanai/deepseek-ocr-service",
+    "sam2ai/DeepSeek-OCR-DEMO",
+    "hosseinzzzzz/visionverse-ocr-explorer",
+    "Sereinia/deepseek",
+    "AravinthEZ/Extract_with_deepseek",
+    "SharathxD/Deepseek_ocr",
+    "qiufuyu123/deepseek-ai-DeepSeek-OCR",
+    "arafathinno/deepseek-ocr",
+    "itmyjobai/deepseek-ocr-demo",
+    "semiautomatix/deepseek-ocr-token-test",
+    "Adilmaqsood50/Multi_language_And_handwritten_text_extraction_through_DeepSeek_OCR",
+    "aarav260406/deepseek-ocr-demo",
+    "loifpt/demo-deepseek-ocr",
+    "LongLwu2000/DeepSeek-OCR-Demo",
+    "samyhusy/OCR",
+    "halishrichard17/PaddleOCR-VL_Online_Vehicle_License",
+    "amberdawn84/deepseek-ai-DeepSeek-OCR",
+    "Sumit0503881/OCRInsmart",
+    "Sumit0503881/insmartocrdemo",
+    "Randonamem/deepseek-ai-DeepSeek-OCR",
+    "svbhan/deepseek-ai-DeepSeek-OCR",
+    "baihuola/DeepSeek-OCR-Demo",
+    "mathan14151/deepseek-ai-DeepSeek-OCR",
+    "Sumit0503881/InsmartKumarITOCR",
+    "Sumit0503881/kumarinsamrtnew",
+    "idspike/deepseek-ai-DeepSeek-OCR",
+    "moha77edhassan/deepseek-ai-DeepSeek-OCR",
+    "jorgeiv500/DeepSeek-OCR-Demo2",
+    "voidborn001/deepseek-ai-DeepSeek-OCR",
+    "gsummer/deepseek-ai-DeepSeek-OCR-demo",
+    "fenix577/deepseek-ai-DeepSeek-OCR",
+    "Liangjiejie/deepseek-ai-DeepSeek-OCR",
+    "garent/deepseek-ai-DeepSeek-OCR",
+    "akshayve3/deepseek_ocr",
+    "Akshayredekar07/DEEPSEEK_OCR",
+    "AneeshAhuja31/deepseekocr-space",
+    "L-Boy/deepseek-ai-DeepSeek-OCR",
+    "Aadrish0612/ImageOCR",
+    "joezhoujinjing/deepseek-ai-DeepSeek-OCR",
+    "arulmu/DeepSeek-OCR-Demo",
+    "jorgeiv500/OpScanIA",
+    "D-Kota/deepseek-ai-DeepSeek-OCR",
+    "GF7F8/deepseek-ai-DeepSeek-OCR",
+    "arulmu/deepseek-ai-DeepSeek-OCR",
+    "dexwengtw/deepseekocr",
+    "mrinalcs/deepseek-ocr-api",
+    "LauzHack/DeepSeek-Optim-johnclaire",
+    "Ziad122/ocr",
+    "phamhieu2001/TestDeepseek",
+    "AliAbdallah/deepseek-ocr-demo",
+    "Mondola/deepseek-ocr-demo",
+    "ddavis485/satorisiq",
+    "FabioVicente/stamp-ocr-teste",
+    "aimlapi1/DeepSeek-OCR-API",
+    "mrsinani/ml-registry-transcript",
+    "marceloclaro/DeepSeek-OCR-Demo",
+    "Kaithaveli/deepseek-ocr-simple",
+    "Irfaniiioo/ocr",
+    "JonusNattapong/OCR",
+    "dsde-dnbsame/deepseekocrapi_test2",
+    "caria-so/hermetic-ocr",
+    "sehesuministros/DeepSeek-OCR-Demo",
+    "defatul/DeepseekOCR"
+  ],
+  "createdAt": "2025-10-17T06:22:05.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 3336106240
+    },
+    "total": 3336106240
+  },
+  "usedStorage": 6711407201
+}

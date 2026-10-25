@@ -1,0 +1,209 @@
+{
+  "_id": "6ad26a3bad995a32256d0031",
+  "id": "abenzerps/Hy-Memory-30B-A3B-Quantized",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "safetensors",
+    "mlx",
+    "fp8",
+    "nvfp4",
+    "tencent",
+    "hunyuan",
+    "memory",
+    "agent-memory",
+    "moe",
+    "llama-cpp",
+    "ollama",
+    "text-generation",
+    "base_model:tencent/Hy-Memory-30B-A3B",
+    "base_model:quantized:tencent/Hy-Memory-30B-A3B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1034,
+  "likes": 3,
+  "modelId": "abenzerps/Hy-Memory-30B-A3B-Quantized",
+  "author": "abenzerps",
+  "sha": "7505cfa203dc84e83ea788599daafae6d0f7f0b4",
+  "lastModified": "2026-10-16T19:21:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "tencent/Hy-Memory-30B-A3B"
+    ],
+    "base_model_relation": "quantized",
+    "pipeline_tag": "text-generation",
+    "library_name": "gguf",
+    "tags": [
+      "gguf",
+      "safetensors",
+      "mlx",
+      "fp8",
+      "nvfp4",
+      "tencent",
+      "hunyuan",
+      "memory",
+      "agent-memory",
+      "moe",
+      "llama-cpp",
+      "ollama"
+    ]
+  },
+  "gguf": {
+    "total": 30064725888,
+    "architecture": "hy_v3",
+    "context_length": 262144,
+    "chat_template": "{# ----------\u2011\u2011\u2011 special token variables \u2011\u2011\u2011---------- #}\n{%- set HYTK = '' %}\n{%- set bos_token = '<\uff5chy_begin\u2581of\u2581sentence\uff5c>' %}\n{%- set pad_token = '<\uff5chy_\u2581pad\u2581\uff5c>' %}\n{%- set user_token = '<\uff5chy_User\uff5c>' %}\n{%- set assistant_token = '<\uff5chy_Assistant\uff5c>' %}\n{%- set eos_token = '<eos:6124c78e>' %}\n{# ----------\u2011\u2011\u2011 tokens with md5 encoding (conditional on HYTK) \u2011\u2011\u2011---------- #}\n{%- if HYTK %}\n    {%- set think_begin_token = '<think:{}>'.format(HYTK) %}\n    {%- set think_end_token = '</think:{}>'.format(HYTK) %}\n    {%- set toolcalls_begin_token = '<tool_calls:{}>'.format(HYTK) %}\n    {%- set toolcalls_end_token = '</tool_calls:{}>'.format(HYTK) %}\n    {%- set toolcall_begin_token = '<tool_call:{}>'.format(HYTK) %}\n    {%- set toolcall_end_token = '</tool_call:{}>'.format(HYTK) %}\n    {%- set toolsep_token = '<tool_sep:{}>'.format(HYTK) %}\n    {%- set argkey_begin_token = '<arg_key:{}>'.format(HYTK) %}\n    {%- set argkey_end_token = '</arg_key:{}>'.format(HYTK) %}\n    {%- set argvalue_begin_token = '<arg_value:{}>'.format(HYTK) %}\n    {%- set argvalue_end_token = '</arg_value:{}>'.format(HYTK) %}\n    {%- set toolresponses_begin_token = '<tool_responses:{}>'.format(HYTK) %}\n    {%- set toolresponses_end_token = '</tool_responses:{}>'.format(HYTK) %}\n    {%- set toolresponse_begin_token = '<tool_response:{}>'.format(HYTK) %}\n    {%- set toolresponse_end_token = '</tool_response:{}>'.format(HYTK) %}\n    {%- set reasoning_mode_token = '<\uff5creasoning_mode\uff5c>' %}\n    {%- set toolcalls_begin_ds_token = '<\uff5ctool\u2581calls\u2581begin\uff5c>' %}\n    {%- set toolcalls_end_ds_token = '<\uff5ctool\u2581calls\u2581end\uff5c>' %}\n    {%- set toolcall_begin_ds_token = '<\uff5ctool\u2581call\u2581begin\uff5c>' %}\n    {%- set toolcall_end_ds_token = '<\uff5ctool\u2581call\u2581end\uff5c>' %}\n    {%- set toolsep_ds_token = '<\uff5ctool\u2581sep\uff5c>' %}\n    {%- set tooloutput_begin_ds_token = '<\uff5ctool\u2581output\u2581begin\uff5c>' %}\n    {%- set tooloutput_end_ds_token = '<\uff5ctool\u2581output\u2581end\uff5c>' %}\n{%- else %}\n    {%- set think_begin_token = '<think>' %}\n    {%- set think_end_token = '</think>' %}\n    {%- set toolcalls_begin_token = '<tool_calls>' %}\n    {%- set toolcalls_end_token = '</tool_calls>' %}\n    {%- set toolcall_begin_token = '<tool_call>' %}\n    {%- set toolcall_end_token = '</tool_call>' %}\n    {%- set toolsep_token = '<tool_sep>' %}\n    {%- set argkey_begin_token = '<arg_key>' %}\n    {%- set argkey_end_token = '</arg_key>' %}\n    {%- set argvalue_begin_token = '<arg_value>' %}\n    {%- set argvalue_end_token = '</arg_value>' %}\n    {%- set toolresponses_begin_token = '<tool_responses>' %}\n    {%- set toolresponses_end_token = '</tool_responses>' %}\n    {%- set toolresponse_begin_token = '<tool_response>' %}\n    {%- set toolresponse_end_token = '</tool_response>' %}\n    {%- set reasoning_mode_token = '<\uff5creasoning_mode\uff5c>' %}\n    {%- set toolcalls_begin_ds_token = '<\uff5ctool\u2581calls\u2581begin\uff5c>' %}\n    {%- set toolcalls_end_ds_token = '<\uff5ctool\u2581calls\u2581end\uff5c>' %}\n    {%- set toolcall_begin_ds_token = '<\uff5ctool\u2581call\u2581begin\uff5c>' %}\n    {%- set toolcall_end_ds_token = '<\uff5ctool\u2581call\u2581end\uff5c>' %}\n    {%- set toolsep_ds_token = '<\uff5ctool\u2581sep\uff5c>' %}\n    {%- set tooloutput_begin_ds_token = '<\uff5ctool\u2581output\u2581begin\uff5c>' %}\n    {%- set tooloutput_end_ds_token = '<\uff5ctool\u2581output\u2581end\uff5c>' %}\n{%- endif %}\n{# ----------\u2011\u2011\u2011 hyperparameters variables \u2011\u2011\u2011---------- #}\n{%- if not add_generation_prompt is defined %}\n    {%- set add_generation_prompt = false %}\n{%- endif %}\n{%- if not interleaved_thinking is defined %}\n    {%- set interleaved_thinking = false %}\n{%- endif %}\n{%- if not tools %}\n    {%- set interleaved_thinking = false %}\n{%- endif %}\n{%- if not is_training is defined %}\n    {%- set is_training = false %}\n{%- endif %}\n{%- if not is_ai_search is defined %}\n    {%- set is_ai_search = false %}\n{%- endif %}\n{%- if not reasoning_effort is defined or reasoning_effort not in ['high', 'low', 'no_think'] %}\n    {%- set reasoning_effort = 'no_think' %}\n{%- endif %}\n\n{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text }}\n            {%- elif item is string -%}\n                {{- item }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- elif content is none -%}\n        {{- '' }}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- set ns = namespace(last_user_index=-1) %}\n{%- set sp_ns = namespace(system_prompt='', is_first_sp=true) %}\n{%- for message in messages %}\n    {%- if message['role'] == 'system' %}\n        {%- set sp_ns.system_prompt = sp_ns.system_prompt + visible_text(message['content']) %}\n    {%- endif %}\n    {%- if message['role'] == 'user' %}\n        {%- set ns.last_user_index = loop.index0 %}\n    {%- endif %}\n{%- endfor %}\n{%- if reasoning_effort is defined and reasoning_effort is string and reasoning_effort != '' and not tools %}\n    {%- set sp_ns.system_prompt = sp_ns.system_prompt + reasoning_mode_token + 'reasoning_effort:' + reasoning_effort %}\n{%- endif %}\n{{- bos_token }}\n{{- sp_ns.system_prompt }}\n{%- if tools %}\n    {%- if sp_ns.system_prompt != '' %}\n        {{- '\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.' }}\n    {%- else %}\n        {{- '# Tools\\n\\nYou may call one or more functions to assist with the user query.' }}\n    {%- endif %}\n    {{- '\\n\\nYou are provided with function signatures within <tools></tools> XML tags:' }}\n    {{- '\\n<tools>\\n' }}\n    {%- for tool in tools %}\n        {%- if loop.index0 > 0 %}\n            {{- '\\n' }}\n        {%- endif %}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- '\\n</tools>\\n\\n' }}\n    {{- 'For function call returns, you should first print ' + toolcalls_begin_token + '\\n' }}\n    {{- 'For each function call, you should return object like:\\n' }}\n    {{- toolcall_begin_token + '{function-name}' + toolsep_token + '\\n' }}\n    {{- argkey_begin_token + '{arg-key-1}' + argkey_end_token + '\\n' }}\n    {{- argvalue_begin_token + '{arg-value-1}' + argvalue_end_token + '\\n' }}\n    {{- argkey_begin_token + '{arg-key-2}' + argkey_end_token + '\\n' }}\n    {{- argvalue_begin_token + '{arg-value-2}' + argvalue_end_token + '\\n' }}\n    {{- '...\\n' }}\n    {{- toolcall_end_token + '\\n' }}\n    {%- if reasoning_effort is defined and reasoning_effort is string and reasoning_effort != '' %}\n        {{- 'At the end of function call returns, you should print ' + toolcalls_end_token + reasoning_mode_token + 'reasoning_effort:' + reasoning_effort }}\n    {%- else %}\n        {{- 'At the end of function call returns, you should print ' + toolcalls_end_token }}\n    {%- endif %}\n{%- endif %}\n\n{%- set prev_ns = namespace(is_tool=false, is_tool_first=true) %}\n{%- set last_ns = namespace(last_is_assistant=false) %}\n{%- for message in messages %}\n    {%- if message['role'] == 'user' %}\n        {%- if prev_ns.is_tool and not is_ai_search %}\n            {{- toolresponses_end_token }}\n        {%- endif %}\n        {{- user_token + visible_text(message['content']) }}\n        {%- set prev_ns.is_tool = false %}\n    {%- endif %}\n    {%- if message['role'] == 'assistant' %}\n        {%- if is_training %}\n            {%- if 'reasoning_content' in message and message['reasoning_content'] is string %}\n                {%- set content = think_begin_token + message['reasoning_content'] + think_end_token + visible_text(message['content']) %}\n            {%- else %}\n                {%- set content = think_begin_token + think_end_token + visible_text(message['content']) %}\n            {%- endif %}\n        {%- else %}\n            {%- if interleaved_thinking %}\n                {%- if loop.index0 > ns.last_user_index and 'reasoning_content' in message and message['reasoning_content'] is string %}\n                    {%- set content = think_begin_token + message['reasoning_content'] + think_end_token + visible_text(message['content']) %}\n                {%- else %}\n                    {%- set content = think_begin_token + think_end_token + visible_text(message['content']) %}\n                {%- endif %}\n            {%- else %}\n                {%- set content = think_begin_token + think_end_token + visible_text(message['content']) %}\n            {%- endif %}\n        {%- endif %}\n        {%- if prev_ns.is_tool and not is_ai_search %}\n            {{- toolresponses_end_token }}\n        {%- endif %}\n        {{- assistant_token }}\n        {%- if message['tool_calls'] is defined and message['tool_calls'] %}\n            {%- set prev_ns.is_tool_first = true %}\n            {{- content }}\n            {{- toolcalls_begin_token + '\\n' }}\n            {%- for tool in message['tool_calls'] %}\n                {%- set arguments = tool['function']['arguments'] %}\n                {{- toolcall_begin_token + tool['function']['name'] + toolsep_token + '\\n' }}\n                {%- for key, value in arguments.items() %}\n                    {{- argkey_begin_token + key + argkey_end_token + '\\n' }}\n                    {%- if value is not string %}\n                        {%- set value = value | tojson(ensure_ascii=False) %}\n                    {%- endif %}\n                    {{- argvalue_begin_token + value + argvalue_end_token + '\\n' }}\n                {%- endfor %}\n                {{- toolcall_end_token + '\\n' }}\n            {%- endfor %}\n            {{- toolcalls_end_token + eos_token }}\n        {%- else %}\n            {%- if not loop.last or is_training %}\n                {{- content + eos_token }}\n            {%- else %}\n                {{- content }}\n            {%- endif %}\n        {%- endif %}\n        {%- set prev_ns.is_tool = false %}\n    {%- endif %}\n    {%- if message['role'] == 'tool' %}\n        {%- set prev_ns.is_tool = true %}\n        {%- if prev_ns.is_tool_first and not is_ai_search %}\n            {{- toolresponses_begin_token + '\\n' }}\n            {%- set prev_ns.is_tool_first = false %}\n        {%- endif %}\n        {%- if is_ai_search %}\n            {{- tooloutput_begin_ds_token + visible_text(message['content']) + tooloutput_end_ds_token }}\n        {%- else %}\n            {{- toolresponse_begin_token + '\\n' + visible_text(message['content']) + '\\n' + toolresponse_end_token + '\\n' }}\n        {%- endif %}\n    {%- endif %}\n    {%- if loop.last and message['role'] == 'assistant' %}\n        {%- set last_ns.last_is_assistant = true %}\n    {%- endif %}\n\n{%- endfor %}\n{%- if prev_ns.is_tool and not is_ai_search %}\n    {{- toolresponses_end_token }}\n{%- endif %}\n{%- if add_generation_prompt %}\n    {%- if not last_ns.last_is_assistant %}\n        {%- if is_ai_search %}\n            {{- assistant_token }}\n            {{- think_begin_token + think_end_token }}\n        {%- elif reasoning_effort is defined and reasoning_effort in ['low', 'high'] %}\n            {{- assistant_token + think_begin_token }}\n        {%- elif reasoning_effort is defined and reasoning_effort == 'no_think' %}\n            {{- assistant_token + think_begin_token + think_end_token }}\n        {%- else %}\n            {{- assistant_token }}\n        {%- endif %}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<\uff5chy_begin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<eos:6124c78e>",
+    "totalFileSize": 17023434336
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "cfed10afd58e5fc8a18096a849b5041df2b4ce85",
+      "size": 1843
+    },
+    {
+      "rfilename": "Hy-Memory-30B-A3B-Q4_0.gguf",
+      "blobId": "78f3d076dbaf6a8030d37d73ff455dbc3b43cf78",
+      "size": 17023434336,
+      "lfs": {
+        "sha256": "f96ccc4002504ef86f3557401a06e778327a8b79fe729f9c2d3dd61c7592b9d3",
+        "size": 17023434336,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hy-Memory-30B-A3B-Q4_K_M.gguf",
+      "blobId": "4371c321032418a2c4c6eba7ead1d86d3a0c29eb",
+      "size": 18236702304,
+      "lfs": {
+        "sha256": "32046ae8e556fd8c68e6bc3c083a12bb9e49da5117732b9baeeb291d65225af8",
+        "size": 18236702304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hy-Memory-30B-A3B-Q5_K_M.gguf",
+      "blobId": "169ceeffe531e87da7e42ecf24f4b6f75c73f10d",
+      "size": 21374041696,
+      "lfs": {
+        "sha256": "b7233857c727f483b32353a6d8195bf48eb25f60010a7b4114201d700ed5e164",
+        "size": 21374041696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hy-Memory-30B-A3B-Q6_K.gguf",
+      "blobId": "b73378c975818ebd37c9b48d5f4febadeea5bc10",
+      "size": 24707464800,
+      "lfs": {
+        "sha256": "af0aa6d051ecd359b027f70dd0b3802cbc1f42333af4bc773df2f4e6b56a99ad",
+        "size": 24707464800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hy-Memory-30B-A3B-Q8_0.gguf",
+      "blobId": "0a90fa6da022e61388cad8411cdbce0853d48288",
+      "size": 31985729120,
+      "lfs": {
+        "sha256": "21f5a6f9917256ec02328edd86ab84072b7a780eae59cdad983d2db6e7e1de0f",
+        "size": 31985729120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "82c607728cdfab3a5ca887d8545f3933d412f275",
+      "size": 6008
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "d139df1d441d8fc23649669335ebbd15958d5430",
+      "size": 991
+    },
+    {
+      "rfilename": "assets/benchmark.png",
+      "blobId": "f30a45b6ec0c0529f68e053276eecf800539a60a",
+      "size": 64652
+    },
+    {
+      "rfilename": "hy-memory-30b-a3b-MLX-4bit.safetensors",
+      "blobId": "ddc738474457eb43aec35c31488937e6148d288e",
+      "size": 17648026872,
+      "lfs": {
+        "sha256": "9b655064fbaae2a154a6bf1382b082190ea71dc185b09f19f8b1d1feb5955b91",
+        "size": 17648026872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "hy-memory-30b-a3b-MLX-6bit.safetensors",
+      "blobId": "9dcb668b14c723a70badb3f234207d0fd11bacbc",
+      "size": 25037357240,
+      "lfs": {
+        "sha256": "dcd6c6294399d674268426a1535bf0c16c2237ab88768cc7d8ffcc6fc73c9bb2",
+        "size": 25037357240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "hy-memory-30b-a3b-MLX-8bit.safetensors",
+      "blobId": "62ff93856430fe164d40b1509ff6da7d2ada6110",
+      "size": 32426676952,
+      "lfs": {
+        "sha256": "43d8782d16699e9906eb2a6e5bb647d692bd8c010952e370e934f7abfda47d48",
+        "size": 32426676952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "hy-memory-30b-a3b-NVFP4.safetensors",
+      "blobId": "b1a023cdafc7426eb10cb92fde294b07e8ae5446",
+      "size": 17647780864,
+      "lfs": {
+        "sha256": "d153e7317d278b877eeb3184847daa075570f19cd046dd75a49d7af555cd20c5",
+        "size": 17647780864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "hy-memory-30b-a3b-fp8.safetensors",
+      "blobId": "52554c20904d24a0a9cdf6fd180da7ae5aea1a6b",
+      "size": 30576713416,
+      "lfs": {
+        "sha256": "d55fa93d59f843828fa3e09df713bd23356e69a38b8ddaa7a3d8bb134a028d90",
+        "size": 30576713416,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-16T18:17:31.000Z",
+  "usedStorage": 236663927600
+}

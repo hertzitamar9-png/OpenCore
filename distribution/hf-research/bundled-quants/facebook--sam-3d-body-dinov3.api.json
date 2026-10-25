@@ -1,0 +1,126 @@
+{
+  "_id": "691b6d087b63899ef3561542",
+  "id": "facebook/sam-3d-body-dinov3",
+  "private": false,
+  "library_name": "sam-3d-body",
+  "tags": [
+    "sam-3d-body",
+    "sam-3d",
+    "3d-human-mesh-recovery",
+    "human-pose-estimation",
+    "meta",
+    "en",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 9963,
+  "likes": 620,
+  "modelId": "facebook/sam-3d-body-dinov3",
+  "author": "facebook",
+  "sha": "11aaa346c7204874a1cbafe3d39a979080b2c55a",
+  "lastModified": "2025-12-10T18:45:19.000Z",
+  "gated": "manual",
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "sam-license",
+    "license_link": "https://huggingface.co/facebook/sam-3d-body-dinov3/blob/main/LICENSE",
+    "extra_gated_fields": {
+      "First Name": "text",
+      "Last Name": "text",
+      "Date of birth": "date_picker",
+      "Country": "country",
+      "Affiliation": "text",
+      "Job title": {
+        "type": "select",
+        "options": [
+          "Student",
+          "Research Graduate",
+          "AI researcher",
+          "AI developer/engineer",
+          "Reporter",
+          "Other"
+        ]
+      },
+      "geo": "ip_location",
+      "By clicking Submit below I accept the terms of the license and acknowledge that the information I provide will be collected stored processed and shared in accordance with the Meta Privacy Policy": "checkbox"
+    },
+    "extra_gated_description": "The information you provide will be collected, stored, processed and shared in accordance with the [Meta Privacy Policy](https://www.facebook.com/privacy/policy/).",
+    "extra_gated_button_content": "Submit",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "sam-3d",
+      "sam-3d-body",
+      "3d-human-mesh-recovery",
+      "human-pose-estimation",
+      "meta"
+    ],
+    "library_name": "sam-3d-body"
+  },
+  "siblings": [
+    {
+      "rfilename": "LICENSE",
+      "blobId": "e58d758cc3d92e6d1a57b52f7e4d203d02a67e98",
+      "size": 8204
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "87854edda30f437223c3103f1c0d33b78815acef",
+      "size": 5761
+    },
+    {
+      "rfilename": "assets/mhr_model.pt",
+      "blobId": "6e67294a1b91c304465a0e3392ea8ab9c4d81af9",
+      "size": 696110248,
+      "lfs": {
+        "sha256": "352e271a6c42729c68554ceaea0c955e866970160c31e35506d782dc0f7377bc",
+        "size": 696110248,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model.ckpt",
+      "blobId": "245c34983d39a78fa4c1b42d2f5f60cf918fb102",
+      "size": 2109129346,
+      "lfs": {
+        "sha256": "b5a2f9d305dd02626b967aa2e86021fba07065df66ce7a7e00ffb9664f150abf",
+        "size": 2109129346,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_config.yaml",
+      "blobId": "c43c46e52f41c76094a6fdfe12aee0348213a82b",
+      "size": 1488
+    }
+  ],
+  "spaces": [
+    "dev-bjoern/sam3d-body-mcp",
+    "meghshukla/clue-demo",
+    "hugging-apps/exmr-motion-refinement",
+    "pablovela5620/sam3d-body-rerun",
+    "silas-therapy/small-functional-movement-screening",
+    "mirrash7/VAR",
+    "akhaliq/sam-3d-body",
+    "arnavbansal/sam3d-body-rerun",
+    "jing96963/image999",
+    "mirrash7/VAR-RFDETR",
+    "abohmead/VAR",
+    "hinogi/VAR",
+    "icarofracassi/VAR",
+    "phoque6/VAR",
+    "Mankodrilo/VAR-RFDETR",
+    "ipantsios/myVAR",
+    "OmerAlp07/VAR",
+    "iueieur/image999-recovery",
+    "iueieur/vnccs-pose-studio",
+    "OmerAlp07/VAR-RFDETR",
+    "Rausda6/exmr-motion-refinement_transparent"
+  ],
+  "createdAt": "2025-11-17T18:44:24.000Z",
+  "usedStorage": 2805239594
+}

@@ -1,0 +1,185 @@
+{
+  "_id": "6acc1e450fdd3575a62760dc",
+  "id": "FluidInference/unlimited-ocr-mlx-coreml",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "coreml",
+    "apple",
+    "ocr",
+    "document-parsing",
+    "multi-page",
+    "deepseek-ocr",
+    "moe",
+    "fluidinference",
+    "image-text-to-text",
+    "base_model:baidu/Unlimited-OCR",
+    "base_model:quantized:baidu/Unlimited-OCR",
+    "license:mit",
+    "region:us"
+  ],
+  "downloads": 868,
+  "likes": 25,
+  "modelId": "FluidInference/unlimited-ocr-mlx-coreml",
+  "author": "FluidInference",
+  "sha": "4568571eacd864e0a253c609b3c9d0e00450cebc",
+  "lastModified": "2026-10-13T04:03:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "base_model": "baidu/Unlimited-OCR",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "mlx",
+    "tags": [
+      "mlx",
+      "coreml",
+      "apple",
+      "ocr",
+      "document-parsing",
+      "multi-page",
+      "deepseek-ocr",
+      "moe",
+      "fluidinference"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6c03fab62d5cde963846eb5f996f19c8103d1b85",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "890d455ae73d1d930eee703ce1e5478783ec9154",
+      "size": 1061
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "47e052407c1a9de8e657fb244c19e23a584dc145",
+      "size": 5098
+    },
+    {
+      "rfilename": "UnlimitedOcrDecoder.mlpackage/Data/com.apple.CoreML/model.mlmodel",
+      "blobId": "1851e40fd8b198811523158c93242d653ebd9b8c",
+      "size": 3423081,
+      "lfs": {
+        "sha256": "4a339171fbfd8ca84a1de4d39de77d53538feb7e4bb9759d3fb92b3d0ee20ee2",
+        "size": 3423081,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UnlimitedOcrDecoder.mlpackage/Data/com.apple.CoreML/weights/weight.bin",
+      "blobId": "a861e5ea1f8f05f21251dbc74f8eb815a1d2ab3a",
+      "size": 2942897664,
+      "lfs": {
+        "sha256": "9dca216cc86a99767f5837c2b17e132c96001ec21006c12eae45830fbebc468e",
+        "size": 2942897664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UnlimitedOcrDecoder.mlpackage/Manifest.json",
+      "blobId": "e1590e174daff172b7af583817113ad249d78628",
+      "size": 617
+    },
+    {
+      "rfilename": "UnlimitedOcrPageEncoder.mlpackage/Data/com.apple.CoreML/model.mlmodel",
+      "blobId": "84433de08e9ce517f1accb1683a217c6aeaa458b",
+      "size": 480813,
+      "lfs": {
+        "sha256": "7dcce3bed4dcf35e3dde7bd2510aa7cbc7b1bd3ca8eff93d859d11456005fc9d",
+        "size": 480813,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "UnlimitedOcrPageEncoder.mlpackage/Data/com.apple.CoreML/weights/weight.bin",
+      "blobId": "bea0abaa17e1370f116c5924e00bd07bdbef89d8",
+      "size": 806020480,
+      "lfs": {
+        "sha256": "767a77ddc86f6721dfe1e46fbb44c1e624429dfc3920682e49f68734189e40f9",
+        "size": 806020480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "UnlimitedOcrPageEncoder.mlpackage/Manifest.json",
+      "blobId": "4fd5c697f3f73164c0000ae26ebe8a47c57dcc92",
+      "size": 617
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "404a19af18abaf299b7a2935106466f3051cafbd",
+      "size": 704
+    },
+    {
+      "rfilename": "embeddings.f16",
+      "blobId": "334aea267b3fd07b9ffe094e26fe271958867cda",
+      "size": 330956800,
+      "lfs": {
+        "sha256": "5d1df8b73bdff79c672f53ddc000451158cd16cd04ed143a1c0054b30ca03455",
+        "size": 330956800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mlx-turbo/config.json",
+      "blobId": "325b6a200e88d4306ff60ee958702240febad647",
+      "size": 479
+    },
+    {
+      "rfilename": "mlx-turbo/decoder.safetensors",
+      "blobId": "c078841d653584fa3e28d537536aa04dfb51932c",
+      "size": 2059359575,
+      "lfs": {
+        "sha256": "64111bfd978cc13c11c22105149b4232ec5ae8f5e13c2cabcf1660d66ac2bc02",
+        "size": 2059359575,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mlx/config.json",
+      "blobId": "e1d2d1adc17281fd53ee3e43e2e5fb22a40625d8",
+      "size": 425
+    },
+    {
+      "rfilename": "mlx/decoder.safetensors",
+      "blobId": "7b7dd745d22119f18744b91588ebbcedd53ed8b5",
+      "size": 3119076803,
+      "lfs": {
+        "sha256": "155e9ff5f5e89969ac43f5e3b6efa10961eeaa23cfd46efdc0dd52b29115aad3",
+        "size": 3119076803,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "c93a1c4d2ecf31bb5a9ec39eb73dfbf915aaf77e",
+      "size": 9979544
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-11T23:39:49.000Z",
+  "usedStorage": 9265454895
+}

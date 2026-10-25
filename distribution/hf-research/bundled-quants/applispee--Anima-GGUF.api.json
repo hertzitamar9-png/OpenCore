@@ -1,0 +1,266 @@
+{
+  "_id": "69d9004bdd45825d83d28d31",
+  "id": "applispee/Anima-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "base_model:circlestone-labs/Anima",
+    "base_model:quantized:circlestone-labs/Anima",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 191,
+  "likes": 0,
+  "modelId": "applispee/Anima-GGUF",
+  "author": "applispee",
+  "sha": "a4b901d5a70d00ed9b9ede79a1542c9ce5d4f9b8",
+  "lastModified": "2026-04-10T13:51:07.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "circlestone-labs-non-commercial-license",
+    "license_link": "https://huggingface.co/circlestone-labs/Anima/blob/main/LICENSE.md",
+    "base_model": [
+      "circlestone-labs/Anima"
+    ],
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 2091068928,
+    "architecture": "cosmos",
+    "totalFileSize": 1146410112
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "54300c78046e0ac0cc7fd20f7427a1fa3fba0af8",
+      "size": 3020
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "db294f72fd95e981ffd4e9e75736e66c2e4dd8fc",
+      "size": 2695
+    },
+    {
+      "rfilename": "anima-preview-Q3_K_L.gguf",
+      "blobId": "f275b38c1490ecea6909e9d5125e06b9983ffa6f",
+      "size": 1146410112,
+      "lfs": {
+        "sha256": "c83ba1cf4a2ede5d74671fa9beb6c4147ce3331f9aea5bca4dbd96781c7aa47c",
+        "size": 1146410112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q4_0.gguf",
+      "blobId": "d6893db410951754de8fcbd6f8db71b635236b2d",
+      "size": 1272635520,
+      "lfs": {
+        "sha256": "df86fe7915a33fe4b205fdec5cef4ade9b2b39f20ef2135e865f8f0e2975f50d",
+        "size": 1272635520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q4_1.gguf",
+      "blobId": "1aabb8a4e57d231cc6ef03f5d821f10456e4654d",
+      "size": 1370046592,
+      "lfs": {
+        "sha256": "b7c5cd0c563b5b2b4cb8ef6e8a6bd53509b02807e6b91351859c5e40916a02dc",
+        "size": 1370046592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q4_K_M.gguf",
+      "blobId": "0cd4a9d01a1837d63b29bce4ccbe5f07cbdf6361",
+      "size": 1421648000,
+      "lfs": {
+        "sha256": "219ff28288177b526ec3197309045ab0c11ede88ed7d6f6a27d0148033a8de00",
+        "size": 1421648000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q4_K_S.gguf",
+      "blobId": "36564374c118f218ccfa43ab89f94032220caf3a",
+      "size": 1306321024,
+      "lfs": {
+        "sha256": "2c19456010e86d199493389c87d7918aa8ad2ca300163ee5dd79e6b941ba0d0c",
+        "size": 1306321024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q5_0.gguf",
+      "blobId": "b3d65bf8a9d37d58e0d853dfb7ee72b8a4ab1a8a",
+      "size": 1531682944,
+      "lfs": {
+        "sha256": "355b5293b0628a6843930932979c8eb3b50fb8cef86a70a6557b454352981d08",
+        "size": 1531682944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q5_1.gguf",
+      "blobId": "de3ee5aea5e2343410fdbe6642b793ab4175dc70",
+      "size": 1629094016,
+      "lfs": {
+        "sha256": "831948e884b71e2bbf8d4be3bda3aed86133ef487d95725c005bc3244b656cd9",
+        "size": 1629094016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q5_K_M.gguf",
+      "blobId": "a5ff667d9239334c177c80a32155ce1e416c6ccc",
+      "size": 1592877184,
+      "lfs": {
+        "sha256": "c6470e796888ea0bcae52bdc134977a96f36d198aa850b0450db0947528384d3",
+        "size": 1592877184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q5_K_S.gguf",
+      "blobId": "2827b939122bc288b57f959fb79882dc871aae60",
+      "size": 1499570304,
+      "lfs": {
+        "sha256": "254d8c3c3d5656f19ed224d88862644e1dc12a5c8bf0c3fc2c66707fcfd942e4",
+        "size": 1499570304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q6_K.gguf",
+      "blobId": "7922e1f4e4ad45ccae0c19ad0021109c27e3e137",
+      "size": 1774808192,
+      "lfs": {
+        "sha256": "4a4345166804756c32134856c9ff1045d2d54d46dede6e18625ccb98147e0347",
+        "size": 1774808192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview-Q8_0.gguf",
+      "blobId": "a40fcabe5a65ccf6c486917cce97e7eccdeda83e",
+      "size": 2276712576,
+      "lfs": {
+        "sha256": "e6c1189ea99155c734ad505d14d8be4196d460d90c697ed39e0edb8b65d78d93",
+        "size": 2276712576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2-Q4_K_M.gguf",
+      "blobId": "319d1dfe8e3cde2ff22ad037e778d2a0afaebfdd",
+      "size": 1421648000,
+      "lfs": {
+        "sha256": "fe1bd4b0d2388ba5091e779c4105b5e6e3113c5136edc462414742d266ca0fb4",
+        "size": 1421648000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2-Q5_K_M.gguf",
+      "blobId": "6628b79e8269d71f7c7a2da1a7d78041d0281af0",
+      "size": 1592877184,
+      "lfs": {
+        "sha256": "f0556b4a78524e672844bef33bf2213c2863b6e84b875404dff7ceecee2d14cc",
+        "size": 1592877184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2-Q5_K_S.gguf",
+      "blobId": "62edf55f2f07d9365741f066b7755040a9bc63fd",
+      "size": 1499570304,
+      "lfs": {
+        "sha256": "b9693206a33a2c55d0cdf27c15b19be9ab6e79886ea4cc5e628050620c7704a1",
+        "size": 1499570304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2-Q6_K.gguf",
+      "blobId": "46e5e55d53f17d4f26bc964ca262473797d53f18",
+      "size": 1774808192,
+      "lfs": {
+        "sha256": "e1e6fa7f166ba8e00393bee1281b3eb706a670594c1010b23698e220eaf6ba6f",
+        "size": 1774808192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2-Q8_0.gguf",
+      "blobId": "7ce65efe6fa888a322fb62ae61a1faada0879106",
+      "size": 2276712576,
+      "lfs": {
+        "sha256": "1168127781056183d12e753c3582feac181ffee8c9e3e6d97f9932542f1e6f3f",
+        "size": 2276712576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview3-base-Q4_K_M.gguf",
+      "blobId": "08df6890724a3e620ddabc8acc9d65abc01882ea",
+      "size": 1421648000,
+      "lfs": {
+        "sha256": "31866c1b89984cf5c001866661639212da9e0dc576eb3ee3f758984ccf2806dc",
+        "size": 1421648000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview3-base-Q5_K_M.gguf",
+      "blobId": "2c43689392a52a1b91fad4886d4e5208df1b8e1f",
+      "size": 1592877184,
+      "lfs": {
+        "sha256": "c58fcc4cf84ad34dab390e869a1691985b7f323376755a0a9b5e6a2812fbddab",
+        "size": 1592877184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview3-base-Q5_K_S.gguf",
+      "blobId": "62f41c9f7eece5495b6ff5024be28b6ce796d044",
+      "size": 1499570304,
+      "lfs": {
+        "sha256": "77fa548d6d2609939436ff2b4c801c14fe26307cb8f2af6de72f9dac88aef853",
+        "size": 1499570304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview3-base-Q6_K.gguf",
+      "blobId": "aa192f406c563fc7250121c50be433919313ef36",
+      "size": 1774808192,
+      "lfs": {
+        "sha256": "f16f2baf597090fcddee462f71b8d4429d53690da23b2d8e0de8d4f825390b9d",
+        "size": 1774808192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview3-base-Q8_0.gguf",
+      "blobId": "626e59971ac717bfc5ddb65b1f230b97524e8809",
+      "size": 2276712576,
+      "lfs": {
+        "sha256": "8ceef6a28e3fcf1bce5eff1d61858b69afcb709cc90f43c4d6d20bdf470d7546",
+        "size": 2276712576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima_gguf_patch.py",
+      "blobId": "4d54f43b62532202fe78bcd39744c151eaad4b37",
+      "size": 1196
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-04-10T13:51:07.000Z",
+  "usedStorage": 36751680512
+}

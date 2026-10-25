@@ -1,0 +1,205 @@
+{
+  "_id": "6670cbcdc718469ee729af87",
+  "id": "mradermacher/DeepSeek-Coder-V2-Lite-Base-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "en",
+    "base_model:deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "base_model:quantized:deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1053,
+  "likes": 2,
+  "modelId": "mradermacher/DeepSeek-Coder-V2-Lite-Base-GGUF",
+  "author": "mradermacher",
+  "sha": "34cdf6b89fab5d1ffef3b89904a9344920e87a6e",
+  "lastModified": "2024-06-18T03:59:44.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "other",
+    "license_link": "LICENSE",
+    "license_name": "deepseek-license",
+    "quantized_by": "mradermacher"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 15706484224,
+    "architecture": "deepseek2",
+    "context_length": 163840,
+    "chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 7553175488
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2487ca3479864c2243d97afc327c168cfb6dd36a",
+      "size": 2575
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.IQ3_M.gguf",
+      "blobId": "84b2dc1207c00283b9e601b4132544637cea48aa",
+      "size": 7553175488,
+      "lfs": {
+        "sha256": "76e7d544cd05af642b505533b1fc834bc92e3ef5d8fbeebbc9b10822bbe5b2f1",
+        "size": 7553175488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.IQ3_S.gguf",
+      "blobId": "b8c69e453cacf537e38671071ff77a30118ee415",
+      "size": 7487664064,
+      "lfs": {
+        "sha256": "ff5d558a0aae69628cc763337e801a347736b1e6b09a31dde6790e5cb423d459",
+        "size": 7487664064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.IQ3_XS.gguf",
+      "blobId": "32ca9336f14e535e5d058489dcd230f2d47784aa",
+      "size": 7122857920,
+      "lfs": {
+        "sha256": "219dd376e92fd178b9268fba5f6a9893f3b5d82f752b4f4f94e7cec951c33a87",
+        "size": 7122857920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.IQ4_XS.gguf",
+      "blobId": "0333bab23cb556ada8ff22b6b144f8c787c254dd",
+      "size": 8646804416,
+      "lfs": {
+        "sha256": "e6ea96e2b9f48b450520528badde6f938f00233ab4c413e1edaac5c352d93580",
+        "size": 8646804416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q2_K.gguf",
+      "blobId": "748cf578fd3381e3f7065dc6e30b8f4c21077d99",
+      "size": 6430464960,
+      "lfs": {
+        "sha256": "3075cfac4bd11a9f8585fb733d7575e0786ad3008475e2c705a64da80bd8b22b",
+        "size": 6430464960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q3_K_L.gguf",
+      "blobId": "c27fca157411846216b73e18beb27cbc2ac119ad",
+      "size": 8459399104,
+      "lfs": {
+        "sha256": "3a28fedc4b19fcef30680b8cf4575cf15de0df81e0dc1e16c382b6c7594300a4",
+        "size": 8459399104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q3_K_M.gguf",
+      "blobId": "4171824892a06afa285af60220b481522d7aa53e",
+      "size": 8126607296,
+      "lfs": {
+        "sha256": "70d49d1a6afbe4be49f6e11c5873a89285d007a2748a4c81dd7f77fa3d2a57db",
+        "size": 8126607296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q3_K_S.gguf",
+      "blobId": "d8cf6de7d9b100398756eea0f5d531e1e5666865",
+      "size": 7487664064,
+      "lfs": {
+        "sha256": "1274e6eef5bb776fb7854ceb75a765dfcf923f50e50d87861faaa685028a90e3",
+        "size": 7487664064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q4_K_M.gguf",
+      "blobId": "e46b788400fb35d9d9afaa4055954401e5ee1fbe",
+      "size": 10364416960,
+      "lfs": {
+        "sha256": "5298b2380468ea4a10ebd4e930ed5d6af21cf886cbe26af2a5235987cd366c80",
+        "size": 10364416960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q4_K_S.gguf",
+      "blobId": "27f37cddffe8d9fb8f9c2aa17916c5ee05b6d346",
+      "size": 9533608896,
+      "lfs": {
+        "sha256": "a58e64571d69c1e344aaf59eb632c9b75b04f232c6fb7d764c957892979c702d",
+        "size": 9533608896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q5_K_M.gguf",
+      "blobId": "adbb7411b4d4fd7fba440b99c093f5832db458a6",
+      "size": 11851314112,
+      "lfs": {
+        "sha256": "5b1c0b5ef988110fd54d2e546d1a50abaf7fc3d9323a77e33035b10445f3ea86",
+        "size": 11851314112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q5_K_S.gguf",
+      "blobId": "3b2254e405bd9318c3e1007264e928b900854d11",
+      "size": 11143058368,
+      "lfs": {
+        "sha256": "477880844679a0cbee0148264142a379e6160d9c0c7b8b3573995f4bee7d5a38",
+        "size": 11143058368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q6_K.gguf",
+      "blobId": "a66a6615029be5cbcab52bd054c8fb06df013d70",
+      "size": 14066972608,
+      "lfs": {
+        "sha256": "72546a230a4d81f8727ba3dfab31d0503915c366b4742b7ea6e65c36f736b377",
+        "size": 14066972608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-Coder-V2-Lite-Base.Q8_0.gguf",
+      "blobId": "14b58f15e28cfabe430b851a47723af58f837dcb",
+      "size": 16702518208,
+      "lfs": {
+        "sha256": "c748ec6b2054b520ffad79a50042acfb995b38e8151aab4ad92dc465de0151be",
+        "size": 16702518208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "3c6eae210bab8bbed8c624e47f46774443681ea5",
+      "size": 3854
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2024-06-17T23:50:37.000Z",
+  "usedStorage": 134976526464
+}

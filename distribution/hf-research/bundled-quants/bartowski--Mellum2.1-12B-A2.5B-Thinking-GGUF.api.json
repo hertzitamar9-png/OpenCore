@@ -1,0 +1,1116 @@
+{
+  "_id": "6ac7ae9dd345d4d1ddbb7b64",
+  "id": "bartowski/Mellum2.1-12B-A2.5B-Thinking-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "en",
+    "base_model:JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+    "base_model:quantized:JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+    "license:apache-2.0",
+    "model-index",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 9213,
+  "likes": 11,
+  "modelId": "bartowski/Mellum2.1-12B-A2.5B-Thinking-GGUF",
+  "author": "bartowski",
+  "sha": "355e97042763a75b33efc51efd731ce0149413d4",
+  "lastModified": "2026-10-08T15:15:18.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": [
+    {
+      "name": "Mellum2.1 Thinking",
+      "results": [
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "LiveCodeBench v6",
+            "type": "livecodebench"
+          },
+          "metrics": [
+            {
+              "type": "pass@1",
+              "value": 82,
+              "name": "pass@1",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "HumanEval+",
+            "type": "humaneval-plus"
+          },
+          "metrics": [
+            {
+              "type": "pass@1",
+              "value": 91.5,
+              "name": "pass@1",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "MBPP+",
+            "type": "mbpp-plus"
+          },
+          "metrics": [
+            {
+              "type": "pass@1",
+              "value": 79.4,
+              "name": "pass@1",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "AIME 25/26",
+            "type": "aime"
+          },
+          "metrics": [
+            {
+              "type": "exact_match",
+              "value": 83.3,
+              "name": "exact match",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "GSM-Plus",
+            "type": "gsm-plus"
+          },
+          "metrics": [
+            {
+              "type": "exact_match",
+              "value": 88.3,
+              "name": "exact match",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "SWE-bench Verified",
+            "type": "swe-bench-verified"
+          },
+          "metrics": [
+            {
+              "type": "resolved",
+              "value": 47,
+              "name": "resolved rate",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "Terminal-Bench 2.1",
+            "type": "terminal-bench"
+          },
+          "metrics": [
+            {
+              "type": "resolved",
+              "value": 17.4,
+              "name": "resolved rate",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "SWE-bench Pro",
+            "type": "swe-bench-pro"
+          },
+          "metrics": [
+            {
+              "type": "resolved",
+              "value": 28,
+              "name": "resolved rate",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "BFCL v4",
+            "type": "bfcl"
+          },
+          "metrics": [
+            {
+              "type": "acc",
+              "value": 62.3,
+              "name": "accuracy",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "WorkBench",
+            "type": "workbench"
+          },
+          "metrics": [
+            {
+              "type": "task_completion",
+              "value": 44.6,
+              "name": "task completion",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "ToolHop",
+            "type": "toolhop"
+          },
+          "metrics": [
+            {
+              "type": "acc",
+              "value": 49.1,
+              "name": "accuracy",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "IFEval",
+            "type": "ifeval"
+          },
+          "metrics": [
+            {
+              "type": "acc",
+              "value": 90.6,
+              "name": "accuracy",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "GPQA Diamond",
+            "type": "gpqa"
+          },
+          "metrics": [
+            {
+              "type": "acc",
+              "value": 64.6,
+              "name": "accuracy",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "MMLU-Redux",
+            "type": "mmlu-redux"
+          },
+          "metrics": [
+            {
+              "type": "acc",
+              "value": 87.8,
+              "name": "accuracy",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "MixEval-Hard",
+            "type": "mixeval"
+          },
+          "metrics": [
+            {
+              "type": "acc",
+              "value": 46.4,
+              "name": "accuracy",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "XSTest",
+            "type": "xstest"
+          },
+          "metrics": [
+            {
+              "type": "safe_compliance",
+              "value": 88.8,
+              "name": "safe compliance",
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "name": "HarmBench (harmful rate, lower is better)",
+            "type": "harmbench"
+          },
+          "metrics": [
+            {
+              "type": "harmful_rate",
+              "value": 8.5,
+              "name": "harmful rate",
+              "verified": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model_relation": "quantized",
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0",
+    "base_model": "JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+    "model-index": [
+      {
+        "name": "Mellum2.1 Thinking",
+        "results": [
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "LiveCodeBench v6",
+              "type": "livecodebench"
+            },
+            "metrics": [
+              {
+                "type": "pass@1",
+                "value": 82,
+                "name": "pass@1",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "HumanEval+",
+              "type": "humaneval-plus"
+            },
+            "metrics": [
+              {
+                "type": "pass@1",
+                "value": 91.5,
+                "name": "pass@1",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "MBPP+",
+              "type": "mbpp-plus"
+            },
+            "metrics": [
+              {
+                "type": "pass@1",
+                "value": 79.4,
+                "name": "pass@1",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "AIME 25/26",
+              "type": "aime"
+            },
+            "metrics": [
+              {
+                "type": "exact_match",
+                "value": 83.3,
+                "name": "exact match",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "GSM-Plus",
+              "type": "gsm-plus"
+            },
+            "metrics": [
+              {
+                "type": "exact_match",
+                "value": 88.3,
+                "name": "exact match",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "SWE-bench Verified",
+              "type": "swe-bench-verified"
+            },
+            "metrics": [
+              {
+                "type": "resolved",
+                "value": 47,
+                "name": "resolved rate",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "Terminal-Bench 2.1",
+              "type": "terminal-bench"
+            },
+            "metrics": [
+              {
+                "type": "resolved",
+                "value": 17.4,
+                "name": "resolved rate",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "SWE-bench Pro",
+              "type": "swe-bench-pro"
+            },
+            "metrics": [
+              {
+                "type": "resolved",
+                "value": 28,
+                "name": "resolved rate",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "BFCL v4",
+              "type": "bfcl"
+            },
+            "metrics": [
+              {
+                "type": "acc",
+                "value": 62.3,
+                "name": "accuracy",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "WorkBench",
+              "type": "workbench"
+            },
+            "metrics": [
+              {
+                "type": "task_completion",
+                "value": 44.6,
+                "name": "task completion",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "ToolHop",
+              "type": "toolhop"
+            },
+            "metrics": [
+              {
+                "type": "acc",
+                "value": 49.1,
+                "name": "accuracy",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "IFEval",
+              "type": "ifeval"
+            },
+            "metrics": [
+              {
+                "type": "acc",
+                "value": 90.6,
+                "name": "accuracy",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "GPQA Diamond",
+              "type": "gpqa"
+            },
+            "metrics": [
+              {
+                "type": "acc",
+                "value": 64.6,
+                "name": "accuracy",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "MMLU-Redux",
+              "type": "mmlu-redux"
+            },
+            "metrics": [
+              {
+                "type": "acc",
+                "value": 87.8,
+                "name": "accuracy",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "MixEval-Hard",
+              "type": "mixeval"
+            },
+            "metrics": [
+              {
+                "type": "acc",
+                "value": 46.4,
+                "name": "accuracy",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "XSTest",
+              "type": "xstest"
+            },
+            "metrics": [
+              {
+                "type": "safe_compliance",
+                "value": 88.8,
+                "name": "safe compliance",
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "name": "HarmBench (harmful rate, lower is better)",
+              "type": "harmbench"
+            },
+            "metrics": [
+              {
+                "type": "harmful_rate",
+                "value": 8.5,
+                "name": "harmful rate",
+                "verified": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "gguf": {
+    "total": 12149923072,
+    "architecture": "mellum",
+    "context_length": 131072,
+    "chat_template": "{%- macro normalize_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns_c = namespace(text='') -%}\n        {%- for part in content -%}\n            {%- if part is mapping -%}\n                {%- if part.type == 'text' -%}\n                    {%- set ns_c.text = ns_c.text + (part.text or '') -%}\n                {%- elif part.type == 'tool-result' and part.output is mapping and part.output.type == 'text' -%}\n                    {%- set ns_c.text = ns_c.text + (part.output.value or '') -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns_c.text -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- normalize_content(messages[0].content) + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + normalize_content(messages[0].content) + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- set msg_content = normalize_content(message.content) %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(msg_content.startswith('<tool_response>') and msg_content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- set content = normalize_content(message.content) %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if reasoning_content %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 24311970176
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e3edd5bad4603e972a4e14168c8428fb0eeb4db4",
+      "size": 3278
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-IQ2_M.gguf",
+      "blobId": "c386d582e6f14ffc825048feae8a130c586aa223",
+      "size": 5399733984,
+      "lfs": {
+        "sha256": "ea612f2d9b1ba8c58fe190528f0a631afcb5949dc2d947be277b08e52693911d",
+        "size": 5399733984,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-IQ3_M.gguf",
+      "blobId": "7ab45997f6c2d04e87404c6020559adcdf25f6e2",
+      "size": 7243643616,
+      "lfs": {
+        "sha256": "e9ed9bec0d17d83bf4dfb8b4f19a2d34294c7cdf06a0a80a7b57f2c04f6e41a1",
+        "size": 7243643616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-IQ3_XS.gguf",
+      "blobId": "ddf5e1299b6a1ad1b474c48d11da5402450364ec",
+      "size": 6292921056,
+      "lfs": {
+        "sha256": "bf483990f7a65d3105ab262cf508e79d7499840fab9ae82702f02b39c4a9c82a",
+        "size": 6292921056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-IQ3_XXS.gguf",
+      "blobId": "699e11e0e0834757091719a2a7253a5243526fb6",
+      "size": 6281861856,
+      "lfs": {
+        "sha256": "b3721bbdb8c7dbe23be6e614c1a6682af0785cc06a8399859d60630d201c5018",
+        "size": 6281861856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-IQ4_NL.gguf",
+      "blobId": "fb16035160e01a4550eacc781fe29afd57185ea7",
+      "size": 7663303392,
+      "lfs": {
+        "sha256": "482809c54dbfa1ee1add96c9763c641a545d3b57a02534ef96f4c861f1bc5aaa",
+        "size": 7663303392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-IQ4_XS.gguf",
+      "blobId": "0a2f331a481938be963c9a11bcb1cadb7610172d",
+      "size": 6971366112,
+      "lfs": {
+        "sha256": "a2d4e77f5badd137494500b5ce100496e36ff9760699cbc8dc1de9a6e3cf45e5",
+        "size": 6971366112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q2_K.gguf",
+      "blobId": "5eff753e1c502e5e268bbd2743dabae2200cf461",
+      "size": 5532315360,
+      "lfs": {
+        "sha256": "d8ab482cae4c92dc3c86719fd05d487b939a16c5e2095d0e10bd5eef11f0c47b",
+        "size": 5532315360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q3_K_L.gguf",
+      "blobId": "4cf7daffa4c24a5b24550c178d8bbad287fca1a4",
+      "size": 7130102496,
+      "lfs": {
+        "sha256": "d0d662d7ead9637ae6733c8b85adac85edb9ee0525f539c50abb7dff2e47f526",
+        "size": 7130102496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q3_K_M.gguf",
+      "blobId": "d6e7a2ec5393e3787d072d06945c93af38dc6dae",
+      "size": 6702480096,
+      "lfs": {
+        "sha256": "8c793bb811ed7e65b7e8ec11bb09edba9d9a5ee2a082374e8db65accff807b0b",
+        "size": 6702480096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q3_K_S.gguf",
+      "blobId": "40a5c87716906624fc7731210c340a332d7df453",
+      "size": 6052706016,
+      "lfs": {
+        "sha256": "bf0cc81062eeeea130d99a4db5029bbee4c8ff59513ee20ed54fadff67eceec0",
+        "size": 6052706016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q4_0.gguf",
+      "blobId": "40e4ba04da4be7c0d55f6a95324406933e1c0e3d",
+      "size": 7002847968,
+      "lfs": {
+        "sha256": "17d4e4871bafc758d641caf4a14a822aae8f9bfda6e054c65344025817af971b",
+        "size": 7002847968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q4_1.gguf",
+      "blobId": "8d95c8aba1eb3b8127048b7cc6e5ab06a6bd0410",
+      "size": 7710636768,
+      "lfs": {
+        "sha256": "2f166a8b91c0880dc9ee61ddda7781302e8c95063b92b478f07b824178ba1979",
+        "size": 7710636768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q4_K_L.gguf",
+      "blobId": "ce36d826b69106cb35199aac14a1173157ec3f81",
+      "size": 9226042080,
+      "lfs": {
+        "sha256": "4bb0d8ccd1e5ea37650585eeef5b3e4b441f7a28f328409a2508c7814f5de707",
+        "size": 9226042080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.gguf",
+      "blobId": "f4eab3e4b25cd58c13992fe09f299722eb74473b",
+      "size": 8819358432,
+      "lfs": {
+        "sha256": "7adfc5bc1f8bf180db6e94c9d207600aadbe7b9368314b8533d6c4df1d7b8fea",
+        "size": 8819358432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q4_K_S.gguf",
+      "blobId": "690cf147ea2acf998a390bf972499f5bfb2a2260",
+      "size": 7861041888,
+      "lfs": {
+        "sha256": "d032124d3a233ec164bfccf654ea96f552a1f60d82ae3e45edef94fa9d690ce2",
+        "size": 7861041888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q5_K_M.gguf",
+      "blobId": "d7020c3c52643ea1e95f9a98b8525d4841933e95",
+      "size": 9969220320,
+      "lfs": {
+        "sha256": "7462ad2db2fb6dfa735f28020b4b65640259d0b16019bb7ecb194d6ebffa21ce",
+        "size": 9969220320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q5_K_S.gguf",
+      "blobId": "722b71ed82930b368dee9efb49f531cd39029312",
+      "size": 8963422944,
+      "lfs": {
+        "sha256": "9fe81c18e6628a918757a356614abb4590b5c415a8281272fae3298eafb678c1",
+        "size": 8963422944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q6_K.gguf",
+      "blobId": "a11e85e375f1b3c474cfe4264ccaf65f194a9158",
+      "size": 11453512416,
+      "lfs": {
+        "sha256": "301b6392b16b2dc94465c9700c670b394e17666fc160f7edc9590d271f737f5f",
+        "size": 11453512416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q6_K_L.gguf",
+      "blobId": "b0761074556e8067e8148e73c298104f604c5cf4",
+      "size": 11805489888,
+      "lfs": {
+        "sha256": "ffbff5767362fe9c7f7497ba9972b2ab5292725e5356320b77939182dca3132f",
+        "size": 11805489888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q6_K_S.gguf",
+      "blobId": "98344a5d4cd00c9f362749dbfcfa2db187b57202",
+      "size": 11133532896,
+      "lfs": {
+        "sha256": "c53971af9c31c67198a019bf2824a37bebe76bc768212ecfd3f7aa4f49db6f4f",
+        "size": 11133532896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q8_0.gguf",
+      "blobId": "d777c198f8699e13e7a84444c8c10bc3c1666af7",
+      "size": 12925418208,
+      "lfs": {
+        "sha256": "853693e4fd2f5b50eb058d2ce6524df2e3e7edb76c84fff6759111986d2f83a6",
+        "size": 12925418208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-bf16.gguf",
+      "blobId": "ff48307ca42804f83ea5f269c55f3a8f7fe704dd",
+      "size": 24311970176,
+      "lfs": {
+        "sha256": "f14a57940d610b306fc8679b1060e98a85cd092aa8630584fc5c15ab7a15cec7",
+        "size": 24311970176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-calibration-v6.txt",
+      "blobId": "22eb4bcff4406b763046823a4d54d26ed5ba582d",
+      "size": 1101574
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-imatrix.gguf",
+      "blobId": "040b8043fe0104d48e975853aab08fe754a4071b",
+      "size": 81985984,
+      "lfs": {
+        "sha256": "fb9ef72249b22bf5e1146aa7ae52affea69f8910ec6849717f654e6b13088e8f",
+        "size": 81985984,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "720ac6ac14ed2bd1a4a26d74e221f22ae34ded0f",
+      "size": 22030
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ2_M.layout.json",
+      "blobId": "1199ee23b5f849bc01e3c177965dac099413ace9",
+      "size": 5866
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ2_M.tensor-types.txt",
+      "blobId": "f7feee34b303fff5b4b7ee52f43c7b683f71996b",
+      "size": 6840
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ3_M.layout.json",
+      "blobId": "171da69dc58788584065067ff8a100d6e76775f2",
+      "size": 5773
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ3_M.tensor-types.txt",
+      "blobId": "29305ea942d622ccc1ca25916ef5f1c0eb9e358c",
+      "size": 6792
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ3_XS.layout.json",
+      "blobId": "b47dc38b40be30cb1f8fa94285c7d2b5df308197",
+      "size": 5776
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ3_XS.tensor-types.txt",
+      "blobId": "20e3b475276ea7829e8ed08adee01be6c27517a7",
+      "size": 6817
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ3_XXS.layout.json",
+      "blobId": "a3e13b6728e8005aa3ae67b4d7fb65f342f11cb2",
+      "size": 5787
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ3_XXS.tensor-types.txt",
+      "blobId": "d2b9f864149dae6cc97db6ea18731609a8a59346",
+      "size": 6912
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ4_NL.layout.json",
+      "blobId": "5ba2577f8690658b7794a78082746791d2331c52",
+      "size": 5799
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ4_NL.tensor-types.txt",
+      "blobId": "d595ea23139f54a4909ec0eb15c1557238c4cb9b",
+      "size": 6878
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ4_XS.layout.json",
+      "blobId": "a122e8f3932c0cc510858f7a623de89aa4329b54",
+      "size": 5818
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-IQ4_XS.tensor-types.txt",
+      "blobId": "2253bd30317b860ee2ef000f215e07c532d8296f",
+      "size": 6902
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q2_K.layout.json",
+      "blobId": "062792076c6537e9cfefcff2a4e0bb997460bd63",
+      "size": 5690
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q2_K.tensor-types.txt",
+      "blobId": "675e0bd68e5f10ca3aea1b4a4648d4065326721b",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q3_K_L.layout.json",
+      "blobId": "ee14ea762115baf0bd1f37ef66436d8cc57ca72f",
+      "size": 5698
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q3_K_L.tensor-types.txt",
+      "blobId": "6d22c06590618da5656e39266de0da5a2c256b4c",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q3_K_M.layout.json",
+      "blobId": "d2cac27565266c3f8b108228a4cd3f762f998cda",
+      "size": 5680
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q3_K_M.tensor-types.txt",
+      "blobId": "327ede9170115695c426ca45e28a3368fd3f1c87",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q3_K_S.layout.json",
+      "blobId": "2c04d3b013ebff9606177281ab81c819cfd63da7",
+      "size": 5663
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q3_K_S.tensor-types.txt",
+      "blobId": "2a8dd1323adc796a93e944fbdf3e0997c92762be",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q4_K_L.layout.json",
+      "blobId": "52ad8f433d3d42521ef2bea51f01a6955dcac8b8",
+      "size": 5698
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q4_K_L.tensor-types.txt",
+      "blobId": "ccf28b4f4378ffc0f439ed4c81bf121ad5a4314c",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.layout.json",
+      "blobId": "275704031e0561a1864e9701e49a3c9d435d623e",
+      "size": 5680
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.tensor-types.txt",
+      "blobId": "db0c158622a4e6a383f1db6e2dcaae60f8460abd",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q4_K_S.layout.json",
+      "blobId": "eb80111cceb855509c7f5a05438fadd2ec9b5aa4",
+      "size": 5647
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q4_K_S.tensor-types.txt",
+      "blobId": "630d8f9b97fb68f9eb9ac4c80ec2396195f8643d",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q5_K_M.layout.json",
+      "blobId": "ffef71533ce0b0fb26ba71b05a139e2738871de4",
+      "size": 5645
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q5_K_M.tensor-types.txt",
+      "blobId": "05165a2e640e586c2e57ad84130d996f7316d433",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q5_K_S.layout.json",
+      "blobId": "bbaf97b9b966b9481057a1dfa447baa8f5150914",
+      "size": 5643
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q5_K_S.tensor-types.txt",
+      "blobId": "4edb22788a13b6212c6c480169a6661c4306e36c",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q6_K.layout.json",
+      "blobId": "34d076fa7c0f1c54f222b64b2f16a5817b8843da",
+      "size": 5642
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q6_K.tensor-types.txt",
+      "blobId": "8ddf62d40582b3da91c8436cdf21d26cd8c07de9",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q6_K_L.layout.json",
+      "blobId": "5e560c95cc9e1f233cba47cd21ef7f32f4f62132",
+      "size": 5647
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q6_K_L.tensor-types.txt",
+      "blobId": "30cdcb553bd16124ec414dc2e2c835682b3a0405",
+      "size": 6726
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q6_K_S.layout.json",
+      "blobId": "9da95e825c45787a613b4e05cdb020e9e2b54869",
+      "size": 5613
+    },
+    {
+      "rfilename": "layouts/Mellum2.1-12B-A2.5B-Thinking-Q6_K_S.tensor-types.txt",
+      "blobId": "7dec058ddfa3a9781862750b1860c265dce879ec",
+      "size": 6726
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-08T14:54:21.000Z",
+  "usedStorage": 196534913952
+}

@@ -1,0 +1,70 @@
+{
+  "_id": "66ded87ac788a0ecfa60e884",
+  "id": "ijohn07/DeepSeek-Coder-V2-Lite-Base-Q6_K-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "llama-cpp",
+    "gguf-my-repo",
+    "base_model:deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "base_model:quantized:deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 52,
+  "likes": 0,
+  "modelId": "ijohn07/DeepSeek-Coder-V2-Lite-Base-Q6_K-GGUF",
+  "author": "ijohn07",
+  "sha": "1ba70e40a0a87af32cb546430ad53250e64c3460",
+  "lastModified": "2024-09-09T11:15:05.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "license": "other",
+    "license_name": "deepseek-license",
+    "license_link": "LICENSE",
+    "tags": [
+      "llama-cpp",
+      "gguf-my-repo"
+    ]
+  },
+  "gguf": {
+    "total": 15706484224,
+    "architecture": "deepseek2",
+    "context_length": 163840,
+    "chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 14066972352
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "270d0eff5f2d3e3abd83d77db89c1e3feb8aaa90",
+      "size": 1593
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "691e67e5b33cdfc331c9045ca123a253488d6c43",
+      "size": 1928
+    },
+    {
+      "rfilename": "deepseek-coder-v2-lite-base-q6_k.gguf",
+      "blobId": "8aff49efca22ec9488fcce6486162ec924e8cedc",
+      "size": 14066972352,
+      "lfs": {
+        "sha256": "fe3100ddbf2e5d693910b0941de01738603866b5016b99d4da36cf6b8148112e",
+        "size": 14066972352,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2024-09-09T11:14:02.000Z",
+  "usedStorage": 14066972352
+}

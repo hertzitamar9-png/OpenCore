@@ -1,0 +1,145 @@
+{
+  "_id": "6abec5a5b09ca7a1ec3c9340",
+  "id": "NIM-AI/NIM-2-Coder-7B",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gguf",
+    "code",
+    "coding",
+    "software-engineering",
+    "autonomous-agent",
+    "ollama",
+    "text-generation",
+    "en",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 133,
+  "likes": 1,
+  "modelId": "NIM-AI/NIM-2-Coder-7B",
+  "author": "NIM-AI",
+  "sha": "bbf5b9cdb82ada526b981f57865c20bc41f4b6f9",
+  "lastModified": "2026-10-01T20:42:30.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "code",
+      "coding",
+      "software-engineering",
+      "autonomous-agent",
+      "gguf",
+      "ollama"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2",
+    "context_length": 32768,
+    "chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{'<|im_start|>user\n' + message['content'] + '<|im_end|>\n'}}{% elif message['role'] == 'assistant' %}{{'<|im_start|>assistant\n' + message['content'] + '<|im_end|>\n' }}{% else %}{{ '<|im_start|>system\n' + message['content'] + '<|im_end|>\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 4683071552
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "16d363b6bbdfe96234b95116fd74d39f9369a68e",
+      "size": 1638
+    },
+    {
+      "rfilename": "Modelfile",
+      "blobId": "1a7547df504ec7409ea1cf28b9fde89b069fb8a6",
+      "size": 565
+    },
+    {
+      "rfilename": "NIM-2-Coder-7B-Q4_K_M.gguf",
+      "blobId": "62ee267f74f4a56b5d34ea40d5aa14ceae525b40",
+      "size": 4683071552,
+      "lfs": {
+        "sha256": "fc1bab8d8956b41e17650894bf83467822afd2ec9fa467b121e86a7d6de1b59a",
+        "size": 4683071552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bac57646bba8f8a565ebb4f8f78ab1ebfe79f052",
+      "size": 2082
+    },
+    {
+      "rfilename": "lora/README.md",
+      "blobId": "3ccaca5ea2263cc7613f6b1584fa73297a36e578",
+      "size": 5260
+    },
+    {
+      "rfilename": "lora/adapter_config.json",
+      "blobId": "5b9fffea8dec209100cb8f524ba33f06c556aa07",
+      "size": 1332
+    },
+    {
+      "rfilename": "lora/adapter_model.safetensors",
+      "blobId": "a11bb73b9d89b5873cfe4030c21d7fdb78fb809f",
+      "size": 161533192,
+      "lfs": {
+        "sha256": "fa8d15c48533aca47940bee09d34fffb2dd5a8a229223dc034abb646282afa5f",
+        "size": 161533192,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lora/chat_template.jinja",
+      "blobId": "ecb8be2c9e22f947354626254b7a78ee3527a582",
+      "size": 398
+    },
+    {
+      "rfilename": "lora/tokenizer.json",
+      "blobId": "c71eaaa50f7ae2ca6ab29d25303b87b28a64669e",
+      "size": 11422082,
+      "lfs": {
+        "sha256": "ea43b288542655d72d632195ab9b58ca2cd9532c292bf6667827ce899ad196bc",
+        "size": 11422082,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "lora/tokenizer_config.json",
+      "blobId": "a73a9e53c04b3def65273179a47f08833b329f77",
+      "size": 4443
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-01T20:42:13.000Z",
+  "usedStorage": 4856026826
+}

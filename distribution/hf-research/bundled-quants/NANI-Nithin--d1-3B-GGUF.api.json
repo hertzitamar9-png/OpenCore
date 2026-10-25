@@ -1,0 +1,378 @@
+{
+  "_id": "6acd0248807dfffb714abd24",
+  "id": "NANI-Nithin/d1-3B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "quantized",
+    "text-generation",
+    "base_model:LiquidAI/d1-3B",
+    "base_model:quantized:LiquidAI/d1-3B",
+    "endpoints_compatible",
+    "region:us",
+    "decision-model",
+    "conversational"
+  ],
+  "downloads": 5107,
+  "likes": 1,
+  "modelId": "NANI-Nithin/d1-3B-GGUF",
+  "author": "NANI-Nithin",
+  "sha": "35eba943ae3b164a29b6c97e6bc2a7bfe513af91",
+  "lastModified": "2026-10-12T18:43:22.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "LiquidAI/d1-3B",
+    "library_name": "gguf",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "quantized"
+    ]
+  },
+  "gguf": {
+    "total": 2697198592,
+    "architecture": "lfm2",
+    "context_length": 32768,
+    "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n\n{%- macro format_arg_value(arg_value) -%}\n    {%- if arg_value is string -%}\n        {{- \"'\" + (arg_value | replace(\"\\\\\", \"\\\\\\\\\") | replace(\"'\", \"\\\\'\") | replace(\"\\n\", \"\\\\n\") | replace(\"\\r\", \"\\\\r\")) + \"'\" -}}\n    {%- elif arg_value is mapping or arg_value is iterable -%}\n        {{- arg_value | tojson -}}\n    {%- else -%}\n        {{- arg_value | string -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<image>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- set tool_calls_ns = namespace(tool_calls=[]) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_name = func[\"name\"] -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- set args_ns = namespace(arg_strings=[]) -%}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {%- set args_ns.arg_strings = args_ns.arg_strings + [arg_name + \"=\" + format_arg_value(arg_value)] -%}\n            {%- endfor -%}\n        {%- elif func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {%- set tool_calls_ns.tool_calls = tool_calls_ns.tool_calls + [func_name + \"(\" + (args_ns.arg_strings | join(\", \")) + \")\"] -%}\n    {%- endfor -%}\n    {{- \"<|tool_call_start|>[\" + (tool_calls_ns.tool_calls | join(\", \")) + \"]<|tool_call_end|>\" -}}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set ns.system_prompt = ns.system_prompt + (\"\\n\" if ns.system_prompt else \"\") + \"List of tools: [\" -%}\n    {%- for tool in tools -%}\n        {%- if tool is not string -%}\n            {%- set tool = tool | tojson -%}\n        {%- endif -%}\n        {%- set ns.system_prompt = ns.system_prompt + tool -%}\n        {%- if not loop.last -%}\n            {%- set ns.system_prompt = ns.system_prompt + \", \" -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns.system_prompt = ns.system_prompt + \"]\" -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- set thinking = message.thinking or message.reasoning or message.reasoning_content -%}\n        {%- set thinking = thinking if thinking is string else \"\" -%}\n        {%- if thinking and keep_thinking -%}\n            {{- \"<think>\" + thinking + \"</think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking and \"</think>\" in content -%}\n            {%- set content = content.split(\"</think>\")[-1] | trim -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"<|im_start|>assistant\\n\" -}}\n{%- endif -%}\n",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "decision_type": "lfm2-d1",
+    "totalFileSize": 5403160160
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6dfc9f2d45ac13eb22837bf329641631c71f5d9d",
+      "size": 3115
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "53fbf789adb98e74b63a660984f82bf113411af5",
+      "size": 6120
+    },
+    {
+      "rfilename": "d1-3B-BF16.gguf",
+      "blobId": "77d9e4a83ea7fcd8072c9615515d57bd4fe47276",
+      "size": 5403160160,
+      "lfs": {
+        "sha256": "a03fdd5b13a93e0c5340ffdded985fbf59fb8d8f1b59ecc367986bb9a8ff2af6",
+        "size": 5403160160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ1_M.gguf",
+      "blobId": "d89db9436ca1eb413ec4a021d46e8e43d24ebecc",
+      "size": 731574144,
+      "lfs": {
+        "sha256": "7009e75cd0da0d10f7527c99d09e4f90c9a516f5f1b8d42faccc243feb9f4ebb",
+        "size": 731574144,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ1_S.gguf",
+      "blobId": "14a74bf462de8992a165707be75ef3e360a6087e",
+      "size": 677040000,
+      "lfs": {
+        "sha256": "0d54844f5283b81350f814fcbff76a12e3609f02757c9f75b08dd2e2b5ebfd47",
+        "size": 677040000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ2_M.gguf",
+      "blobId": "961cc1ea8436e0b8ddccabe9dacd1bbb31b44fa9",
+      "size": 981217152,
+      "lfs": {
+        "sha256": "33352ffe5e2a2f2a566f0c7d0b456f04c07d7838ef06a159c8e144cefb4b4ba7",
+        "size": 981217152,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ2_S.gguf",
+      "blobId": "503fce83f5d3aa5b3d45ba4bfa28d7890b717542",
+      "size": 908504960,
+      "lfs": {
+        "sha256": "7d67ecc7ffb87743fb4fd68c9a948adc427d813648a0177826591ea66c30455d",
+        "size": 908504960,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ2_XS.gguf",
+      "blobId": "2c0b8f1fd53b41555245a5168013c7057b872531",
+      "size": 896225152,
+      "lfs": {
+        "sha256": "23ef80b1ee81356e71f26c23cf2004f32f3bfcd5cc1a706f6dec3adda84c6bce",
+        "size": 896225152,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ2_XXS.gguf",
+      "blobId": "78b7af578f870cd29f92be647b65ead96136cb7b",
+      "size": 822464384,
+      "lfs": {
+        "sha256": "1ec9e9b13dca152dcc622a370cc11e8adaa3eb0008be0a7de926f9d176dceb36",
+        "size": 822464384,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ3_M.gguf",
+      "blobId": "1ba98d41b565bda9dadf08e5f3410e2a47ec31ce",
+      "size": 1284870016,
+      "lfs": {
+        "sha256": "1eb74f0d1970a155b5b60792f8218692296006aa0e0520e3fac662dcbbd727eb",
+        "size": 1284870016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ3_S.gguf",
+      "blobId": "ec3880379cbb96c6e1635b394aba30b776b0f4f0",
+      "size": 1270525824,
+      "lfs": {
+        "sha256": "85d24afb001fb231a131e38af6c6fccc31616f8c0e850fabd5b6e4789392b268",
+        "size": 1270525824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ3_XS.gguf",
+      "blobId": "4d38021223bdcde424d1b4d4f39eaf34a738ea7d",
+      "size": 1221078912,
+      "lfs": {
+        "sha256": "4242f7c1bd8d78f6e797d144da293a94d5309f72774ef8cc75971db531e26c57",
+        "size": 1221078912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ3_XXS.gguf",
+      "blobId": "41bf366f84b3aae27890632d2b0157529d8b875a",
+      "size": 1120530304,
+      "lfs": {
+        "sha256": "ac04d597345fd0a308b327b59a05c26df3af10dcf5183860198347011af223d6",
+        "size": 1120530304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ4_NL.gguf",
+      "blobId": "964d131238e8e2a1dc4e388dd82562f08e64030c",
+      "size": 1593896832,
+      "lfs": {
+        "sha256": "4e9e904a0919ff07556735712e427882e52e76e94e2cf0111adb82e157560fed",
+        "size": 1593896832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-IQ4_XS.gguf",
+      "blobId": "259c39df580a5f90516367b7ab1494c88997a194",
+      "size": 1517809536,
+      "lfs": {
+        "sha256": "99e56f23caaf1f01448cc5c60112588a7deb2086df98f89677facf368525d1d9",
+        "size": 1517809536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q1_0.gguf",
+      "blobId": "6701054dc4fe569da87627479ac7f6a5a473c186",
+      "size": 566718336,
+      "lfs": {
+        "sha256": "cc05e995f6389b415e1dc714f198a119a090873f2c8e80a260f729442be28cc5",
+        "size": 566718336,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q2_0.gguf",
+      "blobId": "4454aa3d50675dc786b70cd1807ac9c0e27c2683",
+      "size": 909111168,
+      "lfs": {
+        "sha256": "de3ed6f2dd47fc01d671b5e5a2b81c5ab1c48aa6f4ddeb2e2a8f5a3b5b0ca2e3",
+        "size": 909111168,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q2_K.gguf",
+      "blobId": "e898bf1f1f1e28e6655599573a3d2c315d66cbd9",
+      "size": 1094594432,
+      "lfs": {
+        "sha256": "354deac92eff62a0c8b9d22425cd7f7106052447c57f4b068ef28b3a106e903f",
+        "size": 1094594432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q2_K_S.gguf",
+      "blobId": "0837a70428385d612b82f3975ab6bfe4f7d73627",
+      "size": 1038724992,
+      "lfs": {
+        "sha256": "5d59c7611221b1e1036033f201ec05eead93718f4e5fb6679364c1119306c608",
+        "size": 1038724992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q3_K_L.gguf",
+      "blobId": "df87f0843c929509d196b395a82cc9cf982a2bb8",
+      "size": 1451650944,
+      "lfs": {
+        "sha256": "137a7cf230ad1b77794eed91c22d495cdc75d9a6e9ceca0465cbb6d71158511d",
+        "size": 1451650944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q3_K_M.gguf",
+      "blobId": "b12b2564c879b820ded848a13088a3822e40ca34",
+      "size": 1366847360,
+      "lfs": {
+        "sha256": "d7e4038d6dff30e5280d7c626c573d81a812322a6fc260df2fc0bc3b1cc030c1",
+        "size": 1366847360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q3_K_S.gguf",
+      "blobId": "38b8163d13de1a1c5dfe307a989f0ec7b58966dc",
+      "size": 1270525824,
+      "lfs": {
+        "sha256": "031199185b3a87284f2e50caab0f2d67d2cf6ab7535f6fe6e107f434d057c974",
+        "size": 1270525824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q4_0.gguf",
+      "blobId": "ad043129e01d915c503b32704969e0339c8a43e3",
+      "size": 1593896544,
+      "lfs": {
+        "sha256": "7b0546192453bcedec70073d7d23668b89b1c82dac5fe285e84f5ba1f8222f7c",
+        "size": 1593896544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q4_1.gguf",
+      "blobId": "ff465d03a2a69f95df21fa0069c01a8ecdff05c9",
+      "size": 1746071136,
+      "lfs": {
+        "sha256": "f234089d0214cc1910d4ec2c62b17f76e9ef2bce9cef646418780f750aad729b",
+        "size": 1746071136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q4_K_M.gguf",
+      "blobId": "361838ad11e895a2442ac9b1f87a81a178a88e6f",
+      "size": 1674456960,
+      "lfs": {
+        "sha256": "eacb2416b209d0f626bdf521dc5779abf5e6e586a148e9b7602bed9a4a04c4e9",
+        "size": 1674456960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q4_K_S.gguf",
+      "blobId": "905dcf220745f20d726b0a3c7de1437fb6fdcdbb",
+      "size": 1602678656,
+      "lfs": {
+        "sha256": "1151d41322f422690e42476242d36cc1b11e6099c096fbd83d6a08871a33da4f",
+        "size": 1602678656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q5_0.gguf",
+      "blobId": "5135d4f98725a0048d998a403daba56559daf756",
+      "size": 1898245728,
+      "lfs": {
+        "sha256": "27d828bdaa16541e4375e3e790042d01c7ad395d7129aad6faffe359bb98f683",
+        "size": 1898245728,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q5_1.gguf",
+      "blobId": "36c8dfa576f63027bf15dd7eaeec1e7ceb2494f3",
+      "size": 2050420320,
+      "lfs": {
+        "sha256": "f0d85163da18381ab2be81fcc22eb765565569d08275a04cf5bb67f5ae56c748",
+        "size": 2050420320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q5_K_M.gguf",
+      "blobId": "e71ca68409d0103b95198e70730f645c098dc577",
+      "size": 1939746688,
+      "lfs": {
+        "sha256": "33f611e169fbd1adccc0a06faa1379db9df89059ec5d8ab252f6c0d6b9aa90ff",
+        "size": 1939746688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q5_K_S.gguf",
+      "blobId": "bbb258ce1ba167c67c77e7b41fdaece4a8dc94af",
+      "size": 1898246016,
+      "lfs": {
+        "sha256": "ed97d14f0f0492cce603efbf52f6262367e875a879ab268984b328f2f8c3402a",
+        "size": 1898246016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q6_K.gguf",
+      "blobId": "1230819a804928af7145802bd6d435003885eb98",
+      "size": 2221616736,
+      "lfs": {
+        "sha256": "e01921c840f3e05997aeaafd80bc04d0d36eb19da23cf9605995de8806c0981b",
+        "size": 2221616736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q8_0.gguf",
+      "blobId": "69cd260fa8d3be0bee0a1b8fc8a65e263d476e4b",
+      "size": 2874781280,
+      "lfs": {
+        "sha256": "daae8c398a8d0be2fd55324b2c95183ecd5f68aa0c6934045e388fadd675dd22",
+        "size": 2874781280,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-12T15:52:40.000Z",
+  "usedStorage": 45627230496
+}

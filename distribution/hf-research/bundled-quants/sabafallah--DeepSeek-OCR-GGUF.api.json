@@ -1,0 +1,107 @@
+{
+  "_id": "692f48d66405f1d79dccfda2",
+  "id": "sabafallah/DeepSeek-OCR-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "base_model:deepseek-ai/DeepSeek-OCR",
+    "base_model:quantized:deepseek-ai/DeepSeek-OCR",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2020,
+  "likes": 13,
+  "modelId": "sabafallah/DeepSeek-OCR-GGUF",
+  "author": "sabafallah",
+  "sha": "d26779bcd1cb301fec3ff82adc672f18384776fc",
+  "lastModified": "2026-05-29T16:43:11.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "deepseek-ai/DeepSeek-OCR"
+    ]
+  },
+  "gguf": {
+    "total": 2934734080,
+    "architecture": "deepseek2-ocr",
+    "context_length": 8192,
+    "chat_template": "{% for m in messages %}{{m['content']}}{% endfor %}",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 5876578112
+  },
+  "siblings": [
+    {
+      "rfilename": ".DS_Store",
+      "blobId": "5008ddfcf53c02e82d7eee2e57c38e5672ef89f6",
+      "size": 6148
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "be4022868e76fa9fe9fe35c749d653f337326095",
+      "size": 2137
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "413e57ee594d7f1bea87fb953d871a791f8d6a22",
+      "size": 1703
+    },
+    {
+      "rfilename": "deepseek-ocr-Q4_K_M.gguf",
+      "blobId": "712d102ab58f33d0151f448df900c387a38086c2",
+      "size": 1950326592,
+      "lfs": {
+        "sha256": "f2eaee9a439f66abcacdde782cdde1ed6c94eee4edd178bde799968203ae6d0c",
+        "size": 1950326592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "deepseek-ocr-bf16.gguf",
+      "blobId": "3d2942cdf17a68aa7355250d5aa18b78ca8c74c6",
+      "size": 5876578112,
+      "lfs": {
+        "sha256": "b36ae07925d06a3675b3409c8babbd8023c004c6ee2c87137046809e8f74f13c",
+        "size": 5876578112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "deepseek-ocr-q8_0.gguf",
+      "blobId": "0b29105b69fbf1ebb6f0789d22a04d71c1b5e0d5",
+      "size": 3126139712,
+      "lfs": {
+        "sha256": "81ede3e256230707dccf7fa052570c3a939d57db99de655f43cbb1a830d14d92",
+        "size": 3126139712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-deepseek-ocr-bf16.gguf",
+      "blobId": "494cddae8153b4c6197217d309fa812beb83e5f4",
+      "size": 826425472,
+      "lfs": {
+        "sha256": "4caeed8b6c3c7d25dfebccfdb5cf34d6ae540ef4dc4fa2b9842b69cfa50ecbe2",
+        "size": 826425472,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-deepseek-ocr-q8_0.gguf",
+      "blobId": "8fc4ba0262f86f1e2be530bfd3be7f3095864822",
+      "size": 461226112,
+      "lfs": {
+        "sha256": "213a55f433ad3d5c17d60b3b3f2d4bcdc7f2a8958ce3e3c8910791808bb5b390",
+        "size": 461226112,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-12-02T20:15:18.000Z",
+  "usedStorage": 85622690624
+}

@@ -1,0 +1,261 @@
+{
+  "_id": "6889ec2029577a514ed82d21",
+  "id": "dots-studio/dots.ocr",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "dots_ocr",
+  "tags": [
+    "dots_ocr",
+    "safetensors",
+    "text-generation",
+    "image-to-text",
+    "ocr",
+    "document-parse",
+    "layout",
+    "table",
+    "formula",
+    "transformers",
+    "custom_code",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "zh",
+    "multilingual",
+    "license:mit",
+    "eval-results",
+    "region:us"
+  ],
+  "downloads": 504913,
+  "likes": 1344,
+  "modelId": "dots-studio/dots.ocr",
+  "author": "dots-studio",
+  "sha": "c0111ce6bc07803dbc267932ffef0ae3a51dc951",
+  "lastModified": "2025-10-31T08:49:31.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "DotsOCRForCausalLM"
+    ],
+    "model_type": "dots_ocr",
+    "auto_map": {
+      "AutoConfig": "configuration_dots.DotsOCRConfig",
+      "AutoModelForCausalLM": "modeling_dots_ocr.DotsOCRForCausalLM"
+    },
+    "processor_config": {
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{%- for m in messages %}{%- if m.role == 'system' %}{{- '<|system|>' + m.content + '<|endofsystem|>\n' }}{%- elif m.role == 'user' %}{% if m.content is string %}{{- '<|user|>' + m.content + '<|endofuser|>' }}{% else %} {% for content in m.content %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|img|><|imgpad|><|endofimg|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|img|><|video_pad|><|endofimg|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}{%- endif %}{%- elif m.role == 'assistant' %}{{- '<|assistant|>' + m.content }}{%- if not loop.last %}{{- '<|endofassistant|>' }}{%- endif %}{%- endif %}{%- endfor %}{%- if messages[-1].role != 'assistant' %}{{- '<|assistant|>' }}{%- endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{%- for m in messages %}\n    {%- if m.role == 'system' %}\n        {{- '<|system|>' + m.content + '<|endofsystem|>\\n' }}\n    {%- elif m.role == 'user' %}\n        {{- '<|user|>' + m.content + '<|endofuser|>' }}\n    {%- elif m.role == 'assistant' %}\n        {{- '<|assistant|>' + m.content }}\n        {%- if not loop.last %}\n            {{- '<|endofassistant|>' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if messages[-1].role != 'assistant' %}\n    {{- '<|assistant|>' }}\n{%- endif %}",
+      "eos_token": "<|endoftext|>",
+      "pad_token": "[PAD]",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "mit",
+    "library_name": "dots_ocr",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "image-to-text",
+      "ocr",
+      "document-parse",
+      "layout",
+      "table",
+      "formula",
+      "transformers",
+      "custom_code"
+    ],
+    "language": [
+      "en",
+      "zh",
+      "multilingual"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_dots_ocr.DotsOCRForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "4d433fabf5fc5d02cb6236e567341722c4f8331b",
+      "size": 80471
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6ddfcf16d1d61060cd8699b37f196653139293d7",
+      "size": 33567
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "87a662f7ffedeacec6a2bc7acfb60f638d7eb72d",
+      "size": 1109
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "7ea2c09f6a238715eeaa9e649bb2556fe204c59e",
+      "size": 1474
+    },
+    {
+      "rfilename": "configuration_dots.py",
+      "blobId": "f128b8a5c6190f89efafd75d1d0b0d72d9637d39",
+      "size": 3038
+    },
+    {
+      "rfilename": "dots.ocr LICENSE AGREEMENT",
+      "blobId": "69c62cc31e4eacdb4c9100b90a805f7d5d74210c",
+      "size": 15532
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "c6f6906647405a39703b00f42eafcc3e15b0fac7",
+      "size": 74
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "616497e001004956bf67fc9bb1a436fc8fbdc503",
+      "size": 4292758192,
+      "lfs": {
+        "sha256": "ea1d532184f3adf5cbcfcc00b2cf5b2abfa6fe182768a3ae63d441a9b5fc99ac",
+        "size": 4292758192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "5b10c0d22f8d57b26bdaf763ee2806e7d904b465",
+      "size": 1785673544,
+      "lfs": {
+        "sha256": "26ab1ec6c8b4e4116befbd59af42159f1dbcb0ad0c045a15e890bb2f6e8b0dae",
+        "size": 1785673544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "8a62c0793d30c8ab47418a5198485939ff4acb35",
+      "size": 52250
+    },
+    {
+      "rfilename": "modeling_dots_ocr.py",
+      "blobId": "79d1c2561c0fba50fbba002e332d992432ed570a",
+      "size": 4981
+    },
+    {
+      "rfilename": "modeling_dots_ocr_vllm.py",
+      "blobId": "a8ba8d066620dc811695feaf7936039052b4da5f",
+      "size": 17510
+    },
+    {
+      "rfilename": "modeling_dots_vision.py",
+      "blobId": "42a570e49f6649f37bb31c2e3da247044419987b",
+      "size": 20040
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "c5e511aefbe5e8e927ff02410fcaee3d31fabe66",
+      "size": 432
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ec36c2f94529d5711c1b4ce135b723bdfe85ee77",
+      "size": 494
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "54a3cca8cde7c075fa20b941ceeb28eb4e7acc4d",
+      "size": 7036028
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "a7055e5dbff6ce5c1b594ecbf9c2a9e9e83199bd",
+      "size": 9310
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "finebooks/bhl-ocr-leaderboard",
+    "fastgpu/vram-and-gpu-cost-calculator",
+    "MohamedRashad/Dots-OCR",
+    "VIDraft/global-llm-leaderboard",
+    "prithivMLmods/Super-OCRs-Demo",
+    "ysharma/OPF-Image-Anonymizer",
+    "trevorpfiz/VLM-playground",
+    "baohuynhbk14/Dots-mOCR_DEMO",
+    "chanukya-aiplanet/Arabic-OCR",
+    "helenai/check-optimum-intel-support",
+    "Pradeep018/Dots-OCR",
+    "lcdkhoa/bio-rag-be",
+    "redhairedshanks1/dots-ocr",
+    "Ahmed-a-Labib/Arabic-OCR",
+    "openfree/Dots-OCR",
+    "algoryn/kybocr",
+    "moahmmed1245/dots_ocra",
+    "ykxdyy/dots-ocr-demo",
+    "wjbmattingly/Dots-OCR-larger",
+    "algoryn/dots-ocr-idcard",
+    "arnabkar101/dotsocr-space",
+    "MrGo2/dots-ocr",
+    "VanguardAI/Arabic_OCR",
+    "isseygino911/dots-ocr-parser",
+    "yahtzee/Dots-OCR",
+    "phungta/dotsocr-gradio-api",
+    "Hyunsang/pdf_to_pptx",
+    "hexiydev/Dots-OCR",
+    "ZuiFengTing/Multimodal-OCR3",
+    "notiv/Super-OCRs-Demo",
+    "kaldan/Dots-OCR",
+    "openpecha/bec-dot.orc-api",
+    "giarom/Multimodal-OCR3",
+    "mrbubbaz/dots-ocr",
+    "kunal-maurya/BookLeaf-Cover-Validator",
+    "Maksim-Oncoshot/Qwen3.5-VL-Space-Sample",
+    "ysharma/OPF-Image-Anonymizer-cp",
+    "mike2505/Super-OCRs-Demo",
+    "Kietttqe/demoocr-dotsocr-ocr",
+    "zussnikita/inochi-ocr-dots",
+    "Syncre/arabic-audio-reader-worker",
+    "Karkavelraja/OCR_STUDIO",
+    "pranaysuyash/shopstack"
+  ],
+  "createdAt": "2025-07-30T09:55:44.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 3039179264
+    },
+    "total": 3039179264
+  },
+  "usedStorage": 6078431736
+}

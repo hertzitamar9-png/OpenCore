@@ -1,0 +1,211 @@
+{
+  "_id": "69782976c30195de70f3a7ba",
+  "id": "deepseek-ai/DeepSeek-OCR-2",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "deepseek_vl_v2",
+    "feature-extraction",
+    "deepseek",
+    "vision-language",
+    "ocr",
+    "custom_code",
+    "image-text-to-text",
+    "multilingual",
+    "arxiv:2601.20552",
+    "arxiv:2510.18234",
+    "license:apache-2.0",
+    "eval-results",
+    "region:us"
+  ],
+  "downloads": 529743,
+  "likes": 1146,
+  "modelId": "deepseek-ai/DeepSeek-OCR-2",
+  "author": "deepseek-ai",
+  "sha": "aaa02f3811945a91062062994c5c4a3f4c0af2b0",
+  "lastModified": "2026-02-03T00:33:19.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "DeepseekOCR2ForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "modeling_deepseekocr2.DeepseekOCR2Config",
+      "AutoModel": "modeling_deepseekocr2.DeepseekOCR2ForCausalLM"
+    },
+    "model_type": "deepseek_vl_v2",
+    "num_experts_per_tok": 6,
+    "tokenizer_config": {
+      "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+      "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+      "pad_token": "<\uff5c\u2581pad\u2581\uff5c>",
+      "unk_token": null,
+      "use_default_system_prompt": false
+    }
+  },
+  "cardData": {
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "multilingual"
+    ],
+    "tags": [
+      "deepseek",
+      "vision-language",
+      "ocr",
+      "custom_code"
+    ],
+    "license": "apache-2.0",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "custom_class": "modeling_deepseekocr2.DeepseekOCR2ForCausalLM",
+    "pipeline_tag": "feature-extraction"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "44fdba96bd2787ebd5cd27283a090512722d3144",
+      "size": 1571
+    },
+    {
+      "rfilename": "LICENSE.txt",
+      "blobId": "78a3bb92155448004aca4c07b09613808f9585df",
+      "size": 11342
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "175cf52ef29da8fea09f3eff3e9946deeb1c1f49",
+      "size": 4143
+    },
+    {
+      "rfilename": "assets/fig1.png",
+      "blobId": "bf3cd1d8aadc26c4e4776fa8d25d9100330ed30d",
+      "size": 140796,
+      "lfs": {
+        "sha256": "bfa3301b397df240c5eba7206c7865cae3d9aaf6674a6c8a68904a9c98bcbc77",
+        "size": 140796,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "bf67e90876829f88e146c9873e2537ba77f2d203",
+      "size": 2588
+    },
+    {
+      "rfilename": "configuration_deepseek_v2.py",
+      "blobId": "a8622c20101ed06940eb7fb6164babbc499bc524",
+      "size": 10646
+    },
+    {
+      "rfilename": "conversation.py",
+      "blobId": "65c295e81cd804080ec238b31d1922f33e1f9405",
+      "size": 9253
+    },
+    {
+      "rfilename": "deepencoderv2.py",
+      "blobId": "ef3635fe6d6c9b6a5a97da2acd05ad058c8d8056",
+      "size": 36299
+    },
+    {
+      "rfilename": "model-00001-of-000001.safetensors",
+      "blobId": "0261ddab8d5dfa1c59aebf777326e4d2fb897ccb",
+      "size": 6778573880,
+      "lfs": {
+        "sha256": "d8ff67a424ba6f4dd077885eb9d6a05d2537e76fe5491f0e2a9b712f8c8870fa",
+        "size": 6778573880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "7d80f3c53327ff3fead4558299cd8786c00e34dd",
+      "size": 247401
+    },
+    {
+      "rfilename": "modeling_deepseekocr2.py",
+      "blobId": "9c69562aa4d454017379d7a0335d37ba618b054c",
+      "size": 39226
+    },
+    {
+      "rfilename": "modeling_deepseekv2.py",
+      "blobId": "ff008470d58b98d3f8304ecfb6ee1bd04c877739",
+      "size": 82224
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "9153af2ad5e59ad9cf24fed29cf286fcf10d389a",
+      "size": 460
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "d59d312be868edc63b195e19e256c730dba685ad",
+      "size": 801
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "c93a1c4d2ecf31bb5a9ec39eb73dfbf915aaf77e",
+      "size": 9979544
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "ba9d4175d69cde58ad9f68a76a4758df091eaffa",
+      "size": 165938
+    }
+  ],
+  "spaces": [
+    "finebooks/bhl-ocr-leaderboard",
+    "merterbak/DeepSeek-OCR-Demo",
+    "aquanode/gpu-vram-calculator",
+    "prithivMLmods/DeepSeek-OCR-2-Unlimited-OCR",
+    "baohuynhbk14/DeepSeek-OCR-2-DEMO",
+    "mcikalmerdeka/vlms-ocr-playground",
+    "notiv/DeepSeek-OCR-Demo",
+    "notiv/DeepSeek-OCR-2-Demo",
+    "Yaxum/deepseek-ocr-arsredovisning",
+    "Dustinsystem/ocrtester",
+    "DocUA/Local_OCR_Demo",
+    "wayofloser/DeepSeek-OCR-Demo-cpu",
+    "grechzed/DeepSeek-OCR-Demo",
+    "bdsmgdjfv/ghhhj",
+    "bdsmgdjfv/noihh",
+    "lifeengines/DeepSeek-OCR-Demo",
+    "Punnya1/Test1",
+    "lsextractor/deepseek-ocr2-api",
+    "cga101/DeepSeek-OCR-Demo",
+    "o-misirlioglu/DeepSeek-OCR-2-Demo",
+    "o-misirlioglu/DeepSeek-OCR-Demo2",
+    "anhle/DeepSeek-OCR-Demo",
+    "ricklon/DeepSeek-OCR-2-Math",
+    "fengchen31/wardrobe-os-ml",
+    "Pxeim/DeepSeek-OCR-Demo-361",
+    "pendax/DeepSeek-OCR-Demo",
+    "Zienab/ocr",
+    "Miafwmi/OCR",
+    "ZienabM/ocr",
+    "zussnikita/inochi-ocr-deepseek-v2",
+    "Syncre/arabic-audio-reader-worker",
+    "pranaysuyash/shopstack",
+    "phan-kim-tu/DeepSeek-OCR-Demo",
+    "sadimanna/paper_summarizer",
+    "dayanand007/DeepSeek-OCR-2-Unlimited-OCR",
+    "Arun0914/arabic-ocr-deepseek",
+    "DhruvTambekar24/deepseek-ocr-2-demo1",
+    "AiQademy/DeepSeek-OCR-Demo",
+    "jetlan/DeepSeekOCR"
+  ],
+  "createdAt": "2026-01-27T02:56:54.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 3389119360
+    },
+    "total": 3389119360
+  },
+  "usedStorage": 6779402071
+}

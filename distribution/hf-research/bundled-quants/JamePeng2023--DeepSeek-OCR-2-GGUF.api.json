@@ -1,0 +1,111 @@
+{
+  "_id": "6a19d147ca63123d87c18adc",
+  "id": "JamePeng2023/DeepSeek-OCR-2-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:deepseek-ai/DeepSeek-OCR-2",
+    "base_model:quantized:deepseek-ai/DeepSeek-OCR-2",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 273,
+  "likes": 0,
+  "modelId": "JamePeng2023/DeepSeek-OCR-2-GGUF",
+  "author": "JamePeng2023",
+  "sha": "286987a0bddf167887f340b933b0db50df2042c7",
+  "lastModified": "2026-05-29T18:18:04.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "deepseek-ai/DeepSeek-OCR-2"
+    ],
+    "pipeline_tag": "image-text-to-text"
+  },
+  "gguf": {
+    "total": 2934734080,
+    "architecture": "deepseek2-ocr",
+    "context_length": 8192,
+    "chat_template": "{% for m in messages %}{{m['content']}}{% endfor %}",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 5876578208
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "032ba211fe54e00b6e48bb73f5de5e8957926697",
+      "size": 1777
+    },
+    {
+      "rfilename": "DeepSeek-OCR-2-BF16.gguf",
+      "blobId": "5d9671f46876723240a61c0d0ea2afff40c0d7d0",
+      "size": 5876578208,
+      "lfs": {
+        "sha256": "9ae1b623757ee7880f2aa23759686c7807603740187671e36490a1567e109922",
+        "size": 5876578208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-OCR-2-Q8_0.gguf",
+      "blobId": "4341642362c9807e621cf85f1c77f98acb436921",
+      "size": 3126139808,
+      "lfs": {
+        "sha256": "d4ef7c429ee461c7ae7f23fa2ab4e5216d025c59d70d7e34314d8e669d150e32",
+        "size": 3126139808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "cffc8d25da4dd2dddd768f1649ca07ff365c2b0b",
+      "size": 2057
+    },
+    {
+      "rfilename": "mmproj-DeepSeek-OCR-2-BF16.gguf",
+      "blobId": "aa8929c49c21000917e4a2d5df63e9951f771d17",
+      "size": 929037632,
+      "lfs": {
+        "sha256": "b65e8460acc82dd4e8546206c5abd1abed9c5c582223731ce1585689d95f5cdb",
+        "size": 929037632,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-DeepSeek-OCR-2-Q8_0.gguf",
+      "blobId": "e9986234f5e50b50e5d3c5af636b9e095e2e2dd3",
+      "size": 512537792,
+      "lfs": {
+        "sha256": "46efe1304f581869f3b067eb77b1151dc0daf32bc25ef644fc7d505f4153a545",
+        "size": 512537792,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-05-29T17:47:51.000Z",
+  "usedStorage": 10444293440
+}

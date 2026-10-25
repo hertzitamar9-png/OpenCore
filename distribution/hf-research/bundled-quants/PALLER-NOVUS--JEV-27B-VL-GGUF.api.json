@@ -1,0 +1,730 @@
+{
+  "_id": "6ad0e6dc271320ed43250159",
+  "id": "PALLER-NOVUS/JEV-27B-VL-GGUF",
+  "private": false,
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "cpu",
+    "multimodal",
+    "evaluation",
+    "research",
+    "base_model:autotrust/JEV-27B-VL",
+    "base_model:quantized:autotrust/JEV-27B-VL",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "decision-model",
+    "conversational"
+  ],
+  "downloads": 2756,
+  "likes": 1,
+  "modelId": "PALLER-NOVUS/JEV-27B-VL-GGUF",
+  "author": "PALLER-NOVUS",
+  "sha": "9346334e5febb8a32df86a16f8e4f5e3b8aa7b7b",
+  "lastModified": "2026-10-15T17:01:14.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "tags": [
+      "gguf",
+      "cpu",
+      "multimodal",
+      "evaluation",
+      "research"
+    ],
+    "license": "apache-2.0",
+    "library_name": "gguf",
+    "base_model": "autotrust/JEV-27B-VL",
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 26895998464,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/srv/jev27-q3/lowbit-20261008/calibration/bf16-text-v1.imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "decision_type": "jev",
+    "totalFileSize": 7631086784
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "1f33a6ced98681a8bfd45d2e93cdcbfc9b89627d",
+      "size": 3073
+    },
+    {
+      "rfilename": ".gitignore",
+      "blobId": "d14070c20bdb4977a80747abeb7736565f4bf33d",
+      "size": 63
+    },
+    {
+      "rfilename": "JEV-27B-VL-IQ1_M.gguf",
+      "blobId": "f93e16f9432642567d58c909bb9cfb0b2b704e9d",
+      "size": 7631086784,
+      "lfs": {
+        "sha256": "827ce1023f29b446105791e7ef967da30d572bc026a8a3e168e0b88c0fbb0647",
+        "size": 7631086784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-IQ2_XS.gguf",
+      "blobId": "6e80ac0556205d6af36000f72063749161504e8c",
+      "size": 9090593984,
+      "lfs": {
+        "sha256": "6abfc73d4f3bcb71b9879a408187ae174234d52926923330ae71afcb89660c8b",
+        "size": 9090593984,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q1_0.gguf",
+      "blobId": "185c817c8028cad636b501e583f59ecd688291ff",
+      "size": 4667610016,
+      "lfs": {
+        "sha256": "6874a94608d16b3476f375f587668213d26558d9b8a92d61cf69dbd97394b362",
+        "size": 4667610016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q2_K.gguf",
+      "blobId": "0239dab00160b292982ebe20fe76fb19284b80fe",
+      "size": 10711667616,
+      "lfs": {
+        "sha256": "373cc856938e2cafbe36a7c1bde4fb7aa7278af5ebbc0298fb43d96dc692912f",
+        "size": 10711667616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q3_K_M.gguf",
+      "blobId": "a9fbe25b37bedf45670286f58d0c4196c1d3a8f6",
+      "size": 13301445536,
+      "lfs": {
+        "sha256": "4d6133527df5545c0494b3a9e43c9dba7302953d9e78993f074f8b741dd69c32",
+        "size": 13301445536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q3_K_S.gguf",
+      "blobId": "2eb9a39e0ac74eda4da895e09e3f8294142c3716",
+      "size": 12073956256,
+      "lfs": {
+        "sha256": "90a6c811c8a83497a288e3b955bc571e3d207f64b98d8016ed4366973c8ac9ba",
+        "size": 12073956256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q4_K_M.gguf",
+      "blobId": "a6b4114c99f5ab344ce5c1f6d163448e1b67f750",
+      "size": 16547402656,
+      "lfs": {
+        "sha256": "0f3991bc19b3eb56e3d449de07c7f13bced03bc19033a9b2bf34ec7f91af4e4e",
+        "size": 16547402656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q5_K_M.gguf",
+      "blobId": "a87790bec85ec4e8bb7944f5488aeba8029cc330",
+      "size": 19231101856,
+      "lfs": {
+        "sha256": "d16ae120cc2484707fcd743e8b88cd9f1c4a6835ba0f725ebc5a6bd63a8a9b4c",
+        "size": 19231101856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q6_K.gguf",
+      "blobId": "d70093ebcd417e63a380c9633c8715635b1bcbdd",
+      "size": 22082532256,
+      "lfs": {
+        "sha256": "e1051de567bf8bda8e8c290d13db422abd56eee3f87651e34df4366642459e98",
+        "size": 22082532256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-Q8_0.gguf",
+      "blobId": "c05eb93991f4e71b7c487a379f8d5f2be950a2dc",
+      "size": 28595766176,
+      "lfs": {
+        "sha256": "d6a1a89ee284b33cc5e7b3be538a17d1010e838319aabb4a286e8292d53764e5",
+        "size": 28595766176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "JEV-27B-VL-TQ1_0.gguf",
+      "blobId": "954031ecc5328913f0f4893a07f3e7a5df778859",
+      "size": 6916129696,
+      "lfs": {
+        "sha256": "f100fdb212dd8a6c25334f5cf15a086c2b3335d65b8337d833c9f96162225547",
+        "size": 6916129696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f938136e3adacfd92be087f6e113b5d6d97f678f",
+      "size": 11544
+    },
+    {
+      "rfilename": "LICENSE-llama-cpp.txt",
+      "blobId": "e7dca554bcb802f98408383a864404e3aa4eacca",
+      "size": 1078
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "c6539e9e14ec2a022afbe63ac5b537bdd9a92888",
+      "size": 1584
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6abd09fd8a9f335ffbef19f74f4c1e0ecbc5c7f2",
+      "size": 17229
+    },
+    {
+      "rfilename": "SHA256SUMS.bundle",
+      "blobId": "c572b57b4cf5725d91a3e2008460301110291d6e",
+      "size": 9294
+    },
+    {
+      "rfilename": "SHA256SUMS.fixtures",
+      "blobId": "abb44a0a64def2f4e3bf5cc943279bffc6de2351",
+      "size": 285
+    },
+    {
+      "rfilename": "SHA256SUMS.models",
+      "blobId": "3a6a0226f51fd45542898531a0b1b255d7eda1cb",
+      "size": 1152
+    },
+    {
+      "rfilename": "assets/novus-nubo-cover-round-glasses.png",
+      "blobId": "2ea300598a84d39b7723225c5300358d5548ab10",
+      "size": 1605375,
+      "lfs": {
+        "sha256": "3c0ea3f202309a16052e88c124ccabd588820f7ff73d9713ccc947e6343c38e9",
+        "size": 1605375,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/novus-nubo-cover-v1.png",
+      "blobId": "98a0117751a7c7840a2297a5fbad74effc3c0ed7",
+      "size": 1491098,
+      "lfs": {
+        "sha256": "99d51d9d2cc640b82d211f126bc8994d29e241a56881980202c3c5117107c65e",
+        "size": 1491098,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/novus-nubo-cover-v2.png",
+      "blobId": "ae44ee07d540e08029b1daf434ba07866b87dbe8",
+      "size": 1587818,
+      "lfs": {
+        "sha256": "a90f212352c17f34a3f2db086614354c301b0697add9f4e1a272d4003b3dddbc",
+        "size": 1587818,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-comparison.png",
+      "blobId": "c7c0dd722dfdd61f6428170a3270c9c8ea4b88c4",
+      "size": 131591,
+      "lfs": {
+        "sha256": "04ef4932f82f3da879c6dd3108fd8d2f0b88d0347d57c7f1865d2295746c44b8",
+        "size": 131591,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-comparison.svg",
+      "blobId": "7b51b42619d65e8a0b5f361e089106edab9a4cd2",
+      "size": 126966
+    },
+    {
+      "rfilename": "assets/novus-white-cover.png",
+      "blobId": "81e318ef34f4438c441937c247c21ca701bb5a63",
+      "size": 105456,
+      "lfs": {
+        "sha256": "9998c2f4996ca7dbbfa0145c4a0942999f1e3388c6526bc0a2fb96c6c74a6e9a",
+        "size": 105456,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-cover.svg",
+      "blobId": "629382117653ee3b169471e5299604ad6ebd2e40",
+      "size": 108525
+    },
+    {
+      "rfilename": "assets/novus-white-evidence.png",
+      "blobId": "c133df0d9f299e6e998efe7b1d5f8b01473ba343",
+      "size": 124636,
+      "lfs": {
+        "sha256": "42e9ec4ec85d792d4c39c26adedccada05b0621783555eaaaac355156f952224",
+        "size": 124636,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-evidence.svg",
+      "blobId": "fadbe2c9981c2c6f5496a14b2bcf3196a0059925",
+      "size": 119796
+    },
+    {
+      "rfilename": "assets/novus-white-footprint.png",
+      "blobId": "9b0e0d575ca0260a6ec6e0f13c3216bb131d50bc",
+      "size": 92268
+    },
+    {
+      "rfilename": "assets/novus-white-footprint.svg",
+      "blobId": "77a79006b7f3f0499599545a6d19d224b135911b",
+      "size": 101699
+    },
+    {
+      "rfilename": "assets/novus-white-latency.png",
+      "blobId": "b3af1e781913cdaac962d08f007913e9ca8693dd",
+      "size": 99384
+    },
+    {
+      "rfilename": "assets/novus-white-latency.svg",
+      "blobId": "897b8f46af689c0ba33c2f966a3db3c2b6f2b1e4",
+      "size": 102547
+    },
+    {
+      "rfilename": "assets/novus-white-pilot-latency.png",
+      "blobId": "1899397d57c543188ee4a4a68b8f655f75164078",
+      "size": 125517,
+      "lfs": {
+        "sha256": "21cc0229f6f8baa343849a4fc0b5dced713e1f8c8d05614c854c68c4048fad01",
+        "size": 125517,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-pilot-latency.svg",
+      "blobId": "c1012d2370ff5e46deef033d84a737c999060a74",
+      "size": 128694
+    },
+    {
+      "rfilename": "assets/novus-white-pilot-quality.png",
+      "blobId": "a6669adc328c073d56c278832c718cf8c841df7b",
+      "size": 150786,
+      "lfs": {
+        "sha256": "ebc3f320aca764af0a8810eccc1237fb3412fe4edd48493a6d07e921f2053553",
+        "size": 150786,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-pilot-quality.svg",
+      "blobId": "3cdac6e896aba720a550f231f98b61876c998e48",
+      "size": 141553
+    },
+    {
+      "rfilename": "assets/novus-white-pilot-replay.gif",
+      "blobId": "a8a49a841fba2b999dfe5af703aaf76f60cb85e9",
+      "size": 471694,
+      "lfs": {
+        "sha256": "2bea353cd022141efa7c428fa03d2389df5ccc3882e4e80912dafb847587b098",
+        "size": 471694,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/novus-white-recorded-decisions-preview.png",
+      "blobId": "4bc1d05ce41135216848e8289c446306b43b0ca1",
+      "size": 47460
+    },
+    {
+      "rfilename": "assets/novus-white-recorded-decisions.gif",
+      "blobId": "222b7bddedc095a3ef845ca37a373e5319e4bfd9",
+      "size": 696720,
+      "lfs": {
+        "sha256": "43d7cea4d46a1e3900124bb36dc4e3627e6016e97c38de33b64dd0acd33b405e",
+        "size": 696720,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/nubo-approved-identity.json",
+      "blobId": "97f8d8229aa7a1ecdb8c47319a94c237d193e207",
+      "size": 3328
+    },
+    {
+      "rfilename": "assets/nubo-cover-provenance.json",
+      "blobId": "71fdcff4422d2f5e4906ebecbc99f4d6773f115c",
+      "size": 2481
+    },
+    {
+      "rfilename": "assets/nubo-novus-avatar-transparent.png",
+      "blobId": "c1aee0f659e5ad4f0e83ad43d7eeadacfa8472b9",
+      "size": 1358392,
+      "lfs": {
+        "sha256": "ad872b077a7c913cdea40589d19991f590e7e52997b47ccd5bdb7110a3a92756",
+        "size": 1358392,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/nubo-novus-elite-character.png",
+      "blobId": "089cffef14bd648d99ead967c423f34045b658ac",
+      "size": 1741628,
+      "lfs": {
+        "sha256": "ecfe70f4edd3d46d07753fde6d7f16ce82819623d898350e06b25f2fd6cf8918",
+        "size": 1741628,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/pilot-replay-provenance.json",
+      "blobId": "041cdd4c41194fc3e97392167d3a9ddbd7bb5751",
+      "size": 2746
+    },
+    {
+      "rfilename": "assets/quantization-comparison.json",
+      "blobId": "bee3638ae061aed72905e1d2103194ecafba258f",
+      "size": 1832
+    },
+    {
+      "rfilename": "assets/recorded-decisions-provenance.json",
+      "blobId": "2cec0195cc9616c958d0726c5d97fd2b56a055fa",
+      "size": 10004
+    },
+    {
+      "rfilename": "assets/visual-provenance.json",
+      "blobId": "2f099a6549cdbff2c8b5403c55da69edd5f035f6",
+      "size": 3148
+    },
+    {
+      "rfilename": "benchmarks.md",
+      "blobId": "2f7dd8b90dc0ce08f4447c23f2301fa89ba322c1",
+      "size": 52700
+    },
+    {
+      "rfilename": "calibration/text-v1.json",
+      "blobId": "300d16aea9c49f3938e032cd5963e11ef0066690",
+      "size": 505
+    },
+    {
+      "rfilename": "calibration/text-v1.txt",
+      "blobId": "174b2bd1f9b00b968e1d5f4c7f6edf27443cbb59",
+      "size": 16967
+    },
+    {
+      "rfilename": "fixtures/agentrewardbench-selected.csv",
+      "blobId": "fee5ea7dc6e8aeed7be3dccddde98cbb8128405c",
+      "size": 6503
+    },
+    {
+      "rfilename": "fixtures/controlled-100.jsonl",
+      "blobId": "fcb01c2728e92a4c3470570a75f554e48788fa17",
+      "size": 66535
+    },
+    {
+      "rfilename": "fixtures/hermes-lab-6.jsonl",
+      "blobId": "4f2818d270a4718c8b84173d606870c4d2dbbe9d",
+      "size": 23721
+    },
+    {
+      "rfilename": "fixtures/latency-24.jsonl",
+      "blobId": "a7b4c4af6084c737405b8f699fb7af70995d5f17",
+      "size": 86240
+    },
+    {
+      "rfilename": "fixtures/published-pilot-selection.json",
+      "blobId": "5ecf9fe3cbbc2dc33d6437da591c16d4d8b0cc99",
+      "size": 46492
+    },
+    {
+      "rfilename": "license-provenance.json",
+      "blobId": "ef5a468f4ee86332bdba88fe50a5107aa24ea124",
+      "size": 614
+    },
+    {
+      "rfilename": "measurements.json",
+      "blobId": "6c315b0ddee86fbbaa8afcdd3606f6286b5821a2",
+      "size": 72666
+    },
+    {
+      "rfilename": "mmproj-BF16.gguf",
+      "blobId": "563634d32c58faa12764795530b7022cafc1198a",
+      "size": 931146464,
+      "lfs": {
+        "sha256": "e019e9f6cbac791941d23eb81475077472fedcf28c32d9e8773ae16c89f9ab48",
+        "size": 931146464,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "production-progress.json",
+      "blobId": "ba156519454bb98dd564efc001136a3aa7472641",
+      "size": 16188
+    },
+    {
+      "rfilename": "publication-validation.json",
+      "blobId": "7805f8db174c3b4948b723d18f2eb66144da9e55",
+      "size": 3999
+    },
+    {
+      "rfilename": "release-manifest.json",
+      "blobId": "460d1993e5eed5d9352ed4b427e80ffce230e193",
+      "size": 18631
+    },
+    {
+      "rfilename": "reproduce.md",
+      "blobId": "92d4c12fd71aa198fdc251b1262fac31f42f98de",
+      "size": 20736
+    },
+    {
+      "rfilename": "results-provenance.json",
+      "blobId": "f8bf5fea6d151bd1eea75257036f1080633d4181",
+      "size": 16806
+    },
+    {
+      "rfilename": "results/study-a-bf16.jsonl",
+      "blobId": "a8f15046b2ff43bf54427d19ef4b59b672f3d982",
+      "size": 52504
+    },
+    {
+      "rfilename": "results/study-a-q3-m.jsonl",
+      "blobId": "b9d4c49b5f30e0dffec60c87bd98981bbc99dbc3",
+      "size": 52556
+    },
+    {
+      "rfilename": "results/study-a-q3-s.jsonl",
+      "blobId": "79f1dc70cc5f3ae0dbceb61b296dd4144c03632a",
+      "size": 52589
+    },
+    {
+      "rfilename": "results/study-b-cpu2-lengths.jsonl",
+      "blobId": "176daabf6624d61765485348adb006160cbfa421",
+      "size": 8092
+    },
+    {
+      "rfilename": "results/study-b-cpu4-controlled100.jsonl",
+      "blobId": "51ff0bc183ecbb592c18eecda09e5ccb04d81617",
+      "size": 52500
+    },
+    {
+      "rfilename": "results/study-b-cpu4-short.jsonl",
+      "blobId": "7ff30491c239f8da5c24e2ec8510851f05594e90",
+      "size": 4081
+    },
+    {
+      "rfilename": "results/study-c-extra-image1.jsonl",
+      "blobId": "64fd0d1ba6e38635d6ed97b40900157a06fec846",
+      "size": 229
+    },
+    {
+      "rfilename": "results/study-c-matched-images6.jsonl",
+      "blobId": "7c831b9b8b7d84ad58d9b2371de3034686af10b2",
+      "size": 1378
+    },
+    {
+      "rfilename": "results/study-c-text16.jsonl",
+      "blobId": "e8403566e56ce8bac59d0e8cd250b541d7f5c827",
+      "size": 3672
+    },
+    {
+      "rfilename": "results/study-d-turkish6.jsonl",
+      "blobId": "87540f4ad4f5a7df39a72d971a9c8c34753859bc",
+      "size": 2016
+    },
+    {
+      "rfilename": "results/study-e-iq1-m-controlled100.jsonl",
+      "blobId": "624b13da1f1c36c645e4e2552885b8bcc3f7a31d",
+      "size": 52164
+    },
+    {
+      "rfilename": "results/study-e-iq2-xs-controlled100.jsonl",
+      "blobId": "713aecb64d3639e51c26bc9560f27e46f47e1dbd",
+      "size": 52419
+    },
+    {
+      "rfilename": "results/study-e-q1-0-controlled100.jsonl",
+      "blobId": "30a6de30f98267c29bf1cb5c65f0c3468f44f495",
+      "size": 51723
+    },
+    {
+      "rfilename": "results/study-e-q2-k-controlled100.jsonl",
+      "blobId": "f3595e3de9f7cdfa4fc8e1917a5bb2e7e772f495",
+      "size": 52270
+    },
+    {
+      "rfilename": "results/study-e-q4-k-m-controlled100.jsonl",
+      "blobId": "a1762ae9193e10d8ee2ccda3486085f2b47022b4",
+      "size": 52541
+    },
+    {
+      "rfilename": "results/study-e-tq1-0-controlled100.jsonl",
+      "blobId": "b01624dd080643772394c20bf411bf7db62694f8",
+      "size": 51347
+    },
+    {
+      "rfilename": "results/study-g-iq1-m-agent.jsonl",
+      "blobId": "0091510cc4d78309ab174c4be2da647da2cf3acb",
+      "size": 10848
+    },
+    {
+      "rfilename": "results/study-g-iq1-m-vl.jsonl",
+      "blobId": "25d932b5e1865691dc6e9eef92ed20cdb272d598",
+      "size": 75228
+    },
+    {
+      "rfilename": "results/study-g-iq2-xs-agent.jsonl",
+      "blobId": "ed99ad244da0a044d2e341cfca2495241e6f3cc4",
+      "size": 10862
+    },
+    {
+      "rfilename": "results/study-g-iq2-xs-vl.jsonl",
+      "blobId": "160c64398d851720e2b8e67c6f95258e5e17b9f4",
+      "size": 75226
+    },
+    {
+      "rfilename": "results/study-g-q1-0-agent.jsonl",
+      "blobId": "613909c107bb18f5103a17fcdece0fd68101d15d",
+      "size": 10838
+    },
+    {
+      "rfilename": "results/study-g-q1-0-vl.jsonl",
+      "blobId": "19d0bc4a4b0983d21f4b77d45cf3b0d4160db93e",
+      "size": 75559
+    },
+    {
+      "rfilename": "results/study-g-q2-k-agent.jsonl",
+      "blobId": "d69c61f2bec2caeb5907dc1e6bdc9667b43571d9",
+      "size": 10870
+    },
+    {
+      "rfilename": "results/study-g-q2-k-vl.jsonl",
+      "blobId": "337e7e6fdc60202b88d495a37880e8b9256c31e9",
+      "size": 75201
+    },
+    {
+      "rfilename": "results/study-g-q3-k-m-agent.jsonl",
+      "blobId": "2aa6e20197d8f2ed2e83caea61cf1ad2453db7ff",
+      "size": 10868
+    },
+    {
+      "rfilename": "results/study-g-q3-k-m-vl.jsonl",
+      "blobId": "2f60775abf4335017cff91b63cb237258c0831db",
+      "size": 75260
+    },
+    {
+      "rfilename": "results/study-g-q3-k-s-agent.jsonl",
+      "blobId": "ece30e0edde3fa924b68969c2a39c4394f116304",
+      "size": 10862
+    },
+    {
+      "rfilename": "results/study-g-q3-k-s-vl.jsonl",
+      "blobId": "0c48fef7e36bc39362133a46c7cc71e6776d23ab",
+      "size": 75282
+    },
+    {
+      "rfilename": "results/study-g-q4-k-m-agent.jsonl",
+      "blobId": "14b8d1f7b82d87114e347c374aa24e39e132c55a",
+      "size": 10882
+    },
+    {
+      "rfilename": "results/study-g-q4-k-m-vl.jsonl",
+      "blobId": "36b8b48fdfdef632616d53e8206bad09d86b8c87",
+      "size": 75198
+    },
+    {
+      "rfilename": "results/study-g-q5-k-m-agent.jsonl",
+      "blobId": "642689cca754f262bae6917bee3afa588dd07b51",
+      "size": 10870
+    },
+    {
+      "rfilename": "results/study-g-q5-k-m-vl.jsonl",
+      "blobId": "826c3faca6fe396af3d12a8113a09fa163fa0fc7",
+      "size": 75243
+    },
+    {
+      "rfilename": "results/study-g-q6-k-agent.jsonl",
+      "blobId": "0b7d50db7c7d62c96d6bfafbfe6e2a18bfb90bc3",
+      "size": 10882
+    },
+    {
+      "rfilename": "results/study-g-q6-k-vl.jsonl",
+      "blobId": "1e4b7cdc45911e88e9f513776fb65525484348e2",
+      "size": 75289
+    },
+    {
+      "rfilename": "results/study-g-q8-0-agent.jsonl",
+      "blobId": "d335914e9775fff37e0aba43c0befe8adc860124",
+      "size": 10878
+    },
+    {
+      "rfilename": "results/study-g-q8-0-vl.jsonl",
+      "blobId": "9a5b458baa2bd2a1761ae94db0d6291894562135",
+      "size": 75092
+    },
+    {
+      "rfilename": "results/study-g-tq1-0-agent.jsonl",
+      "blobId": "e3b404846a7cd05ee5da1bfd11260d3a15083596",
+      "size": 10864
+    },
+    {
+      "rfilename": "results/study-g-tq1-0-vl.jsonl",
+      "blobId": "f5f435c0f1cd8c2138d0f7bf97218e716513a278",
+      "size": 75173
+    },
+    {
+      "rfilename": "tools/benchmark.py",
+      "blobId": "f9512238a045a22a53034550f197f8931d46b07f",
+      "size": 8115
+    },
+    {
+      "rfilename": "tools/prepare-public-pilot.py",
+      "blobId": "efb34b9c0454d1ebad54a20e2a368090709e6814",
+      "size": 5378
+    },
+    {
+      "rfilename": "tools/render-pilot-replay.py",
+      "blobId": "4ea363f7f4c16da4c4781a5a39ba8e60f6325a4d",
+      "size": 5623
+    },
+    {
+      "rfilename": "tools/render-replay.py",
+      "blobId": "1899b0d28367e5f559a92576d8fd69123a4f2c0a",
+      "size": 5899
+    },
+    {
+      "rfilename": "tools/render-visuals.py",
+      "blobId": "dadaea794822e3078d4c0951410965f7c334e7c0",
+      "size": 16667
+    },
+    {
+      "rfilename": "tools/replay-published-pilot.py",
+      "blobId": "c516b72b66f3ad716e4cb1014725d907fda63b6f",
+      "size": 6201
+    },
+    {
+      "rfilename": "tools/verify_release_weights.py",
+      "blobId": "67d5843170015017e54762af1e5ee6372bc0ca28",
+      "size": 1884
+    },
+    {
+      "rfilename": "visuals.md",
+      "blobId": "7272841f93575b1782d9416178f34714b5da8cea",
+      "size": 8431
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-15T14:44:44.000Z",
+  "usedStorage": 151790030007
+}

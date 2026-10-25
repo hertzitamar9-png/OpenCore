@@ -1,0 +1,703 @@
+{
+  "_id": "6ac93b6d1aeb4a9775639673",
+  "id": "autotrust/GLM5.3-Flash-E256-DGX-Spark",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "vllm",
+  "tags": [
+    "vllm",
+    "safetensors",
+    "glm5_next",
+    "autotrust",
+    "moe",
+    "nvfp4",
+    "modelopt",
+    "dgx-spark",
+    "gb10",
+    "blackwell",
+    "neural-architecture-search",
+    "mtp",
+    "speculative-decoding",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "zh",
+    "base_model:zai-org/GLM-5.3-Flash",
+    "base_model:quantized:zai-org/GLM-5.3-Flash",
+    "license:mit",
+    "8-bit",
+    "region:us"
+  ],
+  "downloads": 6711,
+  "likes": 23,
+  "modelId": "autotrust/GLM5.3-Flash-E256-DGX-Spark",
+  "author": "autotrust",
+  "sha": "83fa8fe0495a3bee40adb4e46e6a47c7d9bf353f",
+  "lastModified": "2026-10-11T03:49:59.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Glm5NextForConditionalGeneration"
+    ],
+    "model_type": "glm5_next",
+    "quantization_config": {
+      "config_groups": {
+        "group_0": {
+          "weights": {
+            "num_bits": 4
+          },
+          "targets": [
+            "Linear"
+          ]
+        }
+      },
+      "ignore": [
+        "lm_head",
+        "model.language_model.embed_tokens",
+        "model.language_model.layers.0.self_attn*",
+        "model.language_model.layers.1.self_attn*",
+        "model.language_model.layers.10.mlp.gate",
+        "model.language_model.layers.10.mlp.shared_experts*",
+        "model.language_model.layers.10.self_attn*",
+        "model.language_model.layers.11.mlp.gate",
+        "model.language_model.layers.11.mlp.shared_experts*",
+        "model.language_model.layers.11.self_attn*",
+        "model.language_model.layers.12.mlp.gate",
+        "model.language_model.layers.12.mlp.shared_experts*",
+        "model.language_model.layers.12.self_attn*",
+        "model.language_model.layers.13.mlp.gate",
+        "model.language_model.layers.13.mlp.shared_experts*",
+        "model.language_model.layers.13.self_attn*",
+        "model.language_model.layers.14.mlp.gate",
+        "model.language_model.layers.14.mlp.shared_experts*",
+        "model.language_model.layers.14.self_attn*",
+        "model.language_model.layers.15.mlp.gate",
+        "model.language_model.layers.15.mlp.shared_experts*",
+        "model.language_model.layers.15.self_attn*",
+        "model.language_model.layers.16.mlp.gate",
+        "model.language_model.layers.16.mlp.shared_experts*",
+        "model.language_model.layers.16.self_attn*",
+        "model.language_model.layers.17.mlp.gate",
+        "model.language_model.layers.17.mlp.shared_experts*",
+        "model.language_model.layers.17.self_attn*",
+        "model.language_model.layers.18.mlp.gate",
+        "model.language_model.layers.18.mlp.shared_experts*",
+        "model.language_model.layers.18.self_attn*",
+        "model.language_model.layers.19.mlp.gate",
+        "model.language_model.layers.19.mlp.shared_experts*",
+        "model.language_model.layers.19.self_attn*",
+        "model.language_model.layers.2.self_attn*",
+        "model.language_model.layers.20.mlp.gate",
+        "model.language_model.layers.20.mlp.shared_experts*",
+        "model.language_model.layers.20.self_attn*",
+        "model.language_model.layers.21.mlp.gate",
+        "model.language_model.layers.21.mlp.shared_experts*",
+        "model.language_model.layers.21.self_attn*",
+        "model.language_model.layers.22.mlp.gate",
+        "model.language_model.layers.22.mlp.shared_experts*",
+        "model.language_model.layers.22.self_attn*",
+        "model.language_model.layers.23.mlp.gate",
+        "model.language_model.layers.23.mlp.shared_experts*",
+        "model.language_model.layers.23.self_attn*",
+        "model.language_model.layers.24.mlp.gate",
+        "model.language_model.layers.24.mlp.shared_experts*",
+        "model.language_model.layers.24.self_attn*",
+        "model.language_model.layers.25.mlp.gate",
+        "model.language_model.layers.25.mlp.shared_experts*",
+        "model.language_model.layers.25.self_attn*",
+        "model.language_model.layers.26.mlp.gate",
+        "model.language_model.layers.26.mlp.shared_experts*",
+        "model.language_model.layers.26.self_attn*",
+        "model.language_model.layers.27.mlp.gate",
+        "model.language_model.layers.27.mlp.shared_experts*",
+        "model.language_model.layers.27.self_attn*",
+        "model.language_model.layers.28.mlp.gate",
+        "model.language_model.layers.28.mlp.shared_experts*",
+        "model.language_model.layers.28.self_attn*",
+        "model.language_model.layers.29.mlp.gate",
+        "model.language_model.layers.29.mlp.shared_experts*",
+        "model.language_model.layers.29.self_attn*",
+        "model.language_model.layers.3.mlp.gate",
+        "model.language_model.layers.3.mlp.shared_experts*",
+        "model.language_model.layers.3.self_attn*",
+        "model.language_model.layers.30.mlp.gate",
+        "model.language_model.layers.30.mlp.shared_experts*",
+        "model.language_model.layers.30.self_attn*",
+        "model.language_model.layers.31.mlp.gate",
+        "model.language_model.layers.31.mlp.shared_experts*",
+        "model.language_model.layers.31.self_attn*",
+        "model.language_model.layers.32.mlp.gate",
+        "model.language_model.layers.32.mlp.shared_experts*",
+        "model.language_model.layers.32.self_attn*",
+        "model.language_model.layers.33.mlp.gate",
+        "model.language_model.layers.33.mlp.shared_experts*",
+        "model.language_model.layers.33.self_attn*",
+        "model.language_model.layers.34.mlp.gate",
+        "model.language_model.layers.34.mlp.shared_experts*",
+        "model.language_model.layers.34.self_attn*",
+        "model.language_model.layers.35.mlp.gate",
+        "model.language_model.layers.35.mlp.shared_experts*",
+        "model.language_model.layers.35.self_attn*",
+        "model.language_model.layers.36.mlp.gate",
+        "model.language_model.layers.36.mlp.shared_experts*",
+        "model.language_model.layers.36.self_attn*",
+        "model.language_model.layers.37.mlp.gate",
+        "model.language_model.layers.37.mlp.shared_experts*",
+        "model.language_model.layers.37.self_attn*",
+        "model.language_model.layers.38.mlp.gate",
+        "model.language_model.layers.38.mlp.shared_experts*",
+        "model.language_model.layers.38.self_attn*",
+        "model.language_model.layers.39.mlp.gate",
+        "model.language_model.layers.39.mlp.shared_experts*",
+        "model.language_model.layers.39.self_attn*",
+        "model.language_model.layers.4.mlp.gate",
+        "model.language_model.layers.4.mlp.shared_experts*",
+        "model.language_model.layers.4.self_attn*",
+        "model.language_model.layers.40.mlp.gate",
+        "model.language_model.layers.40.mlp.shared_experts*",
+        "model.language_model.layers.40.self_attn*",
+        "model.language_model.layers.41.mlp.gate",
+        "model.language_model.layers.41.mlp.shared_experts*",
+        "model.language_model.layers.41.self_attn*",
+        "model.language_model.layers.42.mlp.gate",
+        "model.language_model.layers.42.mlp.shared_experts*",
+        "model.language_model.layers.42.self_attn*",
+        "model.language_model.layers.43.mlp.gate",
+        "model.language_model.layers.43.mlp.shared_experts*",
+        "model.language_model.layers.43.self_attn*",
+        "model.language_model.layers.44.mlp.gate",
+        "model.language_model.layers.44.mlp.shared_experts*",
+        "model.language_model.layers.44.self_attn*",
+        "model.language_model.layers.5.mlp.gate",
+        "model.language_model.layers.5.mlp.shared_experts*",
+        "model.language_model.layers.5.self_attn*",
+        "model.language_model.layers.6.mlp.gate",
+        "model.language_model.layers.6.mlp.shared_experts*",
+        "model.language_model.layers.6.self_attn*",
+        "model.language_model.layers.7.mlp.gate",
+        "model.language_model.layers.7.mlp.shared_experts*",
+        "model.language_model.layers.7.self_attn*",
+        "model.language_model.layers.8.mlp.gate",
+        "model.language_model.layers.8.mlp.shared_experts*",
+        "model.language_model.layers.8.self_attn*",
+        "model.language_model.layers.9.mlp.gate",
+        "model.language_model.layers.9.mlp.shared_experts*",
+        "model.language_model.layers.9.self_attn*",
+        "model.visual*",
+        "layers.45.self_attn",
+        "layers.45.mlp.gate",
+        "layers.45.eh_proj",
+        "layers.45.shared_head",
+        "layers.45.embed_tokens",
+        "layers.45.enorm",
+        "layers.45.hnorm",
+        "layers.45.head"
+      ],
+      "quant_method": "modelopt"
+    },
+    "tokenizer_config": {
+      "eos_token": "<|endoftext|>",
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "[gMASK]<sop>\n{%- set effective_reasoning_effort = reasoning_effort if reasoning_effort is defined and reasoning_effort in ['low', 'high'] else 'max' -%}\n{%- if effective_reasoning_effort is not none -%}<|system|>Reasoning Effort: {{ effective_reasoning_effort | capitalize }}{%- endif -%}\n{%- set clear_thinking = clear_thinking if clear_thinking is defined else false -%}\n{%- if tools -%}\n{%- macro tool_to_json(tool) -%}\n    {%- set ns_tool = namespace(first=true) -%}\n    {{ '{' -}}\n    {%- for k, v in tool.items() -%}\n        {%- if k != 'defer_loading' and k != 'strict' -%}\n            {%- if not ns_tool.first -%}{{- ', ' -}}{%- endif -%}\n            {%- set ns_tool.first = false -%}\n            \"{{ k }}\": {{ v | tojson(ensure_ascii=False) }}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- '}' -}}\n{%- endmacro -%}\n{%- macro tool_references_to_response(refs) -%}\n    {{- '<tool_response><tools>\\n' -}}\n    {%- for tr in refs -%}\n        {%- for tool in tools -%}\n            {%- if 'function' in tool -%}\n                {%- set tool = tool['function'] -%}\n            {%- endif -%}\n            {%- if tool.name == tr.name -%}\n                {{- tool_to_json(tool) + '\\n' -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endfor -%}\n    {{- '</tools></tool_response>' -}}\n{%- endmacro -%}\n<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{%- if 'function' in tool -%}\n    {%- set tool = tool['function'] -%}\n{%- endif -%}\n{% if tool.defer_loading is not defined or not tool.defer_loading %}\n{{ tool_to_json(tool) }}\n{% endif %}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call>{%- endif -%}\n{%- macro emit_image() -%}<|begin_of_image|><|image|><|end_of_image|>{%- endmacro -%}\n{%- macro emit_video() -%}<|begin_of_video|><|video|><|end_of_video|>{%- endmacro -%}\n{%- macro emit_audio() -%}<|begin_of_audio|><|end_of_audio|>{%- endmacro -%}\n{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text -}}\n            {%- elif item is string -%}\n                {{- item -}}\n            {%- elif item is mapping and item.type in ['image', 'image_url'] -%}\n                {{- emit_image() -}}\n            {%- elif item is mapping and item.type in ['video', 'video_url'] -%}\n                {{- emit_video() -}}\n            {%- elif item is mapping and item.type in ['audio', 'audio_url', 'input_audio'] -%}\n                {{- emit_audio() -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro tool_response(text) -%}\n{{- '<tool_response>' + text + '</tool_response>' -}}\n{%- endmacro -%}\n{%- macro render_tool_response(m) -%}\n{%- if m.content is string -%}\n    {{- tool_response(m.content) -}}\n{%- elif m.content and m.content is not mapping and m.content.0.type == \"tool_reference\" -%}\n    {{- tool_references_to_response(m.content) -}}\n{%- elif is_list_of_outputs(m) -%}\n    {%- for tr in m.content -%}\n        {%- if tr.output is iterable and tr.output is not string and tr.output is not mapping and tr.output and tr.output.0.type == \"tool_reference\" -%}\n            {{- tool_references_to_response(tr.output) -}}\n        {%- else -%}\n            {{- tool_response(visible_text(tr.output)) -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n    {{- tool_response(visible_text(m.content)) -}}\n{%- endif -%}\n{%- endmacro -%}\n{%- macro id_of(obj) -%}\n    {%- if obj.tool_call_id -%}\n        {{- obj.tool_call_id -}}\n    {%- elif obj.id -%}\n        {{- obj.id -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro is_list_of_outputs(m) -%}\n    {%- if m.content and m.content.0.output is defined -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro has_dup_tool_result_id(lo, hi, target) -%}\n    {%- set ns_cnt = namespace(n=0) -%}\n    {%- for k in range(lo, hi + 1) -%}\n        {%- set m = messages[k] -%}\n        {%- if is_list_of_outputs(m) -%}\n            {%- for entry in m.content -%}\n                {%- if id_of(entry) == target -%}\n                    {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- elif id_of(m) == target -%}\n            {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n        {%- endif -%}\n        {%- if ns_cnt.n > 1 -%}{%- break -%}{%- endif -%}\n    {%- endfor -%}\n    {%- if ns_cnt.n > 1 -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro tc_id_exists(tcs, target) -%}\n    {%- set ns_f = namespace(found=false) -%}\n    {%- for tc in tcs -%}\n        {%- if id_of(tc) == target -%}\n            {%- set ns_f.found = true -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if ns_f.found -%}1{%- endif -%}\n{%- endmacro -%}\n{%- set ns = namespace(last_user_index=-1) -%}\n{%- for m in messages %}\n    {%- if m.role == 'user' %}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{%- for m in messages -%}\n{%- if m.role == 'user' -%}<|user|>{{ visible_text(m.content) }}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n    {%- set reasoning_content = m.reasoning_content %}\n{%- elif '</think>' in content %}\n    {%- set reasoning_content = content.split('</think>')[0].split('<think>')[-1] %}\n    {%- set content = content.split('</think>')[-1] %}\n{%- endif %}\n{%- if (not clear_thinking or loop.index0 > ns.last_user_index) and reasoning_content is defined -%}\n{{ '<think>' + reasoning_content +  '</think>'}}\n{%- else -%}\n{{ '<think></think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{% for tc in m.tool_calls %}\n{%- if tc.function %}\n    {%- set tc = tc.function %}\n{%- endif %}\n{{- '<tool_call>' + tc.name -}}\n{% set _args = tc.arguments %}{% for k, v in _args.items() %}<arg_key>{{ k }}</arg_key><arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>{% endfor %}</tool_call>{% endfor %}\n{% endif %}\n{%- elif m.role == 'tool' -%}\n{%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n    {{- '<|observation|>' -}}\n    {%- set block_start = loop.index0 -%}\n    {%- set ns_blk = namespace(end=block_start) -%}\n    {%- for j in range(block_start, messages|length) -%}\n        {%- if messages[j].role == 'tool' -%}\n            {%- set ns_blk.end = j -%}\n        {%- else -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns_a = namespace(tool_calls=none) -%}\n    {%- if block_start > 0 and messages[block_start - 1].role == 'assistant' and messages[block_start - 1].tool_calls -%}\n        {%- set ns_a.tool_calls = messages[block_start - 1].tool_calls -%}\n    {%- endif -%}\n    {%- set ns_chk = namespace(can_sort=true) -%}\n    {%- if not ns_a.tool_calls -%}\n        {%- set ns_chk.can_sort = false -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {%- set m = messages[k] -%}\n            {%- if is_list_of_outputs(m) -%}\n                {%- for entry in m.content -%}\n                    {%- set eid = id_of(entry) -%}\n                    {%- if not eid -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif has_dup_tool_result_id(block_start, ns_blk.end, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif not tc_id_exists(ns_a.tool_calls, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- endif -%}\n                {%- endfor -%}\n            {%- else -%}\n                {%- set tk_id = id_of(m) -%}\n                {%- if not tk_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif has_dup_tool_result_id(block_start, ns_blk.end, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif not tc_id_exists(ns_a.tool_calls, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for i in range(ns_a.tool_calls | length) -%}\n            {%- set tc_id = id_of(ns_a.tool_calls[i]) -%}\n            {%- if not tc_id -%}\n                {%- set ns_chk.can_sort = false -%}\n            {%- endif -%}\n            {%- for j in range(i + 1, ns_a.tool_calls | length) -%}\n                {%- if id_of(ns_a.tool_calls[j]) == tc_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endfor -%}\n    {%- endfor -%}\n    {%- endif -%}\n    {%- if ns_chk.can_sort -%}\n        {%- for tc in ns_a.tool_calls -%}\n            {%- set tc_id = id_of(tc) -%}\n            {%- for k in range(block_start, ns_blk.end + 1) -%}\n                {%- set m = messages[k] -%}\n                {%- if is_list_of_outputs(m) -%}\n                    {%- for entry in m.content -%}\n                        {%- set eid = id_of(entry) -%}\n                        {%- if eid == tc_id -%}\n                            {%- if entry.output is iterable and entry.output is not string and entry.output is not mapping and entry.output and entry.output.0.type == \"tool_reference\" -%}\n                                {{- tool_references_to_response(entry.output) -}}\n                            {%- else -%}\n                                {{- tool_response(visible_text(entry.output)) -}}\n                            {%- endif -%}\n                        {%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n                    {%- set tk_id = id_of(m) -%}\n                    {%- if tk_id == tc_id -%}\n                        {{- render_tool_response(m) -}}\n                    {%- endif -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endfor -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {{- render_tool_response(messages[k]) -}}\n        {%- endfor -%}\n    {%- endif -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<|system|>{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    <|assistant|>{{- '<think>' -}}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "mit",
+    "base_model": "zai-org/GLM-5.3-Flash",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "vllm",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "autotrust",
+      "glm5_next",
+      "moe",
+      "nvfp4",
+      "modelopt",
+      "vllm",
+      "dgx-spark",
+      "gb10",
+      "blackwell",
+      "neural-architecture-search",
+      "mtp",
+      "speculative-decoding"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "56d326cb842245b337bcec56d16ea6edfa145072",
+      "size": 1696
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2ef7ee4e9e1d41c6127b5e2c6d750642d711c673",
+      "size": 13393
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "fb94d40d72a2eefa0c7140cb66d941656be16969",
+      "size": 10644
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "64819dc95469ddc9791523af2f50ab49d25303c7",
+      "size": 14244
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "46d04e68002526d394949f63d65f93ac4ac8abeb",
+      "size": 215
+    },
+    {
+      "rfilename": "hf_quant_config.json",
+      "blobId": "a84f2838c71911ae5bf50800cfaa3d081720122f",
+      "size": 7390
+    },
+    {
+      "rfilename": "model-00001-of-00032.safetensors",
+      "blobId": "bcf303f5293b5c0a3c4d7d669e897f2a0b755b69",
+      "size": 5366047808,
+      "lfs": {
+        "sha256": "ad9e537229e21f01fcae348f2cfa34fb0e032ae85cafd7a65adf26b9431cfc8b",
+        "size": 5366047808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00032.safetensors",
+      "blobId": "ceb4185208e6e468cecc9f0ab630b39a852ad09d",
+      "size": 5365108380,
+      "lfs": {
+        "sha256": "c3ce64594a16f2e50698c96b05afe52666ff36fff6db0258fbbb5bdf86e6ddc6",
+        "size": 5365108380,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00032.safetensors",
+      "blobId": "eb698921ed0892f3249a6dc35141a0b7174fd33e",
+      "size": 5367652488,
+      "lfs": {
+        "sha256": "65dff57ca2b2334cbe8c57777fca07bb8bc269ae57cc03749bf9cffead5c5fe6",
+        "size": 5367652488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00032.safetensors",
+      "blobId": "577aacc2b43a77f9b6e6dff12bbca5f537bb64a1",
+      "size": 5367710448,
+      "lfs": {
+        "sha256": "0c6c0d114871236a9cea3b888aed68e6087af42c69bdaae5858051b7e62884cd",
+        "size": 5367710448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00032.safetensors",
+      "blobId": "65dcade98d783ee9e8700f27b1dc51c0bd166209",
+      "size": 5366613726,
+      "lfs": {
+        "sha256": "f130465f9dc3dd39c210575b5a7e4f003f8e0a6b321ba1aaf183ec4f3c0cee61",
+        "size": 5366613726,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00032.safetensors",
+      "blobId": "4d727c85ccdd7092ded5204d694c33415c2c6e14",
+      "size": 5366366948,
+      "lfs": {
+        "sha256": "89b65e4f12bdf74afecfafe92b2925986c1c0a5b802a1cefda4087bd15474053",
+        "size": 5366366948,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00032.safetensors",
+      "blobId": "9ff2be923a0e8812f7f04d86658563387637f423",
+      "size": 5369251722,
+      "lfs": {
+        "sha256": "11d07db2fb31648cabde3d9a4779346d819c65bac8d30a81f427b6cc2ff44b4e",
+        "size": 5369251722,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00032.safetensors",
+      "blobId": "e1a0cd80e6a32e29f5a31d17bfc11ca20bc647f9",
+      "size": 5365862388,
+      "lfs": {
+        "sha256": "18346b717be06c123be89f0c60041891019c25a724356bbe76d3f28ea53150af",
+        "size": 5365862388,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00032.safetensors",
+      "blobId": "878a06775e10fb25281de2eb45754ec23c3d48bb",
+      "size": 5354828792,
+      "lfs": {
+        "sha256": "a9708621f380847c9dd6768095cfdf8b5ec97128a2ba5f477f42b08d7ac988fa",
+        "size": 5354828792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00032.safetensors",
+      "blobId": "05c2f79beb3d3d7ff53635f226c62b1573f8dc27",
+      "size": 5366101698,
+      "lfs": {
+        "sha256": "70c0402418c9850968f0cbdace993e14f4dd432ec69695113ec93818a9153c7d",
+        "size": 5366101698,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00032.safetensors",
+      "blobId": "450ce72724334af785b6925dd214a695d9703177",
+      "size": 5344621942,
+      "lfs": {
+        "sha256": "3d1946f0d91f6449042d17b91d8c37297451a2bf4ddc2fadcd85f4d721dafaa5",
+        "size": 5344621942,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00012-of-00032.safetensors",
+      "blobId": "a54529f6e340bd5908311e249556740cbbd1111b",
+      "size": 5320687772,
+      "lfs": {
+        "sha256": "8408cff0eae39c9e43cbdbd74f7eda021d83ce0fedd0edc6214eb29bb88f6490",
+        "size": 5320687772,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00013-of-00032.safetensors",
+      "blobId": "014c97fd063cac970386b38f601ae2d7fe0d9763",
+      "size": 5363550872,
+      "lfs": {
+        "sha256": "fcb9c3d1c8ef16553787cb3525fbfb8fb07f791158536a55e6cc9e277cfa301d",
+        "size": 5363550872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00014-of-00032.safetensors",
+      "blobId": "027d4842c32145a8fb218c2a642a230541a9aac4",
+      "size": 5369370730,
+      "lfs": {
+        "sha256": "640414aa41b787fd7326cf03adc89c327f6b61f2954f1a2db8a05552415e12c1",
+        "size": 5369370730,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00015-of-00032.safetensors",
+      "blobId": "c66f7b4c2eb6449c68d08eb44863766ea6671e81",
+      "size": 5305444638,
+      "lfs": {
+        "sha256": "3dd867bf1ef9829eb751c743e96e06f107c47d67f15ac0d188de0b8f80c2ab74",
+        "size": 5305444638,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00016-of-00032.safetensors",
+      "blobId": "ef7e38a9495095e196087d21b1da7a70a78be918",
+      "size": 5369088300,
+      "lfs": {
+        "sha256": "3782b5a4cf6ec013a1cbf36831e5d8415cb10c5de158588bcc7661635320697c",
+        "size": 5369088300,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00017-of-00032.safetensors",
+      "blobId": "9dc0b27b9be183f4b7497fb7f35b9e6c8d45daf7",
+      "size": 5366795850,
+      "lfs": {
+        "sha256": "02a9a23f3f84d075fffb9511e155122ea6cd03bc2acad83205742fb8e6554e19",
+        "size": 5366795850,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00018-of-00032.safetensors",
+      "blobId": "4a0c0afe9a8919e3fc1303a7801c64d80f27c07c",
+      "size": 5368460754,
+      "lfs": {
+        "sha256": "3d50379fc962c0dc105ced930cf6c9b483dbda47bc323c3a37e2ee6645b06cf7",
+        "size": 5368460754,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00019-of-00032.safetensors",
+      "blobId": "f4b3c20a6e1113b46be830e19b65ffcfbb989203",
+      "size": 5330969294,
+      "lfs": {
+        "sha256": "fc4e6b3e4e1c22f64fe5849557f0861ceb61e78d3c89cbb90cc3fc240312823c",
+        "size": 5330969294,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00020-of-00032.safetensors",
+      "blobId": "741b850c47d0776dff6be905cb0da3c663c7ef59",
+      "size": 5365335070,
+      "lfs": {
+        "sha256": "aa67e0bd96b5e16ff285de85782cd881b9440e6d68d76086431bce3dbeb53140",
+        "size": 5365335070,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00021-of-00032.safetensors",
+      "blobId": "71f66156625b025330c5ad52e3fc6ece7afd495f",
+      "size": 5368984564,
+      "lfs": {
+        "sha256": "ee164f4f9bccc52490d131605d42e4a8d5652e6be652822cf04dd24f216e9ad9",
+        "size": 5368984564,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00022-of-00032.safetensors",
+      "blobId": "890082e9cee13b274f7731f1754b70ed6e8cb0cb",
+      "size": 5366479356,
+      "lfs": {
+        "sha256": "ddbf6fde5d3075cd358d6d0de635f778967736aebf14a44f4f3b23de9a913113",
+        "size": 5366479356,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00023-of-00032.safetensors",
+      "blobId": "a5bf0ea5b99bc7d1b41faf41b94c3a3466121a8a",
+      "size": 5368929392,
+      "lfs": {
+        "sha256": "6a3e13c914b6283f2b644071a66b992c861d19ad9296209deebce8832a3f4173",
+        "size": 5368929392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00024-of-00032.safetensors",
+      "blobId": "f804c04db2d645c9d0e9e41c2c8d18191dd14a4a",
+      "size": 5369058936,
+      "lfs": {
+        "sha256": "35b6a4577306a0844b68867dc7245ed5f919c2dd2ea7329579ca23b165e4aaa1",
+        "size": 5369058936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00025-of-00032.safetensors",
+      "blobId": "c81b1012e1958f3ed15313cf721e616729164bfa",
+      "size": 5367630296,
+      "lfs": {
+        "sha256": "c15d643a6514284feed70332a568512d18ba67a43dbeec09c86d8cf99d9b5ec5",
+        "size": 5367630296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00026-of-00032.safetensors",
+      "blobId": "34be05a6c2fc53dc4f86231f8d382529627dc492",
+      "size": 5369234456,
+      "lfs": {
+        "sha256": "1ce2b0f5129d4f879d843a8d42d32df3c32fd82b6a414c2f23d02855e111381f",
+        "size": 5369234456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00027-of-00032.safetensors",
+      "blobId": "521381c33687c6129c797a603502281f4cad5064",
+      "size": 5366543828,
+      "lfs": {
+        "sha256": "55be19ae73e79763587d9f0e40270ce3853d959f0f4faef03d199e245ddeff8f",
+        "size": 5366543828,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00028-of-00032.safetensors",
+      "blobId": "dc9153e860cf45975032097cb1487d1530bdca0c",
+      "size": 5361488652,
+      "lfs": {
+        "sha256": "c3c2964d24d10b6e219c9b9c70423f8246dcc459ced4757592920f9c0cbad4d5",
+        "size": 5361488652,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00029-of-00032.safetensors",
+      "blobId": "b34bc1702ec12198da352c0b5654f587fdc9b5e2",
+      "size": 5366933124,
+      "lfs": {
+        "sha256": "7de5e45b02fa048aca7dfd3b47dff1d964da7b48f62bd7d78262204b209c771a",
+        "size": 5366933124,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00030-of-00032.safetensors",
+      "blobId": "b8293282b8d3ef4a6a7cdd5e3ceab80e1faee851",
+      "size": 5368172516,
+      "lfs": {
+        "sha256": "448fb0ea17d30c8f28870dce1bf4596bb03f6dc1140f54723ebf7a82aa5c977a",
+        "size": 5368172516,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00031-of-00032.safetensors",
+      "blobId": "db9080da197c701ad632886cb01fb89aeee604a3",
+      "size": 5368244460,
+      "lfs": {
+        "sha256": "862603b49920b35f2caa97dc776968e2c2190dd38f3798a7726da965540d70ed",
+        "size": 5368244460,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00032-of-00032.safetensors",
+      "blobId": "dffef51841897a76c86f11ee4a5e3a3d053cd9b4",
+      "size": 4333618132,
+      "lfs": {
+        "sha256": "f60a2ca64ddc440d0b5558c9ec25565980ef9a6412809e6d5fb9c5bd53e76971",
+        "size": 4333618132,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "1d326892f327f5ae91b18c8eb100f1f9ef30f064",
+      "size": 14408496,
+      "lfs": {
+        "sha256": "258511c5dce1c62b3722aa383af0068e0e09e490c4b5ef80b10f45dfff899628",
+        "size": 14408496,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "mtp-nvfp4/chat_template.jinja",
+      "blobId": "fb94d40d72a2eefa0c7140cb66d941656be16969",
+      "size": 10644
+    },
+    {
+      "rfilename": "mtp-nvfp4/config.json",
+      "blobId": "6ee254f4588eab37cab0840153a703a9b55de18e",
+      "size": 7326
+    },
+    {
+      "rfilename": "mtp-nvfp4/generation_config.json",
+      "blobId": "46d04e68002526d394949f63d65f93ac4ac8abeb",
+      "size": 215
+    },
+    {
+      "rfilename": "mtp-nvfp4/hf_quant_config.json",
+      "blobId": "5a0393f03d59d7c5c0c673815a89f545fb0681f1",
+      "size": 1025
+    },
+    {
+      "rfilename": "mtp-nvfp4/model.safetensors",
+      "blobId": "e0de327bcddc8076ff154a7f97248cf217285107",
+      "size": 6948389096,
+      "lfs": {
+        "sha256": "7d75ea350cd7d07baf4d8a6e9735701d0c03db117954626cf465358767351aa5",
+        "size": 6948389096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp-nvfp4/processor_config.json",
+      "blobId": "3ec2a058b2cdec556eca0f621e8c5164eec213c2",
+      "size": 909
+    },
+    {
+      "rfilename": "mtp-nvfp4/tokenizer.json",
+      "blobId": "aba40197a4cdb5607f4ab7a05fb0a4ee8054fd6d",
+      "size": 20217442,
+      "lfs": {
+        "sha256": "19e773648cb4e65de8660ea6365e10acca112d42a854923df93db4a6f333a82d",
+        "size": 20217442,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "mtp-nvfp4/tokenizer_config.json",
+      "blobId": "e375fa0a4e16660ce0e2026e39374d35dad4c079",
+      "size": 761
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "3ec2a058b2cdec556eca0f621e8c5164eec213c2",
+      "size": 909
+    },
+    {
+      "rfilename": "scripts/export_mtp_nvfp4.py",
+      "blobId": "d694ce69a32a4eb55c3f669d5b151a236a556398",
+      "size": 6018
+    },
+    {
+      "rfilename": "scripts/validate_nvfp4_format.py",
+      "blobId": "b7b5357bdf5b1b05c0c4c504a8b5ab69b936ac8d",
+      "size": 4099
+    },
+    {
+      "rfilename": "scripts/vllm_glm5next_standalone_mtp_draft.patch",
+      "blobId": "0f8b833b490af2efe4a5e2c482da69202e795c44",
+      "size": 1927
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "aba40197a4cdb5607f4ab7a05fb0a4ee8054fd6d",
+      "size": 20217442,
+      "lfs": {
+        "sha256": "19e773648cb4e65de8660ea6365e10acca112d42a854923df93db4a6f333a82d",
+        "size": 20217442,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "e375fa0a4e16660ce0e2026e39374d35dad4c079",
+      "size": 761
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-09T19:07:25.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 9022506878,
+      "U8": 135517962240,
+      "F32": 3633792
+    },
+    "total": 144544102910
+  },
+  "usedStorage": 184502763702
+}

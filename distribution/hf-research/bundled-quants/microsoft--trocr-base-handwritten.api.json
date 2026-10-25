@@ -1,0 +1,311 @@
+{
+  "_id": "621ffdc136468d709f17df0f",
+  "id": "microsoft/trocr-base-handwritten",
+  "private": false,
+  "pipeline_tag": "image-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "safetensors",
+    "vision-encoder-decoder",
+    "image-text-to-text",
+    "trocr",
+    "image-to-text",
+    "arxiv:2109.10282",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 118754,
+  "likes": 532,
+  "modelId": "microsoft/trocr-base-handwritten",
+  "author": "microsoft",
+  "sha": "eaacaf452b06415df8f10bb6fad3a4c11e609406",
+  "lastModified": "2025-02-11T04:26:58.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask>",
+  "widgetData": [
+    {
+      "src": "https://fki.tic.heia-fr.ch/static/img/a01-122-02.jpg",
+      "example_title": "Note 1"
+    },
+    {
+      "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoolxi9yWGAT5SLZShv8vVd0bz47UWRzQC19fDTeE8GmGv_Rn-PCF1pP1rrUx8kOjA4gg&usqp=CAU",
+      "example_title": "Note 2"
+    },
+    {
+      "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNYtTuSBpZPV_nkBYPMFwVVD9asZOPgHww4epu9EqWgDmXW--sE2o8og40ZfDGo87j5w&usqp=CAU",
+      "example_title": "Note 3"
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "VisionEncoderDecoderModel"
+    ],
+    "model_type": "vision-encoder-decoder",
+    "tokenizer_config": {
+      "unk_token": {
+        "content": "<unk>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "bos_token": {
+        "content": "<s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "eos_token": {
+        "content": "</s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "sep_token": {
+        "content": "</s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "cls_token": {
+        "content": "<s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "pad_token": {
+        "content": "<pad>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "mask_token": {
+        "content": "<mask>",
+        "single_word": false,
+        "lstrip": true,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      }
+    }
+  },
+  "cardData": {
+    "tags": [
+      "trocr",
+      "image-to-text"
+    ],
+    "widget": [
+      {
+        "src": "https://fki.tic.heia-fr.ch/static/img/a01-122-02.jpg",
+        "example_title": "Note 1"
+      },
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoolxi9yWGAT5SLZShv8vVd0bz47UWRzQC19fDTeE8GmGv_Rn-PCF1pP1rrUx8kOjA4gg&usqp=CAU",
+        "example_title": "Note 2"
+      },
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNYtTuSBpZPV_nkBYPMFwVVD9asZOPgHww4epu9EqWgDmXW--sE2o8og40ZfDGo87j5w&usqp=CAU",
+        "example_title": "Note 3"
+      }
+    ],
+    "license": "mit"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2bf99854609538f90af03c921c41a0cbde670b2f",
+      "size": 1229
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "242dbdaefcfc75e80aa64a069152aa9fe45b4a8e",
+      "size": 2999
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "77ca481534a03a5050a452b5e66eeb6b33655cef",
+      "size": 4165
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "209d1d39a6767d115b4ebff7ba46fe9c1739e90e",
+      "size": 190
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "226b0752cac7789c48f0cb3ec53eda48b7be36cc",
+      "size": 456318
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "c8611b22d3db7757407a9cc21e561e25ccec3361",
+      "size": 1333384464,
+      "lfs": {
+        "sha256": "25a40cddc7e6120140a3d5b9e3dd3878a92ada7b4f312953ab22edc19c2a5acc",
+        "size": 1333384464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "f6f37e38a43eb75f83f8413557dd71ec2168185b",
+      "size": 224
+    },
+    {
+      "rfilename": "pytorch_model.bin",
+      "blobId": "50085edc519c71f5b0db55443764e60ab7373bfb",
+      "size": 1333508485,
+      "lfs": {
+        "sha256": "d1091e5a98ff3b31cddcaa21423171be74e6d270128896e9edd0f6394e2a9978",
+        "size": 1333508485,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "e97d1993365bb21c88f390e8703e4c1af564821f",
+      "size": 772
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "8a1587ff662748498a14db272b5c3eb58ec7da95",
+      "size": 1118
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "0a39732b2d8be8e493cab3da68b68cc3e28221de",
+      "size": 898822
+    }
+  ],
+  "spaces": [
+    "microsoft/HuggingGPT",
+    "nielsr/TrOCR-handwritten",
+    "Riksarkivet/htr_demo",
+    "RitaParadaRamos/SmallCapDemo",
+    "amit-scans/Image-Text-Detection",
+    "phyloforfun/VoucherVision",
+    "opendatalab/UniMERNet-Demo",
+    "taesiri/HuggingGPT-Lite",
+    "sushmanth/hand_written_to_text",
+    "ajitrajasekharan/Image-Text-Detection",
+    "wjbmattingly/medieval-htr",
+    "Agents-MCP-Hackathon/htrflow_mcp",
+    "vigneshv/TrOCR-handwritten",
+    "wjbmattingly/medieval-htr-page",
+    "ahasera/alpr-YOLOv8-OCR",
+    "engrrifatullah/Image_text_extractor",
+    "flaviooliveira/trocr-bullinger-htr",
+    "wufan/unimer_demo",
+    "sajitkun125/inkference-app",
+    "VishnuTransformer/TrOCR_Handwritten",
+    "choiyk0103/TrOCR_app",
+    "aico/TrOCR-digit",
+    "Sohag1/Handwritten-text-Recognition-Using-TrOCR",
+    "BMukhtar/BMA",
+    "ccarr0807/HuggingGPT",
+    "theholycityweb/HuggingGPT",
+    "mscsasem3/CHAAT",
+    "Alfasign/HuggingGPT-Lite",
+    "saurshaz/HuggingGPT",
+    "cheenchan/OCR-TEXT",
+    "Amine-0047/license_plate_detection",
+    "elliottd/SmallCapDemo",
+    "ak-ml18/OCR_Model",
+    "prabhat076/OCR",
+    "SebDixonRevenir/TrOCR-Handwriting-Demo",
+    "apaxray/SabziAi",
+    "JarvisOnSolana/Jarvis",
+    "DataInsightAI/pdf-ocr-extractor",
+    "awacke1/PDF-Image-Book-Album-Maker-AI-UI-UX",
+    "awacke1/Book-Maker-CVLM-AI-UI-UX",
+    "chandinisaisri/formiq",
+    "NOTBRICK/CEK_PLAT",
+    "NTU-Peak-2/SIngtel-Bill-Scanner",
+    "iammraat/yoloocr",
+    "Subiksha0515/Air_Writing_Recognition",
+    "rizwanbaaz/mediscan-ai",
+    "Singhp08/Daimond-Batch",
+    "nithya200x/LexiSight",
+    "ghadgemadhuri92/mathstutor",
+    "hashan-7/medscript-prescription-ocr",
+    "MasterSayn/ocr-app-private",
+    "sajitkun125/inkference",
+    "hugruby/trocr_streamlit_imitate",
+    "Aalaa/OCR",
+    "imflash217/TrOCR_EN_ICR",
+    "mscsasem3/recogniser",
+    "sussahoo/hwreco",
+    "sk2003/Hist-TrOCR",
+    "dvsth/learning-legibility-2023",
+    "abdulsamad/NameOnCheque",
+    "BalajiM/handwritten_text_recognition",
+    "Felixogunwale/samuel_text_detection",
+    "keaneu/HuggingGPT",
+    "viscosity/HuggingGPT",
+    "Mcdof/HuggingGPT",
+    "manu1435/HuggingGPT",
+    "Shenziqian/HuggingGPT",
+    "chrisW6825/HuggingGPT",
+    "ryan12439/HuggingGPTpub",
+    "lokutus/HuggingGPT",
+    "trhacknon/HuggingGPT",
+    "mimiqiao/HuggingGPT",
+    "tsgbalakarthik/HuggingGPT",
+    "Msp/HuggingGPT",
+    "wowochkin/HuggingGPT",
+    "Betacuckgpt/HuggingGPT",
+    "cashqin/HuggingGPT",
+    "felixfriday/MICROSOFTT_JARVIS_HuggingGPT",
+    "apgarmd/jarvis2",
+    "apgarmd/jarvis",
+    "Meffordh/HuggingGPT",
+    "mukulnag/HuggingGPT1",
+    "NaamanSaif/HuggingGPT",
+    "lzqfree/HuggingGPT",
+    "bountyfuljr/HuggingGPTplaypublic",
+    "mearjunsha/HuggingGPT",
+    "lugifudun/HuggingGPT",
+    "leadmaister/HuggingGPT",
+    "pors/HuggingGPT",
+    "vs4vijay/HuggingGPT",
+    "Chokyounghoon/HuggingGPT",
+    "turbowed/HuggingGPT",
+    "lollo21/Will-GPT",
+    "Pfs2021Funny/HuggingGPT",
+    "irritablebro/HuggingGPT",
+    "mckeeboards/HuggingGPT",
+    "MagKoz/HuggingGPT",
+    "zhangdream/HuggingGPT",
+    "calliber/HuggingGPT",
+    "gaocegege/HuggingGPT"
+  ],
+  "createdAt": "2022-03-02T23:29:05.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 333331200
+    },
+    "total": 333331200
+  },
+  "usedStorage": 6522841040
+}

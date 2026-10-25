@@ -1,0 +1,1499 @@
+{
+  "_id": "6ad18c6db23362744e67d5dc",
+  "id": "DevQuasar/meta-models.Muse-Spark-Open-816B-A42B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:meta-models/Muse-Spark-Open-816B-A42B",
+    "base_model:quantized:meta-models/Muse-Spark-Open-816B-A42B",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 206,
+  "likes": 0,
+  "modelId": "DevQuasar/meta-models.Muse-Spark-Open-816B-A42B-GGUF",
+  "author": "DevQuasar",
+  "sha": "c672a7ec1265a824669cf0b856846ce9113d41d9",
+  "lastModified": "2026-10-16T22:11:45.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "meta-models/Muse-Spark-Open-816B-A42B"
+    ],
+    "pipeline_tag": "image-text-to-text"
+  },
+  "gguf": {
+    "total": 819991575808,
+    "architecture": "muse-spark",
+    "context_length": 1048576,
+    "chat_template": "{%- set tools = tools | default(none) -%}\n{%- set add_generation_prompt = add_generation_prompt | default(false) -%}\n{%- set reasoning_effort = reasoning_effort | default('xhigh', true) -%}\n{%- set cutoff_date = cutoff_date | default('2026-01-04') -%}\n{%- set current_date = current_date | default(strftime_now('%Y-%m-%d') if strftime_now is defined else none) -%}\n{%- set reasoning_effort_map = {'low': 8, 'medium': 32, 'high': 256, 'xhigh': 512} -%}\n{%- if not (reasoning_effort is string and reasoning_effort in reasoning_effort_map) -%}\n    {{- raise_exception('Unsupported reasoning_effort: ' ~ reasoning_effort ~ '. Expected one of: low, medium, high, xhigh.') -}}\n{%- endif -%}\n{%- set deferred_render_mode = deferred_render_mode | default('tool_name_and_description') -%}\n\n{#- Neutralise control sequences in caller-supplied text so it cannot be\n    tokenized as structure. \"<|\" is broken because every special token has the\n    form \"<|...|>\"; the bare media placeholders are broken because the\n    multimodal processor rewrites them positionally and a literal one in text\n    would desynchronise placeholders from the attached media. -#}\n{%- macro esc(value) -%}\n    {{- value | string\n        | replace('<|', '< |')\n        | replace('<image>', '< image>')\n        | replace('<video>', '< video>')\n        | replace('<audio>', '< audio>') -}}\n{%- endmacro -%}\n\n{%- macro esc_header(value) -%}\n    {{- esc(value) | replace('\\r', ' ') | replace('\\n', ' ') -}}\n{%- endmacro -%}\n\n{%- macro esc_attr(value) -%}\n    {{- esc_header(value)\n        | replace('&', '&amp;')\n        | replace('\"', '&quot;')\n        | replace(\"'\", '&#39;')\n        | replace('<', '&lt;')\n        | replace('>', '&gt;') -}}\n{%- endmacro -%}\n\n{%- macro render_content(content) -%}\n    {%- if content is string -%}\n        {{- esc(content) -}}\n    {%- elif content is not none -%}\n        {%- for part in content -%}\n            {%- set part_type = part.get('type', '') -%}\n            {%- if part_type in ['image', 'input_image', 'image_url'] -%}\n                {{- '<|patch|>' -}}\n            {%- elif part_type in ['video', 'input_video', 'video_url'] -%}\n                {{- '<|video|>' -}}\n            {%- elif part_type in ['audio', 'input_audio', 'audio_url'] -%}\n                {{- '<|audio|>' -}}\n            {%- elif part_type in ['text', 'input_text', 'output_text'] -%}\n                {{- esc(part.get('text', '')) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_atem(tc) -%}\n    {%- set args = tc.function.arguments -%}\n    {%- if args is not mapping -%}\n        {{- raise_exception('This chat template requires tool_call.function.arguments to be a dict (mapping). The jinja sandbox has no JSON parser, so deserialize the arguments string before calling apply_chat_template.') -}}\n    {%- endif -%}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"' -}}{{- esc_attr(tc.function.name) -}}{{- '\">\\n' -}}\n    {%- for k, v in args.items() -%}\n        {{- '<atem:parameter name=\"' -}}{{- esc_attr(k) -}}{{- '\">' -}}\n        {%- if v is boolean -%}\n            {%- if v -%}\n                true\n            {%- else -%}\n                false\n            {%- endif -%}\n        {%- elif v is none -%}\n            null\n        {%- elif v is mapping or (v is iterable and v is not string) -%}\n            {{- esc(v | tojson) -}}\n        {%- else -%}\n            {{- esc(v) -}}\n        {%- endif -%}\n        {{- '</atem:parameter>\\n' -}}\n    {%- endfor -%}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n\n{#- One function line, as the training renderer prints it. Deferred: name plus description and annotation\n    (tool_name_and_description) or annotation only (tool_name_only). Full: \"additionalProperties\": false is added\n    when the schema lacks it, and empty parameters become an empty object schema. -#}\n{%- macro fn_line(name, fn, deferred) -%}\n    {%- set desc = fn.description if fn.description is defined and fn.description else '' -%}\n    {%- set p = fn.parameters if fn.parameters is defined and fn.parameters else {} -%}\n    {%- if deferred -%}\n        {%- set desc = ('' if deferred_render_mode == 'tool_name_only' else desc ~ ' ') ~ '[deferred: use tool_search to load full schema]' -%}\n        {{- '\\n{\"name\": ' ~ esc(name | tojson) ~ ', \"description\": ' ~ esc(desc | tojson) ~ ', \"defer_loading\": true}' -}}\n    {%- else -%}\n        {%- if p is mapping and p | length == 0 -%}\n            {%- set p = '{\"type\": \"object\", \"properties\": {}, \"additionalProperties\": false}' -%}\n        {%- elif p is mapping and 'additionalProperties' not in p -%}\n            {%- set p = (p | tojson)[:-1] ~ ', \"additionalProperties\": false}' -%}\n        {%- else -%}\n            {%- set p = p | tojson -%}\n        {%- endif -%}\n        {{- '\\n{\"name\": ' ~ esc(name | tojson) ~ ', \"description\": ' ~ esc(desc | tojson) ~ ', \"parameters\": ' ~ esc(p) ~ '}' -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- tools: OpenAI function tools, plus namespace tools {\"type\": \"namespace\", \"name\", \"description\", \"defer_loading\",\n    \"tools\": [function, ...]}. In a deferred namespace, functions without their own flag inherit the deferral; only\n    when some are true and some explicitly false do the explicitly eager ones keep their full schema. -#}\n{%- macro render_tool_defs(tools) -%}\n    {{- 'In this environment you have access to a set of tools you can use to answer the user\\'s question.\\n\\n' -}}\n    {{- 'You can invoke a function by writing a \"<atem:function_calls>\" block like the following as part of your reply to the user:\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"$FUNCTION_NAME\">\\n<atem:parameter name=\"$PARAMETER_NAME\">$PARAMETER_VALUE</atem:parameter>\\n...\\n</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'String and scalar parameters should be specified as is, while lists and objects should use JSON format. Note that spaces for string values are not stripped. The output is not expected to be valid XML and is parsed with regular expressions.\\n' -}}\n    {{- 'Here are the functions available in JSONSchema format:\\n' -}}\n    {%- set td = namespace(meta='', fns='', loose=false) -%}\n    {%- for tool in tools -%}\n        {%- if tool.type is defined and tool.type == 'namespace' -%}\n            {%- set ns_deferred = tool.defer_loading is defined and tool.defer_loading -%}\n            {%- set ns_desc = tool.description if tool.description is defined and tool.description else '' -%}\n            {%- set members = tool.tools if tool.tools is defined and tool.tools else [] -%}\n            {%- set flags = namespace(t=false, f=false) -%}\n            {%- for m in members -%}\n                {%- set d = (m.function if m.function is defined else m).defer_loading -%}\n                {%- set flags.t = flags.t or d is not sameas false -%}\n                {%- set flags.f = flags.f or d is sameas false -%}\n            {%- endfor -%}\n            {%- if ns_deferred -%}\n                {%- set ns_desc = '[deferred: use tool_search to load descriptions and schemas]' if deferred_render_mode == 'tool_name_only' else (ns_desc ~ ' ' if ns_desc else '') ~ '[deferred: use tool_search to discover functions]' -%}\n            {%- endif -%}\n            {%- set td.meta = td.meta ~ '\\n{\"name\": ' ~ esc(tool.name | tojson) ~ ', \"description\": ' ~ esc(ns_desc | tojson) ~ (', \"has_deferred_functions\": true}' if ns_deferred else '}') -%}\n            {%- for m in members -%}\n                {%- set mfn = m.function if m.function is defined else m -%}\n                {%- set eager = flags.t and flags.f and mfn.defer_loading is defined and mfn.defer_loading is sameas false -%}\n                {%- if not ns_deferred or eager or deferred_render_mode == 'tool_name_only' -%}\n                    {%- set td.fns = td.fns ~ fn_line(tool.name ~ '.' ~ mfn.name, mfn, (not eager) if ns_deferred else (mfn.defer_loading is defined and mfn.defer_loading)) -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- else -%}\n            {%- set fn = tool.function if tool.function is defined else tool -%}\n            {%- set td.meta = td.meta ~ ('' if td.loose else '\\n{\"name\": \"\", \"description\": \"\"}') -%}\n            {%- set td.loose = true -%}\n            {%- set td.fns = td.fns ~ fn_line(fn.name, fn, fn.defer_loading is defined and fn.defer_loading) -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- '// Tool metadata' ~ td.meta ~ '\\n// Function schemas' ~ td.fns -}}\n    {{- '\\n\\n' -}}\n    {{- 'Here are examples of how to call functions in the tool set. To make parallel tool calls, emit each call as its own message (one tool call per message) in consecutive messages, as shown below:\\n' -}}\n    {{- '(If the tool namespace is not specified, invoke the function directly as `example_function_name_1` rather than `example_tool_name_1.example_function_name_1`)\\n\\n' -}}\n    {{- 'to=example_tool_name_1.example_function_name_1\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name_1.example_function_name_1\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_1\">value_1</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'to=example_tool_name_2.example_function_name_2\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name_2.example_function_name_2\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_2\">This is the value for the second parameter\\nthat can span\\n\"multiple\" lines\\n</atem:parameter>\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_3\">value_3</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n\n{%- macro render_valid_recipients(tools) -%}\n    {%- set rns = namespace(recipients=[]) -%}\n    {{- 'Use the appropriate recipient for each message:\\n\\n' -}}\n    {%- set rns.recipients = rns.recipients + ['\"self\"'] -%}\n    {{- '- \"self\": private reasoning and tool planning.\\n' -}}\n    {%- set rns.recipients = rns.recipients + ['\"commentary\"'] -%}\n    {{- '- \"commentary\": user-visible intermediate updates while the assistant will continue working, including messages sent to the user before or between tool calls.\\n' -}}\n    {%- if tools -%}\n        {%- set rt = namespace(first=none, ns=[]) -%}\n        {%- for tool in tools -%}\n            {%- if tool.type is defined and tool.type == 'namespace' -%}\n                {%- set rt.ns = rt.ns + ['\"' ~ esc_header(tool.name) ~ '.*\"'] -%}\n            {%- elif rt.first is none -%}\n                {%- set rt.first = (tool.function if tool.function is defined else tool).name -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- set rns.recipients = rns.recipients + (['\"[func_name] (e.g., ' ~ esc_header(rt.first) ~ ')\"'] if rt.first is not none else []) + rt.ns -%}\n        {{- '- \"tool\" or \"[tool name]\": the name of the tool to call.\\n' -}}\n    {%- endif -%}\n    {%- set rns.recipients = rns.recipients + ['\"user\"'] -%}\n    {{- '- \"user\": messages that end the assistant turn, such as a completed response or clarification question that waits for the user\\'s reply; do not use for pre-tool updates or partial responses.\\n' -}}\n    {{- '\\n# Valid recipients: ' ~ rns.recipients | join(', ') ~ '.' -}}\n{%- endmacro -%}\n\n{{- bos_token -}}\n{%- set ns = namespace(instructions=none, rest=messages) -%}\n{%- if messages and messages[0]['role'] in ['system', 'developer'] -%}\n    {%- set ns.instructions = render_content(messages[0]['content'])\n          | replace('Reasoning effort', 'Reasoning strength')\n          | replace('Reasoning Effort', 'Reasoning Strength')\n          | replace('reasoning effort', 'reasoning strength')\n          | replace('REASONING EFFORT', 'REASONING STRENGTH') -%}\n    {%- set ns.rest = messages[1:] -%}\n{%- endif -%}\n{%- set sys = namespace(parts=['You are a helpful AI assistant.', 'Knowledge cutoff: ' ~ cutoff_date ~ '.']) -%}\n{%- if current_date -%}\n    {%- set sys.parts = sys.parts + ['Current date: ' ~ current_date ~ '.'] -%}\n{%- endif -%}\n{%- if ns.instructions -%}\n    {%- set sys.parts = sys.parts + [ns.instructions] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set sys.parts = sys.parts + [render_tool_defs(tools) | trim] -%}\n{%- endif -%}\n{%- if 'reasoning strength:' not in ((ns.instructions if ns.instructions else '') | lower) -%}\n    {%- set sys.parts = sys.parts + ['Reasoning strength: ' ~ reasoning_effort_map[reasoning_effort] ~ '.'] -%}\n{%- endif -%}\n{%- set sys.parts = sys.parts + [render_valid_recipients(tools) | trim] -%}\n{{- '<|start|>system<|message|>' ~ sys.parts | join('\\n\\n') ~ '<|eot|>' -}}\n{%- for message in ns.rest -%}\n    {%- set role = message['role'] -%}\n    {%- set end_token = '<|eom|>' if (not loop.last and ns.rest[loop.index0 + 1]['role'] == role) else '<|eot|>' -%}\n    {%- if role in ['system', 'developer'] -%}\n        {{- '<|start|>' + role + '<|message|>' -}}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'user' -%}\n        {{- '<|start|>user<|message|>' -}}\n        {%- if message.get('render_timestamp') and message.get('timestamp') -%}\n            {%- set ts = message['timestamp'] -%}\n            {%- if ts is string -%}\n                {{- '[' ~ esc_header(ts) ~ '] ' -}}\n            {%- elif ts.strftime is defined -%}\n                {{- '[' ~ (ts.strftime('%a %Y-%m-%d %H:%M %Z') | trim) ~ '] ' -}}\n            {%- endif -%}\n        {%- endif -%}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'tool' -%}\n        {%- set tname = message.get('name') -%}\n        {%- if not tname -%}\n            {%- set tcid = message.get('tool_call_id') -%}\n            {%- set tns = namespace(name=tcid if tcid else '') -%}\n            {%- for m in messages -%}\n                {%- if m.get('tool_calls') -%}\n                    {%- for tc in m['tool_calls'] -%}\n                        {%- if tcid is not none and tc.id is defined and tc.id == tcid -%}\n                            {%- set tns.name = tc.function.name -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n            {%- endfor -%}\n            {%- set tname = tns.name -%}\n        {%- endif -%}\n        {%- if not tname -%}\n            {{- raise_exception('tool message has no name and no matching tool_call_id') -}}\n        {%- endif -%}\n        {{- '<|start|>tool ' -}}{{- esc_header(tname) -}}{{- '<|message|><tool_output name=\"' -}}{{- esc_attr(tname) -}}{{- '\">\\n' -}}\n        {{- render_content(message['content']) -}}\n        {{- '\\n</tool_output><|eot|>' -}}\n    {%- elif role == 'assistant' -%}\n        {%- generation %}\n        {%- set reasoning = message.get('reasoning_content') or message.get('reasoning') -%}\n        {%- if reasoning -%}\n            {{- '<|start|>assistant to=self<|message|>' -}}{{- esc(reasoning) -}}{{- '<|eom|>' -}}\n        {%- endif -%}\n        {%- set body = render_content(message.get('content')) -%}\n        {%- if message.get('tool_calls') -%}\n            {%- if body -%}\n                {{- '<|start|>assistant to=commentary<|message|>' + body + '<|eom|>' -}}\n            {%- endif -%}\n            {%- for tc in message['tool_calls'] -%}\n                {{- '<|start|>assistant to=' -}}{{- esc_header(tc.function.name) -}}{{- '<|message|>' -}}\n                {{- render_atem(tc) -}}\n                {{- (end_token if loop.last else '<|eom|>') -}}\n            {%- endfor -%}\n        {%- elif body or not reasoning -%}\n            {%- set recipient = message.get('recipient') or 'user' -%}\n            {%- if recipient == 'user' -%}\n                {%- set end_turn = true -%}\n            {%- elif recipient in ['self', 'commentary'] -%}\n                {%- set end_turn = false -%}\n            {%- elif message.get('end_turn') is not none -%}\n                {%- set end_turn = message.get('end_turn') -%}\n            {%- else -%}\n                {%- set end_turn = false -%}\n            {%- endif -%}\n            {{- '<|start|>assistant to=' -}}{{- esc_header(recipient) -}}{{- '<|message|>' -}}\n            {{- body -}}\n            {{- ('<|eot|>' if end_turn else '<|eom|>') -}}\n        {%- endif -%}\n        {%- endgeneration %}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- '<|start|>assistant' -}}\n{%- endif -%}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|end_of_text|>",
+    "totalFileSize": 304080478560
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2833d91e913ba982dd9c007cf8e8a038be52b131",
+      "size": 18837
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00001-of-00024.gguf",
+      "blobId": "e8449fab016bde448e5402c0f2300b59bfa7571e",
+      "size": 13636511488,
+      "lfs": {
+        "sha256": "bbf8a0896c33e41b2d099744d02bef67173a16b83a2091857b86b99036cfb192",
+        "size": 13636511488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00002-of-00024.gguf",
+      "blobId": "3f19b93678a492e63ae66b7284fbb8818a198904",
+      "size": 12775465664,
+      "lfs": {
+        "sha256": "a103ab2e45baed61a31096fffc9f36ae3473136ca073db3e52fa133b44b9862b",
+        "size": 12775465664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00003-of-00024.gguf",
+      "blobId": "6bb3865e1c50cfb45a7dd69103d5681e234e24c2",
+      "size": 13081909760,
+      "lfs": {
+        "sha256": "0583f26902544cc730e6a96a5f6707fb9c172634103156450000b4bad588fa95",
+        "size": 13081909760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00004-of-00024.gguf",
+      "blobId": "188ec3b09702635cef0d2f749701c5dbf2cd0865",
+      "size": 13131849952,
+      "lfs": {
+        "sha256": "6fec95a3ae8b5a1a95a405568ee91dd1ebaddbf52089ea749a862ee078576f38",
+        "size": 13131849952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00005-of-00024.gguf",
+      "blobId": "ba3695bca847c4b266c7a58481a339527af24cdf",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "7c37f619304a924483ba760f9124a271c5e5c4d45694e91b6a1d8c554e945011",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00006-of-00024.gguf",
+      "blobId": "ca1f79463f5caac101ad596e3d55dcf2e50741cc",
+      "size": 13081909824,
+      "lfs": {
+        "sha256": "3f60377ce56f6f75830bb5bd4a0b9b9a129ce40663c0060d57d7521d7a012f75",
+        "size": 13081909824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00007-of-00024.gguf",
+      "blobId": "e6b8a10e85cc0e13a77698975b61b1e849a5dc31",
+      "size": 13131850016,
+      "lfs": {
+        "sha256": "49689c164691bbbe670a3ec48b5db854b6dce32bdcbf033d349c1511af7d2f50",
+        "size": 13131850016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00008-of-00024.gguf",
+      "blobId": "06c437efbb72b98db85940b43205a441bdc5cfb5",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "98baef3380420aaff000bac0e16c3817df13afa69fdb72e3e49884b9a35dd283",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00009-of-00024.gguf",
+      "blobId": "6d9793dd5630de9ed1144cee9d42bce64256b8ff",
+      "size": 13081909824,
+      "lfs": {
+        "sha256": "3a9eac7ad81c18aef5160fb37ffd6fc82a4eff504054536a935398ddb86b63f9",
+        "size": 13081909824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00010-of-00024.gguf",
+      "blobId": "bb2d7cf4950ae69c33598608d72be69c565e0792",
+      "size": 13131850016,
+      "lfs": {
+        "sha256": "83c80828e64cf8bb9bb3df78bae48441f3ed6487a290ec6fdea50813f41862d6",
+        "size": 13131850016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00011-of-00024.gguf",
+      "blobId": "89f105ca043b0257b9d17ed7740265f78002020d",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "f9246d8c7560863b9e2d55dd6106962d5ef6f2fdf455e8f61f8f19802acd60e6",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00012-of-00024.gguf",
+      "blobId": "3419e8d523d049409b1eac53e0d1d716ab7c96a4",
+      "size": 13081909824,
+      "lfs": {
+        "sha256": "f7d3cd247de319045cf7a7daf60fcb56c6a4daded6a839cc3c7680347a046587",
+        "size": 13081909824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00013-of-00024.gguf",
+      "blobId": "651814a5a01017f00f251be46406d2685efc4984",
+      "size": 13131850016,
+      "lfs": {
+        "sha256": "93a221f07c0349879b43ca7052398911d5176360435bad5ff3068b74d68b4416",
+        "size": 13131850016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00014-of-00024.gguf",
+      "blobId": "58957324d7a4cdc2de5554209992351f36cdd39b",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "f641052b417add43c7b00a6b85f10bfbd1f93affb9ffb1a21292c2bd8d664130",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00015-of-00024.gguf",
+      "blobId": "21ed8f6d8ccb83f9c49e5c1ad4c94b8574859992",
+      "size": 13081909824,
+      "lfs": {
+        "sha256": "d3b430aa7f767d46b93ca45732885e3d37a202ba22b17c1f15f8f0f15e31b98b",
+        "size": 13081909824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00016-of-00024.gguf",
+      "blobId": "a0dacc613d30c1e5db4c48993fe28776451f0bbc",
+      "size": 13131850016,
+      "lfs": {
+        "sha256": "bba222b869650b31fd9acb37d304c19cb2adecb55cff2c18a163f5322334fc95",
+        "size": 13131850016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00017-of-00024.gguf",
+      "blobId": "ead8edcfbce049be6d060e6a7b09f7161f30f076",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "f076372742603f23d095e2a7e7a9e936710b5787d30296057cbda25dc5be481a",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00018-of-00024.gguf",
+      "blobId": "90c56e5318b0d802b47f5704759a887fbbbc6803",
+      "size": 13081909824,
+      "lfs": {
+        "sha256": "faf1462e5e942e111a2631751470f5a36eb523e66d90235ac8960656aeab0fad",
+        "size": 13081909824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00019-of-00024.gguf",
+      "blobId": "47ec28458bbb92ce6e0430789b77bc712ee9a7c8",
+      "size": 13131850016,
+      "lfs": {
+        "sha256": "1254c11f90b881e8ea61311695e0826bad3731112c7d853cf60404973433ac18",
+        "size": 13131850016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00020-of-00024.gguf",
+      "blobId": "a2501d692f2f356fce64a3aba78895fadde0128e",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "9d5a6bed7a6ede5ad600d30cbdafba828aa683fe95e166fc858a6f09f3bdc5a9",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00021-of-00024.gguf",
+      "blobId": "2c19eb501a59fc8455b141835c39f409ce750977",
+      "size": 13081909824,
+      "lfs": {
+        "sha256": "279c889476fb02cb8e78cd774f624922a2927150adb1f027331aace02268f88f",
+        "size": 13081909824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00022-of-00024.gguf",
+      "blobId": "04e3c7afd31450b6f206160849c5cdb235bf2b8a",
+      "size": 13131850016,
+      "lfs": {
+        "sha256": "d5adc02da15d16f022b43c26025ee0d981cacf973b7f1322336a0d630f09630a",
+        "size": 13131850016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00023-of-00024.gguf",
+      "blobId": "ccbb0a89067283e92a775bf4053ceccf69ce45ff",
+      "size": 12775465728,
+      "lfs": {
+        "sha256": "36c6f2edd23fd00e24939e17207725ea98b5349b2bb2a79fc364d6e88386632e",
+        "size": 12775465728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q2_K.gguf-00024-of-00024.gguf",
+      "blobId": "c0fbebd03b0f0ccab3f6ef11317dd0ff6e484901",
+      "size": 4743922560,
+      "lfs": {
+        "sha256": "b3b2e6a7f978c2bc9364c5589b28fd85c0f9f940603f2a58cdca9e77e89f48e8",
+        "size": 4743922560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00001-of-00032.gguf",
+      "blobId": "7e97c6996fec92085ce0e48d0e5d82cbcaab6837",
+      "size": 13978545568,
+      "lfs": {
+        "sha256": "923bf82c4c6b5c8a393a50188afa77e5f9e1e73a899313814627326d451cfb46",
+        "size": 13978545568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00002-of-00032.gguf",
+      "blobId": "98fe526f6e2038b4e53f7803ccea2f9a476b192d",
+      "size": 13203019648,
+      "lfs": {
+        "sha256": "86b013ba93f486e3189ada39b0cf62625205bb0531165090d130a210a38061d1",
+        "size": 13203019648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00003-of-00032.gguf",
+      "blobId": "f4522d018858dd81ebf5ea56e11683cec5feb97c",
+      "size": 12666148736,
+      "lfs": {
+        "sha256": "ca10fe07a7253ed38813ee3f4a1f1cf1401ebc585463d28fd74db03caa80de27",
+        "size": 12666148736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00004-of-00032.gguf",
+      "blobId": "9b3102debe813225aadcf985aeea78c938bc76d8",
+      "size": 12666148736,
+      "lfs": {
+        "sha256": "db99bfca97f1bdd77e10e0b85dfe6186bcda2867532bdd9d91a32182825e5d21",
+        "size": 12666148736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00005-of-00032.gguf",
+      "blobId": "22d8cf20e0560a93cced6e4f3ee41dc1a17b06b3",
+      "size": 12666148736,
+      "lfs": {
+        "sha256": "6b8551d187f995f6572d64fb4fd009391944b0a04b5ba1801dbe2a30900101cb",
+        "size": 12666148736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00006-of-00032.gguf",
+      "blobId": "6863d2dfd66f1bcd57223e48c918ff50303aa258",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "3cae54a899aa6bd0ed00aa1b4220a37361af820f6611049d73d9367e5945f2b7",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00007-of-00032.gguf",
+      "blobId": "1a6904a25eaac05cee906dc448044ae0c399f3e0",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "e1b264fda26a192de8f6efcc3dfde7265f0800668de8a02b4af3f53f1a6c83d1",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00008-of-00032.gguf",
+      "blobId": "c25b663d0aed5d6e452c27fa399be5612f6d22ce",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "bbcd4bbb51de05b1e161955fa55c7ec2d0c972533e1abdcfd12d4a62a0316b69",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00009-of-00032.gguf",
+      "blobId": "2fb52af0cf81833044f90a3b1ecdf342561bf2a7",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "79f29ed429d1c2a5a59afb789bdd5f2f135ecfa5efc7c86368463e5681623ef9",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00010-of-00032.gguf",
+      "blobId": "9560f03f6986c6704bcbe3bf1f54278d3c36f9b7",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "965dd84dc61487f2c2a4a36d848e7f6a71dbf79ddda4afc1fa4ebe918cc51f4b",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00011-of-00032.gguf",
+      "blobId": "a74709a5bdf984e83033f931fd7359805437485f",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "334caf0ed3690c0e0dd0e3e77bede297922c80644811dd5b4b475d116473b67b",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00012-of-00032.gguf",
+      "blobId": "b94768d5c3661318f94555a1065687c280e8cd05",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "76cb3d570e28a4f8d7361bafaf92b430b0e34f0d030004a91e8989bbeb834cce",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00013-of-00032.gguf",
+      "blobId": "8fd62970629a63c43b6c715f78e9ddbb7bbc9220",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "4fb7872e6cf614f5a0dde27606685bfe251c9718fb5377762f91ac2a70240d55",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00014-of-00032.gguf",
+      "blobId": "d1268bdb5d63adb32d5ed3249ad8bb27f677eba7",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "d860ecc59697252182cf0fb3ee8c4257794e16a3f41c2a4e603ded15e2f768e1",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00015-of-00032.gguf",
+      "blobId": "c9a673d29ad93baa118fdfbf3a2cdd46e54257dc",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "1edab2ab084c1f74f8129428e1bff8af6e4c3118db8a477a0f4f16c3c0385791",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00016-of-00032.gguf",
+      "blobId": "42116ab7bd0948926bd2786db8b5ebcfb21514ee",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "d933599b5ee051aa9f1f38951b6cbc209507f0c8b7ec9c5b6df65fffe829cd3b",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00017-of-00032.gguf",
+      "blobId": "334b306dcc5966848fbb9849c25a20c26c42b5f3",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "e2a597ea9a1831267b0c98fa7eef8fc7f43a851d228e66d34abec066c53609a5",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00018-of-00032.gguf",
+      "blobId": "02eaab7cad1e87211ee4beeb2491e9a68b693ea1",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "01bf49e7bc15ed21f754492423ea640ee2cb9be76a310111fa24ec6e9e24cc76",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00019-of-00032.gguf",
+      "blobId": "24e38076b51c73f39617197e66c798afdd80ab3c",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "b7ba9bb44107fccf93142af6ce30dc36e6fd1ffd10a126889dab7da6c6e2b227",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00020-of-00032.gguf",
+      "blobId": "65009792c546264207b204f610186ce3f50f3640",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "dfd12dec627fde91024cfcc0ae58078ce6b53b2382b58a02b11ff6106904691c",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00021-of-00032.gguf",
+      "blobId": "b803a68663fad79d59d7d45d9ed8d7eee24d4162",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "962e13664b371a7e8cd66e953789102315751501b19adff563221d244d2be412",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00022-of-00032.gguf",
+      "blobId": "0f9265397fa941093a8607ab450966db7d8c98ac",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "521c12dd56aa8c96784b8bbde46782dd5a49c268105a500b356462e01d376409",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00023-of-00032.gguf",
+      "blobId": "49089d0eb6d675c142da011a329e1ec21f1c805e",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "db9f12f12ae301f68d48f3218566e7e580af4b1f406fcab48dc2877aec7e1f2d",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00024-of-00032.gguf",
+      "blobId": "c7e85b8ae4f4dea43b8f39417dcb8e157ebb5597",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "8c65b66a6fbd8a70dddd7989519ee7a2ab1e32fd6475280d0b517f1d9bbb9fbd",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00025-of-00032.gguf",
+      "blobId": "00d6add84694d086560299e6ce28dfb296f8b25a",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "b8b563efd1d01995734fb72b987af32fd94727e7005f811bb917f1074df8c2b9",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00026-of-00032.gguf",
+      "blobId": "9c640c14ec96b86d31752e29a79d4117a8cfcd1c",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "52a2c5bc59e82adb5a25f6d30eb735f18d1dd7e16780e61e234ffbd6d4f271bb",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00027-of-00032.gguf",
+      "blobId": "2cedead81f7e3ff3fd4a2375aa798827267b012c",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "94e6ee23435918efea650785e09388329a31a95afe41565eac632d897de76eb0",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00028-of-00032.gguf",
+      "blobId": "87708502f9f6dbed109073cd184d10be21aefa76",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "8c2639f9a32ca57421778c345a59990e695a9d2355178b5808cd49277c87057c",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00029-of-00032.gguf",
+      "blobId": "8e53b40fccbec81aae0001117b97ecc9f71e8c58",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "10a187a070000b9818ad3ccb6ba9653fbb7986fc186c42a9381f628c28ad13e7",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00030-of-00032.gguf",
+      "blobId": "139dd82a78cc8a068854db9e05c9c7597eb23f6d",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "c5ec7fe6ffb6b431a560b60af8717b3763ed77cb45a554ffe27af2869a7cbdf4",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00031-of-00032.gguf",
+      "blobId": "2136f8ad599622795e80a210d8b8bda287d4846e",
+      "size": 12666148800,
+      "lfs": {
+        "sha256": "ab9f1042f992ec62ab5d778cec0d2d3ccfcffa7a5c9ada6a07530a3e48dd0d2d",
+        "size": 12666148800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q3_K_M.gguf-00032-of-00032.gguf",
+      "blobId": "c2ebd2d2af93048d47b4aad9ccf9dd8217431cb3",
+      "size": 1845526784,
+      "lfs": {
+        "sha256": "60d309417055697fa67f74a8d5f328facbf17b08c5f906372f544997cfa57299",
+        "size": 1845526784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00001-of-00039.gguf",
+      "blobId": "fcf118f99051477b008d6998c65396ea3df892ff",
+      "size": 11053824800,
+      "lfs": {
+        "sha256": "8770078e725b5365fadd53fc23f40accaa45985221b0aa9b59f58bddca527503",
+        "size": 11053824800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00002-of-00039.gguf",
+      "blobId": "7d782b83221ee105c998a6067364b13698f236ea",
+      "size": 12116626496,
+      "lfs": {
+        "sha256": "b6d31502307f4f9fd93706fdb2728f581a6429ce3b9dad7ebf369c2cb64aaa9e",
+        "size": 12116626496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00003-of-00039.gguf",
+      "blobId": "6e7b65735e9454161d083b8a0cc5a649bddbc41f",
+      "size": 13663606592,
+      "lfs": {
+        "sha256": "93c1701d8e98c22aa1f09f93674efbdd3b8f6d334fc1979b63d23a4ff114b261",
+        "size": 13663606592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00004-of-00039.gguf",
+      "blobId": "8cbc92ed4401c4a51f00bf61d76d7d63d1043764",
+      "size": 12116626496,
+      "lfs": {
+        "sha256": "012fe36a43223936c1ef6acd393c5c61d34d57882e941c30914fb0cb940c7a04",
+        "size": 12116626496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00005-of-00039.gguf",
+      "blobId": "35ec0d08a46863517f5f79bb8216c7803eff23d2",
+      "size": 13661443904,
+      "lfs": {
+        "sha256": "0adc77feb518b68358f797b289225e70cd0d55a14a0b4f459349ae495da6f004",
+        "size": 13661443904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00006-of-00039.gguf",
+      "blobId": "625832c8049e17038c27a5adc46331e8d322bac3",
+      "size": 12395613824,
+      "lfs": {
+        "sha256": "737ebb1248732b0efdd6ad025ea9ebefdd182b3a06fcb13a95474e15aa5ffda7",
+        "size": 12395613824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00007-of-00039.gguf",
+      "blobId": "5acee300ed068a379781ca3ecfad381df1af6c73",
+      "size": 13581620576,
+      "lfs": {
+        "sha256": "47b05d955a97a8ad5ab3474d839d49a2188a02d2d19157082e03048b92f88843",
+        "size": 13581620576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00008-of-00039.gguf",
+      "blobId": "900eb5669080a446be741a73b6ed90df776cebc8",
+      "size": 12554147680,
+      "lfs": {
+        "sha256": "0cc75672f6c3b61f97246584c32293fbc9c9e068813c68c1b304fc9ea5576520",
+        "size": 12554147680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00009-of-00039.gguf",
+      "blobId": "2d9033be44ef835c7d16eacb9c3bfb9df645980d",
+      "size": 13502910112,
+      "lfs": {
+        "sha256": "fd37d0d4586550d4522a47bb83e6b510d7f3343cb7c1344fccf57d0bad3dea23",
+        "size": 13502910112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00010-of-00039.gguf",
+      "blobId": "c3b1ccd9c7e89a022f276414c373ed6fd81c2462",
+      "size": 13581620608,
+      "lfs": {
+        "sha256": "bdb188f758d187197eab76516bc0f9dd36a5aae794c9ba6fdec5a389e174774d",
+        "size": 13581620608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00011-of-00039.gguf",
+      "blobId": "784c79381320179f4352b9095354f566bcb12e5d",
+      "size": 12551984992,
+      "lfs": {
+        "sha256": "285897633f885cc8a3f36db2c8708ccb30232f43210464c1b1756f8c2717c975",
+        "size": 12551984992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00012-of-00039.gguf",
+      "blobId": "184a9104f02184f8ca4bd9aba9e33874f663cbf4",
+      "size": 13505072800,
+      "lfs": {
+        "sha256": "07b5eb2f5ca689e90574ddbfb42556373424168bdcc6bd3e6f135bc78daa21da",
+        "size": 13505072800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00013-of-00039.gguf",
+      "blobId": "275425c382cd945285aba040c1dde2dd600ff03c",
+      "size": 12472161664,
+      "lfs": {
+        "sha256": "8b554d2b49a248e9b0f784a7d7277893435df2102367bcb2ba7ae011f72b4ae2",
+        "size": 12472161664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00014-of-00039.gguf",
+      "blobId": "598dcd4f623b8f23c22c848b119403600a988533",
+      "size": 13661443936,
+      "lfs": {
+        "sha256": "1cd9248f4a81803c6c1ea7a5e66e7ee5b85cb579deeb94b725210215bc40d6b3",
+        "size": 13661443936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00015-of-00039.gguf",
+      "blobId": "5228d70658d3716da4abb805d61d62cc9b577a37",
+      "size": 12395613856,
+      "lfs": {
+        "sha256": "125f09323508452b199c4b4f80f54c2474bcf766c6b5647a0fa78f8cbbd63fd2",
+        "size": 12395613856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00016-of-00039.gguf",
+      "blobId": "9205e6e5ed898b1136cc8a154bf8bd3d626f1169",
+      "size": 13581620608,
+      "lfs": {
+        "sha256": "ef5234293049c2e1f8e0471599879856e81eb9fca7f9875c7313ffc403b2e6a8",
+        "size": 13581620608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00017-of-00039.gguf",
+      "blobId": "439c21e036ddc0cc04024f3434348a0c391a2c92",
+      "size": 12554147680,
+      "lfs": {
+        "sha256": "525de8e4dbb064916223c622a3c5715cdee4720e93c54912b6fbea5f4dd40a10",
+        "size": 12554147680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00018-of-00039.gguf",
+      "blobId": "75febeaabf704e175dd9c00d31123aff2adb04e4",
+      "size": 13502910112,
+      "lfs": {
+        "sha256": "2aa703225467e48e60cb3c890715f7220edd26de1ad4bd9904562d3ad7488411",
+        "size": 13502910112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00019-of-00039.gguf",
+      "blobId": "6349411bfe269d6b729a8fa3f251ccdeca395273",
+      "size": 13581620608,
+      "lfs": {
+        "sha256": "3400ca6973365e55dd812766d4945e77c67a61180914a8745053177c4739ba37",
+        "size": 13581620608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00020-of-00039.gguf",
+      "blobId": "ab58d29f48ac61a25deb8971c362eec25ec3f2b9",
+      "size": 12551984992,
+      "lfs": {
+        "sha256": "e7e3ce0459b46ef990bb1b4338e1f3f81aafa7ef74b7e44dbf66f3bc77595624",
+        "size": 12551984992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00021-of-00039.gguf",
+      "blobId": "0f9cc5a9c4ad1eb7c14c48b76dc25e621f65fe75",
+      "size": 13505072800,
+      "lfs": {
+        "sha256": "03c3e6446bbac0769092031b7cb3b4d95d4533df4b26bc9edebe4a52f2cdfd3a",
+        "size": 13505072800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00022-of-00039.gguf",
+      "blobId": "d55e743c7a7ad09498b69085ca89b686f8901656",
+      "size": 12472161664,
+      "lfs": {
+        "sha256": "0a9df7aa6df062a3fdc6811db44f17181121de6a465799ba71f0d8eceb467ca0",
+        "size": 12472161664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00023-of-00039.gguf",
+      "blobId": "b6515a6d0b698a6abad896bd03cda61a27b2b2c8",
+      "size": 13661443936,
+      "lfs": {
+        "sha256": "91cd9c14a9694c8a98c70ad9b7bc887f28d7002a44de855a7e9eebdf986583a9",
+        "size": 13661443936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00024-of-00039.gguf",
+      "blobId": "cd16c9ea205d011247787f4f1e4c4736877028a2",
+      "size": 12395613856,
+      "lfs": {
+        "sha256": "8c49143e6b9920c76207a0ae82707d4e0816913a8a2dede3e801ad2a48de1315",
+        "size": 12395613856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00025-of-00039.gguf",
+      "blobId": "6d9dc6b107ea9575e78a2a630b34b3974f4a3607",
+      "size": 13581620608,
+      "lfs": {
+        "sha256": "ab70df91ac24c9eaca1c3e398d43548437ebe4285c27a7101af0a339db8e1c37",
+        "size": 13581620608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00026-of-00039.gguf",
+      "blobId": "7c46325506fbf39274f9c30ed0782e12950018d6",
+      "size": 12554147680,
+      "lfs": {
+        "sha256": "37354614da129853e4718f7b69a08ebc947739fa6b86464ae223b3fcfc48214e",
+        "size": 12554147680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00027-of-00039.gguf",
+      "blobId": "d8c3497e3b8cf16b9b1104f39f36332504348aad",
+      "size": 13502910112,
+      "lfs": {
+        "sha256": "5adb48bb911c00d50b20f5c8afdbc47845cb0a44b388dbd58055de6760cb2525",
+        "size": 13502910112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00028-of-00039.gguf",
+      "blobId": "6d80891237c903152058747ceae79c907c73867c",
+      "size": 13581620608,
+      "lfs": {
+        "sha256": "880222d3d36692204190240f21f0c48de7691fa7024206830df298a2ddcae26d",
+        "size": 13581620608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00029-of-00039.gguf",
+      "blobId": "b28c97eaf8dbb3d0d867d70c3f4cafc6c0892046",
+      "size": 12551984992,
+      "lfs": {
+        "sha256": "ed65e79f9ae16931a4321c2c2d5e268c538b94bbb925a9033bab475fd280d53b",
+        "size": 12551984992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00030-of-00039.gguf",
+      "blobId": "0b193c0655b8c3b477d77283fc15570b56c2dcc0",
+      "size": 13505072800,
+      "lfs": {
+        "sha256": "431638378bf90fc656630e2bb7c9c4f23f4ce25caae00ee50be5204804a3ea91",
+        "size": 13505072800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00031-of-00039.gguf",
+      "blobId": "3bba316fbc03c6e0197933907d9bf3dc1b1fcd1e",
+      "size": 12472161664,
+      "lfs": {
+        "sha256": "0c75bf7f3a6e1f383ccb3e7342d23507463c843c0716ad13c093c07dc648615e",
+        "size": 12472161664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00032-of-00039.gguf",
+      "blobId": "0b43852876cbb759312cf834e93c9dcd479516b2",
+      "size": 13661443936,
+      "lfs": {
+        "sha256": "d07d0fa5ea37ede4b098906275da5f3c47ed01158b2da51649a24abf15ddf452",
+        "size": 13661443936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00033-of-00039.gguf",
+      "blobId": "1fb2c8bca8d9f1b62667305cbb4a2e4a826ae84e",
+      "size": 12395613856,
+      "lfs": {
+        "sha256": "41c79caa6052560e54b434f201bd11c0752547be96411cf403011109805baf8f",
+        "size": 12395613856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00034-of-00039.gguf",
+      "blobId": "f29a0c7c43278ee22a1b71691137e0b7c4eb0d40",
+      "size": 11167864096,
+      "lfs": {
+        "sha256": "3253788c14ee76f9cb8631637c4d97315dd8a152d97ca3548d8a4fa0a7a933a2",
+        "size": 11167864096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00035-of-00039.gguf",
+      "blobId": "74282efda954ec5bb422be262ccb87f3ab8d47af",
+      "size": 12116626528,
+      "lfs": {
+        "sha256": "27d693d1f14c22851102d6695a8dcce0e29072111f40401ef03da1a3855e2031",
+        "size": 12116626528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00036-of-00039.gguf",
+      "blobId": "ca1020ab5d6ed5d21c3b5b617bb8bdae7226af74",
+      "size": 13663606624,
+      "lfs": {
+        "sha256": "677cb1502e12a6a1af21ed34fc09a376426da436a6c9f221480358e412234adb",
+        "size": 13663606624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00037-of-00039.gguf",
+      "blobId": "c44e4ecac65fb1a83b7950c2b7a932c1cb4ead59",
+      "size": 12116626528,
+      "lfs": {
+        "sha256": "8606922b21a6b24d140789488d3d9162484ea3566536a555856f3913fa9ac290",
+        "size": 12116626528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00038-of-00039.gguf",
+      "blobId": "395ea554661cfcecb98186ebf07bab1d5f922e69",
+      "size": 13663606624,
+      "lfs": {
+        "sha256": "cbbe812f4452f5799593da428936ea5fc158fc4b59b50f862d179caaa365575f",
+        "size": 13663606624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q4_K_M.gguf-00039-of-00039.gguf",
+      "blobId": "cab4d501242300a0fa47c730372d52f5d0c353e2",
+      "size": 8434910080,
+      "lfs": {
+        "sha256": "e212063e74319df3ab982ac9ec8bced3ed736bc780b59b32020ce399b5ddb82d",
+        "size": 8434910080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00001-of-00047.gguf",
+      "blobId": "75fa772d4d5a49c25fbaa3cd0dc2485005d8fd6c",
+      "size": 12370115360,
+      "lfs": {
+        "sha256": "2abc93212d0c05f4fd3df2cb8b6f025f929b8b54e391dc5592c2f5ccaafa502b",
+        "size": 12370115360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00002-of-00047.gguf",
+      "blobId": "9d99805d3f80bfbfdc9073a96690ab4367a1675b",
+      "size": 13208194112,
+      "lfs": {
+        "sha256": "f31d626b707a7301cb2b554c3be90f020e6a9a45c1d6c2d5650f67e19fd6821a",
+        "size": 13208194112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00003-of-00047.gguf",
+      "blobId": "9ade73f5a12fffe2eaab8cee378c2b5d47087860",
+      "size": 12717592128,
+      "lfs": {
+        "sha256": "8918b0b07684645d16a97882ea3038d68f87261fb1ec963ae9ead64df856bc5e",
+        "size": 12717592128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00004-of-00047.gguf",
+      "blobId": "9aeb03c1e8807903ef1f76fef54918444307a8dc",
+      "size": 12814128384,
+      "lfs": {
+        "sha256": "1c04374bf5c6191fc0f2d2f29011ec8df9109e4b282f8c2b4ccea3d47f612f41",
+        "size": 12814128384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00005-of-00047.gguf",
+      "blobId": "d9e60b3ecc448f3bdb1c8b690b2f5bb2bac53643",
+      "size": 13208194112,
+      "lfs": {
+        "sha256": "15f42dea421486e03c0be06590e75ca7684e1f9bd4d24e5926c590d1930cd490",
+        "size": 13208194112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00006-of-00047.gguf",
+      "blobId": "de52eef862e6aaad8af05499ab73953d633ef86e",
+      "size": 12146052672,
+      "lfs": {
+        "sha256": "0f9d8ad07b2d8bd5230257b981918b5076187274fee0c747b569cee7b37ab3b1",
+        "size": 12146052672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00007-of-00047.gguf",
+      "blobId": "a0a11f2a4ccb7d86e19810b60111fc9519b1922d",
+      "size": 12242588928,
+      "lfs": {
+        "sha256": "fbc120f972d7c8e802201712c5fa678adffe6fb9d2c4c00a7d328f4385f349b1",
+        "size": 12242588928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00008-of-00047.gguf",
+      "blobId": "9ee56fb7a7cdb75e3ddac2a10ce43281861cb3dd",
+      "size": 12636654688,
+      "lfs": {
+        "sha256": "5ffa3c2c29eef128157ac9e3aafecc1619d26413f7f038e747438bf2647799fd",
+        "size": 12636654688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00009-of-00047.gguf",
+      "blobId": "bfc8c3e22a64319d76bdc7102d4b66d27b4076e7",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "3cb5a4782d417ab9c2eda6e4a033cf7d0de6c8f205faef5b6997eee83b099bf0",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00010-of-00047.gguf",
+      "blobId": "4401c67404477641fc6b28e216ffa0a6c400b912",
+      "size": 12813014304,
+      "lfs": {
+        "sha256": "c9087b3b590e68249eb2f9dde44de7118355b725a5de40096bacdc8cb7a70665",
+        "size": 12813014304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00011-of-00047.gguf",
+      "blobId": "a705a12f8a1c30e3a1bd467dcee2484c68ae6969",
+      "size": 12066229344,
+      "lfs": {
+        "sha256": "173bb5d77b738a845182e4124422fe059a238b1631e90cf9fbd16579fda4d172",
+        "size": 12066229344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00012-of-00047.gguf",
+      "blobId": "76afed457ac3ec15c72c55003dabd507a8688bc2",
+      "size": 12717592160,
+      "lfs": {
+        "sha256": "45aa3b7665138332298dee8487cfac1e743b076e326fcd1b2e49b0e1d3ec367d",
+        "size": 12717592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00013-of-00047.gguf",
+      "blobId": "28686561ea1f65a82400f5a31af1970aad83e0aa",
+      "size": 12241474848,
+      "lfs": {
+        "sha256": "c2066bd1622a8f632f3797d4e78f74e039eeca815a4f074cc0d17d48bdca6b78",
+        "size": 12241474848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00014-of-00047.gguf",
+      "blobId": "a3cc50a8ee8760a89543f7bf9e85c72b2f2c03af",
+      "size": 12637768800,
+      "lfs": {
+        "sha256": "91fdc25293848f9ee46b9c018793c82261a1c0c317cdf6979d6683af3f64d1d4",
+        "size": 12637768800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00015-of-00047.gguf",
+      "blobId": "408607181c1f10b99fe18e12277d4378ac91d91f",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "8e2a7b62b2b250451de75b01dbbab2cb37f36dcd8dbac8a17270021f5158a072",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00016-of-00047.gguf",
+      "blobId": "3ccf6fa4fae3bc5a3caf62da6b019f0e1fb11967",
+      "size": 12242588960,
+      "lfs": {
+        "sha256": "3d60e20236255bc000f38a6e0b58cfaf489c82ef05286c7ef2b1c571b608a910",
+        "size": 12242588960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00017-of-00047.gguf",
+      "blobId": "c59c3671a8d0d18f907156e5428bca30990a24e2",
+      "size": 12636654688,
+      "lfs": {
+        "sha256": "c0eb1505a45086222be9b0a15210bbb48f52f99f2c175a94021efaa1b5a377f1",
+        "size": 12636654688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00018-of-00047.gguf",
+      "blobId": "cdd2577b4e345b2f6e3b9fe4fdb1e56d1ffa3aac",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "0f1f1a10798dc6fb496dd45176f3d9e07709724acc808065b227fee7decaa632",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00019-of-00047.gguf",
+      "blobId": "c3364c6c3b625df9667460abd935dfb41caa597f",
+      "size": 12813014304,
+      "lfs": {
+        "sha256": "8b539ada9c2f59d3191d4f8a3f421891752f1c9ebfccfb4cb42d7d4fecb28091",
+        "size": 12813014304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00020-of-00047.gguf",
+      "blobId": "c8c1776baf797cc8eafee7b8bf4165a42fa8733f",
+      "size": 12066229344,
+      "lfs": {
+        "sha256": "9551a475cd0fc3430fa22edcf1c4c9517366013a7b71717b1e4a9e2068d1c5ac",
+        "size": 12066229344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00021-of-00047.gguf",
+      "blobId": "8ed1d146cd0c1fa1bbce8dca835819ab27f82330",
+      "size": 12717592160,
+      "lfs": {
+        "sha256": "37678961fe1a6cec8553288cac462daf2327bd40fb347aabb93a0860bef4d53d",
+        "size": 12717592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00022-of-00047.gguf",
+      "blobId": "a5387cce977f3d4213b524b4396e26c1fe2e38aa",
+      "size": 12241474848,
+      "lfs": {
+        "sha256": "d05c51f72de5da75e9d82135ee4b0ae4888f737f488e87da60b44e9b9fad5360",
+        "size": 12241474848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00023-of-00047.gguf",
+      "blobId": "ecc758b1bb13ba8ce9015a99d3c9334a56943d28",
+      "size": 12637768800,
+      "lfs": {
+        "sha256": "12150c7727085557e515d2c93fe5c0b3e801f5a8fe1ab2d4ffeb2b1bf844219a",
+        "size": 12637768800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00024-of-00047.gguf",
+      "blobId": "da5d972fca774f4224b90cde75f5170295572d0d",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "3f08677c1ab2a4fd67d26ef8024f8340bbcdfe0d29a9f19d197f39870f30692d",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00025-of-00047.gguf",
+      "blobId": "08c3c6eb198fba6a4a20082708fa300574c6b972",
+      "size": 12242588960,
+      "lfs": {
+        "sha256": "08892d5ba0ac2e3362b026df72000484384241596da143195c8d55f8f806d7cb",
+        "size": 12242588960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00026-of-00047.gguf",
+      "blobId": "7ec7d618d7821b3b29ee4c583cb4aff1cb7bddc8",
+      "size": 12636654688,
+      "lfs": {
+        "sha256": "595aed6afc27c81ff152a11ff813697d1a2a62dda428eeccb6d3d80ced10bd76",
+        "size": 12636654688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00027-of-00047.gguf",
+      "blobId": "bf5d296f5c4347170ba37d9cd65ca15b53909bcf",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "69c17c2e36fff9f0ad1a5caf7fb071449459bf28a545e27e28b57cbf873e6af9",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00028-of-00047.gguf",
+      "blobId": "2b6529e323927cbe8a49d04601c9e1911cd11d28",
+      "size": 12813014304,
+      "lfs": {
+        "sha256": "d70fc3e1b1d2b9c6734c9ad936e8dcc2876ad6a026060800b9e7d8deea0b9874",
+        "size": 12813014304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00029-of-00047.gguf",
+      "blobId": "9236ac0c6401621845b54aa3ea00049cb94b0a62",
+      "size": 12066229344,
+      "lfs": {
+        "sha256": "6e6612b2d0f6b223f81ccfa8771d1603e9daa38663774928c75d82bc7970e926",
+        "size": 12066229344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00030-of-00047.gguf",
+      "blobId": "0b5c5f9ac7b2d720aef754da0b4c4a21448a0910",
+      "size": 12717592160,
+      "lfs": {
+        "sha256": "93191a21df2e8af767d4c4556ca01f191882c9a830e02ae1cc11142d51fa27ea",
+        "size": 12717592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00031-of-00047.gguf",
+      "blobId": "2f80ee69eaaba9e3e4dd2a3f58a9a03f1dec793c",
+      "size": 12241474848,
+      "lfs": {
+        "sha256": "cc6f1c2c1726697f8ca317a4e38a3029e05523fe821eb86b3ba7acda2f4954f3",
+        "size": 12241474848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00032-of-00047.gguf",
+      "blobId": "c5decf811d963ff91b475fbed52fdeb8a8f78115",
+      "size": 12637768800,
+      "lfs": {
+        "sha256": "d36d925b9914a4a8b47354ce58adc2c53cf3d0510a3465aee78753e427d5eaad",
+        "size": 12637768800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00033-of-00047.gguf",
+      "blobId": "44e8810bb219efc152449971c1ad68cc32f97f2b",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "2fbf9969e9e5fd250ee8495c2ffe538686a9b57e1048448f22c5db72393e80bd",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00034-of-00047.gguf",
+      "blobId": "2d716e12ad3f1a8e03c8aa367ff7ac8a5c50e9e0",
+      "size": 12242588960,
+      "lfs": {
+        "sha256": "8d0fcefe6df16509b1feacd13e723571656e465c5e139d759b58dc221f05e1e8",
+        "size": 12242588960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00035-of-00047.gguf",
+      "blobId": "adb99395d82bf568df25cca2eb16f96fa872b11e",
+      "size": 12636654688,
+      "lfs": {
+        "sha256": "d43d17809f2ccd7ae8735fb1d913dc216f5a7c57ebc1b1487a78bbc106322466",
+        "size": 12636654688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00036-of-00047.gguf",
+      "blobId": "c198060c8d132f9d8dd9a6efeb0271bd38e10deb",
+      "size": 12146052704,
+      "lfs": {
+        "sha256": "e2149009f060bfaf420df81bbcedcb166c46e07101ac1fee254213e3f6c96b5b",
+        "size": 12146052704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00037-of-00047.gguf",
+      "blobId": "4af716cc928d50bab0196f23efada7bc7344e040",
+      "size": 12813014304,
+      "lfs": {
+        "sha256": "ecf4b8697e268c24a10eaf2c5a090195f1197d3f3c0696144185c24f56463649",
+        "size": 12813014304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00038-of-00047.gguf",
+      "blobId": "8a0d7b58c9960a2774ff070192fea9690234e6de",
+      "size": 12066229344,
+      "lfs": {
+        "sha256": "bff3ba21820cf29f0ca759f44ef3794f5bb27963c18e5f5756475544b9b1270e",
+        "size": 12066229344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00039-of-00047.gguf",
+      "blobId": "38e2e786bb507765fb7b66242b25c48ea7d7bc43",
+      "size": 12717592160,
+      "lfs": {
+        "sha256": "d81571449c994aaa49ee6a37359532ed467f58b53fdfdf75fe67cd56f5c090a3",
+        "size": 12717592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00040-of-00047.gguf",
+      "blobId": "f9d5f965dfa3fc51d516043b2b3524806bb2cf27",
+      "size": 12241474848,
+      "lfs": {
+        "sha256": "2d37b8ee8a0703a71ba85ba1c181832fb7fd646e3d1c47ce9ac4417d86d35ebb",
+        "size": 12241474848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00041-of-00047.gguf",
+      "blobId": "2374cbb3da290b1b791d719572478150b3d48af9",
+      "size": 12637768800,
+      "lfs": {
+        "sha256": "9556843d171790d98defbcf171585090ed4c0fae76ab24c45f651a26980b77c4",
+        "size": 12637768800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00042-of-00047.gguf",
+      "blobId": "34b7bf3ff53fe29e0faf4a1eebf449a26048dbf6",
+      "size": 12717592160,
+      "lfs": {
+        "sha256": "1ba4aad0ed8ed24e0ba50488206bad1eabb7bdac5fd0ba46ce2ffc07a94366f9",
+        "size": 12717592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00043-of-00047.gguf",
+      "blobId": "6891fbf3349f6404811b47c6980e51ad0c8c9152",
+      "size": 12814128416,
+      "lfs": {
+        "sha256": "d9ff9c8ebbe9776fb36e898901821a5b6fbaf1bb67609713fa7766b59225a62b",
+        "size": 12814128416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00044-of-00047.gguf",
+      "blobId": "1c68bbd893272c8b9623ab0066edd8f21d7a970b",
+      "size": 13208194144,
+      "lfs": {
+        "sha256": "2e129b591393aa28ebfe127193766c4443e19f65f66ed9b585c64e929c2eeabf",
+        "size": 13208194144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00045-of-00047.gguf",
+      "blobId": "86260ab8532325e0ff539ed0c9dadb4d7e6601c2",
+      "size": 12717592160,
+      "lfs": {
+        "sha256": "85df622679db13b850a2d28114fc86524812aafc3dbfdf0ada71b398db19f527",
+        "size": 12717592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00046-of-00047.gguf",
+      "blobId": "c143ffbb06c0dfe355395f9d498f582736eb8ffb",
+      "size": 12814128416,
+      "lfs": {
+        "sha256": "4e06574f455b0fe65f475953b7f264c630ea820181938f98b13d687912a4b678",
+        "size": 12814128416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/meta-models.Muse-Spark-Open-816B-A42B.f16.gguf.Q5_K_M.gguf-00047-of-00047.gguf",
+      "blobId": "a455684f5ad678345bd72a1abf941404002cf338",
+      "size": 9508651904,
+      "lfs": {
+        "sha256": "09ed74c9c41d42de25a573ccd6104567f5604518d4d3a4ce11bde36eed1c54c2",
+        "size": 9508651904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2b6ae7819a12d61f87ac886ff9f1b83b1c08aad9",
+      "size": 608
+    },
+    {
+      "rfilename": "mmproj-meta-models.Muse-Spark-Open-816B-A42B.f16.gguf",
+      "blobId": "9da57fa369e22fef9d5ad7b508b4937b0fe0a3dd",
+      "size": 4095796000,
+      "lfs": {
+        "sha256": "564619d7457aa4345fe38e3f18ffe4c6b510f352d152cc75b6423ae4cf2ee930",
+        "size": 4095796000,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-16T02:31:09.000Z",
+  "usedStorage": 1788800618176
+}

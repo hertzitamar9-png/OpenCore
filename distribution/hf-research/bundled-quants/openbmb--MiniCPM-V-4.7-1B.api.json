@@ -1,0 +1,234 @@
+{
+  "_id": "6ac5327d514eaed946076dbe",
+  "id": "openbmb/MiniCPM-V-4.7-1B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "minicpmv4_7",
+    "image-text-to-text",
+    "minicpm-v",
+    "multimodal",
+    "On-Device Model",
+    "lightweight",
+    "conversational",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 116673,
+  "likes": 405,
+  "modelId": "openbmb/MiniCPM-V-4.7-1B",
+  "author": "openbmb",
+  "sha": "379f120c2ff3588e6e06559ec6b9ec15cc05114e",
+  "lastModified": "2026-10-19T12:53:37.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "MiniCPMV4_7ForConditionalGeneration"
+    ],
+    "model_type": "minicpmv4_7",
+    "tokenizer_config": {
+      "bos_token": "<|im_start|>",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": "<unk>"
+    },
+    "chat_template_jinja": "{%- macro render_content(content, is_system_content=false) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns = namespace(parts=[]) -%}\n        {%- for item in content -%}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain images.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|image_pad|>'] -%}\n            {%- elif 'video' in item or item.type == 'video' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain videos.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|video_pad|>'] -%}\n            {%- elif 'text' in item -%}\n                {%- set ns.parts = ns.parts + [item.text] -%}\n            {%- else -%}\n                {{- raise_exception('Unexpected item type in content.') -}}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns.parts | join('\\n') -}}\n    {%- elif content is none or content is undefined -%}\n        {{- '' -}}\n    {%- else -%}\n        {{- raise_exception('Unexpected content type.') -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index and reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is true %}\n        {{- '<think>\\n' }}\n    {%- else %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "minicpm-v",
+      "multimodal",
+      "On-Device Model",
+      "lightweight"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "54bf1e5385c7f63c584910273bfa3eede0e00b5f",
+      "size": 2475
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ae8168f313e80aa1e25afd20fed6192319d43e4a",
+      "size": 24681
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "93107b9f70bdb7a39055d438779c52d5f3c8fc72",
+      "size": 7249
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "f7e1c13b894ba935e120acdaf503a2515b13783a",
+      "size": 2575
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "4c73e409ffe7483d35ecb3b60dfb9cbd8def8912",
+      "size": 132
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/moe_speed_comparison_en.gif",
+      "blobId": "7bcc3d28cd4bd768d46688e0e613ccc194f86c75",
+      "size": 19657646,
+      "lfs": {
+        "sha256": "62b8de01ee485c70a131580285ed73c0e791a48391bc592f9302ea27b4997496",
+        "size": 19657646,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/overall_performance_1b_instruct.png",
+      "blobId": "3f4464a7183360509a6a9ea33d89e35d32ca2f60",
+      "size": 1455648,
+      "lfs": {
+        "sha256": "c28c42e8ca323bb6669d7282045ceeed7b232dc34a1bb10c72437d89252944ce",
+        "size": 1455648,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/overall_performance_35ba3b_instruct.png",
+      "blobId": "ac1ee12d237413421120273271b63367e148d66f",
+      "size": 1487809,
+      "lfs": {
+        "sha256": "0d90331f7e81184d10fe527c3b9d9bf2e0d0d2dee567f980cd25d43447687b43",
+        "size": 1487809,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/overall_performance_35ba3b_language.png",
+      "blobId": "f1ef5b64027f99ff486831a6a971a0ed260a1b5b",
+      "size": 524366,
+      "lfs": {
+        "sha256": "0a04cb534173e07bfea9579975a82eebea0cd29a7ac0862aa9f8b365b983024e",
+        "size": 524366,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/performance_efficiency_frontier.png",
+      "blobId": "1b52dc12bae64af14ebc3ce4d80818d1eafd00a2",
+      "size": 1930098,
+      "lfs": {
+        "sha256": "e2b7fc281ed6a4f3422bd7304f8ed02898bd7fa558d209fe9a399626f72ed2c8",
+        "size": 1930098,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/v47_1b_iphone_en.gif",
+      "blobId": "f167c9729b0353ca3094f65dfb56a5feb47512ac",
+      "size": 16132771,
+      "lfs": {
+        "sha256": "c74287b765a1127eb3ae053b21d18c2696b230c750fed12738e2f1459cc57856",
+        "size": 16132771,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/v47_35ba3b_ipad_en.gif",
+      "blobId": "c226b4d7f96df888c9fd78a398a81bbcdda366a2",
+      "size": 9672251,
+      "lfs": {
+        "sha256": "e3fbf226902bc52b5fbfd05357e766c9f251e124c916dc9cee6341e09f2829d7",
+        "size": 9672251,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/minicpmv4.7/v47_35ba3b_iphone2_en.gif",
+      "blobId": "41c4872874c32f07d66adda44285893ea8f1e821",
+      "size": 63029179,
+      "lfs": {
+        "sha256": "d389edb5eaf323f7a0eb0e1912a8b3b0b071f0af656ff11328dfbc12b731cce0",
+        "size": 63029179,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "minicpm_v4dot7_assets/modelscope_logo.png",
+      "blobId": "0286d28f488f6425c9671d2b0ec81db56aede2f8",
+      "size": 6186
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "c1072c65d72fc5e92d67c180f0bb2fc7d2a37e69",
+      "size": 3109054480,
+      "lfs": {
+        "sha256": "8c4921ac83182c85190ad10c3aeb118d51e385d2d98ec13b88b514bbf6cac002",
+        "size": 3109054480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "a7334d890fcf56c83bc3265d9f71f599b0048289",
+      "size": 148
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "9e26dfeeb6e641a33dae4961196235bdb965b21b",
+      "size": 2
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "20e07d534707e3e879933e9f39dfb631ff1cbd9a",
+      "size": 19992481,
+      "lfs": {
+        "sha256": "33861e37bb955af1e3f3061182b820f347eba2b9c2c1011c82794bf0d6e77b54",
+        "size": 19992481,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "466d7fce40974b9219aa237691e18ed980b34c29",
+      "size": 1436
+    }
+  ],
+  "spaces": [
+    "openbmb/MiniCPM-V-4.7-Demo",
+    "MUDrFKr/MiniCPM-V-4.7-Demo",
+    "bep40/MiniCPM-V-4.7-Demo",
+    "OjciecTadeusz/MiniCPM-V-4.7-Demo"
+  ],
+  "createdAt": "2026-10-06T17:40:13.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1554476272
+    },
+    "total": 1554476272
+  },
+  "usedStorage": 3295937680
+}

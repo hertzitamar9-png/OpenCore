@@ -1,0 +1,170 @@
+{
+  "_id": "6ad146c99101a4c065f5ca74",
+  "id": "scratchyone/anon-1b",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gguf",
+    "gemma3_text",
+    "text-generation",
+    "greentext",
+    "4chan",
+    "gemma3",
+    "base-model",
+    "en",
+    "dataset:scratchyone/anon-greentext",
+    "base_model:google/gemma-3-1b-pt",
+    "base_model:quantized:google/gemma-3-1b-pt",
+    "license:gemma",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 2175,
+  "likes": 41,
+  "modelId": "scratchyone/anon-1b",
+  "author": "scratchyone",
+  "sha": "2831fb6c0906495bb5afdeb59cc1cbea34e61b12",
+  "lastModified": "2026-10-15T22:08:22.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask>",
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Gemma3ForCausalLM"
+    ],
+    "model_type": "gemma3_text",
+    "tokenizer_config": {
+      "bos_token": "<bos>",
+      "eos_token": "<eos>",
+      "mask_token": "<mask>",
+      "pad_token": "<pad>",
+      "unk_token": "<unk>",
+      "use_default_system_prompt": false
+    }
+  },
+  "cardData": {
+    "license": "gemma",
+    "base_model": "google/gemma-3-1b-pt",
+    "library_name": "transformers",
+    "pipeline_tag": "text-generation",
+    "datasets": [
+      "scratchyone/anon-greentext"
+    ],
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "greentext",
+      "4chan",
+      "gemma3",
+      "base-model"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "gguf": {
+    "total": 999887104,
+    "architecture": "gemma3",
+    "context_length": 32768,
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 2014777152
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9d7172994fa3d780d4771ca2062ff9e24c0c1c5c",
+      "size": 1624
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "27fe1d325f98f3f4643f3ba5735584cffd2553dd",
+      "size": 97
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "199eee04fd60c60d42be7b556453231917f49258",
+      "size": 11161
+    },
+    {
+      "rfilename": "anon-1b-bf16.gguf",
+      "blobId": "526b5cbae08b515e1353bedd03a140dad1961cc2",
+      "size": 2014777152,
+      "lfs": {
+        "sha256": "216ac7f60a9bdf03dfd9ba143a00566b1223a428082f2875e128775b6ca51817",
+        "size": 2014777152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "832b20c0695f438db4e6d88944340986da633f0d",
+      "size": 1757
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "a72fb8d3bc832dc27d2c9847143701f3bc55db2a",
+      "size": 210
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "d7ab0aeb7c4d3fcf3ec2686bf410526d8d9e6d39",
+      "size": 2604064168,
+      "lfs": {
+        "sha256": "78acc60a3a92ef44d6d44b78ab9981342308a84287fcc34db91206d9351885e0",
+        "size": 2604064168,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "f74d183147799f3fd56768db82b27473f0e09a1d",
+      "size": 33384567,
+      "lfs": {
+        "sha256": "daab2354f8a74e70d70b4d1f804939b68a8c9624dd06cb7858e52dd8970e9726",
+        "size": 33384567,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "d4698c9ab16fe095c4aa4103a77f584d3e8a9218",
+      "size": 705
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse",
+    "darvell/anon-1b-green-text"
+  ],
+  "createdAt": "2026-10-15T21:34:01.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 302125312,
+      "BF16": 697761792
+    },
+    "total": 999887104
+  },
+  "usedStorage": 4652225887
+}

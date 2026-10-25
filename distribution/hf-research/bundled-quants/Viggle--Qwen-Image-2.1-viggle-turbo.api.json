@@ -1,0 +1,545 @@
+{
+  "_id": "6ab200c00904bf4177659aa5",
+  "id": "Viggle/Qwen-Image-2.1-viggle-turbo",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "safetensors",
+    "gguf",
+    "lora",
+    "text-to-image",
+    "image-to-image",
+    "image-editing",
+    "distillation",
+    "turbo",
+    "few-step",
+    "qwen-image",
+    "comfyui",
+    "int8",
+    "fp8",
+    "quantized",
+    "base_model:Qwen/Qwen-Image-2.1",
+    "base_model:adapter:Qwen/Qwen-Image-2.1",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 463610,
+  "likes": 775,
+  "modelId": "Viggle/Qwen-Image-2.1-viggle-turbo",
+  "author": "Viggle",
+  "sha": "009a44a895ef85f7e643c80fdca9543795248867",
+  "lastModified": "2026-10-01T02:44:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "qwen-research",
+    "license_link": "LICENSE",
+    "base_model": "Qwen/Qwen-Image-2.1",
+    "base_model_relation": "adapter",
+    "library_name": "diffusers",
+    "pipeline_tag": "text-to-image",
+    "tags": [
+      "diffusers",
+      "lora",
+      "text-to-image",
+      "image-to-image",
+      "image-editing",
+      "distillation",
+      "turbo",
+      "few-step",
+      "qwen-image",
+      "comfyui",
+      "gguf",
+      "int8",
+      "fp8",
+      "quantized"
+    ]
+  },
+  "gguf": {
+    "total": 7115124736,
+    "architecture": "qwen_image",
+    "totalFileSize": 4335931552
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "798a527f3a41b7ba669a9c3cf9c6dabb565a0dff",
+      "size": 2281
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "13ae08d5a5828f508cf0e852b1b316c0c0bbb9b3",
+      "size": 7831
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "d63bd2575dc449765f9da238dcec0b49bbacd777",
+      "size": 2660
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-4step-lora-r64.safetensors",
+      "blobId": "f2460ea4ab4cdf94ff5c3ee2a400539d1ec87e29",
+      "size": 339832808,
+      "lfs": {
+        "sha256": "5c494dce662a95898d0988831af733b203ceced9116a82aa099c997f96ea1a3a",
+        "size": 339832808,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2-5step-lora-r128.safetensors",
+      "blobId": "589a43702df45fd15494883b57089967f665086b",
+      "size": 679604800,
+      "lfs": {
+        "sha256": "7096a791d0f19cd083a8d2984b4524398d1d6bdd4e720c303ed17200df83ae2b",
+        "size": 679604800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2-5step-lora-r256.safetensors",
+      "blobId": "0d8e9c1a22d88fe206ca17affb1595dd406d699f",
+      "size": 1359147904,
+      "lfs": {
+        "sha256": "7fd196e14629160c9d1470a698fbb65ccb95f725b72397ef554648ce468ad825",
+        "size": 1359147904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-Q4_K_M.gguf",
+      "blobId": "57c6e3d5633f428cc008ab6d86d621c77b742479",
+      "size": 4335931552,
+      "lfs": {
+        "sha256": "98beb16751c389a346c2de2049593df2ca6a7712c2403db6b2b54969e36d9de6",
+        "size": 4335931552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-Q5_K_M.gguf",
+      "blobId": "31b9a2289cf561d0a03ead48f2e2a654fee15fd3",
+      "size": 5141237920,
+      "lfs": {
+        "sha256": "123dd90a37e0dcd1ee4a3ba78377e19832cfd29a23ca1bb4dbd1e2e508d8c89f",
+        "size": 5141237920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-Q6_K.gguf",
+      "blobId": "510365c995708f9b2bbced77d17552456bec461d",
+      "size": 5996875936,
+      "lfs": {
+        "sha256": "823da9e263184a5005fdaff1dcba9e7f28599f34e61046cd9c0d3d48b86622bd",
+        "size": 5996875936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-Q8_0.gguf",
+      "blobId": "f604dcff42962b43fa79d6a4e2b8bee31d9ce9d4",
+      "size": 7687180448,
+      "lfs": {
+        "sha256": "e9dee1f533680732d151a9835a988dec236e2070c84d064d6570f15cbc9226e8",
+        "size": 7687180448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-fp8_e4m3fn.safetensors",
+      "blobId": "fcfc7e9c75d987af3f0cd672d5d2fb81f18ca32d",
+      "size": 7251013192,
+      "lfs": {
+        "sha256": "61fc6a2d51d8e08de2142e0a0fc40efa89d0ed69fbabf025c66565fe9b2f5e1e",
+        "size": 7251013192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-int8_convrot.safetensors",
+      "blobId": "08fdb04082792473e79c03961b8b195e89be2130",
+      "size": 7256783064,
+      "lfs": {
+        "sha256": "d1b7845f435dff38c49d4201b56b963d9302eee18e5fdfea2974950f024edab2",
+        "size": 7256783064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-lora-r128.safetensors",
+      "blobId": "8900f7f71c36945119bab438c31c605b7e42afa9",
+      "size": 679604800,
+      "lfs": {
+        "sha256": "bafb91d0047df3f9b8a5a850b0c967f051164314d8aad778dfa34d9c24ec345b",
+        "size": 679604800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-lora-r256.safetensors",
+      "blobId": "27890116d66611ed5806887fa53bd754a47fdc22",
+      "size": 1359147904,
+      "lfs": {
+        "sha256": "2a0148f5c73abbed5f97da5ea356e439318aadb281d01fce4af39cdf43728803",
+        "size": 1359147904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-Q4_K_M.gguf",
+      "blobId": "bf0fad68d5e556ed87e7f870df7d97af7b9e26c9",
+      "size": 4335931552,
+      "lfs": {
+        "sha256": "047dd62db7c7a55e6bb796e89710cb31457e3b944e0f5f94d0ebe71d1b9c8cae",
+        "size": 4335931552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-Q5_K_M.gguf",
+      "blobId": "a58f70716649edea1ab1273a3f77ce85c0dd7117",
+      "size": 5141237920,
+      "lfs": {
+        "sha256": "36429b9176b230a84e50587b20d5c05fa93e58d2b602eb48b5ed2fcf75092be9",
+        "size": 5141237920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-Q6_K.gguf",
+      "blobId": "b804b9a0bd2ca933a0efe0b791564002b767ba49",
+      "size": 5996875936,
+      "lfs": {
+        "sha256": "3f90a114f51a47b2ac5a371075a904069914218d3c2def799fc8d82641b79625",
+        "size": 5996875936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-Q8_0.gguf",
+      "blobId": "81635946ec3d0beeac31da70a9176bd78b08d66a",
+      "size": 7687180448,
+      "lfs": {
+        "sha256": "f3aaa3a00da202b1295bb2cb8dae0b15172c1e26aaeb805cdc1e4755bd94d64f",
+        "size": 7687180448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-fp8_e4m3fn.safetensors",
+      "blobId": "8a68bd2a27f40bd7dd9bdb4404ed26f8891e08fa",
+      "size": 7251013192,
+      "lfs": {
+        "sha256": "d44fdadba196b29ff46792e2b674e322685f176b8a8a7e3ecebcd34bf63925e3",
+        "size": 7251013192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-int8_convrot.safetensors",
+      "blobId": "1ad064f0cbebcc5b92268d4d75e55aae050b6af1",
+      "size": 7256783064,
+      "lfs": {
+        "sha256": "2c9e9f0052f85140ca389d0cde190b49a08a53ad7a4ad7d08a51884c1ed652c2",
+        "size": 7256783064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-lora-r128.safetensors",
+      "blobId": "4b249818be12dc80db8ef6e1e9b74db7fd38c7f0",
+      "size": 679604800,
+      "lfs": {
+        "sha256": "0c98591700346f9777051d4e6fa29aa94519abec0d85b1f1f672a2a3db8c94b3",
+        "size": 679604800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-viggle-turbo-v0.3-6step-lora-r256.safetensors",
+      "blobId": "f8b915be97badb1485134187fe79c5941bb0abd2",
+      "size": 1359147904,
+      "lfs": {
+        "sha256": "f06c266e04438b5272bdfb99410421d52a65d7a37f6f42aabc3cb1faf0142644",
+        "size": 1359147904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "3ae99636f658b1b68457025821541238ac76e6c6",
+      "size": 14789
+    },
+    {
+      "rfilename": "assets/viggle_turbo_promo.mp4",
+      "blobId": "e13aafcd35af8da4c0c5b1371297b95e6b909968",
+      "size": 15757713,
+      "lfs": {
+        "sha256": "0fb0247c728b7146a09730bc0e713075cf36c26cca782d31a9872fa5707e6b6b",
+        "size": 15757713,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-edit.json",
+      "blobId": "8f04d32a66e03766bfea610fb15a9979856ade7d",
+      "size": 98152
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-t2i.json",
+      "blobId": "17ac2eda323986d1390129ac126d2f0762311b85",
+      "size": 71730
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-gguf-edit.json",
+      "blobId": "ae6964ac5f72605f5279c42bd005c27df06c7622",
+      "size": 95435
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-gguf-t2i.json",
+      "blobId": "c05f91cd0deace2eaa52f530d60aa76fc06e5f26",
+      "size": 69005
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-merged-edit.json",
+      "blobId": "79ebd88767968420577c1365ae1f1b86048fb8d0",
+      "size": 95883
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-merged-t2i.json",
+      "blobId": "ca73c15a7fcc3323bb1ef606fe9b59864873c6df",
+      "size": 69235
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.3-6step-gguf-edit.json",
+      "blobId": "0f052d6fb5662a116a5de89dd4dc0fdead68c17f",
+      "size": 95427
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.3-6step-gguf-t2i.json",
+      "blobId": "c8d270b48089d6d2384091e4df44437036da4439",
+      "size": 68981
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.3-6step-merged-edit.json",
+      "blobId": "df82ea715a34f23aab0f598805d35dc980b49e0a",
+      "size": 95875
+    },
+    {
+      "rfilename": "comfyui/Qwen-Image-2.1-viggle-turbo-v0.3-6step-merged-t2i.json",
+      "blobId": "960136de8484d7453db780f3e1c2f96b540a9185",
+      "size": 69211
+    },
+    {
+      "rfilename": "comfyui/input/cat.webp",
+      "blobId": "a943195cb9873f25d6c36d01628c2b9a9b98bdec",
+      "size": 46192
+    },
+    {
+      "rfilename": "comfyui/input/woman2.webp",
+      "blobId": "14be23074fe0724e8e0d8cdec5a8954f0bb69da9",
+      "size": 83734
+    },
+    {
+      "rfilename": "comfyui/viggle_turbo.py",
+      "blobId": "ee4a0920bedcf1cdfdc6199826ec1819e4ba849e",
+      "size": 5467
+    },
+    {
+      "rfilename": "peft/adapter_config.json",
+      "blobId": "6a0ca4578fea5640c9c7c84ace623985c9f171a1",
+      "size": 1126
+    },
+    {
+      "rfilename": "peft/adapter_model.safetensors",
+      "blobId": "1f7fff8214ddb021a1f4c7f550664a5a299ee637",
+      "size": 679597776,
+      "lfs": {
+        "sha256": "c7d944042f506ce46963b6f93795681e6c55b460a677ee4a11c510f48cf797aa",
+        "size": 679597776,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "peft_v0.2.1/adapter_config.json",
+      "blobId": "64bdf4cb94de7202e59511dabac330a3bc5570a2",
+      "size": 1128
+    },
+    {
+      "rfilename": "peft_v0.2.1/adapter_model.safetensors",
+      "blobId": "fe59c7965b283fc42f3fc5031d56b5fa03e8d6a5",
+      "size": 2718227264,
+      "lfs": {
+        "sha256": "50e6436ecc4b8c8f5131776617dbec2c3dc63c47a17e818dc85264e3d2e20efc",
+        "size": 2718227264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "peft_v0.2/adapter_config.json",
+      "blobId": "64bdf4cb94de7202e59511dabac330a3bc5570a2",
+      "size": 1128
+    },
+    {
+      "rfilename": "peft_v0.2/adapter_model.safetensors",
+      "blobId": "3d44dab583d5c804a494cbe6071006c2bc9ea58f",
+      "size": 2718227264,
+      "lfs": {
+        "sha256": "9845b0da828aaeb3bdd772309470f6421a75f28aea520f53260a29bca28d1b5d",
+        "size": 2718227264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "peft_v0.3/adapter_config.json",
+      "blobId": "2450176137eb833dd75415e3ca23d9d9695fec82",
+      "size": 1128
+    },
+    {
+      "rfilename": "peft_v0.3/adapter_model.safetensors",
+      "blobId": "dfd1925c826dbfa48afd409d0bf1b40155e8fecc",
+      "size": 2718227264,
+      "lfs": {
+        "sha256": "c468fe49c1b7b04be7bcb46fb3109de13f7c722ace57f7c079db8e019588adc6",
+        "size": 2718227264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "scheduler/scheduler_config.json",
+      "blobId": "0f289c902df312761c091522b66b6d6d2933d8c1",
+      "size": 484
+    },
+    {
+      "rfilename": "transformer/config.json",
+      "blobId": "9e1a5e7ed1bb7324362340f62dc5549eb9857dc8",
+      "size": 369
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model.safetensors",
+      "blobId": "6d6f4444e2eca1a1290a1daa9ea206def9c2c110",
+      "size": 14230284584,
+      "lfs": {
+        "sha256": "a011a284b2dcb4b5f73aa7041b770d6bbff601bbb0850f3b6d49740b567b24e5",
+        "size": 14230284584,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [
+    "hugging-apps/bfs-best-face-swap",
+    "Viggle/Qwen-Image-2.1-viggle-turbo",
+    "wank3r/qwen-image-2.1-uncensored-aio-loras-2",
+    "Anygork/qwen-image-2.1-uncensored-aio-loras-2",
+    "amisima/Qwen-2.1-Turbo",
+    "prithivMLmods/qwen-image-object-remover-bbox-turbo",
+    "M3st3rJ4k3l/qwen-image-2.1-multi-Loras",
+    "linoyts/Qwen-Image-2.1-Move",
+    "prithivMLmods/Qwen-Image-2.1-LoRAs-PnP",
+    "linoyts/Qwen-Image-2.1-Relight",
+    "ufrik/best-swp",
+    "Simzy/bfs-best-face-swap",
+    "Simzy/face-swap-runpod",
+    "richard-gpts/test",
+    "Guaryn/qwen-image-2.1-uncensored-aio-loras",
+    "xyzanonn0/qwen-image-2.1-uncensored-aio-loras",
+    "xyzanonimous5/Qwen-Image-2.1-viggle-turbo",
+    "arudradey/qwen-image-2.1-uncensored-aio-loras",
+    "ovi054/Qwen-Image-2.1-LORA",
+    "ML-Intern-lab/Qwen-Image-2.1-doodle-in-LoRA",
+    "Viggle/Qwen-Image-2.1-viggle-turbo-workflow",
+    "ourikenn/Qwen-Image-2.1-viggle-turbo",
+    "akhaliq/Qwen-Image-2.1-viggle-turbo",
+    "bep40/Qwen-Image-2.1-viggle-turbo-fast",
+    "baka999/qwen_2.1_studio",
+    "timfromhcs/qwen-image-2.1-uncensored-aio-loras",
+    "akhaliq/bfs-best-face-swap-workflow",
+    "tabrezahmed51/Qwen-Image-2.1-viggle-turbo",
+    "Maximofn/Qwen-Image-2.1-studio",
+    "akhaliq/qwen21-next-scene",
+    "xyzanonimous1/qwen-image-2.1-uncensored-aio-loras",
+    "1mviews3/Qwen-Image-2.1-LORA",
+    "yycc/Qwen-Image-2.1-viggle-turbo-workflow",
+    "jing96963/image999",
+    "javier233455/MANGA_IAPICTURE",
+    "iueieur/image999-recovery",
+    "baooduy/ff0000",
+    "blankingthrowaway/Qwen-Image-2.1-LoRAs-PnP",
+    "fuqwell/Qwen-Image-2.1-viggle-turbo",
+    "GuiAworld/SDNQ",
+    "quangthanhvy96/qwen-image-novel",
+    "kylekylekylekyle1234/qwen-viggle-turbo-studio",
+    "McCartt65/qwen-image-novel",
+    "mcqjcbx/qwen-image-2.1-uncensored-aio-loras",
+    "mcqjcbx/qwen-image-2.1-uncensored-aio-loras-2",
+    "Anygork/qwen-image-2.1-uncensored-aio-loras",
+    "Jffddj/Qwen-2.1-Turbo",
+    "ismailthasreef/qwen-image-2.1-viggle-turbo-demo",
+    "Battu33/Qwen-Image-2.1-viggle-turbo",
+    "cherrywena/qwenimage",
+    "patoDrama/bfs-best-face-swap",
+    "ShauryaRawal/newtestspace",
+    "hitoshifreak/qwen-image-2.1-uncensored-aio-loras",
+    "toni963/Qwen-Image-2.1-viggle-turbo",
+    "majoranan/qwen-image-2-1-viggle-turbo-alpacas",
+    "idkwhatmyusernameisrn/bfs-best-face-swap",
+    "Gotlayeh/Qwen-2.1-Turbo",
+    "KevinJustinSpredlhuaba/qwen-image-2.1-loras",
+    "Daankular/qwen-image-2.1-uncensored-aio-loras",
+    "jblast94/qwen-image-2.1-uncensored-aio-loras-2",
+    "theblackcoffeecafe/Qwen-Image-2.1-viggle-turbo-demo",
+    "douccana/Qwen-Image-2.1-viggle-turbo",
+    "jasfn/qwen-image-2.1-uncensored-aio-loras",
+    "ohokaystar/Qwen-Image-2.1-viggle-slow",
+    "silf563/qwen-image-2.1-uncensored-aio-loras",
+    "Tr2882/LP6",
+    "yamunacr/qwen-image-2.1-uncensored-aio-loras",
+    "bcbagalihog/qwen-image-2.1-uncensored-aio-loras",
+    "Hatracc/qwen-image-2.1-uncensored-aio-loras",
+    "korrante/qwen-image-2.1-uncensored-aio-loras",
+    "Futchzy/qwen-image-2.1-uncensored-aio-loras3",
+    "SudoRmRfMe/Qwen-Image-2.1-LoRAs-PnP",
+    "Danny20261984/imgturbo",
+    "Sam1882/QP2",
+    "fivequibick/qwen-image-2.1-uncensored-aio-loras",
+    "Navikaran1/Qwen-Image-2.1-viggle-turbo",
+    "Dobby94/Qwen-Image-2.1-viggle-turbo",
+    "ysharma/Qwen-Image-2.1-image-translator-LoRA",
+    "gly29368/qwen-image-2.1-uncensored-aio-loras",
+    "Daverrrr75/qwen-image-2.1-uncensored-aio-loras",
+    "eyuhugging/bfs-best-face-swap",
+    "kevinppaulo/qwen-image-2.1-uncensored-aio-loras",
+    "dfdfsfsdf/qwen-image-2.1-uncensored-aio-loras",
+    "17imreddddd/Qwen-Image-2.1-viggle-turbo",
+    "Sandre98/BFS-Best-Face-Swap",
+    "nwoshock/bfs-best-face-swap",
+    "Sosandre1488/BFS-Best-Face-Swap",
+    "jaimealtamira2025/bfs-best-face-swap",
+    "fulzam/Qwen-Image-2.1-viggle-turbo",
+    "zennvhs/qwen-image-2-1-uncensored-demo",
+    "crydamour/bfs-best-face-swap",
+    "linoyts/qwen-image-2.1-panel-edit",
+    "raubatz/bfs-best-face-swap",
+    "vcats/qwen-image-2.1-uncensored-aio-loras",
+    "a-test-user-in-the-wrold/qwen-image-2.1-uncensored-aio-loras",
+    "Juan33333/Qwen-Image-2.1-viggle-turbo",
+    "leivisondias/qwen-image-2.1-uncensored-aio-loras",
+    "EnokNitti/bfs-best-face-swap",
+    "sanetium/bfs-best-face-swap",
+    "yycc/Qwen-Image-2.1-viggle-turbo"
+  ],
+  "createdAt": "2026-09-22T04:14:56.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 7115124736
+    },
+    "total": 7115124736
+  },
+  "usedStorage": 105939234839
+}

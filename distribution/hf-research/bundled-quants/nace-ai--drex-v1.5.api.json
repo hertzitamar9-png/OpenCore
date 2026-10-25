@@ -1,0 +1,232 @@
+{
+  "_id": "6abad685461d7c89d5122c3a",
+  "id": "nace-ai/drex-v1.5",
+  "private": false,
+  "tags": [
+    "safetensors",
+    "qwen3_5_text",
+    "decision-model",
+    "system-one",
+    "kev",
+    "drex",
+    "typed-decisions",
+    "decision-index",
+    "classification",
+    "qwen3_5",
+    "calibrated-probabilities",
+    "decisionbench",
+    "zero-shot",
+    "recommendation",
+    "base_model:XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B",
+    "base_model:finetune:XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 798,
+  "likes": 51,
+  "modelId": "nace-ai/drex-v1.5",
+  "author": "nace-ai",
+  "sha": "f80f9d2b5c3dadde590a30f203f1ecd99acd6cf3",
+  "lastModified": "2026-10-15T21:16:49.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5ForCausalLM"
+    ],
+    "model_type": "qwen3_5_text",
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- generation -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n    {%- endgeneration -%}\n{%- endmacro -%}\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "base_model": "XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B",
+    "license": "other",
+    "license_name": "nace-ai-open-rail-m",
+    "license_link": "LICENSE",
+    "tags": [
+      "decision-model",
+      "system-one",
+      "kev",
+      "drex",
+      "typed-decisions",
+      "decision-index",
+      "classification",
+      "qwen3_5",
+      "calibrated-probabilities",
+      "decisionbench",
+      "zero-shot",
+      "recommendation"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4838dff47f2ea2dd800a39fa382ebbac4ad81799",
+      "size": 1621
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "a42ca548a2409947766773e37855157390c2a94a",
+      "size": 12046
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "699360f0f79ab1a4eaaebd59202548bf2e8aa10e",
+      "size": 13061
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "c6a37693fc7d9b48122182931a59f436e21b577a",
+      "size": 3916
+    },
+    {
+      "rfilename": "code/kev/__init__.py",
+      "blobId": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "rfilename": "code/kev/api.py",
+      "blobId": "6a1a3e779b0d75e2561703ac2d9e4c5af667c29d",
+      "size": 6892
+    },
+    {
+      "rfilename": "code/kev/checkpoint.py",
+      "blobId": "f7b7cdd1370c744831159e06c1ee3fe103bbdb81",
+      "size": 1439
+    },
+    {
+      "rfilename": "code/kev/model.py",
+      "blobId": "5a3d9d35e67a3a5d4a7326ae67cd2a2855492a42",
+      "size": 28977
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "8e0f0638467c1088f951f37eabd7e9a565a9eab0",
+      "size": 1981
+    },
+    {
+      "rfilename": "examples/request.json",
+      "blobId": "c28e154950702b9183e65d44752991f02652f659",
+      "size": 713
+    },
+    {
+      "rfilename": "game_arena.png",
+      "blobId": "13198eff4dbe8f55b922187058cb723f863832d7",
+      "size": 296043,
+      "lfs": {
+        "sha256": "0ac61099661fd20ad88183db387270d25390978109bf7c80233f21856eb88f19",
+        "size": 296043,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "42522a4907b342c514618d8f92a66caa3984614b",
+      "size": 162
+    },
+    {
+      "rfilename": "head.pt",
+      "blobId": "c6bbefcca7d19cd829ccd67423f85b429db722a0",
+      "size": 8393151,
+      "lfs": {
+        "sha256": "9c9fe6c3b81f997e1813d4adc0f94b720afd317ecc8ce2f690edf56614755881",
+        "size": 8393151,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "inference.py",
+      "blobId": "311fdb94e639d00a7f72e3219999b63b53a836f8",
+      "size": 5611
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "88424dec495b9bd92ca76f1fb9b9d2e3a8cb68a7",
+      "size": 4942706120,
+      "lfs": {
+        "sha256": "1d2a5ffedb5923c930489f58d14197cfa054b403b3589ea87961f0a48fec502c",
+        "size": 4942706120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "d55bea942ccd2c591423d78b51c88f3fd3bc4ab1",
+      "size": 4987757928,
+      "lfs": {
+        "sha256": "1121fb2144c38ed6612b6f7cbfa183fe31efec33dca8cb5a69fc88bfeae8982f",
+        "size": 4987757928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "0ff832efc13bfa46aa636482b14be339cc9f9761",
+      "size": 4954810240,
+      "lfs": {
+        "sha256": "b144d0c842fb783557ca0e819850ee302772f75bfdc9e24d955643996a65d3c6",
+        "size": 4954810240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "91740403fc6afed0dc4c5344da1a819477ad1ef2",
+      "size": 3022388120,
+      "lfs": {
+        "sha256": "bd7b4f1d63756ac0fae48fcc054b76ec32d66e893b71dfde6220a95f4e509e6c",
+        "size": 3022388120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "6819850f8d211ab188c3281254a288192c298b18",
+      "size": 42052
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "a5ceecd6702fef01d15710d1457de281689e601c",
+      "size": 72
+    },
+    {
+      "rfilename": "serve.py",
+      "blobId": "bf81319674245f47f965421888049441eb7c17cf",
+      "size": 4362
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "5520bfd2dd834ce386c1312c410fa71af56db5ad",
+      "size": 19989325,
+      "lfs": {
+        "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+        "size": 19989325,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "875b7b0a3aabbd4e5e2888802dfbd5624a4a2060",
+      "size": 1164
+    }
+  ],
+  "spaces": [
+    "multimodalart/jev-decision-index",
+    "muratcanlaloglu/TurkishDecisionBenchmark",
+    "hugging-apps/drex-decision-model"
+  ],
+  "createdAt": "2026-09-28T21:05:09.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8953803264
+    },
+    "total": 8953803264
+  },
+  "usedStorage": 17936340927
+}

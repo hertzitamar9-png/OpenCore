@@ -1,0 +1,185 @@
+{
+  "_id": "699b3726c055587af247457d",
+  "id": "JamePeng2023/PaddleOCR-VL-1.5-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "PaddleOCR",
+  "tags": [
+    "PaddleOCR",
+    "gguf",
+    "ERNIE4.5",
+    "PaddlePaddle",
+    "image-to-text",
+    "ocr",
+    "document-parse",
+    "layout",
+    "table",
+    "formula",
+    "chart",
+    "seal",
+    "spotting",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "zh",
+    "multilingual",
+    "base_model:PaddlePaddle/PaddleOCR-VL-1.5",
+    "base_model:quantized:PaddlePaddle/PaddleOCR-VL-1.5",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 146,
+  "likes": 6,
+  "modelId": "JamePeng2023/PaddleOCR-VL-1.5-GGUF",
+  "author": "JamePeng2023",
+  "sha": "3bc7eb30d5786c492c4a1ee2c6552c0ac38856bb",
+  "lastModified": "2026-04-08T20:18:26.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask:1>",
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "cls_token": "<|begin_of_sentence|>",
+      "eos_token": "</s>",
+      "mask_token": "<mask:1>",
+      "pad_token": "<unk>",
+      "sep_token": "<|end_of_sentence|>",
+      "unk_token": "<unk>",
+      "use_default_system_prompt": false
+    },
+    "chat_template_jinja": "{%- if not add_generation_prompt is defined -%}\r\n    {%- set add_generation_prompt = true -%}\r\n{%- endif -%}\r\n{%- if not cls_token is defined -%}\r\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\r\n{%- endif -%}\r\n{%- if not eos_token is defined -%}\r\n    {%- set eos_token = \"</s>\" -%}\r\n{%- endif -%}\r\n{{- cls_token -}}\r\n{%- for message in messages -%}\r\n    {%- if message[\"role\"] == \"user\" -%}\r\n        {{- \"User: \" -}}\r\n        {%- for content in message[\"content\"] -%}\r\n            {%- if content[\"type\"] == \"image\" -%}\r\n                {{ \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" }}\r\n            {%- endif -%}\r\n        {%- endfor -%}\r\n        {%- for content in message[\"content\"] -%}\r\n            {%- if content[\"type\"] == \"text\" -%}\r\n                {{ content[\"text\"] }}\r\n            {%- endif -%}\r\n        {%- endfor -%}\r\n        {{ \"\\n\" -}}\r\n    {%- elif message[\"role\"] == \"assistant\" -%}\r\n        {{- \"Assistant:\\n\" -}}\r\n        {%- for content in message[\"content\"] -%}\r\n            {%- if content[\"type\"] == \"text\" -%}\r\n                {{ content[\"text\"] }}\r\n            {%- endif -%}\r\n        {%- endfor -%}\r\n        {{ eos_token -}}\r\n    {%- elif message[\"role\"] == \"system\" -%}\r\n        {%- for content in message[\"content\"] -%}\r\n            {%- if content[\"type\"] == \"text\" -%}\r\n                {{ content[\"text\"] + \"\\n\" }}\r\n            {%- endif -%}\r\n        {%- endfor -%}\r\n    {%- endif -%}\r\n{%- endfor -%}\r\n{%- if add_generation_prompt -%}\r\n    {{- \"Assistant:\\n\" -}}\r\n{%- endif -%}\r\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "ERNIE4.5",
+      "PaddleOCR",
+      "PaddlePaddle",
+      "image-to-text",
+      "ocr",
+      "document-parse",
+      "layout",
+      "table",
+      "formula",
+      "chart",
+      "seal",
+      "spotting"
+    ],
+    "base_model": [
+      "PaddlePaddle/PaddleOCR-VL-1.5"
+    ],
+    "language": [
+      "en",
+      "zh",
+      "multilingual"
+    ],
+    "library_name": "PaddleOCR"
+  },
+  "gguf": {
+    "total": 466654208,
+    "architecture": "paddleocr",
+    "context_length": 131072,
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n    {%- set add_generation_prompt = true -%}\n{%- endif -%}\n{%- if not cls_token is defined -%}\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\n{%- endif -%}\n{%- if not eos_token is defined -%}\n    {%- set eos_token = \"</s>\" -%}\n{%- endif -%}\n{{- cls_token -}}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {{- \"User: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"image\" -%}\n                {{ \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" }}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ \"\\n\" -}}\n    {%- elif message[\"role\"] == \"assistant\" -%}\n        {{- \"Assistant:\\n\" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ eos_token -}}\n    {%- elif message[\"role\"] == \"system\" -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] + \"\\n\" }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"Assistant:\\n\" -}}\n{%- endif -%}\n",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 935768640
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "cdd780677aa7f769db1f38e76395fddbb9e7657c",
+      "size": 1812
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.5-BF16.gguf",
+      "blobId": "8828949ed42223713e0e36a7e153531aff458e5b",
+      "size": 935768640,
+      "lfs": {
+        "sha256": "c8f8145ab7718bf68355bbb9b255cd43487fbfcbaad246f06a7b453039abf100",
+        "size": 935768640,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.5-F16.gguf",
+      "blobId": "a6b90f4942724844df39c9511b645033af185011",
+      "size": 935768640,
+      "lfs": {
+        "sha256": "e74bbf28e01a938a16fe4c66c34f8d5e11968e2ad7d512ed33278c2ff98fea69",
+        "size": 935768640,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.5-Q8_0.gguf",
+      "blobId": "ea2cd4dfb9a5475625ad1d8be7bdd493c65e4fe9",
+      "size": 498315840,
+      "lfs": {
+        "sha256": "dfbcf5588cbd2182d3e7e6c5c0139f509c6dccc7fe4a8406eef361cfeec70922",
+        "size": 498315840,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d481309c8c98dba5c0b0678adc881b1b42982957",
+      "size": 5045
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "92b70e1a03ff70ff1c4d575e0072c838009adc1d",
+      "size": 1517
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "4c457ef72860bb12a19c86a26b37c303453345a4",
+      "size": 140
+    },
+    {
+      "rfilename": "mmproj-BF16.gguf",
+      "blobId": "5406d5ec98303591afe72918dd380e9fc7a080d6",
+      "size": 881770496,
+      "lfs": {
+        "sha256": "e7f1a72400fba517046f90d964e2fa0f4dac7781ee3b1bc5d2022f5f8cecbd87",
+        "size": 881770496,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-F16.gguf",
+      "blobId": "eac295db99e4ae7ef471159565db8cb7fee5801e",
+      "size": 880415744,
+      "lfs": {
+        "sha256": "68cf6bc6c4c54e3c177a080b37fdffe80b1193ae82c813fa1750d5172c311fca",
+        "size": 880415744,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "61c356548c1ad51edfb06cd7bba40ef182e58a49",
+      "size": 195308
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-02-22T17:04:38.000Z",
+  "usedStorage": 4132039360
+}

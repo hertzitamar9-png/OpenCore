@@ -1,0 +1,439 @@
+{
+  "_id": "6895f1c4b8cf7290c86f11d4",
+  "id": "bartowski/openai_gpt-oss-120b-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:openai/gpt-oss-120b",
+    "base_model:quantized:openai/gpt-oss-120b",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 4876,
+  "likes": 13,
+  "modelId": "bartowski/openai_gpt-oss-120b-GGUF",
+  "author": "bartowski",
+  "sha": "8d64014efc314685c68ad448590f905fcb20e534",
+  "lastModified": "2025-08-11T17:32:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model_relation": "quantized",
+    "base_model": "openai/gpt-oss-120b"
+  },
+  "gguf": {
+    "total": 116829156672,
+    "architecture": "gpt-oss",
+    "context_length": 131072,
+    "chat_template": "{#-\n  In addition to the normal inputs of `messages` and `tools`, this template also accepts the\n  following kwargs:\n  - \"builtin_tools\": A list, can contain \"browser\" and/or \"python\".\n  - \"model_identity\": A string that optionally describes the model identity.\n  - \"reasoning_effort\": A string that describes the reasoning effort, defaults to \"medium\".\n #}\n\n{#- Tool Definition Rendering ============================================== #}\n{%- macro render_typescript_type(param_spec, required_params, is_nullable=false) -%}\n    {%- if param_spec.type == \"array\" -%}\n        {%- if param_spec['items'] -%}\n            {%- if param_spec['items']['type'] == \"string\" -%}\n                {{- \"string[]\" }}\n            {%- elif param_spec['items']['type'] == \"number\" -%}\n                {{- \"number[]\" }}\n            {%- elif param_spec['items']['type'] == \"integer\" -%}\n                {{- \"number[]\" }}\n            {%- elif param_spec['items']['type'] == \"boolean\" -%}\n                {{- \"boolean[]\" }}\n            {%- else -%}\n                {%- set inner_type = render_typescript_type(param_spec['items'], required_params) -%}\n                {%- if inner_type == \"object | object\" or inner_type|length > 50 -%}\n                    {{- \"any[]\" }}\n                {%- else -%}\n                    {{- inner_type + \"[]\" }}\n                {%- endif -%}\n            {%- endif -%}\n            {%- if param_spec.nullable -%}\n                {{- \" | null\" }}\n            {%- endif -%}\n        {%- else -%}\n            {{- \"any[]\" }}\n            {%- if param_spec.nullable -%}\n                {{- \" | null\" }}\n            {%- endif -%}\n        {%- endif -%}\n    {%- elif param_spec.type is defined and param_spec.type is iterable and param_spec.type is not string and param_spec.type is not mapping and param_spec.type[0] is defined -%}\n        {#- Handle array of types like [\"object\", \"object\"] from Union[dict, list] #}\n        {%- if param_spec.type | length > 1 -%}\n            {{- param_spec.type | join(\" | \") }}\n        {%- else -%}\n            {{- param_spec.type[0] }}\n        {%- endif -%}\n    {%- elif param_spec.oneOf -%}\n        {#- Handle oneOf schemas - check for complex unions and fallback to any #}\n        {%- set has_object_variants = false -%}\n        {%- for variant in param_spec.oneOf -%}\n            {%- if variant.type == \"object\" -%}\n                {%- set has_object_variants = true -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if has_object_variants and param_spec.oneOf|length > 1 -%}\n            {{- \"any\" }}\n        {%- else -%}\n            {%- for variant in param_spec.oneOf -%}\n                {{- render_typescript_type(variant, required_params) -}}\n                {%- if variant.description %}\n                    {{- \"// \" + variant.description }}\n                {%- endif -%}\n                {%- if variant.default is defined %}\n                    {{ \"// default: \" + variant.default|tojson }}\n                {%- endif -%}\n                {%- if not loop.last %}\n                    {{- \" | \" }}\n                {% endif -%}\n            {%- endfor -%}\n        {%- endif -%}\n    {%- elif param_spec.type == \"string\" -%}\n        {%- if param_spec.enum -%}\n            {{- '\"' + param_spec.enum|join('\" | \"') + '\"' -}}\n        {%- else -%}\n            {{- \"string\" }}\n            {%- if param_spec.nullable %}\n                {{- \" | null\" }}\n            {%- endif -%}\n        {%- endif -%}\n    {%- elif param_spec.type == \"number\" -%}\n        {{- \"number\" }}\n    {%- elif param_spec.type == \"integer\" -%}\n        {{- \"number\" }}\n    {%- elif param_spec.type == \"boolean\" -%}\n        {{- \"boolean\" }}\n\n    {%- elif param_spec.type == \"object\" -%}\n        {%- if param_spec.properties -%}\n            {{- \"{\\n\" }}\n            {%- for prop_name, prop_spec in param_spec.properties.items() -%}\n                {{- prop_name -}}\n                {%- if prop_name not in (param_spec.required or []) -%}\n                    {{- \"?\" }}\n                {%- endif -%}\n                {{- \": \" }}\n                {{ render_typescript_type(prop_spec, param_spec.required or []) }}\n                {%- if not loop.last -%}\n                    {{-\", \" }}\n                {%- endif -%}\n            {%- endfor -%}\n            {{- \"}\" }}\n        {%- else -%}\n            {{- \"object\" }}\n        {%- endif -%}\n    {%- else -%}\n        {{- \"any\" }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_namespace(namespace_name, tools) -%}\n    {{- \"## \" + namespace_name + \"\\n\\n\" }}\n    {{- \"namespace \" + namespace_name + \" {\\n\\n\" }}\n    {%- for tool in tools %}\n        {%- set tool = tool.function %}\n        {{- \"// \" + tool.description + \"\\n\" }}\n        {{- \"type \"+ tool.name + \" = \" }}\n        {%- if tool.parameters and tool.parameters.properties %}\n            {{- \"(_: {\\n\" }}\n            {%- for param_name, param_spec in tool.parameters.properties.items() %}\n                {%- if param_spec.description %}\n                    {{- \"// \" + param_spec.description + \"\\n\" }}\n                {%- endif %}\n                {{- param_name }}\n                {%- if param_name not in (tool.parameters.required or []) -%}\n                    {{- \"?\" }}\n                {%- endif -%}\n                {{- \": \" }}\n                {{- render_typescript_type(param_spec, tool.parameters.required or []) }}\n                {%- if param_spec.default is defined -%}\n                    {%- if param_spec.enum %}\n                        {{- \", // default: \" + param_spec.default }}\n                    {%- elif param_spec.oneOf %}\n                        {{- \"// default: \" + param_spec.default }}\n                    {%- else %}\n                        {{- \", // default: \" + param_spec.default|tojson }}\n                    {%- endif -%}\n                {%- endif -%}\n                {%- if not loop.last %}\n                    {{- \",\\n\" }}\n                {%- else %}\n                    {{- \",\\n\" }}\n                {%- endif -%}\n            {%- endfor %}\n            {{- \"}) => any;\\n\\n\" }}\n        {%- else -%}\n            {{- \"() => any;\\n\\n\" }}\n        {%- endif -%}\n    {%- endfor %}\n    {{- \"} // namespace \" + namespace_name }}\n{%- endmacro -%}\n\n{%- macro render_builtin_tools(browser_tool, python_tool) -%}\n    {%- if browser_tool %}\n        {{- \"## browser\\n\\n\" }}\n        {{- \"// Tool for browsing.\\n\" }}\n        {{- \"// The `cursor` appears in brackets before each browsing display: `[{cursor}]`.\\n\" }}\n        {{- \"// Cite information from the tool using the following format:\\n\" }}\n        {{- \"// `\u3010{cursor}\u2020L{line_start}(-L{line_end})?\u3011`, for example: `\u30106\u2020L9-L11\u3011` or `\u30108\u2020L3\u3011`.\\n\" }}\n        {{- \"// Do not quote more than 10 words directly from the tool output.\\n\" }}\n        {{- \"// sources=web (default: web)\\n\" }}\n        {{- \"namespace browser {\\n\\n\" }}\n        {{- \"// Searches for information related to `query` and displays `topn` results.\\n\" }}\n        {{- \"type search = (_: {\\n\" }}\n        {{- \"query: string,\\n\" }}\n        {{- \"topn?: number, // default: 10\\n\" }}\n        {{- \"source?: string,\\n\" }}\n        {{- \"}) => any;\\n\\n\" }}\n        {{- \"// Opens the link `id` from the page indicated by `cursor` starting at line number `loc`, showing `num_lines` lines.\\n\" }}\n        {{- \"// Valid link ids are displayed with the formatting: `\u3010{id}\u2020.*\u3011`.\\n\" }}\n        {{- \"// If `cursor` is not provided, the most recent page is implied.\\n\" }}\n        {{- \"// If `id` is a string, it is treated as a fully qualified URL associated with `source`.\\n\" }}\n        {{- \"// If `loc` is not provided, the viewport will be positioned at the beginning of the document or centered on the most relevant passage, if available.\\n\" }}\n        {{- \"// Use this function without `id` to scroll to a new location of an opened page.\\n\" }}\n        {{- \"type open = (_: {\\n\" }}\n        {{- \"id?: number | string, // default: -1\\n\" }}\n        {{- \"cursor?: number, // default: -1\\n\" }}\n        {{- \"loc?: number, // default: -1\\n\" }}\n        {{- \"num_lines?: number, // default: -1\\n\" }}\n        {{- \"view_source?: boolean, // default: false\\n\" }}\n        {{- \"source?: string,\\n\" }}\n        {{- \"}) => any;\\n\\n\" }}\n        {{- \"// Finds exact matches of `pattern` in the current page, or the page given by `cursor`.\\n\" }}\n        {{- \"type find = (_: {\\n\" }}\n        {{- \"pattern: string,\\n\" }}\n        {{- \"cursor?: number, // default: -1\\n\" }}\n        {{- \"}) => any;\\n\\n\" }}\n        {{- \"} // namespace browser\\n\\n\" }}\n    {%- endif -%}\n\n    {%- if python_tool %}\n        {{- \"## python\\n\\n\" }}\n        {{- \"Use this tool to execute Python code in your chain of thought. The code will not be shown to the user. This tool should be used for internal reasoning, but not for code that is intended to be visible to the user (e.g. when creating plots, tables, or files).\\n\\n\" }}\n        {{- \"When you send a message containing Python code to python, it will be executed in a stateful Jupyter notebook environment. python will respond with the output of the execution or time out after 120.0 seconds. The drive at '/mnt/data' can be used to save and persist user files. Internet access for this session is UNKNOWN. Depends on the cluster.\\n\\n\" }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- System Message Construction ============================================ #}\n{%- macro build_system_message() -%}\n    {%- if model_identity is not defined %}\n        {%- set model_identity = \"You are ChatGPT, a large language model trained by OpenAI.\" %}\n    {%- endif %}\n    {{- model_identity + \"\\n\" }}\n    {{- \"Knowledge cutoff: 2024-06\\n\" }}\n    {{- \"Current date: \" + strftime_now(\"%Y-%m-%d\") + \"\\n\\n\" }}\n    {%- if reasoning_effort is not defined %}\n        {%- set reasoning_effort = \"medium\" %}\n    {%- endif %}\n    {{- \"Reasoning: \" + reasoning_effort + \"\\n\\n\" }}\n    {%- if builtin_tools %}\n        {{- \"# Tools\\n\\n\" }}\n        {%- set available_builtin_tools = namespace(browser=false, python=false) %}\n        {%- for tool in builtin_tools %}\n            {%- if tool == \"browser\" %}\n                {%- set available_builtin_tools.browser = true %}\n            {%- elif tool == \"python\" %}\n                {%- set available_builtin_tools.python = true %}\n            {%- endif %}\n        {%- endfor %}\n        {{- render_builtin_tools(available_builtin_tools.browser, available_builtin_tools.python) }}\n    {%- endif -%}\n    {{- \"# Valid channels: analysis, commentary, final. Channel must be included for every message.\" }}\n    {%- if tools -%}\n        {{- \"\\nCalls to these tools must go to the commentary channel: 'functions'.\" }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- Main Template Logic ================================================= #}\n{#- Set defaults #}\n\n{#- Render system message #}\n{{- \"<|start|>system<|message|>\" }}\n{{- build_system_message() }}\n{{- \"<|end|>\" }}\n\n{#- Extract developer message #}\n{%- if messages[0].role == \"developer\" or messages[0].role == \"system\" %}\n    {%- set developer_message = messages[0].content %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set developer_message = \"\" %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n\n{#- Render developer message #}\n{%- if developer_message or tools %}\n    {{- \"<|start|>developer<|message|>\" }}\n    {%- if developer_message %}\n        {{- \"# Instructions\\n\\n\" }}\n        {{- developer_message }}\n    {%- endif %}\n    {%- if tools -%}\n        {{- \"\\n\\n\" }}\n        {{- \"# Tools\\n\\n\" }}\n        {{- render_tool_namespace(\"functions\", tools) }}\n    {%- endif -%}\n    {{- \"<|end|>\" }}\n{%- endif %}\n\n{#- Render messages #}\n{%- set last_tool_call = namespace(name=none) %}\n{%- for message in loop_messages -%}\n    {#- At this point only assistant/user/tool messages should remain #}\n    {%- if message.role == 'assistant' -%}\n        {#- Checks to ensure the messages are being passed in the format we expect #}\n        {%- if \"content\" in message %}\n            {%- if \"<|channel|>analysis<|message|>\" in message.content or \"<|channel|>final<|message|>\" in message.content %}\n                {{- raise_exception(\"You have passed a message containing <|channel|> tags in the content field. Instead of doing this, you should pass analysis messages (the string between '<|message|>' and '<|end|>') in the 'thinking' field, and final messages (the string between '<|message|>' and '<|end|>') in the 'content' field.\") }}\n            {%- endif %}\n        {%- endif %}\n        {%- if \"thinking\" in message %}\n            {%- if \"<|channel|>analysis<|message|>\" in message.thinking or \"<|channel|>final<|message|>\" in message.thinking %}\n                {{- raise_exception(\"You have passed a message containing <|channel|> tags in the thinking field. Instead of doing this, you should pass analysis messages (the string between '<|message|>' and '<|end|>') in the 'thinking' field, and final messages (the string between '<|message|>' and '<|end|>') in the 'content' field.\") }}\n            {%- endif %}\n        {%- endif %}\n        {%- if \"tool_calls\" in message %}\n            {#- We need very careful handling here - we want to drop the tool call analysis message if the model #}\n            {#- has output a later <|final|> message, but otherwise we want to retain it. This is the only case #}\n            {#- when we render CoT/analysis messages in inference. #}\n            {%- set future_final_message = namespace(found=false) %}\n            {%- for future_message in loop_messages[loop.index:] %}\n                {%- if future_message.role == 'assistant' and \"tool_calls\" not in future_message %}\n                    {%- set future_final_message.found = true %}\n                {%- endif %}\n            {%- endfor %}\n            {#- We assume max 1 tool call per message, and so we infer the tool call name #}\n            {#- in \"tool\" messages from the most recent assistant tool call name #}\n            {%- set tool_call = message.tool_calls[0] %}\n            {%- if tool_call.function %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {%- if message.content and message.thinking %}\n                {{- raise_exception(\"Cannot pass both content and thinking in an assistant message with tool calls! Put the analysis message in one or the other, but not both.\") }}\n            {%- elif message.content and not future_final_message.found %}\n                {{- \"<|start|>assistant<|channel|>analysis<|message|>\" + message.content + \"<|end|>\" }}\n            {%- elif message.thinking and not future_final_message.found %}\n                {{- \"<|start|>assistant<|channel|>analysis<|message|>\" + message.thinking + \"<|end|>\" }}\n            {%- endif %}\n            {{- \"<|start|>assistant to=\" }}\n            {{- \"functions.\" + tool_call.name + \"<|channel|>commentary \" }}\n            {{- (tool_call.content_type if tool_call.content_type is defined else \"json\") + \"<|message|>\" }}\n            {{- tool_call.arguments|tojson }}\n            {{- \"<|call|>\" }}\n            {%- set last_tool_call.name = tool_call.name %}\n        {%- elif loop.last and not add_generation_prompt %}\n            {#- Only render the CoT if the final turn is an assistant turn and add_generation_prompt is false #}\n            {#- This is a situation that should only occur in training, never in inference. #}\n            {%- if \"thinking\" in message %}\n                {{- \"<|start|>assistant<|channel|>analysis<|message|>\" + message.thinking + \"<|end|>\" }}\n            {%- endif %}\n            {#- <|return|> indicates the end of generation, but <|end|> does not #}\n            {#- <|return|> should never be an input to the model, but we include it as the final token #}\n            {#- when training, so the model learns to emit it. #}\n            {{- \"<|start|>assistant<|channel|>final<|message|>\" + message.content + \"<|return|>\" }}\n        {%- else %}\n            {#- CoT is dropped during all previous turns, so we never render it for inference #}\n            {{- \"<|start|>assistant<|channel|>final<|message|>\" + message.content + \"<|end|>\" }}\n            {%- set last_tool_call.name = none %}\n        {%- endif %}\n    {%- elif message.role == 'tool' -%}\n        {%- if last_tool_call.name is none %}\n            {{- raise_exception(\"Message has tool role, but there was no previous assistant message with a tool call!\") }}\n        {%- endif %}\n        {{- \"<|start|>functions.\" + last_tool_call.name }}\n        {{- \" to=assistant<|channel|>commentary<|message|>\" + message.content|tojson + \"<|end|>\" }}\n    {%- elif message.role == 'user' -%}\n        {{- \"<|start|>user<|message|>\" + message.content + \"<|end|>\" }}\n    {%- endif -%}\n{%- endfor -%}\n\n{#- Generation prompt #}\n{%- if add_generation_prompt -%}\n<|start|>assistant\n{%- endif -%}",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|return|>",
+    "totalFileSize": 65369016768
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "07adb85b8628464059ff168bda8ab4123e4b4cd2",
+      "size": 5508
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f640356e5a213bbe698df7f4662512bfa910223e",
+      "size": 11836
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ2_M/openai_gpt-oss-120b-IQ2_M-00001-of-00002.gguf",
+      "blobId": "ec45140bd9c6afda10491a055cfacfcbafe39680",
+      "size": 39830129568,
+      "lfs": {
+        "sha256": "ac904dff985114515bc8d09c9ba78a075bca0d8b4a6bf99d7c9ab598b83b421f",
+        "size": 39830129568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ2_M/openai_gpt-oss-120b-IQ2_M-00002-of-00002.gguf",
+      "blobId": "def03ac9ffad715cb2aeaa628da584e9d7795902",
+      "size": 22856248096,
+      "lfs": {
+        "sha256": "b89c1bb408835bfc37040b852f667e9110dbbe30d2b0d44a664794a924df80c0",
+        "size": 22856248096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ3_M/openai_gpt-oss-120b-IQ3_M-00001-of-00002.gguf",
+      "blobId": "32182bc26226d989803635d595015595bce2be54",
+      "size": 39842847648,
+      "lfs": {
+        "sha256": "0f1b4b7ab03daf6be249e55c6c17b5dafea13b05d60fb3df5dde9407485253c2",
+        "size": 39842847648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ3_M/openai_gpt-oss-120b-IQ3_M-00002-of-00002.gguf",
+      "blobId": "356861cf12d4590e6af1ff356ee76be70dd852e3",
+      "size": 22863436576,
+      "lfs": {
+        "sha256": "e62bb4fe04bf1d47df861ac85fcf35f5d3e375826256095edc2d172d7a39c865",
+        "size": 22863436576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ4_NL/openai_gpt-oss-120b-IQ4_NL-00001-of-00002.gguf",
+      "blobId": "96337c53c9ebd915e3d489522d069569b10e3f83",
+      "size": 39844967328,
+      "lfs": {
+        "sha256": "a0007aac582d7b05374a34634ef12d3c63b488abbb18b4118d9ca741aeede491",
+        "size": 39844967328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ4_NL/openai_gpt-oss-120b-IQ4_NL-00002-of-00002.gguf",
+      "blobId": "810739e1c14534c19b9648701ecb97bacfa633e8",
+      "size": 22864634656,
+      "lfs": {
+        "sha256": "ad82ce3d53b1287958f645210bd596b365458e80fefb1d0d21e2d37215389963",
+        "size": 22864634656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ4_XS/openai_gpt-oss-120b-IQ4_XS-00001-of-00002.gguf",
+      "blobId": "7ce96bf9fd753f44b76881dc45b7180e3b15b4c5",
+      "size": 39844967328,
+      "lfs": {
+        "sha256": "7e8d22b4913da4c0dcee13bf0db2b9b9dcade97b969c7c9dabbd2093901c7df1",
+        "size": 39844967328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-IQ4_XS/openai_gpt-oss-120b-IQ4_XS-00002-of-00002.gguf",
+      "blobId": "810739e1c14534c19b9648701ecb97bacfa633e8",
+      "size": 22864634656,
+      "lfs": {
+        "sha256": "ad82ce3d53b1287958f645210bd596b365458e80fefb1d0d21e2d37215389963",
+        "size": 22864634656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-MXFP4_MOE/openai_gpt-oss-120b-MXFP4_MOE-00001-of-00002.gguf",
+      "blobId": "2d30e31a72ce1011a71a5f361957b05cea8f6577",
+      "size": 39815567520,
+      "lfs": {
+        "sha256": "06a0fcd109049b9d48fa9db9cf0cabc2f923cd3cfe4b7733874ef519ea6a44df",
+        "size": 39815567520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-MXFP4_MOE/openai_gpt-oss-120b-MXFP4_MOE-00002-of-00002.gguf",
+      "blobId": "e45f7df7134c8551e88c42f566560bfc8249e314",
+      "size": 23571779104,
+      "lfs": {
+        "sha256": "b7bf9fba295115d0e32951ce54911b3020dd92459b88a3908ad58479be6f7676",
+        "size": 23571779104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q2_K/openai_gpt-oss-120b-Q2_K-00001-of-00002.gguf",
+      "blobId": "b58a45cbc16cd995223eefd90cdaa8a39b3e5dc4",
+      "size": 39842847648,
+      "lfs": {
+        "sha256": "e3693423bc5bf7b80fee4aa08b5b8669d62e81d73ef487a463d2964bd1660046",
+        "size": 39842847648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q2_K/openai_gpt-oss-120b-Q2_K-00002-of-00002.gguf",
+      "blobId": "356861cf12d4590e6af1ff356ee76be70dd852e3",
+      "size": 22863436576,
+      "lfs": {
+        "sha256": "e62bb4fe04bf1d47df861ac85fcf35f5d3e375826256095edc2d172d7a39c865",
+        "size": 22863436576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q2_K_L/openai_gpt-oss-120b-Q2_K_L-00001-of-00002.gguf",
+      "blobId": "ddc180118bbeb17f422e1d8d3c1a697fb9f6a871",
+      "size": 39565445280,
+      "lfs": {
+        "sha256": "b396d4db53114333963413a086d618fd3ef499704a387297f2ccb0e8b23e9ce6",
+        "size": 39565445280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q2_K_L/openai_gpt-oss-120b-Q2_K_L-00002-of-00002.gguf",
+      "blobId": "3423863f45b79cbe762cdd58ed1e280e3ffff45e",
+      "size": 23430405664,
+      "lfs": {
+        "sha256": "112cd88e73248ad7cec8e3ecd12399af590a8e02445f29826fb20eb38a909ea9",
+        "size": 23430405664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_L/openai_gpt-oss-120b-Q3_K_L-00001-of-00002.gguf",
+      "blobId": "e887acc8170750cc437b62842cd2f213099b763d",
+      "size": 39775017888,
+      "lfs": {
+        "sha256": "d146a5927000fc74acc3fef2ab58796659cac1e7e8f4753af365589eb8634c86",
+        "size": 39775017888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_L/openai_gpt-oss-120b-Q3_K_L-00002-of-00002.gguf",
+      "blobId": "c1e300dc8087a060bab9184e68098baf8cc5add2",
+      "size": 22825098016,
+      "lfs": {
+        "sha256": "2c69e407de376dbc136c224af48f9a10c0c72d8360beed1df020ea557e56fb42",
+        "size": 22825098016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_M/openai_gpt-oss-120b-Q3_K_M-00001-of-00002.gguf",
+      "blobId": "77b770f6024e883abd0056fdefedf9a4910d9e0e",
+      "size": 39843031968,
+      "lfs": {
+        "sha256": "c5698643502834be5d649c55935490761e2376395018035f6be9004d0b6ea035",
+        "size": 39843031968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_M/openai_gpt-oss-120b-Q3_K_M-00002-of-00002.gguf",
+      "blobId": "356861cf12d4590e6af1ff356ee76be70dd852e3",
+      "size": 22863436576,
+      "lfs": {
+        "sha256": "e62bb4fe04bf1d47df861ac85fcf35f5d3e375826256095edc2d172d7a39c865",
+        "size": 22863436576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_S/openai_gpt-oss-120b-Q3_K_S-00001-of-00002.gguf",
+      "blobId": "1c95745522c85f54c8a0d971915b8298662a338e",
+      "size": 39838608288,
+      "lfs": {
+        "sha256": "8add2d05899a6d2fa3d6ec7dc8b2d1c1b1c7f9d0045d2e4e89b7d83aa3e337be",
+        "size": 39838608288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_S/openai_gpt-oss-120b-Q3_K_S-00002-of-00002.gguf",
+      "blobId": "fca0aee37d9adacf226d6d5027fdf2262c1869a3",
+      "size": 22861040416,
+      "lfs": {
+        "sha256": "8b2078172f9ca8fe76953bbe6f7d8eb02cc869902761f46a732a2afe556ca963",
+        "size": 22861040416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_XL/openai_gpt-oss-120b-Q3_K_XL-00001-of-00002.gguf",
+      "blobId": "be459656404f674d3f2f46ab0b63511bd5670bd2",
+      "size": 39497615520,
+      "lfs": {
+        "sha256": "39acf756d411b5dca4971e14a183f89faed1fb2bc8d32a7cb33d6ff2eb69ec14",
+        "size": 39497615520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q3_K_XL/openai_gpt-oss-120b-Q3_K_XL-00002-of-00002.gguf",
+      "blobId": "0645db521dc5b8611d0009409b60daa3f678e18b",
+      "size": 23392067104,
+      "lfs": {
+        "sha256": "ad88cfc7733cde421a31b1193dcb9d78ba8ffad24411be9da68225e0edb0f8bf",
+        "size": 23392067104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_0/openai_gpt-oss-120b-Q4_0-00001-of-00002.gguf",
+      "blobId": "cd36e3d62653b0bbdc69211bec9c8a9dbd747be1",
+      "size": 39804693408,
+      "lfs": {
+        "sha256": "cc546f9a752528708da62902db8e507fe0281ce53c1c071fe781c7b43a349be0",
+        "size": 39804693408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_0/openai_gpt-oss-120b-Q4_0-00002-of-00002.gguf",
+      "blobId": "7b0e2df6f27c279e6ab0f049b08344c8768bdc74",
+      "size": 22841871136,
+      "lfs": {
+        "sha256": "bab26426b619468ea4fa57f49e3e42a8e9ff631b46902565b6f92025100d8ee7",
+        "size": 22841871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_1/openai_gpt-oss-120b-Q4_1-00001-of-00002.gguf",
+      "blobId": "e045d93a182e5847799d5103694b853f5a0aaf53",
+      "size": 39876923808,
+      "lfs": {
+        "sha256": "7096573d30cafe3cb10a177084c852ab18f48cd5e737f53fee17c454109ea901",
+        "size": 39876923808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_1/openai_gpt-oss-120b-Q4_1-00002-of-00002.gguf",
+      "blobId": "40814bd1f8666deb930617f2a6672af99cdafb34",
+      "size": 22862238496,
+      "lfs": {
+        "sha256": "5c80179d0f7766b1e461d81f3e9db264c899e9dfc5d0fdb7cac887d0b3863de1",
+        "size": 22862238496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_K_L/openai_gpt-oss-120b-Q4_K_L-00001-of-00002.gguf",
+      "blobId": "de69911a16c14c43724ede22b76d8f40672caff5",
+      "size": 39604889760,
+      "lfs": {
+        "sha256": "9051f6bcaf1c37e46dc6dd0d3f64a022079e4da2b46155fd3ebd9427256ffc29",
+        "size": 39604889760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_K_L/openai_gpt-oss-120b-Q4_K_L-00002-of-00002.gguf",
+      "blobId": "88ca199b87429bd84bd2e25df8b8c4d9d95132e9",
+      "size": 23453998624,
+      "lfs": {
+        "sha256": "035c054b2642eed78e22798776078db54913118d216d4ce3cb9233a26919cc06",
+        "size": 23453998624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_K_M/openai_gpt-oss-120b-Q4_K_M-00001-of-00002.gguf",
+      "blobId": "10a64a39adbe8cb164b08bddcb6631e28eb57c67",
+      "size": 39954683808,
+      "lfs": {
+        "sha256": "48b6bea561b52aaa3c10ca7681f35a923196cc348098e55ffc6ee3d184eb0949",
+        "size": 39954683808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q4_K_M/openai_gpt-oss-120b-Q4_K_M-00002-of-00002.gguf",
+      "blobId": "571fddc244806a77fda5505fd224b1a0ab0ae5bf",
+      "size": 22887029536,
+      "lfs": {
+        "sha256": "06ab40ac3a9e2d7a77b6491b4cf76af152bee88ce493331a1f5147a0207abcad",
+        "size": 22887029536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q6_K/openai_gpt-oss-120b-Q6_K-00001-of-00002.gguf",
+      "blobId": "cc9f95e3b1af85e2a967ba061844e63fe69dcdd8",
+      "size": 39749857440,
+      "lfs": {
+        "sha256": "88dcf7b169593e875cb428638ea32a8bbc4082d12a53d3ccc08d6713e7be2b18",
+        "size": 39749857440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q6_K/openai_gpt-oss-120b-Q6_K-00002-of-00002.gguf",
+      "blobId": "8dc9da6f9ec8bf40a0323e374db8380dd33351e7",
+      "size": 23534638624,
+      "lfs": {
+        "sha256": "f52bbe681080253f43a66549247e76d6c66e0ccf142979e104413da9a15cb2b2",
+        "size": 23534638624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q8_0/openai_gpt-oss-120b-Q8_0-00001-of-00002.gguf",
+      "blobId": "87368dcb825eacbe4ecb9896c0cb87a4229be93f",
+      "size": 39815567264,
+      "lfs": {
+        "sha256": "ad52548a8e0d431cc0649ebde6c561801abe201f8c5739ffad753179510ba218",
+        "size": 39815567264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-Q8_0/openai_gpt-oss-120b-Q8_0-00002-of-00002.gguf",
+      "blobId": "e45f7df7134c8551e88c42f566560bfc8249e314",
+      "size": 23571779104,
+      "lfs": {
+        "sha256": "b7bf9fba295115d0e32951ce54911b3020dd92459b88a3908ad58479be6f7676",
+        "size": 23571779104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-bf16/openai_gpt-oss-120b-bf16-00001-of-00002.gguf",
+      "blobId": "352e6a7a648f6a6ff5629ecbea7c0fbafe0b7802",
+      "size": 39494329568,
+      "lfs": {
+        "sha256": "02df4825e4e9cb1ee4313a5d759a1779d43a856a51145de0c842302e9b8dddc4",
+        "size": 39494329568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-bf16/openai_gpt-oss-120b-bf16-00002-of-00002.gguf",
+      "blobId": "12e2fcb79b4e3309b00aeec4d84adf2d630f92aa",
+      "size": 25874687200,
+      "lfs": {
+        "sha256": "57cc2c44cc009ea54baea618d875f73f7ac2e22495eb0152004ef241310f36d8",
+        "size": 25874687200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-120b-imatrix.gguf",
+      "blobId": "e77bb8421f73f97ea5dc562eb2b4c50fbdaa58c5",
+      "size": 161600480,
+      "lfs": {
+        "sha256": "a2ee62f0d685d497b6e39e60a0827b639b63ea42930d3ad5573d8bccb29f3729",
+        "size": 161600480,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-08-08T12:47:00.000Z",
+  "usedStorage": 1042122764768
+}

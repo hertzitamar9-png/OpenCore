@@ -1,0 +1,188 @@
+{
+  "_id": "69710b3a38616e3bf1912b76",
+  "id": "mistralai/Voxtral-Mini-4B-Realtime-2602",
+  "private": false,
+  "pipeline_tag": "automatic-speech-recognition",
+  "library_name": "vllm",
+  "tags": [
+    "vllm",
+    "safetensors",
+    "voxtral_realtime",
+    "mistral-common",
+    "automatic-speech-recognition",
+    "en",
+    "fr",
+    "es",
+    "de",
+    "ru",
+    "zh",
+    "ja",
+    "it",
+    "pt",
+    "nl",
+    "ar",
+    "hi",
+    "ko",
+    "arxiv:2602.11298",
+    "base_model:mistralai/Ministral-3-3B-Base-2512",
+    "base_model:finetune:mistralai/Ministral-3-3B-Base-2512",
+    "license:apache-2.0",
+    "eval-results",
+    "deploy:sagemaker",
+    "region:us"
+  ],
+  "downloads": 2041370,
+  "likes": 1046,
+  "modelId": "mistralai/Voxtral-Mini-4B-Realtime-2602",
+  "author": "mistralai",
+  "sha": "2769294da9567371363522aac9bbcfdd19447add",
+  "lastModified": "2026-03-11T15:04:02.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "VoxtralRealtimeForConditionalGeneration"
+    ],
+    "model_type": "voxtral_realtime"
+  },
+  "cardData": {
+    "library_name": "vllm",
+    "language": [
+      "en",
+      "fr",
+      "es",
+      "de",
+      "ru",
+      "zh",
+      "ja",
+      "it",
+      "pt",
+      "nl",
+      "ar",
+      "hi",
+      "ko"
+    ],
+    "license": "apache-2.0",
+    "inference": false,
+    "base_model": [
+      "mistralai/Ministral-3-3B-Base-2512"
+    ],
+    "extra_gated_description": "If you want to learn more about how we process your personal data, please read our <a href=\"https://mistral.ai/terms/\">Privacy Policy</a>.",
+    "pipeline_tag": "automatic-speech-recognition",
+    "tags": [
+      "mistral-common"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ed18453a3dbda4c3ae158368dc6a42bf6488d24c",
+      "size": 1567
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4d9f2d31a2eb713f08912d0b208669fbeb3446d2",
+      "size": 14942
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "442f2f739e26ebaf7dd3d4ebe2280c404f5adaf1",
+      "size": 1572
+    },
+    {
+      "rfilename": "consolidated.safetensors",
+      "blobId": "d58a8bdeccd03dda4879f752c93ed0c18ced137a",
+      "size": 8859462744,
+      "lfs": {
+        "sha256": "263f178fe752c90a2ae58f037a95ed092db8b14768b0978b8c48f66979c8345d",
+        "size": 8859462744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "81a5cdc3fca9825bd91576588333f05bf7ac7542",
+      "size": 191
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "0a6306d5af2c47791169a175ce886c90c06b5dae",
+      "size": 8859446848,
+      "lfs": {
+        "sha256": "e745e4902df6a4c48f29f2f8dc1f6d0fb4cc73c7156bc45923451a5bcdfcd1d6",
+        "size": 8859446848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "params.json",
+      "blobId": "a60316a6010cf63138e0932a6d974ae77bd513b4",
+      "size": 1343
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "806b2e13fc82235ad644cf89e351d5632c196a34",
+      "size": 384
+    },
+    {
+      "rfilename": "tekken.json",
+      "blobId": "bcc325ca42a6272103fa5066c9e2fa67d10e4b9d",
+      "size": 14910348,
+      "lfs": {
+        "sha256": "8434af1d39eba99f0ef46cf1450bf1a63fa941a26933a1ef5dbbf4adf0d00e44",
+        "size": 14910348,
+        "pointerSize": 133
+      }
+    }
+  ],
+  "spaces": [
+    "mistralai/Voxtral-Mini-4B-Realtime-WebGPU",
+    "Steveeeeeeen/SpeechLLM-Playbook",
+    "msalhab96/open_universal_arabic_asr_leaderboard_all",
+    "fastgpu/vram-and-gpu-cost-calculator",
+    "kywpcm/SpeechLLM-Playbook",
+    "kadirnar/arabic-asr-leaderboard",
+    "mistralai/Voxtral-Mini-Realtime",
+    "GenAISecurityProject/OWASP-AIBOM-Generator",
+    "emanforhelp/model-pulse",
+    "mineapple/Voxtral-Mini-Realtime",
+    "pandora-s/Voxtral-Realtime-Offline",
+    "shreyask/Voxtral-Mini-Realtime-WebGPU",
+    "driodnexus/droidnexus-labs-hub",
+    "MihaiPopa-1/Voxtral-Mini-Realtime",
+    "shreyask/voxtral-pipeline-explorer",
+    "lovegold/Voxtral-Realtime-WebGPU",
+    "vcasas/Voxtral-Mini-Realtime",
+    "homegrownherbalist/Voxtral-Mini-Realtime",
+    "kamcio1989/Voxtral-Realtime-WebGPU",
+    "z4iXsECHS6ND-heighTSAI-INSEGCSyX6T-SYS-ROD/Voxtral-Realtime-WebGPU",
+    "okvic77/Voxtral-Mini-Realtime",
+    "hardeep-cheerio/Voxtral-Mini-Realtime",
+    "mobydoyle/Voxtral-Mini-Realtime",
+    "rishavjain/Voxtral-Mini-Realtime",
+    "eburondeveloper/Voxtral-Realtime-WebGPU",
+    "blond187/Voxtral-Mini-Realtime",
+    "usernameeReal/Voxtral-Realtime-wasm",
+    "juliaturc/Voxtral-Realtime-RawTokens",
+    "pvatanasov/Voxtral-Mini-Realtime",
+    "pranaysuyash/shopstack",
+    "codexxx/Realtime-WebGPU",
+    "edotrajan/Voxtral-Realtime-WebGPUf",
+    "AnthonyDi/Voxtral-Mini-Realtime",
+    "yumu908/Voxtral-Realtime-WebGPU",
+    "yumu908/Voxtral-Mini-Realtime-WebGPU",
+    "eustlb/asr-models-on-the-hub",
+    "kadirnar/closed-source-asr-leaderboard",
+    "kadirnar/arabic-asr-benchmarks",
+    "nathycodes/presentercoach"
+  ],
+  "createdAt": "2026-01-21T17:22:02.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 4429679360
+    },
+    "total": 4429679360
+  },
+  "usedStorage": 17774901613
+}

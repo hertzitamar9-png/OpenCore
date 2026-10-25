@@ -1,0 +1,824 @@
+{
+  "_id": "6aafbb07b6dc6303fe8388e8",
+  "id": "JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "mellum",
+    "text-generation",
+    "conversational",
+    "en",
+    "arxiv:2605.31268",
+    "base_model:JetBrains/Mellum2-12B-A2.5B-Base",
+    "base_model:finetune:JetBrains/Mellum2-12B-A2.5B-Base",
+    "license:apache-2.0",
+    "model-index",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 6205,
+  "likes": 177,
+  "modelId": "JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+  "author": "JetBrains",
+  "sha": "92ddae9fc7665e9f801d141d2e5a6b2caf2460c4",
+  "lastModified": "2026-10-07T23:08:12.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": [
+    {
+      "name": "Mellum2.1 Thinking",
+      "results": [
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "livecodebench",
+            "name": "LiveCodeBench v6"
+          },
+          "metrics": [
+            {
+              "name": "pass@1",
+              "type": "pass@1",
+              "value": 82,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "humaneval-plus",
+            "name": "HumanEval+"
+          },
+          "metrics": [
+            {
+              "name": "pass@1",
+              "type": "pass@1",
+              "value": 91.5,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "mbpp-plus",
+            "name": "MBPP+"
+          },
+          "metrics": [
+            {
+              "name": "pass@1",
+              "type": "pass@1",
+              "value": 79.4,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "aime",
+            "name": "AIME 25/26"
+          },
+          "metrics": [
+            {
+              "name": "exact match",
+              "type": "exact_match",
+              "value": 83.3,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "gsm-plus",
+            "name": "GSM-Plus"
+          },
+          "metrics": [
+            {
+              "name": "exact match",
+              "type": "exact_match",
+              "value": 88.3,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "swe-bench-verified",
+            "name": "SWE-bench Verified"
+          },
+          "metrics": [
+            {
+              "name": "resolved rate",
+              "type": "resolved",
+              "value": 47,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "terminal-bench",
+            "name": "Terminal-Bench 2.1"
+          },
+          "metrics": [
+            {
+              "name": "resolved rate",
+              "type": "resolved",
+              "value": 17.4,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "swe-bench-pro",
+            "name": "SWE-bench Pro"
+          },
+          "metrics": [
+            {
+              "name": "resolved rate",
+              "type": "resolved",
+              "value": 28,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "bfcl",
+            "name": "BFCL v4"
+          },
+          "metrics": [
+            {
+              "name": "accuracy",
+              "type": "acc",
+              "value": 62.3,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "workbench",
+            "name": "WorkBench"
+          },
+          "metrics": [
+            {
+              "name": "task completion",
+              "type": "task_completion",
+              "value": 44.6,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "toolhop",
+            "name": "ToolHop"
+          },
+          "metrics": [
+            {
+              "name": "accuracy",
+              "type": "acc",
+              "value": 49.1,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "ifeval",
+            "name": "IFEval"
+          },
+          "metrics": [
+            {
+              "name": "accuracy",
+              "type": "acc",
+              "value": 90.6,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "gpqa",
+            "name": "GPQA Diamond"
+          },
+          "metrics": [
+            {
+              "name": "accuracy",
+              "type": "acc",
+              "value": 64.6,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "mmlu-redux",
+            "name": "MMLU-Redux"
+          },
+          "metrics": [
+            {
+              "name": "accuracy",
+              "type": "acc",
+              "value": 87.8,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "mixeval",
+            "name": "MixEval-Hard"
+          },
+          "metrics": [
+            {
+              "name": "accuracy",
+              "type": "acc",
+              "value": 46.4,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "xstest",
+            "name": "XSTest"
+          },
+          "metrics": [
+            {
+              "name": "safe compliance",
+              "type": "safe_compliance",
+              "value": 88.8,
+              "verified": false
+            }
+          ]
+        },
+        {
+          "task": {
+            "type": "text-generation",
+            "name": "Text Generation"
+          },
+          "dataset": {
+            "type": "harmbench",
+            "name": "HarmBench (harmful rate, lower is better)"
+          },
+          "metrics": [
+            {
+              "name": "harmful rate",
+              "type": "harmful_rate",
+              "value": 8.5,
+              "verified": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "config": {
+    "architectures": [
+      "MellumForCausalLM"
+    ],
+    "model_type": "mellum",
+    "num_experts": 64,
+    "num_experts_per_tok": 8,
+    "tokenizer_config": {
+      "bos_token": "<|endoftext|>",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "{%- macro normalize_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns_c = namespace(text='') -%}\n        {%- for part in content -%}\n            {%- if part is mapping -%}\n                {%- if part.type == 'text' -%}\n                    {%- set ns_c.text = ns_c.text + (part.text or '') -%}\n                {%- elif part.type == 'tool-result' and part.output is mapping and part.output.type == 'text' -%}\n                    {%- set ns_c.text = ns_c.text + (part.output.value or '') -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns_c.text -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- normalize_content(messages[0].content) + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + normalize_content(messages[0].content) + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- set msg_content = normalize_content(message.content) %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(msg_content.startswith('<tool_response>') and msg_content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- set content = normalize_content(message.content) %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if reasoning_content %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}"
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation",
+    "license": "apache-2.0",
+    "base_model": "JetBrains/Mellum2-12B-A2.5B-Base",
+    "model-index": [
+      {
+        "name": "Mellum2.1 Thinking",
+        "results": [
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "livecodebench",
+              "name": "LiveCodeBench v6"
+            },
+            "metrics": [
+              {
+                "name": "pass@1",
+                "type": "pass@1",
+                "value": 82,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "humaneval-plus",
+              "name": "HumanEval+"
+            },
+            "metrics": [
+              {
+                "name": "pass@1",
+                "type": "pass@1",
+                "value": 91.5,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "mbpp-plus",
+              "name": "MBPP+"
+            },
+            "metrics": [
+              {
+                "name": "pass@1",
+                "type": "pass@1",
+                "value": 79.4,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "aime",
+              "name": "AIME 25/26"
+            },
+            "metrics": [
+              {
+                "name": "exact match",
+                "type": "exact_match",
+                "value": 83.3,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "gsm-plus",
+              "name": "GSM-Plus"
+            },
+            "metrics": [
+              {
+                "name": "exact match",
+                "type": "exact_match",
+                "value": 88.3,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "swe-bench-verified",
+              "name": "SWE-bench Verified"
+            },
+            "metrics": [
+              {
+                "name": "resolved rate",
+                "type": "resolved",
+                "value": 47,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "terminal-bench",
+              "name": "Terminal-Bench 2.1"
+            },
+            "metrics": [
+              {
+                "name": "resolved rate",
+                "type": "resolved",
+                "value": 17.4,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "swe-bench-pro",
+              "name": "SWE-bench Pro"
+            },
+            "metrics": [
+              {
+                "name": "resolved rate",
+                "type": "resolved",
+                "value": 28,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "bfcl",
+              "name": "BFCL v4"
+            },
+            "metrics": [
+              {
+                "name": "accuracy",
+                "type": "acc",
+                "value": 62.3,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "workbench",
+              "name": "WorkBench"
+            },
+            "metrics": [
+              {
+                "name": "task completion",
+                "type": "task_completion",
+                "value": 44.6,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "toolhop",
+              "name": "ToolHop"
+            },
+            "metrics": [
+              {
+                "name": "accuracy",
+                "type": "acc",
+                "value": 49.1,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "ifeval",
+              "name": "IFEval"
+            },
+            "metrics": [
+              {
+                "name": "accuracy",
+                "type": "acc",
+                "value": 90.6,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "gpqa",
+              "name": "GPQA Diamond"
+            },
+            "metrics": [
+              {
+                "name": "accuracy",
+                "type": "acc",
+                "value": 64.6,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "mmlu-redux",
+              "name": "MMLU-Redux"
+            },
+            "metrics": [
+              {
+                "name": "accuracy",
+                "type": "acc",
+                "value": 87.8,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "mixeval",
+              "name": "MixEval-Hard"
+            },
+            "metrics": [
+              {
+                "name": "accuracy",
+                "type": "acc",
+                "value": 46.4,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "xstest",
+              "name": "XSTest"
+            },
+            "metrics": [
+              {
+                "name": "safe compliance",
+                "type": "safe_compliance",
+                "value": 88.8,
+                "verified": false
+              }
+            ]
+          },
+          {
+            "task": {
+              "type": "text-generation",
+              "name": "Text Generation"
+            },
+            "dataset": {
+              "type": "harmbench",
+              "name": "HarmBench (harmful rate, lower is better)"
+            },
+            "metrics": [
+              {
+                "name": "harmful rate",
+                "type": "harmful_rate",
+                "value": 8.5,
+                "verified": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7624774fc4ca389dd2cfde597233efae6b302281",
+      "size": 1576
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "1da06e0d214a2bc6232556430566ea8c0a3aa84d",
+      "size": 8907
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "116fec1e4c4f6d8c370111d0ad694ef752858412",
+      "size": 4849
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "51a8384f7f486efa2b78b5a1f8ee82760c0de50a",
+      "size": 2329
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "a9500a728d7ffc4a81bec6d90377f7863321446e",
+      "size": 111
+    },
+    {
+      "rfilename": "mellum-logo-dark.svg",
+      "blobId": "0e8d124bdcef96aef2b74476c9b9a3f0014136ed",
+      "size": 5176
+    },
+    {
+      "rfilename": "mellum21_summary.png",
+      "blobId": "230bca3cccf22a703986a50f41532632cbeefad3",
+      "size": 174934,
+      "lfs": {
+        "sha256": "2a86585d0f7075c56a9a3ae7cd582561dc7020aff87e094a065651d5d4f92324",
+        "size": 174934,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "model-00001-of-00005.safetensors",
+      "blobId": "62c85bb03b537609c682d9914b21ebd8a5a29dcd",
+      "size": 4999531104,
+      "lfs": {
+        "sha256": "f5ccf8012c7d44fd2598325bf2482b8fc21792ef888de68f9ca8c9053c2e022f",
+        "size": 4999531104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00005.safetensors",
+      "blobId": "9b6a90b7beb2ab99f7f8e8856caaed3d6de09289",
+      "size": 4996604776,
+      "lfs": {
+        "sha256": "266beea6f34dea9c86414d8bf8cb35c0f4a53330731d99ed41ec666390758e39",
+        "size": 4996604776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00005.safetensors",
+      "blobId": "6de7f89c03befd9d0d8cdbc48c8eaa83f907b22c",
+      "size": 4996605688,
+      "lfs": {
+        "sha256": "da9a04fb6ea121f71e30920c7657b889ca0078aea57d878e5cb768ebb3e4483a",
+        "size": 4996605688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00005.safetensors",
+      "blobId": "df5f882c284c8f376dcd8f3ae5c5b8963db9be8f",
+      "size": 4996605688,
+      "lfs": {
+        "sha256": "32f27ab7f38ff5d98ac3d50dabb57ab8a55a8aa552febd42c2a5b01f4116262a",
+        "size": 4996605688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00005.safetensors",
+      "blobId": "8985a4f233e8b153c4af102e594fd3182514623c",
+      "size": 4311191552,
+      "lfs": {
+        "sha256": "d8bbb9b829cb3279e23f59af55bf68ec00cc8ad30923c227d8b13c7d831e6b3b",
+        "size": 4311191552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "1f2d70f3a8c3e48a2bdd0c6ff137b20964f3a82c",
+      "size": 526510
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "8245cf33537325c3cf60028ce625da5aee09d124",
+      "size": 1185
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "6d5c16d2f9452829c41ad4441f9e0c89833d5ef4",
+      "size": 7091587
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "360a848ea68319c453479a3f49edd60fb74d80ab",
+      "size": 7033
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse",
+    "Clay1024/mellum21-thinking",
+    "Renandf/mellum21-thinking-demo"
+  ],
+  "createdAt": "2026-09-20T10:52:55.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 12149923072
+    },
+    "total": 12149923072
+  },
+  "usedStorage": 25157630419
+}

@@ -1,0 +1,512 @@
+{
+  "_id": "6acd147b6aa2c20628729c0f",
+  "id": "AtomicChat/MiniCPM-V-4.7-35B-A3B-Uncensored-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "atomic-chat",
+    "minicpm",
+    "minicpm-v",
+    "openbmb",
+    "moe",
+    "imatrix",
+    "llama.cpp",
+    "lora",
+    "abliteration",
+    "refusal-direction",
+    "image-text-to-text",
+    "base_model:openbmb/MiniCPM-V-4.7-35B-A3B",
+    "base_model:finetune:openbmb/MiniCPM-V-4.7-35B-A3B",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 9767,
+  "likes": 41,
+  "modelId": "AtomicChat/MiniCPM-V-4.7-35B-A3B-Uncensored-GGUF",
+  "author": "AtomicChat",
+  "sha": "948c2f37e34730f8abd9b80f86642f37e8f30960",
+  "lastModified": "2026-10-13T20:01:42.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "openbmb/MiniCPM-V-4.7-35B-A3B"
+    ],
+    "base_model_relation": "finetune",
+    "quantized_by": "AtomicChat",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "tags": [
+      "atomic-chat",
+      "minicpm",
+      "minicpm-v",
+      "openbmb",
+      "moe",
+      "gguf",
+      "imatrix",
+      "llama.cpp",
+      "lora",
+      "abliteration",
+      "refusal-direction"
+    ]
+  },
+  "gguf": {
+    "total": 26562560,
+    "architecture": "qwen35moe",
+    "totalFileSize": 106269248
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a76c2885d6a69b113a1d673f15b656749bf8647f",
+      "size": 14313
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00001-of-00011.gguf",
+      "blobId": "1a2bfc450d189eea346b9801dd5c56de8bf4a1c4",
+      "size": 1893148192,
+      "lfs": {
+        "sha256": "ededfbd2709bab4d48bebb7cf73429a8fd0567f1fb17f8be1d3522775184fdcf",
+        "size": 1893148192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00002-of-00011.gguf",
+      "blobId": "b53637c6d9c375c3c9d7e9de4cb7368867c5d8c4",
+      "size": 1903428416,
+      "lfs": {
+        "sha256": "b268130b6592959b532a5b751b0150ba8d4468cce142ae79bc447cdb091c897e",
+        "size": 1903428416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00003-of-00011.gguf",
+      "blobId": "9ec59b9cabb4e3a394e0e21c207baf10de54da0d",
+      "size": 1903428416,
+      "lfs": {
+        "sha256": "c8567d2ed77e60bc25d27111c9a2a83fc1d0b2154b39e2ddd1bcde682a05f561",
+        "size": 1903428416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00004-of-00011.gguf",
+      "blobId": "52160124b86d51d6d45ca2d8bf288f183ea7fdd2",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "a617dc76e210203a20925f287337625a89c908dff49199959f39af383804e76a",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00005-of-00011.gguf",
+      "blobId": "4c155d95b0d86d97feacb1574aafd7cbc9449c21",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "a38b6295a283ace463a5d013814baeaf4e452e89a2aa54a02964977598c9d870",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00006-of-00011.gguf",
+      "blobId": "812da77bd8e4132a454648e5ceef8b1168fdec68",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "51e2bf54868f0595ce0de650cfffe68bf227cd88ce994cf80cca9af8f83212af",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00007-of-00011.gguf",
+      "blobId": "dc070f67b192bbddc3c2453de0895d4bfb3696da",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "95b6ac36a9eb16e40ec1cc7b54687a82a3f8cf9ae33fdb0dd83afb8df6e3584b",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00008-of-00011.gguf",
+      "blobId": "2673e738d232d2cd2b15621f9b7f04f9d781058e",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "9dcdbac30a269116b7181922c15a2c8fdaf83228f7f0cab38c2b53d332570e41",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00009-of-00011.gguf",
+      "blobId": "819f94772e765f4beab1f080905b6269fe24fb66",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "9198cbf4df908dc96981736fdbd2e9b0f8fd35ace49521f0dd07a4a6c335a4f7",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00010-of-00011.gguf",
+      "blobId": "85f40383bdb69db3788eb33f6e0b111275de3055",
+      "size": 1903428480,
+      "lfs": {
+        "sha256": "6bd1b0efaa4f9e7a7cafc905fd00b7eadfff043fb3b740ec84cc35d28ce7cdbf",
+        "size": 1903428480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q4_K-IQ4_XS-00011-of-00011.gguf",
+      "blobId": "25a01f50eff277e90bbecb82f3200299631ebf85",
+      "size": 1101150592,
+      "lfs": {
+        "sha256": "c52f2d97fd09b1e6ba07b38ab3edc9b7730443f390c18f0115f02007ec3e4dad",
+        "size": 1101150592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00001-of-00012.gguf",
+      "blobId": "e2147c52dd2ee28e64cae80a33b2b020dc651920",
+      "size": 1985422880,
+      "lfs": {
+        "sha256": "2b3e1a8932af53d3885ef906fdc8ff0c1f83a54c98b0160b9214a1bf9eb8433d",
+        "size": 1985422880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00002-of-00012.gguf",
+      "blobId": "851a6fa52a41f7bd4fd2072ec52612982febb86c",
+      "size": 1950540352,
+      "lfs": {
+        "sha256": "6863223dac4d2453988f3ecd85087cadcd35cf09e165f953220b66ca66cb4c6a",
+        "size": 1950540352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00003-of-00012.gguf",
+      "blobId": "81da95e28972f9f2688745b74a578250983d7a49",
+      "size": 1919091392,
+      "lfs": {
+        "sha256": "d5c42934977f58ac426599946f2b2b47d853c634cda75eec0cd802694f1356b3",
+        "size": 1919091392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00004-of-00012.gguf",
+      "blobId": "fca74c5b4104d4e5bd813200dfaa8622e62e9394",
+      "size": 1916706144,
+      "lfs": {
+        "sha256": "368bc993a85bb658ee4205edb5360242662aebe6309c19839212c8371d33037e",
+        "size": 1916706144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00005-of-00012.gguf",
+      "blobId": "c8a6da48025ea061d7e82da0276b9d8bfa2d1286",
+      "size": 1950540416,
+      "lfs": {
+        "sha256": "2114dd4c7c777d7fb6463b80cd9d41e3d8c16ba80bf8d49d18ddac612e4fc07a",
+        "size": 1950540416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00006-of-00012.gguf",
+      "blobId": "41012cf8aeff218ca39edf3a1d893af1bf21eef8",
+      "size": 1919091456,
+      "lfs": {
+        "sha256": "dd67175fe635d6f9324ac9cb0b4dfa01fdf13940c4cfdd2dc98fc5862209f9ac",
+        "size": 1919091456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00007-of-00012.gguf",
+      "blobId": "61c0cc6353506b7f10b1c2a8d73d4cf0596b5f83",
+      "size": 1925890560,
+      "lfs": {
+        "sha256": "ee1b4c4086881d2cccfb0ba4f7140598af552f3c596865bb3241483d3b31183b",
+        "size": 1925890560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00008-of-00012.gguf",
+      "blobId": "7809b460a9c15a44e1494117d4eebf699d639327",
+      "size": 1950540416,
+      "lfs": {
+        "sha256": "8db66e5d5aee67c06834ece1b224ea10d1fcdf2676cbf4411bcf5080e6da30e9",
+        "size": 1950540416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00009-of-00012.gguf",
+      "blobId": "44de71765a12872ee9b91fbe7e7cfd68e8a33e47",
+      "size": 1919091456,
+      "lfs": {
+        "sha256": "cefcf3b34e96c0bf8dca571bce8ff840c86764801c1840cf0d04294d93a2e123",
+        "size": 1919091456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00010-of-00012.gguf",
+      "blobId": "2d73d9e84cde7fcd5d7322f5264ccf3f1979221c",
+      "size": 1914475680,
+      "lfs": {
+        "sha256": "b4178c486423c6c7c10e1dbea22554cb607805e1ce2a5787cccba52516721d1f",
+        "size": 1914475680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00011-of-00012.gguf",
+      "blobId": "6dd6c7d6776411da206d75d6338159b2bf8a1f10",
+      "size": 1950540416,
+      "lfs": {
+        "sha256": "ebfcaa810dba26370a4360abc1fc6d408be07abc365804f66547f71449a20516",
+        "size": 1950540416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q5_K-Q4_K-00012-of-00012.gguf",
+      "blobId": "a214d6b36df48f3065f9d24d6455e13f5d42ee0e",
+      "size": 836489952,
+      "lfs": {
+        "sha256": "2ea49e40bf9e550e6099979bebbfbff666ab3b81953f16e9bd9da2f1ec234345",
+        "size": 836489952,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00001-of-00016.gguf",
+      "blobId": "5e490a0e6597f8dff6ec8bd5de9264d59ed69cf1",
+      "size": 1819608192,
+      "lfs": {
+        "sha256": "0c04cd31988229dc6dcc2e46582a956cea333a0ebd8bf59496afeb17db2a6ce4",
+        "size": 1819608192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00002-of-00016.gguf",
+      "blobId": "53d6157235ab1c946835265cd38ab6e8e40afd81",
+      "size": 1850948128,
+      "lfs": {
+        "sha256": "0f6718c7d4bb5f16764b16b06971896bf8cf4806cc99bbd201f10d23d589f27e",
+        "size": 1850948128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00003-of-00016.gguf",
+      "blobId": "14e223757a314e3b87b08453fa3ea59f9b890e2e",
+      "size": 1873367488,
+      "lfs": {
+        "sha256": "9d8b3681a60d5defb1c43b3b70d7ec3b38a6dcb36e39e900dde59354543f73ff",
+        "size": 1873367488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00004-of-00016.gguf",
+      "blobId": "59b31acc52b99ae5b572a66b922e9f54f4c3eb8b",
+      "size": 1877703456,
+      "lfs": {
+        "sha256": "f9d40212be4f65e9ffbd74278d53ffc975f4a6c8aa5b823c0ac5fa7bdd20c453",
+        "size": 1877703456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00005-of-00016.gguf",
+      "blobId": "039763a2bfacce079f0f036b41362fb3c92e8217",
+      "size": 1850948160,
+      "lfs": {
+        "sha256": "622537a165aea469fa3c24a35b670e65db75310c80d707170ce40e2e661ee958",
+        "size": 1850948160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00006-of-00016.gguf",
+      "blobId": "0235dd32cc92cad1f040d85564f6dc04eaf061b8",
+      "size": 1873367520,
+      "lfs": {
+        "sha256": "c096bf25eb119d2136e6fc4af6fcfb0809fc6d96f2b1935ff9e750567b6f421e",
+        "size": 1873367520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00007-of-00016.gguf",
+      "blobId": "5f64c9ec664e9d7f34df0c51d086314437db4b1f",
+      "size": 1877703520,
+      "lfs": {
+        "sha256": "9cb9dcd9f73faf364be302ba042052121dcde5b9a30044831b9d4a6470321b47",
+        "size": 1877703520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00008-of-00016.gguf",
+      "blobId": "13e890466c9ecd19d5fd5ad78386825c2f29d47f",
+      "size": 1850948192,
+      "lfs": {
+        "sha256": "336634b01cf0e1b2cd0eef641e820134c81ff96912b0fae869f35a79963263d2",
+        "size": 1850948192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00009-of-00016.gguf",
+      "blobId": "c3e96b9439b6f9c66078d3425520f34dd11fb5ea",
+      "size": 1873367520,
+      "lfs": {
+        "sha256": "de855b95468db6d69d03e51a10917efff7e73ddcd6810d2167579544a7484cd6",
+        "size": 1873367520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00010-of-00016.gguf",
+      "blobId": "af50024b1db16ce84f32522df9964350f4c4aaa2",
+      "size": 1877703520,
+      "lfs": {
+        "sha256": "1f3022d27e441a9d9f5667f1ad9411f5d1928d9af0d8c3498a5901ee796c086f",
+        "size": 1877703520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00011-of-00016.gguf",
+      "blobId": "4e18b6c31722e28588a3ffce80486751d59307f8",
+      "size": 1850948192,
+      "lfs": {
+        "sha256": "aac45e52f376f929e08452f4b87a34f7bd498ca31acffe15c1664028d8dbea60",
+        "size": 1850948192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00012-of-00016.gguf",
+      "blobId": "3c15fe987cc7bb0df8cd2278e2cd7fa4728ce99b",
+      "size": 1873367520,
+      "lfs": {
+        "sha256": "b9fbc22a2e18d408b007b0cc61293b2413ea3246fd153a081a38a3cb5a77e98b",
+        "size": 1873367520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00013-of-00016.gguf",
+      "blobId": "989897c715c92e96335817045ef8b296b8cdc593",
+      "size": 1877703520,
+      "lfs": {
+        "sha256": "c2c0f6ce07365baed8b8a34fd2979ad4d0f2c0bffd59b6bf6076fb3d1dd38e8b",
+        "size": 1877703520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00014-of-00016.gguf",
+      "blobId": "bbbdf5d01d8bbfe8902b47da967de08ac6b28574",
+      "size": 1850948192,
+      "lfs": {
+        "sha256": "b7d405ca5d8451d055df9caf2aa2c5bba731edf848ca82d14008ee85f3548edd",
+        "size": 1850948192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00015-of-00016.gguf",
+      "blobId": "6ce55f855ecc43fd639cde7ff3cff0a93c990e42",
+      "size": 1873367520,
+      "lfs": {
+        "sha256": "dcab51216a0c401cb78fa8d58485bb3a6ace207c46a63fd07dc4e7cd17c1c359",
+        "size": 1873367520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K/MiniCPM-V-4.7-35B-A3B-Uncensored-AD-Q6_K-00016-of-00016.gguf",
+      "blobId": "3dc3afafaf51e775a3a79117dba4508fab96cadf",
+      "size": 1148965600,
+      "lfs": {
+        "sha256": "1e0cacf4cc7f80b7b84f2b5becf27bd97b94b4052180d62f477c10cb4b0bcf70",
+        "size": 1148965600,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "52c8217960544398f2ed54959ad378baf1d420ea",
+      "size": 8389
+    },
+    {
+      "rfilename": "lora/MiniCPM-V-4.7-35B-A3B-Uncensored-LoRA.gguf",
+      "blobId": "162184de795af5ee5c40004969e8762fee07f3d9",
+      "size": 106269248,
+      "lfs": {
+        "sha256": "035cd9c02925a0782afb3575b8135f6ae41e4317f564e2a501b22472baa19cce",
+        "size": 106269248,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-MiniCPM-V-4.7-35B-A3B-Uncensored-BF16.gguf",
+      "blobId": "af76a5bcc9861b2f3af0823cb666b08e55b2a3bb",
+      "size": 1119575968,
+      "lfs": {
+        "sha256": "ca746ac0b2d2ff3491e8a4994b04df7554fef2daea9ae4408a9765b81f8c30bc",
+        "size": 1119575968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-MiniCPM-V-4.7-35B-A3B-Uncensored-F16.gguf",
+      "blobId": "66a2acf0c0f31f4205a46480836339dd9ed9c0ca",
+      "size": 1118221216,
+      "lfs": {
+        "sha256": "d7ccc65bd9fbd13ad7e3b5773a530d875fe364d7b387e683f981918716139479",
+        "size": 1118221216,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-12T17:10:19.000Z",
+  "usedStorage": 73708608768
+}

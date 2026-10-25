@@ -1,0 +1,129 @@
+{
+  "_id": "6a3c4ba0a36e777abc5907b9",
+  "id": "DevQuasar/baidu.Unlimited-OCR-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:baidu/Unlimited-OCR",
+    "base_model:quantized:baidu/Unlimited-OCR",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2074,
+  "likes": 12,
+  "modelId": "DevQuasar/baidu.Unlimited-OCR-GGUF",
+  "author": "DevQuasar",
+  "sha": "807356749e4feeb12d3c11ce516a96fe8cb4287f",
+  "lastModified": "2026-06-25T14:46:28.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "baidu/Unlimited-OCR"
+    ],
+    "pipeline_tag": "image-text-to-text"
+  },
+  "gguf": {
+    "total": 2934734080,
+    "architecture": "deepseek2-ocr",
+    "context_length": 32768,
+    "chat_template": "{% for m in messages %}{{m['content']}}{% endfor %}",
+    "bos_token": "<\uff5cbegin of sentence\uff5c>",
+    "eos_token": "<\uff5cend of sentence\uff5c>",
+    "totalFileSize": 1553630592
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6b30ecffea74e011a263ea7d4a18fb0646cbe535",
+      "size": 2383
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "afea72ce98c3c6dbfee7d2e5ab21314ea94c5180",
+      "size": 555
+    },
+    {
+      "rfilename": "baidu.Unlimited-OCR.Q3_K_M.gguf",
+      "blobId": "d5453542be61c71b9fa62c55ba7a7378a92b3cf7",
+      "size": 1553630592,
+      "lfs": {
+        "sha256": "f4e5f98fb1e453b111491cf09ec091977b5a6ff3544a0cb8ce6969fc4495bf74",
+        "size": 1553630592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "baidu.Unlimited-OCR.Q4_K_M.gguf",
+      "blobId": "1b795279057d9af1a47e93140d9e1fe41ff90097",
+      "size": 1950321792,
+      "lfs": {
+        "sha256": "ccf23c8a9fef39013981aa9b546e9f26127811c88bfe620cf98585cf044510fb",
+        "size": 1950321792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "baidu.Unlimited-OCR.Q5_K_M.gguf",
+      "blobId": "452c674791d379a34ea1935dc866c8b8330ad1b6",
+      "size": 2219203712,
+      "lfs": {
+        "sha256": "900b10b81e6ebe6853974539967e8f6b33565812470b7ca1f8a923984678d1a0",
+        "size": 2219203712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "baidu.Unlimited-OCR.Q6_K.gguf",
+      "blobId": "eb469c69fa315d85397a7d8eb4603e4740a038cd",
+      "size": 2613270912,
+      "lfs": {
+        "sha256": "190a19e30da943b2f537a0381bf9b81c130c7c284c7401d139c2e0496c26bbfb",
+        "size": 2613270912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "baidu.Unlimited-OCR.Q8_0.gguf",
+      "blobId": "0b2da512519c42cda66977fa6f39d907e5e389ac",
+      "size": 3126134912,
+      "lfs": {
+        "sha256": "4954488bc5ca78559d9ae1d3aa2b2111c2baa4e84311bffa38f4edff1c019ee4",
+        "size": 3126134912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-baidu.Unlimited-OCR.f16.gguf",
+      "blobId": "0870a7a33db9f8e130561c0a5f85653b4fd840a3",
+      "size": 825245792,
+      "lfs": {
+        "sha256": "810660e618d1cf6a9832ee39930609f7246bcbc758250f02f03822dca81ef6dd",
+        "size": 825245792,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-06-24T21:26:56.000Z",
+  "usedStorage": 25001286624
+}

@@ -1,0 +1,330 @@
+{
+  "_id": "67bde894e675326dce870d1b",
+  "id": "bartowski/allenai_olmOCR-7B-0225-preview-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "en",
+    "dataset:allenai/olmOCR-mix-0225",
+    "base_model:allenai/olmOCR-7B-0225-preview",
+    "base_model:quantized:allenai/olmOCR-7B-0225-preview",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 916,
+  "likes": 7,
+  "modelId": "bartowski/allenai_olmOCR-7B-0225-preview-GGUF",
+  "author": "bartowski",
+  "sha": "26be33255a6cfbd753445d05c4b727efed50a3ee",
+  "lastModified": "2025-02-25T17:19:33.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "allenai/olmOCR-7B-0225-preview",
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "datasets": [
+      "allenai/olmOCR-mix-0225"
+    ]
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2vl",
+    "context_length": 32768,
+    "quantize_imatrix_file": "/models_out/olmOCR-7B-0225-preview-GGUF/allenai_olmOCR-7B-0225-preview.imatrix",
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 2780341696
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "21bb2ee4a9b99a875792589d70fa227d9c24184e",
+      "size": 3484
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2592debade7c329121bfe405fa622f4927265970",
+      "size": 14261
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-IQ2_M.gguf",
+      "blobId": "9c973b362a76b6a4c3613daee3a406e23258d73f",
+      "size": 2780341696,
+      "lfs": {
+        "sha256": "77eb4cb376be97b579eeecf357a0ce2a7ce69428c6b4bfb3fb7ae3f7ca8952a5",
+        "size": 2780341696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-IQ3_M.gguf",
+      "blobId": "e287a3ec09a887cfdac11257ff00d8e525a4a8c1",
+      "size": 3574011328,
+      "lfs": {
+        "sha256": "283bdd145cc93c889e7e85702e1971bd6f5d9c303404088de0dd4e4b95ee5e8e",
+        "size": 3574011328,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-IQ3_XS.gguf",
+      "blobId": "5544772fb66cdf0691160227d3cf2f7d45ddd58a",
+      "size": 3346255296,
+      "lfs": {
+        "sha256": "1c8136067a3504c523912d9f76c540ece4bb53ad9489bdafc5ed4d0f6dbbfbbc",
+        "size": 3346255296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-IQ3_XXS.gguf",
+      "blobId": "7ac430ee35e6c9d5f1949f4fc2a25f7cdd660012",
+      "size": 3114513856,
+      "lfs": {
+        "sha256": "24e08ffcff62b26daa0ebc1a5b72abe16e9d4b92d2fc1872ce6089cff374db77",
+        "size": 3114513856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-IQ4_NL.gguf",
+      "blobId": "c9018a523af318ca198bc5908d61d81d942b3adb",
+      "size": 4437812672,
+      "lfs": {
+        "sha256": "ec1865ddbe686dfa7cf9c50013da6e34865be6af339de39055e0b71af05b3923",
+        "size": 4437812672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-IQ4_XS.gguf",
+      "blobId": "df3348636398814874dd3ab303854ddaadd3d113",
+      "size": 4218471872,
+      "lfs": {
+        "sha256": "d3be7c989657e1f9167969af8647de1cd8fd917559320af92d10a24091a62bb9",
+        "size": 4218471872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q2_K.gguf",
+      "blobId": "4e8d4ce3cd437eeb79113ffa72441fdd27e423c4",
+      "size": 3015939520,
+      "lfs": {
+        "sha256": "319d08620c58f5d808ee6c9c04172d4f5bbeddecebf7a9efcee322fc1ccb928f",
+        "size": 3015939520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q2_K_L.gguf",
+      "blobId": "a194327140184dd0e31601ba03fe0eeba593c3a1",
+      "size": 3548163520,
+      "lfs": {
+        "sha256": "224fcfd1d5e2ad03670598ecbdf44610fc9e9420d37aa62a5674aabb66162545",
+        "size": 3548163520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q3_K_L.gguf",
+      "blobId": "7c1b5fd76bff6377ba5939983327f8927dcf7023",
+      "size": 4088458688,
+      "lfs": {
+        "sha256": "f5dd3c5399500bfed15ebbc6fd4cb0b7ad63dd3e91bd1b209f0caba2d175fe7e",
+        "size": 4088458688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q3_K_M.gguf",
+      "blobId": "6295cb8d841fc40375adfa561f745bb076d605df",
+      "size": 3808390592,
+      "lfs": {
+        "sha256": "5a61718389a68e146dc135ff74675ea38f7f73e754d5f35e0cccccc0f6e1e82f",
+        "size": 3808390592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q3_K_S.gguf",
+      "blobId": "ad06b9e212c13871defa59842e87057a332ea43a",
+      "size": 3492367808,
+      "lfs": {
+        "sha256": "78601e7b60b083ac1a5422ae0d00d3c1883e212e38d7cb7c37bc0ea9394e37be",
+        "size": 3492367808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q3_K_XL.gguf",
+      "blobId": "6c7cb148e6eadb47c4c359e2121460a7f9243617",
+      "size": 4565331392,
+      "lfs": {
+        "sha256": "58cd1576f451175c104b90970e4e16426a11b2a2dace9fa6f1e893b2a6ae84f1",
+        "size": 4565331392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q4_0.gguf",
+      "blobId": "77ba89c6e431055f4478f2b89aacf0815967d0c3",
+      "size": 4444120512,
+      "lfs": {
+        "sha256": "1d08e0ee3cdda1d27d7e22b0a062de3a5b4b21c32765747b2eebfe07ddcdb91e",
+        "size": 4444120512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q4_1.gguf",
+      "blobId": "89cf2a5b56241dd97f72d0fd69402f219ac97962",
+      "size": 4873283008,
+      "lfs": {
+        "sha256": "21451489d66d55059351e847375754ab7b593991644eb091949473621ea4e16a",
+        "size": 4873283008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q4_K_L.gguf",
+      "blobId": "33f0239313f6905ce25e3ab3c60490dd5fd04caa",
+      "size": 5087563200,
+      "lfs": {
+        "sha256": "c39d634da52368dae689987b07035bdf30cbd841eb72411dc132b5b27ab3a122",
+        "size": 5087563200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q4_K_M.gguf",
+      "blobId": "844901e472963cf04baabe4a2e2f7ae0abaec3c3",
+      "size": 4683072960,
+      "lfs": {
+        "sha256": "0a5603f95ba59828061d315b7869e021ea1b86e2dececaba8a1f9bcc3f81e84a",
+        "size": 4683072960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q4_K_S.gguf",
+      "blobId": "582e3fee9a8fefa8400a13fb9c7111a4a319ce03",
+      "size": 4457768384,
+      "lfs": {
+        "sha256": "653eb985ca42910a7727c3ff152f7ed86ca20394eb24e3c8791bc00a47d4eab4",
+        "size": 4457768384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q5_K_L.gguf",
+      "blobId": "a8ff56f7a82a6f1028b51cc9e45f132de56ee53c",
+      "size": 5781196224,
+      "lfs": {
+        "sha256": "d412637d8997bbd76bfb9047df625f30a020c5d06c159f594ae771884e84b2f0",
+        "size": 5781196224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q5_K_M.gguf",
+      "blobId": "7a18d7990d50923ac59ca16cebfc741c26b3263e",
+      "size": 5444830656,
+      "lfs": {
+        "sha256": "0b6c94d338be42fe2f999ab3a910e8a8904b742f685ec4130035224530a25b30",
+        "size": 5444830656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q5_K_S.gguf",
+      "blobId": "66319461a6d8fd56420dd5a4ff1f4b47ca565487",
+      "size": 5315175872,
+      "lfs": {
+        "sha256": "c2f803ff84f275eb0d8d2c8c095032f6024550caaceaa9ba003ee0d0121f8555",
+        "size": 5315175872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q6_K.gguf",
+      "blobId": "7a46f6f24ae89d4ad02dc93cb12010cfb09c34b7",
+      "size": 6254198208,
+      "lfs": {
+        "sha256": "0887ad467efb2b2ec634d1f035519a28bf21e5273f14224fa4cf0850caf7319e",
+        "size": 6254198208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q6_K_L.gguf",
+      "blobId": "f207401eeb22cba88ccc897081c13ec7bd418855",
+      "size": 6518181312,
+      "lfs": {
+        "sha256": "b4891ba7ffd5a4c68748dc853db6143e25145606397ed2568bf666b4d16446f2",
+        "size": 6518181312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview-Q8_0.gguf",
+      "blobId": "133fd0c2f577dbc87a15ad4f3a877a6420afedad",
+      "size": 8098524608,
+      "lfs": {
+        "sha256": "6dffe86261a9bdc821d240dbf5f33617acea4dfd47c8d6eeebf48ab9152996bf",
+        "size": 8098524608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "allenai_olmOCR-7B-0225-preview.imatrix",
+      "blobId": "c07059c98bc49d1ad1f7bdda73e49b8a9348528c",
+      "size": 4536678,
+      "lfs": {
+        "sha256": "bfec035a91a961ba0245d1859335d3f74ed3f0d90efa24487e9bdc0db3255a35",
+        "size": 4536678,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "mmproj-allenai_olmOCR-7B-0225-preview-f16.gguf",
+      "blobId": "a3924a4a89f23d62ee609fc931647823eea5fdd9",
+      "size": 1352635904,
+      "lfs": {
+        "sha256": "341c09449288f24bab74740f1ef7e5bcfafe2189c720181a212c6322989cba1a",
+        "size": 1352635904,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-02-25T15:58:12.000Z",
+  "usedStorage": 106305145766
+}

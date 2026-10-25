@@ -1,0 +1,146 @@
+{
+  "_id": "69b7809b6815d51abceb17a4",
+  "id": "Cactus-Compute/needle",
+  "private": false,
+  "library_name": "jax",
+  "tags": [
+    "jax",
+    "safetensors",
+    "needle",
+    "function-calling",
+    "tool-use",
+    "encoder-decoder",
+    "edge",
+    "on-device",
+    "flax",
+    "license:mit",
+    "region:us"
+  ],
+  "downloads": 655,
+  "likes": 352,
+  "modelId": "Cactus-Compute/needle",
+  "author": "Cactus-Compute",
+  "sha": "5f89b4307696d669c3df1d38ae057e6e1728b107",
+  "lastModified": "2026-07-13T14:56:52.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "NeedleForCausalLM"
+    ],
+    "model_type": "needle",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "</s>",
+      "pad_token": "<pad>",
+      "unk_token": "<unk>"
+    }
+  },
+  "cardData": {
+    "license": "mit",
+    "library_name": "jax",
+    "tags": [
+      "function-calling",
+      "tool-use",
+      "encoder-decoder",
+      "edge",
+      "on-device",
+      "jax",
+      "flax"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c0e997550d14261c677f37e6e1c94d524845aa95",
+      "size": 5681
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "e5885b0d981c595ab95753cf0e2915a3bdd6af08",
+      "size": 777
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "bcf3d6eeec965fed83b7500b05623359b35319d7",
+      "size": 60881792,
+      "lfs": {
+        "sha256": "c5f9a3016e4537e492c362da5cb8ba05107d8595bec0d5ea5d8a65801db46531",
+        "size": 60881792,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "needle-cq4.zip",
+      "blobId": "629451aaa2ef699f5b8372edc9a558e513f7eff2",
+      "size": 16185061,
+      "lfs": {
+        "sha256": "a3423af7d7bd2a35e08ba1f262c4796f4e97963da0a3fbe124d3a8eaae9e4098",
+        "size": 16185061,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "needle.pkl",
+      "blobId": "b4026450c95b1321206b3976c88641d558ed54ab",
+      "size": 52633098,
+      "lfs": {
+        "sha256": "40a32e91d1d4197bf15ba559b74f6727c342dc8746918742fc7d8e2c1f18df40",
+        "size": 52633098,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "91e27bbe9a3766b71a426a8eb223de9752b6e1d6",
+      "size": 168
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "013706690e2250dd5c1648ce714a3d61cc6fd89f",
+      "size": 124960,
+      "lfs": {
+        "sha256": "0823f5b9133c68a8140addc5d7a425fa9119c4c8cb4a550363b4bffa4ba1c8c7",
+        "size": 124960,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenizer/needle.model",
+      "blobId": "013706690e2250dd5c1648ce714a3d61cc6fd89f",
+      "size": 124960,
+      "lfs": {
+        "sha256": "0823f5b9133c68a8140addc5d7a425fa9119c4c8cb4a550363b4bffa4ba1c8c7",
+        "size": 124960,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenizer/needle.vocab",
+      "blobId": "a793993fc9af7906cf4cc2a6426ae50a22790503",
+      "size": 105748
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "3e14ba8821e72b56ac5f0d686db855192ba81c29",
+      "size": 435
+    }
+  ],
+  "spaces": [
+    "shreyask/needle-playground"
+  ],
+  "createdAt": "2026-03-16T04:01:31.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 30427676
+    },
+    "total": 30427676
+  },
+  "usedStorage": 22510126891
+}

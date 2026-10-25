@@ -1,0 +1,126 @@
+{
+  "_id": "6ad39a49b3d1f77f2c4e39a5",
+  "id": "cleyesode/Qwen3.8-Flash-Next-GSQ-RCO-CODER-GGUF-MTP",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "fine-tune",
+    "custom-head",
+    "moe",
+    "mixture-of-experts",
+    "qwen",
+    "qwen3.8",
+    "code",
+    "coder",
+    "mtp",
+    "multi-token-prediction",
+    "speculative-decoding",
+    "gsq",
+    "rco",
+    "text-generation",
+    "arxiv:2605.00649",
+    "arxiv:2604.18556",
+    "base_model:ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+    "base_model:quantized:ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 425,
+  "likes": 0,
+  "modelId": "cleyesode/Qwen3.8-Flash-Next-GSQ-RCO-CODER-GGUF-MTP",
+  "author": "cleyesode",
+  "sha": "493f9371b0f3c472d382a992c39088ae5b8088aa",
+  "lastModified": "2026-10-21T01:58:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "library_name": "gguf",
+    "tags": [
+      "fine-tune",
+      "custom-head",
+      "moe",
+      "mixture-of-experts",
+      "qwen",
+      "qwen3.8",
+      "code",
+      "coder",
+      "gguf",
+      "mtp",
+      "multi-token-prediction",
+      "speculative-decoding",
+      "gsq",
+      "rco"
+    ]
+  },
+  "gguf": {
+    "total": 448931056,
+    "architecture": "clip",
+    "totalFileSize": 907543008
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e490c1c80f78f8f950007b767584dc6c8b6c52fb",
+      "size": 1843
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-GSQ-RCO-Coder-MTP_Q4_K_M-PER_STREAM-STEPS_3-HEALED-00001-of-00002.gguf",
+      "blobId": "7834917a61f161053da886009c582e522136fddb",
+      "size": 29608446560,
+      "lfs": {
+        "sha256": "da8431f1375d498bb87830d0e316e7b0ff0aeb2df2dee952af1508af4d36c5f0",
+        "size": 29608446560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-GSQ-RCO-Coder-MTP_Q4_K_M-PER_STREAM-STEPS_3-HEALED-00002-of-00002.gguf",
+      "blobId": "f7e7a83797f62149e9bac3571931996eeb3f6d84",
+      "size": 29786178752,
+      "lfs": {
+        "sha256": "cef21468d17a39f653914361eca9f8f7ec55ec2d8b02f364c808608c17b51e71",
+        "size": 29786178752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0bf9f61ecc6c6e59a48f4c371a832affea3055b0",
+      "size": 15207
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+      "blobId": "974f4ca87254dcaec0cf82479f4eea73629eef56",
+      "size": 907543008,
+      "lfs": {
+        "sha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0",
+        "size": 907543008,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-17T15:54:49.000Z",
+  "usedStorage": 60302168320
+}

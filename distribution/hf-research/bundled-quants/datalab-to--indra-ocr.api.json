@@ -1,0 +1,420 @@
+{
+  "_id": "6aca47d1e431a8f2d56fd610",
+  "id": "datalab-to/indra-ocr",
+  "private": false,
+  "pipeline_tag": "image-to-text",
+  "library_name": "onnx",
+  "tags": [
+    "onnx",
+    "safetensors",
+    "indra-ocr",
+    "ocr",
+    "cpu",
+    "pdf",
+    "markdown",
+    "layout",
+    "document-parsing",
+    "handwriting",
+    "multilingual",
+    "image-to-text",
+    "en",
+    "fr",
+    "de",
+    "es",
+    "it",
+    "pt",
+    "nl",
+    "pl",
+    "cs",
+    "sk",
+    "ro",
+    "hu",
+    "sv",
+    "da",
+    "no",
+    "fi",
+    "tr",
+    "az",
+    "uz",
+    "vi",
+    "id",
+    "ms",
+    "sw",
+    "ha",
+    "yo",
+    "ru",
+    "uk",
+    "bg",
+    "sr",
+    "el",
+    "zh",
+    "ja",
+    "ko",
+    "ar",
+    "fa",
+    "ur",
+    "ps",
+    "he",
+    "hi",
+    "mr",
+    "ne",
+    "bn",
+    "ta",
+    "te",
+    "kn",
+    "ml",
+    "gu",
+    "pa",
+    "or",
+    "th",
+    "lo",
+    "km",
+    "my",
+    "si",
+    "ka",
+    "hy",
+    "am",
+    "license:openrail",
+    "region:us"
+  ],
+  "downloads": 4636,
+  "likes": 418,
+  "modelId": "datalab-to/indra-ocr",
+  "author": "datalab-to",
+  "sha": "bd02167fdf2005a19962cc15188f8496a2c87d3b",
+  "lastModified": "2026-10-19T14:36:52.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "model_type": "indra-ocr"
+  },
+  "cardData": {
+    "library_name": "onnx",
+    "license": "openrail",
+    "license_link": "LICENSE",
+    "pipeline_tag": "image-to-text",
+    "language": [
+      "en",
+      "fr",
+      "de",
+      "es",
+      "it",
+      "pt",
+      "nl",
+      "pl",
+      "cs",
+      "sk",
+      "ro",
+      "hu",
+      "sv",
+      "da",
+      "no",
+      "fi",
+      "tr",
+      "az",
+      "uz",
+      "vi",
+      "id",
+      "ms",
+      "sw",
+      "ha",
+      "yo",
+      "ru",
+      "uk",
+      "bg",
+      "sr",
+      "el",
+      "zh",
+      "ja",
+      "ko",
+      "ar",
+      "fa",
+      "ur",
+      "ps",
+      "he",
+      "hi",
+      "mr",
+      "ne",
+      "bn",
+      "ta",
+      "te",
+      "kn",
+      "ml",
+      "gu",
+      "pa",
+      "or",
+      "th",
+      "lo",
+      "km",
+      "my",
+      "si",
+      "ka",
+      "hy",
+      "am"
+    ],
+    "tags": [
+      "ocr",
+      "onnx",
+      "cpu",
+      "pdf",
+      "markdown",
+      "layout",
+      "document-parsing",
+      "handwriting",
+      "multilingual"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "d5475f4800cf14b15870b2620c444c035e0bb84e",
+      "size": 2464
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "953c202748062ee95df59ab3821876339742ac6f",
+      "size": 14750
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f6254f389e726d7d1ff7966c782ccef6ffa60d7c",
+      "size": 22905
+    },
+    {
+      "rfilename": "assets/datalab-logo.png",
+      "blobId": "c32033cb18944d41982300f0fee319867e4ed425",
+      "size": 6169
+    },
+    {
+      "rfilename": "assets/examples/handwriting_letter.png",
+      "blobId": "eb037dcf6e256ad51cc1a957e2da7c55d3c2f056",
+      "size": 368867,
+      "lfs": {
+        "sha256": "bed634b6df330b040cd52d8d9104433f54e458c16ed87607c406c009b98ecd25",
+        "size": 368867,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/examples/korean_letter.png",
+      "blobId": "bfa50abed5301dab4f15fc51cf1674b0fa9ac9a1",
+      "size": 406761,
+      "lfs": {
+        "sha256": "973d6e2aca838ba5da72ab691bd8d0d9820e907002ca398eb884a1c87a8efb29",
+        "size": 406761,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/speed_score.png",
+      "blobId": "6f43902f4bdfd2d91d3ffdf4025c372595fd4509",
+      "size": 126637,
+      "lfs": {
+        "sha256": "83e72fbb5369a045cb6038318337d4a9138217fe394b1a11e7cb0760f46fc7b6",
+        "size": 126637,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/throughput.png",
+      "blobId": "b6b713cd106c297541232fb322c837e536914fdd",
+      "size": 88103,
+      "lfs": {
+        "sha256": "76812c7807427c1117a8c2fbd0d9070557e911870736a7921fd8e56d49edfcc3",
+        "size": 88103,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "303ff7639f390ae36d27f30dc22969c7300f7aa6",
+      "size": 703
+    },
+    {
+      "rfilename": "det.onnx",
+      "blobId": "52f0ee39b08bcd5fd6d3c5f42935a45dfea4321e",
+      "size": 389948,
+      "lfs": {
+        "sha256": "f2bd4cba23e9c328cf7ec824634e423e191a2c6aacbbf35c62bd79dd70f62f59",
+        "size": 389948,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "lm.npz",
+      "blobId": "9f6fba4f4cf311582d5441e5b78cd6a5fdc04963",
+      "size": 15695957,
+      "lfs": {
+        "sha256": "6c0fb618a363a0acdd05d4f5b0edd9e8146d2d990541b87f6130bbfe17cea58d",
+        "size": 15695957,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "lm_cjk.npz",
+      "blobId": "d55a0eff6303eece3f3dad891d93e09f7fd14d25",
+      "size": 18955160,
+      "lfs": {
+        "sha256": "6d64f13f4f90f4e529bd63340c6df76238d007feaef2abb903d8cd28d92bc2f3",
+        "size": 18955160,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "lm_world.npz",
+      "blobId": "19f16a93635aee2eebcf854b540363a463ca3484",
+      "size": 11641215,
+      "lfs": {
+        "sha256": "34df5e74a2fcbb9cf5e7f360a559375ffa2e04d2d2943a42308c177bcb444d5d",
+        "size": 11641215,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "math_dec_init.onnx",
+      "blobId": "28d962adf5b118484a734a6a98ea5a128e4b6471",
+      "size": 1356364,
+      "lfs": {
+        "sha256": "919417fde9962c3318aeb478c1fe3955dd2bb8cd34476c68debed2ba39e5dcd6",
+        "size": 1356364,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "math_dec_step.onnx",
+      "blobId": "7042656f8d83a2b6feaa8c93a887ec1d6011b11a",
+      "size": 8429418,
+      "lfs": {
+        "sha256": "5ff6e6cbaf0dea70314f66222a1469736a8c5e7994fab06a5b4e53c90469239f",
+        "size": 8429418,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "math_enc.onnx",
+      "blobId": "8c4590184fea652f9932f9ec793b83f4269b64cb",
+      "size": 9889575,
+      "lfs": {
+        "sha256": "d4e4a6c40dad1ee988d32c6403b1590ca42864d4483bbe1e671c5dbb999a5a97",
+        "size": 9889575,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "math_meta.json",
+      "blobId": "27c61906b0e933c2fb9ce29e9362273e680a5774",
+      "size": 7797
+    },
+    {
+      "rfilename": "mathcls.onnx",
+      "blobId": "fb39b8d42a6e90df61f83597e37ef4c0a83f98e2",
+      "size": 191005,
+      "lfs": {
+        "sha256": "818b1556e9ef337958db6be0c9791299d3f74a4575586b0cd469aaae9534ff96",
+        "size": 191005,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "meta.json",
+      "blobId": "13473e59be561a618a49cf3bc8f3cc503ecf0763",
+      "size": 211869
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "7d35a8665494c693900236f6860e461173a5456e",
+      "size": 5013304,
+      "lfs": {
+        "sha256": "e9b0b74c12176516548664a46429758ac7c1088dd43524534fc7272e221a6762",
+        "size": 5013304,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "order.onnx",
+      "blobId": "0629a6252f805996aa8798ccbb77f03377824d9f",
+      "size": 2973138,
+      "lfs": {
+        "sha256": "a42db2e8b536ad3d84045a4b7f9b0a72667cf8be4aa02d63f7b38004719fb180",
+        "size": 2973138,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "orient.onnx",
+      "blobId": "6d6d403626669515a04a831f6e796bd76e856d3e",
+      "size": 371802,
+      "lfs": {
+        "sha256": "20eaf670f55a7cf9facfe1bdd6c7b8e40be75bbf4d48a3df43f66aa3bbd874fd",
+        "size": 371802,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "rec.onnx",
+      "blobId": "5308a6485e4d662bc7bbb6ebcaf599d4446b2785",
+      "size": 5042161,
+      "lfs": {
+        "sha256": "475972a2710be4a3cbfeb2bc7f3624ffd563de07de42476fc7a290d4e1ece484",
+        "size": 5042161,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "rec_cjk.onnx",
+      "blobId": "1e3ae1105b7be2376c9ab93a1453d9a5a51636bf",
+      "size": 10176018,
+      "lfs": {
+        "sha256": "4a035516a17e62cdf33a4fe2d88077654cb8841cff024685cdef4e351694ef50",
+        "size": 10176018,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "rec_rtl.onnx",
+      "blobId": "74a7f954d13fccf2866f0b3a7f8214a5facf9b18",
+      "size": 4812710,
+      "lfs": {
+        "sha256": "468796bd684486a8388c30c8b4ed2a26e3eeb1f8ff02831c24c2e12c79a2a834",
+        "size": 4812710,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "rec_world.onnx",
+      "blobId": "9a91955c5ad4ca91030dff31bd50e0ef9d58ff89",
+      "size": 5627990,
+      "lfs": {
+        "sha256": "c8d1e59f21b04966f179d2d2d8e22b230d22110b3f89855bbbf2624a58c40043",
+        "size": 5627990,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "script.onnx",
+      "blobId": "cbfa84c8c9632cf863206850147c4cd9c8b04cf1",
+      "size": 191630,
+      "lfs": {
+        "sha256": "b6ce4e926e19c243faaf37bd46880398bf2cb4ae56a29e1177a3b017c1280e36",
+        "size": 191630,
+        "pointerSize": 131
+      }
+    }
+  ],
+  "spaces": [
+    "datalab-to/indra-ocr",
+    "mrfakename/indra-ocr",
+    "tomngdev/indra-ocr-web",
+    "BIGJUTT/model-pulse",
+    "danielfcramos/indra-ocr"
+  ],
+  "createdAt": "2026-10-10T14:12:33.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 1250566
+    },
+    "total": 1250566
+  },
+  "usedStorage": 127714196
+}

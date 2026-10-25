@@ -1,0 +1,174 @@
+{
+  "_id": "6ac916b8a58766dba416dd3f",
+  "id": "AtomicChat/Qwen-Image-2.1-Turbo-Uncensored-GGUF",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "atomic-chat",
+    "qwen",
+    "qwen-image",
+    "qwen3-vl",
+    "text-encoder",
+    "stable-diffusion.cpp",
+    "abliteration",
+    "refusal-direction",
+    "text-to-image",
+    "base_model:Qwen/Qwen3-VL-8B-Instruct",
+    "base_model:finetune:Qwen/Qwen3-VL-8B-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 508081,
+  "likes": 629,
+  "modelId": "AtomicChat/Qwen-Image-2.1-Turbo-Uncensored-GGUF",
+  "author": "AtomicChat",
+  "sha": "df96693dbdfb8738c0bf1bbd0337d149808db948",
+  "lastModified": "2026-10-13T20:02:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "Qwen/Qwen3-VL-8B-Instruct"
+    ],
+    "base_model_relation": "finetune",
+    "quantized_by": "AtomicChat",
+    "pipeline_tag": "text-to-image",
+    "library_name": "gguf",
+    "tags": [
+      "atomic-chat",
+      "qwen",
+      "qwen-image",
+      "qwen3-vl",
+      "text-encoder",
+      "stable-diffusion.cpp",
+      "gguf",
+      "abliteration",
+      "refusal-direction"
+    ]
+  },
+  "gguf": {
+    "total": 8190735360,
+    "architecture": "qwen3vl",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/work/stageE/imatrix.gguf",
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' }}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- for message in messages %}\n    {%- if message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content in message.content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                    {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                    <|vision_start|><|image_pad|><|vision_end|>\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                    {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                    <|vision_start|><|video_pad|><|vision_end|>\n                {%- elif 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content_item in message.content %}\n                {%- if 'text' in content_item %}\n                    {{- content_item.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and message.content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content in message.content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                    {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                    <|vision_start|><|image_pad|><|vision_end|>\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                    {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                    <|vision_start|><|video_pad|><|vision_end|>\n                {%- elif 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 3336289216
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "cc39fbe244a7e4ee936f12f10e32fa728e12af0c",
+      "size": 3179
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-AD-Q2_K.gguf",
+      "blobId": "3e470669b176b105de67cd88896c568934419f5c",
+      "size": 3336289216,
+      "lfs": {
+        "sha256": "e42dac4f385fc49e5812721ff930e2417fbcc9fd148c01a78c8492ebbe54dd2a",
+        "size": 3336289216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-AD-Q3_K.gguf",
+      "blobId": "7248bc2385453f132e56ce369f99f8762b3320e4",
+      "size": 4184140736,
+      "lfs": {
+        "sha256": "e6bd367602ef37ac08f4b0e0915d716b734c8c8c8957864cc81a50314715a3df",
+        "size": 4184140736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-AD-Q4_K.gguf",
+      "blobId": "e24aecaa5b58980a311a617b0bb1543ed9f59522",
+      "size": 5287517120,
+      "lfs": {
+        "sha256": "8123f36d2b3e562deef164dffdae33bdb1d152797ad10bb630827eaa7bce795d",
+        "size": 5287517120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-AD-Q5_K.gguf",
+      "blobId": "f85cf1a2b6aeb1457977551f5fb48dc3f821f834",
+      "size": 6281292736,
+      "lfs": {
+        "sha256": "ea5473082841c6a0eda38d2d42d784ca5bc6f3a2e8cf648e305ea4da6373525b",
+        "size": 6281292736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-AD-Q6_K.gguf",
+      "blobId": "b1dd5cfbafc810b901f6bb50a7950766c087d425",
+      "size": 7490550720,
+      "lfs": {
+        "sha256": "f30f66b0fa833d3ce95c522271fc96182cc2c72a1e577d9b3444633b201b334d",
+        "size": 7490550720,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-BF16.gguf",
+      "blobId": "838ea6d3007be1b46b44e784a25ec75de44b01ae",
+      "size": 16388045536,
+      "lfs": {
+        "sha256": "af8502723461ba196d3b486c93b198e4163ce20c39a64916cce52f14bf5cafe3",
+        "size": 16388045536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen-Image-2.1-Turbo-Uncensored-Q8_0.gguf",
+      "blobId": "329818bf4894c29a9410cb1edf93fbc6fb0a4d26",
+      "size": 8709520096,
+      "lfs": {
+        "sha256": "f8f9f6276b726db5291f4a5343089612cb5fd08aa81e8f0791dc66d2c03d07ca",
+        "size": 8709520096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "68366d30d98dc609c814f22d45d8ea5808e165be",
+      "size": 12027
+    },
+    {
+      "rfilename": "mmproj-Qwen-Image-2.1-Turbo-Uncensored-BF16.gguf",
+      "blobId": "0b8b7d6a8573e95c97ece77ab4b4d2863e9a8428",
+      "size": 1162568928,
+      "lfs": {
+        "sha256": "5cc50e36ab57d7467e7016113525cc699e4c34c3eff7cd7b98d2ecfdba8ab720",
+        "size": 1162568928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-Qwen-Image-2.1-Turbo-Uncensored-F16.gguf",
+      "blobId": "06afd579f26d533134ad5ff06dcc22c9da8644da",
+      "size": 1159029984,
+      "lfs": {
+        "sha256": "d9870a1f168db3d814596216aaf35702154147b443572c7939acca1802621ac6",
+        "size": 1159029984,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-10-09T16:30:48.000Z",
+  "usedStorage": 59026740512
+}

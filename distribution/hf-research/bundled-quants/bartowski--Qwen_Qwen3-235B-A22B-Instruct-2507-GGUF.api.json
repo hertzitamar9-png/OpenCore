@@ -1,0 +1,931 @@
+{
+  "_id": "687e66cc6705718c6f05dfd7",
+  "id": "bartowski/Qwen_Qwen3-235B-A22B-Instruct-2507-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "base_model:quantized:Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 4403,
+  "likes": 9,
+  "modelId": "bartowski/Qwen_Qwen3-235B-A22B-Instruct-2507-GGUF",
+  "author": "bartowski",
+  "sha": "88c7cb3896a641944f1210980b3c3e7d4e4aaef6",
+  "lastModified": "2025-07-24T00:53:43.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model_relation": "quantized",
+    "base_model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+  },
+  "gguf": {
+    "total": 235093634560,
+    "architecture": "qwen3moe",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/Qwen3-235B-A22B-Instruct-2507-GGUF/Qwen_Qwen3-235B-A22B-Instruct-2507-imatrix.gguf",
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 53226813664
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c2274822f88887f14c2e561a22b30f0367ede319",
+      "size": 13405
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ1_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ1_M-00001-of-00002.gguf",
+      "blobId": "3878f087af9514fc882e3241307a9605fe9f78d9",
+      "size": 39928520192,
+      "lfs": {
+        "sha256": "7741d01b9d9b8dfca30ddfac93dd39242205f453428e029b36a19d4a5648bc8c",
+        "size": 39928520192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ1_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ1_M-00002-of-00002.gguf",
+      "blobId": "939d8b4f30f690cdc9d78f175cfe13bd00091f00",
+      "size": 13298293472,
+      "lfs": {
+        "sha256": "3b49a58cbf7b07aff6a587f45c7430f1477ccb4d4023539839fd1375d7e80037",
+        "size": 13298293472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_M-00001-of-00002.gguf",
+      "blobId": "4a777cb66f8c462accdccb225d2e6008c83004c5",
+      "size": 39896524608,
+      "lfs": {
+        "sha256": "52d2661fd3d3312850804aca4aae5a86a657b9ef519ff5d51e72e0869383cfe5",
+        "size": 39896524608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_M-00002-of-00002.gguf",
+      "blobId": "d9ee47c8cc7ba05890a4b1a0ab7fa31455108838",
+      "size": 38657360256,
+      "lfs": {
+        "sha256": "173f4b0cff88ddd2ecf4765381d8b161f34fdb1acc78767b6ea6246ec1244cf1",
+        "size": 38657360256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_S/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_S-00001-of-00002.gguf",
+      "blobId": "2f57471a4c0a7def83514de95c1cb3959a24db34",
+      "size": 39989799328,
+      "lfs": {
+        "sha256": "8de21f499f3b5badce3c418cbf1f6eec44fc641c898319f8b96643fbcfa563b0",
+        "size": 39989799328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_S/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_S-00002-of-00002.gguf",
+      "blobId": "d2085f2173d9f7b65690da1d7cccde08b6b92de8",
+      "size": 26083934016,
+      "lfs": {
+        "sha256": "4ceba7e978e2148687b47d09074554179aff91dd9b56eb3864ac2f825a6bf6de",
+        "size": 26083934016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_XS-00001-of-00002.gguf",
+      "blobId": "051ad7b669ba5169e2fd23bc8b37c2c4935a4635",
+      "size": 39924890848,
+      "lfs": {
+        "sha256": "da2fc1890fbfc60db119b13912bf5645a635b109b852ebbc687d55028f5070d4",
+        "size": 39924890848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ2_XS-00002-of-00002.gguf",
+      "blobId": "e691346840c8536ef4c686d036ede6b1645d1c8e",
+      "size": 25691372544,
+      "lfs": {
+        "sha256": "c6eed9020668277eddfdd33418601880fa79767fc858d7ffe739e1fb42b2e048",
+        "size": 25691372544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_M-00001-of-00003.gguf",
+      "blobId": "eef923632224ec987bff71269ba13f7ef16d4fa3",
+      "size": 39960902880,
+      "lfs": {
+        "sha256": "eccfd1112e2ff81c6f80614736ff76bfe2d162197d15ce4f6266ba75e4a71fb7",
+        "size": 39960902880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_M-00002-of-00003.gguf",
+      "blobId": "83bf9f2a4a4d1e0ee21a3ec259f29d84d187190e",
+      "size": 39750662816,
+      "lfs": {
+        "sha256": "17f95ba4e8b7349b4325ecf89686d3d766e4e9bdc8b56048d298c7c636eff96e",
+        "size": 39750662816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_M/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_M-00003-of-00003.gguf",
+      "blobId": "894bd14f469a17a17b0e1b251fdfca4a85f37ca2",
+      "size": 27617157600,
+      "lfs": {
+        "sha256": "f84444542cfb077167371b9c42118bff2e91a9d1257a081ed0be18c6e1625027",
+        "size": 27617157600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XS-00001-of-00003.gguf",
+      "blobId": "4897384e913299a1af18f82fb6cbb4d2f61ba831",
+      "size": 39807424608,
+      "lfs": {
+        "sha256": "ff4ddd7af6cf6f0c782183720f6397c5f47ae3dc8a39d03b82f58448689c8ac3",
+        "size": 39807424608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XS-00002-of-00003.gguf",
+      "blobId": "9ba619b13bbb20b62c96dd3e0d72e07a023afbc6",
+      "size": 39814222048,
+      "lfs": {
+        "sha256": "b2a85bdd3c1a2d8f679e02aa4672fb6809795782a0257287a7f6971241f920dd",
+        "size": 39814222048,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XS-00003-of-00003.gguf",
+      "blobId": "e34437c05513360671ffdf8be2b29c17368ee277",
+      "size": 17278988320,
+      "lfs": {
+        "sha256": "d7d295637cd70991fac6cd8bfa0fcf10c71ead99dc70c3a9d54a6bc8c56fc846",
+        "size": 17278988320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XXS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XXS-00001-of-00003.gguf",
+      "blobId": "a1b53bde92a5a1a4618d43f7193258a8f44e1673",
+      "size": 39715909728,
+      "lfs": {
+        "sha256": "7937b1437e9f6eae583b6800287fa9a5180f5597475c405c6293d0a1a7d8a50b",
+        "size": 39715909728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XXS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XXS-00002-of-00003.gguf",
+      "blobId": "f5b67b584da8ccdc576239cb24272f5e1dd44206",
+      "size": 39750294784,
+      "lfs": {
+        "sha256": "1e893da491faafb55252260f5dc8936c6a1d5f2ccc1101a0d8033a052ba91736",
+        "size": 39750294784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XXS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ3_XXS-00003-of-00003.gguf",
+      "blobId": "e107fc903a0254aab42e398efe92fd8b09575946",
+      "size": 13606263808,
+      "lfs": {
+        "sha256": "9893f890f0689aab9d7af8d0dbb9c4c2f681f17f4b2dad66b19915ba9e05c6db",
+        "size": 13606263808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL-00001-of-00004.gguf",
+      "blobId": "1e0e9f09e860e88ff20fd2b3804cb4af5ff58fc2",
+      "size": 39801109728,
+      "lfs": {
+        "sha256": "8b8bb6786bbdc313dcbe7ddf7261e48e53e11a06e7a67dacfc6052e5276e48c4",
+        "size": 39801109728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL-00002-of-00004.gguf",
+      "blobId": "1f344d442c382bcd25df3e6451e543ff838d3944",
+      "size": 39886194976,
+      "lfs": {
+        "sha256": "f0f782082109b2901a2bfb104fa5385c26d9175988f585cf83be77ff5e9860ab",
+        "size": 39886194976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL-00003-of-00004.gguf",
+      "blobId": "9e975dc28d5c718166b65d838c8f8d6eae58d9ef",
+      "size": 39840564128,
+      "lfs": {
+        "sha256": "4bc10355e3eaf70a21f24766dfcefb9cba19ce40b5fb4abdef748a44cdaf25f9",
+        "size": 39840564128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_NL-00004-of-00004.gguf",
+      "blobId": "4a6c6c872d7bde76fc706e6158a27898f332f625",
+      "size": 13568376864,
+      "lfs": {
+        "sha256": "c00f84ac339cd1c22af71464a4e96ac2b226205cdcd57ffef1b8374c976fd4d0",
+        "size": 13568376864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS-00001-of-00004.gguf",
+      "blobId": "967b9b400a363f6672dfc50e88235048066b0a5f",
+      "size": 39893912096,
+      "lfs": {
+        "sha256": "3e373d55a7a21dfaf4225609deb4dc05c0a19e2256a8a57d712318b8bef6ad9d",
+        "size": 39893912096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS-00002-of-00004.gguf",
+      "blobId": "9747f3dc27d87a0cb418cabf3e8ce7157f1614c5",
+      "size": 39904596256,
+      "lfs": {
+        "sha256": "b6ff3ffdc1d0b8f53557b7911837b9c4551b732d70c44271969f79b87f64db3f",
+        "size": 39904596256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS-00003-of-00004.gguf",
+      "blobId": "f0daa6242cd8d60a0a109664f2b2bcdbfb05afda",
+      "size": 39904596256,
+      "lfs": {
+        "sha256": "301732f13e0c3109fc9c81615509d7fce9583d7eb2c76bec580ec1b955d07bca",
+        "size": 39904596256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS/Qwen_Qwen3-235B-A22B-Instruct-2507-IQ4_XS-00004-of-00004.gguf",
+      "blobId": "5b034f16564c9e6c3ace7f52d364e97d98f74216",
+      "size": 6178364768,
+      "lfs": {
+        "sha256": "86905f4251b78c030dc9bcae252c87881f6691705a0bf59ef5c20c0fc3854821",
+        "size": 6178364768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K-00001-of-00003.gguf",
+      "blobId": "f5b9a507150d64f20f1d7de9629362ff5b73ba44",
+      "size": 40000706144,
+      "lfs": {
+        "sha256": "c61b02479a277e2dd1f61c92ea307da7e609e355cd3a651bd422d7ff522db106",
+        "size": 40000706144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K-00002-of-00003.gguf",
+      "blobId": "f97c95e908545e13804a64a6c682e9742d5f9b6d",
+      "size": 39982219328,
+      "lfs": {
+        "sha256": "b5376f04aee4d2a88669f31dd65220dab36e6be8afcbfc1003289cf7e565b86c",
+        "size": 39982219328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K-00003-of-00003.gguf",
+      "blobId": "3b9a30ef0bec92d8a93c735656190e913edc341f",
+      "size": 2740146848,
+      "lfs": {
+        "sha256": "5f15ef47b0349460075628eb1d3a5c5918aa773ee772ecf57193a1be5fd24d12",
+        "size": 2740146848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K_L-00001-of-00003.gguf",
+      "blobId": "e0e05959ac2b5f9d6410e7f7d83bb9efb0c3c5e9",
+      "size": 39788298784,
+      "lfs": {
+        "sha256": "b167ccd881510f40ec12c280de34de6c4c292e04fc5546eaab44a7c1a3c00b99",
+        "size": 39788298784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K_L-00002-of-00003.gguf",
+      "blobId": "292bbdb95eef3229f323473e1fd2dec506a55e24",
+      "size": 39923499136,
+      "lfs": {
+        "sha256": "e18a6c333b7478d32eab3f409c3691d39edc6025ee0157965d2e14fe8ee8f78b",
+        "size": 39923499136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q2_K_L-00003-of-00003.gguf",
+      "blobId": "09522a7ca1ccaebfd40a3b04e17082286b9c9e5e",
+      "size": 3619018400,
+      "lfs": {
+        "sha256": "eb79a662e15d6619ac0969fb0ab93bff30c275b743f4cbfe0e8dba21b732b964",
+        "size": 3619018400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_L-00001-of-00003.gguf",
+      "blobId": "94b44d118c63567202d24e77d555679c11a96687",
+      "size": 39953528224,
+      "lfs": {
+        "sha256": "d49272f4e32aaf2e3ebe8afed8a7e0b28a2bcf6c3bba634fc57d530deb0a7bf8",
+        "size": 39953528224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_L-00002-of-00003.gguf",
+      "blobId": "98583f50826c6b19b206aadbcb773cf7ef4509fc",
+      "size": 39658335776,
+      "lfs": {
+        "sha256": "0cc839ff554062c6bfbf2284b6c9ffdf7384fd2d3cef46d6f5d1908b8fcb3c10",
+        "size": 39658335776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_L-00003-of-00003.gguf",
+      "blobId": "d829e15fa0b5d53152dce3e1e0c424fc25151f59",
+      "size": 31558841760,
+      "lfs": {
+        "sha256": "fab8759192433a86c822a3aefcecc2a41d4c45762ce339bcc99b9827f8233304",
+        "size": 31558841760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_M-00001-of-00003.gguf",
+      "blobId": "fd5571810cfdbd9864fd6af637b805f40610eedf",
+      "size": 39961427168,
+      "lfs": {
+        "sha256": "2566cc3575a4d83628a8528f541a57190df2b59ec0a518bc320c268171a25ce9",
+        "size": 39961427168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_M-00002-of-00003.gguf",
+      "blobId": "0ef818d53bfa2f94c2d9b29909bd321905529706",
+      "size": 39750662816,
+      "lfs": {
+        "sha256": "57b4d93adc3035e0b35113474ba026f36785d1534f0c9ba341dd3e87f114a8f6",
+        "size": 39750662816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_M-00003-of-00003.gguf",
+      "blobId": "e9fc142317cf9ba17bb9b9b94347f3be046aaeba",
+      "size": 27617157600,
+      "lfs": {
+        "sha256": "20c0c5a02176de1faef44acabd1e98d13926fb30a1c1d8963db722a75bbe7e7d",
+        "size": 27617157600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_S-00001-of-00003.gguf",
+      "blobId": "c7f78257707326e0d94268a5b0907ee289ad4fc9",
+      "size": 39734659712,
+      "lfs": {
+        "sha256": "09a6bcef6523ce7d25e63251ddb926e2b25baacf98cb0981d8d547461cf13804",
+        "size": 39734659712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_S-00002-of-00003.gguf",
+      "blobId": "a0656e8bec0c07d39252da48624e8ab0f11bffa8",
+      "size": 39991001568,
+      "lfs": {
+        "sha256": "0d2c8b94f2150ff199a70ae516803ca375b2afb3370076bf806865cdcecae1a7",
+        "size": 39991001568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_S-00003-of-00003.gguf",
+      "blobId": "2889d646391c20f4682d223615242cc667d0cc0b",
+      "size": 22656961792,
+      "lfs": {
+        "sha256": "b4ad5dd1cdb64843f18099b7635722ab36feeb57c24c939be602fea839b49363",
+        "size": 22656961792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_XL/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_XL-00001-of-00003.gguf",
+      "blobId": "12867860a9e7ba7a5a5b2e0b5bc4f3b9c633b423",
+      "size": 39771369216,
+      "lfs": {
+        "sha256": "b91f90c807041da2d8e0ce494d9ae4570110a3120ede425c8d80f0c08560f7a5",
+        "size": 39771369216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_XL/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_XL-00002-of-00003.gguf",
+      "blobId": "af7c59e903787f2a316dcdb613196e9d68149af4",
+      "size": 39483241376,
+      "lfs": {
+        "sha256": "c2a73a173ccd09afff047b539079b2034260259044d82afb90f8cd1f9ab63a97",
+        "size": 39483241376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_XL/Qwen_Qwen3-235B-A22B-Instruct-2507-Q3_K_XL-00003-of-00003.gguf",
+      "blobId": "1ea0a9c1718fc05c8fa18ffe9d0c8d35925a37ff",
+      "size": 32460633792,
+      "lfs": {
+        "sha256": "6f0e78bc1d2ba83b3f65d4f8423dd52a4003805577c01721bb5d2c76b121efea",
+        "size": 32460633792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0-00001-of-00004.gguf",
+      "blobId": "86e05834b5c00a42c87866302f920f0a6c466916",
+      "size": 39573552096,
+      "lfs": {
+        "sha256": "d0265fd5a75d4985c28dc8cfef47622f23e2bd628aa8a777ec19f8849ed7b41d",
+        "size": 39573552096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0-00002-of-00004.gguf",
+      "blobId": "b3ca78def51e1610814cf69beac87225a2ee0edf",
+      "size": 39715783488,
+      "lfs": {
+        "sha256": "84ceaa2180b3eeb204353dfb53e75d369b006487d8133dfb06bd96289a18cba1",
+        "size": 39715783488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0-00003-of-00004.gguf",
+      "blobId": "8a4e6808bf64d0463b189928ad9e23668af75a29",
+      "size": 39766115136,
+      "lfs": {
+        "sha256": "ce23e6631039062e1a5e682a1cabea9459f172d7ffa9f75056cfe51cbccf947d",
+        "size": 39766115136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_0-00004-of-00004.gguf",
+      "blobId": "abcf92808034167746e798b9d188dd09ee0f0002",
+      "size": 15937144672,
+      "lfs": {
+        "sha256": "b38c7eca29ec37ba56ab6984097d58a0e0cdb35e3d51ab7cf518ca9a65e69de9",
+        "size": 15937144672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1-00001-of-00004.gguf",
+      "blobId": "65299f177ca44eca2633510ea5582d13dbf8ae36",
+      "size": 39889989120,
+      "lfs": {
+        "sha256": "a34e76080c21a45e4a71ce0c4db840e0dbd5b147d6a2f691c6831d12a361deec",
+        "size": 39889989120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1-00002-of-00004.gguf",
+      "blobId": "ef9c79d1fef3c1cea09f66a057a988aae2f502d5",
+      "size": 39947825024,
+      "lfs": {
+        "sha256": "fc9c21a7d722557a304ab67a47f541671fc213f60e72e7ce62e0dee4d0dc5b0f",
+        "size": 39947825024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1-00003-of-00004.gguf",
+      "blobId": "9eee14ee5d7fbf661f8402ad4f2603c9cf121aad",
+      "size": 39991211168,
+      "lfs": {
+        "sha256": "6f45e14bf90b2130f9959bc6794efacfbae4c97c7890a8432a5a4019f9d4d0ca",
+        "size": 39991211168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_1-00004-of-00004.gguf",
+      "blobId": "ab19fd3caaa32777f22cd45b57d8291d81a7a20a",
+      "size": 27487320000,
+      "lfs": {
+        "sha256": "51eb3d8addf82a0a8ee6b973ffc3d25cf62026c267cb4ff3a2608d73d999344d",
+        "size": 27487320000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L-00001-of-00004.gguf",
+      "blobId": "829aba673df31879bdd7bbbc295b2dafed0b0242",
+      "size": 39657618944,
+      "lfs": {
+        "sha256": "f3f07fbb4b96267dd477d7917d8a02e0bde49812656a8815e9c2b7760635b8bf",
+        "size": 39657618944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L-00002-of-00004.gguf",
+      "blobId": "09ecf1a77bc010eee09fdf2d8669378718c3dd4d",
+      "size": 39847230560,
+      "lfs": {
+        "sha256": "f7514ca03701bfdce679e03b894a86c732635704152c6f2e51d4920bae47fb45",
+        "size": 39847230560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L-00003-of-00004.gguf",
+      "blobId": "73175f546e61d80155568b6a64746dbe8a40b17c",
+      "size": 39847230560,
+      "lfs": {
+        "sha256": "d019d2344bc539b6386eb802c2443c2bbe93bddba5af4e54b83614b6857fccec",
+        "size": 39847230560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_L-00004-of-00004.gguf",
+      "blobId": "4f04e636a34346b36d62cc725ade64837604f39c",
+      "size": 23756710720,
+      "lfs": {
+        "sha256": "cae41190e9024fecfe12a8d3e5f414046fc439b3c253e1aaa679df6543ce8e69",
+        "size": 23756710720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M-00001-of-00004.gguf",
+      "blobId": "39af136825046faaad6952ffa7b55df857a0e7a7",
+      "size": 39856336448,
+      "lfs": {
+        "sha256": "dfb7479c13e3d0a88efadcb712e02afe7ab3bf884775f69ca83529f35b99f6d0",
+        "size": 39856336448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M-00002-of-00004.gguf",
+      "blobId": "e28a505ec13bf9703cce6e4a2a0b1bfc32a67b51",
+      "size": 39847230560,
+      "lfs": {
+        "sha256": "ac9e4decc11c7ed37258f20c512a4e9aef4b7db0a89646279ee5993358c0fff5",
+        "size": 39847230560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M-00003-of-00004.gguf",
+      "blobId": "b9a950245189d79df752c661943c9295d87ee37c",
+      "size": 39847230560,
+      "lfs": {
+        "sha256": "e1b516bea9a6019e38a324acd41cecb6534a651fe6afcbe71f8defbb0b97570e",
+        "size": 39847230560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_M-00004-of-00004.gguf",
+      "blobId": "735d750cc116e8ae42fe4e16f62436f35d23fa07",
+      "size": 23096107744,
+      "lfs": {
+        "sha256": "0f646d53271d8c845e4d0d2d81648fdf445cfdfd0b9b7657f26258ed7bd4aeba",
+        "size": 23096107744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S-00001-of-00004.gguf",
+      "blobId": "caedd5d9c90a842d42f1491009e215470ea937a5",
+      "size": 39998993920,
+      "lfs": {
+        "sha256": "d01dc4969db27f02d167e65dc2c8bd9f0625be49c7b584ba865a1e7fc024b53b",
+        "size": 39998993920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S-00002-of-00004.gguf",
+      "blobId": "1939b1268149a9578168ca2a57007884980f9f9c",
+      "size": 39831110272,
+      "lfs": {
+        "sha256": "48e656ea00ae96872864b20590409daf3c5c66f796c88cf456aca033bd6994a8",
+        "size": 39831110272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S-00003-of-00004.gguf",
+      "blobId": "5cba78dfea5ecea7416809de1c63f5e0fbfcf483",
+      "size": 39833223936,
+      "lfs": {
+        "sha256": "8631b3ade3b777c7d214e6fe651783e9b5e9055dccc48aa94c879f1236eebfd3",
+        "size": 39833223936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q4_K_S-00004-of-00004.gguf",
+      "blobId": "c8f48ab18468ac0bca34814c92628c3de473072c",
+      "size": 18039836256,
+      "lfs": {
+        "sha256": "abd2414e2d9110f5dbed60b81094bb5d3f3273c8a09b71db7bca6c0ebe7184d5",
+        "size": 18039836256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M-00001-of-00005.gguf",
+      "blobId": "4674a646af2f0a50d850107240a4e1e38a7a01bb",
+      "size": 39575360288,
+      "lfs": {
+        "sha256": "b8dce5df3406175f90dfdef5410a89c704a4d426800eb9a4438873338f5b6dfd",
+        "size": 39575360288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M-00002-of-00005.gguf",
+      "blobId": "40564308dffe4949ab6b95d91a2e9c9afa225a1f",
+      "size": 39698423744,
+      "lfs": {
+        "sha256": "951a623d0300200a13afc60b7cb942039ddfe2e7e0551c90f87d6f7560c31e44",
+        "size": 39698423744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M-00003-of-00005.gguf",
+      "blobId": "acaa01c4dab8adadf1c08b366d0f04cbb9e2bacd",
+      "size": 39593582656,
+      "lfs": {
+        "sha256": "8613102d9d740d2d3befe549e443764cde3d50443c29af62c830aa4713c1749b",
+        "size": 39593582656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M-00004-of-00005.gguf",
+      "blobId": "8ffc4b6f041dfd9cad7ca67c7225b8a3b26817fb",
+      "size": 39630838240,
+      "lfs": {
+        "sha256": "84ffd427ff925e0e7bdd258fb6e88935cdffa2f8d1a8d5c7b0a3b2858453a67d",
+        "size": 39630838240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_M-00005-of-00005.gguf",
+      "blobId": "454c5b9b4a6e3bef4241f573bb01699123d67f7a",
+      "size": 8389877088,
+      "lfs": {
+        "sha256": "2f859d1a618c6d0f2bcf73b936b950dde684f5e7a22d15e6375318b49501aa29",
+        "size": 8389877088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S-00001-of-00005.gguf",
+      "blobId": "c02d57bcb14a161137a0038546703caa311e4699",
+      "size": 39786977824,
+      "lfs": {
+        "sha256": "fe5df30f103f278af068dd7af43b81e9e33511969be172dd4846ce45678ed056",
+        "size": 39786977824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S-00002-of-00005.gguf",
+      "blobId": "04528b3be4c7092eb4a679f98fcf0b72a0399c77",
+      "size": 39999792736,
+      "lfs": {
+        "sha256": "343cffe6a8c94e9e05b578611b688dbec4bd326122ce282b9c400aad26317e7b",
+        "size": 39999792736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S-00003-of-00005.gguf",
+      "blobId": "bc99fd997e624e49c521cea8e8cf288a6ac70bee",
+      "size": 39949967552,
+      "lfs": {
+        "sha256": "8cdb392b70f56e9917dabdbc38c20e7fd013cb5010eec46fb0b1aeebede793c6",
+        "size": 39949967552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S-00004-of-00005.gguf",
+      "blobId": "f26c7e0f71df0091829540fba05a7e2c40ef5a8e",
+      "size": 39952081216,
+      "lfs": {
+        "sha256": "fd391f3b6b43f911d5c5de022f6748e9dc77143553c28a5102cef50d44f8ca26",
+        "size": 39952081216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S/Qwen_Qwen3-235B-A22B-Instruct-2507-Q5_K_S-00005-of-00005.gguf",
+      "blobId": "dc5c66ea0a2dd284d8c0fa98c0aa49997b896101",
+      "size": 2266531776,
+      "lfs": {
+        "sha256": "f3280395e52a1280ff3b7e427655b0b12635232f3774c0fc951859e66f834ba0",
+        "size": 2266531776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K-00001-of-00005.gguf",
+      "blobId": "9d807603d7366a22165bb4d22a6ea43078addfa3",
+      "size": 39901819968,
+      "lfs": {
+        "sha256": "1aa8b581a2681e63fe9170ddfa1ddca103a47e49656b40709cb231b472231e58",
+        "size": 39901819968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K-00002-of-00005.gguf",
+      "blobId": "a2626680f0ec231b6570bce3cdd84d7f5a5cb5e1",
+      "size": 39476446464,
+      "lfs": {
+        "sha256": "7f13e4b74947f87c5d5053977a60b79756754796b278b1938a2a46a488544542",
+        "size": 39476446464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K-00003-of-00005.gguf",
+      "blobId": "9b38c1205646d7a62c8f7cf102f652fb9fa4d159",
+      "size": 39478560096,
+      "lfs": {
+        "sha256": "6fcfb065e7d4e72a9a690b8d926f29dd9b7e77c227a9bc6aeb34d432309babdf",
+        "size": 39478560096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K-00004-of-00005.gguf",
+      "blobId": "6f5a82d965908738123bab90a45e187f941f9676",
+      "size": 39535463040,
+      "lfs": {
+        "sha256": "e8255212d65329e43e514ec24cbd9d7addea8f142632679c4e13b0b528b563cc",
+        "size": 39535463040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K/Qwen_Qwen3-235B-A22B-Instruct-2507-Q6_K-00005-of-00005.gguf",
+      "blobId": "c54b9bb102675bf322484ad02cf0f9ad52f3fbb5",
+      "size": 34670948640,
+      "lfs": {
+        "sha256": "891f09fc41a375613e56e059bd0451a0f4dbe63a0aeafc81557446e40eb272d0",
+        "size": 34670948640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00001-of-00007.gguf",
+      "blobId": "65ddf79ceb1ac714026f8e1c63853d4eab011bbf",
+      "size": 39287091328,
+      "lfs": {
+        "sha256": "f95a5cc37cc998d733883199ff8a104748ed8c2047d9b3359c9d366ba3a25825",
+        "size": 39287091328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00002-of-00007.gguf",
+      "blobId": "c76cd3cc8c2e23cc0acf44638d4dffb5d91e005b",
+      "size": 39672080608,
+      "lfs": {
+        "sha256": "a503d29d1f03bc994c39bf50683a101721a803f2181954ca5e0fb2a60706ac34",
+        "size": 39672080608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00003-of-00007.gguf",
+      "blobId": "c9c44273ba57c3aa7f4cbf613309ed325ab212dd",
+      "size": 39672080608,
+      "lfs": {
+        "sha256": "e75aeb591e69b8ea1a9ed77a0402b321ff9a89864f1f3d6d470eed186d46543c",
+        "size": 39672080608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00004-of-00007.gguf",
+      "blobId": "a05f1abe7847c308404e02cd708370a3a2b4c7a0",
+      "size": 39672080608,
+      "lfs": {
+        "sha256": "fdd510ef5f28dd1046fd074db6d5f7646636c34a28f7f3d5f160746ea117c493",
+        "size": 39672080608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00005-of-00007.gguf",
+      "blobId": "454a17f3b643a63e4b6644cb3966d4fc5953fdcb",
+      "size": 39672080608,
+      "lfs": {
+        "sha256": "c5e77663da5ccaf46209ce334f1425fb736f1e431b387ef8dc0f477a10822d86",
+        "size": 39672080608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00006-of-00007.gguf",
+      "blobId": "6e18c0dce8072a9f4dcc0afcedc33d2c0d40af10",
+      "size": 39672080608,
+      "lfs": {
+        "sha256": "9a56c50b12cf9f837c5c8ec8018ffdb2e13c90284ecb92702ddf8c1c2c64c0eb",
+        "size": 39672080608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0/Qwen_Qwen3-235B-A22B-Instruct-2507-Q8_0-00007-of-00007.gguf",
+      "blobId": "f92156208800772cecc551269c41dba3cc7accf2",
+      "size": 12292611424,
+      "lfs": {
+        "sha256": "8a3bd6a41f1b0db9aa5172baed16f96d6e2a5bacc378048615aa3e35310ebb72",
+        "size": 12292611424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-235B-A22B-Instruct-2507-imatrix.gguf",
+      "blobId": "421daffb5743ba1292e8114ffc7e0630046b16f1",
+      "size": 477688896,
+      "lfs": {
+        "sha256": "8d2f61604921ea9e5fbb746ac7fd3bdf359be058b0d778c50187921e0a7f2212",
+        "size": 477688896,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "927f8ffbad4125d37d74725b92a07391130d14ab",
+      "size": 14364
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-07-21T16:11:56.000Z",
+  "usedStorage": 3697031119872
+}

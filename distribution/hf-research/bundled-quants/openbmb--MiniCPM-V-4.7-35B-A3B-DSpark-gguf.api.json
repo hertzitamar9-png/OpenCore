@@ -1,0 +1,215 @@
+{
+  "_id": "6acfb3e4802b9dda803390f0",
+  "id": "openbmb/MiniCPM-V-4.7-35B-A3B-DSpark-gguf",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "llama.cpp",
+  "tags": [
+    "llama.cpp",
+    "gguf",
+    "dspark",
+    "speculative-decoding",
+    "draft-model",
+    "quantized",
+    "minicpmv",
+    "minicpmv4.7",
+    "text-generation",
+    "vision-understanding",
+    "tool-calling",
+    "on-device",
+    "edge-ai",
+    "en",
+    "zh",
+    "arxiv:2607.05147",
+    "base_model:openbmb/MiniCPM-V-4.7-35B-A3B-DSpark",
+    "base_model:quantized:openbmb/MiniCPM-V-4.7-35B-A3B-DSpark",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 12555,
+  "likes": 9,
+  "modelId": "openbmb/MiniCPM-V-4.7-35B-A3B-DSpark-gguf",
+  "author": "openbmb",
+  "sha": "2c8f6931e5fba8a01bcc74b2964f330c62056b5e",
+  "lastModified": "2026-10-20T05:49:04.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "library_name": "llama.cpp",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "dspark",
+      "speculative-decoding",
+      "draft-model",
+      "quantized",
+      "minicpmv",
+      "minicpmv4.7",
+      "text-generation",
+      "vision-understanding",
+      "tool-calling",
+      "on-device",
+      "edge-ai"
+    ],
+    "base_model": "openbmb/MiniCPM-V-4.7-35B-A3B-DSpark",
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 389223169,
+    "architecture": "dflash",
+    "context_length": 262144,
+    "chat_template": "{%- macro render_content(content, is_system_content=false) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns = namespace(parts=[]) -%}\n        {%- for item in content -%}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain images.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|image_pad|>'] -%}\n            {%- elif 'video' in item or item.type == 'video' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain videos.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|video_pad|>'] -%}\n            {%- elif 'text' in item -%}\n                {%- set ns.parts = ns.parts + [item.text] -%}\n            {%- else -%}\n                {{- raise_exception('Unexpected item type in content.') -}}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns.parts | join('\\n') -}}\n    {%- elif content is none or content is undefined -%}\n        {{- '' -}}\n    {%- else -%}\n        {{- raise_exception('Unexpected content type.') -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index and reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {#- thinking hard-disabled for llama.cpp GGUF xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -#}\n    {{- '<think>\\n\\n</think>\\n\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 789442080
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52047b98cc00967299ec65f256234790035e5d27",
+      "size": 2351
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "aaaf49926d3893d79d6ba7dda9c8f06e03ff7965",
+      "size": 5525
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-F16.gguf",
+      "blobId": "180d5ee695fa1b12a499d5267414aa4919c792a6",
+      "size": 789442080,
+      "lfs": {
+        "sha256": "0971fb1f8944657f4604f3f44e322b568194390ea0111c611f261fecca63b546",
+        "size": 789442080,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q4_0.gguf",
+      "blobId": "9bf4507426b434b00ba966d38b86b864a97c780d",
+      "size": 229976064,
+      "lfs": {
+        "sha256": "e7a5746a0cfd8f16706e44e61bc9ae34420ad99d65b5d407e0b9693b271ddb5a",
+        "size": 229976064,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q4_1.gguf",
+      "blobId": "3042e191a1360c1044bac82f28f4e9967bae8740",
+      "size": 254300672,
+      "lfs": {
+        "sha256": "0ed1769642c3568d37a20c287a3ed7da06442e498cc11bc9a6a823a29e14f687",
+        "size": 254300672,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
+      "blobId": "981ba81d862bc20dde4b4b0860040a7406e96c87",
+      "size": 237004800,
+      "lfs": {
+        "sha256": "7e48251cf7f717298235e92aaf22d969cba365e27f1d285260d01986185d0a1d",
+        "size": 237004800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q4_K_S.gguf",
+      "blobId": "fbe1fb42b25f2bcca700066ccd257b189a32e485",
+      "size": 230500352,
+      "lfs": {
+        "sha256": "41311fc110628b8e5d2feec06b9bcd0f7f87538047b9ed16968e04095eeb9aca",
+        "size": 230500352,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q5_0.gguf",
+      "blobId": "6de3c79c0d598c035d205b0f60fee9bc2bc7f1e8",
+      "size": 278625280,
+      "lfs": {
+        "sha256": "3100acf3198cb8e124299e07041503af8ad17e269f67a36c3cf71d2b83b63b85",
+        "size": 278625280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q5_1.gguf",
+      "blobId": "200d6abaa5e78ef9cf8311ad92e39f453f7a84e0",
+      "size": 302949888,
+      "lfs": {
+        "sha256": "01dacc95e88eafc4dcf36f65d6529f56fda7341b5d05f622998847b0d42ff087",
+        "size": 302949888,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q5_K_M.gguf",
+      "blobId": "30567a850930233f20549258f9f16bb5f1245ec7",
+      "size": 282246144,
+      "lfs": {
+        "sha256": "47355df12b582f9f208eeafc584ef4ca33bda0ba4528980ca366c1b7ca49c5a5",
+        "size": 282246144,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q5_K_S.gguf",
+      "blobId": "a0a8e1df28b276ed06c6dd072b78dda7064de3f2",
+      "size": 278625280,
+      "lfs": {
+        "sha256": "d5c02c2e6cdfba3b47c92aad0885feb5239e41eecca97ae8cc4ce1a52261f864",
+        "size": 278625280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q6_K.gguf",
+      "blobId": "d39b2f8525eda4263e697ccadc95b929c58c6717",
+      "size": 330315072,
+      "lfs": {
+        "sha256": "576712e7bf42fb96aaad42e35b84bc175f3cfce92b863eb52fd1762eedb26c88",
+        "size": 330315072,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-Q8_0.gguf",
+      "blobId": "782cb6eeabdf1a6028f27136ed764df5e58094d0",
+      "size": 424572928,
+      "lfs": {
+        "sha256": "8c0ee456b4b6fb3b67eee42dd515d97f7c8f7353bc4be9aafe9c4ff68a780c16",
+        "size": 424572928,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-14T16:55:00.000Z",
+  "usedStorage": 7277117120
+}

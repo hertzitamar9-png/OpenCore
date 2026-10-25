@@ -1,0 +1,268 @@
+{
+  "_id": "66f45dd75d40846d240fb443",
+  "id": "MaziyarPanahi/Llama-3.2-3B-Instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "mistral",
+    "quantized",
+    "2-bit",
+    "3-bit",
+    "4-bit",
+    "5-bit",
+    "6-bit",
+    "8-bit",
+    "GGUF",
+    "text-generation",
+    "base_model:meta-llama/Llama-3.2-3B-Instruct",
+    "base_model:quantized:meta-llama/Llama-3.2-3B-Instruct",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 57125,
+  "likes": 15,
+  "modelId": "MaziyarPanahi/Llama-3.2-3B-Instruct-GGUF",
+  "author": "MaziyarPanahi",
+  "sha": "e56a0ae870579697698c3ded68df97747125d554",
+  "lastModified": "2024-09-25T19:18:32.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "model_type": "mistral"
+  },
+  "cardData": {
+    "tags": [
+      "quantized",
+      "2-bit",
+      "3-bit",
+      "4-bit",
+      "5-bit",
+      "6-bit",
+      "8-bit",
+      "GGUF",
+      "text-generation",
+      "text-generation"
+    ],
+    "model_name": "Llama-3.2-3B-Instruct-GGUF",
+    "base_model": "meta-llama/Llama-3.2-3B-Instruct",
+    "inference": false,
+    "model_creator": "meta-llama",
+    "pipeline_tag": "text-generation",
+    "quantized_by": "MaziyarPanahi"
+  },
+  "gguf": {
+    "total": 3212749888,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{{- bos_token }}\n{%- if custom_tools is defined %}\n    {%- set tools = custom_tools %}\n{%- endif %}\n{%- if not tools_in_user_message is defined %}\n    {%- set tools_in_user_message = true %}\n{%- endif %}\n{%- if not date_string is defined %}\n    {%- if strftime_now is defined %}\n        {%- set date_string = strftime_now(\"%d %b %Y\") %}\n    {%- else %}\n        {%- set date_string = \"26 Jul 2024\" %}\n    {%- endif %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n\n{#- This block extracts the system message, so we can slot it into the right place. #}\n{%- if messages[0]['role'] == 'system' %}\n    {%- set system_message = messages[0]['content']|trim %}\n    {%- set messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n{%- endif %}\n\n{#- System message #}\n{{- \"<|start_header_id|>system<|end_header_id|>\\n\\n\" }}\n{%- if tools is not none %}\n    {{- \"Environment: ipython\\n\" }}\n{%- endif %}\n{{- \"Cutting Knowledge Date: December 2023\\n\" }}\n{{- \"Today Date: \" + date_string + \"\\n\\n\" }}\n{%- if tools is not none and not tools_in_user_message %}\n    {{- \"You have access to the following functions. To call a function, please respond with JSON for a function call.\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n{%- endif %}\n{{- system_message }}\n{{- \"<|eot_id|>\" }}\n\n{#- Custom tools are passed in a user message with some extra guidance #}\n{%- if tools_in_user_message and not tools is none %}\n    {#- Extract the first user message so we can plug it in here #}\n    {%- if messages | length != 0 %}\n        {%- set first_user_message = messages[0]['content']|trim %}\n        {%- set messages = messages[1:] %}\n    {%- else %}\n        {{- raise_exception(\"Cannot put tools in the first user message when there's no first user message!\") }}\n{%- endif %}\n    {{- '<|start_header_id|>user<|end_header_id|>\\n\\n' -}}\n    {{- \"Given the following functions, please respond with a JSON for a function call \" }}\n    {{- \"with its proper arguments that best answers the given prompt.\\n\\n\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n    {{- first_user_message + \"<|eot_id|>\"}}\n{%- endif %}\n\n{%- for message in messages %}\n    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}\n        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n'+ message['content'] | trim + '<|eot_id|>' }}\n    {%- elif 'tool_calls' in message %}\n        {%- if not message.tool_calls|length == 1 %}\n            {{- raise_exception(\"This model only supports single tool-calls at once!\") }}\n        {%- endif %}\n        {%- set tool_call = message.tool_calls[0].function %}\n        {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' -}}\n        {{- '{\"name\": \"' + tool_call.name + '\", ' }}\n        {{- '\"parameters\": ' }}\n        {{- tool_call.arguments | tojson }}\n        {{- \"}\" }}\n        {{- \"<|eot_id|>\" }}\n    {%- elif message.role == \"tool\" or message.role == \"ipython\" %}\n        {{- \"<|start_header_id|>ipython<|end_header_id|>\\n\\n\" }}\n        {%- if message.content is mapping or message.content is iterable %}\n            {{- message.content | tojson }}\n        {%- else %}\n            {{- message.content }}\n        {%- endif %}\n        {{- \"<|eot_id|>\" }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|eot_id|>",
+    "totalFileSize": 6433687872
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "91861a0d3686258afea834f7777bd51434fb6161",
+      "size": 2704
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-GGUF_imatrix.dat",
+      "blobId": "78249fffefd93df883f9e87101f984dc090b5951",
+      "size": 2988366,
+      "lfs": {
+        "sha256": "b0758ed86f614bb022d971a86549ee5d0286a1a1d05a3e03696c3d452454b927",
+        "size": 2988366,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.IQ1_M.gguf",
+      "blobId": "dfc15c662dc60c07c9572fe3baf14f98abc15655",
+      "size": 924191264,
+      "lfs": {
+        "sha256": "6fd0700c94a24a98f9f57d573536e6afb94b7960142f04904d667b2a5fab5a2b",
+        "size": 924191264,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.IQ1_S.gguf",
+      "blobId": "b3fa23b19f60baa50854203fee3eb38b48423309",
+      "size": 868157984,
+      "lfs": {
+        "sha256": "d5d0c6eb708b7ec64ee9a585e83e2060e0e13f329c52bdd36d1b25aebd359001",
+        "size": 868157984,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.IQ2_XS.gguf",
+      "blobId": "a1664142f3115aab2adb5b0dcb0223f7fe8bf356",
+      "size": 1100548640,
+      "lfs": {
+        "sha256": "79ed8dc2b582786937ad69140d5f0a83d4ddf967cf502e4aa247668c13f9f46e",
+        "size": 1100548640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.IQ3_XS.gguf",
+      "blobId": "b1e99aa20d6084d41c5e221d39e641b9556bb32a",
+      "size": 1476788768,
+      "lfs": {
+        "sha256": "2441ebb3d5dd7e19c6392e4ffe204c93e7f38ea098b380942619fb6f5f955284",
+        "size": 1476788768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.IQ4_XS.gguf",
+      "blobId": "7a392ebbf87e4c3595b3cc517e94c88c78f6864b",
+      "size": 1829110304,
+      "lfs": {
+        "sha256": "27362be54f0333850c085d85dd5fd9505a2a3ddcab1daa31faa228c333fe9486",
+        "size": 1829110304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q2_K.gguf",
+      "blobId": "f282b26c75a6f947c48cf16932573f971287bc2d",
+      "size": 1363935776,
+      "lfs": {
+        "sha256": "436c90a401ec7fadf014bbf918b5c0d9abfa444678e98f9d23494c1592115e98",
+        "size": 1363935776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q3_K_L.gguf",
+      "blobId": "cb789d72fab5fc02a56781dfbd780522290155a5",
+      "size": 1815347744,
+      "lfs": {
+        "sha256": "68e35bea9562470d85184cff343e6bfc29d1873e98a3ed2b455146fee648d3b4",
+        "size": 1815347744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q3_K_M.gguf",
+      "blobId": "8d488a33e578b60d85be46cc45c1f40d7c01a671",
+      "size": 1687159328,
+      "lfs": {
+        "sha256": "1399c90c682ccfba48fc8925b60543e93c566a0f7b0f4d494442b05fea420737",
+        "size": 1687159328,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q3_K_S.gguf",
+      "blobId": "3e67510cf9be2fc32cbd311f2380612c94245018",
+      "size": 1542849056,
+      "lfs": {
+        "sha256": "414c3b9c15b7afc992886aef3e39894aa8b9eeff4a42236f81b879d7de4245a9",
+        "size": 1542849056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q4_K_M.gguf",
+      "blobId": "f54ce993f0085c9228993ada5b377c95a4aa1f90",
+      "size": 2019377696,
+      "lfs": {
+        "sha256": "1c323c8ef8b7dd877d40a4138de8bf915884a383b08097b5c20abcb2ae2896d6",
+        "size": 2019377696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q4_K_S.gguf",
+      "blobId": "060c2fd0f71ea974978b40de1e27c12603380cf8",
+      "size": 1928200736,
+      "lfs": {
+        "sha256": "a7a3b12ff5b1b9ddfed7165ba111eea2e6a6cdfdbb21d51c2215bab9083e9b06",
+        "size": 1928200736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q5_K_M.gguf",
+      "blobId": "54720723e151366f7d9f19c04264bae74a51b76d",
+      "size": 2322154016,
+      "lfs": {
+        "sha256": "33ce5d9712c437f639fe775f8ece1215e5cd6e366e9d6261d6b41b4e5e0bb171",
+        "size": 2322154016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q5_K_S.gguf",
+      "blobId": "d38a6cb7d7b0a7e7b01f15ef2d4bc9d70e3bf505",
+      "size": 2269512224,
+      "lfs": {
+        "sha256": "52367bcdfab5b0ee1ac1558bce8acaf56cc1874a67d7cf935aa1f4b37a9160bd",
+        "size": 2269512224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q6_K.gguf",
+      "blobId": "44cbb6614d3b85f888b8b7ea3c5613a1b615e450",
+      "size": 2643853856,
+      "lfs": {
+        "sha256": "8719f84a68214015992f3f548ae4ec8d8c4c1d36d5ae300eab89efd02e41c30e",
+        "size": 2643853856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.Q8_0.gguf",
+      "blobId": "2fe1a79ba35fac57b793a464558d10c075a72a5c",
+      "size": 3421899296,
+      "lfs": {
+        "sha256": "a205ac5672eba8b8ccf843b2b16cfc00bd02a4e7b0e597bac774b3d237bf8816",
+        "size": 3421899296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.fp16.gguf",
+      "blobId": "c4729ebf2b4dca8e8d02ac9ef892776d3ff223b1",
+      "size": 6433687872,
+      "lfs": {
+        "sha256": "5f985a76a8576bf731dc76de97ea34beab446e7cc6bafc0182088bc67040ddfa",
+        "size": 6433687872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2e6790543c9b58fc2bfaaad11a4eda8957a9b333",
+      "size": 3007
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "9f0f76f8d1de0ed9b8adf494540f149aaef5f07c",
+      "size": 31
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2024-09-25T19:00:39.000Z",
+  "usedStorage": 33649762926
+}

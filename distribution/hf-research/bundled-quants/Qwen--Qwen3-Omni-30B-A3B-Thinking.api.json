@@ -1,0 +1,285 @@
+{
+  "_id": "68c83340604821b122288810",
+  "id": "Qwen/Qwen3-Omni-30B-A3B-Thinking",
+  "private": false,
+  "pipeline_tag": "any-to-any",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3_omni_moe",
+    "text-to-audio",
+    "multimodal",
+    "any-to-any",
+    "en",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 279221,
+  "likes": 331,
+  "modelId": "Qwen/Qwen3-Omni-30B-A3B-Thinking",
+  "author": "Qwen",
+  "sha": "2f443cfc4c54b14a815c0e2bb9a9d6cbcd9a748b",
+  "lastModified": "2025-09-22T14:17:44.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3OmniMoeForConditionalGeneration"
+    ],
+    "model_type": "qwen3_omni_moe",
+    "processor_config": {
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}{{- messages[0].content + '\\n\\n' }}{%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- if messages[0].content is string %}\n            {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {{- '<|im_start|>system\\n' +\"<|vision_start|><|image_pad|><|vision_end|>\"+ '<|im_end|>\\n' }}\n                {%- elif content.type == 'audio' or 'audio' in content or 'audio_url' in content %}\n                    {{- '<|im_start|>system\\n' +\"<|audio_start|><|audio_pad|><|audio_end|>\"+ '<|im_end|>\\n' }}\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {{- '<|im_start|>system\\n' +\"<|vision_start|><|video_pad|><|vision_end|>\"+ '<|im_end|>\\n' }}\n                {%- elif content.type == 'text' %}\n                    {{- '<|im_start|>system\\n' +content.text+ '<|im_end|>\\n' }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = namespace(text=\"\") %}\n        {%- for mcontent in message.content %}\n            {%- if mcontent.type == 'image' or 'image' in mcontent or 'image_url' in mcontent %}\n                {%- set content.text = content.text~\"<|vision_start|><|image_pad|><|vision_end|>\" %}\n            {%- elif mcontent.type == 'audio' or 'audio' in mcontent or 'audio_url' in mcontent %}\n                {%- set content.text = content.text~\"<|audio_start|><|audio_pad|><|audio_end|>\" %}\n            {%- elif mcontent.type == 'video' or 'video' in mcontent %}\n                {%- set content.text = content.text~\"<|vision_start|><|video_pad|><|vision_end|>\" %}\n            {%- elif mcontent.type == 'text' %}\n                {%- set content.text = content.text~mcontent.text %}\n            {%- endif %}\n        {%- endfor %}\n        {%- set content = content.text %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = \"\" %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n            {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n            {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n        {%- endif %}\n    {%- endif %}\n    {%- if loop.index0 > ns.last_query_index %}\n        {%- if loop.last or (not loop.last and reasoning_content) %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip(\"\\n\") + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n    {%- endif %}\n    {%- if message.tool_calls %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if (loop.first and content) or (not loop.first) %}{{- '\\n' }}{%- endif %}\n            {%- if tool_call.function %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {%- if tool_call.arguments is string %}\n                {{- tool_call.arguments }}\n            {%- else %}\n                {{- tool_call.arguments | tojson }}\n            {%- endif %}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}{{- '<|im_start|>user' }}{%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}{{- '<|im_end|>\\n' }}{%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}{{- '<think>\\n\\n</think>\\n\\n' }}{%- endif %}\n{%- endif %}\n"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "multimodal"
+    ],
+    "library_name": "transformers",
+    "pipeline_tag": "any-to-any"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "text-to-audio",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "64fde95f19d9f979785606ece4e484d896cd7738",
+      "size": 90295
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "baa71fe6882b38fa5a39a6b4863f7ed491490a27",
+      "size": 5946
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "83c2015515c5d3f936c47e1a30c72490da0d32f6",
+      "size": 8528
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "1da04216d6a1b1c5e1d25766f6e713a8c6f33eeb",
+      "size": 113
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model-00001-of-00016.safetensors",
+      "blobId": "05c18ac3df014e6e510ab40125c65915d1f5759b",
+      "size": 4000129664,
+      "lfs": {
+        "sha256": "ba3b117f1fe9a10f670e87c73321c0651e89f425de598ede20185fdc94df997b",
+        "size": 4000129664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00016.safetensors",
+      "blobId": "3ac64b127665448ebc3d591b9d26a5a31499614b",
+      "size": 3999992216,
+      "lfs": {
+        "sha256": "0c419d9fc447b83ab36be8243f1da793125f01ce0ca0fc49d4ad8aca5a03b6f0",
+        "size": 3999992216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00016.safetensors",
+      "blobId": "4a03dcd8b7e1448f388b006b783e233ea503dd36",
+      "size": 3997362968,
+      "lfs": {
+        "sha256": "bdd6cc1cb3bf3422eefaca3be1a730d78253bf158a53aa5ec73310cacb2f7d5a",
+        "size": 3997362968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00016.safetensors",
+      "blobId": "5c741f3eea6cadea9680e24175ce2b306f5d76f3",
+      "size": 3999984424,
+      "lfs": {
+        "sha256": "c8228f28c83b8355ec441ea8caf33e847ec71192e2a378568289e6653d8d72f4",
+        "size": 3999984424,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00016.safetensors",
+      "blobId": "d1b6f5386a9bc1ea2887db6a67ff508a629b7e70",
+      "size": 3999985496,
+      "lfs": {
+        "sha256": "4317632b9dd26e4c950bbd90d1e89304325725f3290db00a642918a364ca1e01",
+        "size": 3999985496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00016.safetensors",
+      "blobId": "4aa201d610316edbbec6ae9af7dadbf0ee575ed3",
+      "size": 3999985528,
+      "lfs": {
+        "sha256": "c86a2cdcdf7eb7b8d5e6846a778798a12d14344ae4f178d4c9a4842c8fcaf9e5",
+        "size": 3999985528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00016.safetensors",
+      "blobId": "7c4ad9ef14de637181dbe6406f613ded9d35e463",
+      "size": 3997372200,
+      "lfs": {
+        "sha256": "e670918aaab9144dfe7e1132924c706d56b4c6b4c2b6e94a5cf796c3c55e7916",
+        "size": 3997372200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00016.safetensors",
+      "blobId": "e4dfcd7b1137c2bd730cf68d99b08c93be9c14f3",
+      "size": 3999985488,
+      "lfs": {
+        "sha256": "1f44c6e93b85b0cc05284beac60a4076caf61c803f569bf5dcb5ab6a6a810312",
+        "size": 3999985488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00016.safetensors",
+      "blobId": "2303ce9b120eb05072b61f1834a47d9914f86fa6",
+      "size": 3999985496,
+      "lfs": {
+        "sha256": "5439c95a4cbbd6a6ea7c498d8a71fcf3dacba64b4dac5bf5ad2834fda4140929",
+        "size": 3999985496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00016.safetensors",
+      "blobId": "3af7c94029e877184fb3c0b3e1954e889a5bfa29",
+      "size": 3999985496,
+      "lfs": {
+        "sha256": "c75a2bb738fcb3da89798e5faffd627e3b2592325491bb9df915835afaac64c0",
+        "size": 3999985496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00016.safetensors",
+      "blobId": "4ee5e6c7a307d0f7aeabdec8fa7218e1c25ef0f9",
+      "size": 3999985544,
+      "lfs": {
+        "sha256": "35439fa67730c6f2553ac6ae11f97a34dff37a61341275d3416d080423aa689b",
+        "size": 3999985544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00012-of-00016.safetensors",
+      "blobId": "24edc5786e5935304bc9d3caa0a966b764a4c718",
+      "size": 3997372160,
+      "lfs": {
+        "sha256": "61415e98a78c64a790c946be3145877886b4e6b681425dc061225df511b76e04",
+        "size": 3997372160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00013-of-00016.safetensors",
+      "blobId": "1cbd1f72f5a49ad92845a0a7a137f3b3708309c1",
+      "size": 3999985504,
+      "lfs": {
+        "sha256": "70587b5b7e51e8a6e4bf2d069ef465aea913c337f8d951e2790cd1e426bf5378",
+        "size": 3999985504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00014-of-00016.safetensors",
+      "blobId": "eff745bc227b81d0ac56f971f2cb33e519a1d31b",
+      "size": 3999985496,
+      "lfs": {
+        "sha256": "bee3c092d2966c401ef4b9899a4659e1fc2e9112667354c4e7bcb8a2faff2be7",
+        "size": 3999985496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00015-of-00016.safetensors",
+      "blobId": "ddab27b4c19b57a9f84fd90b65a16eb80bf5dc21",
+      "size": 3999985496,
+      "lfs": {
+        "sha256": "80ea0e6c2cb35f485ae7534a3092793c18a429e102c820b77338726758d30e30",
+        "size": 3999985496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00016-of-00016.safetensors",
+      "blobId": "9c7ae51047e80e6f5ec3431ef4dda18b8dc2fbba",
+      "size": 3448914464,
+      "lfs": {
+        "sha256": "da33b1078d1b474f83ccc455928b18b731e3b09ad46b21af88e68d7cbb8488a5",
+        "size": 3448914464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "a7e75d7dc74338607cd871f7023fabc3663fd0a3",
+      "size": 1928791
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "7df5b45379044a680218cb2b7ed4d01a6633f537",
+      "size": 603
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "6ff9fd60cc623bb54bbd603cbd418c97a11528d7",
+      "size": 7344
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "chenxie95/Resonate",
+    "Daniel-IADAR/Media_Optimization",
+    "malekradwan130/EbWFsZWtyYWR3YW4xMzBAZ21haWwuY"
+  ],
+  "createdAt": "2025-09-15T15:39:44.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 31719205488
+    },
+    "total": 31719205488
+  },
+  "usedStorage": 63440997640
+}

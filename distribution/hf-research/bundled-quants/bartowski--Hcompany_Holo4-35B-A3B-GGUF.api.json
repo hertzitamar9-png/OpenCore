@@ -1,0 +1,586 @@
+{
+  "_id": "6abc4a04c142cf0a2c6cb191",
+  "id": "bartowski/Hcompany_Holo4-35B-A3B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "multimodal",
+    "computer-use",
+    "agent",
+    "image-text-to-text",
+    "base_model:Hcompany/Holo4-35B-A3B",
+    "base_model:quantized:Hcompany/Holo4-35B-A3B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 8417,
+  "likes": 2,
+  "modelId": "bartowski/Hcompany_Holo4-35B-A3B-GGUF",
+  "author": "bartowski",
+  "sha": "2ef8a872e6210e799101b4671fdd58814316ad8f",
+  "lastModified": "2026-09-30T01:17:18.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "multimodal",
+      "computer-use",
+      "agent"
+    ],
+    "base_model_relation": "quantized",
+    "license": "apache-2.0",
+    "base_model": "Hcompany/Holo4-35B-A3B"
+  },
+  "gguf": {
+    "total": 34660610688,
+    "architecture": "qwen35moe",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/Holo4-35B-A3B-GGUF/Hcompany_Holo4-35B-A3B-imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if (preserve_thinking is defined and preserve_thinking is true) or (loop.index0 > ns.last_query_index) %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 13233806016
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e0d84c94bdd7e84067cdf05db0bd9e124d8297e6",
+      "size": 3659
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ2_M.gguf",
+      "blobId": "80a7d5b95c00e7f96d8c42e4ac0d3730b6e0b94b",
+      "size": 13233806016,
+      "lfs": {
+        "sha256": "4a0c23a963a8303bff2ae78d811308f09e25719742eb351f41d824ac372375b3",
+        "size": 13233806016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ2_S.gguf",
+      "blobId": "3b4c7121facfc8e42c9dd95439d0e582ac693a92",
+      "size": 11979545280,
+      "lfs": {
+        "sha256": "a508315b981abebddf8e565f547f51e79d3ec509304c614e9ef15175b4b7a78d",
+        "size": 11979545280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ2_XS.gguf",
+      "blobId": "e2a47da7c6717925971bdb982bbc0b0e75471901",
+      "size": 11265260224,
+      "lfs": {
+        "sha256": "6fdc7413a6dd55697ef0e7b0cf6ee580ef9553b5a826c455e6247b8b17eea5ae",
+        "size": 11265260224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ2_XXS.gguf",
+      "blobId": "24ca78911246089c3b3a88692d5b9ee8cc5aea01",
+      "size": 10793196224,
+      "lfs": {
+        "sha256": "507103d5b6b3531ad22814fc19cd9e856bb530814f9990433a6fa4bb25f83385",
+        "size": 10793196224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ3_M.gguf",
+      "blobId": "06b88c9cb937fc977bc57e27b0451e907cc67785",
+      "size": 18958219968,
+      "lfs": {
+        "sha256": "4c495f4a489657b9eff7d96a6078a6f05e35c208850284de0b5cc02befd3b87f",
+        "size": 18958219968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ3_XS.gguf",
+      "blobId": "fdf86dac173066aa792b929fbd7f0048c4022aa4",
+      "size": 16318692032,
+      "lfs": {
+        "sha256": "e7ba94dfb6e55d358435364fd784684e1e288877778d188efc4c48e8d0d222e0",
+        "size": 16318692032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ3_XXS.gguf",
+      "blobId": "e6d43726ec9073c032cfd0e92fec4e1d8c66de1b",
+      "size": 15581674176,
+      "lfs": {
+        "sha256": "c36f396554f289cef1b30f430a98a19a907000f4de9193cb033b0944bf244f6e",
+        "size": 15581674176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ4_NL.gguf",
+      "blobId": "21917075c1661567995e89ea0351d50dc0e4ca82",
+      "size": 22318512832,
+      "lfs": {
+        "sha256": "1ed12f6d6a6afe4891f6a9c59cac2d7345e4f1fd10027fcaceb1b7b32a233552",
+        "size": 22318512832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-IQ4_XS.gguf",
+      "blobId": "553b268afd370433c93d83891e6111c2a12f1d58",
+      "size": 19886930624,
+      "lfs": {
+        "sha256": "f780ce54f9ec8590c0df63eec5a1a47dbea33759531713176b4df96083f55d31",
+        "size": 19886930624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q2_K.gguf",
+      "blobId": "ba68d0cc01c0b0fbe626591c60a22e28f161ff44",
+      "size": 13839334080,
+      "lfs": {
+        "sha256": "0aaa010c66cbccae6960a85f6a087213c930e67d74523af7ceaaa2a05dbfce25",
+        "size": 13839334080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q3_K_L.gguf",
+      "blobId": "842faef15f7ed777ec4299a646bb3aeac0b72540",
+      "size": 18267077312,
+      "lfs": {
+        "sha256": "8e88c74e815bb03716d6ef4577d9a8e1a5838ea4c85d8a3de684e4eb14515d37",
+        "size": 18267077312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q3_K_M.gguf",
+      "blobId": "2fc027226941281aad5b97ff67f6d84a1eda0b1b",
+      "size": 17344330432,
+      "lfs": {
+        "sha256": "809ec2f1e50804f078042e4361f61a04ac9e1b9446674839e1afc7fd545aba33",
+        "size": 17344330432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q3_K_S.gguf",
+      "blobId": "a917f3bf910f164bcaa083b80b8a685d7cb9d487",
+      "size": 16318692032,
+      "lfs": {
+        "sha256": "f6582dd0cea7e9a6ac5050e1483483064ef9daecfcf84b8e265f4593bebfc8d1",
+        "size": 16318692032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q4_0.gguf",
+      "blobId": "7b2bdfaf85d893aae800181a0023b69779c12e63",
+      "size": 19942611648,
+      "lfs": {
+        "sha256": "30ea9e32a4e5a56cf57912a2d90aa719bcb1bfb766ee5b2ee4a9c88131f19873",
+        "size": 19942611648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q4_1.gguf",
+      "blobId": "4a773fd74785cb95191b0e09e52395a3dd925b9e",
+      "size": 21973768896,
+      "lfs": {
+        "sha256": "d8cdbfc88232618fa340059fdc7f989a95e60f8ae2d7156ec8665ead9bda9a47",
+        "size": 21973768896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q4_K_L.gguf",
+      "blobId": "b022da4976c6982a0f511e3c78bb424088c0933f",
+      "size": 24113674944,
+      "lfs": {
+        "sha256": "de8ed3dd069344473e548ac79b2621a8e9b7bba261cfc08edc573e193434c692",
+        "size": 24113674944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q4_K_M.gguf",
+      "blobId": "659c92ed288e629ec980128b4c6e9646257780fe",
+      "size": 22318512832,
+      "lfs": {
+        "sha256": "3d5430e91761afb9e0d175d2284d70cdbb67be341db72d691b239fb131b18c6e",
+        "size": 22318512832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q4_K_S.gguf",
+      "blobId": "99f4740d2fbc927b076afc3db39a8f658643480b",
+      "size": 20946975424,
+      "lfs": {
+        "sha256": "c0f609ed9e391687ed11448751bcc92f5b594c5f9421f4dc782109b3693fdac3",
+        "size": 20946975424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q5_K_M.gguf",
+      "blobId": "82a78d2106d17e71f2b22b0d8eb4e260911fcddc",
+      "size": 26984676032,
+      "lfs": {
+        "sha256": "7ff9c69e94bf87cc6fe97ef43b08cde37c29973ac9ed2f0f263d07f1ab989896",
+        "size": 26984676032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q5_K_S.gguf",
+      "blobId": "765dc474b58772c1021dc92f73d60354e621471f",
+      "size": 25137085120,
+      "lfs": {
+        "sha256": "d574904692fd5a1a2c25348c8f0aebfadc9f1db378c2b6b60099bf6252febec6",
+        "size": 25137085120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q6_K.gguf",
+      "blobId": "230832c8cf8aed043dc5cf39f679ca8861c6a409",
+      "size": 30738578112,
+      "lfs": {
+        "sha256": "54a5ce423e54580fe86fd99964243893200d0c98862c7710dbc5140e21eb1189",
+        "size": 30738578112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q6_K_L.gguf",
+      "blobId": "4e7368dd3682079de5f46d8b7cb1abc8f4931c68",
+      "size": 32298859200,
+      "lfs": {
+        "sha256": "3ccad395b8cd475eff1399a46c5aad5fdee9c43f2b99edf35d1aed48ff2caa7b",
+        "size": 32298859200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q6_K_S.gguf",
+      "blobId": "5263f6d9ccd016b23c61cf30011262281b77032e",
+      "size": 29373332160,
+      "lfs": {
+        "sha256": "e0e8906020a617d357d8a4edbef114d5b31e0e0d2e1bc18572f98ac32a1cb675",
+        "size": 29373332160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-Q8_0.gguf",
+      "blobId": "11ca2a1aa4792f1b65b7eaeaab4cb00cdf1f1b73",
+      "size": 36914690752,
+      "lfs": {
+        "sha256": "520fed46c9ac128083666496e4a4db74f1611c9e98fbd7bc766f97162b2e6f14",
+        "size": 36914690752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-bf16/Hcompany_Holo4-35B-A3B-bf16-00001-of-00002.gguf",
+      "blobId": "893b94609c5cfe95c6b10b086f057414b7493446",
+      "size": 39753376000,
+      "lfs": {
+        "sha256": "aead3f2a3cb83a2964b3a0fae77fb94e666852c0bb874369c9f3a958ced9d283",
+        "size": 39753376000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-bf16/Hcompany_Holo4-35B-A3B-bf16-00002-of-00002.gguf",
+      "blobId": "4cce0491a1fe8c420ba8b5e943591fbd405a2dbd",
+      "size": 29623261504,
+      "lfs": {
+        "sha256": "c366f9af49b4fed8b93c3f8eb9cc426f8f1154f40b2ebabbc61154266ef106f1",
+        "size": 29623261504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-calibration-v6.txt",
+      "blobId": "1ff4092f3c846843f1ae251440cf870a691e9202",
+      "size": 1177575
+    },
+    {
+      "rfilename": "Hcompany_Holo4-35B-A3B-imatrix.gguf",
+      "blobId": "034fdbd0383814b0c9d35b67ccef659c86fe671a",
+      "size": 192223936,
+      "lfs": {
+        "sha256": "1aa9ccc40972cf8aacfe1a44e3e4c6d94be1368da73ca0b7dc4e7d725d0b52fd",
+        "size": 192223936,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ef3d26a62ed0319a66299b187830dcc480c203f6",
+      "size": 20370
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_M.layout.json",
+      "blobId": "d69698bf71fcb4758bad3d47c525ecfcd5e056fe",
+      "size": 9011
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_M.tensor-types.txt",
+      "blobId": "513349b5ab75d3d61138d1e826fdc9dd2868a6ed",
+      "size": 15359
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_S.layout.json",
+      "blobId": "d6825cab1f0cdd529a6bb47a22b2a00443e085b6",
+      "size": 9070
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_S.tensor-types.txt",
+      "blobId": "496c7fc4f2bb202b9a4bab5eefdf60ccf40cc4db",
+      "size": 15519
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_XS.layout.json",
+      "blobId": "81219ec7a57cd6d6fb2379250a775646d90ae680",
+      "size": 8947
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_XS.tensor-types.txt",
+      "blobId": "547dd82f6530ff44aa7649bb15f8c3d1bf5faed8",
+      "size": 15572
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_XXS.layout.json",
+      "blobId": "935d5dc69ab3df6762fdbea67d53914b1486d705",
+      "size": 9088
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ2_XXS.tensor-types.txt",
+      "blobId": "0731815affb731c7d8a881ef5cba46bac67748df",
+      "size": 15761
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ3_M.layout.json",
+      "blobId": "5aff14fe9df7a7fc96d6425e19972ee68c402e22",
+      "size": 8919
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ3_M.tensor-types.txt",
+      "blobId": "b4d315b39276371b3072a847478e12cc0ecfdcf4",
+      "size": 15307
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ3_XS.layout.json",
+      "blobId": "cd167606849d3460ba1b05356189a006b61745ae",
+      "size": 8918
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ3_XS.tensor-types.txt",
+      "blobId": "4616471c91f2f24f53ed6de0b2b9ae612139150c",
+      "size": 15348
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ3_XXS.layout.json",
+      "blobId": "8b5defd1223c3327a3ffdd72f08f01db5fd19bc3",
+      "size": 8987
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ3_XXS.tensor-types.txt",
+      "blobId": "ce61ac45e573cc8c234a8e18af2d17452868c580",
+      "size": 15564
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ4_NL.layout.json",
+      "blobId": "76a68b5e45d9ca564fb7a915e9fdb1550c44372b",
+      "size": 8873
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ4_NL.tensor-types.txt",
+      "blobId": "480577f1d0fc1383b41f2ad2a83f58f79bd99dc9",
+      "size": 15426
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ4_XS.layout.json",
+      "blobId": "498a951e4a05c40732d3010fd7cf81f7755dce5b",
+      "size": 8856
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-IQ4_XS.tensor-types.txt",
+      "blobId": "041f0b39ec8a79aaf214b8ac3b998067eeed8df2",
+      "size": 15466
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q2_K.layout.json",
+      "blobId": "768ac8d11dbe9121e2a8d075e66951c985c24e70",
+      "size": 8907
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q2_K.tensor-types.txt",
+      "blobId": "5b96684c30aa15665a85e73f1bdb67b085e2aad9",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q3_K_L.layout.json",
+      "blobId": "53cc2f2b9e0d16bda0a2b6555d3c3873ca6c70f2",
+      "size": 8915
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q3_K_L.tensor-types.txt",
+      "blobId": "0114690e4a8777eaf4feaaa8ac6987dd2729931c",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q3_K_M.layout.json",
+      "blobId": "e674948b5d79fd1e3520c98744e912f397a9eb89",
+      "size": 8897
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q3_K_M.tensor-types.txt",
+      "blobId": "0a791a1fc5dfacd1d017778a8d202792f7a971a7",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q3_K_S.layout.json",
+      "blobId": "9737ed9162e065ea668faac6038aeeb90210232a",
+      "size": 8895
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q3_K_S.tensor-types.txt",
+      "blobId": "89a1e9df73d8a098d37f8f72deca2427b4697b23",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q4_K_L.layout.json",
+      "blobId": "2ea273104c0284f59dca6b82635735842689c883",
+      "size": 8866
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q4_K_L.tensor-types.txt",
+      "blobId": "dc4051c8714bd57524975fb2405601bcd828bb76",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q4_K_M.layout.json",
+      "blobId": "5da648c7e189ea752ec2074e6a8edd746373817f",
+      "size": 8865
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q4_K_M.tensor-types.txt",
+      "blobId": "05a6c8431081eb08f51220a08e6a5f593579a423",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q4_K_S.layout.json",
+      "blobId": "5bea6b0d72e1589775e9557941c523cb2a852a12",
+      "size": 8794
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q4_K_S.tensor-types.txt",
+      "blobId": "0548a29b7ebfd0b4b8196479ebe7f89cb57ef14d",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q5_K_M.layout.json",
+      "blobId": "6466310d34a6377d6db44a9c272082f790f647ac",
+      "size": 8829
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q5_K_M.tensor-types.txt",
+      "blobId": "6fda03984a80f9f54fa36287cc01e1b732cb105d",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q5_K_S.layout.json",
+      "blobId": "e29e16db94552f13a287ec17ffaf29ce14c17c80",
+      "size": 8813
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q5_K_S.tensor-types.txt",
+      "blobId": "b3840626e1f8e71716249a88998ed249be6c210a",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q6_K.layout.json",
+      "blobId": "6062aa5ea00260130279880efb80e54e53793903",
+      "size": 8808
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q6_K.tensor-types.txt",
+      "blobId": "4450c2d38d1ab9cce45e2b4f816d2bb640b0c2b3",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q6_K_L.layout.json",
+      "blobId": "274a08d915681d3e74638e2875025a6fc2f862de",
+      "size": 8812
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q6_K_L.tensor-types.txt",
+      "blobId": "200da02ea866841920a4e87252ae2bdd440fa502",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q6_K_S.layout.json",
+      "blobId": "b4bd168963557d45cf1bc4c82b5bf88a5e0986d1",
+      "size": 8811
+    },
+    {
+      "rfilename": "layouts/Hcompany_Holo4-35B-A3B-Q6_K_S.tensor-types.txt",
+      "blobId": "43e70620c9c0960edc6b3195b800ab7a500f48de",
+      "size": 15230
+    },
+    {
+      "rfilename": "mmproj-Hcompany_Holo4-35B-A3B-bf16.gguf",
+      "blobId": "bfef3cbb3d53440df6b0725c8382770192bc0306",
+      "size": 902822432,
+      "lfs": {
+        "sha256": "db3dfb10438bdf10900bfa9878f064a01a8d6e7cdb37a53cd3b6e8a0a65fd1c3",
+        "size": 902822432,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-Hcompany_Holo4-35B-A3B-f16.gguf",
+      "blobId": "544211690bb64689e9fe607a2a574f621c66d5ae",
+      "size": 899283488,
+      "lfs": {
+        "sha256": "9fe08693f0ae3c02b3ef76a2762475366c98dcdced879ff90e8258734b5bf6d1",
+        "size": 899283488,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-29T23:30:12.000Z",
+  "usedStorage": 568219003712
+}

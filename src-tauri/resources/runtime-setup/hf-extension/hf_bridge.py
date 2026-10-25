@@ -5,6 +5,7 @@ import copy
 import ctypes
 from ctypes import wintypes
 import hmac
+import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -24,10 +25,12 @@ from urllib.request import Request, urlopen
 if str(Path(__file__).resolve().parent) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hf_catalog import build_plan, parse_repository
+from hf_lineage import source_identity
 from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry
 from hf_security import TokenStore
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
+CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
 TAURI_ORIGINS = {"http://tauri.localhost", "https://tauri.localhost", "tauri://localhost"}
 ID = re.compile(r"hf-[0-9a-f]{24}\Z")
 ACTIVE = {"running", "pausing"}
@@ -69,6 +72,8 @@ class BridgeState:
         self.client = client or HubClient(self.tokens.get)
         self.downloader = Downloader(self.root, self.client)
         self.entries, self.plans, self.receipt_cache = {}, {}, {}
+        self.catalog_epoch, self.catalog_snapshot = 0, None
+        self.catalog_snapshot_at, self.catalog_fingerprint, self.catalog_revision = 0, None, None
         self.progress, self.worker = None, None
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
@@ -110,12 +115,13 @@ class BridgeState:
         if len(json.dumps(value, ensure_ascii=True, indent=2).encode('utf-8')) > MAX_CATALOG_BYTES:
             raise ValueError('Managed model metadata exceeds the catalog size limit')
         atomic_json(self.catalog_path, value)
+        self.catalog_epoch += 1
 
     def _seed_publisher_catalog(self):
         source = self.resources / 'runtime-setup/hf-extension/publisher-models.json'
         if not source.is_file():
             return
-        seed = _read_json(source)
+        seed = _read_json(source, MAX_CATALOG_BYTES)
         if seed.get('schema') != 1 or not isinstance(seed.get('entries'), list):
             raise ValueError('The bundled publisher catalog is invalid')
         changed = False
@@ -184,17 +190,48 @@ class BridgeState:
         with self.lock:
             return [self._hydrate(x) for x in self.entries.values()]
 
-    def status(self):
+    def status(self, catalog_revision=None):
         with self.lock:
-            return {"schema": 1, "healthy": True, "catalog": self.catalog(), "progress": copy.deepcopy(self.progress),
-                    "tokenConfigured": self.tokens.status()["configured"], "runtimeAdapterAvailable": not isinstance(self.runtime, RuntimeUnavailable)}
+            job = self.progress or {}
+            fingerprint = (self.catalog_epoch, job.get('jobId'), job.get('status'))
+            now = time.monotonic()
+            if (catalog_revision is None or self.catalog_snapshot is None or fingerprint != self.catalog_fingerprint
+                    or now - self.catalog_snapshot_at >= 30):
+                self.catalog_snapshot = self.catalog()
+                self.catalog_revision = hashlib.sha256(json.dumps(self.catalog_snapshot, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+                self.catalog_fingerprint, self.catalog_snapshot_at = fingerprint, now
+            result = {"schema": 1, "healthy": True, "catalogRevision": self.catalog_revision, "progress": copy.deepcopy(self.progress),
+                      "tokenConfigured": self.tokens.status()["configured"], "runtimeAdapterAvailable": not isinstance(self.runtime, RuntimeUnavailable)}
+            if catalog_revision != self.catalog_revision:
+                result['catalog'] = copy.deepcopy(self.catalog_snapshot)
+            return result
 
-    def plan(self, repository, include_community=False):
-        if include_community:
-            from hf_discovery import discover
-            plan = discover(self.client, repository)
-        else:
-            plan = build_plan(self.client.metadata(parse_repository(repository)))
+    def plan(self, repository):
+        metadata = self.client.metadata(parse_repository(repository))
+        plan = build_plan(metadata)
+        canonical, identities = source_identity(metadata)
+        with self.lock:
+            family = next((entry for entry in self.entries.values() if entry.get('familyId') and (
+                str(entry.get('originalRepository', '')).lower() == canonical
+                or entry['repository'].lower() in identities)), None)
+            family = copy.deepcopy(family) if family else None
+        for entry in plan['variants']:
+            entry.update(originalRepository=canonical, familyId=family['familyId'] if family else
+                         'checkpoint-' + hashlib.sha256(canonical.encode()).hexdigest()[:24],
+                         familyLabel=family['familyLabel'] if family else metadata['id'].split('/')[-1])
+            if family:
+                entry['nativeModelIds'] = family.get('nativeModelIds', [])
+                for field in ('builtIn', 'builtInDescription', 'libraryCategory'):
+                    if field in family:
+                        entry[field] = family[field]
+                if family.get('managedEngine'):
+                    entry['managedEngine'] = family['managedEngine']
+                if not entry.get('modelType') and family.get('modelType'):
+                    entry['modelType'] = family['modelType']
+            elif entry['format'] == 'gguf':
+                entry['managedEngine'] = 'flint-cpu-v1'
+        plan['originalRepository'] = canonical
+        plan['planId'] = hashlib.sha256(json.dumps(plan['variants'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         with self.lock:
             now = time.monotonic()
             self.plans = {key: item for key, item in self.plans.items() if now - item[0] < 900}
@@ -437,7 +474,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self.send_header("Vary", "Origin")
         if self.command == "OPTIONS":
             self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-OpenCore-Hub-Secret, Authorization")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-OpenCore-Hub-Secret, X-OpenCore-Catalog-Revision, Authorization")
             self.send_header("Access-Control-Max-Age", "600")
         self.end_headers()
         if payload:
@@ -453,7 +490,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return False
         if preflight:
             requested = {h.strip().lower() for h in self.headers.get("Access-Control-Request-Headers", "").split(",") if h.strip()}
-            if not origin or self.headers.get("Access-Control-Request-Method") not in {"GET", "POST", "PUT", "DELETE"} or not requested <= {"content-type", AUTH_HEADER.lower(), "authorization"}:
+            if not origin or self.headers.get("Access-Control-Request-Method") not in {"GET", "POST", "PUT", "DELETE"} or not requested <= {"content-type", AUTH_HEADER.lower(), CATALOG_HEADER.lower(), "authorization"}:
                 self._send(403, {"error": "Invalid desktop preflight"})
                 return False
             return True
@@ -506,8 +543,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
         route = path[4:] if path.startswith("/api/") else path
         state = self.server.state
         if self.command == "GET":
-            if route in ("/status", "/health"):
-                self._send(200, {**state.status(), "instanceId": self.server.instance_id})
+            if route == '/health':
+                self._send(200, {'schema': 1, 'healthy': not state.closed, 'instanceId': self.server.instance_id})
+            elif route == '/status':
+                revision = self.headers.get(CATALOG_HEADER)
+                if revision is not None and not re.fullmatch('[a-f0-9]{64}', revision):
+                    raise ValueError('Invalid catalog revision')
+                self._send(200, {**state.status(revision), "instanceId": self.server.instance_id})
             elif route == "/catalog":
                 self._send(200, {"catalog": state.catalog()})
             elif route == "/token":
@@ -528,7 +570,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif self.command != "POST":
             self._send(405, {"error": "Method not allowed"})
         elif route == "/plan":
-            self._send(200, state.plan(body.get("repository"), body.get('includeCommunity') is True))
+            self._send(200, state.plan(body.get("repository")))
         elif route == "/catalog/add":
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":

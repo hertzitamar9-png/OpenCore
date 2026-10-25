@@ -1,0 +1,123 @@
+{
+  "_id": "6ac2611dc9e7a116817b9613",
+  "id": "hnao23/MiniMax-H3_GGUFs",
+  "private": false,
+  "tags": [
+    "gguf",
+    "minimax",
+    "comfyui",
+    "base_model:Comfy-Org/MiniMax-H3",
+    "base_model:quantized:Comfy-Org/MiniMax-H3",
+    "license:unknown",
+    "region:us"
+  ],
+  "downloads": 303,
+  "likes": 0,
+  "modelId": "hnao23/MiniMax-H3_GGUFs",
+  "author": "hnao23",
+  "sha": "af9240c59c27ef10715a072d3ead18e47023ed36",
+  "lastModified": "2026-10-04T14:22:22.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "unknown",
+    "tags": [
+      "minimax",
+      "gguf",
+      "comfyui"
+    ],
+    "base_model": "Comfy-Org/MiniMax-H3"
+  },
+  "gguf": {
+    "total": 33122992912,
+    "architecture": "wan",
+    "totalFileSize": 15577923360
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f3390c67ffd2b00e6cbf344b30fae1f979a0a153",
+      "size": 2429
+    },
+    {
+      "rfilename": "FL2V_(WORKFLOW).json",
+      "blobId": "7e9a78976c268d7d7e90b79da322c705c2e5b166",
+      "size": 61654
+    },
+    {
+      "rfilename": "MiniMax-H3-FL2VA-Q3_K_M.gguf",
+      "blobId": "707c422541c0f67369bc152ff5ad13ba5baea5e4",
+      "size": 15577923360,
+      "lfs": {
+        "sha256": "d809c9e38999eb65dd425a32e034726d5c5c54dacf5d10791e46c49bf8d61be8",
+        "size": 15577923360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniMax-H3-FL2VA-Q4_K_M.gguf",
+      "blobId": "0fca530c537039426ba91b4c7769ad04c3297f22",
+      "size": 19864208160,
+      "lfs": {
+        "sha256": "5e8fa6e960d5fbd547390ceec63fcead275435d8f3bd2466a8a2cbd8c2e361e3",
+        "size": 19864208160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniMax-H3-REF2VA-Q3_K_M.gguf",
+      "blobId": "8ad0e51b9270beea9d9c1a1cac64e00f0cee0264",
+      "size": 15577923264,
+      "lfs": {
+        "sha256": "ada8452ece22ef84497f7f6f7ad07708c4754066127a6ad2c10fab8ae9eee596",
+        "size": 15577923264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniMax-H3-REF2VA-Q4_K_M.gguf",
+      "blobId": "90383600c12a02adb6181175ff7495c5b8436c01",
+      "size": 19864208064,
+      "lfs": {
+        "sha256": "17925612821ea3037ffaf5f7f9789f5460e87025385bd45e9ec6c7d536684d56",
+        "size": 19864208064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9e9c795b901ed19d93b8a883d6d0a594f1109024",
+      "size": 2357
+    },
+    {
+      "rfilename": "REF2V_(WORKFLOW).json",
+      "blobId": "8d6dcf8e1d5d4614796005975ea8aced9ec64b98",
+      "size": 46150
+    },
+    {
+      "rfilename": "qwen3vl-32B-MiniMax-H3-Q2_K.gguf",
+      "blobId": "bbe7b77a0e125ffaf42834869f42740a42fda985",
+      "size": 8487968160,
+      "lfs": {
+        "sha256": "5bbc11d0b3ef197c98df2ce8f05de8fbb8eb5917cd91c33d0b59f93759b34914",
+        "size": 8487968160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf",
+      "blobId": "59415e3bfaaf60fad753260489918bf1e0d85acc",
+      "size": 14576977888,
+      "lfs": {
+        "sha256": "1bf75e038c5895b97b6ea16cc1e3d32076254b06ec3df10657650d86dc82279e",
+        "size": 14576977888,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-04T14:22:21.000Z",
+  "usedStorage": 93949208896
+}

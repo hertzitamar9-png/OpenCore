@@ -1,0 +1,374 @@
+{
+  "_id": "6acb48c00fdd3575a604c164",
+  "id": "bartowski/AesCode-32B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "code-generation",
+    "html",
+    "multimodal",
+    "reinforcement-learning",
+    "design",
+    "image-text-to-text",
+    "en",
+    "base_model:microsoft/AesCode-32B",
+    "base_model:quantized:microsoft/AesCode-32B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 6531,
+  "likes": 10,
+  "modelId": "bartowski/AesCode-32B-GGUF",
+  "author": "bartowski",
+  "sha": "d226037abd7b070100e31a490ed23b300bcdbee9",
+  "lastModified": "2026-10-11T09:36:18.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "base_model_relation": "quantized",
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "code-generation",
+      "html",
+      "multimodal",
+      "reinforcement-learning",
+      "design"
+    ],
+    "base_model": "microsoft/AesCode-32B"
+  },
+  "gguf": {
+    "total": 32762123264,
+    "architecture": "qwen3vl",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/AesCode-32B-GGUF/AesCode-32B-imatrix.gguf",
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' }}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- for message in messages %}\n    {%- if message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content in message.content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                    {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                    <|vision_start|><|image_pad|><|vision_end|>\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                    {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                    <|vision_start|><|video_pad|><|vision_end|>\n                {%- elif 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content_item in message.content %}\n                {%- if 'text' in content_item %}\n                    {{- content_item.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and message.content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content in message.content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                    {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                    <|vision_start|><|image_pad|><|vision_end|>\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                    {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                    <|vision_start|><|video_pad|><|vision_end|>\n                {%- elif 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 12710938432
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0b7a83fee88f078967013940db6448ee49e0757b",
+      "size": 3258
+    },
+    {
+      "rfilename": "AesCode-32B-IQ2_M.gguf",
+      "blobId": "ff7f688aebea7372398303f62e3fde607a505922",
+      "size": 12710938432,
+      "lfs": {
+        "sha256": "8000891c7057698c187ea2ee7797b79a5098ee47ac0729b1da493b9903d844f7",
+        "size": 12710938432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ2_S.gguf",
+      "blobId": "4b7f8a8e3bc53e15037aa49e17e20f3e3daf9167",
+      "size": 12022810432,
+      "lfs": {
+        "sha256": "00423f254e354db5366e1586e2232f56dd677ea79fd2681cfd8afc2ded890709",
+        "size": 12022810432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ2_XS.gguf",
+      "blobId": "0ebc1a588124e06d91735b1179f30f50387d14d9",
+      "size": 11406572352,
+      "lfs": {
+        "sha256": "a8a0db0a981962b592ed15c53f8cadd0a50580d14f4fbc288f2b5e2d79de7afd",
+        "size": 11406572352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ2_XXS.gguf",
+      "blobId": "f5e3edddb5933277315e277c0b0ccc65edc51c30",
+      "size": 10634558272,
+      "lfs": {
+        "sha256": "18b759a08b799a28e06cebbd964deaed8ebb7f48a486aa0abef3a47c4ce8df3d",
+        "size": 10634558272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ3_M.gguf",
+      "blobId": "15995e86484c359daa40a6e8cef6dd2bc72f77e4",
+      "size": 15496315712,
+      "lfs": {
+        "sha256": "dd9b5e2fd920dfa2c6392cee0ad3b92dcbbbb7ff4fe6141a138794310e205421",
+        "size": 15496315712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ3_XS.gguf",
+      "blobId": "ec17cb4946f6b0bcb713f037df18a8565b6a18fb",
+      "size": 14368768832,
+      "lfs": {
+        "sha256": "e8ddc465a26cf3ef4558d658c5f20845b7567bf388769bfe96ff22b3a990a70c",
+        "size": 14368768832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ3_XXS.gguf",
+      "blobId": "a4524da6177ab04051e00721db08c4c7181e8843",
+      "size": 13596985152,
+      "lfs": {
+        "sha256": "e0eaa1ec46fb1ef4961112b98701bd55e10f00b2247de89a7f553ef363b36a9a",
+        "size": 13596985152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ4_NL.gguf",
+      "blobId": "b0ee643c997f7d0490324003a515a55617c8b973",
+      "size": 19070091072,
+      "lfs": {
+        "sha256": "df00992ba73d432d3fa264a73d7061c6297a6e7068bcade1d4791a6468fd44ab",
+        "size": 19070091072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-IQ4_XS.gguf",
+      "blobId": "fa6014e9815da381fef9a5a303403b522f93f928",
+      "size": 18123034432,
+      "lfs": {
+        "sha256": "4542bd4493dff6d79d01d05de02205cb1cdc96dc160a2c61cf268d6c1963ea86",
+        "size": 18123034432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q2_K.gguf",
+      "blobId": "eeab6e7b87f2e7c99b829808d2bff6648833d2d9",
+      "size": 13005256512,
+      "lfs": {
+        "sha256": "4b601376279c410209cd1f80a97f1d3fd4234ea8757073e3ee126711f79ad143",
+        "size": 13005256512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q3_K_L.gguf",
+      "blobId": "1a6373ac0e1f453ef9c4cb00adcf95c2c2de8917",
+      "size": 17519739712,
+      "lfs": {
+        "sha256": "930dae171bcd3ca946ef20e27a14ecb949f8f3f4d61632fcd687ec3caf505d9c",
+        "size": 17519739712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q3_K_M.gguf",
+      "blobId": "1d52ec8b32b0757355830266775db5a6d8b8239a",
+      "size": 16515728192,
+      "lfs": {
+        "sha256": "530c15f9b30e0885d0289afcb75ef2f15bee65e502da14ae50948250f3a9f611",
+        "size": 16515728192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q3_K_S.gguf",
+      "blobId": "b126c334d05ce26b702107b9d96ba6050a4e05a6",
+      "size": 14914028352,
+      "lfs": {
+        "sha256": "d38d61c94f6b94eec86c08468a9d2c08fd0e8b9837b5afe8d78ce2d3d156e19b",
+        "size": 14914028352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q4_0.gguf",
+      "blobId": "20f575555975a36d8ab1e6f49a66d5063f648087",
+      "size": 19049119552,
+      "lfs": {
+        "sha256": "a0daf28e4c97d8d9c1ed08945c7004d71fb6f9c8a1cffd6fd31465569cd93705",
+        "size": 19049119552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q4_1.gguf",
+      "blobId": "8ed2e8ed5d00f4669d7b53057e4b14c16c6aee02",
+      "size": 20898668352,
+      "lfs": {
+        "sha256": "30624533ab433ff323f077b930d166bb91fbe7d74737aecda44d0473bc920da0",
+        "size": 20898668352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q4_K_L.gguf",
+      "blobId": "09bfa2ace1319cd989a0f3ad476dbc9b8c1fab82",
+      "size": 21063025472,
+      "lfs": {
+        "sha256": "4bd682ad028d5d1f1700afc77b254e51818ec8f446e1dd089b68c79cc73f2482",
+        "size": 21063025472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q4_K_M.gguf",
+      "blobId": "cf537cae990705432a5abf167972cffb878ddcbd",
+      "size": 20485668672,
+      "lfs": {
+        "sha256": "e5c65039f807f08bac657744f9344985b7487234adf0a49c69afdea343e24363",
+        "size": 20485668672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q4_K_S.gguf",
+      "blobId": "26e90e4cc75beb3e59525f422032e7ff2ae3bbc8",
+      "size": 19135627072,
+      "lfs": {
+        "sha256": "1e7e7cee9f972d960245328e85ff754cc4c1c54747e124e9fab6f45a722e2dfd",
+        "size": 19135627072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q5_K_M.gguf",
+      "blobId": "847177662abfeca587fef3f061db49e632bc7295",
+      "size": 23794171712,
+      "lfs": {
+        "sha256": "e99d46143dda4ed08b13d7e2e8fb8e9838b23259fdfb169c8d47c5f3d0b2c0c9",
+        "size": 23794171712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q5_K_S.gguf",
+      "blobId": "d9251bdb29a28357110616c15ff08ea1671931e2",
+      "size": 22813753152,
+      "lfs": {
+        "sha256": "5c53065bcf856c464921afd8c44a3eb7ba1efb0b8ac6531cbe60027da2ad02b7",
+        "size": 22813753152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q6_K.gguf",
+      "blobId": "a1a5c483c2df1b7b4f6e70492b2d45f0b2e1baa1",
+      "size": 27980380992,
+      "lfs": {
+        "sha256": "bb9e06b15c0b9d1951669e3abb1827c79eb5e8a7785f1d67c0148e10a4795897",
+        "size": 27980380992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q6_K_L.gguf",
+      "blobId": "37830a37220fe10f909f5c32cbe1ad07c0f15bbc",
+      "size": 28357182272,
+      "lfs": {
+        "sha256": "8bc5d3a642caa3c5da6134eefe07ac0c7d377c02770f57b6d4d9719c7962eeca",
+        "size": 28357182272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-Q8_0.gguf",
+      "blobId": "21278018bc6e60c179a3efbe5754b3517c5f97b9",
+      "size": 34817721152,
+      "lfs": {
+        "sha256": "e48c3d53507944f348fccb2d8a315dbee9bfac7fb755be4fa7d21142a3a31ed8",
+        "size": 34817721152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-bf16/AesCode-32B-bf16-00001-of-00002.gguf",
+      "blobId": "5cc6a217e37d6c869eb9bbc547aae01f5b233750",
+      "size": 39920273888,
+      "lfs": {
+        "sha256": "ad343f96e6d101c6cce1ca4dce72c888767b322691894053c585afb69c43f9b8",
+        "size": 39920273888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-bf16/AesCode-32B-bf16-00002-of-00002.gguf",
+      "blobId": "230ea72e7cd6d876af897fbb5c80b85fb664d311",
+      "size": 25611303168,
+      "lfs": {
+        "sha256": "f9dc83f5b41233cbc46c5f3b65232bfa7f6464a36a505666a6b380e51d502ab9",
+        "size": 25611303168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-32B-calibration-v6.txt",
+      "blobId": "3c594a5aa4021f2a3e44be154147875150af0d81",
+      "size": 1017465
+    },
+    {
+      "rfilename": "AesCode-32B-imatrix.gguf",
+      "blobId": "821e9fcf2b482ac7fc396a26bf00691780a179c5",
+      "size": 30559936,
+      "lfs": {
+        "sha256": "4e5d85380cd51d3225de499186bc7dfa10e4bc9fc421a9237701b28294088580",
+        "size": 30559936,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2a160ab471fab1f55e594555cb95cfcac47c7148",
+      "size": 14481
+    },
+    {
+      "rfilename": "mmproj-AesCode-32B-bf16.gguf",
+      "blobId": "cba3fd1c208abc5d45b9f08c60451d322a3f5cd4",
+      "size": 1200334496,
+      "lfs": {
+        "sha256": "638b347495576592569662725d9cabc96cbb48449543c67310a598b64e568270",
+        "size": 1200334496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-AesCode-32B-f16.gguf",
+      "blobId": "8a2e3d2ab1283d35f1fdb4ff6952168ba9475188",
+      "size": 1196795552,
+      "lfs": {
+        "sha256": "974b47ad6f2fb00da1984e599acb0657a09c0277fe63f2de2a5d27751c0b93cd",
+        "size": 1196795552,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-11T08:28:48.000Z",
+  "usedStorage": 495739412896
+}

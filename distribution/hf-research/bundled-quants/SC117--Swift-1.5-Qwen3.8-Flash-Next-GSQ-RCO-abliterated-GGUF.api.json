@@ -1,0 +1,277 @@
+{
+  "_id": "6ac10af18b7b3938f1ad2497",
+  "id": "SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama-cpp",
+    "abliterated",
+    "uncensored",
+    "quantization",
+    "tensor-transplant",
+    "gsq",
+    "rco",
+    "moe",
+    "mixture-of-experts",
+    "qwen3.8",
+    "flash-next",
+    "long-context",
+    "reasoning",
+    "reasoning-efficient",
+    "token-efficient",
+    "red-teaming",
+    "image-text-to-text",
+    "en",
+    "zh",
+    "base_model:ukisai/Swift1.5-Qwen3.8-Flash-Next",
+    "base_model:quantized:ukisai/Swift1.5-Qwen3.8-Flash-Next",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 276417,
+  "likes": 112,
+  "modelId": "SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF",
+  "author": "SC117",
+  "sha": "3db919a964b1f0ae0d1000ba7be90b3e38b1f7a3",
+  "lastModified": "2026-10-24T10:10:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "ukisai/Swift-Qwen3.8-Flash-Next",
+    "base_model_relation": "quantized",
+    "license": "other",
+    "license_name": "swift-open-license-1.0",
+    "license_link": "https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF/blob/main/LICENSE",
+    "library_name": "gguf",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "gguf",
+      "llama-cpp",
+      "abliterated",
+      "uncensored",
+      "quantization",
+      "tensor-transplant",
+      "gsq",
+      "rco",
+      "moe",
+      "mixture-of-experts",
+      "qwen3.8",
+      "flash-next",
+      "long-context",
+      "reasoning",
+      "reasoning-efficient",
+      "token-efficient",
+      "red-teaming"
+    ]
+  },
+  "gguf": {
+    "total": 176943899520,
+    "architecture": "qwen4exp",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/data/gguf_fn/v1mix/imatrix-swiftfn-v1mix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 83549259040
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7f96d2c15508021c31626bf8e5926a365474f0d8",
+      "size": 2679
+    },
+    {
+      "rfilename": "IQ2_XS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ2_XS-00001-of-00002.gguf",
+      "blobId": "f1fa13e6f43782bde5627bb4ef4c16fc37ff1ebe",
+      "size": 39791412224,
+      "lfs": {
+        "sha256": "ea68dd601c4911415b4461f53accecd99d6d38aa06cb0b6722e8f7fb6556d9da",
+        "size": 39791412224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ2_XS-00002-of-00002.gguf",
+      "blobId": "b77cb03a4f95922142cbf8e418fc2df3ff78f34b",
+      "size": 28359413504,
+      "lfs": {
+        "sha256": "bdec0a9242f2a266ff517280ea6a5934e4a246f0ed8eb7a462c07434ffea161b",
+        "size": 28359413504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XXS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_XXS-00001-of-00002.gguf",
+      "blobId": "16c17d22affa616f8abee0988b86734fab9950b3",
+      "size": 39771812960,
+      "lfs": {
+        "sha256": "83f75959e296a6380c98d5b6e906a0cde175077ffac2419fd56e7e15969d55dd",
+        "size": 39771812960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XXS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_XXS-00002-of-00002.gguf",
+      "blobId": "669846341ac582955ad3f634f8582a69754e3131",
+      "size": 36056143040,
+      "lfs": {
+        "sha256": "aa59f45eaa3c02069016903862a5f8d73adfdb7ca97f9cab25f7494e9ac4b1a3",
+        "size": 36056143040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_0/Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-Q2_0-00001-of-00002.gguf",
+      "blobId": "792ee5eb0bbf18b6ecaddad99e2aaa11e4b56550",
+      "size": 39797110944,
+      "lfs": {
+        "sha256": "745a93a8b3e86e5553899259b7ad7e6d0cf889b69e6a334f4a70965a1a828113",
+        "size": 39797110944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_0/Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-Q2_0-00002-of-00002.gguf",
+      "blobId": "65a71e5711d264a042876c59225eff6f5498e5d3",
+      "size": 26710079616,
+      "lfs": {
+        "sha256": "5b91b79a4bbee162761c16b9a47a3434c3f8be0ad6bf34849318d9efcb4b6aa1",
+        "size": 26710079616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "cf3395587db4a7b5066ca435ad0a36932d536b76",
+      "size": 50931
+    },
+    {
+      "rfilename": "README.zh-CN.md",
+      "blobId": "1faacae680371fe869d6eea61d4f583070d7bdb8",
+      "size": 49869
+    },
+    {
+      "rfilename": "Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00001-of-00002.gguf",
+      "blobId": "a11f6bb72b06cad22dea0319a42ad9c683e909bd",
+      "size": 44849330016,
+      "lfs": {
+        "sha256": "638fbd42a01c7b39a9b7b21c5c8dc5eb1876222d8bd268d471304b647fcd6f94",
+        "size": 44849330016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00002-of-00002.gguf",
+      "blobId": "c5d20a69abde6464f6ab073995997e3af976ce04",
+      "size": 38699929024,
+      "lfs": {
+        "sha256": "091a4f6a53697a12a2ea1e5e1d61414410d50c0d44e971304602bba6873fd23d",
+        "size": 38699929024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+      "blobId": "b072531a44656cf614efa0c861329244825e500c",
+      "size": 907542944,
+      "lfs": {
+        "sha256": "2e788f8c511d8093c7b43cb87b2fd7e14228340318057f8fb20c86df2efe2355",
+        "size": 907542944,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mtp-Qwen3.8-Flash-Next-Q4_0.gguf",
+      "blobId": "5ecc6ad565868eaaf6253198a180c38478457844",
+      "size": 2199652672,
+      "lfs": {
+        "sha256": "70da35359338d15ef5af31f0e0e08998f2a2b3350678be1bbb1a57a376e350c3",
+        "size": 2199652672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp-Qwen3.8-Flash-Next-Q8_0.gguf",
+      "blobId": "1b756804404814ad7a7b61ad58adf3c679254072",
+      "size": 4137429312,
+      "lfs": {
+        "sha256": "713b16d7e97246858ebd9a6dec403b1cfc3407d8a539f65401948e20b38b0f91",
+        "size": 4137429312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp-q2_0.gguf",
+      "blobId": "6663dc97aa164aa7782ee3c78bda93ccac315d09",
+      "size": 889017216,
+      "lfs": {
+        "sha256": "a22206a4d74eafbf31063a84610292535fb3b49af9a339963817fd04aed81e4d",
+        "size": 889017216,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "strata/rt/dense.bin",
+      "blobId": "952dda56c20bfed823682d8dc1a6d3553b5a35b3",
+      "size": 116099072,
+      "lfs": {
+        "sha256": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a",
+        "size": 116099072,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "strata/rt/dense.txt",
+      "blobId": "0a6b354ada9f26d07c4d51684089bdc2fda06a1b",
+      "size": 1880
+    },
+    {
+      "rfilename": "strata/rt/draft_vocab.bin",
+      "blobId": "31f761b32b7fa903266ddf878caea6afd36506d9",
+      "size": 425196,
+      "lfs": {
+        "sha256": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91",
+        "size": 425196,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "strata/rt/experts.bin",
+      "blobId": "7804acaa65ac699ebd4199a136f865ffd4d7e9d6",
+      "size": 707788800,
+      "lfs": {
+        "sha256": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f",
+        "size": 707788800,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-03T14:02:25.000Z",
+  "usedStorage": 307130656652
+}

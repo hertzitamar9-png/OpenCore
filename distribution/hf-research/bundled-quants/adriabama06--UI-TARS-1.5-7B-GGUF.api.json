@@ -1,0 +1,137 @@
+{
+  "_id": "68560b6c2212bd5c725d5628",
+  "id": "adriabama06/UI-TARS-1.5-7B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "multimodal",
+    "gui",
+    "llama-cpp",
+    "image-text-to-text",
+    "en",
+    "base_model:ByteDance-Seed/UI-TARS-1.5-7B",
+    "base_model:quantized:ByteDance-Seed/UI-TARS-1.5-7B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 213,
+  "likes": 5,
+  "modelId": "adriabama06/UI-TARS-1.5-7B-GGUF",
+  "author": "adriabama06",
+  "sha": "96f33d38cf1bb053be29189573e72a71617337ef",
+  "lastModified": "2025-06-21T01:47:33.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "multimodal",
+      "gui",
+      "llama-cpp"
+    ],
+    "library_name": "transformers",
+    "base_model": "ByteDance-Seed/UI-TARS-1.5-7B"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15237853056
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "bab2a369505203ba5ab71d36484ae4dfc1fd3bf2",
+      "size": 1902
+    },
+    {
+      "rfilename": "ByteDance-Seed_UI-TARS-1.5-7B-F16.gguf",
+      "blobId": "6b508465897510b76d741f5494500a924f6fafb1",
+      "size": 15237853056,
+      "lfs": {
+        "sha256": "d1f664a956851b454934db1c53d38b9e58425edf51042c6cc5ae36604774e90a",
+        "size": 15237853056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "ByteDance-Seed_UI-TARS-1.5-7B-Q4_K_M.gguf",
+      "blobId": "e65aab15a8f767b454ebdb112771c4b1b2abf71f",
+      "size": 4683073408,
+      "lfs": {
+        "sha256": "5bd301f8ab111772e8b938c7c9bc13bc62a36489680694825e2b4c6f896ec77e",
+        "size": 4683073408,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ByteDance-Seed_UI-TARS-1.5-7B-Q6_K.gguf",
+      "blobId": "4d60424af17db89ec972ed6c4b6b832d87b42c74",
+      "size": 6254198656,
+      "lfs": {
+        "sha256": "0464a85f3872ff25ec3afb6eae46d65dcaab8a01390c4c80875e9b269b2e54af",
+        "size": 6254198656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ByteDance-Seed_UI-TARS-1.5-7B-Q8_0.gguf",
+      "blobId": "50a8cdd8ef46ae7da3576eabf508de41f2d368c1",
+      "size": 8098525056,
+      "lfs": {
+        "sha256": "5dcf1a70850e5370552017659ffba1d32d596697d994ff540352a0fefbfe8010",
+        "size": 8098525056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b315cb8c28b0945f254b8a612cd8b5cfd00de6ff",
+      "size": 982
+    },
+    {
+      "rfilename": "mmproj-ByteDance-Seed_UI-TARS-1.5-7B.gguf",
+      "blobId": "bd2e821ad334926b032ad9a27e82acb4aac3ab3b",
+      "size": 1354162912,
+      "lfs": {
+        "sha256": "cc25acefe561ae3fb23f2a07e02c3b5480d34af5516adfded51d14de4952418f",
+        "size": 1354162912,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-06-21T01:31:24.000Z",
+  "usedStorage": 35627813088
+}

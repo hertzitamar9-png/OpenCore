@@ -1,0 +1,393 @@
+{
+  "_id": "6a31ceb8d10081bc032ac8bd",
+  "id": "Comfy-Org/Krea-2",
+  "private": false,
+  "library_name": "diffusion-single-file",
+  "tags": [
+    "diffusion-single-file",
+    "comfyui",
+    "base_model:krea/Krea-2-Raw",
+    "base_model:finetune:krea/Krea-2-Raw",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 3583280,
+  "likes": 747,
+  "modelId": "Comfy-Org/Krea-2",
+  "author": "Comfy-Org",
+  "sha": "1171f4dc7e325bf3734586942e737872506c73e1",
+  "lastModified": "2026-10-16T09:51:48.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "krea-2-community-license",
+    "license_link": "https://huggingface.co/krea/Krea-2-Turbo/blob/main/LICENSE.pdf",
+    "tags": [
+      "comfyui",
+      "diffusion-single-file"
+    ],
+    "base_model": [
+      "krea/Krea-2-Raw",
+      "krea/Krea-2-Turbo"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2448906902fa2b4b2a66c0ab12e3d53720451ec7",
+      "size": 1567
+    },
+    {
+      "rfilename": "LICENSE.pdf",
+      "blobId": "78cb4aa4bb89da0b52b0619663b485a918d7d596",
+      "size": 137711,
+      "lfs": {
+        "sha256": "b82a2805162bde714a4eb27b9063c4fc3345d08a30be055134a6160e5430ba74",
+        "size": 137711,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "972dd258dc63fc54fb0b3f41dfe986d19c6ce32c",
+      "size": 5441
+    },
+    {
+      "rfilename": "diffusion_models/krea2_raw_bf16.safetensors",
+      "blobId": "0c5e7b4c1ffebb9fa1e29ce3bc2bd731474712c2",
+      "size": 26283332608,
+      "lfs": {
+        "sha256": "f99bb0ff8e362b77342bc4994e0c50906fe7ef7074864b181b7d48d2fa6d03d7",
+        "size": 26283332608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_raw_fp8_scaled.safetensors",
+      "blobId": "459a6d70985c925d40e7eb6a96cb52362efa2a41",
+      "size": 13141730784,
+      "lfs": {
+        "sha256": "48cd5d6c100297968349b41a8e77c6591d1dac18a215807f5f25f59e5c54cd61",
+        "size": 13141730784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_raw_int8_convrot.safetensors",
+      "blobId": "d2e8170a6208c9da94b02a851a470f743a7e467a",
+      "size": 13492686496,
+      "lfs": {
+        "sha256": "5585a4a38c4bcfb6fde2d480a4aa6edf7f665721ebde56d30662c35a45f5fa5c",
+        "size": 13492686496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_turbo_bf16.safetensors",
+      "blobId": "446cec6805101a2198770129bccab2182386a3fc",
+      "size": 26283332608,
+      "lfs": {
+        "sha256": "78bbf8f4165eda19cea3cb06c78089221932a39e2eed8af9da741f942c47ffb3",
+        "size": 26283332608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_turbo_fp8_scaled.safetensors",
+      "blobId": "c06aa040dbb0f28d3550bb90273327e7475b18ce",
+      "size": 13141730784,
+      "lfs": {
+        "sha256": "eb4dd8c612cfd10f64f25b057e6e6bbcb5737c94a7372177e456dbf7579502f1",
+        "size": 13141730784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_turbo_int8_convrot.safetensors",
+      "blobId": "21471903cff1b41995db8d35f45286bf07b7180a",
+      "size": 13492686496,
+      "lfs": {
+        "sha256": "8e4eeda70dd5037ab1ba2bef6b417f9f901e26093117cf397f741fc1fdaaf3f1",
+        "size": 13492686496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_turbo_mxfp8.safetensors",
+      "blobId": "78de7753e07ad8c85804d497510a6a9b52106d2e",
+      "size": 13532318080,
+      "lfs": {
+        "sha256": "4c09131a442c3a01e95f934b43c76c1e691b9f683694a7b68d6fc707d5ecfce3",
+        "size": 13532318080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/krea2_turbo_nvfp4.safetensors",
+      "blobId": "8cfbea7cc571bc0db43d0e38e8685132c048915a",
+      "size": 7673668448,
+      "lfs": {
+        "sha256": "61527003b2d537055494d01bc8efe51d6e86e64192ba23e3721a5647231fe394",
+        "size": 7673668448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "loras/krea2_darkbrush.safetensors",
+      "blobId": "fc7be399719b0d839cdc1900e21a87fd03d8d122",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "f47c4316dd93af66e0518c93b582f459571d4925b519133770c73a52cd5db7c6",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_dotmatrix.safetensors",
+      "blobId": "c28ef9d23ac2d0bbd218bd566fb4b8b825112948",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "805aa30d863347222485b9d3ce81642dbc70a73cebc95ab57219d98b878fceec",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_kidsdrawing.safetensors",
+      "blobId": "abd9a3ad6bde1d761e8a30326db4e3487673a9e8",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "8c1d45d204aeb4e34a7d9e16a7d473917592ba0048b03f4e03e037e3578ca500",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_neondrip.safetensors",
+      "blobId": "e7bca90f70ad00cf31cc3917d203a4332663d471",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "a779c14435949eabae9ce0bface4320cad6672ef3547e8489107e3498d65e871",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_rainywindow.safetensors",
+      "blobId": "790dc45980c61dcee8e6c40206ac6f76c23a8202",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "7063a6f15ec6112ad3c06d79097b2a30a3ea7d9072821cb36021010d55989fe5",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_retroanime.safetensors",
+      "blobId": "7bfadc6d26cfacde12d0d600ce2f4e379f126b71",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "ca42107783d9e517c5d62cb9a9db9ab2ba4887d90e9dad97a9d1a7fe6ff14c56",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_softwatercolor.safetensors",
+      "blobId": "97ee72a533d5aec338df8ddbe5b9c1c408415e8f",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "3805e8655f19fbcac116542685e3f78f3a642e8fbfb857b5352bb32a4b3d445a",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_style_reference.safetensors",
+      "blobId": "46b2e4966671aeea3145eb189c43e17d5c53a4fc",
+      "size": 457111760,
+      "lfs": {
+        "sha256": "f50df5a9e62e4be8aa926a63dd5bb1a64770c4004f763c1208007ae13daa82b8",
+        "size": 457111760,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_sunsetblur.safetensors",
+      "blobId": "dd8a1226a86c3011e660a51a5895cb292a42da4d",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "194abdd531ca190d32799f26ab5bab634aa5ba3f07b7a60ffb282657db8bf3a0",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_turbo_lora_rank_64_bf16.safetensors",
+      "blobId": "cdb89fe434cbcb74cd6c0bec2d3ad7df34da24a3",
+      "size": 469423778,
+      "lfs": {
+        "sha256": "db8c5bae0a415d448da9d842111d6e51f7d32e47143a3118eb267e5c4773de87",
+        "size": 469423778,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "loras/krea2_vintagetarot.safetensors",
+      "blobId": "b42461707943adc48d03724672fb52ee5c4ab7f7",
+      "size": 469291992,
+      "lfs": {
+        "sha256": "8cca96c56658fb3ac5269f9ef2245bd07cbf1b7a189f517c8763470bb1385f9f",
+        "size": 469291992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_4b_bf16.safetensors",
+      "blobId": "2cb94c9dd94377f234e9e515c7284e6b2d55a1a3",
+      "size": 8875719384,
+      "lfs": {
+        "sha256": "36f3ff447ef59201722e8f9ce6020c9819fdcfba6aa2608c4e09b1c0ce114e34",
+        "size": 8875719384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_4b_fp8_scaled.safetensors",
+      "blobId": "f6f7126515afb4c576a67348902f86be3a3a584b",
+      "size": 5242467968,
+      "lfs": {
+        "sha256": "54bd5144df0bbc25dd6ccadfcb826b521445a1b06ae5a42570bdd2974ca87094",
+        "size": 5242467968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_4b_int8_convrot.safetensors",
+      "blobId": "f3e18bede7712a8a068eeef83327c2aeaf380580",
+      "size": 4858559240,
+      "lfs": {
+        "sha256": "32de113cbf8282b02cbff0794b637b9d6676da09314a1db5a30bcea9bf4ee01c",
+        "size": 4858559240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "vae/qwen_image_vae.safetensors",
+      "blobId": "0e2c65956cb47e2be7d1def5a08ddd58a0d5beb5",
+      "size": 253806246,
+      "lfs": {
+        "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+        "size": 253806246,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "Aura1in/Krea-2-Turbo_v2",
+    "RioShiina/ImageGen",
+    "Intruzo/Krea-2-Turbo_v2",
+    "embedl/hfviewer",
+    "Gramlin/ImageGennew",
+    "alxander84/ImageGen-32",
+    "Velzevulvus/Krea-2-Turbo_I2I",
+    "akashbroo007/Krea-2-Turbo_v2",
+    "bnyland/Krea-2-Turbo_v2-1",
+    "Ziadhero/ziad-image-editor",
+    "Or1290/LP12",
+    "metaloz/Krea-2-Turbo_I2I_IP_NSFW",
+    "2i/pornmaster-krea2",
+    "Ziadhero/Krea-extra",
+    "MarkTheArtist/Spicy-krea2",
+    "badsys/Krea-2-Turbo_PornMaster",
+    "Beckyb67/Krea-2-Turbo_I2I_IP_NSFW",
+    "Lavanet/Krea-2-Turbo_I2I_IP_NSFW",
+    "master44334/Krea-2-Turbo_I2I",
+    "emanforhelp/model-pulse",
+    "Tinchote/ImageGen",
+    "bobbyr667/pornmaster-krea2",
+    "runebloodstone/img_test",
+    "Fataj/TtC",
+    "rajinder786/Krea-2-Turbo_I2I",
+    "nairobisdrive/Krea-2-Turbo_I2I",
+    "pici68/Krea-2-Turbo_I2I",
+    "PapisMboge/Krea-2-Turbo_I2I",
+    "afbile70/Krea-2-Turbo_I2I",
+    "Naveenvd/Krea-2-Turbo_v2",
+    "Sdh88/Krea-2-Turbo_v2",
+    "Arifjayap/Krea-2-Turbo_I2I",
+    "madna09/PM-Krea2-Edit",
+    "sherwin217/pornmaster-krea2",
+    "itsDre706/Krea-2-Turbo_v2",
+    "chrisssut/Krea-2-Turbo_I2I",
+    "Gramlin/ImageGen",
+    "Lukyhluke/Krea-2-Turbo",
+    "Giroparis96/Krea-2-Turbo_v2",
+    "sfdhfdjfg/zzz",
+    "jing96963/zzz",
+    "mrhangetsbetter/ImageGen",
+    "R1000/ImageGen",
+    "beznogim666/test2",
+    "Damario33/krea-gemma-ideogram-pipeline",
+    "saitaka/Redcraft-Krea2",
+    "desirel/ImageGen",
+    "Rabger666/ImageGen",
+    "pierrock86/pornmaster-krea2",
+    "jp123454321/Master-krea2",
+    "aagogogo/pornmaster-krea2",
+    "Phar2020/Krea-2-Turbo_I2I",
+    "thekrocot/Krea-2-Turbo_I2I",
+    "mstevensjerkface/pornmaster-krea2",
+    "bobbyr667/Krea-2-Turbo_bbr",
+    "bobbyr667/pornmaster-krea2-br",
+    "Nzomne/Krea-2-Turbo_I2I",
+    "pratamtoji/muralix-krea2",
+    "ChromeLantern/pornmaster-krea2",
+    "Hujsukapizda/pornmaster-krea2",
+    "Unknownmen097/Krea-2-Turbo_I2I",
+    "deneme0948/pornmaster-krea2",
+    "BlueSkyXN/ImageGen-Studio",
+    "deneme0948/Krea-2-Turbo_I2I",
+    "Lcy215860934/pornmaster-krea2111111",
+    "royovi/Krea-2-Turbo_I2I",
+    "ThomasPantau/Krea-2-Turbo_I2I",
+    "DomFodder/Krea-2-Turbo_I2I",
+    "Mrwzs/Krea-2-Turbo_I2I",
+    "tibsza/Krea-2-Turbo_I2I",
+    "amitr24/Krea-2-Turbo_I2I",
+    "Dps2005/Krea-2-Turbo_I2I",
+    "elfret/pornmaster-krea2",
+    "piyaster/pornmaster-krea2v2",
+    "Xfess/Krea-2-Turbo_I2I",
+    "N3nhum/pornmaster-krea2",
+    "Paulinv/Krea-2-Turbo_I2I",
+    "Mi9999888/krea2-realism-v2",
+    "piyaster/pornmaster-krea2",
+    "horseflybob/pornmaster-krea2",
+    "dinamerasaldana/JardinInfantilMandarina",
+    "rl74/Krea-2-Turbo_I2I",
+    "JAYTEKH/Krea-2-Turbo_I2I",
+    "Bgpop88/Krea-2-Turbo_I2I",
+    "Kashapps/Krea-2-Turbo_I2I",
+    "Usuiro/pornmaster-krea2",
+    "PhiNgoc/Krea-2-Turbo_I2I",
+    "hfdhdhfkuuuuu/Krea-2-Turbo_I2I",
+    "Helohihihi/Krea-2-Turbo_I2I",
+    "Warmerplace/Krea-2-Turbo_I2I",
+    "Sudhiprasad987/Krea-2-Turbo_I2I",
+    "NiranjanWaghmare/pornmaster-krea2",
+    "Lcy215860934/pornmaster-krea2chengtu",
+    "ohokaystar/pnmaster-krea2",
+    "PUTHU007/Krea-2-Turbo_I2I",
+    "mohdhuzafa/Krea-2-Turbo_I2I",
+    "balinotaku/Krea-2-Turbo_I2I",
+    "limasol/pornmaster-krea2",
+    "wv420/Krea-2-Turbo_I2I",
+    "amibeamer/Krea-2-Turbo_I2I"
+  ],
+  "createdAt": "2026-06-16T22:31:20.000Z",
+  "usedStorage": 183142041776
+}

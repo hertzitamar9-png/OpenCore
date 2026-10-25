@@ -1,0 +1,209 @@
+{
+  "_id": "68c2b907570ec0fe6594e685",
+  "id": "Hcompany/Holo1.5-3B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_5_vl",
+    "image-text-to-text",
+    "multimodal",
+    "action",
+    "agent",
+    "pytorch",
+    "conversational",
+    "en",
+    "base_model:Qwen/Qwen2.5-VL-3B-Instruct",
+    "base_model:finetune:Qwen/Qwen2.5-VL-3B-Instruct",
+    "license:other",
+    "eval-results",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 347,
+  "likes": 33,
+  "modelId": "Hcompany/Holo1.5-3B",
+  "author": "Hcompany",
+  "sha": "f10805d3a566ac2932ca17dfeeed91986ead01f8",
+  "lastModified": "2026-03-18T14:20:39.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "model_type": "qwen2_5_vl",
+    "processor_config": {
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "other",
+    "language": [
+      "en"
+    ],
+    "base_model": [
+      "Qwen/Qwen2.5-VL-3B-Instruct"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "transformers",
+    "tags": [
+      "multimodal",
+      "action",
+      "agent",
+      "pytorch"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".eval_results/screenspot_pro.yaml",
+      "blobId": "301bdac4203f38a71946267a458cc12d58b5fd26",
+      "size": 5675
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "99ec21beae5b2c1b7d852f306a0826b8fc29deb0",
+      "size": 9127
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "593a59b070c75ba530622b69ec73293f05499417",
+      "size": 9380
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "482ced4679301bf287ebb310bdd1790eb4514232",
+      "size": 605
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "13303be6f396b038cf397b34a8096819d403836b",
+      "size": 1049
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "6b7bdf9000e8fad62b8d433e58e2c8cfac235aa0",
+      "size": 3413
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "83b4b2c1acd8dff383b1e9714733ff8c7c7fedec",
+      "size": 260
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "677c91f40e59c708e17267472762ffb65b790ac5",
+      "size": 4997750760,
+      "lfs": {
+        "sha256": "c1de40966d14e4de98b5c8b366a12e91b7e2fd4f8bc1338a3604fbb982a20ed7",
+        "size": 4997750760,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "a55c9de70218af3ab9175a8ea9d4e93cedd081f2",
+      "size": 3133917248,
+      "lfs": {
+        "sha256": "ee9764c7e2de0b5bc52787d0613947cb8b39b25e16f44784cea319a2ad882f58",
+        "size": 3133917248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "39ca6d2051d5aa0f1cb31a109eef25ba1149f0fb",
+      "size": 65542
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "4ba2896879737768159b16aa1bb27ec37a68a578",
+      "size": 789
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "6c06829626bf44f72f0bad94469cb071bd4a18ab",
+      "size": 11422063,
+      "lfs": {
+        "sha256": "5eee858c5123a4279c3e1f7b81247343f356ac767940b2692a928ad929543214",
+        "size": 11422063,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "c31b17b868186382f3ed35ede29f0ea6030abca3",
+      "size": 4890
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "0e6c79dcf2f86f2ea4b20d56544e0ba3d31ee55a",
+      "size": 905
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    },
+    {
+      "rfilename": "zero_to_fp32.py",
+      "blobId": "0e759146cadd92ddfefab3680146c2bd6a2b5c04",
+      "size": 33272
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-09-11T11:56:55.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 4065787904
+    },
+    "total": 3754622976
+  },
+  "usedStorage": 8143090071
+}

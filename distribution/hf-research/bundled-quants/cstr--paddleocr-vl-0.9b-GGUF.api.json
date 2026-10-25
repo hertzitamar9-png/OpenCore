@@ -1,0 +1,93 @@
+{
+  "_id": "6a3509e98f62bb96b21de400",
+  "id": "cstr/paddleocr-vl-0.9b-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "ocr",
+    "document-understanding",
+    "crispembed",
+    "paddleocr",
+    "multilingual",
+    "base_model:PaddlePaddle/PaddleOCR-VL",
+    "base_model:quantized:PaddlePaddle/PaddleOCR-VL",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 336,
+  "likes": 0,
+  "modelId": "cstr/paddleocr-vl-0.9b-GGUF",
+  "author": "cstr",
+  "sha": "b009ad150a651289c55c455bd10aa3767c93e949",
+  "lastModified": "2026-08-02T15:34:48.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "PaddlePaddle/PaddleOCR-VL",
+    "language": [
+      "multilingual"
+    ],
+    "license": "apache-2.0",
+    "tags": [
+      "gguf",
+      "ocr",
+      "document-understanding",
+      "crispembed",
+      "paddleocr"
+    ]
+  },
+  "gguf": {
+    "total": 943350384,
+    "architecture": "qwen2vl",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 2392874912
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "30841167a4f6504b357a9d3efedd55f1490e113f",
+      "size": 1710
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "8fc4d958e4f8a0af36aef91922f9808ca4498625",
+      "size": 3552
+    },
+    {
+      "rfilename": "paddleocr-vl-0.9b-f16.gguf",
+      "blobId": "11e065460db2d80853b9f5c10b88f00ec9eda4f3",
+      "size": 2392874912,
+      "lfs": {
+        "sha256": "bdd09a3d428a84cef256fc251bb56a5728856733d8f87cd249e9de874c4ac382",
+        "size": 2392874912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "paddleocr-vl-0.9b-q4_k.gguf",
+      "blobId": "cf18fb61930a7a562276bb5e0ba59b6b832f48cb",
+      "size": 1299217184,
+      "lfs": {
+        "sha256": "fc384fba96e879a0937214ec857b3b5bde281146df36b439eb19d112a3d06491",
+        "size": 1299217184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "paddleocr-vl-0.9b-q8_0.gguf",
+      "blobId": "683dbe0d190f7def1c239249a9b06b3a84d1cdb3",
+      "size": 1479572256,
+      "lfs": {
+        "sha256": "d2d8b7fd9e8b10c70c4ad225d788725ee37781b21f9b8c15260a367ec40b1522",
+        "size": 1479572256,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-06-19T09:20:41.000Z",
+  "usedStorage": 5171664352
+}

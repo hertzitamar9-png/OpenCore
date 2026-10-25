@@ -1,0 +1,89 @@
+{
+  "_id": "6a4454bf04783b195089e01e",
+  "id": "moondream/moondream3.1-9B-A2B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "safetensors",
+    "moondream",
+    "vision",
+    "image-text-to-text",
+    "object-detection",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 9660,
+  "likes": 91,
+  "modelId": "moondream/moondream3.1-9B-A2B",
+  "author": "moondream",
+  "sha": "1da27e6c2d2f9118de14560df456881dc62d91f3",
+  "lastModified": "2026-07-08T07:13:02.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "pipeline_tag": "image-text-to-text",
+    "license": "other",
+    "license_name": "moondream-model-license-1.0",
+    "license_link": "https://moondream.ai/licenses/model/1.0",
+    "tags": [
+      "moondream",
+      "vision",
+      "image-text-to-text",
+      "object-detection"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "5ee0eaa5550502cf4175a6e604b3879e4b8b3988",
+      "size": 2500
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "ec58cb06c7cbef35e0bb49bf6ed66905023c11c5",
+      "size": 38
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "fa4d81cf7e432dbc315532968707dc6d7b878b67",
+      "size": 10505269576,
+      "lfs": {
+        "sha256": "26dde16af961d3a486c7b86b9a34fc8487be7917f7e62324b751400ef4d391b4",
+        "size": 10505269576,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-06-30T23:43:59.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 5242880,
+      "BF16": 1215563248,
+      "F8_E4M3": 8053063680
+    },
+    "total": 9273869808
+  },
+  "usedStorage": 10505269576
+}

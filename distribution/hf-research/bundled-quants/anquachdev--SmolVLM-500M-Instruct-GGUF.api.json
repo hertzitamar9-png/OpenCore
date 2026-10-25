@@ -1,0 +1,92 @@
+{
+  "_id": "6a85bcf680c7c00e9dda378f",
+  "id": "anquachdev/SmolVLM-500M-Instruct-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "base_model:HuggingFaceTB/SmolVLM-500M-Instruct",
+    "base_model:quantized:HuggingFaceTB/SmolVLM-500M-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 68,
+  "likes": 0,
+  "modelId": "anquachdev/SmolVLM-500M-Instruct-GGUF",
+  "author": "anquachdev",
+  "sha": "d669be7669c33bb388430e65d71b01c127736afe",
+  "lastModified": "2026-08-19T14:25:58.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "HuggingFaceTB/SmolVLM-500M-Instruct"
+  },
+  "gguf": {
+    "total": 409252800,
+    "architecture": "llama",
+    "context_length": 8192,
+    "chat_template": "<|im_start|>{% for message in messages %}{{message['role'] | capitalize}}{% if message['content'][0]['type'] == 'image' %}{{':'}}{% else %}{{': '}}{% endif %}{% for line in message['content'] %}{% if line['type'] == 'text' %}{{line['text']}}{% elif line['type'] == 'image' %}{{ '<image>' }}{% endif %}{% endfor %}<end_of_utterance>\n{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<end_of_utterance>",
+    "totalFileSize": 820422912
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4aeb147552cff03ada86e6e8eff8b8e0e80ce6de",
+      "size": 1803
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "22533d123a9d10334b32f0a63a9da4f5af438460",
+      "size": 268
+    },
+    {
+      "rfilename": "SmolVLM-500M-Instruct-Q8_0.gguf",
+      "blobId": "f814739f69ae00aca65bdf5765e63d30b984b214",
+      "size": 436806912,
+      "lfs": {
+        "sha256": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4",
+        "size": 436806912,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-500M-Instruct-f16.gguf",
+      "blobId": "f8edc9ccda08fa202fda9f3afd4d6b8543dd234c",
+      "size": 820422912,
+      "lfs": {
+        "sha256": "26c2ee46ef9f8472b3d305a71703153a55f4f2c3baaa12ff5feb566fddb65343",
+        "size": 820422912,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-SmolVLM-500M-Instruct-Q8_0.gguf",
+      "blobId": "3ababd5a5025957b891acf046b1ce6d4c9d1f3a4",
+      "size": 108783360,
+      "lfs": {
+        "sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150",
+        "size": 108783360,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-SmolVLM-500M-Instruct-f16.gguf",
+      "blobId": "58649a7d1dc2b4a37fce5e394824223783776142",
+      "size": 199468800,
+      "lfs": {
+        "sha256": "4b2fca922e549e9b9608f4ba56f93565dd5220e935ba5570a2a864a0fcc988a6",
+        "size": 199468800,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-19T14:25:58.000Z",
+  "usedStorage": 1565481984
+}

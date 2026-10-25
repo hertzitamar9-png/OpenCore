@@ -1,0 +1,86 @@
+{
+  "_id": "6a6af15d273e463afb1475e1",
+  "id": "hataphu/PaddleOCR-VL-1.6-vi-gguf",
+  "private": false,
+  "tags": [
+    "gguf",
+    "ocr",
+    "vietnamese",
+    "llama.cpp",
+    "paddleocr-vl",
+    "vi",
+    "base_model:PaddlePaddle/PaddleOCR-VL-1.6",
+    "base_model:quantized:PaddlePaddle/PaddleOCR-VL-1.6",
+    "doi:10.57967/hf/9865",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 75,
+  "likes": 0,
+  "modelId": "hataphu/PaddleOCR-VL-1.6-vi-gguf",
+  "author": "hataphu",
+  "sha": "769e7cbb400cb310dd63c337539e52cd0bf1e30e",
+  "lastModified": "2026-07-31T03:51:09.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "PaddlePaddle/PaddleOCR-VL-1.6",
+    "language": [
+      "vi"
+    ],
+    "tags": [
+      "ocr",
+      "vietnamese",
+      "gguf",
+      "llama.cpp",
+      "paddleocr-vl"
+    ]
+  },
+  "gguf": {
+    "total": 466654208,
+    "architecture": "paddleocr",
+    "context_length": 131072,
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n    {%- set add_generation_prompt = true -%}\n{%- endif -%}\n{%- if not cls_token is defined -%}\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\n{%- endif -%}\n{%- if not eos_token is defined -%}\n    {%- set eos_token = \"</s>\" -%}\n{%- endif -%}\n{{- cls_token -}}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {{- \"User: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"image\" -%}\n                {{ \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" }}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ \"\\n\" -}}\n    {%- elif message[\"role\"] == \"assistant\" -%}\n        {{- \"Assistant:\\n\" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ eos_token -}}\n    {%- elif message[\"role\"] == \"system\" -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] + \"\\n\" }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"Assistant:\\n\" -}}\n{%- endif -%}\n",
+    "totalFileSize": 935767648
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "48bb5c0f9bb1de12044f419ab33caca6d31f7cb1",
+      "size": 1664
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bd4e1c1e51263d5c2d04f1608386f72b32d26565",
+      "size": 8106
+    },
+    {
+      "rfilename": "mmproj-paddleocr-vl-1.6-vi-v5.bf16.gguf",
+      "blobId": "f15633f34091a852f67a971035c1ef2bd460f85e",
+      "size": 881769760,
+      "lfs": {
+        "sha256": "5a27c2e0752c6fe79b47cbce9917c8e04bca039eac96e230fb6d6bec2647fa5e",
+        "size": 881769760,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "paddleocr-vl-1.6-vi-v5.bf16.gguf",
+      "blobId": "9e979f94f6de7c0ea5b3d21c3e4f54decf942fa7",
+      "size": 935767648,
+      "lfs": {
+        "sha256": "7205d5758f6c5c010cd029bbec55c043a10f7636fa28cf881c9718018b8461dd",
+        "size": 935767648,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-07-30T06:38:21.000Z",
+  "usedStorage": 1817537408
+}

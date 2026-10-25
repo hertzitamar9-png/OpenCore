@@ -1,0 +1,119 @@
+{
+  "_id": "691079e70570b41ffe274189",
+  "id": "Liyulingyue/PaddleOCR-VL-half-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "base_model:PaddlePaddle/PaddleOCR-VL",
+    "base_model:quantized:PaddlePaddle/PaddleOCR-VL",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 149,
+  "likes": 11,
+  "modelId": "Liyulingyue/PaddleOCR-VL-half-GGUF",
+  "author": "Liyulingyue",
+  "sha": "2e3efbb0f74fe356b8ff43e4b1d33137445b16e9",
+  "lastModified": "2025-11-10T02:07:03.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "PaddlePaddle/PaddleOCR-VL"
+    ]
+  },
+  "gguf": {
+    "total": 466654208,
+    "architecture": "ernie4_5",
+    "context_length": 131072,
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n    {%- set add_generation_prompt = true -%}\n{%- endif -%}\n{%- if not cls_token is defined -%}\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\n{%- endif -%}\n{%- if not eos_token is defined -%}\n    {%- set eos_token = \"</s>\" -%}\n{%- endif -%}\n{%- if not image_token is defined -%}\n    {%- set image_token = \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" -%}\n{%- endif -%}\n{{- cls_token -}}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {{- \"User: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"image\" -%}\n                {{ image_token }}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ \"\\n\" -}}\n    {%- elif message[\"role\"] == \"assistant\" -%}\n        {{- \"Assistant: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ eos_token -}}\n    {%- elif message[\"role\"] == \"system\" -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] + \"\\n\" }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"Assistant: \" -}}\n{%- endif -%}\n",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 292310848
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0338928ff584baace2053e0ee9cd8fc3dda32690",
+      "size": 1790
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "3700b6d23161c8fc75cbe5f6fe3c39655deb0632",
+      "size": 37339
+    },
+    {
+      "rfilename": "demo_ppocrvl_gguf_client.py",
+      "blobId": "9698c4903abb942b434982375a1600da00c051b6",
+      "size": 3282
+    },
+    {
+      "rfilename": "demo_ppocrvl_gguf_server.py",
+      "blobId": "03ae33c6f0c94f8cc8c36c777a668558facdc161",
+      "size": 25243
+    },
+    {
+      "rfilename": "llm_model.gguf",
+      "blobId": "30e7230272c6efe819e0279b84a5423335621828",
+      "size": 935767872,
+      "lfs": {
+        "sha256": "d06d74b0baa383724024f37da2848a1061d3394f47a911268ffd1664bcb9eccc",
+        "size": 935767872,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "llm_model_q4.gguf",
+      "blobId": "ef0dbe7f66be77f3c878821094d84dd79d22dc8a",
+      "size": 300218176,
+      "lfs": {
+        "sha256": "691ec5b2a0b3bca4012eeea742ce05ed0501c1d82ed2f2d1ff0d117d477d8894",
+        "size": 300218176,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "llm_model_q4_0.gguf",
+      "blobId": "beec50c5dc8d2cca273aa8721d32c2dfae4cdada",
+      "size": 292310848,
+      "lfs": {
+        "sha256": "7ee576538f0598e19ae22659928c18b163948a81ca5a9922b472ce531b6de8ff",
+        "size": 292310848,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "llm_model_q5.gguf",
+      "blobId": "8dc52f5319732e42024ea2ea0f07f42a418dd999",
+      "size": 341473088,
+      "lfs": {
+        "sha256": "0066f79dcafb926c3c38a500821addf297bf94a3dbf2ab23ae48758ecfeccfa8",
+        "size": 341473088,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "llm_model_q8_0.gguf",
+      "blobId": "3292b41d329359886e2dda9a022c576ebb9be772",
+      "size": 498315072,
+      "lfs": {
+        "sha256": "8bd2015b4f07cb9af77ac329a6f024f5f167644b07b58fcc94698f134549c6a6",
+        "size": 498315072,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "859f70e090495a97a65ab7feca148ae41acf3af2",
+      "size": 735
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-11-09T11:24:23.000Z",
+  "usedStorage": 2368085056
+}

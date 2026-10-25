@@ -1,0 +1,190 @@
+{
+  "_id": "669628489396af77764e98b0",
+  "id": "Qwen/Qwen2-Audio-7B",
+  "private": false,
+  "pipeline_tag": "audio-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_audio",
+    "text2text-generation",
+    "chat",
+    "audio",
+    "audio-text-to-text",
+    "en",
+    "arxiv:2407.10759",
+    "arxiv:2311.07919",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 19043,
+  "likes": 183,
+  "modelId": "Qwen/Qwen2-Audio-7B",
+  "author": "Qwen",
+  "sha": "dd84470756e6277a71d4d7188773a43cde92696e",
+  "lastModified": "2024-11-20T09:21:08.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2AudioForConditionalGeneration"
+    ],
+    "model_type": "qwen2_audio",
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}{% endif %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "chat",
+      "audio",
+      "audio-text-to-text"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "text2text-generation",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "cc99a016dfb05e72b20a218dc472807888fc3f45",
+      "size": 3108
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "fb0e65eb25c07db35f951aaf3f0fc73b024545a2",
+      "size": 853
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "c7d6e9711f398b041307145346656c01529f5c39",
+      "size": 230
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model-00001-of-00005.safetensors",
+      "blobId": "970aed4ff76f3c3dbe9590c770070c38d3a59950",
+      "size": 3911340848,
+      "lfs": {
+        "sha256": "fa8d805dd49408bcbefbd6f701f24e86994c160f09cb614ebac13e7b79a0a04d",
+        "size": 3911340848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00005.safetensors",
+      "blobId": "778c1d7ffe6ea03198d73aa8b6b7b14883158933",
+      "size": 3980786080,
+      "lfs": {
+        "sha256": "0ebca32eb045bf5b6a02a4514ae584fed886ba6fc135a59855c23a42c806aa12",
+        "size": 3980786080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00005.safetensors",
+      "blobId": "1d6645f2980842d2b71f6e74cf4980cfcdd7e368",
+      "size": 3980819456,
+      "lfs": {
+        "sha256": "59e6495fe1a39b47a40b4e148963787bef81d062b3a48d42193f7fe61120f9e7",
+        "size": 3980819456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00005.safetensors",
+      "blobId": "942c9d0bc42e55a66566a787fe126e0879bea990",
+      "size": 3643135696,
+      "lfs": {
+        "sha256": "698570ad9538a8810511e63ae6e4ee1d50f0c59c00c1df5568032749c31a0110",
+        "size": 3643135696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00005.safetensors",
+      "blobId": "00e379d5af0cf445a2b4eb7a5e18ffc48e197b36",
+      "size": 1278214288,
+      "lfs": {
+        "sha256": "dfa5fbeeb34eef2331b9ea87d802a06f969b5df5827b5f937839d6873f21ec30",
+        "size": 1278214288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "a87cfff186b87b06228b3bef411296e9e305f8b1",
+      "size": 78989
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "3cd6c4610c3e6e98af27fcdf9ffdcb83c498549a",
+      "size": 342
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "33ea6c72ebb92a237fa2bdf26c5ff16592efcdae",
+      "size": 7028015
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "8071e4b39d30f19114e082f888d5cf83f2ac7c3d",
+      "size": 638335
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "nvidia/audio-flamingo-3",
+    "nvidia/audio-flamingo-3-chat",
+    "microsoft/paza-bench",
+    "K00B404/Qwen2-Audio-Instruct",
+    "TechAudio/TeamQwen2AudioInstruct",
+    "y5shen/roboAssist_demo",
+    "Falln87/Audio-Instruct-Demo",
+    "nisten/Qwen2-Audio-Instruct-Demo-Duplicate",
+    "PierrunoYT/audio-flamingo-3",
+    "manoskary/audio-flamingo-3",
+    "zhuohany1206/audiototext",
+    "Sorushhh121/audio-flamingo-3",
+    "TGPro1/audio-flamingo-3-chat",
+    "TGPro1/audio-flamingo-3",
+    "sonicase/audio-flamingo-3",
+    "cloud60138/audio-flamingo-3",
+    "Kseniia02/audio-flamingo-3",
+    "eustlb/audio-text-to-text-models-on-the-hub"
+  ],
+  "createdAt": "2024-07-16T07:59:04.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8397094912
+    },
+    "total": 8397094912
+  },
+  "usedStorage": 16794296368
+}

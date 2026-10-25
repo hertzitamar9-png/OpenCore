@@ -1,0 +1,151 @@
+{
+  "_id": "6640e9644b52a18fe76b595c",
+  "id": "afrideva/Yi-1.5-6B-Chat-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "ggml",
+    "quantized",
+    "text-generation",
+    "arxiv:2403.04652",
+    "base_model:01-ai/Yi-1.5-6B-Chat",
+    "base_model:quantized:01-ai/Yi-1.5-6B-Chat",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 350,
+  "likes": 2,
+  "modelId": "afrideva/Yi-1.5-6B-Chat-GGUF",
+  "author": "afrideva",
+  "sha": "4a8f9c090d85c358b09e39238548fb9dfd299c10",
+  "lastModified": "2024-05-12T16:50:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "01-ai/Yi-1.5-6B-Chat",
+    "inference": true,
+    "license": "apache-2.0",
+    "model_creator": "01-ai",
+    "model_name": "Yi-1.5-6B-Chat",
+    "pipeline_tag": "text-generation",
+    "quantized_by": "afrideva",
+    "tags": [
+      "gguf",
+      "ggml",
+      "quantized"
+    ]
+  },
+  "gguf": {
+    "total": 6061035520,
+    "architecture": "llama",
+    "context_length": 4096,
+    "chat_template": "{% if messages[0]['role'] == 'system' %}{% set system_message = messages[0]['content'] %}{% endif %}{% if system_message is defined %}{{ system_message }}{% endif %}{% for message in messages %}{% set content = message['content'] %}{% if message['role'] == 'user' %}{{ '<|im_start|>user\\n' + content + '<|im_end|>\\n<|im_start|>assistant\\n' }}{% elif message['role'] == 'assistant' %}{{ content + '<|im_end|>' + '\\n' }}{% endif %}{% endfor %}",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 12124098400
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0f3ba68f8d9bb2d66633378cc4ce548f91862926",
+      "size": 1952
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "62c481a3c73776f2a0dc66648015284509ba86fa",
+      "size": 4666
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.Q2_K.gguf",
+      "blobId": "170e52ab3d57d38bab42812206076f9f534223be",
+      "size": 2337066848,
+      "lfs": {
+        "sha256": "023ddece2b74e3c4ad93ef095be41b61a6dd46e2f57ace95caba0745a5b956f9",
+        "size": 2337066848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.Q3_K_M.gguf",
+      "blobId": "50943e4865e6b4ee5cb8d366bfe4211858b55a16",
+      "size": 2992836448,
+      "lfs": {
+        "sha256": "e873bae8fc0983f7c8ec1aecdb8dbfcfef6737bfcaf4ba6382f8f0f701a60798",
+        "size": 2992836448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.Q4_K_M.gguf",
+      "blobId": "adaa03541130f761ec4c39d8c6cabe877e408b35",
+      "size": 3673968480,
+      "lfs": {
+        "sha256": "e687171541283a81da986029bd28ab9f87e3c2ccc3e9fa933c39d7d7a64473cf",
+        "size": 3673968480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.Q5_K_M.gguf",
+      "blobId": "183f217d0eff9a3d3265c52b57f1361969c2be81",
+      "size": 4304424800,
+      "lfs": {
+        "sha256": "35e2bf6cf1cd2c9cecbb55f6783ae0bcf33abf4e73e79d792f638df555e46d6c",
+        "size": 4304424800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.Q6_K.gguf",
+      "blobId": "09be1f162cdb5a1b21ed2e473352f69c127a8fc4",
+      "size": 4974284640,
+      "lfs": {
+        "sha256": "7d860e91df33aafe67805c1fb33055c1a144f3023a2718fe5f169b4d28cf1018",
+        "size": 4974284640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.Q8_0.gguf",
+      "blobId": "7f2d1a26b388a25a2a441cad5b4b8d2aed1ad8de",
+      "size": 6442127200,
+      "lfs": {
+        "sha256": "dd168382c6d075f5a5e179dae3aa69fbec08ea12e4e675e0056f038dbfcfccc4",
+        "size": 6442127200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "yi-1.5-6b-chat.fp16.gguf",
+      "blobId": "0e635fce111e590b0a36c9035a19388f698e6f60",
+      "size": 12124098400,
+      "lfs": {
+        "sha256": "14962606822dc792d031a8c286a97d58957391d0ac17061cb8d5e0027cc23849",
+        "size": 12124098400,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2024-05-12T16:08:04.000Z",
+  "usedStorage": 36848806816
+}

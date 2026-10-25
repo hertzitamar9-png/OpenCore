@@ -1,0 +1,354 @@
+{
+  "_id": "6ad15023ff4e577a229aa755",
+  "id": "AtomicChat/Muse-Spark-Open-816B-A42B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "atomic-dynamic",
+    "llama.cpp",
+    "muse",
+    "muse-spark",
+    "imatrix",
+    "quantized",
+    "conversational",
+    "atomic-chat",
+    "image-text-to-text",
+    "base_model:meta-models/Muse-Spark-Open-816B-A42B",
+    "base_model:quantized:meta-models/Muse-Spark-Open-816B-A42B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 651,
+  "likes": 1,
+  "modelId": "AtomicChat/Muse-Spark-Open-816B-A42B-GGUF",
+  "author": "AtomicChat",
+  "sha": "3bc452563e445075cf8eed36964b260b74ca74d2",
+  "lastModified": "2026-10-16T13:35:44.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "meta-models/Muse-Spark-Open-816B-A42B",
+    "base_model_relation": "quantized",
+    "quantized_by": "AtomicChat",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "license": "other",
+    "license_name": "muse-model-license",
+    "license_link": "LICENSE.md",
+    "tags": [
+      "atomic-dynamic",
+      "gguf",
+      "llama.cpp",
+      "muse",
+      "muse-spark",
+      "imatrix",
+      "quantized",
+      "conversational",
+      "atomic-chat"
+    ]
+  },
+  "gguf": {
+    "total": 819991575808,
+    "architecture": "muse-spark",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "/work/Muse-Spark-Open-816B-A42B/imatrix/imatrix.gguf",
+    "chat_template": "{%- set tools = tools | default(none) -%}\n{%- set add_generation_prompt = add_generation_prompt | default(false) -%}\n{%- set reasoning_effort = reasoning_effort | default('xhigh', true) -%}\n{%- set cutoff_date = cutoff_date | default('2026-01-04') -%}\n{%- set current_date = current_date | default(strftime_now('%Y-%m-%d') if strftime_now is defined else none) -%}\n{%- set reasoning_effort_map = {'low': 8, 'medium': 32, 'high': 256, 'xhigh': 512} -%}\n{%- if not (reasoning_effort is string and reasoning_effort in reasoning_effort_map) -%}\n    {{- raise_exception('Unsupported reasoning_effort: ' ~ reasoning_effort ~ '. Expected one of: low, medium, high, xhigh.') -}}\n{%- endif -%}\n\n{#- Neutralise control sequences in caller-supplied text so it cannot be\n    tokenized as structure. \"<|\" is broken because every special token has the\n    form \"<|...|>\"; the bare media placeholders are broken because the\n    multimodal processor rewrites them positionally and a literal one in text\n    would desynchronise placeholders from the attached media. -#}\n{%- macro esc(value) -%}\n    {{- value | string\n        | replace('<|', '< |')\n        | replace('<image>', '< image>')\n        | replace('<video>', '< video>')\n        | replace('<audio>', '< audio>') -}}\n{%- endmacro -%}\n\n{%- macro esc_header(value) -%}\n    {{- esc(value) | replace('\\r', ' ') | replace('\\n', ' ') -}}\n{%- endmacro -%}\n\n{%- macro esc_attr(value) -%}\n    {{- esc_header(value)\n        | replace('&', '&amp;')\n        | replace('\"', '&quot;')\n        | replace(\"'\", '&#39;')\n        | replace('<', '&lt;')\n        | replace('>', '&gt;') -}}\n{%- endmacro -%}\n\n{%- macro render_content(content) -%}\n    {%- if content is string -%}\n        {{- esc(content) -}}\n    {%- elif content is not none -%}\n        {%- for part in content -%}\n            {%- set part_type = part.get('type', '') -%}\n            {%- if part_type in ['image', 'input_image', 'image_url'] -%}\n                {{- '<|patch|>' -}}\n            {%- elif part_type in ['video', 'input_video', 'video_url'] -%}\n                {{- '<|video|>' -}}\n            {%- elif part_type in ['audio', 'input_audio', 'audio_url'] -%}\n                {{- '<|audio|>' -}}\n            {%- elif part_type in ['text', 'input_text', 'output_text'] -%}\n                {{- esc(part.get('text', '')) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_atem(tc) -%}\n    {%- set args = tc.function.arguments -%}\n    {%- if args is not mapping -%}\n        {{- raise_exception('This chat template requires tool_call.function.arguments to be a dict (mapping). The jinja sandbox has no JSON parser, so deserialize the arguments string before calling apply_chat_template.') -}}\n    {%- endif -%}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"' -}}{{- esc_attr(tc.function.name) -}}{{- '\">\\n' -}}\n    {%- for k, v in args.items() -%}\n        {{- '<atem:parameter name=\"' -}}{{- esc_attr(k) -}}{{- '\">' -}}\n        {%- if v is boolean -%}\n            {%- if v -%}\n                true\n            {%- else -%}\n                false\n            {%- endif -%}\n        {%- elif v is none -%}\n            null\n        {%- elif v is mapping or (v is iterable and v is not string) -%}\n            {{- esc(v | tojson) -}}\n        {%- else -%}\n            {{- esc(v) -}}\n        {%- endif -%}\n        {{- '</atem:parameter>\\n' -}}\n    {%- endfor -%}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_defs(tools) -%}\n    {{- 'In this environment you have access to a set of tools you can use to answer the user\\'s question.\\n\\n' -}}\n    {{- 'You can invoke a function by writing a \"<atem:function_calls>\" block like the following as part of your reply to the user:\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"$FUNCTION_NAME\">\\n<atem:parameter name=\"$PARAMETER_NAME\">$PARAMETER_VALUE</atem:parameter>\\n...\\n</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'String and scalar parameters should be specified as is, while lists and objects should use JSON format. Note that spaces for string values are not stripped. The output is not expected to be valid XML and is parsed with regular expressions.\\n' -}}\n    {{- 'Here are the functions available in JSONSchema format:\\n' -}}\n    {{- '// Tool metadata\\n{\"name\": \"\", \"description\": \"\"}\\n' -}}\n    {{- '// Function schemas' -}}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {{- '\\n{\"name\": ' -}}{{- esc(fn.name | tojson) -}}\n        {{- ', \"description\": ' -}}{{- esc((fn.description if fn.description is defined and fn.description else '') | tojson) -}}\n        {{- ', \"parameters\": ' -}}{{- esc((fn.parameters if fn.parameters is defined and fn.parameters else {}) | tojson) -}}{{- '}' -}}\n    {%- endfor -%}\n    {{- '\\n\\n' -}}\n    {{- 'Here are examples of how to call functions in the tool set. To make parallel tool calls, emit each call as its own message (one tool call per message) in consecutive messages, as shown below:\\n' -}}\n    {{- '(If the tool namespace is not specified, invoke the function directly as `example_function_name_1` rather than `example_tool_name_1.example_function_name_1`)\\n\\n' -}}\n    {{- 'to=example_tool_name_1.example_function_name_1\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name_1.example_function_name_1\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_1\">value_1</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'to=example_tool_name_2.example_function_name_2\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name_2.example_function_name_2\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_2\">This is the value for the second parameter\\nthat can span\\n\"multiple\" lines\\n</atem:parameter>\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_3\">value_3</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n\n{%- macro render_valid_recipients(tools) -%}\n    {%- set rns = namespace(recipients=[]) -%}\n    {{- 'Use the appropriate recipient for each message:\\n\\n' -}}\n    {%- set rns.recipients = rns.recipients + ['\"self\"'] -%}\n    {{- '- \"self\": private reasoning and tool planning.\\n' -}}\n    {%- set rns.recipients = rns.recipients + ['\"commentary\"'] -%}\n    {{- '- \"commentary\": user-visible intermediate updates while the assistant will continue working, including messages sent to the user before or between tool calls.\\n' -}}\n    {%- if tools -%}\n        {%- set first_tool = tools | first -%}\n        {%- set first_fn = (first_tool.function if first_tool.function is defined else first_tool).name -%}\n        {%- set rns.recipients = rns.recipients + ['\"[func_name] (e.g., ' ~ esc_header(first_fn) ~ ')\"'] -%}\n        {{- '- \"tool\" or \"[tool name]\": the name of the tool to call.\\n' -}}\n    {%- endif -%}\n    {%- set rns.recipients = rns.recipients + ['\"user\"'] -%}\n    {{- '- \"user\": messages that end the assistant turn, such as a completed response or clarification question that waits for the user\\'s reply; do not use for pre-tool updates or partial responses.\\n' -}}\n    {{- '\\n# Valid recipients: ' ~ rns.recipients | join(', ') ~ '.' -}}\n{%- endmacro -%}\n\n{{- bos_token -}}\n{%- set ns = namespace(instructions=none, rest=messages) -%}\n{%- if messages and messages[0]['role'] in ['system', 'developer'] -%}\n    {%- set ns.instructions = render_content(messages[0]['content'])\n          | replace('Reasoning effort', 'Reasoning strength')\n          | replace('Reasoning Effort', 'Reasoning Strength')\n          | replace('reasoning effort', 'reasoning strength')\n          | replace('REASONING EFFORT', 'REASONING STRENGTH') -%}\n    {%- set ns.rest = messages[1:] -%}\n{%- endif -%}\n{%- set sys = namespace(parts=['You are a helpful AI assistant.', 'Knowledge cutoff: ' ~ cutoff_date ~ '.']) -%}\n{%- if current_date -%}\n    {%- set sys.parts = sys.parts + ['Current date: ' ~ current_date ~ '.'] -%}\n{%- endif -%}\n{%- if ns.instructions -%}\n    {%- set sys.parts = sys.parts + [ns.instructions] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set sys.parts = sys.parts + [render_tool_defs(tools) | trim] -%}\n{%- endif -%}\n{%- if 'reasoning strength:' not in ((ns.instructions if ns.instructions else '') | lower) -%}\n    {%- set sys.parts = sys.parts + ['Reasoning strength: ' ~ reasoning_effort_map[reasoning_effort] ~ '.'] -%}\n{%- endif -%}\n{%- set sys.parts = sys.parts + [render_valid_recipients(tools) | trim] -%}\n{{- '<|start|>system<|message|>' ~ sys.parts | join('\\n\\n') ~ '<|eot|>' -}}\n{%- for message in ns.rest -%}\n    {%- set role = message['role'] -%}\n    {%- set end_token = '<|eom|>' if (not loop.last and ns.rest[loop.index0 + 1]['role'] == role) else '<|eot|>' -%}\n    {%- if role in ['system', 'developer'] -%}\n        {{- '<|start|>' + role + '<|message|>' -}}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'user' -%}\n        {{- '<|start|>user<|message|>' -}}\n        {%- if message.get('render_timestamp') and message.get('timestamp') -%}\n            {%- set ts = message['timestamp'] -%}\n            {%- if ts is string -%}\n                {{- '[' ~ esc_header(ts) ~ '] ' -}}\n            {%- elif ts.strftime is defined -%}\n                {{- '[' ~ (ts.strftime('%a %Y-%m-%d %H:%M %Z') | trim) ~ '] ' -}}\n            {%- endif -%}\n        {%- endif -%}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'tool' -%}\n        {%- set tname = message.get('name') -%}\n        {%- if not tname -%}\n            {%- set tcid = message.get('tool_call_id') -%}\n            {%- set tns = namespace(name=tcid if tcid else '') -%}\n            {%- for m in messages -%}\n                {%- if m.get('tool_calls') -%}\n                    {%- for tc in m['tool_calls'] -%}\n                        {%- if tcid is not none and tc.id is defined and tc.id == tcid -%}\n                            {%- set tns.name = tc.function.name -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n            {%- endfor -%}\n            {%- set tname = tns.name -%}\n        {%- endif -%}\n        {%- if not tname -%}\n            {{- raise_exception('tool message has no name and no matching tool_call_id') -}}\n        {%- endif -%}\n        {{- '<|start|>tool ' -}}{{- esc_header(tname) -}}{{- '<|message|><tool_output name=\"' -}}{{- esc_attr(tname) -}}{{- '\">\\n' -}}\n        {{- render_content(message['content']) -}}\n        {{- '\\n</tool_output><|eot|>' -}}\n    {%- elif role == 'assistant' -%}\n        {%- generation %}\n        {%- set reasoning = message.get('reasoning_content') or message.get('reasoning') -%}\n        {%- if reasoning -%}\n            {{- '<|start|>assistant to=self<|message|>' -}}{{- esc(reasoning) -}}{{- '<|eom|>' -}}\n        {%- endif -%}\n        {%- set body = render_content(message.get('content')) -%}\n        {%- if message.get('tool_calls') -%}\n            {%- if body -%}\n                {{- '<|start|>assistant to=commentary<|message|>' + body + '<|eom|>' -}}\n            {%- endif -%}\n            {%- for tc in message['tool_calls'] -%}\n                {{- '<|start|>assistant to=' -}}{{- esc_header(tc.function.name) -}}{{- '<|message|>' -}}\n                {{- render_atem(tc) -}}\n                {{- (end_token if loop.last else '<|eom|>') -}}\n            {%- endfor -%}\n        {%- elif body or not reasoning -%}\n            {%- set recipient = message.get('recipient') or 'user' -%}\n            {%- if recipient == 'user' -%}\n                {%- set end_turn = true -%}\n            {%- elif recipient in ['self', 'commentary'] -%}\n                {%- set end_turn = false -%}\n            {%- elif message.get('end_turn') is not none -%}\n                {%- set end_turn = message.get('end_turn') -%}\n            {%- else -%}\n                {%- set end_turn = false -%}\n            {%- endif -%}\n            {{- '<|start|>assistant to=' -}}{{- esc_header(recipient) -}}{{- '<|message|>' -}}\n            {{- body -}}\n            {{- ('<|eot|>' if end_turn else '<|eom|>') -}}\n        {%- endif -%}\n        {%- endgeneration %}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- '<|start|>assistant' -}}\n{%- endif -%}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|end_of_text|>",
+    "totalFileSize": 208522913920
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "cab2a9060fecdab6dbff816796cdd6b31b39bbee",
+      "size": 5971
+    },
+    {
+      "rfilename": "LICENSE.md",
+      "blobId": "425b4e8bd18106f70cc707f2717cdb81b252b020",
+      "size": 8299
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_M-00001-of-00005.gguf",
+      "blobId": "2b9c1c8c18500f20f6022508cc479dd9143a6512",
+      "size": 44753775776,
+      "lfs": {
+        "sha256": "c7ba4a7557edbe40059e461ecbdbbc7436c84e45433d53bd36f085e89004ee7d",
+        "size": 44753775776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_M-00002-of-00005.gguf",
+      "blobId": "8b2fe4dcc232458600474d6faaf96848d1835226",
+      "size": 44698083552,
+      "lfs": {
+        "sha256": "9ba357c68afe27c6b4e493d1609d753b468215a345f298f52e21300c91cbf7f3",
+        "size": 44698083552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_M-00003-of-00005.gguf",
+      "blobId": "1c9e47895fa2ff0c665572ec2f0fbcaf1f282368",
+      "size": 44610134752,
+      "lfs": {
+        "sha256": "ed8aad627e8024a58c98c97949880f305dbdf1a4f353cba494e8654a207a5220",
+        "size": 44610134752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_M-00004-of-00005.gguf",
+      "blobId": "539a882f28b9a2158fe4d0cad8a799cbc19b57dc",
+      "size": 44578544160,
+      "lfs": {
+        "sha256": "c8b8924202d5237050878eb305ba9724d944e7dcf05cc873dca8671cf4eafbdf",
+        "size": 44578544160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_M-00005-of-00005.gguf",
+      "blobId": "3962cfcbb0b4d81abbf7ed313271817d4694fc3c",
+      "size": 29882375680,
+      "lfs": {
+        "sha256": "cf18530d1d2bbb68176866e917f19d19f7c77be7081d9090bce9d196b6e38687",
+        "size": 29882375680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_S-00001-of-00004.gguf",
+      "blobId": "51ea0abf20d8ab22d4e1be7d548dbb77d00678e2",
+      "size": 44252695808,
+      "lfs": {
+        "sha256": "e8f94678e8bb3fa6404843492f6f45d5964ca42eeb9780d76c7114f26d4c96e0",
+        "size": 44252695808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_S-00002-of-00004.gguf",
+      "blobId": "f433639de2dad60829ec1f9e083b6053042c7628",
+      "size": 44765854400,
+      "lfs": {
+        "sha256": "65f63d283f0966882b3f9bb471ddac67c62712b62a1b11512b244af7525fedc7",
+        "size": 44765854400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_S-00003-of-00004.gguf",
+      "blobId": "78285d8c8721c5066b13be4b7f0eace0b078223b",
+      "size": 44829424800,
+      "lfs": {
+        "sha256": "01cd23f08d9953b0027ddc9e5e1ef7f672aef936a8eaf57ec115fb75a94617d5",
+        "size": 44829424800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ1_S-00004-of-00004.gguf",
+      "blobId": "82ac39ae3e8f30e4a3717effa51019413132a234",
+      "size": 41086952352,
+      "lfs": {
+        "sha256": "aef764ced84b2f4a36234b341ff3b1dfdcb8c84ae8593498b22a7a30f51f7d36",
+        "size": 41086952352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ2_XXS-00001-of-00006.gguf",
+      "blobId": "4806f28dea946c8dc0c7c3771845d5992b393d18",
+      "size": 44285845760,
+      "lfs": {
+        "sha256": "e63bbbb7c65ac35565969de2d3d04501d9d58738600b9f654870896d725d23eb",
+        "size": 44285845760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ2_XXS-00002-of-00006.gguf",
+      "blobId": "39da0ad63e8ed859835a302a528b3e3ffe21b380",
+      "size": 44113237248,
+      "lfs": {
+        "sha256": "51038c6d2646975a537a55f231480a5be4f5be2bd8cb3eabec3c3ed7389226d5",
+        "size": 44113237248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ2_XXS-00003-of-00006.gguf",
+      "blobId": "94ba160675474008061a0559313c6dbf3d52f878",
+      "size": 43930127424,
+      "lfs": {
+        "sha256": "ec3e0aa050ff435902d79ccaff3676e8b87f0547cdb082a5816021c2dd0b7dd3",
+        "size": 43930127424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ2_XXS-00004-of-00006.gguf",
+      "blobId": "df8b58a7086969ce44965eac5f306d5eb9106d24",
+      "size": 43993697824,
+      "lfs": {
+        "sha256": "e9495ec55a6e0b7e40b8c71ef2db36dfec29d7f784ff8f5968301eab5bb3659f",
+        "size": 43993697824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ2_XXS-00005-of-00006.gguf",
+      "blobId": "27f93eef3fb71ca835ca5ce366a74167a3e59487",
+      "size": 44784325888,
+      "lfs": {
+        "sha256": "096bc3a0cfc403984d5db3aca87faea46d10b6a80d93f320e4081e8714da8f80",
+        "size": 44784325888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-IQ2_XXS-00006-of-00006.gguf",
+      "blobId": "3e19cf3d237453732cd429fa0bd37849868f81c7",
+      "size": 3519710080,
+      "lfs": {
+        "sha256": "9dbf8a3b9351e953788ee32c04ea10c2c6604a83e921739e99a158d5b93b859e",
+        "size": 3519710080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00001-of-00007.gguf",
+      "blobId": "fec099328a4e45e2c20171bb5d0a72b19724b544",
+      "size": 44578474944,
+      "lfs": {
+        "sha256": "124eee9a230b0a282b252d80e1a3c9c691c1d0181cf6b2ef785dd92a6b510b33",
+        "size": 44578474944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00002-of-00007.gguf",
+      "blobId": "4cddac869d335ce827dccd297a521746e52a3117",
+      "size": 44781824224,
+      "lfs": {
+        "sha256": "82681cbc0fa6b8b2d70fbdcbfd66b8d60456be429cce17b388fe3cae28f47fa4",
+        "size": 44781824224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00003-of-00007.gguf",
+      "blobId": "b169f0c6e79da91fd6a7f7d49c9c6973b709ad15",
+      "size": 44781824288,
+      "lfs": {
+        "sha256": "a3d29cdb779c9e5fece2d9e5d3bc78c1192f043645dd67749160f8b6be59a163",
+        "size": 44781824288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00004-of-00007.gguf",
+      "blobId": "188061682f09e3e2fc499d128d36680fc7966cdb",
+      "size": 44815378784,
+      "lfs": {
+        "sha256": "489f21156e223562f997434c6cdd075a494a38b1601837205657df5ff6bd96fb",
+        "size": 44815378784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00005-of-00007.gguf",
+      "blobId": "d0ce95ccdd993946d77dcf9928de882b35b9498f",
+      "size": 44388873376,
+      "lfs": {
+        "sha256": "126ab8952fd1a0e9e36384cef3e91af235304da8273d64506991f1d3c47f358f",
+        "size": 44388873376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00006-of-00007.gguf",
+      "blobId": "2f9bc6b96844cd1a0ffc1f40072c5be6a5d7759f",
+      "size": 44861647712,
+      "lfs": {
+        "sha256": "82a0af7ec2c575682df3ee57cd5f6bd22c7eaa6ba82937dfa7d02696271e63d9",
+        "size": 44861647712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-AD-Q2_K-00007-of-00007.gguf",
+      "blobId": "b3d2b8fe02c90dbcb482ad97743e11a98d116e1c",
+      "size": 41675444832,
+      "lfs": {
+        "sha256": "fa07f7748fa5121e9363e927fa88fa07c2fe488b5a1fe85a877d5aff59982200",
+        "size": 41675444832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "def88f2a72c466d6b44693689cf2f1cd98c3e1bf",
+      "size": 11961
+    },
+    {
+      "rfilename": "USE_POLICY.md",
+      "blobId": "15a3a3891eb441b314ba8091e366fb38fe14a751",
+      "size": 4901
+    },
+    {
+      "rfilename": "mmproj-Muse-Spark-Open-816B-A42B-BF16.gguf",
+      "blobId": "8ca2f7b4da2254edda853a08bc4ffe56dd26b77a",
+      "size": 4097601888,
+      "lfs": {
+        "sha256": "5730a0433da65c61965319083d25fc7428800beb7bf76251b50109509be28558",
+        "size": 4097601888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-Muse-Spark-Open-816B-A42B-F16.gguf",
+      "blobId": "5e7d626df0e9dce320a34afe441f3ea5a68e6fe0",
+      "size": 4095795552,
+      "lfs": {
+        "sha256": "03301ea4888d6db20514f340edd29a3399741816df10a67f324cb1af0d1cd3ff",
+        "size": 4095795552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-Muse-Spark-Open-816B-A42B-Q8_0.gguf",
+      "blobId": "155c6254ca1b87a75f0bd58a159d8fe631ff0b0e",
+      "size": 2183868768,
+      "lfs": {
+        "sha256": "c3a0613bb2be1dde38faec3d1d1bf2c118013626ab9623936de500a656232ed3",
+        "size": 2183868768,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-15T22:13:55.000Z",
+  "usedStorage": 928345519872
+}

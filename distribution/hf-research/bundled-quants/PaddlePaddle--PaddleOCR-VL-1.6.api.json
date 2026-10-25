@@ -1,0 +1,253 @@
+{
+  "_id": "6a168ecf3808a906c2a2adbe",
+  "id": "PaddlePaddle/PaddleOCR-VL-1.6",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "PaddleOCR",
+  "tags": [
+    "PaddleOCR",
+    "safetensors",
+    "paddleocr_vl",
+    "ERNIE4.5",
+    "PaddlePaddle",
+    "image-to-text",
+    "ocr",
+    "document-parse",
+    "layout",
+    "table",
+    "formula",
+    "chart",
+    "seal",
+    "spotting",
+    "image-text-to-text",
+    "conversational",
+    "custom_code",
+    "en",
+    "zh",
+    "multilingual",
+    "arxiv:2606.03264",
+    "license:apache-2.0",
+    "eval-results",
+    "region:us"
+  ],
+  "downloads": 70895,
+  "likes": 550,
+  "modelId": "PaddlePaddle/PaddleOCR-VL-1.6",
+  "author": "PaddlePaddle",
+  "sha": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "lastModified": "2026-08-08T14:32:21.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask:1>",
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "PaddleOCRVLForConditionalGeneration"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_paddleocr_vl.PaddleOCRVLConfig",
+      "AutoModel": "modeling_paddleocr_vl.PaddleOCRVLForConditionalGeneration",
+      "AutoModelForCausalLM": "modeling_paddleocr_vl.PaddleOCRVLForConditionalGeneration"
+    },
+    "model_type": "paddleocr_vl",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "cls_token": "<|begin_of_sentence|>",
+      "eos_token": "</s>",
+      "mask_token": "<mask:1>",
+      "pad_token": "<unk>",
+      "sep_token": "<|end_of_sentence|>",
+      "unk_token": "<unk>",
+      "use_default_system_prompt": false
+    },
+    "chat_template_jinja": "{%- if not add_generation_prompt is defined -%}\n    {%- set add_generation_prompt = true -%}\n{%- endif -%}\n{%- if not cls_token is defined -%}\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\n{%- endif -%}\n{%- if not eos_token is defined -%}\n    {%- set eos_token = \"</s>\" -%}\n{%- endif -%}\n{{- cls_token -}}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {{- \"User: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"image\" -%}\n                {{ \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" }}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ \"\\n\" -}}\n    {%- elif message[\"role\"] == \"assistant\" -%}\n        {{- \"Assistant:\\n\" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ eos_token -}}\n    {%- elif message[\"role\"] == \"system\" -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] + \"\\n\" }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"Assistant:\\n\" -}}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "ERNIE4.5",
+      "PaddleOCR",
+      "PaddlePaddle",
+      "image-to-text",
+      "ocr",
+      "document-parse",
+      "layout",
+      "table",
+      "formula",
+      "chart",
+      "seal",
+      "spotting"
+    ],
+    "language": [
+      "en",
+      "zh",
+      "multilingual"
+    ],
+    "library_name": "PaddleOCR"
+  },
+  "siblings": [
+    {
+      "rfilename": ".eval_results/real5_omnidocbench.yaml",
+      "blobId": "57e6759f2c21614b485d2308714b7fe16821120d",
+      "size": 1418
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "0491a00e80b424eb709078b57e35d8b83ffee985",
+      "size": 11376
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "58e9801f72ad5f992f0fc2e397ccf0fb014e5e5f",
+      "size": 21424
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "6a2790e1462ecb007f9b92dfb00f594701462889",
+      "size": 25381
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "d8b8c271d7a7245d4937098f53aa372cff3dba70",
+      "size": 1474
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "c54711466ae75457f8e57b909a49dae570bfa5c5",
+      "size": 2059
+    },
+    {
+      "rfilename": "configuration_paddleocr_vl.py",
+      "blobId": "a8fd139287293301b287db6dfdaac21d7ad1a236",
+      "size": 8104
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "ba87d71b9881c1d52f0be4286fb63e381ce3febf",
+      "size": 133
+    },
+    {
+      "rfilename": "image_processing_paddleocr_vl.py",
+      "blobId": "f7e28fd3c1971331581f73d573b9c4a2a4ce7a58",
+      "size": 25032
+    },
+    {
+      "rfilename": "inference.yml",
+      "blobId": "93f88dfb31b6dbc3f529094ccfe26ddec98fa8ad",
+      "size": 43
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "04667d00268d801a65293c1041e0fa4ad2ef573b",
+      "size": 1917255968,
+      "lfs": {
+        "sha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+        "size": 1917255968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_paddleocr_vl.py",
+      "blobId": "693782514116586458b12cfd911c88d6565f552c",
+      "size": 103889
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "d873cd63d04d9e6243999759fc30f7752dab3222",
+      "size": 641
+    },
+    {
+      "rfilename": "processing_paddleocr_vl.py",
+      "blobId": "73c3faeff201555fc7b52709848e3c669419dbb1",
+      "size": 12253
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "033053ac4d8b5de2e47884ce85a6b4939cc58e87",
+      "size": 137
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "dcd70aaa8c9987899d7593995546d9c0cfc6a1f3",
+      "size": 1151
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "e42528d5cae447340ed0a3e403001c88fe9b0f17",
+      "size": 11189060,
+      "lfs": {
+        "sha256": "c8a215a59183d0d0781adc33bacd3ce6162716f7fd568fb30234a74d69803a7d",
+        "size": 11189060,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "81e33aa7fdb8ef76fceb1a69f1997021f3056770",
+      "size": 1614363,
+      "lfs": {
+        "sha256": "34ef7db83df785924fb83d7b887b6e822a031c56e15cff40aaf9b982988180df",
+        "size": 1614363,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "cd9eb7da01a3209f4fb9b3561e04be022cd87764",
+      "size": 186947
+    }
+  ],
+  "spaces": [
+    "finebooks/bhl-ocr-leaderboard",
+    "PaddlePaddle/PaddleOCR-VL-1.6_Online_Demo",
+    "quantid/huggingface-official-benchmark-leaderboards",
+    "quantid/measurement-lab",
+    "adowu/PaddleOCR-VL-1.6_Online_Demo",
+    "Syncre/arabic-audio-reader-worker",
+    "pranaysuyash/shopstack",
+    "Arrown/paddle-ocr-space",
+    "himipo/ocr-workbench-zerogpu-paddle-vl",
+    "amankumar27/PaddleOCR-VL-1.6_Online_Demo",
+    "HiteshKamwal/PaddleOCR-VL-1.6_Online_Demo",
+    "mudderhugger/PaddleOCR-VL-1.6-Demo",
+    "ngohel58/DWG_Balloon_LIST",
+    "ngohel58/Drawing_Extraction",
+    "alirezaaminzadeh/document-ocr",
+    "Rbeachg93/card-restoration-batch-demo",
+    "sahuSridhar/paddleocr-vl-1-6-demo",
+    "chlabelek/paddle-ocrvl",
+    "icode100/revsy-quiz-zerogpu",
+    "thesanogoeffect/bibr-metacheck-offline-test",
+    "pngwn/small-ocr-compare",
+    "tusarpandey2026/paddleocr-vl-munimji",
+    "abidlabs/ocr-comparison-en-fr-ar"
+  ],
+  "createdAt": "2026-05-27T06:27:27.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 958588736
+    },
+    "total": 958588736
+  },
+  "usedStorage": 1930059391
+}

@@ -1,0 +1,188 @@
+{
+  "_id": "6ac0a698b73470ecf7fdec95",
+  "id": "lightonai/colgrep-agent-2B",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "llama",
+    "text-generation",
+    "code",
+    "code-search",
+    "tool-use",
+    "reinforcement-learning",
+    "colgrep",
+    "conversational",
+    "en",
+    "arxiv:2610.05099",
+    "base_model:openbmb/MiniCPM5-2B",
+    "base_model:finetune:openbmb/MiniCPM5-2B",
+    "license:apache-2.0",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:eu"
+  ],
+  "downloads": 879,
+  "likes": 34,
+  "modelId": "lightonai/colgrep-agent-2B",
+  "author": "lightonai",
+  "sha": "f798a61129c6decb5166864e0a3c98373e62c764",
+  "lastModified": "2026-10-11T16:24:32.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_type": "llama",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "</s>",
+      "pad_token": "</s>",
+      "unk_token": "<unk>",
+      "use_default_system_prompt": false
+    },
+    "chat_template_jinja": "{{- bos_token }}{%- if tools %}\n    {%- set tool_definitions %}\n        {{- \"# Tools\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n        {%- for tool in tools %}\n            {{- \"\\n\" }}\n            {{- tool | tojson(ensure_ascii=False) }}\n        {%- endfor %}\n        {{- '\\n</tools>\\n\\nTool usage guidelines:\\n- You may call zero or more functions. If no function calls are needed, just answer normally and do not include any <function ... </function>.\\n- When calling a function, return an XML object within <function ... </function> using:\\n<function name=\"function-name\"><param name=\"param-name\">param-value</param></function>\\n- param-value may be multi-line. If it contains <, & or newline characters, wrap it in a CDATA block: <param name=\"param-name\"><![CDATA[...multi-line value...]]></param>' }}\n    {%- endset %}\n    \n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {%- if '<tool_def_sep>' in messages[0].content %}\n            {{- messages[0].content.replace('<tool_def_sep>', tool_definitions) }}\n        {%- else %}\n            {{- messages[0].content + '\\n\\n' + tool_definitions }}\n        {%- endif %}\n    {%- else %}\n        {{- tool_definitions.lstrip() }}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        \n        {%- if message.tool_calls %}\n            {%- set content_parts = content.split('<tool_sep>') %}\n            {%- set processed_content = content_parts[0] %}\n            {%- set tool_calls_count = message.tool_calls|length %}\n            {%- set tool_sep_count = content_parts|length - 1 %}\n            {%- set min_count = [tool_calls_count, tool_sep_count]|min %}\n            \n            {%- for i in range(1, content_parts|length) %}\n                {%- set tool_index = i - 1 %}\n                {%- if tool_index < tool_calls_count %}\n                    {%- set tool_call = message.tool_calls[tool_index] %}\n                    {%- if tool_call.function %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {%- set single_tool_xml %}\n                        {{- '<function name=\"' ~ tool_call.name ~ '\">' }}\n                        {%- if tool_call.arguments %}\n                            {%- set args_dict = tool_call.arguments %}\n                            {%- for param_name, param_value in args_dict.items() %}\n                                {{- '<param name=\"' ~ param_name ~ '\">' }}\n                                {%- if param_value is string and ('<' in param_value or '&' in param_value or '\\n' in param_value) %}\n                                    {{- '<![CDATA[' + param_value + ']]>' }}\n                                {%- else %}\n                                    {{- param_value }}\n                                {%- endif %}\n                                {{- '</param>' }}\n                            {%- endfor %}\n                        {%- endif %}\n                        {{- '</function>' }}\n                    {%- endset %}\n                    {%- set processed_content = processed_content + single_tool_xml + content_parts[i] %}\n                {%- else %}\n                    {%- set processed_content = processed_content + content_parts[i] %}\n                {%- endif %}\n            {%- endfor %}\n            \n            {%- if tool_calls_count > tool_sep_count %}\n                {%- for remaining_index in range(tool_sep_count, tool_calls_count) %}\n                    {%- set tool_call = message.tool_calls[remaining_index] %}\n                    {%- if tool_call.function %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {%- set remaining_tool_xml %}\n                        {{- '<function name=\"' ~ tool_call.name ~ '\">' }}\n                        {%- if tool_call.arguments %}\n                            {%- set args_dict = tool_call.arguments %}\n                            {%- for param_name, param_value in args_dict.items() %}\n                                {{- '<param name=\"' ~ param_name ~ '\">' }}\n                                {%- if param_value is string and ('<' in param_value or '&' in param_value or '\\n' in param_value) %}\n                                    {{- '<![CDATA[' + param_value + ']]>' }}\n                                {%- else %}\n                                    {{- param_value }}\n                                {%- endif %}\n                                {{- '</param>' }}\n                            {%- endfor %}\n                        {%- endif %}\n                        {{- '</function>' }}\n                    {%- endset %}\n                    {%- set processed_content = processed_content + remaining_tool_xml %}\n                {%- endfor %}\n            {%- endif %}\n            \n            {%- set content = processed_content %}\n        {%- endif %}\n        \n        {%- if reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- elif '<think>' not in content and '</think>' not in content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        \n        {%- if message.tool_calls and not has_tool_sep %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<function name=\"' ~ tool_call.name ~ '\">' }}\n                {%- if tool_call.arguments %}\n                    {%- set args_dict = tool_call.arguments %}\n                    {%- for param_name, param_value in args_dict.items() %}\n                        {{- '<param name=\"' ~ param_name ~ '\">' }}\n                        {%- if param_value is string and ('<' in param_value or '&' in param_value or '\\n' in param_value) %}\n                            {{- '<![CDATA[' + param_value + ']]>' }}\n                        {%- else %}\n                            {{- param_value }}\n                        {%- endif %}\n                        {{- '</param>' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {%- if message.content is string %}\n            {{- content }}\n        {%- else %}\n            {{- message.content | tojson(ensure_ascii=False) }}\n        {%- endif %}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined %}\n        {%- if enable_thinking is false %}\n            {{- '<think>\\n\\n</think>\\n\\n' }}\n        {%- elif enable_thinking is true %}\n            {{- '<think>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endif %}\n"
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "base_model": "openbmb/MiniCPM5-2B",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "code",
+      "code-search",
+      "tool-use",
+      "reinforcement-learning",
+      "colgrep"
+    ],
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f66d16b44253fed20b6dff2a8b2ffab3f08d8ed1",
+      "size": 1785
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0cc930fea3a186d23dca1bfe3b2357ec2ce8191c",
+      "size": 11393
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "be166eec32c67d62c71d6e0dfaf2c0f194b00923",
+      "size": 9060
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "0cb98fbd9f319ba0390b6649410eb2bc50e533d8",
+      "size": 791
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "51e109f6dbfbb7d9ed7d4c97d7d961943aa90ea3",
+      "size": 237
+    },
+    {
+      "rfilename": "media/banner.png",
+      "blobId": "fa52dc9907b6c5141b3b82ab05e95280e55b5478",
+      "size": 1336968,
+      "lfs": {
+        "sha256": "17eee9967a72bdcc5bc1ca3b635d6699140bebc8a341f25cf1a45262f1f11931",
+        "size": 1336968,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "media/colgrep-demo.gif",
+      "blobId": "a9068cbc22207398ec3adf6b918f972ec5dd8819",
+      "size": 137560,
+      "lfs": {
+        "sha256": "2c555f4a478f86e486638c4770d907694433b67d8e039c8d6a721ce0d03c12f1",
+        "size": 137560,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "media/colgrep_performance_vs_model_size.png",
+      "blobId": "c5040f5cc043b259fea0ee3528dd3c48472fc679",
+      "size": 263094,
+      "lfs": {
+        "sha256": "9295b5c91584b432bcd416ff2930f7f6916cd44506426f90212bb007277d4196",
+        "size": 263094,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "eb8187fe7ea0d595a5daf04d758bdbdc1d53d617",
+      "size": 4498783184,
+      "lfs": {
+        "sha256": "19c22d8e7c3d1f3276889b5277c4bd9d1d7631687b8797285f56809d1de18f36",
+        "size": 4498783184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "8d92cb0a93463e9b64dca30960cf24b78a9e06b2",
+      "size": 534773888,
+      "lfs": {
+        "sha256": "22be60355777581fe0ded99c7bf1b0d72d3a4ae863c069f5fbb4ff36549c483f",
+        "size": 534773888,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "3282ff382469f595de8aa6b0e7dc69d13d7c3272",
+      "size": 31379
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "ec0bf9a34dc884738494ed1f74d0c5327b06d690",
+      "size": 9894271
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "5ad4c7f49d673ee09a82f5a179eaef4484097fd8",
+      "size": 434
+    }
+  ],
+  "spaces": [
+    "lightonai/colgrep-agent"
+  ],
+  "createdAt": "2026-10-03T06:54:16.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 2516756480
+    },
+    "total": 2516756480
+  },
+  "usedStorage": 5036972695
+}

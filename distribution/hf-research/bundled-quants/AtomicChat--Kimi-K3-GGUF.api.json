@@ -1,0 +1,1641 @@
+{
+  "_id": "6a67a774240d0a7fa09eff7d",
+  "id": "AtomicChat/Kimi-K3-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "kimi",
+    "kimi-k3",
+    "moe",
+    "mixture-of-experts",
+    "imatrix",
+    "quantized",
+    "1-bit",
+    "2-bit",
+    "vision",
+    "multimodal",
+    "conversational",
+    "image-text-to-text",
+    "en",
+    "zh",
+    "base_model:moonshotai/Kimi-K3",
+    "base_model:quantized:moonshotai/Kimi-K3",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 3380,
+  "likes": 17,
+  "modelId": "AtomicChat/Kimi-K3-GGUF",
+  "author": "AtomicChat",
+  "sha": "bc0720ffbcd581e0d4e1ab032c04ca513b1e30ca",
+  "lastModified": "2026-10-22T23:52:01.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "kimi-k3",
+    "license_link": "LICENSE",
+    "base_model": "moonshotai/Kimi-K3",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "kimi",
+      "kimi-k3",
+      "moe",
+      "mixture-of-experts",
+      "imatrix",
+      "quantized",
+      "1-bit",
+      "2-bit",
+      "vision",
+      "multimodal",
+      "conversational"
+    ],
+    "library_name": "gguf",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "metrics": [
+      "perplexity",
+      "kl_divergence"
+    ]
+  },
+  "gguf": {
+    "total": 2779484476000,
+    "architecture": "kimi-k3",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "/data/imatrix_v2.dat",
+    "chat_template": "{%- macro escape_attr(value) -%}\n{{- value|string|replace('&', '&amp;')|replace('\"', '&quot;') -}}\n{%- endmacro -%}\n\n{%- macro open_tag(tag, attrs=[]) -%}\n{{- '<|open|>' + tag -}}\n{%- for attr in attrs -%}\n{{- ' ' + attr[0] + '=\"' -}}{{- escape_attr(attr[1]) -}}{{- '\"' -}}\n{%- endfor -%}\n{{- '<|sep|>' -}}\n{%- endmacro -%}\n\n{%- macro close_tag(tag) -%}\n{{- '<|close|>' + tag + '<|sep|>' -}}\n{%- endmacro -%}\n\n{%- macro next_image(state) -%}\n{%- if image_prompts is defined and image_prompts is not none -%}\n    {%- if state.image_index >= image_prompts|length -%}\n        {{- raise_exception('More image placeholders than image prompts.') -}}\n    {%- endif -%}\n    {{- image_prompts[state.image_index] -}}\n    {%- set state.image_index = state.image_index + 1 -%}\n{%- else -%}\n    {{- '<|kimi_image_placeholder|>' -}}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_text(text, state) -%}\n{%- set text = text|string -%}\n{%- if image_prompts is defined and image_prompts is not none and '<|kimi_image_placeholder|>' in text -%}\n    {%- set parts = text.split('<|kimi_image_placeholder|>') -%}\n    {%- for part in parts -%}\n        {{- part -}}\n        {%- if not loop.last -%}{{- next_image(state) -}}{%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n    {{- text -}}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(content, state) -%}\n{%- if content is string -%}\n    {{- render_text(content, state) -}}\n{%- elif content is not none and content is defined -%}\n    {%- for part in content -%}\n        {%- if part.type in ['image', 'image_url'] -%}\n            {{- next_image(state) -}}\n        {%- else -%}\n            {{- render_text(part.text, state) -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro internal_system_message(message_type, body) -%}\n{{- open_tag('message', [('role', 'system'), ('type', message_type)]) -}}\n{{- body|trim -}}\n{{- close_tag('message') -}}\n{{- '<|end_of_msg|>' -}}\n{%- endmacro -%}\n\n{%- macro json_sorted(value) -%}\n{#- Minja \u306f tojson(sort_keys=true) \u3092\u5b9f\u88c5\u3057\u3066\u3044\u306a\u3044\u3002K3 \u53c2\u7167\u5b9f\u88c5\u306f\n    deep_sort_dict() \u306e\u5f8c\u306b compact JSON \u5316\u3059\u308b\u305f\u3081\u3001dictsort \u3068\u518d\u5e30\u30de\u30af\u30ed\u3067\n    \u540c\u3058\u30d0\u30a4\u30c8\u5217\u3092\u4f5c\u308b\u3002\u914d\u5217\u306e\u9806\u5e8f\u306f\u4fdd\u6301\u3057\u3001mapping \u306e\u5404\u968e\u5c64\u3060\u3051\u30bd\u30fc\u30c8\u3059\u308b\u3002 -#}\n{%- if value is mapping -%}\n{{- '{' -}}\n{%- for key, item in value|dictsort -%}\n{%- if not loop.first -%}{{- ',' -}}{%- endif -%}\n{{- key|tojson(ensure_ascii=false) -}}{{- ':' -}}{{- json_sorted(item) -}}\n{%- endfor -%}\n{{- '}' -}}\n{%- elif value is string or value is number or value is boolean or value is none -%}\n{{- value|tojson(ensure_ascii=false) -}}\n{%- else -%}\n{{- '[' -}}\n{%- for item in value -%}\n{%- if not loop.first -%}{{- ',' -}}{%- endif -%}\n{{- json_sorted(item) -}}\n{%- endfor -%}\n{{- ']' -}}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_declare(tool_list, dynamic=false) -%}\n{{- open_tag('message', [('role', 'system'), ('type', 'tool-declare')]) -}}\n{%- if dynamic -%}\n{{- '## New Tools Available\\nThe system dynamically extends the toolset via lazy-loading.\\nYou have access to all existing and extended tools.\\nHere are the specs for the extended tools.\\n\\n```json\\n' -}}\n{%- else -%}\n{{- '# Tools\\nHere are the available tools, described in JSONSchema.\\n\\n```json\\n' -}}\n{%- endif -%}\n{{- json_sorted(tool_list) -}}\n{{- '\\n```' -}}\n{{- close_tag('message') -}}\n{{- '<|end_of_msg|>' -}}\n{%- endmacro -%}\n\n{%- macro xtml_type(value) -%}\n{%- if value is boolean -%}boolean\n{%- elif value is none -%}null\n{%- elif value is number -%}number\n{%- elif value is string -%}string\n{%- elif value is mapping -%}object\n{%- else -%}array\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro xtml_value(value) -%}\n{%- if value is string -%}\n{{- value -}}\n{%- else -%}\n{{- value|tojson(ensure_ascii=false) -}}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_assistant(message, state) -%}\n{%- if thinking -%}\n    {%- set reasoning_content = message.get('reasoning_content') or message.get('reasoning') -%}\n    {{- open_tag('think') -}}\n    {%- if reasoning_content is not none and reasoning_content|string|trim -%}\n        {{- render_text(reasoning_content, state) -}}\n    {%- endif -%}\n    {{- close_tag('think') -}}\n{%- endif -%}\n{{- open_tag('response') -}}\n{{- render_content(message.get('content'), state) -}}\n{{- close_tag('response') -}}\n{%- set tool_calls = message.get('tool_calls') -%}\n{%- if tool_calls -%}\n    {{- open_tag('tools') -}}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call is not mapping -%}\n            {{- raise_exception('Kimi K3 tool calls must be mappings.') -}}\n        {%- endif -%}\n        {%- set fn = tool_call.function if tool_call.function is defined and tool_call.function is mapping else tool_call -%}\n        {%- if fn.get('name') is none -%}\n            {{- raise_exception('Kimi K3 tool calls require a function name.') -}}\n        {%- endif -%}\n        {{- open_tag('call', [('tool', fn.name), ('index', loop.index)]) -}}\n        {%- set arguments = fn.get('arguments', {}) -%}\n        {%- set json_block = fn.get('_xtml_json_block') -%}\n        {%- if json_block is not none -%}\n            {{- open_tag('json', [('type', 'object')]) -}}\n            {{- render_text(json_block, state) -}}\n            {{- close_tag('json') -}}\n        {%- elif arguments is mapping -%}\n            {%- for key, value in arguments.items() -%}\n                {{- open_tag('argument', [('key', key), ('type', xtml_type(value))]) -}}\n                {{- render_text(xtml_value(value), state) -}}\n                {{- close_tag('argument') -}}\n            {%- endfor -%}\n        {%- elif arguments is string and arguments|trim -%}\n            {{- open_tag('json', [('type', 'object')]) -}}\n            {{- render_text(arguments, state) -}}\n            {{- close_tag('json') -}}\n        {%- elif arguments is not none and arguments is not string -%}\n            {{- raise_exception('Kimi K3 tool call arguments must be a mapping or a JSON object string.') -}}\n        {%- endif -%}\n        {{- close_tag('call') -}}\n    {%- endfor -%}\n    {{- close_tag('tools') -}}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_message(message, state, resolved_name=none) -%}\n{%- set state.tool_index = state.tool_index + 1 -%}\n{%- if resolved_name is not none -%}\n    {%- set tool_name = resolved_name -%}\n{%- elif 'tool' in message -%}\n    {%- set tool_name = message.get('tool') -%}\n{%- else -%}\n    {%- set tool_name = message.get('name') -%}\n{%- endif -%}\n{%- if tool_name is none and state.tool_calls is not none and state.tool_index <= state.tool_calls|length -%}\n    {%- set fallback_call = state.tool_calls[state.tool_index - 1] -%}\n    {%- set fallback_fn = fallback_call.function if fallback_call.function is defined and fallback_call.function is mapping else fallback_call -%}\n    {%- set tool_name = fallback_fn.name -%}\n{%- endif -%}\n{%- if tool_name is none -%}\n    {{- raise_exception('Kimi K3 tool messages need a resolvable tool name: carry `tool`/`name`, or match a preceding assistant tool_call by order.') -}}\n{%- endif -%}\n{{- open_tag('message', [('role', 'tool'), ('tool', tool_name), ('index', state.tool_index)]) -}}\n{{- render_content(message.get('content'), state) -}}\n{{- close_tag('message') -}}\n{{- '<|end_of_msg|>' -}}\n{%- endmacro -%}\n\n{%- if thinking is undefined -%}\n    {%- set thinking = true -%}\n{%- endif -%}\n{%- if thinking_effort is undefined -%}\n    {%- set thinking_effort = 'max' -%}\n{%- endif -%}\n{%- if thinking and thinking_effort is not none and thinking_effort not in ['low', 'high', 'max'] -%}\n    {{- raise_exception('Unsupported thinking_effort=' + thinking_effort|string + '; supported values are low, high, and max.') -}}\n{%- endif -%}\n\n{%- set state = namespace(image_index=0, tool_calls=none, tool_index=0, response_schema=none) -%}\n\n{%- if tools is defined and tools -%}\n    {{- render_tool_declare(tools) -}}\n{%- endif -%}\n\n{%- if thinking and thinking_effort in ['low', 'high', 'max'] -%}\n    {{- internal_system_message(\n        'thinking-effort',\n        '`thinking_effort` guides on how much to think in your thinking channel (not including the response channel), supported values include `low`, `medium`, `high`, and `max`.\\nNow the system is invoked with `thinking_effort=' + thinking_effort|string + '`.'\n    ) -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message is mapping -%}\n        {%- if 'role' not in message -%}\n            {{- raise_exception('Kimi K3 messages require a role.') -}}\n        {%- elif message.role == 'user' -%}\n            {%- set attrs = [('role', 'user')] -%}\n            {%- if message.get('name') -%}{%- set attrs = attrs + [('name', message.name)] -%}{%- endif -%}\n            {{- open_tag('message', attrs) -}}\n            {{- render_content(message.get('content'), state) -}}\n            {{- close_tag('message') -}}\n            {{- '<|end_of_msg|>' -}}\n        {%- elif message.role == 'system' and message.get('tools') -%}\n            {{- render_tool_declare(message.tools, dynamic=true) -}}\n        {%- elif message.role == 'system' -%}\n            {%- set attrs = [('role', 'system')] -%}\n            {%- if message.get('name') -%}{%- set attrs = attrs + [('name', message.name)] -%}{%- endif -%}\n            {{- open_tag('message', attrs) -}}\n            {{- render_content(message.get('content'), state) -}}\n            {{- close_tag('message') -}}\n            {{- '<|end_of_msg|>' -}}\n        {%- elif message.role == 'assistant' -%}\n            {%- set state.tool_calls = message.get('tool_calls') -%}\n            {%- set state.tool_index = 0 -%}\n            {%- set attrs = [('role', 'assistant')] -%}\n            {%- if message.get('name') -%}{%- set attrs = attrs + [('name', message.name)] -%}{%- endif -%}\n            {{- open_tag('message', attrs) -}}\n            {{- render_assistant(message, state) -}}\n            {{- close_tag('message') -}}\n            {{- '<|end_of_msg|>' -}}\n        {%- elif message.role == 'tool' and (loop.first or messages[loop.index0 - 1].role != 'tool') -%}\n            {%- set run = namespace(tool_messages=[], resolved_count=0) -%}\n            {%- for candidate in messages[loop.index0:] -%}\n                {%- if candidate is not mapping or candidate.role != 'tool' -%}{%- break -%}{%- endif -%}\n                {%- set run.tool_messages = run.tool_messages + [candidate] -%}\n                {%- set call_id = candidate.get('tool_call_id', candidate.get('id')) -%}\n                {%- set match = namespace(found=false) -%}\n                {%- if call_id is not none and state.tool_calls is not none -%}\n                    {%- for tool_call in state.tool_calls -%}\n                        {%- if not match.found and tool_call is mapping and tool_call.get('id') is not none and tool_call.get('id')|string == call_id|string -%}\n                            {%- set match.found = true -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n                {%- if match.found -%}{%- set run.resolved_count = run.resolved_count + 1 -%}{%- endif -%}\n            {%- endfor -%}\n            {%- if run.tool_messages|length > 0 and run.resolved_count == run.tool_messages|length -%}\n                {%- set emitted = namespace(ids=[]) -%}\n                {%- for tool_call in state.tool_calls -%}\n                    {%- if tool_call is mapping and tool_call.get('id') is not none and tool_call.get('id')|string not in emitted.ids -%}\n                        {%- set emitted.ids = emitted.ids + [tool_call.get('id')|string] -%}\n                        {%- set fn = tool_call.function if tool_call.function is defined and tool_call.function is mapping else tool_call -%}\n                        {%- for tool_message in run.tool_messages -%}\n                            {%- set result_id = tool_message.get('tool_call_id', tool_message.get('id')) -%}\n                            {%- if result_id is not none and result_id|string == tool_call.get('id')|string -%}\n                                {{- render_tool_message(tool_message, state, fn.get('name')) -}}\n                            {%- endif -%}\n                        {%- endfor -%}\n                    {%- endif -%}\n                {%- endfor -%}\n            {%- else -%}\n                {%- for tool_message in run.tool_messages -%}\n                    {{- render_tool_message(tool_message, state) -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if tool_choice is defined and tool_choice == 'required' -%}\n    {{- internal_system_message('tool-choice', 'The system is invoked with `tool_choice=required`.\\nYou MUST call tools in the next message.') -}}\n{%- elif tool_choice is defined and tool_choice == 'none' -%}\n    {{- internal_system_message('tool-choice', 'The system is invoked with `tool_choice=none`.\\nYou MUST NOT call any tools in the next message.') -}}\n{%- endif -%}\n\n{%- if response_schema is defined -%}\n    {%- set state.response_schema = response_schema -%}\n{%- elif response_format is defined and response_format is mapping and response_format.get('json_schema') is not none -%}\n    {%- set schema_wrapper = response_format.get('json_schema') -%}\n    {%- if schema_wrapper is mapping and 'schema' in schema_wrapper -%}\n        {%- set state.response_schema = schema_wrapper.get('schema') -%}\n    {%- elif schema_wrapper is mapping and 'json_schema' in schema_wrapper -%}\n        {%- set state.response_schema = schema_wrapper.get('json_schema') -%}\n    {%- else -%}\n        {%- set state.response_schema = schema_wrapper -%}\n    {%- endif -%}\n{%- endif -%}\n\n{%- set response_format_type = none -%}\n{%- if response_format is defined and response_format is mapping -%}\n    {%- set response_format_type = response_format.get('type') -%}\n{%- elif response_format is defined -%}\n    {%- set response_format_type = response_format -%}\n{%- endif -%}\n{%- if response_format_type == 'json_object' -%}\n    {{- internal_system_message(\n        'response-format',\n        'The system is invoked with `response_format=json_object`.\\nYour response must be raw JSON data without markdown code blocks (```json) or any additional formatting.'\n    ) -}}\n{%- elif response_format_type == 'json_schema' -%}\n    {{- internal_system_message(\n        'response-format',\n        'The system is invoked with `response_format=json_schema`.\\nYour response must be raw JSON data without markdown code blocks (```json) or any additional formatting.\\nThe JSON data must match the following schema:\\n```json\\n' + json_sorted(state.response_schema) + '\\n```'\n    ) -}}\n{%- endif -%}\n\n{%- if add_generation_prompt -%}\n    {{- open_tag('message', [('role', 'assistant')]) -}}\n    {{- open_tag('think' if thinking else 'response') -}}\n{%- endif -%}\n\n{%- if image_prompts is defined and image_prompts is not none and state.image_index != image_prompts|length -%}\n    {{- raise_exception('image prompt count ' + image_prompts|length|string + ' != consumed placeholder count ' + state.image_index|string) -}}\n{%- endif -%}",
+    "bos_token": "[BOS]",
+    "eos_token": "<|end_of_msg|>",
+    "totalFileSize": 689888739712
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "83cec3fa06b0772e3a8f0ab8866b727b34078c71",
+      "size": 17494
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00001-of-00016.gguf",
+      "blobId": "46bfc12c8b8a773d907d3d2ec6c9a3c704accbe3",
+      "size": 44124070400,
+      "lfs": {
+        "sha256": "1aaeacb48f7e8dff7ed1e25a4840bd5cc373c00ac21ca94ccabf0f534b87ff64",
+        "size": 44124070400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00002-of-00016.gguf",
+      "blobId": "1fdf9db5685a2332b9623630ecf6827f57ca4fb5",
+      "size": 43402583712,
+      "lfs": {
+        "sha256": "956b9e0d3ae64ec318451bc33bc0a550d43d71211adc74e23377b89736450403",
+        "size": 43402583712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00003-of-00016.gguf",
+      "blobId": "27632d258ff73ff13f353e15b29e7d513125d429",
+      "size": 44921170656,
+      "lfs": {
+        "sha256": "029d3dbb7435c099b4adbb89739877aeb6b8d68131a07d644ead001609ae1f82",
+        "size": 44921170656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00004-of-00016.gguf",
+      "blobId": "19a5fd3e337ba6e322eb353088b5343f592b238f",
+      "size": 44062069664,
+      "lfs": {
+        "sha256": "2b8737e8cdd32710efdff9a7a6a49c27cc99e32bdaa091be0f3898aa2d8f070a",
+        "size": 44062069664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00005-of-00016.gguf",
+      "blobId": "c147d130a98fb13254ab63abdf6d3be46233630d",
+      "size": 44227537632,
+      "lfs": {
+        "sha256": "52588584b33ddef96f82dbe0e5dbcc446f87d97a429d9dac7214be68e6b52246",
+        "size": 44227537632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00006-of-00016.gguf",
+      "blobId": "42083a8d7c5af6a0297340c1d6353e1fb4f9f5e2",
+      "size": 44062069664,
+      "lfs": {
+        "sha256": "c117941447cf5020e48ca9eeb771ab3ec33e3ecf956c61e52c1ef0767db99271",
+        "size": 44062069664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00007-of-00016.gguf",
+      "blobId": "b0c21d9a1355db190d3162c4bbc04cc22d6507a1",
+      "size": 44227537632,
+      "lfs": {
+        "sha256": "8b2d8f024fbb5c0db23f7d9ec9a825d19331ddc15ec999a10676346f4fe1140a",
+        "size": 44227537632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00008-of-00016.gguf",
+      "blobId": "b0bf1ccf028c145a173e1835d98df1484b7bf525",
+      "size": 44062069664,
+      "lfs": {
+        "sha256": "69666287cb6ed8d1691f0226f20011949a8460ccf7cb632637325493b36e75ef",
+        "size": 44062069664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00009-of-00016.gguf",
+      "blobId": "74b9b4f577213a966adc563f8217dbf5055baf1a",
+      "size": 44227537632,
+      "lfs": {
+        "sha256": "046f498f511979bd9f3a77099f87a098c8491c13a62dbf8530e4485102833d40",
+        "size": 44227537632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00010-of-00016.gguf",
+      "blobId": "62adb067fd5594fb76a8b860163da7e605193b7a",
+      "size": 44062069664,
+      "lfs": {
+        "sha256": "d039cdc8f4d0a5ed51085c895b916a7276bdf846581ff3f06321dd9d026fe2d0",
+        "size": 44062069664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00011-of-00016.gguf",
+      "blobId": "a3ebb8c62527e3278fb7c72a0a6336c5ab1aa19a",
+      "size": 44227537632,
+      "lfs": {
+        "sha256": "f62377ec6da91f35783c87871b5811e34be4c4c7a17297ba3ccc096b58ea1205",
+        "size": 44227537632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00012-of-00016.gguf",
+      "blobId": "7ebbe7020041b109c1a80801ec32525f4da31fc7",
+      "size": 44062069664,
+      "lfs": {
+        "sha256": "b5c86e5a90a02bf26b9b77f55b9525bf6db8434db8d13af887357c44a997b4f1",
+        "size": 44062069664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00013-of-00016.gguf",
+      "blobId": "4b255bc7c66944e8064de70eafa5fb326702453b",
+      "size": 44227537632,
+      "lfs": {
+        "sha256": "917f4481d8c49242b98fc9f71fa893e9556e64a9242b443b5ba8d28f25d95e92",
+        "size": 44227537632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00014-of-00016.gguf",
+      "blobId": "988d071b72b0e037dc0b26a710b774708c2fb4c1",
+      "size": 44062069664,
+      "lfs": {
+        "sha256": "e98e835af1c98061ae268ce08a0521543e5e265e2af7a9aab34495d0f61c4072",
+        "size": 44062069664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00015-of-00016.gguf",
+      "blobId": "b0f06a22b3706e8418a67a2a80935ec00c5ccdd8",
+      "size": 44227537632,
+      "lfs": {
+        "sha256": "df57655727095aadd53184ecaa56d9964574441b7cfc101d81b3f65dce3b15d3",
+        "size": 44227537632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_M/Kimi-K3-IQ1_M-00016-of-00016.gguf",
+      "blobId": "e347af92118a78c577807f8a4724aa8cc89689c5",
+      "size": 27703271168,
+      "lfs": {
+        "sha256": "bb012022ebe5fbd0acce14254358d5ae7ddd38d5c2c6071694792b9a4ef353bf",
+        "size": 27703271168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00001-of-00014.gguf",
+      "blobId": "9e23696ca7e3a450fd134cb2a2722e26d17d590a",
+      "size": 45003103776,
+      "lfs": {
+        "sha256": "49e528666d52fdf01881ba4335d62bae3380239fff791db26e5bf8cde790e761",
+        "size": 45003103776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00002-of-00014.gguf",
+      "blobId": "a300aa03fdf2eb7b421673326fb4f0fed5ba0d8a",
+      "size": 43525628672,
+      "lfs": {
+        "sha256": "616070c4769a0f7e43f39cd2ae9aa00c49a4efd153cf645c0e2d79bd0242ecbf",
+        "size": 43525628672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00003-of-00014.gguf",
+      "blobId": "aa2b33ffc91c25ffab07d2f586cdd53319ce0dfb",
+      "size": 43906113280,
+      "lfs": {
+        "sha256": "42e2d023ef71a4d6fc32b7accc2351d7e32a730abc85b26c57314b1f7128c6a3",
+        "size": 43906113280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00004-of-00014.gguf",
+      "blobId": "5e5bf937f7383b6d09c9d740ee863db5526a5d26",
+      "size": 43909908640,
+      "lfs": {
+        "sha256": "72cd70e26e10c2e3d7c50e61629a1453f8845ebbb3557ad24a38bb3664035466",
+        "size": 43909908640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00005-of-00014.gguf",
+      "blobId": "367f0f8bb68cab56f8ad9a9556d0f21b307b69f4",
+      "size": 44075376640,
+      "lfs": {
+        "sha256": "e72f2f1a2a3ff114d591f7cb3b4eefd4f008b1e9d6aeac4393b9ed685cf8dc3b",
+        "size": 44075376640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00006-of-00014.gguf",
+      "blobId": "60b3c56e832d589e155662905242123b5b63932e",
+      "size": 43906113280,
+      "lfs": {
+        "sha256": "440eb00e66779fa3f3b8f02a103a279557140829252f23b94cca9133942b801f",
+        "size": 43906113280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00007-of-00014.gguf",
+      "blobId": "b8a7a828f768b59b37079d123a1977fdf4de4c93",
+      "size": 43906113280,
+      "lfs": {
+        "sha256": "ccd93142b353e7b89a2c44731561ffb78736cc8ab0d8ae2e74573bd9a82e9634",
+        "size": 43906113280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00008-of-00014.gguf",
+      "blobId": "0ee8343a0b0f4698957bcef5ae63f65522e89345",
+      "size": 43909908640,
+      "lfs": {
+        "sha256": "7821365ac603514fe4d4e83bf2c5d95ab5c0fa70644be05f6b427d335028627f",
+        "size": 43909908640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00009-of-00014.gguf",
+      "blobId": "b3d7ee19efed26764797694c4ab848b7ec7b6234",
+      "size": 44075376640,
+      "lfs": {
+        "sha256": "9df48002d4002cd283e6a441aaf223c680fa328e00122c9f42e685be2017837a",
+        "size": 44075376640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00010-of-00014.gguf",
+      "blobId": "b5d2e2c67454229461c40d971fae623ecdb807d9",
+      "size": 43906113280,
+      "lfs": {
+        "sha256": "821f1924404b763acad972d933eb20da151eb617586f6ff739fa7c3590c4506a",
+        "size": 43906113280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00011-of-00014.gguf",
+      "blobId": "f196760a1c083586228a944be314204cf15bd897",
+      "size": 43906113280,
+      "lfs": {
+        "sha256": "5f794be2e2d4a860907c5e2497028f531e47c5baa3807efe9f1ad3559a05c453",
+        "size": 43906113280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00012-of-00014.gguf",
+      "blobId": "0faa0832a17b07f6874d04103a6e54146a036231",
+      "size": 43909908640,
+      "lfs": {
+        "sha256": "21465612bef821c95bdf0826612a8787833a56470524cdba7cbacaa5bfe76d78",
+        "size": 43909908640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00013-of-00014.gguf",
+      "blobId": "79316b625be6a0f1531478e758d8ac11768b0b64",
+      "size": 44075376640,
+      "lfs": {
+        "sha256": "09fb0a4a9a30003e5b6b79ba8baec66a80555f7a432f2d506bc2cb647c0c7574",
+        "size": 44075376640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/Kimi-K3-IQ1_S-00014-of-00014.gguf",
+      "blobId": "038bcef99dc341d71faeca606f72760b73143e4a",
+      "size": 17528007136,
+      "lfs": {
+        "sha256": "24e6bf3df34a991dd46184d47f632a19c3c1f915c4eb491375c4c2e53dd99124",
+        "size": 17528007136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00001-of-00018.gguf",
+      "blobId": "56e7a327c90a68eed9c66008fbc65fa8fc1bdb07",
+      "size": 44990738016,
+      "lfs": {
+        "sha256": "ecf45e28efa5d757eeaae2e9f0f4250bc228e45281506417e2270140a96de51d",
+        "size": 44990738016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00002-of-00018.gguf",
+      "blobId": "00e52d6decbb972a7cd43fb7ebafca73099820b9",
+      "size": 44194531424,
+      "lfs": {
+        "sha256": "61da97342d19c69cce91ffe0f7a09e9d97694b435eb0daff46d576597daf2670",
+        "size": 44194531424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00003-of-00018.gguf",
+      "blobId": "923dffa3b6dac1ea1c4f9e7195e83c7a28d086c0",
+      "size": 43983019648,
+      "lfs": {
+        "sha256": "9fbe346e8d1f667f82ca87bb8adcec9c1d42c57b6fcb8dd0421ccc3e1ae2a382",
+        "size": 43983019648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00004-of-00018.gguf",
+      "blobId": "7e14af30ffff97619e199a5ce606c5bb0978f15b",
+      "size": 44148487616,
+      "lfs": {
+        "sha256": "9f80af1005b0d6226d28e1695da82e6c990b5155890cb6d172828b4cb6440b33",
+        "size": 44148487616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00005-of-00018.gguf",
+      "blobId": "1d063e681bd55ea19051250bd523f4d464eec302",
+      "size": 43458649952,
+      "lfs": {
+        "sha256": "64487731b46eaf74725ce01ddd760c3c28757e0246a9032b7212905bb7ffcc51",
+        "size": 43458649952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00006-of-00018.gguf",
+      "blobId": "72e450c562d9a8c394274f9fdde9b779165d89a0",
+      "size": 43459455168,
+      "lfs": {
+        "sha256": "af73899efefa4522e62e1d535936ee8114314f491cbf0d6108f66e4dce4eb21b",
+        "size": 43459455168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00007-of-00018.gguf",
+      "blobId": "08027fce7d42d4bf45d6d83ecf231f9b1c630e46",
+      "size": 43259770432,
+      "lfs": {
+        "sha256": "4f156adca0bfa376d9efee17d20481f2a385fa99764534e07f35096d060f6bd2",
+        "size": 43259770432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00008-of-00018.gguf",
+      "blobId": "b68b8be9d2a8e117a6cf432471d75145d47de6d0",
+      "size": 43331504544,
+      "lfs": {
+        "sha256": "265afb9585a2904b67bbb5bc3367ddfc0cf160d6fb78d7909e9e6d13929a50f3",
+        "size": 43331504544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00009-of-00018.gguf",
+      "blobId": "1003365b4803d78d50bfc867ce2418470da443a6",
+      "size": 43459455168,
+      "lfs": {
+        "sha256": "2af1dd53ea6060dbf180f0110820f78a664660eb9530d37a1a8bc7b6795c6464",
+        "size": 43459455168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00010-of-00018.gguf",
+      "blobId": "62667fe01b650b720d91739e0c5175251952fcf7",
+      "size": 43259770432,
+      "lfs": {
+        "sha256": "0ad3b9acc669a483263d2bf5e09c0a379322f751a4d0603cdae570c068ff2cf0",
+        "size": 43259770432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00011-of-00018.gguf",
+      "blobId": "d6321761231852a88352786dc319def581fba3bb",
+      "size": 43331504544,
+      "lfs": {
+        "sha256": "1860ee9bfde87ca94cf595c38359d0f476024fc785d9d749058ed185b841d9b3",
+        "size": 43331504544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00012-of-00018.gguf",
+      "blobId": "ed9074cc5e32fcf73c52fe157c2f8f20005859fd",
+      "size": 43459455168,
+      "lfs": {
+        "sha256": "1c3dd63a366a286d86b3dba23eae024b7e6313eeba66f724d0113ae2e465fae0",
+        "size": 43459455168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00013-of-00018.gguf",
+      "blobId": "8cc64eb092c65da2276df38db738077f14197c0f",
+      "size": 43259770432,
+      "lfs": {
+        "sha256": "adead52399600fe6050d30d6612ca8146e6202383cad617bd9b308e02bef5337",
+        "size": 43259770432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00014-of-00018.gguf",
+      "blobId": "937bb70cc00940ad3d08ab2b3cca860f142f0f78",
+      "size": 43331504544,
+      "lfs": {
+        "sha256": "e5b8c8c64ac48f8cb0d8a8cfcd8a5c640078779ec3abbad3868690b8c03f4b49",
+        "size": 43331504544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00015-of-00018.gguf",
+      "blobId": "5853c878a13f16f7edd8b8bfb5d5f9c0f390a29c",
+      "size": 43459455168,
+      "lfs": {
+        "sha256": "63ce5d91dd67dea0b6a04b00c7eaaa5a423d7e2744779af5d46ccb74b2e6a06d",
+        "size": 43459455168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00016-of-00018.gguf",
+      "blobId": "4f7da97a684c30c2a5fe9da28d2db40ff5a7f91e",
+      "size": 43259770432,
+      "lfs": {
+        "sha256": "2c5459daebe132d79af012c010d4bc4c0ce180758468374704ee2fce68d955c2",
+        "size": 43259770432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00017-of-00018.gguf",
+      "blobId": "79edb0da20b8d1f5953c54ba6f7679ab495631f5",
+      "size": 43331504544,
+      "lfs": {
+        "sha256": "a347f321e0819b4a50ec940f7d98972cfd3432d03df5a3c5acc6f2c77bc4ecb4",
+        "size": 43331504544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/Kimi-K3-IQ2_XXS-00018-of-00018.gguf",
+      "blobId": "09141c8c1134114230711b69f455e82235eb902b",
+      "size": 28138697920,
+      "lfs": {
+        "sha256": "6f689823671ecf42c9a4259996391ff6b7d4c21d4bbec6bffcfe8ebdb2b81c0e",
+        "size": 28138697920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "97c0111bba229b0981b1d74e34bacef723ca8f7b",
+      "size": 3065
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00001-of-00028.gguf",
+      "blobId": "d80a384209e5a238bcc4f1a5a2047b7f844f73c3",
+      "size": 41115722784,
+      "lfs": {
+        "sha256": "25c2e323bf20ae5c78772da4be44ee281e1a28063bed1ad1ffcbcc98dbbb133f",
+        "size": 41115722784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00002-of-00028.gguf",
+      "blobId": "d1e7db29d168e7b842ea5c0c405cfc21a0197771",
+      "size": 43207527424,
+      "lfs": {
+        "sha256": "3fca61a9a9329f141ae5c531ca51b1d6d0fab4e110db96badd3ed35534cdb0c2",
+        "size": 43207527424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00003-of-00028.gguf",
+      "blobId": "ebafe9370ea34ec1640dadeb689d4d05a3e9f1f4",
+      "size": 43341800992,
+      "lfs": {
+        "sha256": "911284b9561cb35a63c480679a19ec89be84b9b3ccdce35457a8e4f22c90bd70",
+        "size": 43341800992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00004-of-00028.gguf",
+      "blobId": "326acb9a2aff71a88ab8db81a45611e583b1c06a",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "86028e116ea8b631db5abe32a786cad9e501f3a192531ce70e9d831e0dc3d363",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00005-of-00028.gguf",
+      "blobId": "7ca5fbfdbf0ff372bea07964988e824dd53519a2",
+      "size": 43205312448,
+      "lfs": {
+        "sha256": "2c5223ded6f61b01566da9355f9c1b30045b0eb7f5236417cbfeb7520d7d8535",
+        "size": 43205312448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00006-of-00028.gguf",
+      "blobId": "676c7b63e609a2e32b5f78fec89672265b6dcb84",
+      "size": 43253180800,
+      "lfs": {
+        "sha256": "e5dde91d4eceba753fe0bc96cf2355ee98f52cdf69755144543b82ddd903e187",
+        "size": 43253180800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00007-of-00028.gguf",
+      "blobId": "3031183089a6e9669f78c1ec5419fa8d9586d7bb",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "4a9e20607b2a5ff20ff61c5914b44adfae5fde6995636dca1bbb21898b6fa784",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00008-of-00028.gguf",
+      "blobId": "0ce5dba8cbc64f22bbcaf91dbbcabec9cdffcab4",
+      "size": 43207527520,
+      "lfs": {
+        "sha256": "155afdf0db6cc5033b0c37bcc1ef6373e8d258999641577a8eaefa9ff2746a44",
+        "size": 43207527520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00009-of-00028.gguf",
+      "blobId": "f62b011f7c5169e805d94d74e5db2ff4ea9af561",
+      "size": 43341801056,
+      "lfs": {
+        "sha256": "456fe11d75f21325926fd38942f8dedf8d6595c506b7c34f546a039b0e4b80dd",
+        "size": 43341801056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00010-of-00028.gguf",
+      "blobId": "62efa6bb1d4396911b353abfec67e96cb915fc69",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "bc29e501b099a9c31ad37f39c358a198a6beeca0f21dc3ae63804d59877255c8",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00011-of-00028.gguf",
+      "blobId": "c00039345fc01d2b93008707f6fe0cc8fb6adc44",
+      "size": 43205312448,
+      "lfs": {
+        "sha256": "4510926402b7a5e2ce5ec22d0ad4c2e5a26da9b22f1a1ab0eb3e30153c5782e0",
+        "size": 43205312448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00012-of-00028.gguf",
+      "blobId": "35587fc41562d24321a97ead0147db4b2817e14a",
+      "size": 43253180800,
+      "lfs": {
+        "sha256": "6cb166c138afa97dcf8c58d6d8c097cf29c2693ab359fc0713c64669d2aec430",
+        "size": 43253180800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00013-of-00028.gguf",
+      "blobId": "bd9c381f0418c1d327028524453df43fd4c8775c",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "beaf7d9b14f8249ad4c9d93c24589b17f48c1702767ff9fd2fef4dc0ab2e8fd8",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00014-of-00028.gguf",
+      "blobId": "5c4851ed40a85cdc81e97733cb307f42c2ce641e",
+      "size": 43207527520,
+      "lfs": {
+        "sha256": "892cf79876c198407958ffefc50d3489f061f6b071e900535d76e42bffd93ca2",
+        "size": 43207527520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00015-of-00028.gguf",
+      "blobId": "5947cb871bd2ab2946b1f7252c4db5da2772c1f1",
+      "size": 43341801056,
+      "lfs": {
+        "sha256": "e4cc9e401409deb80e063dc914bd808458dfd08cd4a45077c1435d1d5b83190a",
+        "size": 43341801056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00016-of-00028.gguf",
+      "blobId": "e68af00ebe0c40aebee0910ef16b82f3faed6e24",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "7dedaf317417919e1fb4682270531a892755c7f24887eeea6f1238c03744a1d8",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00017-of-00028.gguf",
+      "blobId": "4f59fd318d131b8652e25c48f5ea0cbb86c6d6a3",
+      "size": 43205312448,
+      "lfs": {
+        "sha256": "e060a921164ba970b96971107df36a927723fc26c47a0bf5f1a7a10a3d7c4065",
+        "size": 43205312448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00018-of-00028.gguf",
+      "blobId": "f0045fdd6829a6b0a6d69482bae5ec2748022fd2",
+      "size": 43253180800,
+      "lfs": {
+        "sha256": "3150dccf448aa8c18498f561e290edefbf6d9c5e0365db7b9e926b5628c8c5dd",
+        "size": 43253180800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00019-of-00028.gguf",
+      "blobId": "f34705b5bbaee4045f6729c757c299240f44e718",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "c37e30c3f9d2fc2b91421e183cf737c2bd096615c2ea18a576e470df2e6295ec",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00020-of-00028.gguf",
+      "blobId": "63724f986556655e97d5eca4764a29a2a46a7d65",
+      "size": 43207527520,
+      "lfs": {
+        "sha256": "6acebf60d7f7561ca945668255c5246e70a9fc3d67f21923d1ccdfb7e188d899",
+        "size": 43207527520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00021-of-00028.gguf",
+      "blobId": "199d6cfd74fd992db7a5ec7d43ab027c98bce83b",
+      "size": 43341801056,
+      "lfs": {
+        "sha256": "78bf5abaddd0a608fa6b67b74f864fe8e1bc00b5e7ec8df2d5b25f70b6f2f897",
+        "size": 43341801056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00022-of-00028.gguf",
+      "blobId": "f585169cbdd0d555b9ff50f631434368b92e9854",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "19efa4a278ae1424de1e49aba9d86419bce08ddd15946f994f635ff7d218cd9f",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00023-of-00028.gguf",
+      "blobId": "6fefdc92bcb56e3ae806d72f61e4fe45ec52c26c",
+      "size": 43205312448,
+      "lfs": {
+        "sha256": "b6b6711b2927d6ceb1af4dabca445d74617d3425dbe5fefbb94ad6bed60801d4",
+        "size": 43205312448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00024-of-00028.gguf",
+      "blobId": "ce2e5260e2df6eb0674f878d364d8332a351a34f",
+      "size": 43253180800,
+      "lfs": {
+        "sha256": "70491dc535d14a8fbe1543e541607ca183cc3ebc1e7763d2c73fdacb0636fecc",
+        "size": 43253180800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00025-of-00028.gguf",
+      "blobId": "49ef9a1415d560fed8b23b775331547c4b2b4093",
+      "size": 43396852864,
+      "lfs": {
+        "sha256": "f51345c4372449e586172705956fa74482c752522cdbbe8936990f99259d6831",
+        "size": 43396852864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00026-of-00028.gguf",
+      "blobId": "14ed0553c5c86114f998504811821116ca372ab3",
+      "size": 43207527520,
+      "lfs": {
+        "sha256": "657b731e561fb2311a8bda0a57936732210ce3d9c27b137606237ca00675da0f",
+        "size": 43207527520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00027-of-00028.gguf",
+      "blobId": "79b8bab3966c3fe3cdf038c7e7f4c0d670cf7337",
+      "size": 43341801056,
+      "lfs": {
+        "sha256": "83bb264df3f6336e3cf4911d82d0a60473bce118d13c7ed4af6bf45912ff783b",
+        "size": 43341801056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_S/Q3_K_S-00028-of-00028.gguf",
+      "blobId": "32e0b658795fed9ae9deb46ce3c245c5e42606be",
+      "size": 30103906976,
+      "lfs": {
+        "sha256": "2ff33e7177fb601fc629a9fc8ec4d772a787f224610e62bf80651a742fb9a139",
+        "size": 30103906976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00001-of-00071.gguf",
+      "blobId": "0b4faa603f63f8aedb6676dbb4ef6f3172769b0c",
+      "size": 44943932032,
+      "lfs": {
+        "sha256": "37e59ecaff9cfd0da07b98df44befcc9295601abf6a8dfae34c4e264c866d944",
+        "size": 44943932032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00002-of-00071.gguf",
+      "blobId": "95a3881702facb79be304d62ec92b7bb4820234e",
+      "size": 38097664160,
+      "lfs": {
+        "sha256": "330628f29b78a5a8978d0cd8624422f67fd77d1c7ee1b7ebbcc92a44eeacd39f",
+        "size": 38097664160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00003-of-00071.gguf",
+      "blobId": "6ee930b70c1385d2e6f569f40d0996622ab43481",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "6a7104709bcb947ec7c7694969774aeddbebae72d68b5dee541b564e4ec52856",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00004-of-00071.gguf",
+      "blobId": "268ee59ac6ca4c58cf429ec62ed45b3d66046e6e",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "0fa717c72005f9d755f5747478daae524eaffb72aa0f6203a5a04740bbf5aa89",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00005-of-00071.gguf",
+      "blobId": "8541cc4af975c2be4a1af0f86247d2c2b2e8f34f",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "9c427fd5ea6fa50635b24994ac7b9e93ef57cd0dda038df0e117036e6163b028",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00006-of-00071.gguf",
+      "blobId": "fdf6b3c3ce24969d27c30df162d34b7c6a3d4efe",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "7d0114cd64725b99d0f8191630de6b7ece5f8b19151e29f27e8dc4f3ef480d4e",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00007-of-00071.gguf",
+      "blobId": "4fbe0767ba3d349cce784913c6153943e99037fc",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3c93172d56b751ff6a991f6654ac2f5de96fe05502fea6ebcf126599267c2766",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00008-of-00071.gguf",
+      "blobId": "40baea06a3d5870bf071a53aa9c70cbcf9c1d834",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "0e456896ef4bfc9361c8760dcc60ff040806adf32bf62d09226e163a1533b772",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00009-of-00071.gguf",
+      "blobId": "c5f538ed32d253b4199e9f883530a1d70688f791",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "9f557fc3f7dc27957da4c995fcdfb7efc4c180f1ad04ddcfed89b08082ee8ea0",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00010-of-00071.gguf",
+      "blobId": "cc0853df8268198388f8ed456f51ae6ed2463787",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "0dfc861ef0cc4949574d68b7679364d51d4a310de0566bee53e176134e8f59e4",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00011-of-00071.gguf",
+      "blobId": "09491a462bdf46fb6a159f17b40cdb23951d2bda",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "bac89bc973443b47e118611d9895525e47cf8fb9388d95121c057c0f007c1121",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00012-of-00071.gguf",
+      "blobId": "3c5be82d7680abc51d312b36e7dcfa8dcccb1fd5",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "b47ab845e10fac9c6652f1fd686dd3e115149a875a46ff116d17ed4649e4e5cf",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00013-of-00071.gguf",
+      "blobId": "0bc34d1647e57f2b787b7d7ea18dfdb6aa7af2ac",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "359c7b4d891ef9aa42c2aa0f37d7e8dd4ce8d17e3b1e6ee387b15a5a0393e54a",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00014-of-00071.gguf",
+      "blobId": "bd4f7ed42e76b7e746fc93bba13d5b6a143b182d",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "9451b583e9584799d7e744fc6da46fca7ce8411bccaed510388d96b96374aebe",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00015-of-00071.gguf",
+      "blobId": "2c40d1a906950a9e54b4db9bfe6a9eeea09c184a",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "139b099c46afaae2bbe696d3f1443ecd93cd0996d317a03a396c23dc62f06fab",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00016-of-00071.gguf",
+      "blobId": "f4f0104ef00915b1169c99d651acb21b60ee2071",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "0b1f807ab9caa46a2fa42b9532b8126bf604812f0e55b750c1f609fc2d4caad9",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00017-of-00071.gguf",
+      "blobId": "5d1911ee26780c669a057a8566b72692ab005fa7",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "45046fe53ddb2eaba63202164f68c95b5bbd6569fc58370e3d145ed11c4a66c1",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00018-of-00071.gguf",
+      "blobId": "dac688359f1fb45a248b53705e71cbe4fb3a44c2",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "44ed049c74e52d07f56ad234870908bd6ebb00a15ec5c924726c0ae2ec8a837e",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00019-of-00071.gguf",
+      "blobId": "f52a79196cc5a55950d4e6057745863a15681312",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3ece38da6e72c7624233e0c299760fd3e1d724d69dc37c08de6b677a7b7b5751",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00020-of-00071.gguf",
+      "blobId": "50569e1ddb9c7f4e391cc20861341c9833f85efb",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "a1dba59924781212b269becdc0cb0111822e838302715b2a7c76350c13bbe59b",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00021-of-00071.gguf",
+      "blobId": "e1eb364c275c5b1cfccae6b04ccc53a43946cc5a",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3d7eac546fb450ecf2f8dc07f92be6b0b6e872d45ed649ac1eee0a04dccf7e4c",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00022-of-00071.gguf",
+      "blobId": "78c81fc2310c2215f91abcf0190ec527ef4277e3",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3ccc5391906bcadcbc8f4e603fb0f5ced9e8a6d65ab968cd0e5761c3cdb6daca",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00023-of-00071.gguf",
+      "blobId": "f9e24fffbd08b240e7c64ee420681db19b46c47c",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "fe376340dbe2a6202f7fd50cc5fb72bde43aada3384d7112c07683701b4a7af6",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00024-of-00071.gguf",
+      "blobId": "84082a3248c1a54e8dbd170cacac1c57dd77433a",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "aa967773aba61a0eeeee0478ff89ac698675816e51ae5d078f66559955adfa0e",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00025-of-00071.gguf",
+      "blobId": "7fab62d952922149de6b5c9073f8160225233be9",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "6fa0ed8ec3a1a9737db5f4b4606e5dbc50764b12d1c1f434ef8d014b257a2a5d",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00026-of-00071.gguf",
+      "blobId": "f35eb1132c9f2f370710cdfeeba3f9a5a684a6db",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "39bf7d7380e7f68e31369c5e062c1ce84643f65233fe5ac69e2d466c3d44b850",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00027-of-00071.gguf",
+      "blobId": "c728a29023ff31809ff52cc6dc8313d6d7e709da",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "f309be25fc054d0dd13ca7e456f975ba703600caf3dd22a7a59cc447e0caf4aa",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00028-of-00071.gguf",
+      "blobId": "1d686f462e31b2248acddd854c297bab500f21cc",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "095c9ad055f787cf89eea4ba2613dc63dd14aced18dc551fca016807e70a7577",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00029-of-00071.gguf",
+      "blobId": "3623a0714c68cc3b91402544da7a8d9aab19d920",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3941edb8254c0053b49a8b3c45c31c879e78634a1247afd5953be82328ada73f",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00030-of-00071.gguf",
+      "blobId": "722242dd9263be884cc18ca49052b548fea75c4a",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "d62e64b405d1736a0d9c7f4bcce34612e48b3334054a27a4cfe1ec19f7d15247",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00031-of-00071.gguf",
+      "blobId": "1f8dbaa529fc59705500af8d761ebdfd414bf472",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "b29939f1cae8696c3715e9b455c18b408573bd951ae86fe44f646d8106118587",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00032-of-00071.gguf",
+      "blobId": "565870407a059b293309bce77bf2ad5eedf675f1",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "4bfecfdab641484f46d34a7002cef74009c21d50db68f686fdc1f8060a84d133",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00033-of-00071.gguf",
+      "blobId": "d5fa9a40aee1e33d0ccae8e7e49dc396aa667aa8",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "05f9beab3f3d792bd6441fb2c5d53cdf38a240f72ab192a7f84e49b613aa3d23",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00034-of-00071.gguf",
+      "blobId": "3b33426370d04469833b98513b42176a1c0a347d",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "a411aa080cf2e8d93bb8daaae7272fff026440bc96009073ef3cc92c3d4e79ed",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00035-of-00071.gguf",
+      "blobId": "d9611f527a9dc51a12faef8f8b4cdb1fb7738eb9",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "99300e8ab596a89dff22fd94b7b1b4193591c1e81151b853a56b363d36e5e12b",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00036-of-00071.gguf",
+      "blobId": "50f65c111b03f05955cea04a3af3de4ee3b89357",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "4fdaed599c155e8994a6d34f30302255f9bc827634e5b46b182cb7019aec666e",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00037-of-00071.gguf",
+      "blobId": "cb4d177a7af2c8dd0bb27640e57b7d93b8d21b2d",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "587a6fbd8bc21cf92d2e14de340d83790e1dffae55571275a61adb024da1789b",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00038-of-00071.gguf",
+      "blobId": "28c874a205428227216c6227642a7ba8aa2c2a8a",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "2e96263a0b839d920656a3090547c3c2ca1facea8e8c98560ee41cab1263a87f",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00039-of-00071.gguf",
+      "blobId": "e1ee0f903a453ed5e9e974aaefb4cc1fde5b0fc8",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "a5e243fcc584cda8001ea9b036de6292071a6ccc148e77acbff94e6d6c20e05c",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00040-of-00071.gguf",
+      "blobId": "c24c54f5145f9c5ae56016ccb7d322a7ca565a9b",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "f997efd4fd32abebc7ca06c657a1da0aec2f79723d8508995aa086eef05bea94",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00041-of-00071.gguf",
+      "blobId": "bbdc343c544646cd07a204d478056e31ee76cde0",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "a5188ed3f5f65a0d2a15dbaeb5983dc2d3effceeba17edb94e9a75da2dd8a031",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00042-of-00071.gguf",
+      "blobId": "c5cc0eefb8a57720647e08378da66376547d44ef",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "2b6b3d1110a9177d8dc15f82694a5f061de9a267094ec9d4611e9fbc327d5f58",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00043-of-00071.gguf",
+      "blobId": "2d73532e39e7c7c1a4d6bf8bbd433953715e08ad",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "8f3f8dcc77bea704120ed5041cb14baa22c6f33711625af532349daf7026b33d",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00044-of-00071.gguf",
+      "blobId": "900f3903295b5755722c7818186d9d538963b221",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "8e755e135f318ba606202fb2ae38db28475f876922b2697d4a4fadfccb1e439d",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00045-of-00071.gguf",
+      "blobId": "aae902b9641b2196ae955fbc17e4e91b7e2bfa8f",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "81e80c5802e27a9eaedcd8a14e3d89a802886551792ca6c7063efda47f129921",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00046-of-00071.gguf",
+      "blobId": "85dbebfb4631c1053862d5accc5900a5708aa314",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "5dbf1f7fc115d6da885e709def314e2f5cc8ceacc4120692c09893fa78d9d659",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00047-of-00071.gguf",
+      "blobId": "1e0b8877897b4ec991f22bceb5238b41f34c82ca",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "6ecd0cebaded804f9069d2d647bdf0f7a1cdd87b0ecb1c49515d1cf5d21541b4",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00048-of-00071.gguf",
+      "blobId": "c85845798072dcf022f1219374d61405526ee56a",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "157eb6b0f688eec95b9faa4cfa0159f211f87c6ea8414b32f4a8b9f75c8aff99",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00049-of-00071.gguf",
+      "blobId": "e86cffa2edb8b82f18307eb9e24de37e940943eb",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "d77697516295144bb75173df99e1fafb823de09c33c3db2a8afa28d712c68073",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00050-of-00071.gguf",
+      "blobId": "3db8917546c9606d8086736898ff0a5d28c4a57d",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "5ed4d14370c9238127a8010baa4b5de709c9c3bf237f27eeef6a5d7bb38a7737",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00051-of-00071.gguf",
+      "blobId": "b8f74fc698ea9ba550702aaf4054646b7c272da9",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "88dec0eb45211e4c80a8edf0659aab4acca17261e1534b807dd7ec1445a108f0",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00052-of-00071.gguf",
+      "blobId": "57bf5f65eef7f13d6c25cd64748e1564b160b9e1",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "4dd9b3c62e56539bd67baf138049a8fea422907c31928033ba6dd62f38e72d34",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00053-of-00071.gguf",
+      "blobId": "9a00db7a60c11b8d51161829ddada961383cb146",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "881f2c51af92da050b3ee2719b7011c6f1482f63611bb87e9af9df8aa9710baf",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00054-of-00071.gguf",
+      "blobId": "df8085617ea5da3cc86b5bfef6a46bac5e3dfc0e",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "a1f399e15ab01695d2f772cfb6ee312d2a2a08be25b0165ebc89d60ed42af27e",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00055-of-00071.gguf",
+      "blobId": "34e5c3b7cd1a2a070a16eced46ea15d135ad1db2",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "93c817eaad018b2c2c4881fc5fb209115425f22807c7e38278463e6158edd78f",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00056-of-00071.gguf",
+      "blobId": "6aafaa63b8721e4076beb51185bbdd7c2ab79b5f",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "0dfc54c8fc85dba596263059753a75610274333a9a565519023c9a46c4663025",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00057-of-00071.gguf",
+      "blobId": "6a9292ae21f00b3607f4259a4762a8e522419948",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "5dd0e11c5118b5755ab6c33ed9c58c532cf1b2b4eb656dccd75c1c2bc5c0f071",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00058-of-00071.gguf",
+      "blobId": "f0961e3869ca0fc24ddebacd95495377c3ea7ee6",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3cfb59f4adf0eaf8856e88b138c094fd5fbefcf43323e32264f87b4a1fde69a0",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00059-of-00071.gguf",
+      "blobId": "1da1cd275369ec218e65e08677e1e7e2381d6999",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "8543f36fac56e7a59b8142bb8575c0a08442f8916815d45a950257fe9094e0f4",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00060-of-00071.gguf",
+      "blobId": "8282505d7b4b54c8c3724eb71a342cbf8c6b3b3d",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "ccb5da35bf0005f7a85c8ef3ab249ce9f32c974044a92dff1da40551763dea94",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00061-of-00071.gguf",
+      "blobId": "cc856de9ea0851560964420aaa4966b799515239",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "7c50cd4d0ee5e82753b54234dc9212c892066da6650c600e35e31237ae7feff8",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00062-of-00071.gguf",
+      "blobId": "d8d4c8955b64129fb1afa3c08b1d6b31523871e1",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "94388822dc1bad466c87538298a3c49e85575f98dce58a57507c76ed97941ad3",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00063-of-00071.gguf",
+      "blobId": "e495feb8a98f423b1687e3723dcfa6f2a6efbdb5",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "ebbb7f4e64f8de791d9e72284604465d9efe8ac2e85a51db72ab01ce8b9d17d3",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00064-of-00071.gguf",
+      "blobId": "b33909242b4237998bb48981b9108b448909d738",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "b2f334bb50a7f58d6380ed0c5ca71941c1d9b88be4e9f2c739016fc95fd64259",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00065-of-00071.gguf",
+      "blobId": "e7bc0ad9a47ccc25010c75083e1f1a1f2fa221e8",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "ea30560dc9a67f02a79c2ebce9801667a8a2a6acefa4842ecf77dba204cec50d",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00066-of-00071.gguf",
+      "blobId": "d91267d54c9472c256266a1fb41e783712f0e4ce",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "3c0c6eeefe635ab09bc3dc1da3cbc0c5f601838c5c5c43b242aa592a5335e748",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00067-of-00071.gguf",
+      "blobId": "51a90e38e0d210b110fb88f0c5ba4440c1821ab8",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "d0597f8944607bd19c4e931df75aa48bdfe9871d3df58eaaa2db6ce374ed2061",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00068-of-00071.gguf",
+      "blobId": "cd0d35b587bbdf297606bc0e957ccb8e83a95cb9",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "653d8360c0f8119053d52c466e772e5ea81b6a6cd74364ed7ef232d067062068",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00069-of-00071.gguf",
+      "blobId": "ebeb8248a5b1561516893f95d141008114979929",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "84b0deddcdb900d68b78929ffc5b7afce3462ce9a64e8e0301ca3fd548ed6e05",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00070-of-00071.gguf",
+      "blobId": "73d34ef0fdd983ca40c1eeb5c58bd2f1af9565c2",
+      "size": 41926263200,
+      "lfs": {
+        "sha256": "f592148082c78dca29d1ad3aba9e84dfaa916892d3c098310ed4feb952b8624a",
+        "size": 41926263200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/Kimi-K3-Q8_0-00071-of-00071.gguf",
+      "blobId": "b055079f59eccb4463aac34cbe6c285419b70120",
+      "size": 20963131648,
+      "lfs": {
+        "sha256": "d200d4e791e8004d6873084319fef0b5519fcff54aa50c90c8e0c016470a3117",
+        "size": 20963131648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b0f9198254c51150cd1c5fddc8a13bec153b12e2",
+      "size": 7444
+    },
+    {
+      "rfilename": "imatrix.dat",
+      "blobId": "fad3c7962f07d84b8166214ae694fe15be6a343a",
+      "size": 3416558400,
+      "lfs": {
+        "sha256": "10de290f6f8cababc8d549fb5f8386d2ebc52d095f238d275da420659f27f692",
+        "size": 3416558400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "kld_q8_base.dat",
+      "blobId": "9cba9c16672636b143c23cb640d9594d0883cbed",
+      "size": 4178124420,
+      "lfs": {
+        "sha256": "54574df6d40fcad9ef3de8a251783d7f6ccb4a112085c6adac64e7a94ea8688d",
+        "size": 4178124420,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-BF16.gguf",
+      "blobId": "2a9f4b6dc33cb16503b8a857598691a33d283dc7",
+      "size": 904448704,
+      "lfs": {
+        "sha256": "7a5f768d5c9505fba2c617cb22264fc1b9e567942628b15a723b61391e3aa469",
+        "size": 904448704,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-F16.gguf",
+      "blobId": "58a920b23b1abe64db8269c6e8bfa953f8b081d1",
+      "size": 903244480,
+      "lfs": {
+        "sha256": "2c6ddf39b88ff4393c016c099c7018cda2f0ba0f415f249152ab52df3301969e",
+        "size": 903244480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "pill_atomic_v3.png",
+      "blobId": "d8f38e5f9647887e97006b8c353b6f036f9cf2b2",
+      "size": 23368
+    },
+    {
+      "rfilename": "pill_discord_v3.png",
+      "blobId": "43c508304e09cf9eedcbc0025c21cbcdee07b3a9",
+      "size": 24244
+    },
+    {
+      "rfilename": "pill_github_v3.png",
+      "blobId": "c1d320ea78476a33667dca8181f73ad0a4361530",
+      "size": 19512
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-07-27T18:46:12.000Z",
+  "usedStorage": 6251032724228
+}

@@ -1,0 +1,241 @@
+{
+  "_id": "6ab33ec8ab0039894e79678a",
+  "id": "AxiomicLabs/GPT-X3-150M",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gptx3",
+    "text-generation",
+    "GPTX",
+    "GDN2",
+    "hybrid",
+    "math",
+    "language-model",
+    "GPT-X3",
+    "GPT-X3-150M",
+    "Open_SLM_Leaderboard",
+    "custom_code",
+    "en",
+    "dataset:nvidia/Nemotron-ClimbMix",
+    "dataset:openbmb/UltraData-Code",
+    "dataset:openbmb/UltraData-Math",
+    "dataset:AxiomicLabs/SFTset-SLM",
+    "dataset:AxiomicLabs/FactBase-DCLM",
+    "dataset:IFM/TxT360-v2",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 2291,
+  "likes": 84,
+  "modelId": "AxiomicLabs/GPT-X3-150M",
+  "author": "AxiomicLabs",
+  "sha": "541bdc160e37de749378df2cf7de4023c8991fad",
+  "lastModified": "2026-10-25T03:19:45.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "GPTX3ForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_gptx3.GPTX3Config",
+      "AutoModelForCausalLM": "modeling_gptx3.GPTX3ForCausalLM"
+    },
+    "model_type": "gptx3",
+    "tokenizer_config": {
+      "bos_token": "<|startoftext|>",
+      "eos_token": "<|endoftext|>",
+      "pad_token": "<|pad|>"
+    }
+  },
+  "cardData": {
+    "thumbnail": "https://huggingface.co/AxiomicLabs/GPT-X3-150M/resolve/main/GPT_X3_banner-1200x630.png",
+    "license": "apache-2.0",
+    "datasets": [
+      "nvidia/Nemotron-ClimbMix",
+      "openbmb/UltraData-Code",
+      "openbmb/UltraData-Math",
+      "AxiomicLabs/SFTset-SLM",
+      "AxiomicLabs/FactBase-DCLM",
+      "IFM/TxT360-v2"
+    ],
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "GPTX",
+      "GDN2",
+      "hybrid",
+      "math",
+      "language-model",
+      "GPT-X3",
+      "GPT-X3-150M",
+      "Open_SLM_Leaderboard"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_gptx3.GPTX3ForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f6b1f326ca4ab7cf0c8798856f8fe0020ff82d58",
+      "size": 1561
+    },
+    {
+      "rfilename": ".gitignore",
+      "blobId": "8df466aab02807d7eaf102f9335d3b4174b508e1",
+      "size": 24
+    },
+    {
+      "rfilename": "AxiomicBanner.png",
+      "blobId": "fd9a723652d8e3e5ac7e5082b33a7be4a7fd26f4",
+      "size": 88009,
+      "lfs": {
+        "sha256": "75c38db1d76736a243905a29ba6e85eaf65e14037cd78c4f391bc146fe36fe4e",
+        "size": 88009,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "GPT_X3_banner-1200x630.png",
+      "blobId": "2f1aca1b865b0659bd17fa8d1b8c14aab70cd6b0",
+      "size": 695368,
+      "lfs": {
+        "sha256": "5a15ecebce8576c4f04c015029a050b224b3bed5e209958e4d3ae5b1a13c0b33",
+        "size": 695368,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "GPT_X3_banner.png",
+      "blobId": "22899f95bc2930aa3fa67090a3869ff4df784550",
+      "size": 1284884,
+      "lfs": {
+        "sha256": "e6b65351f872715def564b5487036c54b072d9613c6be2a06199c6e6f7ec1aaa",
+        "size": 1284884,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "692d291868ecb61d7c78a65c6660e7147746f7d3",
+      "size": 10001
+    },
+    {
+      "rfilename": "__init__.py",
+      "blobId": "52355c6b7b2b625e0bd404c34a3d7583d81f0073",
+      "size": 48
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "7abfebd5ad659ee81b06a7418576d88d049bc16f",
+      "size": 777
+    },
+    {
+      "rfilename": "configuration_gptx3.py",
+      "blobId": "b9abcf81567a98e7d8316f9e05b4696f5b04f404",
+      "size": 2291
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "fb9dba4864e1fdb8d5acf6e6f246e27b50883758",
+      "size": 168
+    },
+    {
+      "rfilename": "intelligence_index_vs_compute_flops.png",
+      "blobId": "a88a3a5be715b0d741e7e805d25f88f8079c0dda",
+      "size": 272104,
+      "lfs": {
+        "sha256": "f1c4e75c3ba8a293eb20994b1e04a21e6dde19b8bdc40026f28aae88550671b2",
+        "size": 272104,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "leaderboard_benchmark_comparison.png",
+      "blobId": "be8c91f220f58cee111ef0827d8aca935ebe5ea5",
+      "size": 151497,
+      "lfs": {
+        "sha256": "298391614d0b05a06b48aeeb74dfe9d3ebffc6efd50cf93c25c4a78c2b450fc6",
+        "size": 151497,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "2dc62fa5a78a64573277f32e34101f2a3b9bea4c",
+      "size": 597655008,
+      "lfs": {
+        "sha256": "e72f68ea561a717c03a5a95f70f68a896ae143725bd7d27ff1f6d5178d214af2",
+        "size": 597655008,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "modeling_gptx3.py",
+      "blobId": "e0641d389785c2c2f7b0d31d19923a7dc782d954",
+      "size": 18090
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "fdadd9f08935435f9bbd73364fb4b00a9696a604",
+      "size": 69
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "bfa06af3baa5b0f23d96700b73daed22e5ca0da9",
+      "size": 95
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "a7e2adae624a17e8ea5470cbb5be906dc7131364",
+      "size": 4732774
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "1c3226ada709a2ac48be4ebf55606e7980f39ecb",
+      "size": 12464
+    },
+    {
+      "rfilename": "usage.py",
+      "blobId": "b2df72ab9bd9236ee9a7b769acac9b269631d30f",
+      "size": 600
+    }
+  ],
+  "spaces": [
+    "DedeProGames/SLM-Tetris-Arena",
+    "ahmadw/GPT-X3-150M-ONNX-demo",
+    "mrfakename/gpt-x3-150m"
+  ],
+  "createdAt": "2026-09-23T02:51:52.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 149400930
+    },
+    "total": 149400930
+  },
+  "usedStorage": 600422122
+}

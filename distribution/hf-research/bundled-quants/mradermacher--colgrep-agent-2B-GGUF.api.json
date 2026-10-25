@@ -1,0 +1,184 @@
+{
+  "_id": "6acc68655e4fc69acd096c16",
+  "id": "mradermacher/colgrep-agent-2B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "en",
+    "base_model:lightonai/colgrep-agent-2B",
+    "base_model:quantized:lightonai/colgrep-agent-2B",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 688,
+  "likes": 0,
+  "modelId": "mradermacher/colgrep-agent-2B-GGUF",
+  "author": "mradermacher",
+  "sha": "ea3d5c99db6b658cdef3a866bb40561383a737e2",
+  "lastModified": "2026-10-12T05:09:53.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "lightonai/colgrep-agent-2B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 2516756480,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{{- bos_token }}{%- if tools %}\n    {%- set tool_definitions %}\n        {{- \"# Tools\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n        {%- for tool in tools %}\n            {{- \"\\n\" }}\n            {{- tool | tojson(ensure_ascii=False) }}\n        {%- endfor %}\n        {{- '\\n</tools>\\n\\nTool usage guidelines:\\n- You may call zero or more functions. If no function calls are needed, just answer normally and do not include any <function ... </function>.\\n- When calling a function, return an XML object within <function ... </function> using:\\n<function name=\"function-name\"><param name=\"param-name\">param-value</param></function>\\n- param-value may be multi-line. If it contains <, & or newline characters, wrap it in a CDATA block: <param name=\"param-name\"><![CDATA[...multi-line value...]]></param>' }}\n    {%- endset %}\n    \n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {%- if '<tool_def_sep>' in messages[0].content %}\n            {{- messages[0].content.replace('<tool_def_sep>', tool_definitions) }}\n        {%- else %}\n            {{- messages[0].content + '\\n\\n' + tool_definitions }}\n        {%- endif %}\n    {%- else %}\n        {{- tool_definitions.lstrip() }}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        \n        {%- if message.tool_calls %}\n            {%- set content_parts = content.split('<tool_sep>') %}\n            {%- set processed_content = content_parts[0] %}\n            {%- set tool_calls_count = message.tool_calls|length %}\n            {%- set tool_sep_count = content_parts|length - 1 %}\n            {%- set min_count = [tool_calls_count, tool_sep_count]|min %}\n            \n            {%- for i in range(1, content_parts|length) %}\n                {%- set tool_index = i - 1 %}\n                {%- if tool_index < tool_calls_count %}\n                    {%- set tool_call = message.tool_calls[tool_index] %}\n                    {%- if tool_call.function %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {%- set single_tool_xml %}\n                        {{- '<function name=\"' ~ tool_call.name ~ '\">' }}\n                        {%- if tool_call.arguments %}\n                            {%- set args_dict = tool_call.arguments %}\n                            {%- for param_name, param_value in args_dict.items() %}\n                                {{- '<param name=\"' ~ param_name ~ '\">' }}\n                                {%- if param_value is string and ('<' in param_value or '&' in param_value or '\\n' in param_value) %}\n                                    {{- '<![CDATA[' + param_value + ']]>' }}\n                                {%- else %}\n                                    {{- param_value }}\n                                {%- endif %}\n                                {{- '</param>' }}\n                            {%- endfor %}\n                        {%- endif %}\n                        {{- '</function>' }}\n                    {%- endset %}\n                    {%- set processed_content = processed_content + single_tool_xml + content_parts[i] %}\n                {%- else %}\n                    {%- set processed_content = processed_content + content_parts[i] %}\n                {%- endif %}\n            {%- endfor %}\n            \n            {%- if tool_calls_count > tool_sep_count %}\n                {%- for remaining_index in range(tool_sep_count, tool_calls_count) %}\n                    {%- set tool_call = message.tool_calls[remaining_index] %}\n                    {%- if tool_call.function %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {%- set remaining_tool_xml %}\n                        {{- '<function name=\"' ~ tool_call.name ~ '\">' }}\n                        {%- if tool_call.arguments %}\n                            {%- set args_dict = tool_call.arguments %}\n                            {%- for param_name, param_value in args_dict.items() %}\n                                {{- '<param name=\"' ~ param_name ~ '\">' }}\n                                {%- if param_value is string and ('<' in param_value or '&' in param_value or '\\n' in param_value) %}\n                                    {{- '<![CDATA[' + param_value + ']]>' }}\n                                {%- else %}\n                                    {{- param_value }}\n                                {%- endif %}\n                                {{- '</param>' }}\n                            {%- endfor %}\n                        {%- endif %}\n                        {{- '</function>' }}\n                    {%- endset %}\n                    {%- set processed_content = processed_content + remaining_tool_xml %}\n                {%- endfor %}\n            {%- endif %}\n            \n            {%- set content = processed_content %}\n        {%- endif %}\n        \n        {%- if reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- elif '<think>' not in content and '</think>' not in content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        \n        {%- if message.tool_calls and not has_tool_sep %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<function name=\"' ~ tool_call.name ~ '\">' }}\n                {%- if tool_call.arguments %}\n                    {%- set args_dict = tool_call.arguments %}\n                    {%- for param_name, param_value in args_dict.items() %}\n                        {{- '<param name=\"' ~ param_name ~ '\">' }}\n                        {%- if param_value is string and ('<' in param_value or '&' in param_value or '\\n' in param_value) %}\n                            {{- '<![CDATA[' + param_value + ']]>' }}\n                        {%- else %}\n                            {{- param_value }}\n                        {%- endif %}\n                        {{- '</param>' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {%- if message.content is string %}\n            {{- content }}\n        {%- else %}\n            {{- message.content | tojson(ensure_ascii=False) }}\n        {%- endif %}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined %}\n        {%- if enable_thinking is false %}\n            {{- '<think>\\n\\n</think>\\n\\n' }}\n        {%- elif enable_thinking is true %}\n            {{- '<think>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endif %}\n",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 5039006848
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0b1cc78706b13192e3bf2f0a463d238689a9fdad",
+      "size": 2290
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9e49c3033f8b59114f9646d1d85bb0dcd10cebad",
+      "size": 3628
+    },
+    {
+      "rfilename": "colgrep-agent-2B.IQ4_XS.gguf",
+      "blobId": "5e05213abb0addaa7f39e4775cf38c3ff104444c",
+      "size": 1433339008,
+      "lfs": {
+        "sha256": "2d3a67984a79b2407c5c2ec4ec6a60a7be054a884c9b54ee1270acaae984b7a7",
+        "size": 1433339008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q2_K.gguf",
+      "blobId": "d379ec886e2c80f126e8b2264b037b4529f15a3e",
+      "size": 1039926400,
+      "lfs": {
+        "sha256": "0c751f080db2e9fe44c53e690ffb87e160c5982d0b6c235d41166cf1cbc6662c",
+        "size": 1039926400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q3_K_L.gguf",
+      "blobId": "35bdd35252ce03dbca8168f54040f9d0d1c30c6d",
+      "size": 1378976896,
+      "lfs": {
+        "sha256": "2cb208a388cb65c22a11b8751763c838588bd8da92a822f934370733840cda97",
+        "size": 1378976896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q3_K_M.gguf",
+      "blobId": "8b38c45a50f493d933cb126ca1d817a64534edff",
+      "size": 1291420800,
+      "lfs": {
+        "sha256": "312706b4f681d2c5c2148276ee3d353354f97d706fbcc68e40482ee0ef47ae03",
+        "size": 1291420800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q3_K_S.gguf",
+      "blobId": "a2ec28d48af77b40dd2cf75378e51beba7df3aed",
+      "size": 1191634048,
+      "lfs": {
+        "sha256": "b08d56790b2c1944a8582fd2c8604e293d1977289ec8833cef68894c04a8ef9b",
+        "size": 1191634048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q4_K_M.gguf",
+      "blobId": "fb02c9e55fb87d03f092f252544117d38583c839",
+      "size": 1561318528,
+      "lfs": {
+        "sha256": "ce0e3e7230039ac60d25124758c368552f820cf3821fcdfec92e7519fc0719f9",
+        "size": 1561318528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q4_K_S.gguf",
+      "blobId": "3ea216142e32a4a1d52a906c88aa55927edd5d08",
+      "size": 1498481792,
+      "lfs": {
+        "sha256": "064b7d25eb10940a4f34fd50bd4aa1f4931845342ac4d1a279912d7714c57fcb",
+        "size": 1498481792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q5_K_M.gguf",
+      "blobId": "b5dba0f97f1f1327589dd51620b88a401e4dda1d",
+      "size": 1808061568,
+      "lfs": {
+        "sha256": "4dbf445db586fa322798c6cfb6a08d0da2edc0d6990fddd56d3b3d24be899501",
+        "size": 1808061568,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q5_K_S.gguf",
+      "blobId": "c618377129175f86a8392b04319005d73bd73312",
+      "size": 1771504768,
+      "lfs": {
+        "sha256": "f107705781ed965b22183ce5204106a0aec7693e96c3d0b264e95c1b970bbb4d",
+        "size": 1771504768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q6_K.gguf",
+      "blobId": "24596621e4ba086b22438c8cdc04fd805b5e3737",
+      "size": 2070226048,
+      "lfs": {
+        "sha256": "a7e9e32817cd9eae6991dcf0d6f53bd70198ce6049783875891f6c5bb1b041e4",
+        "size": 2070226048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.Q8_0.gguf",
+      "blobId": "5b51e9e7cb1265ced1afa0b2e38eb1aa2d954e61",
+      "size": 2679710848,
+      "lfs": {
+        "sha256": "bcf92c7c3b192bba6a9b983b33ba87dee818ba2e1a3f39b9038833f9201a7e2d",
+        "size": 2679710848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "colgrep-agent-2B.f16.gguf",
+      "blobId": "daadd33ef5e09c7cddaa2b8927b41690cb1aca68",
+      "size": 5039006848,
+      "lfs": {
+        "sha256": "41412f06786d3291a1794042084820131de4293fef7e33e76bb0c49f0763ec5f",
+        "size": 5039006848,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-12T04:56:05.000Z",
+  "usedStorage": 22763607552
+}

@@ -1,0 +1,341 @@
+{
+  "_id": "6ac8692e8282a1825b6799a6",
+  "id": "Cloudflare/clef-omni",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3_omni_moe",
+    "text-to-audio",
+    "clef",
+    "cloudflare",
+    "systemone",
+    "decision-model",
+    "qwen3-omni",
+    "post-train",
+    "image-text-to-typed-output",
+    "multimodal",
+    "audio",
+    "video",
+    "structured-output",
+    "classification",
+    "custom-code",
+    "image-text-to-text",
+    "conversational",
+    "base_model:Qwen/Qwen3-Omni-30B-A3B-Instruct",
+    "base_model:finetune:Qwen/Qwen3-Omni-30B-A3B-Instruct",
+    "license:apache-2.0",
+    "eval-results",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 6540,
+  "likes": 141,
+  "modelId": "Cloudflare/clef-omni",
+  "author": "Cloudflare",
+  "sha": "df2d7c9505e62ba8a527b147513a4fa66a77dc5d",
+  "lastModified": "2026-10-19T15:08:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3OmniMoeForConditionalGeneration"
+    ],
+    "model_type": "qwen3_omni_moe",
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {{- \"<|vision_start|><|image_pad|><|vision_end|>\" }}\n                {%- elif content.type == 'audio' or 'audio' in content or 'audio_url' in content %}\n                    {{- \"<|audio_start|><|audio_pad|><|audio_end|>\" }}\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {{- \"<|vision_start|><|video_pad|><|vision_end|>\" }}\n                {%- elif content.type == 'text' %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n    {%- endif %}\n    {{- '\\n\\n' }}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- if messages[0].content is string %}\n            {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {{- '<|im_start|>system\\n' +\"<|vision_start|><|image_pad|><|vision_end|>\"+ '<|im_end|>\\n' }}\n                {%- elif content.type == 'audio' or 'audio' in content or 'audio_url' in content %}\n                    {{- '<|im_start|>system\\n' +\"<|audio_start|><|audio_pad|><|audio_end|>\"+ '<|im_end|>\\n' }}\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {{- '<|im_start|>system\\n' +\"<|vision_start|><|video_pad|><|vision_end|>\"+ '<|im_end|>\\n' }}\n                {%- elif content.type == 'text' %}\n                    {{- '<|im_start|>system\\n' +content.text+ '<|im_end|>\\n' }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = namespace(text=\"\") %}\n        {%- for mcontent in message.content %}\n            {%- if mcontent.type == 'image' or 'image' in mcontent or 'image_url' in mcontent %}\n                {%- set content.text = content.text~\"<|vision_start|><|image_pad|><|vision_end|>\" %}\n            {%- elif mcontent.type == 'audio' or 'audio' in mcontent or 'audio_url' in mcontent %}\n                {%- set content.text = content.text~\"<|audio_start|><|audio_pad|><|audio_end|>\" %}\n            {%- elif mcontent.type == 'video' or 'video' in mcontent %}\n                {%- set content.text = content.text~\"<|vision_start|><|video_pad|><|vision_end|>\" %}\n            {%- elif mcontent.type == 'text' %}\n                {%- set content.text = content.text~mcontent.text %}\n            {%- endif %}\n        {%- endfor %}\n        {%- set content = content.text %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = \"\" %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n            {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n            {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n        {%- endif %}\n    {%- endif %}\n    {%- if loop.index0 > ns.last_query_index %}\n        {%- if loop.last or (not loop.last and reasoning_content) %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip(\"\\n\") + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n    {%- endif %}\n    {%- if message.tool_calls %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if (loop.first and content) or (not loop.first) %}{{- '\\n' }}{%- endif %}\n            {%- if tool_call.function %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {%- if tool_call.arguments is string %}\n                {{- tool_call.arguments }}\n            {%- else %}\n                {{- tool_call.arguments | tojson }}\n            {%- endif %}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}{{- '<|im_start|>user' }}{%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}{{- '<|im_end|>\\n' }}{%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}{{- '<think>\\n\\n</think>\\n\\n' }}{%- endif %}\n{%- endif %}"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "transformers",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "Qwen/Qwen3-Omni-30B-A3B-Instruct",
+    "base_model_relation": "finetune",
+    "tags": [
+      "clef",
+      "cloudflare",
+      "systemone",
+      "decision-model",
+      "qwen3-omni",
+      "post-train",
+      "image-text-to-typed-output",
+      "multimodal",
+      "audio",
+      "video",
+      "structured-output",
+      "classification",
+      "custom-code"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "text-to-audio",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".eval_results/Cloudflare__clef-omni.yaml",
+      "blobId": "d00ce271b81706f7727c2db0c8000dff4933e7af",
+      "size": 1111
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f938136e3adacfd92be087f6e113b5d6d97f678f",
+      "size": 11544
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "15b25dd309cdbc140eb59bb27c250448ebb96df4",
+      "size": 10419
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "1efcce1402ae5d1d61d4a4cf56accea5921251cf",
+      "size": 6519
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "18c714a7fa2d8881e8e1441ec3759b6338c9c5ea",
+      "size": 13671
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "59f9fe8f7db6b35dc244fc7eb52743b31533bbb5",
+      "size": 146
+    },
+    {
+      "rfilename": "joint_head.safetensors",
+      "blobId": "272cab1d42bd5860bce45a2de6d2d812fa8ebd42",
+      "size": 218364000,
+      "lfs": {
+        "sha256": "d5ee8d7e75c9a503edce94400dda9074fc0f2f4d62729012bf0a827df947ba9c",
+        "size": 218364000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "joint_head_config.json",
+      "blobId": "e9ed6f616016c6c6e4bc7437a0a0e2ec5de08942",
+      "size": 119
+    },
+    {
+      "rfilename": "joint_schema_model.py",
+      "blobId": "61de2f67fd6880ae0efd97521e3cf86fea537d8e",
+      "size": 29376
+    },
+    {
+      "rfilename": "model-00001-of-00015.safetensors",
+      "blobId": "6b0f17f0cef8d816d27df31d80f4ca0e43ff57e8",
+      "size": 4997899632,
+      "lfs": {
+        "sha256": "c9d19a20a3ae967e9d0e603a21494aceb4447fdd97878f759924d5b35b8f9803",
+        "size": 4997899632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00015.safetensors",
+      "blobId": "2aa697f291919963629a31d5c190cf0ddbe3467e",
+      "size": 4997754216,
+      "lfs": {
+        "sha256": "cd8c09ee40792a40dffcbc6eade1c83c6356cb6d662b8a5124305e6755d28259",
+        "size": 4997754216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00015.safetensors",
+      "blobId": "e7dd33b2f14ff10a138700fe4d87d462c9c24e5e",
+      "size": 4997754216,
+      "lfs": {
+        "sha256": "c37e3fee71e8ecb8952868bbdda16dbce5246d33dff0efa264762447896f4d51",
+        "size": 4997754216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00015.safetensors",
+      "blobId": "2481ca2077593d4356e73ea901cb40ad9ab7c2d2",
+      "size": 4997755648,
+      "lfs": {
+        "sha256": "68b643796653a0eb78ea90381564f44e75b922070ae20963fe8c0e9e2450f40e",
+        "size": 4997755648,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00015.safetensors",
+      "blobId": "3f5ba0d6a086e816f7def40d4d21dc369d1caa13",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "6a333846a40416c2c70ce916600a2817932ff5f64f8ca34a9e62807dbda7fd91",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00015.safetensors",
+      "blobId": "8d8a5e5860fb653608e87511795ba880066abd19",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "44c9929f4e348ddc4d8b42b6ce16e00f482f3467a74b0cd9548cc8a08e9095f6",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00015.safetensors",
+      "blobId": "03d1a20f2480c350ef96b382bf5acfc75ff4f302",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "1812065f61317f429286451db4899342744964eabeb3ef5d376fb32f345e2aa2",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00015.safetensors",
+      "blobId": "06863bdefb377fd6526e9629f01e49789e948cef",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "dacccad2028f0a8e2393ff87c7a42ee74532cebfd9616144f14ff055a8152fb1",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00015.safetensors",
+      "blobId": "0a55c7a425d1e391c71cfea1b03e36fca6005192",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "b1111e4a69c181f0fda808cdeecfe4e1d7b27b856604d7b8335c5375537aae06",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00015.safetensors",
+      "blobId": "4590e1b58c11d9a20136ad819de06040c3608fdc",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "4a7518df7919f5e22502e6e4df1f19ee751e1140e127af2ba09adbc93a2a2f17",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00015.safetensors",
+      "blobId": "1ec7eabd91126dc7e293fb49bc841eed3b0ef61b",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "92c75abe9d87cb67c67605a631e09c89a54c764e2a710e981a6dc5bf56a924ba",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00012-of-00015.safetensors",
+      "blobId": "522c1a7e46d40ebc311ea0f6ec51c6fc7f24a532",
+      "size": 4997755792,
+      "lfs": {
+        "sha256": "a4da2ff05a5d6ef7dabc195572cbea02d41233742a60f63f79484487ef617551",
+        "size": 4997755792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00013-of-00015.safetensors",
+      "blobId": "fd0a46a4ab8c33e2581c65478f697abe109674e2",
+      "size": 4999771808,
+      "lfs": {
+        "sha256": "f858752d0c8dd3809b58005b86ae2098e8f381103be43ec2cc4fe362613d6eb0",
+        "size": 4999771808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00014-of-00015.safetensors",
+      "blobId": "5c9c360dc2cc73f9123a4ec79ed26910e6836cfb",
+      "size": 4996618552,
+      "lfs": {
+        "sha256": "73f09f187ff7b469a8937b39b8ac772e539e0d61311526c345558c5e6a6eb09a",
+        "size": 4996618552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00015-of-00015.safetensors",
+      "blobId": "d5258d7260e6830b12e03a68aba14f2f8a3f2301",
+      "size": 553698794,
+      "lfs": {
+        "sha256": "68880d566a50643807a4e73f5227c4f468bb31532925ed5fae78a51bdd39492a",
+        "size": 553698794,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "e76526beedd5a797e9ae24890a4501b3483241c1",
+      "size": 2727313
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "a6ead2a8b5e68eb4719df71d1c65e412d31e1c4d",
+      "size": 2356
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "f7ab87da8ac9fbb6ebdd03fb50597a92933ce3c6",
+      "size": 11424262,
+      "lfs": {
+        "sha256": "a7d41145c408f3062e824f965be1c29854cd809e111cdf8170aa8b0bcd5d1fab",
+        "size": 11424262,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "08027b3984b45c48d87e24a3f487b7023e985e44",
+      "size": 907
+    }
+  ],
+  "spaces": [
+    "multimodalart/jev-decision-index",
+    "hugging-apps/clef-omni"
+  ],
+  "createdAt": "2026-10-09T04:10:22.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 35259818545
+    },
+    "total": 35259818545
+  },
+  "usedStorage": 70753087464
+}

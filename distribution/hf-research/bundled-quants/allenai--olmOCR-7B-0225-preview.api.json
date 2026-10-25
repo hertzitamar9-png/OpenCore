@@ -1,0 +1,200 @@
+{
+  "_id": "67882547eb36144551980fb3",
+  "id": "allenai/olmOCR-7B-0225-preview",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_vl",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "dataset:allenai/olmOCR-mix-0225",
+    "base_model:Qwen/Qwen2-VL-7B-Instruct",
+    "base_model:finetune:Qwen/Qwen2-VL-7B-Instruct",
+    "license:apache-2.0",
+    "eval-results",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 40591,
+  "likes": 705,
+  "modelId": "allenai/olmOCR-7B-0225-preview",
+  "author": "allenai",
+  "sha": "6f102f3807c44450e4ea1ec3eae775e9e68927cb",
+  "lastModified": "2025-08-19T15:31:31.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2VLForConditionalGeneration"
+    ],
+    "model_type": "qwen2_vl",
+    "processor_config": {
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0",
+    "datasets": [
+      "allenai/olmOCR-mix-0225"
+    ],
+    "base_model": [
+      "Qwen/Qwen2-VL-7B-Instruct"
+    ],
+    "library_name": "transformers",
+    "new_version": "allenai/olmOCR-7B-0825"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "94ce48b5fd0a7d669b4226d643c983f2b6f3c245",
+      "size": 4355
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "732bd68bc5427d1fb6c06a59b3bf2456b2155d24",
+      "size": 1050
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "8c94104266de8ca0e1ff3f3e2ff14ffa806dba15",
+      "size": 1198
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "41791a4ff394ed6717cec97d4b024f242c12abe3",
+      "size": 244
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "b2a866b16edd6cc51c9369dbe27a31b6aa451fc5",
+      "size": 4966659944,
+      "lfs": {
+        "sha256": "f84a8740aafacaaaa1ff67a2c68af7a248713b6f605d9b58972604321e8da066",
+        "size": 4966659944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "9a1096eb5b73a85b92127c058960b46aea1a34b5",
+      "size": 4991495816,
+      "lfs": {
+        "sha256": "f629d9fd79cba378dd516f84a5452540d6002592aa9673d2998a381b1554ac1c",
+        "size": 4991495816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "bce962441f74712d2cf1e93b372e347e9667fba8",
+      "size": 4932751040,
+      "lfs": {
+        "sha256": "dbae882a09ba8a1c903473a42d287b4e1a34885f02bf8257d786100d3d452aeb",
+        "size": 4932751040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "aa6305310cbde40a460136635f1c2970a9afc85c",
+      "size": 1691924384,
+      "lfs": {
+        "sha256": "6b59d226957572d56c69bfd56a451ed8f26a38b0e8326d0a6f2af161fc606e3b",
+        "size": 1691924384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "6dc22ff0024773d1e2ff26b71c286c1b51d513d4",
+      "size": 56470
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "c8bf52bdaee98b049e28da3ef94119f896b03a8d",
+      "size": 347
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "f5195cf97e3c90290b670d48a7c46fef5f145ebc",
+      "size": 7029741
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "ecbc13d75ff851c4f1e57990064f81303b2494f6",
+      "size": 4190
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "davanstrien/ocr-time-machine",
+    "prithivMLmods/Multimodal-VLM-Thinking",
+    "herokeyboard369/olmOCR",
+    "leonarb/olmocr-demo",
+    "ibrahim313/olmOcR_grinda",
+    "flam123/allenocr",
+    "Sanmath/text2",
+    "storytracer/ocr-time-machine",
+    "Tharjama/olmocr-demo",
+    "stadv/Multimodal-VLM-Thinking",
+    "AyushD23/carbontatva-ocr",
+    "thangvckeygen/OCR-Demo"
+  ],
+  "createdAt": "2025-01-15T21:14:47.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8291375616
+    },
+    "total": 8291375616
+  },
+  "usedStorage": 16582831184
+}

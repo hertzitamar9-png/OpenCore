@@ -1,0 +1,476 @@
+{
+  "_id": "6acf9fc1a8cf373abc13ae23",
+  "id": "unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "nvidia",
+    "pytorch",
+    "nemotron-3.5",
+    "unsloth",
+    "image-text-to-text",
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "ja",
+    "dataset:nvidia/nemotron-post-training-v3",
+    "dataset:nvidia/nemotron-pre-training-datasets",
+    "base_model:nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+    "base_model:quantized:nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 18566,
+  "likes": 57,
+  "modelId": "unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+  "author": "unsloth",
+  "sha": "75a5829055f69a0359085ae6bbd0a81b60bc05c6",
+  "lastModified": "2026-10-15T14:55:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "openmdw-1.1",
+    "license_link": "https://openmdw.ai/license/1-1/",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "it",
+      "ja"
+    ],
+    "tags": [
+      "nvidia",
+      "pytorch",
+      "nemotron-3.5",
+      "unsloth"
+    ],
+    "datasets": [
+      "nvidia/nemotron-post-training-v3",
+      "nvidia/nemotron-pre-training-datasets"
+    ],
+    "base_model": [
+      "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16"
+    ]
+  },
+  "gguf": {
+    "total": 1632922404,
+    "architecture": "dflash",
+    "context_length": 1048576,
+    "causal": false,
+    "chat_template": "{% macro render_extra_keys(json_dict, handled_keys) %}\n    {%- if json_dict is mapping %}\n        {%- for json_key in json_dict if json_key not in handled_keys %}\n            {%- if json_dict[json_key] is mapping or (json_dict[json_key] is sequence and json_dict[json_key] is not string) %}\n                {{- '\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | tojson | safe) ~ '</' ~ json_key ~ '>' }}\n            {%- else %}\n                {{-'\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | string) ~ '</' ~ json_key ~ '>' }}\n            {%- endif %}\n        {%- endfor %}\n    {%- endif %}\n{% endmacro %}\n{%- macro render_content(content) -%}\n    {%- if content is none -%}\n        {{- '' -}}\n    {%- elif content is string -%}\n        {{- content | string -}}\n    {%- else -%}\n        {%- set text_ns = namespace(val='') -%}\n        {%- set counters = namespace(images=0, videos=0) -%}\n        {%- for part in content -%}\n            {%- if part['type'] == 'image' or part['type'] == 'image_url' or part['type'] == 'input_image' -%}\n                {%- set counters.images = counters.images + 1 -%}\n            {%- elif part['type'] == 'video' or part['type'] == 'video_url' or part['type'] == 'input_video' -%}\n                {%- set counters.videos = counters.videos + 1 -%}\n            {%- elif part['type'] == 'text' or part['type'] == 'input_text' -%}\n                {%- set text_ns.val = text_ns.val + (part['text'] | default('', true)) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if '<image>' in text_ns.val -%}\n            {%- set counters.images = 0 -%}\n        {%- endif -%}\n        {%- if '<video>' in text_ns.val -%}\n            {%- set counters.videos = 0 -%}\n        {%- endif -%}\n        {%- set content_ns = namespace(val='') -%}\n        {%- set render_ns = namespace(image_index=0, after_text=false) -%}\n        {%- for part in content -%}\n            {%- set sep = '\\n' if render_ns.after_text and not content_ns.val.endswith('\\n') else '' -%}\n            {%- if part['type'] == 'image' or part['type'] == 'image_url' or part['type'] == 'input_image' -%}\n                {%- set render_ns.image_index = render_ns.image_index + 1 -%}\n                {%- if counters.images > 0 -%}\n                    {%- if counters.images > 1 -%}\n                        {%- set content_ns.val = content_ns.val + sep\n                            + '<image ' + render_ns.image_index|string + '><image>' -%}\n                    {%- else -%}\n                        {%- set content_ns.val = content_ns.val + sep + '<image>' -%}\n                    {%- endif -%}\n                    {%- set render_ns.after_text = false -%}\n                {%- endif -%}\n            {%- elif part['type'] == 'video' or part['type'] == 'video_url' or part['type'] == 'input_video' -%}\n                {%- if counters.videos > 0 -%}\n                    {%- set content_ns.val = content_ns.val + sep + '<video>' -%}\n                    {%- set render_ns.after_text = false -%}\n                {%- endif -%}\n            {%- elif part['type'] == 'text' or part['type'] == 'input_text' -%}\n                {%- set content_ns.val = content_ns.val + (part['text'] | default('', true)) -%}\n                {%- if part['text'] | default('', true) -%}\n                    {%- set render_ns.after_text = true -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- content_ns.val -}}\n    {%- endif -%}\n{%- endmacro %}\n{%- set enable_thinking = enable_thinking if enable_thinking is defined else True %}\n{%- set medium_effort = medium_effort if medium_effort is defined else False %}\n{%- set truncate_history_thinking = truncate_history_thinking if truncate_history_thinking is defined else True %}\n{%- set ns = namespace(last_user_idx = -1) %}\n{%- set loop_messages = messages %}\n{%- for m in loop_messages %}\n  {%- if m[\"role\"] == \"user\" %}\n    {%- set ns.last_user_idx = loop.index0 %}\n  {%- endif %}\n{%- endfor %}\n{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = [] %}\n{%- endif %}\n{%- set ns = namespace(last_user_idx = -1) %}\n{%- for m in loop_messages %}\n  {%- if m[\"role\"] == \"user\" %}\n    {%- set ns.last_user_idx = loop.index0 %}\n  {%- endif %}\n{%- endfor %}\n{%- if system_message is defined %}\n    {{- \"<|im_start|>system\\n\" ~ render_content(system_message) }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- \"<|im_start|>system\\n\" }}\n    {%- endif %}\n{%- endif %}\n{%- if tools is iterable and tools | length > 0 %}\n    {%- if system_message is defined and system_message | length > 0 %}\n        {{- \"\\n\\n\" }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n\" }}\n    {{- \"<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.function is defined %}\n            {%- set tool = tool.function %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" ~ tool.name ~ \"</name>\" }}\n        {%- if tool.description is defined %}\n            {{- '\\n<description>' ~ (tool.description | trim) ~ '</description>' }}\n        {%- endif %}\n        {{- '\\n<parameters>' }}\n        {%- if tool.parameters is defined and tool.parameters is mapping and tool.parameters.properties is defined and tool.parameters.properties is mapping %}\n            {%- for param_name, param_fields in tool.parameters.properties|items %}\n                {{- '\\n<parameter>' }}\n                {{- '\\n<name>' ~ param_name ~ '</name>' }}\n                {%- if param_fields.type is defined %}\n                    {{- '\\n<type>' ~ (param_fields.type | string) ~ '</type>' }}\n                {%- endif %}\n                {%- if param_fields.description is defined %}\n                    {{- '\\n<description>' ~ (param_fields.description | trim) ~ '</description>' }}\n                {%- endif %}\n                {%- if param_fields.enum is defined %}\n                    {{- '\\n<enum>' ~ (param_fields.enum | tojson | safe) ~ '</enum>' }}\n                {%- endif %}\n                {%- set handled_keys = ['name', 'type', 'description', 'enum'] %}\n                {{- render_extra_keys(param_fields, handled_keys) }}\n                {{- '\\n</parameter>' }}\n            {%- endfor %}\n        {%- endif %}\n        {% set handled_keys = ['type', 'properties', 'required'] %}\n        {{- render_extra_keys(tool.parameters, handled_keys) }}\n        {%- if tool.parameters is defined and tool.parameters.required is defined %}\n            {{- '\\n<required>' ~ (tool.parameters.required | tojson | safe) ~ '</required>' }}\n        {%- endif %}\n        {{- '\\n</parameters>' }}\n        {%- set handled_keys = ['type', 'name', 'description', 'parameters'] %}\n        {{- render_extra_keys(tool, handled_keys) }}\n        {{- '\\n</function>' }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n{%- endif %}\n{%- if system_message is defined %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in loop_messages %}\n    {%- set content = render_content(message.content | default('', true)) %}\n    {%- if message.role == \"assistant\" %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is string and message.reasoning_content | trim | length > 0 %}\n            {%- set content = \"<think>\\n\" ~ message.reasoning_content ~ \"</think>\" ~ content %}\n        {%- else %}\n            {%- if content is string -%}\n                {%- if '<think>' not in content and '</think>' not in content -%}\n                    {%- set content = \"<think></think>\" ~ content -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endif %}\n        {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 %}\n            {{- '<|im_start|>assistant\\n' }}\n                {%- set include_content = not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}\n                {%- if content is string and content | trim | length > 0 %}\n                    {%- if include_content %}\n                        {{- (content | trim) ~ '\\n' -}}\n                    {%- else %}\n                        {%- set c = (content | string) %}\n                        {%- if '</think>' in c %}\n                            {%- set c = c.split('</think>')[-1] %}\n                        {%- elif '<think>' in c %}\n                            {%- set c = c.split('<think>')[0] %}\n                        {%- endif %}\n                        {%- set c = \"<think></think>\" ~ c %}\n                        {%- if c | length > 0 %}\n                            {{- c ~ '\\n' -}}\n                        {%- endif %}\n                    {%- endif %}\n                {%- else %}\n                    {{- \"<think></think>\" -}}\n                {%- endif %}\n                {%- for tool_call in message.tool_calls %}\n                    {%- if tool_call.function is defined %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {{- '<tool_call>\\n<function=' ~ tool_call.name ~ '>\\n' -}}\n                        {%- if tool_call.arguments is defined %}\n                            {%- for args_name, args_value in tool_call.arguments|items %}\n                                {{- '<parameter=' ~ args_name ~ '>\\n' -}}\n                                    {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                                {{- args_value ~ '\\n</parameter>\\n' -}}\n                            {%- endfor %}\n                        {%- endif %}\n                    {{- '</function>\\n</tool_call>\\n' -}}\n                {%- endfor %}\n                {{- '<|im_end|>\\n' }}\n        {%- else %}\n            {%- if not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}\n                {{- '<|im_start|>assistant\\n' ~ (content | default('', true) | string | trim) ~ '<|im_end|>\\n' }}\n            {%- else %}\n                {%- set c = (content | default('', true) | string) %}\n                {%- if '<think>' in c and '</think>' in c %}\n                    {%- set c = \"<think></think>\" ~ c.split('</think>')[-1] %}\n                {%- endif %}\n                {%- set c = c | trim %}\n                {%- if c | length > 0 %}\n                    {{- '<|im_start|>assistant\\n' ~ c ~ '<|im_end|>\\n' }}\n                {%- else %}\n                    {{- '<|im_start|>assistant\\n<|im_end|>\\n' }}\n                {%- endif %}\n            {%- endif %}\n        {%- endif %}\n    {%- elif message.role == \"user\" or message.role == \"system\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {#- Render structured image/video content in its original order. -#}\n        {%- if message.role == \"user\" and loop.index0 == ns.last_user_idx and medium_effort %}\n            {{- content + '\\n\\n{reasoning effort: efficient}' }}\n        {%- else %}\n            {{- content }}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user\\n' }}\n        {%- endif %}\n        {{- '<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>\\n' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ content ~ '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {%- if enable_thinking %}\n        {{- '<|im_start|>assistant\\n<think>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>assistant\\n<think></think>' }}\n    {%- endif %}\n{%- endif %}\n",
+    "bos_token": "<s>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 1290795104
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "26b41cc3b1b125e1398b245286f57c5c5deaf8b3",
+      "size": 5673
+    },
+    {
+      "rfilename": "LiLiCorr/lilicorr-NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4.gguf",
+      "blobId": "c3b4ff1a08ace215581c998b92e3d06dce76ebe4",
+      "size": 1290795104,
+      "lfs": {
+        "sha256": "d5c0c5f22f8889ae0c0e068ea775cb641cd944a571aa65b00975cbdcdf96c806",
+        "size": 1290795104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "NVFP4/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-00001-of-00003.gguf",
+      "blobId": "d8b69624fdd0a5c9d0793e4d7ffc3b015db4b58e",
+      "size": 7874272,
+      "lfs": {
+        "sha256": "95109d33bc080d3b705d083be31ab18610c619b4990a5c5a72e0bd2e85766b9d",
+        "size": 7874272,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "NVFP4/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-00002-of-00003.gguf",
+      "blobId": "0fd83ac1a5bfcfe005048c89b04fe33eef6739c8",
+      "size": 47786634752,
+      "lfs": {
+        "sha256": "5f67e480e37a48832c9a868c1b4cc4b42530702fe08d6317017cf61dc95e7ce1",
+        "size": 47786634752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVFP4/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-00003-of-00003.gguf",
+      "blobId": "5e9f0cf10ee5725e10805e8afd881b0f4f16a770",
+      "size": 29891544960,
+      "lfs": {
+        "sha256": "24752e37634e07ebbca5baea706fac9b60b03ff818ee8b6febc74c6d87fe4ef9",
+        "size": 29891544960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q8_0-00001-of-00004.gguf",
+      "blobId": "31964f5d82e124d863a093eea043ead68635b81c",
+      "size": 7874266,
+      "lfs": {
+        "sha256": "944ea688886503a64e8df3d4d60dc170dcac4b89f9fae4a7adb50a44fbe0ca68",
+        "size": 7874266,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q8_0-00002-of-00004.gguf",
+      "blobId": "3d35fcf8e7b526782072c02895e99cba8475b0af",
+      "size": 49931083552,
+      "lfs": {
+        "sha256": "b7ec4bcdee84af3a246d1760eccde13d88240864ac3c39f889be1bc7d1d4f623",
+        "size": 49931083552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q8_0-00003-of-00004.gguf",
+      "blobId": "2bb12e2f1d525936e2cb6f0e889df5ae30dd58df",
+      "size": 49462651360,
+      "lfs": {
+        "sha256": "7b63b002e2612245d65273d221ec18c1b66a2e4740cfa03fda45932e15ffd38a",
+        "size": 49462651360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Q8_0-00004-of-00004.gguf",
+      "blobId": "bc34f21a37da492b55f7af1c3a9de0b3b7d003bc",
+      "size": 32203828000,
+      "lfs": {
+        "sha256": "ef291a7e6e26cf1df3e610a7b227f1023579f21bcd06226941a007b76a48b5b1",
+        "size": 32203828000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "17012444dba583b44bbcdaf17270cbf90c085ae1",
+      "size": 82574
+    },
+    {
+      "rfilename": "UD-IQ1_M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ1_M-00001-of-00002.gguf",
+      "blobId": "2e04a5f5eda198b50bdbacba7f0e31b9fb4be6ee",
+      "size": 7874592,
+      "lfs": {
+        "sha256": "19c91f65bf39896cbb720b3e90f9d325ea4a74a7598727760a92b3e30672796f",
+        "size": 7874592,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ1_M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ1_M-00002-of-00002.gguf",
+      "blobId": "42270b9bae82c059975ff024a663e08f4597909d",
+      "size": 46132433696,
+      "lfs": {
+        "sha256": "be5d8ba985e54a1e8f1e33213daa12d65659a15dee58af44f18495f70a4db422",
+        "size": 46132433696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ2_M-00001-of-00003.gguf",
+      "blobId": "2cdff55735118d1936d957021fb448e5de26fad2",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "a84daaeebf3c607b3e4ed9a7916b937ab0a12622b819b98292f8ef7f85f85d1a",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ2_M-00002-of-00003.gguf",
+      "blobId": "f4a8dc365cd110eafa58d4462cce319c3986b0e9",
+      "size": 49467941472,
+      "lfs": {
+        "sha256": "5b266f025eb6e821ae9fcb60153f02e7d8e9c3b50c5fe7abf781940ed81b0225",
+        "size": 49467941472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_M/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ2_M-00003-of-00003.gguf",
+      "blobId": "3d0269d22aff16b5ea8b776f93409e19860fa0e1",
+      "size": 6400577824,
+      "lfs": {
+        "sha256": "75a5d2f116d0309e7ac88cf4e57ed03fd5934016c5305b53beb4c74c35fcc4f3",
+        "size": 6400577824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ2_XXS-00001-of-00003.gguf",
+      "blobId": "7b2307bf38076ec3d3f76436eee845abb61397b4",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "9247e0cc5b489df3aee72e4e7d3031a37f824c41ef1afd1a5cd8e78c20e2e5ea",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ2_XXS-00002-of-00003.gguf",
+      "blobId": "11762c802d6498f5b3e01fc725ab0bddd9760a5e",
+      "size": 49555992928,
+      "lfs": {
+        "sha256": "6c8b64eab997efaae6059b15b4c529596b6e78410f3907858d4f063a47dc8bb4",
+        "size": 49555992928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ2_XXS-00003-of-00003.gguf",
+      "blobId": "96e59a5100c0585645fc5439669b9e8c29ee4c7b",
+      "size": 1556480576,
+      "lfs": {
+        "sha256": "57976b795428793796ca2d618ea0eecbf8585557c098ac44e651d4a0e4650be9",
+        "size": 1556480576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ3_XXS-00001-of-00003.gguf",
+      "blobId": "f5a1906cc78a239bd9fec7d3f1b5d88a38397d82",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "01150188b68c1ebf4528d095eab5fa12b7ae18acfe7cb9fcc5563c0772badd94",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ3_XXS-00002-of-00003.gguf",
+      "blobId": "c2f32108c533f4109a96eb021d6a6973a0b39592",
+      "size": 49997462976,
+      "lfs": {
+        "sha256": "fbf889020bf9effe03da67985d24a1b5d58ad382fcdd02fa390c09687abc0957",
+        "size": 49997462976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-IQ3_XXS-00003-of-00003.gguf",
+      "blobId": "1ecc83b563ebaddb5b9782636720f89aa3cf1544",
+      "size": 9758873024,
+      "lfs": {
+        "sha256": "e69358032031aa6dac6838dffb03ad2d54e510bad2fea10513db7dd27dfbd70b",
+        "size": 9758873024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q2_K_XL-00001-of-00003.gguf",
+      "blobId": "837c98222d59477fbeeb3e90ca5634b2f08cd41b",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "0473295117eeccca0edccc80d81e9def7a0472d07eb15fafda14e4e234411b81",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q2_K_XL-00002-of-00003.gguf",
+      "blobId": "57b76a662ebf61f979235d532d49df227fe6ced1",
+      "size": 49700937760,
+      "lfs": {
+        "sha256": "d86ba79dd0bea46a43c74832838678971128f00f90ad7bb5c45c648d3db450ad",
+        "size": 49700937760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q2_K_XL-00003-of-00003.gguf",
+      "blobId": "f98387afcb532eb7320aa975eb746f5f097d29e2",
+      "size": 8079725440,
+      "lfs": {
+        "sha256": "6282f2c893da4668c5452169f6ecb50f087e9e6b75a023d44200bac55c434f50",
+        "size": 8079725440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q3_K_XL-00001-of-00003.gguf",
+      "blobId": "c1ef90e8bfcd1217e1f752b8930126a7dc7861c9",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "b2a570b4fc2e2e0ef3657937d6d4689c5d9647125e5fe22e31426789cf4e02fa",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q3_K_XL-00002-of-00003.gguf",
+      "blobId": "b5404e8e0a4c6c6234ef1304d1ea741d90158d0a",
+      "size": 49225290592,
+      "lfs": {
+        "sha256": "94827cf22f98854a68127fd4a18cca136951d1181bba8c21a7d9dcd6d3c68674",
+        "size": 49225290592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q3_K_XL-00003-of-00003.gguf",
+      "blobId": "9bed3c4eb799dcb799f746575eb8c2832c3cd805",
+      "size": 16528375872,
+      "lfs": {
+        "sha256": "c2245a2faa51dc1aabcb6b58b7c311bc06ebada10345057e106ac94fcfcef8ce",
+        "size": 16528375872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q4_K_XL-00001-of-00003.gguf",
+      "blobId": "ff015c1f4430b8b70497d470c91b6a0ab08c1384",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "04e0b45e70ab5c86c6b5d3b0133cc35fc10861015bac7dcff867dcf115dc81c5",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q4_K_XL-00002-of-00003.gguf",
+      "blobId": "b943e4f03592ebe7c7bb9fa87d2e0ebb8f9427db",
+      "size": 49851272832,
+      "lfs": {
+        "sha256": "868a7fa360ff10bc7e072e4bb4f8771b280ca35a087a55125bc21f7ebb9962b7",
+        "size": 49851272832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q4_K_XL-00003-of-00003.gguf",
+      "blobId": "4de2126cbe5b4eb7b492a53521a0e8bd011333df",
+      "size": 37048096032,
+      "lfs": {
+        "sha256": "684abb5b5306b18a046ee69e3375a0e863d14d265e0ffa52c33442d375d08b7d",
+        "size": 37048096032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q5_K_XL-00001-of-00004.gguf",
+      "blobId": "cedb32a84281566170f04ba0704fa4d1139df8a6",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "6f694a7dc8f147608210e4b95e2b36a8a9d31b677a644332c23cb29c55c9a554",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q5_K_XL-00002-of-00004.gguf",
+      "blobId": "44ad46165067d1071d0e592a736cb6119fd30212",
+      "size": 49292279680,
+      "lfs": {
+        "sha256": "d0063147e1790b5aa857a609e840ef38b3db405132573b9839a8d3d13dc54f5f",
+        "size": 49292279680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q5_K_XL-00003-of-00004.gguf",
+      "blobId": "4d45c4aa8fbcc3e29d64306b19c3f6ac1ab1d24b",
+      "size": 49336455200,
+      "lfs": {
+        "sha256": "3d7d9b8d8cafcb9fa89d6d76ad3ee91ebdfe4709574bf6c0e920349f0ce5a391",
+        "size": 49336455200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q5_K_XL-00004-of-00004.gguf",
+      "blobId": "8e247a2ec18841b965ec0903dd2aa92e7437321c",
+      "size": 12065858688,
+      "lfs": {
+        "sha256": "b903809ac924f36212ea582263b99a5b728ca8583d753820663485bc4368bf51",
+        "size": 12065858688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q6_K_XL-00001-of-00004.gguf",
+      "blobId": "b1667985cca2cd3d482d9b2eaa9c44c17b822095",
+      "size": 7874568,
+      "lfs": {
+        "sha256": "ec945391f2b6de496cc888d2523a8004101caf0982055273dd081dd4f3803a2d",
+        "size": 7874568,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q6_K_XL-00002-of-00004.gguf",
+      "blobId": "05b9b22062a1dcf9bf787b8337babda94074991d",
+      "size": 49997421504,
+      "lfs": {
+        "sha256": "2ca436ef27ec074863befa32c11390c70c8810f15ec7c24811a226a96e36efc3",
+        "size": 49997421504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q6_K_XL-00003-of-00004.gguf",
+      "blobId": "153b769c524bf212bc9a2062b9c4b1be2352075e",
+      "size": 49600416960,
+      "lfs": {
+        "sha256": "735cce5f90131831f2f1249f821f45f54b2ce355e4dacec6b77d70dfadd4d028",
+        "size": 49600416960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-UD-Q6_K_XL-00004-of-00004.gguf",
+      "blobId": "4255154c9261e0db17d2a84e7b25b3136e0a95ca",
+      "size": 21380139936,
+      "lfs": {
+        "sha256": "1573b9db5682d97059c4eb5c89189600e452a29038ca630314eb534b8a5489fc",
+        "size": 21380139936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "mmproj-BF16.gguf",
+      "blobId": "9205af7ecc018e5394f8dfbea01541910e39817b",
+      "size": 1733695840,
+      "lfs": {
+        "sha256": "9c09381a5744d0ea9a30048c94922f6f25ee0d63842de9c45779eca4fb5924d9",
+        "size": 1733695840,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-10-14T15:29:05.000Z",
+  "usedStorage": 867362886234
+}

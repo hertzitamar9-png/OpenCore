@@ -1,0 +1,94 @@
+{
+  "_id": "69af406da35d80b39eaf514d",
+  "id": "forkjoin-ai/deepseek-ocr-gguf",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "llama-cpp",
+  "tags": [
+    "llama-cpp",
+    "gguf",
+    "vision",
+    "multimodal",
+    "forkjoin-ai",
+    "image-text-to-text",
+    "en",
+    "base_model:deepseek-ai/DeepSeek-OCR",
+    "base_model:quantized:deepseek-ai/DeepSeek-OCR",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 67,
+  "likes": 0,
+  "modelId": "forkjoin-ai/deepseek-ocr-gguf",
+  "author": "forkjoin-ai",
+  "sha": "33986d3eac9aab15f1e64edd75a5fa202ef169b3",
+  "lastModified": "2026-06-09T15:43:37.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0",
+    "library_name": "llama-cpp",
+    "tags": [
+      "gguf",
+      "vision",
+      "multimodal",
+      "forkjoin-ai"
+    ],
+    "base_model": "deepseek-ai/DeepSeek-OCR",
+    "pipeline_tag": "image-text-to-text"
+  },
+  "gguf": {
+    "total": 2934734080,
+    "architecture": "deepseek_vl_v2",
+    "totalFileSize": 2058995264
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "11f65c5adc096629e8ceb78be630f2919e6615ce",
+      "size": 1578
+    },
+    {
+      "rfilename": "DeepSeek-OCR.Q4_K.gguf",
+      "blobId": "3622b81bf98ef13c959a26a9094778366a1d9a1a",
+      "size": 2058995264,
+      "lfs": {
+        "sha256": "ad89b593ca5abed78803e77d45ecf0ac8002b2e96adddab89a9c24ce120c36cb",
+        "size": 2058995264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d650033fce681ef02216b7bce52c60233ba2b573",
+      "size": 1202
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "c93a1c4d2ecf31bb5a9ec39eb73dfbf915aaf77e",
+      "size": 9979544
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-03-09T21:49:33.000Z",
+  "usedStorage": 2058995264
+}

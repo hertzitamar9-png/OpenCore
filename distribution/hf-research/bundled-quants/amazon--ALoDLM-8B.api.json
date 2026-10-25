@@ -1,0 +1,251 @@
+{
+  "_id": "6abffc02f0d79c600128d7e7",
+  "id": "amazon/ALoDLM-8B",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "safetensors",
+    "qwen3",
+    "alodlm",
+    "diffusion-language-model",
+    "looped-transformer",
+    "adaptive-computation",
+    "text-generation",
+    "code",
+    "conversational",
+    "arxiv:2610.04198",
+    "license:cc-by-nc-4.0",
+    "region:us"
+  ],
+  "downloads": 2056,
+  "likes": 62,
+  "modelId": "amazon/ALoDLM-8B",
+  "author": "amazon",
+  "sha": "2c4623d93e285bea86a940c2801eac4509862edd",
+  "lastModified": "2026-10-07T02:25:33.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3ForCausalLM"
+    ],
+    "model_type": "qwen3",
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|im_end|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}"
+  },
+  "cardData": {
+    "license": "cc-by-nc-4.0",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "alodlm",
+      "diffusion-language-model",
+      "looped-transformer",
+      "adaptive-computation",
+      "text-generation",
+      "code"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9b334fff7a979758d7e7712ffdf2c13551105829",
+      "size": 1830
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "340cf0c959586320b003a9ed4ad61ec65f8f90e5",
+      "size": 17649
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "6784c4c5e5b1da574ed558f6416bd55aa36e2dc1",
+      "size": 684
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ca5736060d5301a820ddbc0221be16db5bd7de2d",
+      "size": 13625
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "b54f9135e44c1e81047e8d05cb027af8bc039eed",
+      "size": 707
+    },
+    {
+      "rfilename": "alodlm_config.json",
+      "blobId": "3ab8189f33388b80685c16a6760dcba42aa6dd4a",
+      "size": 179
+    },
+    {
+      "rfilename": "assets/evaluation-results.png",
+      "blobId": "69457eef72b377269ba671a0f81bee32946d9ba7",
+      "size": 374838,
+      "lfs": {
+        "sha256": "d184f66bb21c0fa7b247b3cdbf792f09284efd3ebb04f7269955873a93d0f61d",
+        "size": 374838,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/research-overview.png",
+      "blobId": "0aedd102f58e472a7a1e0a250688196ecf30db75",
+      "size": 397936,
+      "lfs": {
+        "sha256": "24f438de9ae39cdab4e50d18ee1a8bc982fc009398a978221141db75cdd33038",
+        "size": 397936,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/research-radar.png",
+      "blobId": "968a43e8b51e33df4cdb3ba21bd94b0fb0fef66b",
+      "size": 535132,
+      "lfs": {
+        "sha256": "01b320a0093f02f65d7d34230eaae383e64b889fb82d3ff96205ee28ffb75280",
+        "size": 535132,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/research-throughput.png",
+      "blobId": "ba942b30474dc6404cc09a17e19df2444e245107",
+      "size": 197160,
+      "lfs": {
+        "sha256": "30f09164ce2ba92a6188acc9b2be8a42f0125626317ddf6bb75ae84ce387db47",
+        "size": 197160,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "01be9b307daa2d425f7c168c9fb145a286e0afb4",
+      "size": 4168
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "347797053011b60caabb29f1aa8f38e5300e280e",
+      "size": 1538
+    },
+    {
+      "rfilename": "exit_gate.pt",
+      "blobId": "0b000481c08408ffe6aa1e3b6b2ff341cee47d55",
+      "size": 10355,
+      "lfs": {
+        "sha256": "2b8f29fb872ce8136a73ec0db3a3cdb93f590dc8f1a23eac9a5c3c73fadabbf2",
+        "size": 10355,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "licenses/Qwen-Apache-2.0.txt",
+      "blobId": "6634c8cc3133b3848ec74b9f275acaaa1ea618ab",
+      "size": 11343
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "62859cf45cdff61810211760eced99712573185d",
+      "size": 4902257696,
+      "lfs": {
+        "sha256": "ecd4272e3c1bb2912e6eac4cafe0a8fe062779357f7297d16e81202c6bb498b3",
+        "size": 4902257696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "25353fb7b359c3545dfceb67eaf0621323b9041f",
+      "size": 4915960368,
+      "lfs": {
+        "sha256": "784b9c8229442f3d1df7b3addf61b5db7601462ffad7c07b19ecdc14c2054575",
+        "size": 4915960368,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "438c405f53db7ba701f1a7515675f32745354c35",
+      "size": 4983068496,
+      "lfs": {
+        "sha256": "e7ed842e82b7ce2fe341aa1ad67d103c9a4f4ff10f3ad9ba31ffe6dd85cc9d9c",
+        "size": 4983068496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "2992e8854af2b4f9fb45460450f727d3f2b9b09b",
+      "size": 1580230264,
+      "lfs": {
+        "sha256": "dd8f6c925b0b9eddce4d74947e77e7ba5b7eaf7db9f7a79029e075864a227f6d",
+        "size": 1580230264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "10c7a17197289024c4b2801e53b9662e95f5ad83",
+      "size": 32878
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "aa59b33336a271d5b9144ee7849ef82fbb82a0a8",
+      "size": 496
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "cd71f61a15a522601badb3dc960d800d9cb3766c",
+      "size": 11422654,
+      "lfs": {
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "size": 11422654,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "d7b51cc5aed4412402caebd33c2963d27854f6da",
+      "size": 5401
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "mrfakename/alodlm-8b"
+  ],
+  "createdAt": "2026-10-02T18:46:26.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8190735360
+    },
+    "total": 8190735360
+  },
+  "usedStorage": 16394454899
+}

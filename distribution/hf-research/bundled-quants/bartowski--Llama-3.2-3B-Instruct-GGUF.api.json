@@ -1,0 +1,387 @@
+{
+  "_id": "66f457f561dbc064f4a6413f",
+  "id": "bartowski/Llama-3.2-3B-Instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "facebook",
+    "meta",
+    "llama",
+    "llama-3",
+    "text-generation",
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt",
+    "hi",
+    "es",
+    "th",
+    "base_model:meta-llama/Llama-3.2-3B-Instruct",
+    "base_model:quantized:meta-llama/Llama-3.2-3B-Instruct",
+    "license:llama3.2",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 168471,
+  "likes": 251,
+  "modelId": "bartowski/Llama-3.2-3B-Instruct-GGUF",
+  "author": "bartowski",
+  "sha": "5ab33fa94d1d04e903623ae72c95d1696f09f9e8",
+  "lastModified": "2024-10-08T14:01:10.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "meta-llama/Llama-3.2-3B-Instruct",
+    "language": [
+      "en",
+      "de",
+      "fr",
+      "it",
+      "pt",
+      "hi",
+      "es",
+      "th"
+    ],
+    "license": "llama3.2",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "facebook",
+      "meta",
+      "llama",
+      "llama-3"
+    ],
+    "quantized_by": "bartowski",
+    "extra_gated_prompt": "### LLAMA 3.2 COMMUNITY LICENSE AGREEMENT\n\nLlama 3.2 Version Release Date: September 25, 2024\n\n\u201cAgreement\u201d means the terms and conditions for use, reproduction, distribution  and modification of the Llama Materials set forth herein.\n\n\u201cDocumentation\u201d means the specifications, manuals and documentation accompanying Llama 3.2 distributed by Meta at https://llama.meta.com/doc/overview.\n\n\u201cLicensee\u201d or \u201cyou\u201d means you, or your employer or any other person or entity (if you are  entering into this Agreement on such person or entity\u2019s behalf), of the age required under applicable laws, rules or regulations to provide legal consent and that has legal authority to bind your employer or such other person or entity if you are entering in this Agreement on their behalf.\n\n\u201cLlama 3.2\u201d means the foundational large language models and software and algorithms, including machine-learning model code, trained model weights, inference-enabling code, training-enabling code, fine-tuning enabling code and other elements of the foregoing distributed by Meta at  https://www.llama.com/llama-downloads.\n\n\u201cLlama Materials\u201d means, collectively, Meta\u2019s proprietary Llama 3.2 and Documentation (and  any portion thereof) made available under this Agreement.\n\n\u201cMeta\u201d or \u201cwe\u201d means Meta Platforms Ireland Limited (if you are located in or,  if you are an entity, your principal place of business is in the EEA or Switzerland)  and Meta Platforms, Inc. (if you are located outside of the EEA or Switzerland). \n\nBy clicking \u201cI Accept\u201d below or by using or distributing any portion or element of the Llama Materials, you agree to be bound by this Agreement.\n\n1. License Rights and Redistribution.\na. Grant of Rights. You are granted a non-exclusive, worldwide,  non-transferable and royalty-free limited license under Meta\u2019s intellectual property or other rights  owned by Meta embodied in the Llama Materials to use, reproduce, distribute, copy, create derivative works  of, and make modifications to the Llama Materials.  \nb. Redistribution and Use.  \ni. If you distribute or make available the Llama Materials (or any derivative works thereof),  or a product or service (including another AI model) that contains any of them, you shall (A) provide a copy of this Agreement with any such Llama Materials; and (B) prominently display \u201cBuilt with Llama\u201d on a related website, user interface, blogpost, about page, or product documentation. If you use the Llama Materials or any outputs or results of the Llama Materials to create, train, fine tune, or otherwise improve an AI model, which is distributed or made available, you shall also include \u201cLlama\u201d at the beginning of any such AI model name.\nii. If you receive Llama Materials, or any derivative works thereof, from a Licensee as part of an integrated end user product, then Section 2 of this Agreement will not apply to you. \niii. You must retain in all copies of the Llama Materials that you distribute the  following attribution notice within a \u201cNotice\u201d text file distributed as a part of such copies:  \u201cLlama 3.2 is licensed under the Llama 3.2 Community License, Copyright \u00a9 Meta Platforms, Inc. All Rights Reserved.\u201d\niv. Your use of the Llama Materials must comply with applicable laws and regulations (including trade compliance laws and regulations) and adhere to the Acceptable Use Policy for the Llama Materials (available at https://www.llama.com/llama3_2/use-policy), which is hereby  incorporated by reference into this Agreement.\n  \n2. Additional Commercial Terms. If, on the Llama 3.2 version release date, the monthly active users of the products or services made available by or for Licensee, or Licensee\u2019s affiliates,  is greater than 700 million monthly active users in the preceding calendar month, you must request  a license from Meta, which Meta may grant to you in its sole discretion, and you are not authorized to exercise any of the rights under this Agreement unless or until Meta otherwise expressly grants you such rights.\n3. Disclaimer of Warranty. UNLESS REQUIRED BY APPLICABLE LAW, THE LLAMA MATERIALS AND ANY OUTPUT AND  RESULTS THEREFROM ARE PROVIDED ON AN \u201cAS IS\u201d BASIS, WITHOUT WARRANTIES OF ANY KIND, AND META DISCLAIMS ALL WARRANTIES OF ANY KIND, BOTH EXPRESS AND IMPLIED, INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. YOU ARE SOLELY RESPONSIBLE FOR DETERMINING THE APPROPRIATENESS OF USING OR REDISTRIBUTING THE LLAMA MATERIALS AND ASSUME ANY RISKS ASSOCIATED WITH YOUR USE OF THE LLAMA MATERIALS AND ANY OUTPUT AND RESULTS.\n4. Limitation of Liability. IN NO EVENT WILL META OR ITS AFFILIATES BE LIABLE UNDER ANY THEORY OF LIABILITY,  WHETHER IN CONTRACT, TORT, NEGLIGENCE, PRODUCTS LIABILITY, OR OTHERWISE, ARISING OUT OF THIS AGREEMENT,  FOR ANY LOST PROFITS OR ANY INDIRECT, SPECIAL, CONSEQUENTIAL, INCIDENTAL, EXEMPLARY OR PUNITIVE DAMAGES, EVEN  IF META OR ITS AFFILIATES HAVE BEEN ADVISED OF THE POSSIBILITY OF ANY OF THE FOREGOING.\n5. Intellectual Property.\na. No trademark licenses are granted under this Agreement, and in connection with the Llama Materials,  neither Meta nor Licensee may use any name or mark owned by or associated with the other or any of its affiliates,  except as required for reasonable and customary use in describing and redistributing the Llama Materials or as  set forth in this Section 5(a). Meta hereby grants you a license to use \u201cLlama\u201d (the \u201cMark\u201d) solely as required  to comply with the last sentence of Section 1.b.i. You will comply with Meta\u2019s brand guidelines (currently accessible  at https://about.meta.com/brand/resources/meta/company-brand/). All goodwill arising out of your use of the Mark  will inure to the benefit of Meta.\nb. Subject to Meta\u2019s ownership of Llama Materials and derivatives made by or for Meta, with respect to any derivative works and modifications of the Llama Materials that are made by you, as between you and Meta, you are and will be the owner of such derivative works and modifications.\nc. If you institute litigation or other proceedings against Meta or any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Llama Materials or Llama 3.2 outputs or results, or any portion of any of the foregoing, constitutes infringement of intellectual property or other rights owned or licensable by you, then any licenses granted to you under this Agreement shall terminate as of the date such litigation or claim is filed or instituted. You will indemnify and hold harmless Meta from and against any claim by any third party arising out of or related to your use or distribution of the Llama Materials.\n6. Term and Termination. The term of this Agreement will commence upon your acceptance of this Agreement or access to the Llama Materials and will continue in full force and effect until terminated in accordance with the terms and conditions herein. Meta may terminate this Agreement if you are in breach of any term or condition of this Agreement. Upon termination of this Agreement, you shall delete and cease use of the Llama Materials. Sections 3, 4 and 7 shall survive the termination of this Agreement. \n7. Governing Law and Jurisdiction. This Agreement will be governed and construed under the laws of the State of  California without regard to choice of law principles, and the UN Convention on Contracts for the International Sale of Goods does not apply to this Agreement. The courts of California shall have exclusive jurisdiction of any dispute arising out of this Agreement. \n### Llama 3.2 Acceptable Use Policy\nMeta is committed to promoting safe and fair use of its tools and features, including Llama 3.2.  If you access or use Llama 3.2, you agree to this Acceptable Use Policy (\u201c**Policy**\u201d).  The most recent copy of this policy can be found at [https://www.llama.com/llama3_2/use-policy](https://www.llama.com/llama3_2/use-policy).\n#### Prohibited Uses\nWe want everyone to use Llama 3.2 safely and responsibly. You agree you will not use, or allow others to use, Llama 3.2 to:\n1. Violate the law or others\u2019 rights, including to:\n    1. Engage in, promote, generate, contribute to, encourage, plan, incite, or further illegal or unlawful activity or content, such as:\n        1. Violence or terrorism\n        2. Exploitation or harm to children, including the solicitation, creation, acquisition, or dissemination of child exploitative content or failure to report Child Sexual Abuse Material\n        3. Human trafficking, exploitation, and sexual violence\n        4. The illegal distribution of information or materials to minors, including obscene materials, or failure to employ legally required age-gating in connection with such information or materials.\n        5. Sexual solicitation\n        6. Any other criminal activity\n    1. Engage in, promote, incite, or facilitate the harassment, abuse, threatening, or bullying of individuals or groups of individuals\n    2. Engage in, promote, incite, or facilitate discrimination or other unlawful or harmful conduct in the provision of employment, employment benefits, credit, housing, other economic benefits, or other essential goods and services\n    3. Engage in the unauthorized or unlicensed practice of any profession including, but not limited to, financial, legal, medical/health, or related professional practices\n    4. Collect, process, disclose, generate, or infer private or sensitive information about individuals, including information about individuals\u2019 identity, health, or demographic information, unless you have obtained the right to do so in accordance with applicable law\n    5. Engage in or facilitate any action or generate any content that infringes, misappropriates, or otherwise violates any third-party rights, including the outputs or results of any products or services using the Llama Materials\n    6. Create, generate, or facilitate the creation of malicious code, malware, computer viruses or do anything else that could disable, overburden, interfere with or impair the proper working, integrity, operation or appearance of a website or computer system\n    7. Engage in any action, or facilitate any action, to intentionally circumvent or remove usage restrictions or other safety measures, or to enable functionality disabled by Meta\u00a0\n2. Engage in, promote, incite, facilitate, or assist in the planning or development of activities that present a risk of death or bodily harm to individuals, including use of Llama 3.2 related to the following:\n    8. Military, warfare, nuclear industries or applications, espionage, use for materials or activities that are subject to the International Traffic Arms Regulations (ITAR) maintained by the United States Department of State or to the U.S. Biological Weapons Anti-Terrorism Act of 1989 or the Chemical Weapons Convention Implementation Act of 1997\n    9. Guns and illegal weapons (including weapon development)\n    10. Illegal drugs and regulated/controlled substances\n    11. Operation of critical infrastructure, transportation technologies, or heavy machinery\n    12. Self-harm or harm to others, including suicide, cutting, and eating disorders\n    13. Any content intended to incite or promote violence, abuse, or any infliction of bodily harm to an individual\n3. Intentionally deceive or mislead others, including use of Llama 3.2 related to the following:\n    14. Generating, promoting, or furthering fraud or the creation or promotion of disinformation\n    15. Generating, promoting, or furthering defamatory content, including the creation of defamatory statements, images, or other content\n    16. Generating, promoting, or further distributing spam\n    17. Impersonating another individual without consent, authorization, or legal right\n    18. Representing that the use of Llama 3.2 or outputs are human-generated\n    19. Generating or facilitating false online engagement, including fake reviews and other means of fake online engagement\u00a0\n4. Fail to appropriately disclose to end users any known dangers of your AI system 5. Interact with third party tools, models, or software designed to generate unlawful content or engage in unlawful or harmful conduct and/or represent that the outputs of such tools, models, or software are associated with Meta or Llama 3.2\n\nWith respect to any multimodal models included in Llama 3.2, the rights granted under Section 1(a) of the Llama 3.2 Community License Agreement are not being granted to you if you are an individual domiciled in, or a company with a principal place of business in, the European Union. This restriction does not apply to end users of a product or service that incorporates any such multimodal models.\n\nPlease report any violation of this Policy, software \u201cbug,\u201d or other problems that could lead to a violation of this Policy through one of the following means:\n\n* Reporting issues with the model: [https://github.com/meta-llama/llama-models/issues](https://l.workplace.com/l.php?u=https%3A%2F%2Fgithub.com%2Fmeta-llama%2Fllama-models%2Fissues&h=AT0qV8W9BFT6NwihiOHRuKYQM_UnkzN_NmHMy91OT55gkLpgi4kQupHUl0ssR4dQsIQ8n3tfd0vtkobvsEvt1l4Ic6GXI2EeuHV8N08OG2WnbAmm0FL4ObkazC6G_256vN0lN9DsykCvCqGZ)\n* Reporting risky content generated by the model: [developers.facebook.com/llama_output_feedback](http://developers.facebook.com/llama_output_feedback)\n* Reporting bugs and security concerns: [facebook.com/whitehat/info](http://facebook.com/whitehat/info)\n* Reporting violations of the Acceptable Use Policy or unlicensed uses of Llama 3.2: LlamaUseReport@meta.com",
+    "extra_gated_fields": {
+      "First Name": "text",
+      "Last Name": "text",
+      "Date of birth": "date_picker",
+      "Country": "country",
+      "Affiliation": "text",
+      "Job title": {
+        "type": "select",
+        "options": [
+          "Student",
+          "Research Graduate",
+          "AI researcher",
+          "AI developer/engineer",
+          "Reporter",
+          "Other"
+        ]
+      },
+      "geo": "ip_location",
+      "By clicking Submit below I accept the terms of the license and acknowledge that the information I provide will be collected stored processed and shared in accordance with the Meta Privacy Policy": "checkbox"
+    },
+    "extra_gated_description": "The information you provide will be collected, stored, processed and shared in accordance with the [Meta Privacy Policy](https://www.facebook.com/privacy/policy/).",
+    "extra_gated_button_content": "Submit"
+  },
+  "gguf": {
+    "total": 3212749888,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{{- bos_token }}\n{%- if custom_tools is defined %}\n    {%- set tools = custom_tools %}\n{%- endif %}\n{%- if not tools_in_user_message is defined %}\n    {%- set tools_in_user_message = true %}\n{%- endif %}\n{%- if not date_string is defined %}\n    {%- if strftime_now is defined %}\n        {%- set date_string = strftime_now(\"%d %b %Y\") %}\n    {%- else %}\n        {%- set date_string = \"26 Jul 2024\" %}\n    {%- endif %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n\n{#- This block extracts the system message, so we can slot it into the right place. #}\n{%- if messages[0]['role'] == 'system' %}\n    {%- set system_message = messages[0]['content']|trim %}\n    {%- set messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n{%- endif %}\n\n{#- System message #}\n{{- \"<|start_header_id|>system<|end_header_id|>\\n\\n\" }}\n{%- if tools is not none %}\n    {{- \"Environment: ipython\\n\" }}\n{%- endif %}\n{{- \"Cutting Knowledge Date: December 2023\\n\" }}\n{{- \"Today Date: \" + date_string + \"\\n\\n\" }}\n{%- if tools is not none and not tools_in_user_message %}\n    {{- \"You have access to the following functions. To call a function, please respond with JSON for a function call.\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n{%- endif %}\n{{- system_message }}\n{{- \"<|eot_id|>\" }}\n\n{#- Custom tools are passed in a user message with some extra guidance #}\n{%- if tools_in_user_message and not tools is none %}\n    {#- Extract the first user message so we can plug it in here #}\n    {%- if messages | length != 0 %}\n        {%- set first_user_message = messages[0]['content']|trim %}\n        {%- set messages = messages[1:] %}\n    {%- else %}\n        {{- raise_exception(\"Cannot put tools in the first user message when there's no first user message!\") }}\n{%- endif %}\n    {{- '<|start_header_id|>user<|end_header_id|>\\n\\n' -}}\n    {{- \"Given the following functions, please respond with a JSON for a function call \" }}\n    {{- \"with its proper arguments that best answers the given prompt.\\n\\n\" }}\n    {{- 'Respond in the format {\"name\": function name, \"parameters\": dictionary of argument name and its value}.' }}\n    {{- \"Do not use variables.\\n\\n\" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n    {{- first_user_message + \"<|eot_id|>\"}}\n{%- endif %}\n\n{%- for message in messages %}\n    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}\n        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n'+ message['content'] | trim + '<|eot_id|>' }}\n    {%- elif 'tool_calls' in message %}\n        {%- if not message.tool_calls|length == 1 %}\n            {{- raise_exception(\"This model only supports single tool-calls at once!\") }}\n        {%- endif %}\n        {%- set tool_call = message.tool_calls[0].function %}\n        {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' -}}\n        {{- '{\"name\": \"' + tool_call.name + '\", ' }}\n        {{- '\"parameters\": ' }}\n        {{- tool_call.arguments | tojson }}\n        {{- \"}\" }}\n        {{- \"<|eot_id|>\" }}\n    {%- elif message.role == \"tool\" or message.role == \"ipython\" %}\n        {{- \"<|start_header_id|>ipython<|end_header_id|>\\n\\n\" }}\n        {%- if message.content is mapping or message.content is iterable %}\n            {{- message.content | tojson }}\n        {%- else %}\n            {{- message.content }}\n        {%- endif %}\n        {{- \"<|eot_id|>\" }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|eot_id|>",
+    "totalFileSize": 6433687840
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "b542563ddcae2a7e623195348f272c52e37d1989",
+      "size": 2842
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-IQ3_M.gguf",
+      "blobId": "09461eddfa919843ac3b7b70cc202ff06b658acf",
+      "size": 1599668768,
+      "lfs": {
+        "sha256": "deac83b571f3982a12377181fdfd7780bf4ce8cbfbdcac179e4bf2ad47b1b228",
+        "size": 1599668768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-IQ4_XS.gguf",
+      "blobId": "39ce5ef3e368d7acd50eeea57601f513dc30345e",
+      "size": 1829110304,
+      "lfs": {
+        "sha256": "b932f6fd54e64a93f8ad831439adfa2a574315fe4fd98b76c850b24029ec4998",
+        "size": 1829110304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q3_K_L.gguf",
+      "blobId": "523d6fb2e93ed00820ed2de7907183486a758c76",
+      "size": 1815347744,
+      "lfs": {
+        "sha256": "38b11486260d779d1a81876f4c66ea2fd52e52f16d5a2044d992acf6532bfb07",
+        "size": 1815347744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q3_K_XL.gguf",
+      "blobId": "c4b97a6b3ec8d4dac66427275aebd520e3c810b7",
+      "size": 1910770208,
+      "lfs": {
+        "sha256": "b6032695fa266530a4fdbad1fb8f872643c468822f67f905b5de41b386d3eb0d",
+        "size": 1910770208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_0.gguf",
+      "blobId": "312f5156a473c1bdc5ffd54f2dba4ab5a5fc5a0d",
+      "size": 1921909280,
+      "lfs": {
+        "sha256": "4d491003bf6b470e4d04233824c5c939b76d6c81974ba17a3ff207343e1d8e85",
+        "size": 1921909280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_0_4_4.gguf",
+      "blobId": "ccb3bf97e5b5cd86db0b9fcb9cdef213d513fb11",
+      "size": 1917190688,
+      "lfs": {
+        "sha256": "e0fe61bf3e0ddf6859b9a591cc89dc40e18d84bfdaa620954c606fb3eba06bf8",
+        "size": 1917190688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_0_4_8.gguf",
+      "blobId": "4d118137444b6e82b0ee01405a9b3b3fe76ae7ac",
+      "size": 1917190688,
+      "lfs": {
+        "sha256": "b8df70289c53778395cbde3f4eb2baf4f5b61805ca85365c8aacd61c8a022868",
+        "size": 1917190688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_0_8_8.gguf",
+      "blobId": "1382c8c2028081f266da834c41a7be9936581817",
+      "size": 1917190688,
+      "lfs": {
+        "sha256": "c5b547c94140d061db9cd1cc7f71cd9b325f2190e8cd6686def5b1fbd8276827",
+        "size": 1917190688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_K_L.gguf",
+      "blobId": "e5970c0bb27bf4e9d190dbdc0897b0d86e05f2db",
+      "size": 2114800160,
+      "lfs": {
+        "sha256": "a7e78628a8e4c96cf7f9e4873398e18642ac97bb0eacc5cec9b862404a8089a3",
+        "size": 2114800160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "blobId": "05db3ae843d7469470b3bae36359fd49104b5aa2",
+      "size": 2019377696,
+      "lfs": {
+        "sha256": "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
+        "size": 2019377696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q4_K_S.gguf",
+      "blobId": "de28a545874c2c6b697391979b7db297a603788a",
+      "size": 1928200736,
+      "lfs": {
+        "sha256": "bfb5db97e77e3927e18d971806e36d1886271d6c62e160d5bc78bcdbefb7197c",
+        "size": 1928200736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q5_K_L.gguf",
+      "blobId": "575c69e30eb63bf11cc42071caaad12f62908132",
+      "size": 2417576480,
+      "lfs": {
+        "sha256": "43acacbbbf00ea0ed78fd6f5363045eb4226d3dceb76c99bfd58b84d2c58375d",
+        "size": 2417576480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q5_K_M.gguf",
+      "blobId": "157bc82731e7178af6cf6991719229128930891b",
+      "size": 2322154016,
+      "lfs": {
+        "sha256": "0b94ccd04d908304cec5246a3d942b64417a423bc5c6d47c73bc557e590b5194",
+        "size": 2322154016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q5_K_S.gguf",
+      "blobId": "3a89f0daa538ece548ae9a9623ae6ee59fdbeca9",
+      "size": 2269512224,
+      "lfs": {
+        "sha256": "fc58b1880ce451d10f9aa11dd1b566a50cd41b1f72981c5f8a35313e397358f7",
+        "size": 2269512224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q6_K.gguf",
+      "blobId": "47d12cf8883aaa6a6cd0b47975cc026980a3af9d",
+      "size": 2643853856,
+      "lfs": {
+        "sha256": "1771887c15fc3d327cfee6fd593553b2126e88834bf48eae50e709d3f70dd998",
+        "size": 2643853856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q6_K_L.gguf",
+      "blobId": "f5e3f8d09a9021741214a0034e1d1d9ee76854f5",
+      "size": 2739276320,
+      "lfs": {
+        "sha256": "c542b14ec07b8b3cb8d777e1a68ee5aabb964167719466d4c685c29fcfd04900",
+        "size": 2739276320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
+      "blobId": "421abba8b0f82e9ba03298fc2ab83e5c82051e90",
+      "size": 3421899296,
+      "lfs": {
+        "sha256": "b5607b5090a8280063fff2d706bb3408ca6542341b06aab39c3eca0a28575921",
+        "size": 3421899296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct-f16.gguf",
+      "blobId": "f353ff1527aaaa6631852452553ac925872d3638",
+      "size": 6433687840,
+      "lfs": {
+        "sha256": "b5ebe8fbb5ab5f05aaa056948668c5f7443df9d0883497f1d9c05f57fb8ea6cd",
+        "size": 6433687840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Llama-3.2-3B-Instruct.imatrix",
+      "blobId": "176398851c693fbb1c84ea57b6d3117b3b561aad",
+      "size": 2988390,
+      "lfs": {
+        "sha256": "876817f041de1a6c9525d32d5334b2e0a5ed05f73580942e2d45066d8f09154f",
+        "size": 2988390,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f45eb45638903b0d70108ca8743bd37e42109fb1",
+      "size": 24342
+    }
+  ],
+  "spaces": [
+    "seanpedrickcase/topic_modelling",
+    "build-small-hackathon/townlet",
+    "Steven10429/apply_lora_and_quantize",
+    "educatedlucifer12/whisper-ai",
+    "build-small-hackathon/night-companion",
+    "build-small-hackathon/the-committee",
+    "AI-RESEARCHER-2024/Computing-Chatbot",
+    "AyoubZolodick/rag_lite",
+    "Nexari-Research/Nexari-G1.1",
+    "DoralAI/DACodeX",
+    "zohoml/my-private-ai",
+    "build-small-hackathon/oracle",
+    "Zappandy/Kirana_AI",
+    "build-small-hackathon/the-rap-battle",
+    "hari7775/fsconvo",
+    "ganeshvb003/Alphanumerics",
+    "Do0rMaMu/phi3-sql",
+    "Masterdqqq/bartowski-Llama-3.2-3B-Instruct-GGUF",
+    "AI-RESEARCHER-2024/CHAT-PDF",
+    "m96tkmok/streamlit_LLAMA_3.2_Chatbot",
+    "YZ-TAN/flask-llama",
+    "KBaba7/llama.cpp",
+    "pnplvibes/PNPL-Vibes-GGUF",
+    "omaryasserhassan/qwen-planner-api",
+    "SkatNati/justai-cpu-llm",
+    "sohaa143/llmModel",
+    "Fu01978/VoxAI",
+    "MohammedAnsari123/my-ai-chatbot-llm",
+    "yash111222/selfhost-llm-test",
+    "aakashrajput/RunningAgent",
+    "adiiiii13/Llama_Demo",
+    "paulvern/bottifo",
+    "pandharkrdeep/AI.News2Social",
+    "kines9661/whisper-ai",
+    "ranideep/alternate_therapy",
+    "yassineopneclaw/hjjllk",
+    "Sp2503/Generator_Llama-3.2_MongoDB",
+    "ggalancs/hfl",
+    "JosefPilter/appointments-chatbot",
+    "Sachin5112/Slow-ai",
+    "Pugazh24/llama-chat-node",
+    "benzenma123/ai-script-locally",
+    "backendpurpose/workspace",
+    "karthikeya1212/Knowren2",
+    "backendpurpose/newslens-11m",
+    "FR8-1/Orion-S",
+    "lulyo/lulyoai",
+    "KaustubhAS/Autonomous-VRA",
+    "Rei-xx1/Rei_iD",
+    "Shraddhasm/slm-doctor-assistant",
+    "jd-vijay/jd-ai-agent",
+    "jd-vijay/manusclaw",
+    "ttt795420/Aigodot",
+    "Mohamed-20/sahel-api",
+    "Budlee/townlet",
+    "KELIN45/agente_closer",
+    "blueface35/agente_sdk",
+    "viarl199020/agente_gatekeep",
+    "pagareajinkya04/llama-3.2-3b-instruct",
+    "aj689/speculative-api-backend",
+    "Ashmita120/neuromed-backend",
+    "Fluoron/one-piece-analysis",
+    "Nawai58/ollama",
+    "Sirmos/arm-pulse",
+    "gyawalisanish0/Domain_AI",
+    "HulkToigo/THCLLM",
+    "archeese/safeseedops-lite",
+    "Cristobal299/tanakh-translator",
+    "MaduRox/Kalpana-Plain-Models-API",
+    "TheknownStranger/ste-checker",
+    "Rahmat15/anirag-chatbot",
+    "Echizen5135/theology-rag-api",
+    "Subh775/Meeting_summarizer",
+    "w-samik/degradation-backend",
+    "etoledo/curso-meta-IA-llama-wa"
+  ],
+  "createdAt": "2024-09-25T18:35:33.000Z",
+  "usedStorage": 43141705382
+}

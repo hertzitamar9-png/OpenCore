@@ -1,0 +1,106 @@
+{
+  "_id": "6a437170103a6043d155d1f4",
+  "id": "MuScriptor/muscriptor-large",
+  "private": false,
+  "library_name": "muscriptor",
+  "tags": [
+    "muscriptor",
+    "safetensors",
+    "music",
+    "music-transcription",
+    "automatic-music-transcription",
+    "amt",
+    "audio-to-midi",
+    "midi",
+    "music-information-retrieval",
+    "transformer",
+    "pytorch",
+    "license:cc-by-nc-4.0",
+    "region:us"
+  ],
+  "downloads": 6314,
+  "likes": 518,
+  "modelId": "MuScriptor/muscriptor-large",
+  "author": "MuScriptor",
+  "sha": "8809fdfbed2affa7ade94a7059e746e3880720e7",
+  "lastModified": "2026-07-10T10:56:16.000Z",
+  "gated": "auto",
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "model_type": "muscriptor"
+  },
+  "cardData": {
+    "license": "cc-by-nc-4.0",
+    "library_name": "muscriptor",
+    "extra_gated_prompt": "MuScriptor is the result of a research collaboration between Mirelo and Kyutai whose purpose is to transcribe audio to MIDI/music sheet. It is provided primarily for research purposes under the CC BY-NC 4.0 licence supplemented by the below specific conditions of use.\nSpecific conditions of use: MuScriptor and any generated content by MuScriptor are provided as is without any warranty of any kind, including but not limited to any warranty of non-infringement. Use of MuScriptor and its output must comply with all applicable laws and must not result in, involve, or facilitate any illegal or unauthorized activity. Prohibited uses include, without limitation, inputting music files and transcribing them to MIDI/music sheet without having all the necessary rights, including intellectual property rights, under applicable laws. Accordingly, users of MuScriptor undertake and warrant to have all the necessary rights, including intellectual property rights, in connection with their use of MuScriptor and its output. We disclaim all liability for any non-compliant use and users of MuScriptor shall indemnify, defend, and hold harmless Mirelo and Kyutai from and against any and all claims, damages, losses, liabilities, and expenses (including reasonable attorneys' fees) incurred by Mirelo and/or Kyutai arising out of or resulting from their failure to comply with the terms of the CC BY-NC 4.0 licence and/or these specific conditions of use.",
+    "extra_gated_fields": {
+      "Company or university if applicable": "text",
+      "I am a": {
+        "type": "select",
+        "options": [
+          "Musician",
+          "AI Researcher",
+          "Other"
+        ]
+      }
+    },
+    "tags": [
+      "music",
+      "music-transcription",
+      "automatic-music-transcription",
+      "amt",
+      "audio-to-midi",
+      "midi",
+      "music-information-retrieval",
+      "transformer",
+      "pytorch"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "807812ce01a578958d7bed77ff8357898c049a8c",
+      "size": 10255
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "d6e262815ec0b0defc65ac885fae222078e1d367",
+      "size": 125
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "7da37c87769b2fc6ff06df137deedda8616b495d",
+      "size": 5465642136,
+      "lfs": {
+        "sha256": "ac4eb6ea87dfc26b6ca6b954c6b967ab87ad4c7d08e078b25214f13ed051f397",
+        "size": 5465642136,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "hugging-apps/muscriptor-music-transcription",
+    "mason369/music-to-midi",
+    "John2J/muscriptor-slidingwindow",
+    "Miroir/music_smoke",
+    "kaidjuric/muscriptor-video",
+    "k0t0vich/muscriptor-a2m",
+    "asd123aa1234zz/muscriptor-video",
+    "Fornervegear/muscriptor-large",
+    "afbile70/muscriptor-music-transcription"
+  ],
+  "createdAt": "2026-06-30T07:34:08.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 1366399488
+    },
+    "total": 1366399488
+  },
+  "usedStorage": 5465642136
+}

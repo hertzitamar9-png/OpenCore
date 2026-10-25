@@ -1,0 +1,153 @@
+{
+  "_id": "6ac8360371fe1a822bc40db4",
+  "id": "schizophyllume/BeeLLM",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "bee",
+    "buzz",
+    "tiny",
+    "toy",
+    "toy-model",
+    "text-generation",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1946,
+  "likes": 43,
+  "modelId": "schizophyllume/BeeLLM",
+  "author": "schizophyllume",
+  "sha": "f469ed610f716ae438c04c2bd04921fed7eabd55",
+  "lastModified": "2026-10-14T07:23:53.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "bee",
+      "buzz",
+      "tiny",
+      "toy",
+      "toy-model"
+    ]
+  },
+  "gguf": {
+    "total": 11965760,
+    "architecture": "llama",
+    "context_length": 4096,
+    "chat_template": "{% for m in messages %}{% if m['role'] == 'user' %}<|user|>{{ m['content'] }}{% elif m['role'] == 'assistant' %}<|bee|>{{ m['content'] }}</s>{% endif %}{% endfor %}{% if add_generation_prompt %}<|bee|>{% endif %}",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 47913376
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "094f096ba992a83e5916bf7df4312b439ed17c67",
+      "size": 1873
+    },
+    {
+      "rfilename": "BeeLLM-12M-Mood.gguf",
+      "blobId": "f3e381abea9183f683428b9fd535db87efa824e4",
+      "size": 47913376,
+      "lfs": {
+        "sha256": "32d5e894913620beab6b7eda374598a538285217b893ce5f3c7c21d1ef98879b",
+        "size": 47913376,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "BeeLLM-1M-Mood-Chaos.gguf",
+      "blobId": "7a4479e3c9e5e365abe3cffb4b9a6cd0a6c92c59",
+      "size": 4486848,
+      "lfs": {
+        "sha256": "d335a9010bfd1a3de193e5c349844a5af364f7906b439d79f414d0ebef7888f6",
+        "size": 4486848,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "BeeLLM-1M-Mood.gguf",
+      "blobId": "67e2911adbb1fb312411446aa44981f9027e4644",
+      "size": 4486784,
+      "lfs": {
+        "sha256": "14fec85f15fdfcd1a2f139f97a8eb7c65d2728985993b8dc4716235da492de52",
+        "size": 4486784,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "BeeLLM-2.0-12M-Mood.gguf",
+      "blobId": "775a1412963281f9f57b4db258916927f5d2e191",
+      "size": 47912800,
+      "lfs": {
+        "sha256": "1a16507cd2b3344c921607b47e4cda2f7ee6e1f86076739cce46ff78aa575bb9",
+        "size": 47912800,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "BeeLLM-2.0-1M-Mood.gguf",
+      "blobId": "0e40731dc94cad53bad792a06de397d23dcf01f8",
+      "size": 4486176,
+      "lfs": {
+        "sha256": "68bee36dee7fb15ae6beec89b019e17804667eaa8f597caf109383c6586b1e30",
+        "size": 4486176,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "BeeLLM-30P.gguf",
+      "blobId": "fbd3961186deb946e5c6ec0cd471cdd575d3878d",
+      "size": 49504
+    },
+    {
+      "rfilename": "BeeLLM-42P-Chaos.gguf",
+      "blobId": "2287a4e457ffcaeb76457ce42e2effadf13a4e02",
+      "size": 102784,
+      "lfs": {
+        "sha256": "6176e9caecf0744be9854f5c6b94d2542a02a750384367fcc293ac443ce4726d",
+        "size": 102784,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "BeeLLM-42P.gguf",
+      "blobId": "5c947c06cfc2ab9c2f3ef4b88d1efad1bebf084d",
+      "size": 50080
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d0ebc8900fab4a205c230af40bf397ce2f12317e",
+      "size": 5748
+    }
+  ],
+  "spaces": [
+    "multimodalart/Mellifera"
+  ],
+  "createdAt": "2026-10-09T00:32:03.000Z",
+  "usedStorage": 109491104
+}

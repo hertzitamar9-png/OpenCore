@@ -1,0 +1,292 @@
+{
+  "_id": "6ac5385a9abd499cb5a7b7d7",
+  "id": "openbmb/MiniCPM-V-4.7-35B-A3B-gguf",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "llama.cpp",
+  "tags": [
+    "llama.cpp",
+    "gguf",
+    "quantized",
+    "imatrix",
+    "dspark",
+    "speculative-decoding",
+    "moe",
+    "minicpm-v",
+    "multimodal",
+    "On-Device Model",
+    "lightweight",
+    "image-text-to-text",
+    "base_model:openbmb/MiniCPM-V-4.7-35B-A3B",
+    "base_model:quantized:openbmb/MiniCPM-V-4.7-35B-A3B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 239545,
+  "likes": 444,
+  "modelId": "openbmb/MiniCPM-V-4.7-35B-A3B-gguf",
+  "author": "openbmb",
+  "sha": "8ad0085a71c3fbff8c2aa2eadf31b3037ac55da7",
+  "lastModified": "2026-10-20T05:57:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "llama.cpp",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "quantized",
+      "imatrix",
+      "dspark",
+      "speculative-decoding",
+      "moe",
+      "minicpm-v",
+      "multimodal",
+      "On-Device Model",
+      "lightweight"
+    ],
+    "base_model": "openbmb/MiniCPM-V-4.7-35B-A3B",
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 34659889792,
+    "architecture": "qwen35moe",
+    "context_length": 262144,
+    "chat_template": "{%- macro render_content(content, is_system_content=false) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns = namespace(parts=[]) -%}\n        {%- for item in content -%}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain images.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|image_pad|>'] -%}\n            {%- elif 'video' in item or item.type == 'video' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain videos.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|video_pad|>'] -%}\n            {%- elif 'text' in item -%}\n                {%- set ns.parts = ns.parts + [item.text] -%}\n            {%- else -%}\n                {{- raise_exception('Unexpected item type in content.') -}}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns.parts | join('\\n') -}}\n    {%- elif content is none or content is undefined -%}\n        {{- '' -}}\n    {%- else -%}\n        {{- raise_exception('Unexpected content type.') -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index and reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {#- thinking hard-disabled for llama.cpp GGUF xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -#}\n    {{- '<think>\\n\\n</think>\\n\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 69375191008
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f0b802eb762934d8fb91564cd856518c17f38b58",
+      "size": 2822
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-F16.gguf",
+      "blobId": "00b3b1ffdba03c02b5f6a3f8f330904b72f1bc13",
+      "size": 69375191008,
+      "lfs": {
+        "sha256": "559ca1c10344cd6eba570b698214adf39009fe983a444923fca8e6225a143505",
+        "size": 69375191008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-IQ3_M.gguf",
+      "blobId": "391d63fa864efb14152e61a83597aad7c7278e98",
+      "size": 15440064448,
+      "lfs": {
+        "sha256": "f5df9c5dc25b2bd75dc677d06a6e0eee51986684fddf65981682f329dcc298c5",
+        "size": 15440064448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-IQ3_XS.gguf",
+      "blobId": "bae724dbca4e953b1b11189e4bf1a0fe12a45629",
+      "size": 14483689408,
+      "lfs": {
+        "sha256": "a01df9378ee4c53ad2f7c2fda93bb2e2ece8a40112a81687b204717ed8896d32",
+        "size": 14483689408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-IQ4_NL.gguf",
+      "blobId": "0c877c47f9e02cb662a75c3fe1bdb326cbab3076",
+      "size": 19778776256,
+      "lfs": {
+        "sha256": "b6bcc69f7873ef3beb4ad0eca95c892c9adc2a26f71e229189e9523fa45d405c",
+        "size": 19778776256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-IQ4_XS.gguf",
+      "blobId": "a18d152aba721366e0856bafa571db6876a9d966",
+      "size": 18728286400,
+      "lfs": {
+        "sha256": "fce60c709a7f22098980bda5b9b59e0969f4847b2657a2d91a6fe90ff14cefe9",
+        "size": 18728286400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q4_0.gguf",
+      "blobId": "c86230a0d62a60b956dddcb95b92a0eb2a03ce30",
+      "size": 19714550688,
+      "lfs": {
+        "sha256": "17887870a621fbb9b39bd468cea4456d975e17e44cd019b05b5b2b6552f14880",
+        "size": 19714550688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q4_1.gguf",
+      "blobId": "04c04f7779ea7102b800b858d1b960463a3331a6",
+      "size": 21847643040,
+      "lfs": {
+        "sha256": "a3974817e9dc571ae864c017d9799984cbc36825e4586c9e315a95ccbe195ada",
+        "size": 21847643040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q4_K_M.gguf",
+      "blobId": "27e350131ec32ff84821fc675f2a4ac9fd433b93",
+      "size": 21166255008,
+      "lfs": {
+        "sha256": "9ecf91e814d7e9adc64325b1b65f8628a9b1bb8da4f61a92869ca7489bfd888e",
+        "size": 21166255008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q4_K_S.gguf",
+      "blobId": "1e9ac960de77cc9140b73d2afc63039526f1135e",
+      "size": 19889400736,
+      "lfs": {
+        "sha256": "5ac34c455c6e52ff518cb95ac9911e9fbc0b80f6d2be9c6829bc5088f579eb7a",
+        "size": 19889400736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q5_0.gguf",
+      "blobId": "9aae9d2b1d381de68b4471387672e06363c26f5a",
+      "size": 23980735392,
+      "lfs": {
+        "sha256": "bcf146d7a27e99ff3fa3760b3bd0e866e471dfe1a9c97101eb2c4d472f9f339e",
+        "size": 23980735392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q5_1.gguf",
+      "blobId": "7d785b2195cfc461c9a9e7efdc168e9746f6d9e6",
+      "size": 26113827744,
+      "lfs": {
+        "sha256": "5815a31256263d5d994a3e60d0cb8f97c2ac2b25f2c7ab9b75201dc74b0db850",
+        "size": 26113827744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q5_K_M.gguf",
+      "blobId": "83a3f75703bd0681355daf68ff12ee3df080033e",
+      "size": 24728583072,
+      "lfs": {
+        "sha256": "6f968a9b69cf7715e0ed0c826a6f9fef3956bc1e9f24ff363e165353cfafcfac",
+        "size": 24728583072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q5_K_S.gguf",
+      "blobId": "51707c1227a549f39d501009a3dbd2fc07575c02",
+      "size": 23980735392,
+      "lfs": {
+        "sha256": "a1a154c035fde2b79c77c6bdc76d5a427e4ae16686596f8ee68bdb5851b3fc05",
+        "size": 23980735392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q6_K.gguf",
+      "blobId": "86b86c311c81d65a7c66b721255dcd341cfb32f7",
+      "size": 28513556640,
+      "lfs": {
+        "sha256": "b6eaa3a564235c72d251c033554fcd260a6035111246429793f6063eee516c73",
+        "size": 28513556640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-Q8_0.gguf",
+      "blobId": "bd885a586e35322653e245e7c23c0bdcecf62ad8",
+      "size": 36902368928,
+      "lfs": {
+        "sha256": "851fdec9d87d689342c3df04e509de4565ac3a96a226f06e7b12af651311b5ef",
+        "size": 36902368928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-mix_q3gud_im.gguf",
+      "blobId": "aa180695bc69ee019b04e293c9c48663a119d884",
+      "size": 15503944896,
+      "lfs": {
+        "sha256": "9c18b44db370a72aefc3dc33dc8ab1bd004076829eac68a5d803ecbe3f7a69fc",
+        "size": 15503944896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4_7-35B-A3B-mix_q3gud_im.tensor-types.txt",
+      "blobId": "cbf36fc3aa924388abd2193c796722182863d36f",
+      "size": 29
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "06adcef347f102abfc0af005ef0df8a970f63147",
+      "size": 29326
+    },
+    {
+      "rfilename": "dspark-MiniCPM-V-4_7-35B-A3B-F16.gguf",
+      "blobId": "3637568547d486b53ee28fe59e540ee8a5677193",
+      "size": 789442368,
+      "lfs": {
+        "sha256": "2ec640fb446648dae379c38f22d7dcb1e1f0590e65b864fa801d826ac9395e82",
+        "size": 789442368,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-model-f16-4x.gguf",
+      "blobId": "b3f9f8202dcff4999307f5dc985c5761810983b3",
+      "size": 910491648,
+      "lfs": {
+        "sha256": "30f4daac0f61c2ca28d68b5f901c0501cb7a269a1357a9e380d2c376c6ed6518",
+        "size": 910491648,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-model-f16.gguf",
+      "blobId": "f85d0a101e3eee7d57c37956561715480da0cf0f",
+      "size": 1119575840,
+      "lfs": {
+        "sha256": "bff3b688e14c300eca273092c37c50a0ddfcc2054e079af1a0480edeed5d20f1",
+        "size": 1119575840,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-10-06T18:05:14.000Z",
+  "usedStorage": 1470275538656
+}

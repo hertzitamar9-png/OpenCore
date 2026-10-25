@@ -1,0 +1,153 @@
+{
+  "_id": "6ad1fc681202453c8215a372",
+  "id": "lodestones/MOSS-Image-SFT-8-steps-dmd",
+  "private": false,
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "safetensors",
+    "base_model:OpenMOSS-Team/MOSS-Image-SFT",
+    "base_model:finetune:OpenMOSS-Team/MOSS-Image-SFT",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 145445,
+  "likes": 212,
+  "modelId": "lodestones/MOSS-Image-SFT-8-steps-dmd",
+  "author": "lodestones",
+  "sha": "f95df83b5e90ae91ea412434b3f9b7f1c8c6314f",
+  "lastModified": "2026-10-17T03:44:54.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "OpenMOSS-Team/MOSS-Image-SFT"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "44cee71a58c1819c1ddd606591028480fe2a95f1",
+      "size": 2720
+    },
+    {
+      "rfilename": "dataspace.safetensors",
+      "blobId": "4bc9638c30140419ff12585430b104262904e610",
+      "size": 65728,
+      "lfs": {
+        "sha256": "816cf216448000c9f525539adcc005a6b929d1bdb2e4e30e2fe82e094152dcb5",
+        "size": 65728,
+        "pointerSize": 130
+      }
+    },
+    {
+      "rfilename": "generator.safetensors",
+      "blobId": "56856b852de7d0b495dcc6c7542be316fa97e123",
+      "size": 1230219664,
+      "lfs": {
+        "sha256": "f67fd6c79c2e2880943f6d8dd2bf4de8eec5f202ea13ebc2fdb1179974c297a4",
+        "size": 1230219664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "lora.safetensors",
+      "blobId": "1de26a7001d859119b8dc9e215ef3676b49b9419",
+      "size": 1189176800,
+      "lfs": {
+        "sha256": "4abb14e39c1a59018907581e609f43616ec6810126144ec2b1d2e6f8969628fe",
+        "size": 1189176800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "lora_latest.safetensors",
+      "blobId": "4e544680cdd387449ea91be760a6dc2fd1c2edfb",
+      "size": 1189176800,
+      "lfs": {
+        "sha256": "be82ab2bef78194651815bb6de443cec67553e01c14559f2ad365449445f0452",
+        "size": 1189176800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "time_embedding.safetensors",
+      "blobId": "d3c8286d1601b65a3acfb8ad0c433eaeda3369fe",
+      "size": 41017896,
+      "lfs": {
+        "sha256": "54f081f33f48f4abda3362cdc41abec947ddabd11894ce6158b15a9ff6340a3d",
+        "size": 41017896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "transformer/config.json",
+      "blobId": "09ba6435c9566086eab63a37366157a97d9fa2d8",
+      "size": 240
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00001-of-00004.safetensors",
+      "blobId": "86f6d6157227c914874a45028f6bdd8f7e563487",
+      "size": 5362224248,
+      "lfs": {
+        "sha256": "4ca6f4fb468498d56322d71c517495a438fb5022782b44c04b43109773d86e67",
+        "size": 5362224248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00002-of-00004.safetensors",
+      "blobId": "279f22cb10996c23ab1cb8a44c5a9f2d520e9a00",
+      "size": 5360639512,
+      "lfs": {
+        "sha256": "f910d5754e26938be4e645cb1cb4eebf6a0fd5c847c0a085d54b879caaa87254",
+        "size": 5360639512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00003-of-00004.safetensors",
+      "blobId": "8ffe16dde4215c2e415c7435ba64f695adfabbf1",
+      "size": 5234810496,
+      "lfs": {
+        "sha256": "de9b35419cbd02169409d19daa8089dc2510bbd30d10828011db0882c6918fab",
+        "size": 5234810496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00004-of-00004.safetensors",
+      "blobId": "fd837e37b388deaf40a1228deaab8cca82a42700",
+      "size": 4371606768,
+      "lfs": {
+        "sha256": "b868a4e566f455bc1ba1fca92e4d3ee16809338e7de575c9e1512ef786c9fd8d",
+        "size": 4371606768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model.safetensors.index.json",
+      "blobId": "47ae945694588c7148a028313444259d3e3ad192",
+      "size": 40297
+    }
+  ],
+  "spaces": [
+    "hugging-apps/moss-image-8-step-dmd",
+    "akhaliq/moss-image-edit-hq-demo",
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-10-16T10:28:56.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 5082308624
+    },
+    "total": 5082308624
+  },
+  "usedStorage": 137927743472
+}

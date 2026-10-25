@@ -1,0 +1,217 @@
+{
+  "_id": "6ab1f985d5cf3d44b6efdaed",
+  "id": "Baekpica/MiMo-V2.6-Flash-RL-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "mimo_v2",
+    "mxfp4",
+    "calibration",
+    "text-generation",
+    "conversational",
+    "base_model:XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "base_model:quantized:XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 484,
+  "likes": 1,
+  "modelId": "Baekpica/MiMo-V2.6-Flash-RL-GGUF",
+  "author": "Baekpica",
+  "sha": "a485ac9ebf5190639e3b3b4459024bd654a9864b",
+  "lastModified": "2026-09-22T04:01:21.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "chat_template_jinja": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "mit",
+    "base_model": "XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "mimo_v2",
+      "mxfp4",
+      "calibration"
+    ]
+  },
+  "gguf": {
+    "total": 309766601088,
+    "architecture": "mimo2",
+    "context_length": 1048576,
+    "chat_template": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 174908254624
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "518815e77f53d1bcd7d6ff769f15d64887b5fbdd",
+      "size": 2007
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-DFlash-Q8_0.gguf",
+      "blobId": "fa1a7703a18b35e182de67b1e27131b40a74acf6",
+      "size": 1565911104,
+      "lfs": {
+        "sha256": "06a56d466017739918f2e1c9b771f08ac5cb92d7ea2173bbb5537a82284a7d8c",
+        "size": 1565911104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-MXFP4-BF16-00001-of-00004.gguf",
+      "blobId": "8ca2e00f9cbf2cd95ef7d3a9343d81a534189068",
+      "size": 44499128352,
+      "lfs": {
+        "sha256": "829472a0e35d4bf136d7e44ecc9deaaadf1e001dab716c53bdeeecf42599559e",
+        "size": 44499128352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-MXFP4-BF16-00002-of-00004.gguf",
+      "blobId": "9ace5456ca15a983aa38d5650a794133c5fa8b38",
+      "size": 44493179840,
+      "lfs": {
+        "sha256": "caf0e120484239878cbf389914e17f2dd9cb733dd0f9c87c35437b9e649ec551",
+        "size": 44493179840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-MXFP4-BF16-00003-of-00004.gguf",
+      "blobId": "aeab3a81d69067e101a978c1c723ed4e3524a351",
+      "size": 44493179840,
+      "lfs": {
+        "sha256": "c92a8d8ba4eea32c8ff8ca7ba403bc4df90b3fec1b6bf5630d8672aeb2837d16",
+        "size": 44493179840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-MXFP4-BF16-00004-of-00004.gguf",
+      "blobId": "f76f97148b6ec7908f71c596c7370e8f1b391e07",
+      "size": 41422766592,
+      "lfs": {
+        "sha256": "5c91e1e8489000fe5e281616b4b13c7710eaddf7ea82a6808458b26eb575c783",
+        "size": 41422766592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d312c2fce4d19b8246fa12ec774271cf59ab4c60",
+      "size": 4835
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "b9bba6878f2393e406875c525afe4611b4fa20f7",
+      "size": 668
+    },
+    {
+      "rfilename": "artifact-manifest.json",
+      "blobId": "d78c1018cda53cbf35501cd358af65e4e3fc35ae",
+      "size": 1323
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "f23265d928b22848e4879cc0f1d6cfe999bf7429",
+      "size": 3868
+    },
+    {
+      "rfilename": "dflash-audit.json",
+      "blobId": "68ff9ad7ab0938efce5dbf4792fbd33e62d49976",
+      "size": 11718
+    },
+    {
+      "rfilename": "dflash/config.json",
+      "blobId": "890d29a0e7b0cb509374d433f217a4a5e927ce79",
+      "size": 1246
+    },
+    {
+      "rfilename": "dflash/dflash.py",
+      "blobId": "0aea03fe130ec6070d8d94f8d11c37ee9885782f",
+      "size": 14255
+    },
+    {
+      "rfilename": "dflash/mask_embedding.pt",
+      "blobId": "6ebcfd4abd4d19a215375c7b19684794b1b0fa3c",
+      "size": 9882,
+      "lfs": {
+        "sha256": "b35b379fe0497ffdc0d6407f502622237d9346e0d03f457ec574be60f6c2cee0",
+        "size": 9882,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "dflash/runtime-contract.json",
+      "blobId": "fe9b1d1e278ee0a3d9ec3257e33c87dd0f9ee4ea",
+      "size": 1311
+    },
+    {
+      "rfilename": "mmproj-MiMo-V2.6-Flash-RL-BF16.gguf",
+      "blobId": "e4bc4eba41321a2bf64172d7ada74629dae0bf74",
+      "size": 2748509792,
+      "lfs": {
+        "sha256": "7fd51cbab2e7a7c73b1d4dd2d7457dcf8175cb84db75ca8e96ff1750760b3709",
+        "size": 2748509792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "projector-bounds-audit.json",
+      "blobId": "578ecef3ff4d92772571c0fdbed8b2c8cbe6e86e",
+      "size": 502
+    },
+    {
+      "rfilename": "reference-audit.json",
+      "blobId": "b509b62be0362e8450a04aa4cd169d3a3523b952",
+      "size": 693
+    },
+    {
+      "rfilename": "toolchain-pins.json",
+      "blobId": "8ef82c5297a541158a9c05275a90e9e8501dc12c",
+      "size": 178
+    },
+    {
+      "rfilename": "video-patch-weight-audit.json",
+      "blobId": "0ba3459743d3bcc882d80c4f3f2129f9481b5f06",
+      "size": 575
+    },
+    {
+      "rfilename": "vision-parity-fp32.json",
+      "blobId": "c659291f4238ad4f02de7591c6d6e3a0fdb14b7d",
+      "size": 404
+    },
+    {
+      "rfilename": "vision-parity.json",
+      "blobId": "3b3758447bd80c30138a025922739d84c0549a16",
+      "size": 367
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-22T03:44:05.000Z",
+  "usedStorage": 181971195194
+}

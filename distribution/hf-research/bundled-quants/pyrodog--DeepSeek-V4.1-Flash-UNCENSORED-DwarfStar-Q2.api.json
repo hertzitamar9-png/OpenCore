@@ -1,0 +1,422 @@
+{
+  "_id": "6aa7f43a8f1fd8f323200cce",
+  "id": "pyrodog/DeepSeek-V4.1-Flash-UNCENSORED-DwarfStar-Q2",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "dwarfstar",
+    "deepseek-v4.1",
+    "quantized",
+    "q2",
+    "apple-silicon",
+    "abliterated",
+    "vision",
+    "multimodal",
+    "text-generation",
+    "base_model:dealignai/DeepSeek-V4.1-Flash-UNCENSORED-FP8",
+    "base_model:quantized:dealignai/DeepSeek-V4.1-Flash-UNCENSORED-FP8",
+    "license:mit",
+    "region:us"
+  ],
+  "downloads": 78388,
+  "likes": 19,
+  "modelId": "pyrodog/DeepSeek-V4.1-Flash-UNCENSORED-DwarfStar-Q2",
+  "author": "pyrodog",
+  "sha": "9464e2973a092e1acb50dc0bb17ee9b67ca594a4",
+  "lastModified": "2026-09-27T00:45:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "base_model": [
+      "dealignai/DeepSeek-V4.1-Flash-UNCENSORED-FP8"
+    ],
+    "base_model_relation": "quantized",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "dwarfstar",
+      "deepseek-v4.1",
+      "quantized",
+      "q2",
+      "apple-silicon",
+      "abliterated",
+      "vision",
+      "multimodal"
+    ]
+  },
+  "gguf": {
+    "total": 754638867584,
+    "architecture": "deepseek41",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 365713686528
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0df055c5ea32a40dcb851a01c9662a72064b05f7",
+      "size": 1688
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2-bootstrap.gguf",
+      "blobId": "91736d46cf8df8666836947bde7824d88d99d7fa",
+      "size": 365713686528,
+      "lfs": {
+        "sha256": "3fc64cd3705aa8d5a94358d723f5e0e48016d044630ac158aaf4aa2d0f2b2618",
+        "size": 365713686528,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Vision-BF16.gguf",
+      "blobId": "2581956d1234cad0a8ca0a8b5945ea26abea062a",
+      "size": 970555584,
+      "lfs": {
+        "sha256": "492290a62abb56d7f975a9ee2247bd325b3c9c995081c0582bb5bef62a83b93c",
+        "size": 970555584,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d62e3bef9f054f21b7fc616365850fbf879a99ff",
+      "size": 1084
+    },
+    {
+      "rfilename": "LICENSE-DwarfStar",
+      "blobId": "c5b10d432f8b1ce00e1f666f30be04b63cc46dd6",
+      "size": 1143
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "af516a45f6410869cdaedce652d07c67655dcf12",
+      "size": 19582
+    },
+    {
+      "rfilename": "REPRODUCE.md",
+      "blobId": "6c5169632362f5f20e0eff9ced281435b29e5185",
+      "size": 1432
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "15ca485ccb5eab095d45da3a0f396eea56d8798c",
+      "size": 115
+    },
+    {
+      "rfilename": "VALIDATION-REPORT.md",
+      "blobId": "2b851abd9709cf95eba1279c28af5fb448fbc2af",
+      "size": 12570
+    },
+    {
+      "rfilename": "VISION-SHA256SUMS",
+      "blobId": "945378c9cb6e11dab458124dc025a840a8d2dba0",
+      "size": 114
+    },
+    {
+      "rfilename": "VISION.md",
+      "blobId": "d05adb4770088f380487082cc9aee2dfa5bc7a85",
+      "size": 7931
+    },
+    {
+      "rfilename": "converter-metadata.patch",
+      "blobId": "7943b8e87da49cbd674de67887143afdf529a0da",
+      "size": 988
+    },
+    {
+      "rfilename": "dwarfstar-abliterated-vision.patch",
+      "blobId": "f8046a927feae759f8551b9ffc12134ff2de82e3",
+      "size": 1094
+    },
+    {
+      "rfilename": "opencode-dwarfstar.ts",
+      "blobId": "e10df81889bcb2e8d634e79f064c1df5cea1e8ff",
+      "size": 380
+    },
+    {
+      "rfilename": "provenance.json",
+      "blobId": "b95cd99336ccd713bd9139606e3b67ccab849246",
+      "size": 512
+    },
+    {
+      "rfilename": "source-sha256.json",
+      "blobId": "2b93e697c017a0af27293df3a7e51b85d01d14c3",
+      "size": 5091
+    },
+    {
+      "rfilename": "validation/SHA256SUMS",
+      "blobId": "4317c614689f6e1243963d8b409fd696af0ed6db",
+      "size": 3496
+    },
+    {
+      "rfilename": "validation/baselines.json",
+      "blobId": "d3d5771ff1ee3d36e64e43dbb6adaa198dd789df",
+      "size": 183
+    },
+    {
+      "rfilename": "validation/cases.json",
+      "blobId": "c8b3a711ae6cf815d0698269ea16bcfa10e484cb",
+      "size": 7175
+    },
+    {
+      "rfilename": "validation/check_public_download.py",
+      "blobId": "94e8026a86b42619baf9a5a0b84564843b2662ca",
+      "size": 1151
+    },
+    {
+      "rfilename": "validation/coding-metrics.json",
+      "blobId": "1aa56ff634aa35643e1c78e736b0755f81fa5b87",
+      "size": 867
+    },
+    {
+      "rfilename": "validation/coverage.json",
+      "blobId": "97144c29c0035949fa2c18a5400dfbf3d2762397",
+      "size": 331
+    },
+    {
+      "rfilename": "validation/csv_import-acceptance.log",
+      "blobId": "6fb87536065e2b4d5196d942c623f6b0ee29da3e",
+      "size": 102
+    },
+    {
+      "rfilename": "validation/csv_import-baseline.log",
+      "blobId": "5b7ee2c5c2157f931172e24d314b2c928017d32c",
+      "size": 5801
+    },
+    {
+      "rfilename": "validation/csv_import-prompt.txt",
+      "blobId": "07bf73cb5b0df698cf5b2d9d0868eb9c96c048ff",
+      "size": 596
+    },
+    {
+      "rfilename": "validation/extended_payload_audit.py",
+      "blobId": "ae763b8dee97232e674e70f9e612e491a8fd2ab7",
+      "size": 6573
+    },
+    {
+      "rfilename": "validation/followup-20260915/CANDIDATE-SHA256SUMS",
+      "blobId": "213a7500dd9a122d5686223a79ce0c131eaab397",
+      "size": 126
+    },
+    {
+      "rfilename": "validation/followup-20260915/README.md",
+      "blobId": "fcc9bea9e03a445c614deacd209506966e5e02e4",
+      "size": 845
+    },
+    {
+      "rfilename": "validation/followup-20260915/bootstrap-scores.tsv",
+      "blobId": "956cb0d337fc2cbbb25552c8a0aa2815a63d7630",
+      "size": 1266
+    },
+    {
+      "rfilename": "validation/followup-20260915/cache-results.json",
+      "blobId": "4efee91e3983a213f2acb20f074e5697ecf56a40",
+      "size": 31045
+    },
+    {
+      "rfilename": "validation/followup-20260915/calibrated-scores.tsv",
+      "blobId": "931554253db16fb134fe01aee5da2f138ecc64ee",
+      "size": 1267
+    },
+    {
+      "rfilename": "validation/followup-20260915/coding-comparison.json",
+      "blobId": "01b9aea2da8d2845a5e2f3443046396510a2c7a6",
+      "size": 2330
+    },
+    {
+      "rfilename": "validation/followup-20260915/dataset-manifest.json",
+      "blobId": "9962838325d59d0183b76aa3d852c1a11b0ff187",
+      "size": 5677
+    },
+    {
+      "rfilename": "validation/followup-20260915/long-context-results.json",
+      "blobId": "4fc55a08bec1ca25f28cc97ac2d1320ac49c93d8",
+      "size": 10464
+    },
+    {
+      "rfilename": "validation/followup-20260915/matrix-coverage.json",
+      "blobId": "39c3640c85f280d93cd702877c1eb55c4f070c46",
+      "size": 12291
+    },
+    {
+      "rfilename": "validation/http_retry-acceptance.log",
+      "blobId": "a82cb6c98ba4fd479ea2abf108bdc4a06d6854b8",
+      "size": 45
+    },
+    {
+      "rfilename": "validation/http_retry-baseline.log",
+      "blobId": "a0e3a79432c5aebb8a8cc870216ab0898798d4c7",
+      "size": 373
+    },
+    {
+      "rfilename": "validation/http_retry-prompt.txt",
+      "blobId": "7522b0d315ed5a206a0beab20f05124cbbc345c9",
+      "size": 657
+    },
+    {
+      "rfilename": "validation/methodology.json",
+      "blobId": "5d88def66e858d11e1af4afcb15d8aa69349350b",
+      "size": 894
+    },
+    {
+      "rfilename": "validation/payload-audit.log",
+      "blobId": "2b5dbef9af51be24680770e5c41ff7662ad358af",
+      "size": 1613
+    },
+    {
+      "rfilename": "validation/projects/csv_import/AGENTS.md",
+      "blobId": "70df8ac7540f3e7004bd128876246435f363d3bb",
+      "size": 120
+    },
+    {
+      "rfilename": "validation/projects/csv_import/acceptance_checks.py",
+      "blobId": "b8d2b4a044cfabb56ba02a1ba2606e4eb5f46397",
+      "size": 1338
+    },
+    {
+      "rfilename": "validation/projects/csv_import/importer.py",
+      "blobId": "c5713b90965c04a6fb3bfb0cc54e13e516202a21",
+      "size": 2187
+    },
+    {
+      "rfilename": "validation/projects/csv_import/opencode.json",
+      "blobId": "55237cd058eaf2b3b85f480a46aa28ca0cb46ebf",
+      "size": 222
+    },
+    {
+      "rfilename": "validation/projects/csv_import/test_importer.py",
+      "blobId": "f90b3dc110411c8df8ac4ab9d0665e0a9b2f978c",
+      "size": 4901
+    },
+    {
+      "rfilename": "validation/projects/http_retry/AGENTS.md",
+      "blobId": "70df8ac7540f3e7004bd128876246435f363d3bb",
+      "size": 120
+    },
+    {
+      "rfilename": "validation/projects/http_retry/acceptance_checks.mjs",
+      "blobId": "c4113dda51ba659a36d655988978751d858c58ca",
+      "size": 1445
+    },
+    {
+      "rfilename": "validation/projects/http_retry/client.js",
+      "blobId": "b28f865a7b38f773e77adbf049f877c481501546",
+      "size": 1214
+    },
+    {
+      "rfilename": "validation/projects/http_retry/client.test.js",
+      "blobId": "d6830cbcdd29820d90facf8f2bf6b56bfc700700",
+      "size": 4695
+    },
+    {
+      "rfilename": "validation/projects/http_retry/opencode.json",
+      "blobId": "55237cd058eaf2b3b85f480a46aa28ca0cb46ebf",
+      "size": 222
+    },
+    {
+      "rfilename": "validation/projects/http_retry/package.json",
+      "blobId": "9e50534e7675faf5b759f3e2d47eded5b2324a6d",
+      "size": 51
+    },
+    {
+      "rfilename": "validation/projects/sqlite_pagination/AGENTS.md",
+      "blobId": "70df8ac7540f3e7004bd128876246435f363d3bb",
+      "size": 120
+    },
+    {
+      "rfilename": "validation/projects/sqlite_pagination/acceptance_checks.py",
+      "blobId": "c21f6466fb27ea8595e2c06c8fd769687d1f0c0c",
+      "size": 1196
+    },
+    {
+      "rfilename": "validation/projects/sqlite_pagination/opencode.json",
+      "blobId": "55237cd058eaf2b3b85f480a46aa28ca0cb46ebf",
+      "size": 222
+    },
+    {
+      "rfilename": "validation/projects/sqlite_pagination/repository.py",
+      "blobId": "d72a95b7f2dbb6f2372717290f0be87f1af026a9",
+      "size": 616
+    },
+    {
+      "rfilename": "validation/projects/sqlite_pagination/test_repository.py",
+      "blobId": "4467bda92aacb9cbec56b51da7332e24f304aec4",
+      "size": 4495
+    },
+    {
+      "rfilename": "validation/public-download.json",
+      "blobId": "a2f490a270ff98372e240a63adac30195c207ca6",
+      "size": 1514
+    },
+    {
+      "rfilename": "validation/public-download.log",
+      "blobId": "ee5cd8d8410e0655cbeb640b8f6f02ec301407cb",
+      "size": 223
+    },
+    {
+      "rfilename": "validation/run_extended_validation.py",
+      "blobId": "d04395afe120973b885512f63c39155f06490f42",
+      "size": 8883
+    },
+    {
+      "rfilename": "validation/sqlite_pagination-acceptance.log",
+      "blobId": "f85a6884de83d0cd4ad7696358f85ad05cdde95e",
+      "size": 102
+    },
+    {
+      "rfilename": "validation/sqlite_pagination-baseline.log",
+      "blobId": "0f966141bfca51825657a023fbb765a9a74a7ab7",
+      "size": 5378
+    },
+    {
+      "rfilename": "validation/sqlite_pagination-prompt.txt",
+      "blobId": "e8cf9417e1769052be1e229d5807191a3953c9fd",
+      "size": 521
+    },
+    {
+      "rfilename": "validation/status.json",
+      "blobId": "5d7aa90ce448a74d9af2f05b79536d07cc999fc7",
+      "size": 432
+    },
+    {
+      "rfilename": "validation/vision-20260926/fixture.png",
+      "blobId": "29fd6a2dd54f5f546157317d4908c56acb8fcb77",
+      "size": 6838
+    },
+    {
+      "rfilename": "validation/vision-20260926/results.json",
+      "blobId": "2315f70054538fdcdb9e17be8ecd45238a1a674d",
+      "size": 1028
+    },
+    {
+      "rfilename": "vision-converter-metadata.patch",
+      "blobId": "2be90ef37454a68908d9c86acdaec9204e506397",
+      "size": 450
+    },
+    {
+      "rfilename": "vision-provenance.json",
+      "blobId": "1acbca93b1ddde543c831b354bcb04789adcdff4",
+      "size": 930
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-14T13:18:50.000Z",
+  "usedStorage": 366684242112
+}

@@ -1,0 +1,552 @@
+{
+  "_id": "6a6f45546f4309e2880e9536",
+  "id": "6block/Kimi-K3-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "kimi-k3",
+    "moe",
+    "imatrix",
+    "quantized",
+    "text-generation",
+    "en",
+    "zh",
+    "base_model:moonshotai/Kimi-K3",
+    "base_model:quantized:moonshotai/Kimi-K3",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1058,
+  "likes": 1,
+  "modelId": "6block/Kimi-K3-GGUF",
+  "author": "6block",
+  "sha": "26534048f6160622b4358ac6892b0850651359de",
+  "lastModified": "2026-08-03T03:26:12.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "kimi-k3",
+    "license_link": "https://huggingface.co/moonshotai/Kimi-K3/blob/main/LICENSE",
+    "base_model": "moonshotai/Kimi-K3",
+    "base_model_relation": "quantized",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "kimi-k3",
+      "moe",
+      "imatrix",
+      "quantized"
+    ],
+    "language": [
+      "en",
+      "zh"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 2779483135584,
+    "architecture": "kimi-k3",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "imatrix_k3.gguf",
+    "chat_template": "{#- Kimi-K3 template transcribed from the official parser -#}\n{%- set imgns = namespace(idx = 0, on = (image_prompts is defined and image_prompts is not none)) -%}\n\n{%- macro img_next() -%}\n{%- if not imgns.on -%}\n{{- '<|kimi_image_placeholder|>' -}}\n{%- elif imgns.idx >= (image_prompts | length) -%}\n{{- raise_exception('More image placeholders than image prompts.') -}}\n{%- else -%}\n{{- image_prompts[imgns.idx] -}}\n{%- set imgns.idx = imgns.idx + 1 -%}\n{%- endif -%}\n{%- endmacro -%}{%- macro xtext(t) -%}{%- if not imgns.on or '<|kimi_image_placeholder|>' not in (t | string) -%}\n{{- t -}}\n{%- else -%}\n{%- set parts = (t | string).split('<|kimi_image_placeholder|>') -%}\n{%- for part in parts -%}\n{{- part -}}\n{%- if not loop.last -%}{{- img_next() -}}{%- endif -%}\n{%- endfor -%}\n{%- endif -%}\n{%- endmacro -%}{%- macro attr(k, v) -%}\n{{- ' ' + k + '=\"' + (v | string | replace('&', '&amp;') | replace('\"', '&quot;')) + '\"' -}}\n{%- endmacro -%}\n\n{%- macro otag(tag, attrs=[]) -%}\n{{- '<|open|>' + tag -}}\n{%- for a in attrs -%}{{- attr(a[0], a[1]) -}}{%- endfor -%}\n{{- '<|sep|>' -}}\n{%- endmacro -%}\n\n{%- macro ctag(tag) -%}\n{{- '<|close|>' + tag + '<|sep|>' -}}\n{%- endmacro -%}{%- macro numstr(v) -%}\n{%- set s = v | tojson -%}\n{%- if v is float and '.' not in s and 'e' not in s and 'E' not in s\n       and 'n' not in s and 'N' not in s -%}\n{{- s ~ '.0' -}}\n{%- else -%}\n{{- s -}}\n{%- endif -%}\n{%- endmacro -%}{%- macro jkey(k) -%}\n{%- if k is string -%}\n{{- k | tojson -}}\n{%- elif k is boolean -%}\n{{- ('true' if k else 'false') | tojson -}}\n{%- elif k is none -%}\n{{- 'null' | tojson -}}\n{%- elif k is number -%}\n{{- numstr(k) | tojson -}}\n{%- else -%}\n{{- raise_exception('keys must be str, int, float, bool or None') -}}\n{%- endif -%}\n{%- endmacro -%}{%- macro jdump(v) -%}\n{%- if v is mapping -%}\n{{- '{' -}}\n{%- for k, val in v | dictsort(case_sensitive=true) -%}\n{%- if not loop.first -%}{{- ',' -}}{%- endif -%}\n{{- jkey(k) -}}{{- ':' -}}{{- jdump(val) -}}\n{%- endfor -%}\n{{- '}' -}}\n{%- elif v is string or v is boolean or v is none or v is number -%}\n{{- numstr(v) -}}\n{%- elif v is undefined -%}\n{{- 'null' -}}\n{%- else -%}\n{{- '[' -}}\n{%- for item in v -%}\n{%- if not loop.first -%}{{- ',' -}}{%- endif -%}\n{{- jdump(item) -}}\n{%- endfor -%}\n{{- ']' -}}\n{%- endif -%}\n{%- endmacro -%}{%- macro jdumpsp(v) -%}\n{%- if v is mapping -%}\n{{- '{' -}}\n{%- for k, val in v | items -%}\n{%- if not loop.first -%}{{- ', ' -}}{%- endif -%}\n{{- jkey(k) -}}{{- ': ' -}}{{- jdumpsp(val) -}}\n{%- endfor -%}\n{{- '}' -}}\n{%- elif v is string or v is boolean or v is none or v is number -%}\n{{- numstr(v) -}}\n{%- elif v is undefined -%}\n{{- 'null' -}}\n{%- else -%}\n{{- '[' -}}\n{%- for item in v -%}\n{%- if not loop.first -%}{{- ', ' -}}{%- endif -%}\n{{- jdumpsp(item) -}}\n{%- endfor -%}\n{{- ']' -}}\n{%- endif -%}\n{%- endmacro -%}{%- macro jp_ws(s, st) -%}\n{%- set w = namespace(done=false) -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if not w.done -%}\n{%- if st.pos < (s | length) and s[st.pos] in ' \\t\\r\\n' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- else -%}\n{%- set w.done = true -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- endmacro -%}\n\n{%- macro jp_string(s, st, out) -%}\n{%- if st.pos >= (s | length) or s[st.pos] != '\"' -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- set q = namespace(text='', done=false) -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if st.ok and not q.done -%}\n{%- if st.pos >= (s | length) -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set ch = s[st.pos] -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- if ch == '\"' -%}\n{%- set q.done = true -%}\n{%- elif ch == '\\\\' -%}\n{%- if st.pos >= (s | length) -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set esc = s[st.pos] -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- if esc == '\"' -%}{%- set q.text = q.text + '\"' -%}\n{%- elif esc == '\\\\' -%}{%- set q.text = q.text + '\\\\' -%}\n{%- elif esc == '/' -%}{%- set q.text = q.text + '/' -%}\n{%- elif esc == 'b' -%}{%- set q.text = q.text + '\\b' -%}\n{%- elif esc == 'f' -%}{%- set q.text = q.text + '\\f' -%}\n{%- elif esc == 'n' -%}{%- set q.text = q.text + '\\n' -%}\n{%- elif esc == 'r' -%}{%- set q.text = q.text + '\\r' -%}\n{%- elif esc == 't' -%}{%- set q.text = q.text + '\\t' -%}\n{%- elif esc == 'u' -%}\n{%- if st.pos + 4 > (s | length) -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set hx = s[st.pos:st.pos + 4] -%}\n{%- set hv = namespace(ok=true) -%}\n{%- for hc in hx -%}\n{%- if hc not in '0123456789abcdefABCDEF' -%}{%- set hv.ok = false -%}{%- endif -%}\n{%- endfor -%}\n{%- if not hv.ok -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set cp = hx | int(base=16) -%}\n{%- set st.pos = st.pos + 4 -%}{%- if cp >= 55296 and cp <= 56319\n       and st.pos + 6 <= (s | length)\n       and s[st.pos:st.pos + 2] == '\\\\u' -%}\n{%- set lh = s[st.pos + 2:st.pos + 6] -%}\n{%- set lv = namespace(ok=true) -%}\n{%- for lc in lh -%}\n{%- if lc not in '0123456789abcdefABCDEF' -%}{%- set lv.ok = false -%}{%- endif -%}\n{%- endfor -%}\n{%- set low = lh | int(base=16) if lv.ok else 0 -%}\n{%- if lv.ok and low >= 56320 and low <= 57343 -%}\n{%- set cp = 65536 + (cp - 55296) * 1024 + (low - 56320) -%}\n{%- set st.pos = st.pos + 6 -%}\n{%- endif -%}\n{%- endif -%}\n{%- set q.text = q.text + ('%c' | format(cp)) -%}\n{%- endif -%}\n{%- endif -%}\n{%- else -%}\n{%- set st.ok = false -%}\n{%- endif -%}\n{%- endif -%}\n{%- else -%}{%- set ce = ch | tojson -%}\n{%- if ce in ['\"\\\\b\"', '\"\\\\f\"', '\"\\\\n\"', '\"\\\\r\"', '\"\\\\t\"']\n       or (ce[1:5] == '\\\\u00' and ce[5:7] in [\n           '00','01','02','03','04','05','06','07','08','09','0a','0b','0c','0d','0e','0f',\n           '10','11','12','13','14','15','16','17','18','19','1a','1b','1c','1d','1e','1f'\n       ]) -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set q.text = q.text + ch -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- if st.ok and not q.done -%}{%- set st.ok = false -%}{%- endif -%}\n{%- if st.ok -%}{%- set out.node = ['string', q.text] -%}{%- endif -%}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro jp_number(s, st, out) -%}\n{%- set start = st.pos -%}\n{%- set n = namespace(done=false, float=false) -%}\n{%- if s[st.pos:st.pos + 3] == 'NaN' -%}\n{%- set token = s[st.pos:st.pos + 3] -%}\n{%- set st.pos = st.pos + 3 -%}\n{%- set out.node = ['number', token | float] -%}\n{%- elif s[st.pos:st.pos + 8] == 'Infinity' -%}\n{%- set token = s[st.pos:st.pos + 8] -%}\n{%- set st.pos = st.pos + 8 -%}\n{%- set out.node = ['number', token | float] -%}\n{%- elif s[st.pos:st.pos + 9] == '-Infinity' -%}\n{%- set token = s[st.pos:st.pos + 9] -%}\n{%- set st.pos = st.pos + 9 -%}\n{%- set out.node = ['number', token | float] -%}\n{%- else -%}\n{%- if st.pos < (s | length) and s[st.pos] == '-' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- endif -%}\n{%- if st.pos >= (s | length) or s[st.pos] not in '0123456789' -%}\n{%- set st.ok = false -%}\n{%- elif s[st.pos] == '0' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- if st.pos < (s | length) and s[st.pos] in '0123456789' -%}{%- set st.ok = false -%}{%- endif -%}\n{%- else -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if not n.done -%}\n{%- if st.pos < (s | length) and s[st.pos] in '0123456789' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- else -%}{%- set n.done = true -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- endif -%}\n{%- if st.ok and st.pos < (s | length) and s[st.pos] == '.' -%}\n{%- set n.float = true -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- if st.pos >= (s | length) or s[st.pos] not in '0123456789' -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set n.done = false -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if not n.done -%}\n{%- if st.pos < (s | length) and s[st.pos] in '0123456789' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- else -%}{%- set n.done = true -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- endif -%}\n{%- endif -%}\n{%- if st.ok and st.pos < (s | length) and s[st.pos] in 'eE' -%}\n{%- set n.float = true -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- if st.pos < (s | length) and s[st.pos] in '+-' -%}{%- set st.pos = st.pos + 1 -%}{%- endif -%}\n{%- if st.pos >= (s | length) or s[st.pos] not in '0123456789' -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set n.done = false -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if not n.done -%}\n{%- if st.pos < (s | length) and s[st.pos] in '0123456789' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- else -%}{%- set n.done = true -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- endif -%}\n{%- endif -%}\n{%- if st.ok -%}\n{%- set token = s[start:st.pos] -%}\n{%- if n.float -%}{%- set out.node = ['number', token | float] -%}\n{%- else -%}{%- set out.node = ['number', token | int] -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro jp_array(s, st, out) -%}\n{%- set st.pos = st.pos + 1 -%}\n{{- jp_ws(s, st) -}}\n{%- set a = namespace(elems=[], done=false) -%}\n{%- if st.pos < (s | length) and s[st.pos] == ']' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- set a.done = true -%}\n{%- endif -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if st.ok and not a.done -%}\n{%- set child = namespace(node=none) -%}\n{{- jp_value(s, st, child) -}}\n{%- if st.ok -%}\n{%- set a.elems = a.elems + [child.node] -%}\n{{- jp_ws(s, st) -}}\n{%- if st.pos < (s | length) and s[st.pos] == ',' -%}\n{%- set st.pos = st.pos + 1 -%}\n{{- jp_ws(s, st) -}}\n{%- elif st.pos < (s | length) and s[st.pos] == ']' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- set a.done = true -%}\n{%- else -%}\n{%- set st.ok = false -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- if st.ok and not a.done -%}{%- set st.ok = false -%}{%- endif -%}\n{%- if st.ok -%}{%- set out.node = [\"array\", a.elems] -%}{%- endif -%}\n{%- endmacro -%}\n\n{%- macro jp_object(s, st, out) -%}\n{%- set st.pos = st.pos + 1 -%}\n{{- jp_ws(s, st) -}}\n{%- set o = namespace(pairs=[], done=false) -%}\n{%- if st.pos < (s | length) and s[st.pos] == '}' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- set o.done = true -%}\n{%- endif -%}\n{%- for unused in range(s | length + 1) -%}\n{%- if st.ok and not o.done -%}\n{%- set key = namespace(node=none) -%}\n{{- jp_string(s, st, key) -}}\n{%- if st.ok -%}\n{{- jp_ws(s, st) -}}\n{%- if st.pos >= (s | length) or s[st.pos] != ':' -%}\n{%- set st.ok = false -%}\n{%- else -%}\n{%- set st.pos = st.pos + 1 -%}\n{{- jp_ws(s, st) -}}\n{%- set child = namespace(node=none) -%}\n{{- jp_value(s, st, child) -}}\n{%- if st.ok -%}{%- set hit = namespace(index=none) -%}\n{%- for pair in o.pairs -%}\n{%- if hit.index is none and pair[0] == key.node[1] -%}{%- set hit.index = loop.index0 -%}{%- endif -%}\n{%- endfor -%}\n{%- if hit.index is none -%}\n{%- set o.pairs = o.pairs + [[key.node[1], child.node]] -%}\n{%- else -%}\n{%- set repl = namespace(pairs=[]) -%}\n{%- for pair in o.pairs -%}\n{%- set repl.pairs = repl.pairs + [[pair[0], child.node] if loop.index0 == hit.index else pair] -%}\n{%- endfor -%}\n{%- set o.pairs = repl.pairs -%}\n{%- endif -%}\n{{- jp_ws(s, st) -}}\n{%- if st.pos < (s | length) and s[st.pos] == ',' -%}\n{%- set st.pos = st.pos + 1 -%}\n{{- jp_ws(s, st) -}}\n{%- elif st.pos < (s | length) and s[st.pos] == '}' -%}\n{%- set st.pos = st.pos + 1 -%}\n{%- set o.done = true -%}\n{%- else -%}\n{%- set st.ok = false -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- if st.ok and not o.done -%}{%- set st.ok = false -%}{%- endif -%}\n{%- if st.ok -%}{%- set out.node = ['object', o.pairs] -%}{%- endif -%}\n{%- endmacro -%}\n\n{%- macro jp_value(s, st, out) -%}\n{{- jp_ws(s, st) -}}\n{%- if st.pos >= (s | length) -%}\n{%- set st.ok = false -%}\n{%- elif s[st.pos] == '\"' -%}\n{{- jp_string(s, st, out) -}}\n{%- elif s[st.pos] == '{' -%}\n{{- jp_object(s, st, out) -}}\n{%- elif s[st.pos] == '[' -%}\n{{- jp_array(s, st, out) -}}\n{%- elif s[st.pos:st.pos + 4] == 'true' -%}\n{%- set st.pos = st.pos + 4 -%}{%- set out.node = ['boolean', true] -%}\n{%- elif s[st.pos:st.pos + 5] == 'false' -%}\n{%- set st.pos = st.pos + 5 -%}{%- set out.node = ['boolean', false] -%}\n{%- elif s[st.pos:st.pos + 4] == 'null' -%}\n{%- set st.pos = st.pos + 4 -%}{%- set out.node = ['null', none] -%}\n{%- elif s[st.pos] in '-0123456789NI' -%}\n{{- jp_number(s, st, out) -}}\n{%- else -%}\n{%- set st.ok = false -%}\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro jp_type(node) -%}\n{%- if node[0] == 'boolean' -%}boolean\n{%- elif node[0] == 'null' -%}null\n{%- elif node[0] == 'number' -%}number\n{%- elif node[0] == 'string' -%}string\n{%- elif node[0] == 'object' -%}object\n{%- else -%}array\n{%- endif -%}\n{%- endmacro -%}\n\n{%- macro jp_dump(node) -%}\n{%- if node[0] == 'object' -%}\n{{- '{' -}}\n{%- for pair in node[1] -%}\n{%- if not loop.first -%}{{- ', ' -}}{%- endif -%}\n{{- pair[0] | tojson -}}{{- ': ' -}}{{- jp_dump(pair[1]) -}}\n{%- endfor -%}\n{{- '}' -}}\n{%- elif node[0] == 'array' -%}\n{{- '[' -}}\n{%- for child in node[1] -%}\n{%- if not loop.first -%}{{- ', ' -}}{%- endif -%}\n{{- jp_dump(child) -}}\n{%- endfor -%}\n{{- ']' -}}\n{%- elif node[0] == 'string' -%}\n{{- node[1] | tojson -}}\n{%- else -%}\n{{- numstr(node[1]) -}}\n{%- endif -%}\n{%- endmacro -%}{%- macro xtype(v) -%}\n{%- if v is boolean -%}boolean\n{%- elif v is none -%}null\n{%- elif v is number -%}number\n{%- elif v is string -%}string\n{%- elif v is mapping -%}object\n{%- else -%}array\n{%- endif -%}\n{%- endmacro -%}{%- macro xvalue(v) -%}\n{%- if v is string -%}{{- v -}}{%- else -%}{{- jdumpsp(v) -}}{%- endif -%}\n{%- endmacro -%}{%- macro render_content(c) -%}\n{%- if c is string -%}\n{{- xtext(c) -}}\n{%- elif c is mapping and (c | length) == 0 -%}\n{%- elif c is mapping -%}\n{{- raise_exception('Kimi K3 message content must be a string or a list of content parts.') -}}\n{%- elif c is defined and c is not none -%}\n{%- for part in c -%}\n{%- if part is not mapping or 'type' not in part -%}\n{{- raise_exception('Kimi K3 content parts must be objects carrying a `type`.') -}}\n{%- elif part['type'] in ['image', 'image_url'] -%}\n{{- img_next() -}}\n{%- elif 'text' not in part -%}\n{{- raise_exception('Kimi K3 non-image content parts require a `text`.') -}}\n{%- else -%}\n{{- xtext(part['text']) -}}\n{%- endif -%}\n{%- endfor -%}\n{%- endif -%}\n{%- endmacro -%}{%- macro internal_msg(kind, body) -%}\n{{- otag('message', [['role', 'system'], ['type', kind]]) -}}\n{{- body | trim -}}\n{{- ctag('message') -}}\n{{- '<|end_of_msg|>' -}}\n{%- endmacro -%}{%- macro render_tool_declare(tool_list, dynamic=false) -%}\n{{- otag('message', [['role', 'system'], ['type', 'tool-declare']]) -}}\n{%- if dynamic -%}\n{{- '## New Tools Available\\nThe system dynamically extends the toolset via lazy-loading.\\nYou have access to all existing and extended tools.\\nHere are the specs for the extended tools.\\n\\n```json\\n' -}}\n{%- else -%}\n{{- '# Tools\\nHere are the available tools, described in JSONSchema.\\n\\n```json\\n' -}}\n{%- endif -%}\n{{- jdump(tool_list) -}}\n{{- '\\n```' -}}\n{{- ctag('message') -}}\n{{- '<|end_of_msg|>' -}}\n{%- endmacro -%}{%- macro render_assistant(m, thinking) -%}\n{%- if thinking -%}\n{%- set rc = m.get('reasoning_content') or m.get('reasoning') -%}\n{{- otag('think') -}}\n{%- if rc is not none and (rc | string | trim) -%}{{- xtext(rc) -}}{%- endif -%}\n{{- ctag('think') -}}\n{%- endif -%}\n{{- otag('response') -}}\n{{- render_content(m.get('content')) -}}\n{{- ctag('response') -}}\n{%- set tcs = m.get('tool_calls') -%}\n{%- if tcs -%}\n{{- otag('tools') -}}\n{%- for tc in tcs -%}\n{%- set fn = tc['function'] if ('function' in tc) else tc -%}\n{%- if 'name' not in fn -%}\n{{- raise_exception('Kimi K3 tool calls require a function name.') -}}\n{%- endif -%}\n{{- otag('call', [['tool', fn['name']], ['index', loop.index]]) -}}\n{%- set args = fn['arguments'] if ('arguments' in fn) else none -%}{%- if args is mapping -%}\n{%- for key, val in args | items -%}\n{{- otag('argument', [['key', key], ['type', xtype(val)]]) -}}\n{{- xtext(xvalue(val)) -}}\n{{- ctag('argument') -}}\n{%- endfor -%}\n{%- elif args is string -%}\n{%- if args | trim -%}\n{%- set ps = namespace(pos=0, ok=true) -%}\n{%- set parsed = namespace(node=none) -%}\n{{- jp_value(args, ps, parsed) -}}\n{{- jp_ws(args, ps) -}}\n{%- if not ps.ok or ps.pos != (args | length) -%}{{- otag('json', [['type', 'object']]) -}}{{- xtext(args) -}}{{- ctag('json') -}}\n{%- elif parsed.node[0] != 'object' -%}\n{{- raise_exception('Kimi K3 tool call arguments must be a JSON object.') -}}\n{%- else -%}\n{%- for pair in parsed.node[1] -%}\n{{- otag('argument', [['key', pair[0]], ['type', jp_type(pair[1])]]) -}}\n{%- if pair[1][0] == 'string' -%}\n{{- xtext(pair[1][1]) -}}\n{%- else -%}\n{{- xtext(jp_dump(pair[1])) -}}\n{%- endif -%}\n{{- ctag('argument') -}}\n{%- endfor -%}\n{%- endif -%}\n{%- endif -%}\n{%- elif args is not none and args is defined -%}\n{{- raise_exception('Kimi K3 tool call arguments must be a dict or a JSON object string.') -}}\n{%- endif -%}\n{{- ctag('call') -}}\n{%- endfor -%}\n{{- ctag('tools') -}}\n{%- endif -%}\n{%- endmacro -%}{%- macro render_tool_msg(m, idx, forced, tcalls) -%}\n{%- set r = namespace(name = none) -%}\n{%- if forced is not none -%}\n{%- set r.name = forced -%}\n{%- elif 'tool' in m -%}\n{%- set r.name = m['tool'] -%}\n{%- else -%}\n{%- set r.name = m.get('name') -%}\n{%- endif -%}\n{%- if r.name is none and tcalls and idx <= (tcalls | length) -%}\n{%- set tc = tcalls[idx - 1] -%}\n{%- set fn = tc['function'] if ('function' in tc) else tc -%}\n{%- set r.name = fn['name'] -%}\n{%- endif -%}\n{%- if r.name is not defined or r.name is none -%}\n{{- raise_exception('Kimi K3 tool messages need a resolvable tool name: carry `tool`/`name`, or match a preceding assistant tool_call by order.') -}}\n{%- endif -%}\n{{- otag('message', [['role', 'tool'], ['tool', r.name], ['index', idx]]) -}}\n{{- render_content(m.get('content')) -}}\n{{- ctag('message') -}}\n{{- '<|end_of_msg|>' -}}\n{%- endmacro -%}{%- set rens = namespace(off = false, effort = none) -%}\n{%- if reasoning_effort is defined and reasoning_effort is not none -%}\n{%- if reasoning_effort == 'none' -%}\n{%- set rens.off = true -%}\n{%- elif reasoning_effort in ['low', 'high', 'max'] -%}\n{%- set rens.effort = reasoning_effort -%}\n{%- endif -%}\n{%- endif -%}\n{%- if thinking is not defined -%}\n{%- if enable_thinking is defined -%}\n{%- set thinking = enable_thinking -%}\n{%- elif rens.off -%}\n{%- set thinking = false -%}\n{%- else -%}\n{%- set thinking = true -%}\n{%- endif -%}\n{%- endif -%}{%- if thinking_effort is not defined -%}{%- set thinking_effort = rens.effort or 'max' -%}\n{%- endif -%}{%- if thinking and thinking_effort is not none and thinking_effort not in ['low', 'high', 'max'] -%}\n{{- raise_exception(\"Unsupported thinking_effort=\" + (thinking_effort | string) + \"; supported values are ['high', 'low', 'max'].\") -}}\n{%- endif -%}{%- if tools is defined and tools -%}\n{{- render_tool_declare(tools) -}}\n{%- endif -%}\n{%- if thinking and thinking_effort in ['low', 'high', 'max'] -%}\n{{- internal_msg('thinking-effort', '`thinking_effort` guides on how much to think in your thinking channel (not including the response channel), supported values include `low`, `medium`, `high`, and `max`.\\nNow the system is invoked with `thinking_effort=' + (thinking_effort | string) + '`.') -}}\n{%- endif -%}{%- set ns = namespace(tool_calls = none, tool_index = 0) -%}\n{%- for message in messages -%}\n{%- if message is mapping -%}\n{%- if 'role' not in message -%}\n{{- raise_exception('Kimi K3 messages require a `role`.') -}}\n{%- endif -%}\n{%- set role = message['role'] -%}\n\n{%- if role == 'user' -%}\n{%- set attrs = [['role', 'user']] -%}\n{%- if message.get('name') -%}{%- set attrs = attrs + [['name', message['name']]] -%}{%- endif -%}\n{{- otag('message', attrs) -}}\n{{- render_content(message.get('content')) -}}\n{{- ctag('message') -}}\n{{- '<|end_of_msg|>' -}}\n\n{%- elif role == 'system' and message.get('tools') -%}{{- render_tool_declare(message['tools'], true) -}}\n\n{%- elif role == 'system' -%}\n{%- set attrs = [['role', 'system']] -%}\n{%- if message.get('name') -%}{%- set attrs = attrs + [['name', message['name']]] -%}{%- endif -%}\n{{- otag('message', attrs) -}}\n{{- render_content(message.get('content')) -}}\n{{- ctag('message') -}}\n{{- '<|end_of_msg|>' -}}\n\n{%- elif role == 'assistant' -%}\n{%- set ns.tool_calls = message.get('tool_calls') -%}\n{%- set ns.tool_index = 0 -%}\n{%- set attrs = [['role', 'assistant']] -%}\n{%- if message.get('name') -%}{%- set attrs = attrs + [['name', message['name']]] -%}{%- endif -%}\n{{- otag('message', attrs) -}}\n{{- render_assistant(message, thinking) -}}\n{{- ctag('message') -}}\n{{- '<|end_of_msg|>' -}}\n\n{%- elif role == 'tool' -%}{%- set here = loop.index0 -%}\n{%- set start = namespace(is_first = true) -%}\n{%- if not loop.first -%}\n{%- if messages[here - 1] is mapping -%}\n{%- if messages[here - 1].get('role') == 'tool' -%}{%- set start.is_first = false -%}{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- if start.is_first -%}{%- set rl = namespace(n = 0, stop = false) -%}\n{%- for cand in messages[here:] -%}\n{%- if not rl.stop -%}\n{%- if cand is mapping and cand.get('role') == 'tool' -%}\n{%- set rl.n = rl.n + 1 -%}\n{%- else -%}\n{%- set rl.stop = true -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}{%- set rr = namespace(order = [], names = [], unresolved = false) -%}\n{%- for off in range(rl.n) -%}\n{%- set tm = messages[here + off] -%}\n{%- set cid = namespace(v = none) -%}\n{%- if 'tool_call_id' in tm -%}\n{%- set cid.v = tm['tool_call_id'] -%}\n{%- else -%}\n{%- set cid.v = tm.get('id') -%}\n{%- endif -%}\n{%- set mt = namespace(pos = none, name = none) -%}\n{%- if cid.v is not none and ns.tool_calls -%}\n{%- for tc in ns.tool_calls -%}\n{%- if mt.pos is none and tc is mapping and tc.get('id') is not none and (tc.get('id') | string) == (cid.v | string) -%}\n{%- set mt.pos = loop.index -%}\n{%- if tc.get('function') is mapping -%}\n{%- set mt.name = tc['function'].get('name') -%}\n{%- else -%}\n{%- set mt.name = tc.get('name') -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}\n{%- endif -%}\n{%- if mt.pos is none -%}{%- set rr.unresolved = true -%}{%- endif -%}{%- set rr.order = rr.order + [(mt.pos if mt.pos is not none else 0) * 1000000 + off] -%}\n{%- set rr.names = rr.names + [mt.name] -%}\n{%- endfor -%}{%- if rr.unresolved -%}\n{%- for off in range(rl.n) -%}\n{%- set ns.tool_index = ns.tool_index + 1 -%}\n{{- render_tool_msg(messages[here + off], ns.tool_index, none, ns.tool_calls) -}}\n{%- endfor -%}\n{%- else -%}\n{%- for key in rr.order | sort -%}\n{%- set off = key % 1000000 -%}\n{%- set ns.tool_index = ns.tool_index + 1 -%}\n{{- render_tool_msg(messages[here + off], ns.tool_index, rr.names[off], ns.tool_calls) -}}\n{%- endfor -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endif -%}\n{%- endfor -%}{%- if tool_choice is defined and tool_choice == 'required' -%}\n{{- internal_msg('tool-choice', 'The system is invoked with `tool_choice=required`.\\nYou MUST call tools in the next message.') -}}\n{%- elif tool_choice is defined and tool_choice == 'none' -%}\n{{- internal_msg('tool-choice', 'The system is invoked with `tool_choice=none`.\\nYou MUST NOT call any tools in the next message.') -}}\n{%- endif -%}{%- set rsx = namespace(v = none) -%}\n{%- if response_schema is defined -%}\n{%- set rsx.v = response_schema -%}\n{%- elif response_format is defined and response_format is mapping and response_format.get('json_schema') is not none -%}\n{%- set js = response_format['json_schema'] -%}\n{%- if js is mapping -%}\n{%- if 'schema' in js -%}\n{%- set rsx.v = js['schema'] -%}\n{%- elif 'json_schema' in js -%}\n{%- set rsx.v = js['json_schema'] -%}\n{%- else -%}\n{%- set rsx.v = js -%}\n{%- endif -%}\n{%- else -%}\n{%- set rsx.v = js -%}\n{%- endif -%}\n{%- endif -%}\n{%- set rft = namespace(v = none) -%}\n{%- if response_format is defined and response_format is not none -%}\n{%- if response_format is mapping -%}\n{%- set rft.v = response_format.get('type', response_format) -%}\n{%- else -%}\n{%- set rft.v = response_format -%}\n{%- endif -%}\n{%- endif -%}\n{%- if rft.v == 'json_object' -%}\n{{- internal_msg('response-format', 'The system is invoked with `response_format=json_object`.\\nYour response must be raw JSON data without markdown code blocks (```json) or any additional formatting.') -}}\n{%- elif rft.v == 'json_schema' -%}\n{{- internal_msg('response-format', 'The system is invoked with `response_format=json_schema`.\\nYour response must be raw JSON data without markdown code blocks (```json) or any additional formatting.\\nThe JSON data must match the following schema:\\n```json\\n' + jdump(rsx.v) + '\\n```') -}}\n{%- endif -%}\n\n{%- if add_generation_prompt -%}\n{{- otag('message', [['role', 'assistant']]) -}}\n{%- if thinking -%}{{- otag('think') -}}{%- else -%}{{- otag('response') -}}{%- endif -%}\n{%- endif -%}{%- if imgns.on and imgns.idx != (image_prompts | length) -%}\n{{- raise_exception('image prompt count ' + (image_prompts | length | string) + ' != consumed placeholder count ' + (imgns.idx | string)) -}}\n{%- endif -%}\n{#- Unsloth translation to jinja #}\n",
+    "bos_token": "[BOS]",
+    "eos_token": "<|end_of_msg|>",
+    "totalFileSize": 579511854944
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7952deca4d5c799893b3e5f21a03290e1e24a0a0",
+      "size": 7092
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00001-of-00034.gguf",
+      "blobId": "01b8d0303a425c0d45d1dcfff5191168fd2e60da",
+      "size": 20522730592,
+      "lfs": {
+        "sha256": "afff2c48ccbd08e0bbcd397e5b85899bfa419f9354c5dc7a1a1d4d51b1dc0289",
+        "size": 20522730592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00002-of-00034.gguf",
+      "blobId": "d67e2e479d4eec836c1924cabc7eb4e83481af15",
+      "size": 19062558016,
+      "lfs": {
+        "sha256": "9426d1865f72b20a8bf2db6b6c0666e609b323e6c8c6e5f3a67a3dbd22daab43",
+        "size": 19062558016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00003-of-00034.gguf",
+      "blobId": "af9998c0f4dd27ecd9a6d004af0fd33c228a968a",
+      "size": 20372753728,
+      "lfs": {
+        "sha256": "70aa007bc87f6c7eeb28301f0848aca4e88a1fcb93ceebf1087bd2bd6cba2428",
+        "size": 20372753728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00004-of-00034.gguf",
+      "blobId": "893d986326fef4704f8e0f4ce2af0bccef5b3b30",
+      "size": 20805087744,
+      "lfs": {
+        "sha256": "d92d66cc3a5addbe98bbee7d6ee373e5d7beaf0e332e6c2fc1a1c8a917383255",
+        "size": 20805087744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00005-of-00034.gguf",
+      "blobId": "ebf50a6d93d1d55b1aecacd26f26ebd71e505e49",
+      "size": 16358884864,
+      "lfs": {
+        "sha256": "8ee4c475d6eefad57b39bfa500506cb5684166c4129447370ee7c13ed9f0f74f",
+        "size": 16358884864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00006-of-00034.gguf",
+      "blobId": "2a8fe598595ee842148e287c9970d15355c9a838",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "fd1baef80f9d8d16c542dae2920d7300a86d1026c5e6b29852de65683ceeec26",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00007-of-00034.gguf",
+      "blobId": "5e727f4426f0be52cfa6a7c442a08c822cedecfc",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "5d1687d375a192a71db080cfb5ec8ff1fd169a8d94877528337c073b471c880a",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00008-of-00034.gguf",
+      "blobId": "d9313c016d89e722c63736bc41e78b1de7423b9c",
+      "size": 18184696352,
+      "lfs": {
+        "sha256": "196ba4ee1710ae9c0ef24662ae173f7743103e0470e9bae9ef58e9959891985c",
+        "size": 18184696352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00009-of-00034.gguf",
+      "blobId": "4b4cefa983ed8b78431ec21668113e098b06d41e",
+      "size": 16358884864,
+      "lfs": {
+        "sha256": "82fc2d0dd35b0447d2dcaabe8f5254a41a08210d6c4b9fcdc5750b1f310a593f",
+        "size": 16358884864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00010-of-00034.gguf",
+      "blobId": "b6910545d156712e753f81bb8eae544bf685a49d",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "c4e3bfd66b4fba0a2a2b6db47151720fa5e2bc43f73f2636bbae265516ad54d1",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00011-of-00034.gguf",
+      "blobId": "40f992a754ae159a5f961e482398070f7b81bdfe",
+      "size": 16554950176,
+      "lfs": {
+        "sha256": "2889dbcd8489e1f6cb6f4c191eeaac78712994bc2f594706599edaf06e23727a",
+        "size": 16554950176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00012-of-00034.gguf",
+      "blobId": "d4a86dc2c51c67dbd04355271e35d8326f9dcc29",
+      "size": 18181360160,
+      "lfs": {
+        "sha256": "80e346238467fa3db1b83fca6f7b345b906958e375fc69016527e611d51f3a0c",
+        "size": 18181360160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00013-of-00034.gguf",
+      "blobId": "6a456af93bf291e233e53645115b0696718c8285",
+      "size": 16249437568,
+      "lfs": {
+        "sha256": "4ae7eeec761a44d99a255b7bd2de233ffd5bb80d009d2da830c108fc2884aec7",
+        "size": 16249437568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00014-of-00034.gguf",
+      "blobId": "89d31c826d611b645fe06f41b455e717874c6690",
+      "size": 16554950176,
+      "lfs": {
+        "sha256": "333895bd0f65a2c9cd11d5215aa5925e93e31135970e7af6ddc54c8ff560f081",
+        "size": 16554950176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00015-of-00034.gguf",
+      "blobId": "cb79f299bc2ceb5e55ce2e080b7cc17ae8ffa1a2",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "80d54fe03449777e48d91a7743d5ddf4bf3c3810a9d1b74a2a3acf3d2df9a218",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00016-of-00034.gguf",
+      "blobId": "f18ec42d6a9351028aebfd52e955aae9a691f7b6",
+      "size": 18181360160,
+      "lfs": {
+        "sha256": "c9343bbeac44508fc58b8ef220153524dc10aeb048ee87620f251461a9c2d5ad",
+        "size": 18181360160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00017-of-00034.gguf",
+      "blobId": "b38c2969ccc189be3ef34dbebe297a04a9d6d8ea",
+      "size": 16362221088,
+      "lfs": {
+        "sha256": "353d415d523c7f11a253e0487901b854f43e1cde337f73d77c9380a128fe2a49",
+        "size": 16362221088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00018-of-00034.gguf",
+      "blobId": "03b34d77239d948d44b249b178fa0751f9a55be9",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "fe280cf8301f9592ac2c3a2dabc09354d05c4c0996fb276fb02bb79b9e7cd355",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00019-of-00034.gguf",
+      "blobId": "0f790fb87998822e24a7b8ad4f8d1b1aefab4ed7",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "42991f261306d85ccc968d85154db6d051976a4a9cb3b96ceb3662a640c56c69",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00020-of-00034.gguf",
+      "blobId": "848c80cc6bbc75812920684587cd07f6a802aa90",
+      "size": 18184696352,
+      "lfs": {
+        "sha256": "afcbf5562da18f38799e55ed02fd3b3bc58d32685145339ced37726039921b73",
+        "size": 18184696352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00021-of-00034.gguf",
+      "blobId": "e1a79f393c934200856583ad37f1767c44bad49a",
+      "size": 16358884864,
+      "lfs": {
+        "sha256": "8d1e841d855f944e60aa8eb820a55190f816938a4030c7e2d462fe7c425cd0e2",
+        "size": 16358884864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00022-of-00034.gguf",
+      "blobId": "579197cc07b53e4da9e02dea264b49be82499fad",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "2573338e9c452390b907d561cec9b5c1cb63afe2a7b7608b1d406c9af4267750",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00023-of-00034.gguf",
+      "blobId": "05ab6be90eb49a19ead0e182357bff4efbadef1d",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "cc3a9f2f6cf767900ff15ade010ad9cd16b6d814bc082301a1b55f210583d315",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00024-of-00034.gguf",
+      "blobId": "ccaaf88ac729c74736400a71a03861f919f3fba3",
+      "size": 18184696352,
+      "lfs": {
+        "sha256": "f8b7973b144ec6558b555e82ae4982173432c9b10226d4246f18d75ea088f2cb",
+        "size": 18184696352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00025-of-00034.gguf",
+      "blobId": "88aafc75be65fd95aa29b9e8a427f1231e580427",
+      "size": 16358884864,
+      "lfs": {
+        "sha256": "83d18a83cea128352efc2216754e68037e732e42be9f1223d378d6abd32ea9df",
+        "size": 16358884864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00026-of-00034.gguf",
+      "blobId": "2391d48f34c740f7aa51f2601343f6816ad4a50b",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "be03fe0b5cc8fc60e7d9d9ac675c90bd55c80539e4351954812704ac29fc5ee5",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00027-of-00034.gguf",
+      "blobId": "7da631bfbd0715a4f195870bf97bb24bebe96ab7",
+      "size": 16554950176,
+      "lfs": {
+        "sha256": "8671e7da0c396d062212e181139ca3380c155d9dff344ce52c14dfed8834d07d",
+        "size": 16554950176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00028-of-00034.gguf",
+      "blobId": "e9e9a851b944a5d2453819e438673a3159211a88",
+      "size": 18181360160,
+      "lfs": {
+        "sha256": "778d9ecfe9f74a9a80fefb8d943a4fc39933dcfe944be612cb1c98601a48e158",
+        "size": 18181360160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00029-of-00034.gguf",
+      "blobId": "36c16c5af79ccadb2cc72f3fde6b4c9484465dc2",
+      "size": 16249437568,
+      "lfs": {
+        "sha256": "6e4f1216e7d1f599766376d5aa88402fe4bf0c07f5b5559f3ef3aaf9232259fc",
+        "size": 16249437568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00030-of-00034.gguf",
+      "blobId": "385094cf0bde9b75f29df751a2433111b2893534",
+      "size": 16554950176,
+      "lfs": {
+        "sha256": "7b68c18b0aa0ba97a1d8832ca6b51c5769220a76c231e6b0d455b4eb08f231ef",
+        "size": 16554950176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00031-of-00034.gguf",
+      "blobId": "10a44aa11cbe65c5041ff1dfff80a162ee3821ab",
+      "size": 16442166656,
+      "lfs": {
+        "sha256": "f12a58bc551866b03e7cb0cbef819e8586aab322a87a703ea896180e5d15ec04",
+        "size": 16442166656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00032-of-00034.gguf",
+      "blobId": "bd5bd84c6a0ccb335cf0af7a95a413df0d34e6e2",
+      "size": 18181360160,
+      "lfs": {
+        "sha256": "867b48ea5bff43661b69588f97ccae178a6fbfbe1ab83a4cb0394490bd0a50bb",
+        "size": 18181360160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00033-of-00034.gguf",
+      "blobId": "187adeb9d485061acc9ab9ad16efbd8b90b7dab1",
+      "size": 16362221088,
+      "lfs": {
+        "sha256": "661f0ebb0bf0d9645652dea43c9dec682a51dc26372bd1e61ec3e30fead60d58",
+        "size": 16362221088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XS-00034-of-00034.gguf",
+      "blobId": "5f4666fbbb1911a3c1b091b9643ef93627beb7d2",
+      "size": 10168871136,
+      "lfs": {
+        "sha256": "30e45f71e0f1c5e038e9e0e60ad83496bac656b84f579ead312c409d0677c7ac",
+        "size": 10168871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00001-of-00011.gguf",
+      "blobId": "316dd02806b643dc9045239dc9963da3bf340b1d",
+      "size": 50718327456,
+      "lfs": {
+        "sha256": "310932c53ce21508703fae2b35869508f1cf08aa3608af9dca4ff3dea145c901",
+        "size": 50718327456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00002-of-00011.gguf",
+      "blobId": "19c81cf82852b8e4c7cdec33ca8bbcccc09e2d30",
+      "size": 53347848096,
+      "lfs": {
+        "sha256": "c3780e59ac70bf9df60af1f0e6dc4449cd09c0055b4ffe42fb3bf6ad296da70c",
+        "size": 53347848096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00003-of-00011.gguf",
+      "blobId": "ae68370f826bfb8f22a7c3bba84d2bd851e2afec",
+      "size": 53276282976,
+      "lfs": {
+        "sha256": "c933b850a7a2519db131eb885c16b0e5b3dd6bdb01ba23c269f9fe5a103a6413",
+        "size": 53276282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00004-of-00011.gguf",
+      "blobId": "ef18860921fb4aee9197b127bb03b683a98cf419",
+      "size": 53276282976,
+      "lfs": {
+        "sha256": "93a9d985fc272fd489b33e002412f091e98f545acc8803d62c610d9889b513aa",
+        "size": 53276282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00005-of-00011.gguf",
+      "blobId": "2b68d861122ef9c8f9343c9ea2594740cc4b064d",
+      "size": 53541958272,
+      "lfs": {
+        "sha256": "6afcea0a52a63a2edb2011a305058e0760e5de7685c4736ade5178d54c61dd8d",
+        "size": 53541958272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00006-of-00011.gguf",
+      "blobId": "947bdfec63a22e2ac2da287c2b330ac02562b0fb",
+      "size": 53276282976,
+      "lfs": {
+        "sha256": "6c1c68d70b6a7958020433b8962e473676069e5a1f8758229c3bcd847dd7e82d",
+        "size": 53276282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00007-of-00011.gguf",
+      "blobId": "c8feabc8b51d57be02f87ab7f87fdd353c99ba45",
+      "size": 53276282976,
+      "lfs": {
+        "sha256": "220a29d4dd56565acc3960ca02eaf7e36172491466801441be87d44a27024a7e",
+        "size": 53276282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00008-of-00011.gguf",
+      "blobId": "80b32bf311817e166736fc67af80119fcd09afce",
+      "size": 53541958272,
+      "lfs": {
+        "sha256": "1128c4e87c6bde49b28d1000c5ea058cec78ce47be1766c724a5be29a25094b7",
+        "size": 53541958272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00009-of-00011.gguf",
+      "blobId": "20ea9d8f4f3ee7206b65b85e3455ce5e2325795a",
+      "size": 53276282976,
+      "lfs": {
+        "sha256": "674bf1bb02577754b583e4db8169a95e8016eafd7a98876f3dcaeaa5f4e9b0bb",
+        "size": 53276282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00010-of-00011.gguf",
+      "blobId": "28ec250de3ea06209549107c9975ef51a9596e16",
+      "size": 53276282976,
+      "lfs": {
+        "sha256": "b92f735a42795b9885329fdd54c2764d01b2787505f350cdeedb9fbe04cf87fd",
+        "size": 53276282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-IQ1_S-XXS-832e-00011-of-00011.gguf",
+      "blobId": "10f80423a020b4607717d39907d722ff1684ef3d",
+      "size": 9614698208,
+      "lfs": {
+        "sha256": "1fcd95d03458c8ce88115af162dce69c4586c404416b1122eb59926264e51c05",
+        "size": 9614698208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Kimi-K3-mmproj-BF16.gguf",
+      "blobId": "095a8800ed8b92fa667fdab609508f6a2b4e70a3",
+      "size": 904449056,
+      "lfs": {
+        "sha256": "c858aec63e68ba8df6f78b358e9c2a7453d1de947c738dd9875addac591e0759",
+        "size": 904449056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "5c633c2e02bc257c92185470b08f0753b8048252",
+      "size": 33260
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-02T13:25:40.000Z",
+  "usedStorage": 1141361522752
+}

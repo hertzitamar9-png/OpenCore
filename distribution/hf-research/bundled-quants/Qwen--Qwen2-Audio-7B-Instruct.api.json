@@ -1,0 +1,234 @@
+{
+  "_id": "66aa024d19bc636023bdbeba",
+  "id": "Qwen/Qwen2-Audio-7B-Instruct",
+  "private": false,
+  "pipeline_tag": "audio-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_audio",
+    "text2text-generation",
+    "chat",
+    "audio",
+    "audio-text-to-text",
+    "en",
+    "arxiv:2407.10759",
+    "arxiv:2311.07919",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 173738,
+  "likes": 574,
+  "modelId": "Qwen/Qwen2-Audio-7B-Instruct",
+  "author": "Qwen",
+  "sha": "0a095220c30b7b31434169c3086508ef3ea5bf0a",
+  "lastModified": "2025-01-12T02:05:48.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2AudioForConditionalGeneration"
+    ],
+    "model_type": "qwen2_audio",
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}{% endif %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "chat",
+      "audio",
+      "audio-text-to-text"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "text2text-generation",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b6b52f84f876ccc6e19270a5bb6e99bf738e48f9",
+      "size": 8690
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "fb0e65eb25c07db35f951aaf3f0fc73b024545a2",
+      "size": 853
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "2d21cdd6d40003de26591ff0a438801e25a42107",
+      "size": 230
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model-00001-of-00005.safetensors",
+      "blobId": "125fd7ea57df7ec98520d92969e4dc51ffb61c9a",
+      "size": 3911340848,
+      "lfs": {
+        "sha256": "383de5b5b06f7e7f276850a065d9164641c93009f79a377352a7c949d17c1d7a",
+        "size": 3911340848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00005.safetensors",
+      "blobId": "66feca2f2331438fe984ab8bbff2328a87d6d6a2",
+      "size": 3980786080,
+      "lfs": {
+        "sha256": "610e59a23cdf1f78d7e3b42e69f2e1a08578f29726391a1772aecac95db3c59c",
+        "size": 3980786080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00005.safetensors",
+      "blobId": "4469a9a8aa0bd24f6bf4ed6b16041a17c620bcf9",
+      "size": 3980819456,
+      "lfs": {
+        "sha256": "b9ea76e97226524a12b6acc5e896bebf01a01018fbcad20a72eb13c7950f6916",
+        "size": 3980819456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00005.safetensors",
+      "blobId": "ef7c377518ee5e1954b8ce65ecb010f90532fe6c",
+      "size": 3643135696,
+      "lfs": {
+        "sha256": "d68dee591619e26e3d0af23a07e181c70134fbc3aa33e24d872224607aae2c62",
+        "size": 3643135696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00005.safetensors",
+      "blobId": "9d5206a1a13419ec8b86bc2b6b58e21d1aade44a",
+      "size": 1278214288,
+      "lfs": {
+        "sha256": "a447dab3e72f9debd37a0c4ae0b9179a1bad2b06357092a77c066a0405bbc7d2",
+        "size": 1278214288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "a87cfff186b87b06228b3bef411296e9e305f8b1",
+      "size": 78989
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "3cd6c4610c3e6e98af27fcdf9ffdcb83c498549a",
+      "size": 342
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "33ea6c72ebb92a237fa2bdf26c5ff16592efcdae",
+      "size": 7028015
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "8071e4b39d30f19114e082f888d5cf83f2ac7c3d",
+      "size": 638335
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "microsoft/paza-bench",
+    "freddyaboulton/talk-to-qwen-webrtc",
+    "K00B404/Qwen2-Audio-Instruct",
+    "Speedofmastery/orynxml-backend",
+    "CocoBro/MMEdit",
+    "aTrapDeer/Lora-ace-step",
+    "TechAudio/TeamQwen2AudioInstruct",
+    "BATUTO-ART/BATUTO_neurocoreWeb",
+    "BATUTO-ART/BATUTO_mcp_core",
+    "owenisas/spur-spatial-audio",
+    "FuuToru/Qwen-Qwen2-Audio-7B-Instruct",
+    "fengguo21/Qwen-Qwen2-Audio-7B-Instruct",
+    "tttHwUp/Qwen-Qwen2-Audio-7B-Instruct",
+    "bhjiang/Qwen-Qwen2-Audio-7B-Instruct",
+    "cmxx648/Qwen-Qwen2-Audio-7B-Instruct",
+    "y5shen/roboAssist_demo",
+    "Ikkyu321/Qwen-Qwen2-Audio-7B-Instruct",
+    "smatt92/Qwen-Qwen2-Audio-7B-Instruct",
+    "Falln87/Audio-Instruct-Demo",
+    "nisten/Qwen2-Audio-Instruct-Demo-Duplicate",
+    "pm6six/demo-app",
+    "diyoza-08/Qwen-Qwen2-Audio-7B-Instruct",
+    "ELUp/Qwen-Qwen2-Audio-7B-Instruct",
+    "sahil-05/Qwen-Qwen2-Audio-7B-Instruct",
+    "nguyenly/Qwen-Qwen2-Audio-7B-Instruct",
+    "philphilphil111/Qwen-Qwen2-Audio-7B-Instruct",
+    "danieldacostao/Qwen-audio-text",
+    "danieldacostao/Qwen-Qwen2-Audio-7B-Instruct",
+    "bahaaudin2030/Qwen-Qwen2-Audio-7B-Instruct",
+    "vivucloud/Qwen-Qwen2-Audio-7B-Instruct",
+    "alfredo1522/Qwen-Qwen2-Audio-7B-Instruct",
+    "gopal7093/Qwen-Qwen2-Audio-7B-Instruct",
+    "theos04/Cortex_Ears",
+    "23carcar23/Qwen-Qwen2-Audio-7B-Instruct",
+    "Irfan773/audio-text-converter",
+    "mokoraden/Qwen-Qwen2-Audio-7B-Instruct",
+    "agideia/Qwen-Qwen2-Audio-7B-Instruct",
+    "nanoi/Qwen-Qwen2-Audio-7B-Instruct",
+    "nichno/Qwen-Qwen2-Audio-7B-Instruct",
+    "kqik2934/Qwen-Qwen2-Audio-7B-Instruct",
+    "alexrastorguev/Qwen-Qwen2-Audio-7B-Instruct",
+    "Dkapsis/gaia_final_assignment",
+    "legitHacker23/smartMirrorChat",
+    "Speedofmastery/or",
+    "sailusha30/QwenWebrct",
+    "gijs/qwen2audio",
+    "Speedofmastery/yyhh",
+    "Speedofmastery/uhhjj",
+    "Speedofmastery/hhhhh",
+    "Speedofmastery/yyuujhu",
+    "Speedofmastery/yyuu-complete-ai",
+    "Speedofmastery/orynxml",
+    "Speedofmastery/orynxml-complete",
+    "Speedofmastery/orynxml-ai",
+    "dheeraj1278/VoiceVerse4",
+    "owenisas/qwen2-audio-base",
+    "owenisas/qwen2-audio-base-control",
+    "CastBison/heidi",
+    "1978rhata/jhandy",
+    "drizzymedia/Lora-ace-step",
+    "abasit22748/qwen2-audio-scorer",
+    "eustlb/audio-text-to-text-models-on-the-hub"
+  ],
+  "createdAt": "2024-07-31T09:22:21.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8397094912
+    },
+    "total": 8397094912
+  },
+  "usedStorage": 16887655544
+}

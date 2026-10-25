@@ -1,0 +1,341 @@
+{
+  "_id": "6a79b092015504d6fa844726",
+  "id": "AtomicChat/Muse-Glimmer-30B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "image-text-to-text",
+    "base_model:meta-models/Muse-Glimmer-30B",
+    "base_model:quantized:meta-models/Muse-Glimmer-30B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 6447,
+  "likes": 9,
+  "modelId": "AtomicChat/Muse-Glimmer-30B-GGUF",
+  "author": "AtomicChat",
+  "sha": "b26f8ce4a435571e24656d27efef978073809356",
+  "lastModified": "2026-08-11T17:02:05.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "meta-models/Muse-Glimmer-30B",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "gguf",
+      "llama.cpp"
+    ]
+  },
+  "gguf": {
+    "total": 27854794240,
+    "architecture": "muse-glimmer",
+    "context_length": 131072,
+    "quantize_imatrix_file": "/workspace/imatrix/muse-glimmer.imatrix.gguf",
+    "chat_template": "{%- macro render_content(content) -%}{%- if content is string -%}{{- content -}}{%- elif content is not none -%}{%- for part in content -%}{%- if part['type'] == 'image' -%}{{- '<|patch|>' -}}{%- elif part['type'] == 'video' -%}{{- '<|video|>' -}}{%- elif part['type'] == 'text' -%}{{- part['text'] -}}{%- endif -%}{%- endfor -%}{%- endif -%}{%- endmacro -%}{%- macro render_atem(tc) -%}{%- set args = tc.function.arguments -%}{%- if args is not mapping -%}{{- raise_exception('Onyx ATEM chat template requires tool_call.function.arguments to be a dict (mapping); a JSON string cannot be parsed in the HF jinja sandbox.') -}}{%- endif -%}{{- '<atem:function_calls>\\n<atem:invoke name=\"' + tc.function.name + '\">\\n' -}}{%- for k, v in args.items() -%}{{- '<atem:parameter name=\"' + k + '\">' -}}{%- if v is boolean -%}{%- if v -%}true{%- else -%}false{%- endif -%}{%- elif v is none -%}null{%- elif v is mapping or (v is iterable and v is not string) -%}{{- v | tojson -}}{%- else -%}{{- v -}}{%- endif -%}{{- '</atem:parameter>\\n' -}}{%- endfor -%}{{- '</atem:invoke>\\n</atem:function_calls>' -}}{%- endmacro -%}{%- macro render_tool_defs(tools) -%}{{- 'In this environment you have access to a set of tools you can use to answer the user\\'s question.\\n\\n' -}}{{- 'You can invoke a function by writing a \"<atem:function_calls>\" block like the following:\\n' -}}{{- '<atem:function_calls>\\n<atem:invoke name=\"$FUNCTION_NAME\">\\n<atem:parameter name=\"$PARAMETER_NAME\">$PARAMETER_VALUE</atem:parameter>\\n...\\n</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}{{- 'String and scalar parameters should be specified as is, while lists and objects should use JSON format. Note that spaces for string values are not stripped. The output is not expected to be valid XML and is parsed with regular expressions.\\n' -}}{{- 'Here are the functions available in JSONSchema format:\\n' -}}{{- '// Tool metadata\\n' -}}{%- set nsns = namespace(seen=[]) -%}{%- for tool in tools -%}{%- set fn = tool.function if tool.function is defined else tool -%}{%- set tns = fn.name.split('.')[0] -%}{%- if tns not in nsns.seen -%}{%- set nsns.seen = nsns.seen + [tns] -%}{%- endif -%}{%- endfor -%}{%- set nd = tool_namespace_descriptions if tool_namespace_descriptions is defined else {} -%}{%- for tns in nsns.seen -%}{{- '{\"name\": ' + (tns | tojson) + ', \"description\": ' + ((nd[tns] if tns in nd else '') | tojson) + '}\\n' -}}{%- endfor -%}{{- '// Function schemas' -}}{%- for tool in tools -%}{%- set fn = tool.function if tool.function is defined else tool -%}{{- '\\n{\"name\": ' + (fn.name | tojson) + ', \"description\": ' + (fn.description | tojson) + ', \"parameters\": ' + (fn.parameters | tojson) + '}' -}}{%- endfor -%}{{- '\\n\\nHere\\'s an example of how to call a function in the tool set:\\n' -}}{{- '(If the tool namespace is not specified, invoke the function directly as `example_function_name` rather than `example_tool_name.example_function_name`)\\n\\n' -}}{{- 'to=example_tool_name.example_function_name\\n\\n' -}}{{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name.example_function_name\">\\n' -}}{{- '<atem:parameter name=\"example_parameter_1\">value_1</atem:parameter>\\n' -}}{{- '<atem:parameter name=\"example_parameter_2\">This is the value for the second parameter\\nthat can span\\n\"multiple\" lines\\n</atem:parameter>\\n' -}}{{- '</atem:invoke>\\n</atem:function_calls>' -}}{%- endmacro -%}{%- macro render_reasoning() -%}{%- set rs = reasoning_strength if reasoning_strength is defined and reasoning_strength else 'high' -%}{{- 'Reasoning strength: ' + rs + '.' -}}{%- endmacro -%}{%- macro render_system_meta(tools) -%}{%- set rns = namespace(recipients=['\"self\"'], nslist=[]) -%}{%- if tools -%}{%- for tool in tools -%}{%- set fn = tool.function if tool.function is defined else tool -%}{%- set tns = fn.name.split('.')[0] -%}{%- if tns not in rns.nslist -%}{%- set rns.nslist = rns.nslist + [tns] -%}{%- endif -%}{%- endfor -%}{%- for tns in rns.nslist -%}{%- set rns.recipients = rns.recipients + ['\"' + tns + '.*\"'] -%}{%- endfor -%}{%- endif -%}{%- set rns.recipients = rns.recipients + ['\"user\"'] -%}{{- '# Valid recipients: ' + rns.recipients | join(', ') + '.' -}}{%- endmacro -%}{{- bos_token -}}{%- set ns = namespace(has_system=false) -%}{%- for m in messages -%}{%- if m['role'] == 'system' -%}{%- set ns.has_system = true -%}{%- endif -%}{%- endfor -%}{%- if not ns.has_system -%}{{- '<|start|>system<|message|>You are a helpful AI assistant.' -}}{%- set kc = knowledge_cutoff if knowledge_cutoff is defined and knowledge_cutoff else '2026-01-04' -%}{{- '\\nKnowledge cutoff: ' + kc + '.' -}}{%- if current_date is defined and current_date -%}{{- '\\nCurrent date: ' + current_date + '.' -}}{%- elif strftime_now is defined -%}{{- '\\nCurrent date: ' + strftime_now('%Y-%m-%d') + '.' -}}{%- endif -%}{{- '\\n\\n' -}}{{- render_reasoning() -}}{%- if tools -%}{{- '\\n\\n' -}}{{- render_tool_defs(tools) -}}{%- endif -%}{{- '\\n\\n' -}}{{- render_system_meta(tools) -}}{{- '<|eot|>' -}}{%- endif -%}{%- for message in messages -%}{%- set role = message['role'] -%}{%- set end_token = '<|eom|>' if (not loop.last and messages[loop.index0 + 1]['role'] == role) else '<|eot|>' -%}{%- if role == 'system' -%}{{- '<|start|>system<|message|>' -}}{{- render_content(message['content']) -}}{{- '\\n\\n' -}}{{- render_reasoning() -}}{%- if tools -%}{{- '\\n\\n' -}}{{- render_tool_defs(tools) -}}{%- endif -%}{{- '\\n\\n' -}}{{- render_system_meta(tools) -}}{{- '<|eot|>' -}}{%- elif role == 'user' -%}{{- '<|start|>user<|message|>' -}}{{- render_content(message['content']) -}}{{- '<|eot|>' -}}{%- elif role == 'tool' -%}{%- set tname = message.get('name') -%}{%- if not tname -%}{%- set tcid = message.get('tool_call_id') -%}{%- set rns = namespace(name=tcid if tcid else '') -%}{%- for m in messages -%}{%- if m.get('tool_calls') -%}{%- for tc in m['tool_calls'] -%}{%- if tcid is not none and tc.id is defined and tc.id == tcid -%}{%- set rns.name = tc.function.name -%}{%- endif -%}{%- endfor -%}{%- endif -%}{%- endfor -%}{%- set tname = rns.name -%}{%- endif -%}{{- '<|start|>tool ' + tname + '<|message|><tool_output name=\"' + tname + '\">\\n' -}}{{- render_content(message['content']) -}}{{- '\\n</tool_output><|eot|>' -}}{%- elif role == 'assistant' -%}{%- if message.get('reasoning_content') -%}{{- '<|start|>assistant to=self<|message|>' + message['reasoning_content'] + '<|eom|>' -}}{%- endif -%}{%- if message.get('tool_calls') -%}{%- for tc in message['tool_calls'] -%}{{- '<|start|>assistant to=' + tc.function.name + '<|message|>' -}}{{- render_atem(tc) -}}{%- if loop.last -%}{{- end_token -}}{%- else -%}{{- '<|eom|>' -}}{%- endif -%}{%- endfor -%}{%- else -%}{%- set recipient = message.get('recipient') or 'user' -%}{%- set end_turn = message.get('end_turn') -%}{%- if end_turn is none -%}{%- set end_turn = not (recipient and recipient != 'user') -%}{%- endif -%}{{- '<|start|>assistant' -}}{%- if recipient -%}{{- ' to=' + recipient -}}{%- endif -%}{{- '<|message|>' -}}{{- render_content(message['content']) -}}{{- ('<|eot|>' if end_turn else '<|eom|>') -}}{%- endif -%}{%- endif -%}{%- endfor -%}{%- if add_generation_prompt -%}{{- '<|start|>assistant' -}}{%- endif -%}",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|end_of_text|>",
+    "totalFileSize": 11163840800
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "b57f8596a8d77ce0533d384337c48f3c8c93b390",
+      "size": 3149
+    },
+    {
+      "rfilename": "BF16/Muse-Glimmer-30B-BF16-00001-of-00002.gguf",
+      "blobId": "767d5f574a88ea56ff3eae36bcd43b0a20ad169d",
+      "size": 27869304128,
+      "lfs": {
+        "sha256": "c78eb5a0218a194ffec394a4f3c85de6973ac73c9fba977257be2abb50159832",
+        "size": 27869304128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "BF16/Muse-Glimmer-30B-BF16-00002-of-00002.gguf",
+      "blobId": "aa91877714c268e9cb6116a05f5e049d6cec3b7a",
+      "size": 27856207232,
+      "lfs": {
+        "sha256": "030f0f7e7c5bc0a3fe5fd392bfed7d9e2868f2c57658ee311061ef9f868f7914",
+        "size": 27856207232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-IQ2_M.gguf",
+      "blobId": "3c3f303b3f1520e1a24d21e2bd9884b33797692e",
+      "size": 11163840800,
+      "lfs": {
+        "sha256": "2daaaee1b04ac78a301f34ffb57bc0bd12a116183f0c0a750e7f131240f31a0d",
+        "size": 11163840800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-IQ2_XXS.gguf",
+      "blobId": "5b3afba146dc692e7a6cb8749dc56ad179e10c2f",
+      "size": 9310540832,
+      "lfs": {
+        "sha256": "1cd5abb3b084724986a34f25c117bcf52b0d30cc99eb393f5c7ee1d3894aa3d5",
+        "size": 9310540832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-IQ3_M.gguf",
+      "blobId": "9cd5de4b43c546e342183c0dbe7615394f265c75",
+      "size": 14918480416,
+      "lfs": {
+        "sha256": "a99ba89c27a3000603d10e21ae077309eeabe4036e55351089103912a3f29b44",
+        "size": 14918480416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-IQ3_XXS.gguf",
+      "blobId": "f1934b5ca12fa7e0232ac73a7123a17731fbafb6",
+      "size": 12224327968,
+      "lfs": {
+        "sha256": "392ee6a723541aaf79374c046ddc41464981698e807f5d600f41e294d4b7cec6",
+        "size": 12224327968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-IQ4_XS.gguf",
+      "blobId": "2c014f2704617db4d8246f42db5070390b556162",
+      "size": 15946649376,
+      "lfs": {
+        "sha256": "b9c4a3f41a149d202b61d09b48d2ea513827de78394028994145c77deea9d44f",
+        "size": 15946649376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-Q4_K_M.gguf",
+      "blobId": "e618168471acba6353279966cccf3ef71905ec84",
+      "size": 19059983392,
+      "lfs": {
+        "sha256": "09d7cfc502a25489b17f5e00ad07f08a6423a40414e7aeed1813b032c8d89443",
+        "size": 19059983392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-Q5_K_M.gguf",
+      "blobId": "740105656bb9269f1411752de818c46643777e1f",
+      "size": 22670979872,
+      "lfs": {
+        "sha256": "509e63a677db25cad8101fa84e87a825db7cf818d74233a0de96903df2cca735",
+        "size": 22670979872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-Q6_K.gguf",
+      "blobId": "c4f08909da530e8ea95a93529cbf3c5d93061653",
+      "size": 28257227552,
+      "lfs": {
+        "sha256": "3475547d6283d7c3698f5e0803ec64d4b7a48bce7317d05d111625187e83b5b2",
+        "size": 28257227552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-AD-Q8_0.gguf",
+      "blobId": "6f391f5ba5a9c7cb394c55edeee9858cec77ced1",
+      "size": 32134517248,
+      "lfs": {
+        "sha256": "170bd873dae7e96d5855c4059628271b459ac03deb58ca57d5fb5f6f5fcd8baa",
+        "size": 32134517248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Glimmer-30B-Q8_0.gguf",
+      "blobId": "22b1bca95b79b1a395510a75145460d328cab81e",
+      "size": 29612958208,
+      "lfs": {
+        "sha256": "0fe955bf67c2833a562b461fc08e657c9d7abf9690757db0791665ff97c1096a",
+        "size": 29612958208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a647a4735185e29ad28991d5d8ad5f269556230b",
+      "size": 14686
+    },
+    {
+      "rfilename": "dflash-Muse-Glimmer-30B-BF16.gguf",
+      "blobId": "a6cea69680f39a61285a7cd0b452a547e1d34eba",
+      "size": 5125206176,
+      "lfs": {
+        "sha256": "c63f2b10035712f7e138ce5127788e2bffa44e55959b45039956769bf65c8e88",
+        "size": 5125206176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-IQ2_M_STOCK.gguf",
+      "blobId": "cda24e376e3de56a1aa0b3a3cdc884b37897762d",
+      "size": 9845154080,
+      "lfs": {
+        "sha256": "314fe70c2374230d8ff267258e7b359e7596611ddc92007624f48b7b2859639a",
+        "size": 9845154080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-IQ3_XXS_STOCK.gguf",
+      "blobId": "9bcaa2f165ca899c66ea8c895c79dd5eec41ed73",
+      "size": 11142381856,
+      "lfs": {
+        "sha256": "2c9e01c8550d0fe9746de6165a03ad9b3f3e8e5baac6ad248703d916d5e071c7",
+        "size": 11142381856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-IQ4_XS_FLAT.gguf",
+      "blobId": "385cc95aab878172e077885fcbf70f69a1e0aae1",
+      "size": 16036348960,
+      "lfs": {
+        "sha256": "ff3934447b1a2685b1e9173b42cc270b87b429d5851ad50cec31fa1b9567bfbf",
+        "size": 16036348960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-IQ4_XS_STOCK.gguf",
+      "blobId": "8ec2316d27591089fe995152d7983a2daa70db2a",
+      "size": 15218429728,
+      "lfs": {
+        "sha256": "d555c3c40ac1f1bd2b5995be00571b9284d5ff320d48842d9f06399588fb1e5f",
+        "size": 15218429728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-Q4_K_M_STOCK.gguf",
+      "blobId": "20af00530eccc6d0e1a2f9fea2238dff67157e3e",
+      "size": 16935291680,
+      "lfs": {
+        "sha256": "dea64f7e03e9796fa41d16db8fc5fb6094d91ef1adde7ee2189df5cbde55a9da",
+        "size": 16935291680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-Q8_0-embd-bf16.gguf",
+      "blobId": "cce37e230afe02aff5dfdb3742c812b15cf9ff04",
+      "size": 30873737728,
+      "lfs": {
+        "sha256": "a065e1e77ae3b81a9e2f74e8632ba0ce222be64d202b7f0656c9d01a2aa8dd1f",
+        "size": 30873737728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "experiments/Muse-Glimmer-30B-Q8_0-out-bf16.gguf",
+      "blobId": "443ffab48f18532d541f1ca4f16653b14f50d7a7",
+      "size": 30873737728,
+      "lfs": {
+        "sha256": "bacad8c6534e3a3f62eb39f08708661848d83173b384f20079873fe41e343b5d",
+        "size": 30873737728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "imatrix/muse-glimmer.imatrix.gguf",
+      "blobId": "83e9284795d0b30923635a21e825fee6f4159bae",
+      "size": 13403200,
+      "lfs": {
+        "sha256": "eae2b1317b4412675b1b62e86e375a28f4930fd55e149f74f140f26bce0ab054",
+        "size": 13403200,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "layouts/Muse-Glimmer-30B-BF16.json",
+      "blobId": "e494480c5df8f5fbd40952a3355629cf6728c149",
+      "size": 26939
+    },
+    {
+      "rfilename": "layouts/Muse-Glimmer-30B-Q8_0-embd-bf16.json",
+      "blobId": "801f73b784898d5d7a2cde52cb7f596d03f9dc49",
+      "size": 26962
+    },
+    {
+      "rfilename": "layouts/Muse-Glimmer-30B-Q8_0-embd-out-bf16.json",
+      "blobId": "3dabb838d622c297386dd12bdb17ec1483a66d9a",
+      "size": 26966
+    },
+    {
+      "rfilename": "layouts/Muse-Glimmer-30B-Q8_0-out-bf16.json",
+      "blobId": "e8a56969ff9070302a6b0c76d2fe2a3b112cd133",
+      "size": 26961
+    },
+    {
+      "rfilename": "layouts/Muse-Glimmer-30B-Q8_0.json",
+      "blobId": "ac964ce0abbb0f6ccda61a644d8a8b45730cd60c",
+      "size": 26939
+    },
+    {
+      "rfilename": "layouts/dflash-Muse-Glimmer-30B-BF16.json",
+      "blobId": "7829ffa2a68bf82fc9a76ca7cbff64f7b95d1dfc",
+      "size": 2115
+    },
+    {
+      "rfilename": "layouts/mmproj-Muse-Glimmer-30B-BF16.json",
+      "blobId": "3d628d1ed29580b0880c4eb7d49e39b431b5caa4",
+      "size": 27505
+    },
+    {
+      "rfilename": "metrics/layouts-histogram.txt",
+      "blobId": "b433413eb429efe95efa48a9300107b7633740af",
+      "size": 542
+    },
+    {
+      "rfilename": "metrics/sizes.txt",
+      "blobId": "1d4f58fd60ec6d9107e4d4768ae8f22fbe92b1cd",
+      "size": 360
+    },
+    {
+      "rfilename": "mmproj-Muse-Glimmer-30B-BF16.gguf",
+      "blobId": "03ab4e865dff7191372936fbec3bdb578a5fb9d6",
+      "size": 3849173920,
+      "lfs": {
+        "sha256": "bae609fee174d153bf5fd1946083d667c77990b47b3a6f6cbd7e45f457becd2b",
+        "size": 3849173920,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-10T11:05:54.000Z",
+  "usedStorage": 583204995648
+}

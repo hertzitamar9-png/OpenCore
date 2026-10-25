@@ -1,0 +1,129 @@
+{
+  "_id": "6acccf6b5e4fc69acd19ff9b",
+  "id": "codacus/Qwen3.6-35B-A3B-MicroTurn-Duplex-LoRA",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "lora",
+    "llama.cpp",
+    "full-duplex",
+    "voice",
+    "micro-turn",
+    "qwen",
+    "text-generation",
+    "en",
+    "arxiv:2603.09180",
+    "base_model:Qwen/Qwen3.6-35B-A3B",
+    "base_model:adapter:Qwen/Qwen3.6-35B-A3B",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 552,
+  "likes": 59,
+  "modelId": "codacus/Qwen3.6-35B-A3B-MicroTurn-Duplex-LoRA",
+  "author": "codacus",
+  "sha": "f423b2991495a8cb88e3577d6d9515e37d651828",
+  "lastModified": "2026-10-12T20:13:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "Qwen/Qwen3.6-35B-A3B",
+    "base_model_relation": "adapter",
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "lora",
+      "gguf",
+      "llama.cpp",
+      "full-duplex",
+      "voice",
+      "micro-turn",
+      "qwen"
+    ]
+  },
+  "gguf": {
+    "total": 3833856,
+    "architecture": "qwen35moe",
+    "totalFileSize": 15339200
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "df42624d606252ae5ffb5cb6bef7c04e5cf93040",
+      "size": 1644
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "5064107841de24f01256166686426478879f7574",
+      "size": 9349
+    },
+    {
+      "rfilename": "dataset/README.md",
+      "blobId": "377275213af025d989ae2f9f49f10265bf741e0e",
+      "size": 10668
+    },
+    {
+      "rfilename": "dataset/calls_heldout.jsonl",
+      "blobId": "165d4385ec2318fedf1d99b9814ff5f2af95e1e2",
+      "size": 1631305
+    },
+    {
+      "rfilename": "dataset/calls_train.jsonl",
+      "blobId": "c1d1752956678162551f71755a3a621e397bb51b",
+      "size": 29437624,
+      "lfs": {
+        "sha256": "6da8c2279bd314f66fb97707d91daaf25b93d799259152348b00d3ad4d90944f",
+        "size": 29437624,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "dataset/dialogues_long.jsonl",
+      "blobId": "226881bfe42c2c3f49bb782b273e0cb5d710e221",
+      "size": 1096604
+    },
+    {
+      "rfilename": "dataset/dialogues_short.jsonl",
+      "blobId": "a8b9d754621779b896bcf6a4e5020398db98958e",
+      "size": 621036
+    },
+    {
+      "rfilename": "microturn-duplex-lora.gguf",
+      "blobId": "c60828bd1316a5a7390c3b4dbc13f68fe6a818de",
+      "size": 15339200,
+      "lfs": {
+        "sha256": "1d30f1397103de2361acdb608e33fd9ad6ea0ab37e686433c3deb8e9315c9371",
+        "size": 15339200,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "microturn_client.py",
+      "blobId": "9b25588ac0cb82bb3f9b569a3e0acef9a4f9dedd",
+      "size": 3444
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-12T12:15:39.000Z",
+  "usedStorage": 44776824
+}

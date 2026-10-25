@@ -1,0 +1,117 @@
+{
+  "_id": "69e87b9582c8a8c79540d98d",
+  "id": "emmazzz/PaddleOCR-VL-1.5-Q4_0-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "PaddleOCR",
+  "tags": [
+    "PaddleOCR",
+    "gguf",
+    "ERNIE4.5",
+    "PaddlePaddle",
+    "image-to-text",
+    "ocr",
+    "document-parse",
+    "layout",
+    "table",
+    "formula",
+    "chart",
+    "seal",
+    "spotting",
+    "llama-cpp",
+    "gguf-my-repo",
+    "image-text-to-text",
+    "en",
+    "zh",
+    "multilingual",
+    "base_model:PaddlePaddle/PaddleOCR-VL-1.5",
+    "base_model:quantized:PaddlePaddle/PaddleOCR-VL-1.5",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 19,
+  "likes": 0,
+  "modelId": "emmazzz/PaddleOCR-VL-1.5-Q4_0-GGUF",
+  "author": "emmazzz",
+  "sha": "f9e2cdaa86c856df0ac0d2c778369c08feecbcf9",
+  "lastModified": "2026-04-22T07:41:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "ERNIE4.5",
+      "PaddleOCR",
+      "PaddlePaddle",
+      "image-to-text",
+      "ocr",
+      "document-parse",
+      "layout",
+      "table",
+      "formula",
+      "chart",
+      "seal",
+      "spotting",
+      "llama-cpp",
+      "gguf-my-repo"
+    ],
+    "base_model": "PaddlePaddle/PaddleOCR-VL-1.5",
+    "language": [
+      "en",
+      "zh",
+      "multilingual"
+    ],
+    "library_name": "PaddleOCR"
+  },
+  "gguf": {
+    "total": 466654208,
+    "architecture": "paddleocr",
+    "context_length": 131072,
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 292310112
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "55d406d6c96d2b7623eb2e3ca8340b1115e98381",
+      "size": 1582
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "655f088e3b7c36f628790a20249df95c6889b7ee",
+      "size": 1962
+    },
+    {
+      "rfilename": "paddleocr-vl-1.5-q4_0.gguf",
+      "blobId": "b40af1ab83b38980a2816c4d5d752cce386708c2",
+      "size": 292310112,
+      "lfs": {
+        "sha256": "5ee46dea79ffc8b0f4a2eb03e541630ab80af0c080e6ece8ca5430c5bb545f2c",
+        "size": 292310112,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-04-22T07:41:09.000Z",
+  "usedStorage": 292310112
+}

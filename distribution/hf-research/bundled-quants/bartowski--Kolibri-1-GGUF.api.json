@@ -1,0 +1,685 @@
+{
+  "_id": "6ad40c741b890317895416a8",
+  "id": "bartowski/Kolibri-1-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "reasoning",
+    "moe",
+    "text-generation",
+    "de",
+    "en",
+    "base_model:Aleph-Alpha/Kolibri-1-BF16",
+    "base_model:quantized:Aleph-Alpha/Kolibri-1-BF16",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 4566,
+  "likes": 4,
+  "modelId": "bartowski/Kolibri-1-GGUF",
+  "author": "bartowski",
+  "sha": "ffd6001f205725f0c4af4ff93e33c04f0f8ad9f9",
+  "lastModified": "2026-10-18T03:32:00.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model": "Aleph-Alpha/Kolibri-1-BF16",
+    "language": [
+      "de",
+      "en"
+    ],
+    "base_model_relation": "quantized",
+    "license": "apache-2.0",
+    "tags": [
+      "reasoning",
+      "moe"
+    ]
+  },
+  "gguf": {
+    "total": 78103074560,
+    "architecture": "kolibri1",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/Kolibri-1-GGUF/Kolibri-1-imatrix.gguf",
+    "chat_template": "{%- set _sv_reasoning_effort = reasoning_effort | default(none) -%}\n{%- set _sv_thinking_disabled = false -%}\n{%- if _sv_reasoning_effort is not none -%}\n    {%- set _sv_thinking_disabled = _sv_reasoning_effort == 'none' -%}\n{%- elif enable_thinking is defined and enable_thinking is false -%}\n    {%- set _sv_thinking_disabled = true -%}\n{%- endif -%}\n{%- set _sv_no_reasoning_sentence = \"Reasoning is disabled. Proceed straight to answering according to the user's instructions.\" -%}\n{%- set _sv_low_reasoning_sentence = \"Reasoning effort is set to low. Think briefly through only the essential steps in the user's language, then proceed directly to the answer.\" -%}\n{%- set _sv_medium_reasoning_sentence = \"Reasoning effort is set to medium. Think through the task methodically in the user's language, check key assumptions, and provide a well-supported answer.\" -%}\n{%- set _sv_high_reasoning_sentence = \"Reasoning effort is set to high. Think carefully through the task in the user's language, validate key assumptions, consider plausible alternatives, and prioritize correctness and clarity.\" -%}\n{%- set _sv_reasoning_sentence = _sv_high_reasoning_sentence -%}\n{%- if _sv_thinking_disabled -%}\n    {%- set _sv_reasoning_sentence = _sv_no_reasoning_sentence -%}\n{%- elif _sv_reasoning_effort in ['minimal', 'low'] -%}\n    {%- set _sv_reasoning_sentence = _sv_low_reasoning_sentence -%}\n{%- elif _sv_reasoning_effort == 'medium' -%}\n    {%- set _sv_reasoning_sentence = _sv_medium_reasoning_sentence -%}\n{%- elif _sv_reasoning_effort in ['high', 'xhigh', 'max'] or _sv_reasoning_effort is none -%}\n    {%- set _sv_reasoning_sentence = _sv_high_reasoning_sentence -%}\n{%- endif -%}\n{%- set _sv_has_system = messages | length > 0 and messages[0].role == 'system' -%}\n{%- if tools or _sv_reasoning_sentence is not none or _sv_has_system %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if _sv_has_system %}\n        {{- messages[0].content }}\n    {%- endif %}\n    {%- if _sv_reasoning_sentence is not none %}\n        {%- if _sv_has_system %}{{- '\\n\\n' }}{%- endif %}\n        {{- '# Reasoning effort\\n\\n' + _sv_reasoning_sentence }}\n    {%- endif %}\n    {%- if tools %}\n        {%- if _sv_has_system or _sv_reasoning_sentence is not none %}{{- '\\n\\n' }}{%- endif %}\n        {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n        {%- for tool in tools %}\n            {{- \"\\n\" }}\n            {{- tool | tojson }}\n        {%- endfor %}\n        {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call>\" }}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content if message.content is string else '' %}\n        {%- set reasoning = none %}\n        {%- if message.reasoning is defined and message.reasoning is not none %}\n            {%- set reasoning = message.reasoning %}\n        {%- elif message.reasoning_content is defined and message.reasoning_content is not none %}\n            {#- Deprecated vLLM compatibility. Prefer the `reasoning` field. -#}\n            {%- set reasoning = message.reasoning_content %}\n        {%- elif content is string and '</think>' in content %}\n            {%- set reasoning = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n            {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n        {%- endif %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if (loop.index0 > ns.last_query_index) or (preserve_thinking is defined and preserve_thinking is true) %}\n            {{- '<think>\\n' }}\n            {%- if reasoning is not none and reasoning | trim %}\n                {{- reasoning.strip('\\n') }}\n            {%- endif %}\n            {{- '\\n</think>\\n\\n' }}\n        {%- endif %}\n        {{- content.lstrip('\\n') }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if _sv_thinking_disabled %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 19774226304
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7aeddc5c1f7b5462429b82b0291298b1aa573034",
+      "size": 4223
+    },
+    {
+      "rfilename": "Kolibri-1-IQ1_M.gguf",
+      "blobId": "4edc1b874b16222b64442aa313a9184d96a98f25",
+      "size": 19774226304,
+      "lfs": {
+        "sha256": "1feacdd3138ca9a150325bf9fd8ebf9fb455e63683b66e80736f4c7de450f852",
+        "size": 19774226304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ1_S.gguf",
+      "blobId": "5b61aafa5b5c46d06adc56cb4d20e889eaeb3892",
+      "size": 17611671424,
+      "lfs": {
+        "sha256": "d02077a2fa20c2a9ce9e952b17fd56c090bc2d5d2408a3d599bcd6c78f7554a7",
+        "size": 17611671424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ2_M.gguf",
+      "blobId": "ee5a44ed9580a77819249698d5739297518ace65",
+      "size": 28075691904,
+      "lfs": {
+        "sha256": "9a76a8639cd0a4a4a1ce81ff33a207df6efc2a878b5bf82e843bd2b75d1b7686",
+        "size": 28075691904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ2_S.gguf",
+      "blobId": "d84ccd45df05abb1baf0e59ac6e856b4ee6cf259",
+      "size": 25633247104,
+      "lfs": {
+        "sha256": "1e11161082587f55d9c83cde6b40df81a4f25d44865733c931c17ee49d5bfb43",
+        "size": 25633247104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ2_XS.gguf",
+      "blobId": "32ba06345fd91cfee528136b0a5802d42ca4932e",
+      "size": 24339996544,
+      "lfs": {
+        "sha256": "828fe8ce38d5f6d9bd029b4d1604e0edfc93b51ea0b05f9d86f27640e1a7dc17",
+        "size": 24339996544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ2_XXS.gguf",
+      "blobId": "c0ba486aadd7cff0432c4c1a1af3219dd4c20476",
+      "size": 22774013824,
+      "lfs": {
+        "sha256": "0b87e5bbea90a3f7c9fedc4938f88f84144407cb2634fc1176f7d02d05876654",
+        "size": 22774013824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ3_M.gguf",
+      "blobId": "44344975e47ecb1c198f09bc566e6500f3d2816e",
+      "size": 40683794304,
+      "lfs": {
+        "sha256": "1cd834c9c4e642366799be8b3e9668f6d1f8bdfb5baabc3afc32e18758aae8fd",
+        "size": 40683794304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ3_XS.gguf",
+      "blobId": "7fe7da4c48d502d23ee1c1faf027656632de7b26",
+      "size": 35499732864,
+      "lfs": {
+        "sha256": "d67b025d5ad3d9a0d5c95e700499fdea4210f69da62480adcc3c9b325ead1241",
+        "size": 35499732864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ3_XXS.gguf",
+      "blobId": "72c8a2d226d9c048c9015463e8d110a3b99ba8c6",
+      "size": 33653829504,
+      "lfs": {
+        "sha256": "8e27d377c4c53ba68741d0d92f7a1fb8cbe2fd278ae11c209df94b72999d834d",
+        "size": 33653829504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ4_NL.gguf",
+      "blobId": "1623054419a47bcff454c9071349dcd5b3f1e987",
+      "size": 49759219584,
+      "lfs": {
+        "sha256": "c6014c2d129598305d44f1a1472069ea1d2c3c28b3401db938a0bad047da7fe3",
+        "size": 49759219584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-IQ4_XS.gguf",
+      "blobId": "ecec69b26d522c5acff2444c9764ddc5092cbb37",
+      "size": 43632914304,
+      "lfs": {
+        "sha256": "869c1e4af4e630cee81c4206994d4532d091bcad2d6392c384deb4bd849b88c6",
+        "size": 43632914304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q2_K.gguf",
+      "blobId": "e771e906b97a2afd48b1cd4a4d99f33b5224d2d9",
+      "size": 29918769024,
+      "lfs": {
+        "sha256": "6c055121b0dcfa24110e1856b834e09165adfc5b290b0c58bfddd6e2abd63a3e",
+        "size": 29918769024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q3_K_L.gguf",
+      "blobId": "8be0da2eb46078d67f1a50dd92d2a46a705f1d9f",
+      "size": 39810854784,
+      "lfs": {
+        "sha256": "35e588472fd3d675a8159405b2160eac94b48b2b7caf685fc35d2ebfa2264357",
+        "size": 39810854784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q3_K_M.gguf",
+      "blobId": "1b288bd77ec2ca762a0899d29e5724bd82a387f3",
+      "size": 37620641664,
+      "lfs": {
+        "sha256": "1746833c4b6ae88ff6b1d0724b311bf438d9addfc80005d89cb324ed29da80c3",
+        "size": 37620641664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q3_K_S.gguf",
+      "blobId": "cecf93869a86ecbfb52bd1cfc8b63a49f315e8e3",
+      "size": 35945541504,
+      "lfs": {
+        "sha256": "000e94f4406cfc8f9a7d044605cfe331d0d9f4d036360639bfa0eda29aece939",
+        "size": 35945541504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q4_0.gguf",
+      "blobId": "ff64b247415aa2ee8c183c3ba8681fb533133f4c",
+      "size": 44610281344,
+      "lfs": {
+        "sha256": "7f15bc628c9264a06ef958359510e532c45717814dae09c30ccf15244100b13c",
+        "size": 44610281344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q4_1.gguf",
+      "blobId": "324a9d773c2a184d7456e6b1903c9a59701412e2",
+      "size": 49240481664,
+      "lfs": {
+        "sha256": "e29749cff693da03f7b8b50734b40e7678cc690e9268e7b0c4a63c48da3b6e83",
+        "size": 49240481664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q4_K_L.gguf",
+      "blobId": "792c6a50bbf35b70bc6cf859e31abf0b19beb0a7",
+      "size": 53514432384,
+      "lfs": {
+        "sha256": "3c28683aa5b1e0859b87c617fe2ec701b220c024eb076d54001bbd52545d209b",
+        "size": 53514432384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q4_K_M.gguf",
+      "blobId": "e83c3738a5efe4f82f1543b3bbce9d9de199d674",
+      "size": 49759219584,
+      "lfs": {
+        "sha256": "2f2670a78b5c21bef65ef286791285d8e0ad79aef5f0904a3784cb7eeadd5f3e",
+        "size": 49759219584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q4_K_S.gguf",
+      "blobId": "a9fc75e1f8422cfcb46f5393a5be1ef5b42178c6",
+      "size": 46401154944,
+      "lfs": {
+        "sha256": "e437b30724b7227986e407bb88c514f9c2e7bdc1f437a962dfd0cfea7fa247a7",
+        "size": 46401154944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q5_K_M/Kolibri-1-Q5_K_M-00001-of-00002.gguf",
+      "blobId": "4aed44cfcf2212b8aed3ba83b33b0881215fa047",
+      "size": 39899568832,
+      "lfs": {
+        "sha256": "13bfe90137f0cd5bead9e52abb22660402c99aaf88979357e761f4626b464a38",
+        "size": 39899568832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q5_K_M/Kolibri-1-Q5_K_M-00002-of-00002.gguf",
+      "blobId": "c23be8c0883ffaaf2aa44e4269ef4c41e1257433",
+      "size": 20397839744,
+      "lfs": {
+        "sha256": "5ec14bd166da217a2c8efce028c20282a6c9eaef8ac233e79ec51347dfc029c4",
+        "size": 20397839744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q5_K_S/Kolibri-1-Q5_K_S-00001-of-00002.gguf",
+      "blobId": "6939e916affaef2ce08ee3e8f7978f958ff06264",
+      "size": 39711331456,
+      "lfs": {
+        "sha256": "d18a8a204654060e00837b0db70029e2b77bb631bdc3dbd7e8541cd9c99bdb6f",
+        "size": 39711331456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q5_K_S/Kolibri-1-Q5_K_S-00002-of-00002.gguf",
+      "blobId": "03105091c0819bf4fa1b3aa94d27bf91546e273c",
+      "size": 16068025280,
+      "lfs": {
+        "sha256": "d7cf8374418f37c7b5475edc4ff88afffaa554ecff9b827d90ff9973054070ab",
+        "size": 16068025280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q6_K/Kolibri-1-Q6_K-00001-of-00002.gguf",
+      "blobId": "a90a0ce0a552ea8ce47e5719cb839dd130d604c8",
+      "size": 39830529504,
+      "lfs": {
+        "sha256": "a93a65b4084ff35a522e4e12f79430c07fb4fb48637f76e38007ab2d8764cd9b",
+        "size": 39830529504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q6_K/Kolibri-1-Q6_K-00002-of-00002.gguf",
+      "blobId": "045ecadb6504f09d559c194f251e4bbc1c4a3a97",
+      "size": 29164817024,
+      "lfs": {
+        "sha256": "07cc9bec02fb70b9585d5d634f5e4e9f62a6043a00061c4f1ba1d446c80a9475",
+        "size": 29164817024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q6_K_L/Kolibri-1-Q6_K_L-00001-of-00002.gguf",
+      "blobId": "6f4094f0f6a1955255f6fb2ed9642ee36dfe220a",
+      "size": 39766505312,
+      "lfs": {
+        "sha256": "6510bc61370746a80caff292efb6197af406296316e43df914d3ff28fc6be495",
+        "size": 39766505312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q6_K_L/Kolibri-1-Q6_K_L-00002-of-00002.gguf",
+      "blobId": "2603c8e94330c4cff43cfdd68a948836d98d20b3",
+      "size": 32763853024,
+      "lfs": {
+        "sha256": "743ce63125f39c6675e808d812b05679dc0221d3cb7cb88ddba2b5e490c7525a",
+        "size": 32763853024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q6_K_S/Kolibri-1-Q6_K_S-00001-of-00002.gguf",
+      "blobId": "091747b1513467c00bd3fbd4c0d53e4c02d5773f",
+      "size": 39836680896,
+      "lfs": {
+        "sha256": "fb21fd0bd6bf759b96589875c303105f532ccdc08b30480a0b3204e162421efc",
+        "size": 39836680896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q6_K_S/Kolibri-1-Q6_K_S-00002-of-00002.gguf",
+      "blobId": "b3457b3b9b2b581d237eda8572f2d78e73ab07d6",
+      "size": 25989344640,
+      "lfs": {
+        "sha256": "84f18ea04841a36eb8143cefaab806c9b4d6af2bc44ae302fef70d68d1fd2307",
+        "size": 25989344640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q8_0/Kolibri-1-Q8_0-00001-of-00003.gguf",
+      "blobId": "a5ca4def1a70c50394d3f23f49cdf0790f98e391",
+      "size": 39733405216,
+      "lfs": {
+        "sha256": "777277e766a4931d698440636155141d3522accf217b72aca2c378d5b759c88e",
+        "size": 39733405216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q8_0/Kolibri-1-Q8_0-00002-of-00003.gguf",
+      "blobId": "9047234715c234b67560b75c8b39327fdee9a918",
+      "size": 39568431904,
+      "lfs": {
+        "sha256": "a0277d7d4bcad36860b365980401abb07b53e4affaff5c060f28db7ea9638703",
+        "size": 39568431904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-Q8_0/Kolibri-1-Q8_0-00003-of-00003.gguf",
+      "blobId": "cf2e146db2ea78fe54182c82944dfed4c6104af9",
+      "size": 3833556576,
+      "lfs": {
+        "sha256": "014c40744d14f8da83638db7a4436bfca2264c6f47f8d2c015c561c4007461a1",
+        "size": 3833556576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-bf16/Kolibri-1-bf16-00001-of-00004.gguf",
+      "blobId": "8b7f00e04e9f5007863401cb017b91ef48b9da54",
+      "size": 39589132224,
+      "lfs": {
+        "sha256": "038ba31e046e3ebbbff951a7e7494d8afc9e2c8e11038736b76887e4c94f51f6",
+        "size": 39589132224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-bf16/Kolibri-1-bf16-00002-of-00004.gguf",
+      "blobId": "54a001b7d61b72236459b5d790a632d31fcebebd",
+      "size": 39292034048,
+      "lfs": {
+        "sha256": "7a3287619d538e8ace9af40884c50269c8e86437d09cfa09385595228694078b",
+        "size": 39292034048,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-bf16/Kolibri-1-bf16-00003-of-00004.gguf",
+      "blobId": "a40de0ec6233de93c3a79f2a28b82a6d51357d3b",
+      "size": 39143876864,
+      "lfs": {
+        "sha256": "202b08c759deac237cc35cd419ce26129692247fd3a3da762cbc53f2e07f2cce",
+        "size": 39143876864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-bf16/Kolibri-1-bf16-00004-of-00004.gguf",
+      "blobId": "3ba3f7357ab193d1979a869d6a7053e7cbe46355",
+      "size": 38285390720,
+      "lfs": {
+        "sha256": "9ccb2c59a0a595d6eb6a40a273120c6c699b3e8ac5bfede0222a97d72669c6dc",
+        "size": 38285390720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Kolibri-1-calibration-v6.txt",
+      "blobId": "7c9907b29ae5a440478318f6d3804591d0db8c2d",
+      "size": 1126353
+    },
+    {
+      "rfilename": "Kolibri-1-imatrix.gguf",
+      "blobId": "1beeaf80c0c00ca47d7be8295448877c849d532f",
+      "size": 874303840,
+      "lfs": {
+        "sha256": "760ac2fe42954f24499ab8476071e4bc090cc52c82bf1245e4732bca144e43ab",
+        "size": 874303840,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "62b0e8f7e7e5790f019d61df26abbc87a0d124a0",
+      "size": 18526
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ1_M.layout.json",
+      "blobId": "bd40eabca5b269de5251523c83fd12d2e0747af7",
+      "size": 2176
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ1_M.tensor-types.txt",
+      "blobId": "06d5f802ac4fa28868de22dd35967fcda0b7da45",
+      "size": 18029
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ1_S.layout.json",
+      "blobId": "64f0a2e641f0a9602a1352168028b28f877578d2",
+      "size": 2161
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ1_S.tensor-types.txt",
+      "blobId": "11a522f183e27a564c8d92dd4b3804e17f95ac7c",
+      "size": 18177
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_M.layout.json",
+      "blobId": "5fca77a5c119d80d778aef527d6a60302d31049d",
+      "size": 2082
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_M.tensor-types.txt",
+      "blobId": "4e488272f4541545b29c55c0de5c305a91fc8a36",
+      "size": 17926
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_S.layout.json",
+      "blobId": "fd3154da571641c8e3ad60d529d750a638f51462",
+      "size": 2104
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_S.tensor-types.txt",
+      "blobId": "21ec27b760da8a64a6b6877062bac9ecea67a94d",
+      "size": 18073
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_XS.layout.json",
+      "blobId": "2b2bbb7a39ab662437af2d50a17b29fc26a8182f",
+      "size": 2107
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_XS.tensor-types.txt",
+      "blobId": "fb98aa2f3b6a20399051313d2a3bac79221e8924",
+      "size": 18049
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_XXS.layout.json",
+      "blobId": "c532dc84d103c0f92757fc7e8b257345632cc449",
+      "size": 2170
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ2_XXS.tensor-types.txt",
+      "blobId": "ba25b24dc2fb0de88c1f7bb9123464d9a2f770e9",
+      "size": 18238
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ3_M.layout.json",
+      "blobId": "1638c8583ebf4d566b9daeff939c7b1ce24a8c94",
+      "size": 2056
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ3_M.tensor-types.txt",
+      "blobId": "2099a5f36f49767d7224aca948444f82a7f182b4",
+      "size": 17840
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ3_XS.layout.json",
+      "blobId": "f95a83e7af9bfb4d67bb5e030c689f7c24535b66",
+      "size": 2062
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ3_XS.tensor-types.txt",
+      "blobId": "6af43e19a105fe1834bef616eda442c6bb9941d2",
+      "size": 17900
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ3_XXS.layout.json",
+      "blobId": "7df5d59a4783fcc615a3a5b398dd766d51f465ea",
+      "size": 2077
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ3_XXS.tensor-types.txt",
+      "blobId": "60465088a2369403628e0fa2d99b166b82daebb8",
+      "size": 18166
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ4_NL.layout.json",
+      "blobId": "306a769a40cbb89ed5ee5526fea038949c8e181b",
+      "size": 2027
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ4_NL.tensor-types.txt",
+      "blobId": "ac593ba75cf0b81de909e0f33d40540e7ca0681a",
+      "size": 17990
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ4_XS.layout.json",
+      "blobId": "63147c9a5eda70e4db39701d41037840e89986dd",
+      "size": 2044
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-IQ4_XS.tensor-types.txt",
+      "blobId": "07ac7773eb0c0b4779df448dd57816ccd34e2281",
+      "size": 18036
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q2_K.layout.json",
+      "blobId": "997ba978c1aed604cab8fbef18e262a6f74fab5d",
+      "size": 2029
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q2_K.tensor-types.txt",
+      "blobId": "fea335893ed5c2aee70b153ab829d8bcd34dddd8",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q3_K_L.layout.json",
+      "blobId": "b0c60e62f27f2a13d872b9513503b419f2af6421",
+      "size": 2035
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q3_K_L.tensor-types.txt",
+      "blobId": "d0cb6bd61a41133207aebeb566e28ba65b568b14",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q3_K_M.layout.json",
+      "blobId": "3831a419cde8f0a62234a4fa67ee2c27e1b68ca8",
+      "size": 2020
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q3_K_M.tensor-types.txt",
+      "blobId": "93b4ebbd38bc78d86133b1d2f98970e4903110f2",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q3_K_S.layout.json",
+      "blobId": "01d0f2a4a28f51cb3725d77cadeaa54740fa052b",
+      "size": 2001
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q3_K_S.tensor-types.txt",
+      "blobId": "fa42ef45aa1ef4474d01f319d0b709bc477af188",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q4_K_L.layout.json",
+      "blobId": "15f79bb1eadfd8857af70be05f49ed965d0b541a",
+      "size": 2034
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q4_K_L.tensor-types.txt",
+      "blobId": "47296998e397b3d9234fb6c8083dd43ce8180a8b",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q4_K_M.layout.json",
+      "blobId": "5142740bd49a6313419ccda4b896ef3ec45da8de",
+      "size": 2018
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q4_K_M.tensor-types.txt",
+      "blobId": "5bcd6aa78eb4e6b5c6572cd921f2be7317bad576",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q4_K_S.layout.json",
+      "blobId": "a6db62ba8d149152ae3089bbcdb438f1b2a81c7a",
+      "size": 2017
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q4_K_S.tensor-types.txt",
+      "blobId": "1ff47393e6639df36c1180b3557a05e3db86b640",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q5_K_M.layout.json",
+      "blobId": "f55958d207604052aa2581eed2c7e025de220fea",
+      "size": 1985
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q5_K_M.tensor-types.txt",
+      "blobId": "8e5bd1d6ccc777a0c5edf09e1c84942588817a1a",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q5_K_S.layout.json",
+      "blobId": "0dd0458d0764054a1789d451ce9018dfb6db80ba",
+      "size": 2000
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q5_K_S.tensor-types.txt",
+      "blobId": "2fc867cad732154c16deb7af3f84c0a002eeef66",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q6_K.layout.json",
+      "blobId": "5abf54a6b9e8839166576d86dd20abb486472363",
+      "size": 1976
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q6_K.tensor-types.txt",
+      "blobId": "67ec613b6f43a62887c4042b5a5ca21b5605110f",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q6_K_L.layout.json",
+      "blobId": "a9cfe9787d36bbf4b9bae24657041345b86ee5b3",
+      "size": 1982
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q6_K_L.tensor-types.txt",
+      "blobId": "c6a84be29b9f04f2805386205065a8d0e6bc4e54",
+      "size": 17748
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q6_K_S.layout.json",
+      "blobId": "86a8a440df3a592b7ac3b80e4a4fb42539cbbba3",
+      "size": 1979
+    },
+    {
+      "rfilename": "layouts/Kolibri-1-Q6_K_S.tensor-types.txt",
+      "blobId": "74acaf8547364797249f2a9acd2d9c037bd8c1e2",
+      "size": 17748
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-18T00:01:56.000Z",
+  "usedStorage": 1292008341664
+}

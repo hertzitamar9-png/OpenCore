@@ -1,0 +1,321 @@
+{
+  "_id": "680f7b70e445a4be6af508b2",
+  "id": "bartowski/Qwen_Qwen3-8B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:Qwen/Qwen3-8B",
+    "base_model:quantized:Qwen/Qwen3-8B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 35132,
+  "likes": 41,
+  "modelId": "bartowski/Qwen_Qwen3-8B-GGUF",
+  "author": "bartowski",
+  "sha": "0b69f75b7472688e6808490aa2b85efdb81b5ce7",
+  "lastModified": "2025-04-28T16:20:38.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "license": "apache-2.0",
+    "base_model": "Qwen/Qwen3-8B",
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 8190735360,
+    "architecture": "qwen3",
+    "context_length": 32768,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- set tool_start = \"<tool_response>\" %}\n    {%- set tool_start_length = tool_start|length %}\n    {%- set start_of_message = message.content[:tool_start_length] %}\n    {%- set tool_end = \"</tool_response>\" %}\n    {%- set tool_end_length = tool_end|length %}\n    {%- set start_pos = (message.content|length) - tool_end_length %}\n    {%- if start_pos < 0 %}\n        {%- set start_pos = 0 %}\n    {%- endif %}\n    {%- set end_of_message = message.content[start_pos:] %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(start_of_message == tool_start and end_of_message == tool_end) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set content = message.content %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is not none %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in message.content %}\n                {%- set content = (message.content.split('</think>')|last).lstrip('\\n') %}\n        {%- set reasoning_content = (message.content.split('</think>')|first).rstrip('\\n') %}\n        {%- set reasoning_content = (reasoning_content.split('<think>')|last).lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 16388044064
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "998937cae264e580085ca10bede5c8007fc6b356",
+      "size": 3053
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-IQ2_M.gguf",
+      "blobId": "929eb3b9493e7c14097f09a962e73a98525df6f9",
+      "size": 3051914784,
+      "lfs": {
+        "sha256": "38833d850e00f75bac26c0c848f2fde9100a5a21c18aae89cfd8611efca6194b",
+        "size": 3051914784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-IQ3_M.gguf",
+      "blobId": "fd4a38c4eeb999d86a98409ac5ef719a29bc305b",
+      "size": 3896620576,
+      "lfs": {
+        "sha256": "de1982c971c26a256dc2ac6d04b04f1cd20ea35e0d3ec3263320756dea66bee3",
+        "size": 3896620576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-IQ3_XS.gguf",
+      "blobId": "0c4335dff71b250987f589961818846dae85f3f1",
+      "size": 3626874400,
+      "lfs": {
+        "sha256": "15d9f1cfa8be0785df44376669a5b45c3ae75eda916fc553c44923cfb5c3eef2",
+        "size": 3626874400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-IQ3_XXS.gguf",
+      "blobId": "b4f6ceb999c83f1c9bfd11f756ea14348f6d3071",
+      "size": 3369633312,
+      "lfs": {
+        "sha256": "11a2ba2a7970f621c03e05bce111df2cb7c04880ffec2cdd03445d7b5e8b8514",
+        "size": 3369633312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-IQ4_NL.gguf",
+      "blobId": "16ffb189f8d27cb8726af4dedb7f3caae91889a6",
+      "size": 4793624096,
+      "lfs": {
+        "sha256": "57d2f29c36469e05cf7801704b92d42dfc24531a9f19e92b2a2b4d0c4d9b7545",
+        "size": 4793624096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-IQ4_XS.gguf",
+      "blobId": "7808d1248f9aef85074cd1540e0a433cf591f6f4",
+      "size": 4561839648,
+      "lfs": {
+        "sha256": "0f69fe02ca9764c93bcc12ac96509bee53488114d6a7fe47764f80990c28751a",
+        "size": 4561839648,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q2_K.gguf",
+      "blobId": "18a47bbee33f3eddfe611cf118eb44f2ac3c2854",
+      "size": 3281733152,
+      "lfs": {
+        "sha256": "e89189c258704b98b6b0b5bdc1f1b168f523a706b2d9d3e9b5aefbf94ac5de32",
+        "size": 3281733152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q2_K_L.gguf",
+      "blobId": "68b6f33c63f04b6d768968604b6423739d86ead5",
+      "size": 3889477152,
+      "lfs": {
+        "sha256": "79f2c07dc0d7be0c6db8192beb670cff82d173c38c05f5a9ec4c0104e26736fd",
+        "size": 3889477152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q3_K_L.gguf",
+      "blobId": "035c5b1ac5b0e3d5fd5c4bc1b6f3a4337f9c0e31",
+      "size": 4431394336,
+      "lfs": {
+        "sha256": "d34d3a93be237268df8437109a7e461a9c43136106d391fba21d7b3db7794a4d",
+        "size": 4431394336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q3_K_M.gguf",
+      "blobId": "d70706f1df0a59018fb65d5fd5e7b57c5ed68059",
+      "size": 4124161568,
+      "lfs": {
+        "sha256": "c2c61b55d39ec6fc43f84b4cbbed4505fde386d4e03ed005087bfd8c69c502c3",
+        "size": 4124161568,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q3_K_S.gguf",
+      "blobId": "9ba3d024e0e6a8726dfbb09726ac26131cbf3ea9",
+      "size": 3769611808,
+      "lfs": {
+        "sha256": "d03b4542b0b11ac88fceaac135d946c528e3f0469384926f6e94755315174410",
+        "size": 3769611808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q3_K_XL.gguf",
+      "blobId": "e57fd56c3e5cd0a8b5ac7c875ecf9235e64756d0",
+      "size": 4975932960,
+      "lfs": {
+        "sha256": "3b0454730e97c9567bc9f60d1ca5125a5e99750b05f81978744d76f3416d74bc",
+        "size": 4975932960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q4_0.gguf",
+      "blobId": "6e5a8bc0fe41c0deebc7dac13666af6805fe6b28",
+      "size": 4787332640,
+      "lfs": {
+        "sha256": "c9bd6e5597ad3a70ef5b9a0acb995f739e545c5f16cbdf52b1c78835172b893c",
+        "size": 4787332640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q4_1.gguf",
+      "blobId": "9291abdc5cd650543f6c7ad780d90d2a27a78155",
+      "size": 5247755808,
+      "lfs": {
+        "sha256": "ebe71a958467349036e2c27be057473c17bb5fbd08700614ccb3aed8fb77880b",
+        "size": 5247755808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q4_K_L.gguf",
+      "blobId": "a1fcdca8d6cd84904bd01568191a6252f7048019",
+      "size": 5489669664,
+      "lfs": {
+        "sha256": "3e59f21097a8102a681b72ea466b7c2389be92605844e5302ec3a9f20841f4f7",
+        "size": 5489669664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q4_K_M.gguf",
+      "blobId": "3ed7b3f0c5367f485369de354755cf7d9d254e88",
+      "size": 5027784224,
+      "lfs": {
+        "sha256": "54fffa050078e984116639c83dfb64b5aa6d4cd474e018b076777c632bbccccd",
+        "size": 5027784224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q4_K_S.gguf",
+      "blobId": "9311f4d15fdaaf50ec2ccc0af783f2ea22d54f69",
+      "size": 4802012704,
+      "lfs": {
+        "sha256": "3672483a71bb93e2a18c1c1b8ca39e0b7018ce877ca8aff3df6539184a042fb0",
+        "size": 4802012704,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q5_K_L.gguf",
+      "blobId": "796758c3d0f2df164337da0b48d1a71e7a31d930",
+      "size": 6235207200,
+      "lfs": {
+        "sha256": "0dcf4d30b6c92cf66d87cf1abea4e4a8b82aba3fa327e9a05e3c28152a12afee",
+        "size": 6235207200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q5_K_M.gguf",
+      "blobId": "e60b767587ae5a4d04f45fd4a0c881f059a71d50",
+      "size": 5851112992,
+      "lfs": {
+        "sha256": "fa45032e10b515a10374426bee3a41d5340aa78b67f0bed503469479a9772d9b",
+        "size": 5851112992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q5_K_S.gguf",
+      "blobId": "864cf544926d6b474b8693a09dc41377a39b8267",
+      "size": 5720761888,
+      "lfs": {
+        "sha256": "5ce0cb0736182baac640aaced416deb59b0a6a775712de1ec97002788291d00d",
+        "size": 5720761888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q6_K.gguf",
+      "blobId": "07f4ec26562503ac7673b78617690316b799407b",
+      "size": 6725899808,
+      "lfs": {
+        "sha256": "69a45d3c366bab1736b201fdb21eb9d58160999a0f330a79d2c096f50de8985d",
+        "size": 6725899808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q6_K_L.gguf",
+      "blobId": "ed1bbfa4c8065b177d26bc8b9d81656006e1c2df",
+      "size": 7027340832,
+      "lfs": {
+        "sha256": "f2fdbe5817a1f7afb0207e2f0a6f336670a62dd5bd5090dc7d890edfda533208",
+        "size": 7027340832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-Q8_0.gguf",
+      "blobId": "e198b45c8d9e946a0b30ee88ade1723e0b05f84b",
+      "size": 8709518880,
+      "lfs": {
+        "sha256": "edbd7ae01df991a2d4061e61451ad3d6829d8ca19f7cc846f7177499ac280c33",
+        "size": 8709518880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B-bf16.gguf",
+      "blobId": "b730d0478b0bdfce2b5c8de466f9e651515a8774",
+      "size": 16388044064,
+      "lfs": {
+        "sha256": "3eaf8da180bdfef9b16b22c4a9460872e8dcaaf315ee7e29413c9f8baa5fe6b8",
+        "size": 16388044064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-8B.imatrix",
+      "blobId": "a90eb49ec1059bd9091ae38b172c9d8a9f745bc5",
+      "size": 5316782,
+      "lfs": {
+        "sha256": "3cd37e7ed514b9ddc1eab833ca1ec21c841efc30ba788310389b4464c75653c5",
+        "size": 5316782,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "dfeadce71607e0a469c9253e5c462e0164b6545c",
+      "size": 12847
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-04-28T12:58:24.000Z",
+  "usedStorage": 225968147118
+}

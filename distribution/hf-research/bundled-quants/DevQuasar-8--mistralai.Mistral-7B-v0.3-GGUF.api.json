@@ -1,0 +1,177 @@
+{
+  "_id": "67b3c867852790e65d206fb4",
+  "id": "DevQuasar-8/mistralai.Mistral-7B-v0.3-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:mistralai/Mistral-7B-v0.3",
+    "base_model:quantized:mistralai/Mistral-7B-v0.3",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 150,
+  "likes": 0,
+  "modelId": "DevQuasar-8/mistralai.Mistral-7B-v0.3-GGUF",
+  "author": "DevQuasar-8",
+  "sha": "f2f226ff87c50dbae6d6dfe48d6d8c9415d4e611",
+  "lastModified": "2025-02-18T00:26:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "mistralai/Mistral-7B-v0.3"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 7248023552,
+    "architecture": "llama",
+    "context_length": 32768,
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 14497337024
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "1f7168b9e59b9b27fbe7d429a26eae2d469e646f",
+      "size": 2324
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f54a3e5af049c136f49c1d644b45eba7c940e2d9",
+      "size": 832
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q2_K.gguf",
+      "blobId": "253b509dcad2fb6caa067a58ee869c6967ba2f72",
+      "size": 2722877120,
+      "lfs": {
+        "sha256": "7635ec3ca7caf42f1b1d8b3d43066327176787d855c7390d35d36fdac122f235",
+        "size": 2722877120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q3_K_L.gguf",
+      "blobId": "34aa0162caa28c91edd439e16d982b5d4fad490f",
+      "size": 3825979072,
+      "lfs": {
+        "sha256": "729b6c7ed658cf495756d2a108737afe137fa3cbd5bc171ee43fd4312fa7253a",
+        "size": 3825979072,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q3_K_M.gguf",
+      "blobId": "5f3819d086e22d1129620f95a0297cb980be8d07",
+      "size": 3522940608,
+      "lfs": {
+        "sha256": "19d1a99738e6044cad2caf6da21f8eb4a0c091652abf165c21f2c7bda5e79f17",
+        "size": 3522940608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q3_K_S.gguf",
+      "blobId": "96a751698e069f27e0a2c2d88d3d7f951654b1ae",
+      "size": 3168521920,
+      "lfs": {
+        "sha256": "749e44f5e560dd7da12aa0e1e0fd974139096c4d22b0229b72edef9bff16a7fe",
+        "size": 3168521920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q4_K_M.gguf",
+      "blobId": "9f0ff634f919f375921c78f21e68b20eb0012ed4",
+      "size": 4372811456,
+      "lfs": {
+        "sha256": "64c49fc01cb1d8eb8d5cbb2aac5b8d1d611084ed760da2c3f434d372e983a66d",
+        "size": 4372811456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q4_K_S.gguf",
+      "blobId": "19c94961ee98fe709e4289d4d2e965fdf99b75c0",
+      "size": 4144746176,
+      "lfs": {
+        "sha256": "8cca539f1da0a5578e065c4d08142c0b6905fbf786e72c8d86c460330353b75e",
+        "size": 4144746176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q5_K_M.gguf",
+      "blobId": "5b591ec27d8873907bcacca444c3996b1acac8da",
+      "size": 5136174784,
+      "lfs": {
+        "sha256": "564e0bfd235e7b388ce2f4d383211fcc9343be696dad12af47231987460da04b",
+        "size": 5136174784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q5_K_S.gguf",
+      "blobId": "45ee7197c5b803edf4116182d668b51934928107",
+      "size": 5002481344,
+      "lfs": {
+        "sha256": "0c35c8d6763c7fb07f2d97d1600ad7da63fb171a59fe8f63cf942be63014c2f1",
+        "size": 5002481344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q6_K.gguf",
+      "blobId": "d329bcc832bd763c59235a7b2fa38393fd209e71",
+      "size": 5947248320,
+      "lfs": {
+        "sha256": "2bf3cb45658e034ba21a3e6be5a8d6fcb1d9762a5340db393de35e8f7e0fddbe",
+        "size": 5947248320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.Q8_0.gguf",
+      "blobId": "9bbe26f0cdb9d686bb5e80515148e9e90b740195",
+      "size": 7702564544,
+      "lfs": {
+        "sha256": "2b8e15a10ca5d5d56ba111c175acea001143e20acf86f198c6b9c04e5fde9705",
+        "size": 7702564544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mistralai.Mistral-7B-v0.3.f16.gguf",
+      "blobId": "4e80b86b86d57e4636d1ad87b937336d08bfcbe8",
+      "size": 14497337024,
+      "lfs": {
+        "sha256": "2994f2cfa2c614e39fb5287860c623861f0df037e56e5a7f30f258e430844e90",
+        "size": 14497337024,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-02-17T23:38:15.000Z",
+  "usedStorage": 60043682368
+}

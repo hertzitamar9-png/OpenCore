@@ -1,0 +1,263 @@
+{
+  "_id": "6863ecaf31a5f3803df90264",
+  "id": "mistralai/Voxtral-Small-24B-2507",
+  "private": false,
+  "pipeline_tag": "audio-text-to-text",
+  "library_name": "vllm",
+  "tags": [
+    "vllm",
+    "safetensors",
+    "voxtral",
+    "audio-text-to-text",
+    "en",
+    "fr",
+    "de",
+    "es",
+    "it",
+    "pt",
+    "nl",
+    "hi",
+    "arxiv:2507.13264",
+    "base_model:mistralai/Mistral-Small-24B-Base-2501",
+    "base_model:finetune:mistralai/Mistral-Small-24B-Base-2501",
+    "license:apache-2.0",
+    "eval-results",
+    "region:us"
+  ],
+  "downloads": 17245,
+  "likes": 553,
+  "modelId": "mistralai/Voxtral-Small-24B-2507",
+  "author": "mistralai",
+  "sha": "da5b42409f279fdd92febee0511a6c32828569c1",
+  "lastModified": "2025-12-20T23:34:49.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "VoxtralForConditionalGeneration"
+    ],
+    "model_type": "voxtral"
+  },
+  "cardData": {
+    "library_name": "vllm",
+    "language": [
+      "en",
+      "fr",
+      "de",
+      "es",
+      "it",
+      "pt",
+      "nl",
+      "hi"
+    ],
+    "license": "apache-2.0",
+    "inference": false,
+    "base_model": [
+      "mistralai/Mistral-Small-24B-Base-2501"
+    ],
+    "extra_gated_description": "If you want to learn more about how we process your personal data, please read our <a href=\"https://mistral.ai/terms/\">Privacy Policy</a>.",
+    "tags": [
+      "vllm"
+    ],
+    "pipeline_tag": "audio-text-to-text"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "bf3a5dd00f6fe46cbbb534006568cb6f6b7f6c82",
+      "size": 1630
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "8f4c5760f599e7199deee1dc49a49e521079d731",
+      "size": 19077
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "b27326f98dbf64071ad31db24edc6ed59449cd0f",
+      "size": 1362
+    },
+    {
+      "rfilename": "consolidated.safetensors",
+      "blobId": "11cc972e5eef876657d5e55932a5da3ecf52830a",
+      "size": 48519877672,
+      "lfs": {
+        "sha256": "421cd5988a614ac9ecf63eaf0db3572a36a6318dbb3c57cba24d5ef4d4abea7e",
+        "size": 48519877672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "252746de668bd0ce42a1169348c3fbcafead709b",
+      "size": 108
+    },
+    {
+      "rfilename": "model-00001-of-00011.safetensors",
+      "blobId": "b0b5d350eaa539e6f2113f1f540bba2f6ef298e2",
+      "size": 4947893992,
+      "lfs": {
+        "sha256": "9e4c3fde4ef4a1141b4b06f2125c63bb2032f71a7985fafb4b3ae8243ca17be2",
+        "size": 4947893992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00011.safetensors",
+      "blobId": "a4969f7325f979d97d63ff844ebec2fcc5868f6c",
+      "size": 4781593336,
+      "lfs": {
+        "sha256": "6998429899fc08e533b7ef0bb65a66d0c744a490c31b5210ea5f61e62e8fb997",
+        "size": 4781593336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00011.safetensors",
+      "blobId": "246f196df889f5afc146253fe31da56a78ed8176",
+      "size": 4781593344,
+      "lfs": {
+        "sha256": "b692e60c5d9acfd5b6e7fd2c0337349a421bb687c8cef14627469f744efa83df",
+        "size": 4781593344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00011.safetensors",
+      "blobId": "1c05698f675637107182cc68aba4b92446ab25b4",
+      "size": 4886472248,
+      "lfs": {
+        "sha256": "0c34b0b04a59f62c3d1f320803f421c45d51dbf917f4e3f90eda957640ae85da",
+        "size": 4886472248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00011.safetensors",
+      "blobId": "6a2afdbeb4a84aff99e5be5f92e835946de699c1",
+      "size": 4781593376,
+      "lfs": {
+        "sha256": "bcea8514dd1330b2478deeff5b48b6788c1e6fbd1c6d5034faeeee5c066b6288",
+        "size": 4781593376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00011.safetensors",
+      "blobId": "057837ed7115ee5bc8a53c083e2d86b581198355",
+      "size": 4781593368,
+      "lfs": {
+        "sha256": "3e415b6a5cc6f266acdd8aeba526288abd8345ebaa4022ab0e26ea30eaaffa91",
+        "size": 4781593368,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00011.safetensors",
+      "blobId": "01416d0d1cebd102b4bc32bb96e41644df9533d0",
+      "size": 4886472248,
+      "lfs": {
+        "sha256": "720bbe6314e0b69b97fd13e07ffdef4953dc5aec3b4b91c15a9c1d40d7b1c7fc",
+        "size": 4886472248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00011.safetensors",
+      "blobId": "35ec56a357852be567d65c13e6c1129534258578",
+      "size": 4781593376,
+      "lfs": {
+        "sha256": "85c590b7d4d6c843dc083b3048f5b00cda7ee7ddfeb18a3732ff2db65926a6eb",
+        "size": 4781593376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00011.safetensors",
+      "blobId": "0dc17a4ab74c8d995b6df4fda104d1b7487ab37a",
+      "size": 4781593368,
+      "lfs": {
+        "sha256": "fc973532e7f8faea778ed22aac9867b84e1d4bb4ad9c9a50744fc1eeeb6c9115",
+        "size": 4781593368,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00011.safetensors",
+      "blobId": "3eb5470bbe4f37331e9e098e09f1a98f19af42e7",
+      "size": 3670112232,
+      "lfs": {
+        "sha256": "365913969c7a5c93cc2d9e19b6f9d4128e675db8a1941c2436f0a2a2c64870e2",
+        "size": 3670112232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00011.safetensors",
+      "blobId": "d8edbddec4559a34bc9e6f6d871bb190cf107087",
+      "size": 1447035256,
+      "lfs": {
+        "sha256": "2515d18911999b503000115208d6c5ae46777223227c18a170cbff3095aaf697",
+        "size": 1447035256,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "278fc5279d7632ed981e211e62f73f476452de29",
+      "size": 76870
+    },
+    {
+      "rfilename": "params.json",
+      "blobId": "09539e9a3b092003398c1dadea16a10c058461c6",
+      "size": 732
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "a9f84a0f08fad60979c019eeb13dbfe70403adcd",
+      "size": 357
+    },
+    {
+      "rfilename": "tekken.json",
+      "blobId": "dc72fbe4ba7df5ec37bec9671b68727fb5e1f15b",
+      "size": 14894206,
+      "lfs": {
+        "sha256": "4aaf3836c2a5332f029ce85a7a62255c966f47b6797ef81dedd0ade9c862e4a8",
+        "size": 14894206,
+        "pointerSize": 133
+      }
+    }
+  ],
+  "spaces": [
+    "elmresearchcenter/open_universal_arabic_asr_leaderboard",
+    "msalhab96/open_universal_arabic_asr_leaderboard_all",
+    "MohamedRashad/Voxtral",
+    "RyeAI/danish-asr-leaderboard",
+    "yangzhang33/GreekMMLU-Leaderboard",
+    "VincentGOURBIN/MeetingNotes-Voxtral-Analysis",
+    "opedromartins/open_asr_leaderboard_ptbr",
+    "ravinder024/testspace-for-voice-to-text",
+    "kalkhorayef/open_universal_arabic_asr_leaderboard",
+    "khan100/Text_to_Image",
+    "Baktabek/rag-onboarding",
+    "23f3003322/llm-quiz-analysis",
+    "paulalbrecht/voxtral",
+    "Samuelndum/PruebaVoxtralIA",
+    "shmr90661/haven-ai-backend",
+    "passagereptile455/Voxtral-Arabic-Test",
+    "artemgrigoryev/gosim_hackaton",
+    "eustlb/audio-text-to-text-models-on-the-hub",
+    "kadirnar/closed-source-asr-leaderboard",
+    "kadirnar/arabic-asr-benchmarks"
+  ],
+  "createdAt": "2025-07-01T14:11:59.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 1920000,
+      "BF16": 24259880960
+    },
+    "total": 24261800960
+  },
+  "usedStorage": 97062318022
+}

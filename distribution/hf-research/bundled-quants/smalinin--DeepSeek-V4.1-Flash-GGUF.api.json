@@ -1,0 +1,678 @@
+{
+  "_id": "6aa53b5bb8bb46f300b28f68",
+  "id": "smalinin/DeepSeek-V4.1-Flash-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "deepseek",
+    "deepseek-v4.1",
+    "mixture-of-experts",
+    "llama.cpp",
+    "vision",
+    "image-text-to-text",
+    "base_model:deepseek-ai/DeepSeek-V4.1-Flash",
+    "base_model:quantized:deepseek-ai/DeepSeek-V4.1-Flash",
+    "license:mit",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 17922,
+  "likes": 4,
+  "modelId": "smalinin/DeepSeek-V4.1-Flash-GGUF",
+  "author": "smalinin",
+  "sha": "d5e573c6d0a3fb3aa8c445f8b6e67639c86e5820",
+  "lastModified": "2026-10-23T01:57:00.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "base_model": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "pipeline_tag": "image-text-to-text",
+    "inference": false,
+    "tags": [
+      "gguf",
+      "deepseek",
+      "deepseek-v4.1",
+      "mixture-of-experts",
+      "llama.cpp",
+      "vision"
+    ],
+    "quantized_by": "smalinin"
+  },
+  "gguf": {
+    "total": 748494684784,
+    "architecture": "deepseek41",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "/home/sergei/_my_deepseek41/calibration/results/imatrix-stage5-full/imatrix-dsv41-262144.gguf",
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n  {%- set add_generation_prompt = false -%}\n{%- endif -%}\n{%- if not thinking is defined -%}\n  {%- if enable_thinking is defined -%}\n    {%- set thinking = enable_thinking -%}\n  {%- else -%}\n    {%- set thinking = true -%}\n  {%- endif -%}\n{%- endif -%}\n{%- if not drop_thinking is defined -%}\n  {%- set drop_thinking = true -%}\n{%- endif -%}\n{%- set dsml_token = '\uff5cDSML\uff5c' -%}\n{#- tool_calls_block_name: V4.1 -#}\n{%- set thinking_start_token = '<think>' -%}\n{%- set thinking_end_token = '</think>' -%}\n{%- set system_token = '<\uff5cSystem\uff5c>' -%}\n{%- set reasoning_effort_text = '' -%}\n{%- if thinking -%}\n  {%- if not reasoning_effort is defined or reasoning_effort is none -%}\n    {%- set reasoning_budget = 75 -%}\n  {%- elif reasoning_effort is integer and reasoning_effort >= 1 and reasoning_effort <= 100 -%}\n    {%- set reasoning_budget = reasoning_effort -%}\n  {%- elif reasoning_effort == 'low' -%}\n    {%- set reasoning_budget = 50 -%}\n  {%- elif reasoning_effort == 'high' -%}\n    {%- set reasoning_budget = 75 -%}\n  {%- elif reasoning_effort == 'max' -%}\n    {%- set reasoning_budget = 100 -%}\n  {%- else -%}\n    {{- raise_exception('DeepSeek-V4.1 reasoning_effort must be low, high, max, or an integer within [1, 100]') -}}\n  {%- endif -%}\n  {%- set reasoning_effort_text = 'Reasoning Effort: ' + (reasoning_budget | string) + ' (range 1-100, the higher the value, the more thorough the reasoning)\\n\\n' -%}\n{%- endif -%}\n{%- set response_format_template = '## Response Format:\\n\\nYou MUST strictly adhere to the following schema to reply:\\n' -%}\n{%- set tools_header = '## Tools\\n\\nYou have access to a set of tools to help answer the user\\'s question. You can invoke tools by writing a \"<' + dsml_token + ' calls>\" block like the following:\\n\\n<' + dsml_token + ' calls>\\n<' + dsml_token + ' invoke name=\"$TOOL_NAME\">\\n<' + dsml_token + ' parameter name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE</' + dsml_token + ' parameter>\\n...\\n</' + dsml_token + ' invoke>\\n<' + dsml_token + ' invoke name=\"$TOOL_NAME2\">\\n...\\n</' + dsml_token + ' invoke>\\n</' + dsml_token + ' calls>\\n\\nString parameters should be specified as is and set `string=\"true\"`. For all other types (numbers, booleans, arrays, objects), pass the value in JSON format and set `string=\"false\"`.\\n\\nIf thinking_mode is enabled (triggered by ' + thinking_start_token + '), you MUST output your complete reasoning inside ' + thinking_start_token + '...' + thinking_end_token + ' BEFORE any tool calls or final response.\\n\\nOtherwise, output directly after ' + thinking_end_token + ' with tool calls or final response.\\n\\n### Available Tool Schemas\\n\\n' -%}\n{%- set tools_footer = '\\nYou MUST strictly follow the above defined tool name and parameter schemas to invoke tool calls.\\n' -%}\n{%- set has_tools = tools is defined and tools -%}\n{%- set first_is_system = messages and messages[0]['role'] == 'system' -%}\n{{- bos_token -}}\n{%- if thinking or first_is_system or has_tools -%}\n  {{- system_token -}}\n  {{- reasoning_effort_text -}}\n  {%- if first_is_system -%}\n    {{- messages[0]['content'] or '' -}}\n  {%- endif -%}\n  {%- if has_tools -%}\n    {%- if first_is_system and messages[0]['content'] -%}\n      {{- '\\n\\n' -}}\n    {%- endif -%}\n    {{- tools_header -}}\n    {%- for tool in tools -%}\n      {%- if tool['type'] == 'function' -%}\n        {{- tool['function'] | tojson -}}\n        {{- '\\n' -}}\n      {%- endif -%}\n    {%- endfor -%}\n    {{- tools_footer -}}\n  {%- endif -%}\n{%- endif -%}\n{%- if response_format is defined -%}\n  {{- '\\n\\n' + response_format_template + (response_format | tojson) -}}\n{%- endif -%}\n{%- set last_user_idx = namespace(value=-1) -%}\n{%- set state = namespace(in_user=false, has_tool_results=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' or (message['role'] == 'system' and loop.index0 > 0) -%}\n    {%- set last_user_idx.value = loop.index0 -%}\n  {%- endif -%}\n  {%- if message['role'] == 'tool' -%}\n    {%- set state.has_tool_results = true -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'system' and loop.index0 == 0 -%}\n  {%- elif message['role'] == 'system' -%}\n    {%- set state.in_user = false -%}\n    {{- system_token + (message['content'] or '') -}}\n  {%- elif message['role'] == 'latest_reminder' -%}\n    {{- '<\uff5clatest_reminder\uff5c>' + (message['content'] or '') -}}\n  {%- elif message['role'] == 'user' or message['role'] == 'developer' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- message['content'] or '' -}}\n  {%- elif message['role'] == 'tool' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- '<tool_result>' + (message['content'] or '') + '</tool_result>' -}}\n  {%- elif message['role'] == 'assistant' -%}\n    {%- set state.in_user = false -%}\n    {{- '<\uff5cAssistant\uff5c>' -}}\n    {%- set is_after_last_user = loop.index0 > last_user_idx.value -%}\n    {%- set keep_reasoning = thinking and ((not drop_thinking) or has_tools or is_after_last_user or state.has_tool_results) -%}\n    {%- if keep_reasoning -%}\n      {{- thinking_start_token -}}\n      {%- if message['reasoning_content'] is defined and message['reasoning_content'] -%}\n        {{- message['reasoning_content'] -}}\n      {%- endif -%}\n      {{- thinking_end_token -}}\n    {%- else -%}\n      {{- thinking_end_token -}}\n    {%- endif -%}\n    {%- if message['content'] is defined and message['content'] -%}\n      {{- message['content'] -}}\n    {%- endif -%}\n    {%- if message['tool_calls'] -%}\n      {{- '\\n\\n<' + dsml_token + ' calls>\\n' -}}\n      {%- for tool in message['tool_calls'] -%}\n        {%- set func = tool['function'] -%}\n        {%- set tool_name = func['name'] -%}\n        {%- if tool['namespace'] is defined and tool['namespace'] -%}\n          {%- set tool_name = tool['namespace'] + '::' + tool_name -%}\n        {%- elif func['namespace'] is defined and func['namespace'] -%}\n          {%- set tool_name = func['namespace'] + '::' + tool_name -%}\n        {%- endif -%}\n        {{- '<' + dsml_token + ' invoke name=\"' + tool_name + '\">\\n' -}}\n        {%- set args = func['arguments'] -%}\n        {%- if args is string -%}\n          {%- set args = args | from_json -%}\n        {%- endif -%}\n        {%- for key, val in args.items() -%}\n          {%- if val is string -%}\n            {{- '<' + dsml_token + ' parameter name=\"' + key + '\" string=\"true\">' + val + '</' + dsml_token + ' parameter>\\n' -}}\n          {%- else -%}\n            {{- '<' + dsml_token + ' parameter name=\"' + key + '\" string=\"false\">' + (val | tojson) + '</' + dsml_token + ' parameter>\\n' -}}\n          {%- endif -%}\n        {%- endfor -%}\n        {%- if not args -%}\n          {{- '\\n' -}}\n        {%- endif -%}\n        {{- '</' + dsml_token + ' invoke>\\n' -}}\n      {%- endfor -%}\n      {{- '</' + dsml_token + ' calls>' -}}\n    {%- endif -%}\n    {{- eos_token -}}\n  {%- else -%}\n    {{- raise_exception('Unsupported DeepSeek-V4.1 message role: ' + (message['role'] | string)) -}}\n  {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n  {{- '<\uff5cAssistant\uff5c>' -}}\n  {%- if thinking -%}\n    {{- thinking_start_token -}}\n  {%- else -%}\n    {{- thinking_end_token -}}\n  {%- endif -%}\n{%- endif -%}\n",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 371438234464
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0446a317239caf1e44b0d58db0fae7c1abbe5ab4",
+      "size": 12127
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-DSpark-AUTO.gguf",
+      "blobId": "95b31900340c9836bb3ad2a2e328daceb3f5e599",
+      "size": 7972959936,
+      "lfs": {
+        "sha256": "9438de8accbc27d7a2e089ace18bb515cb5cfdee491c21ff3d17f36d9c0a7648",
+        "size": 7972959936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00001-of-00010.gguf",
+      "blobId": "e28026b1d04520a6413e642a42505a37ba59d4cb",
+      "size": 24105979584,
+      "lfs": {
+        "sha256": "c912193fd6de55e8b3d896de963ada7d45739f429cf82a40c3616384b6330db7",
+        "size": 24105979584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00002-of-00010.gguf",
+      "blobId": "24ead83b1cc7761d6ea2b0f8e1da4bdd33ed8476",
+      "size": 24418715136,
+      "lfs": {
+        "sha256": "815b76056b35ebed1b1e9107995052ac0f6b6278d81c7a43237165e5c2548de5",
+        "size": 24418715136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00003-of-00010.gguf",
+      "blobId": "a852ccd1dbb35f47a84cf7b5be684db2a98926c5",
+      "size": 24100210176,
+      "lfs": {
+        "sha256": "210dab7fe3260bd2082da12f9e11fe6d216e760cc7aafe88f0441d0dc1ab7b89",
+        "size": 24100210176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00004-of-00010.gguf",
+      "blobId": "60590cc850ab4b15c187d42f2e3a8023d5e0a09b",
+      "size": 24100210176,
+      "lfs": {
+        "sha256": "6f9c6bd4e37767b182ea87e1e754c0bafc17fba76027157c4d6d833a05f5cd94",
+        "size": 24100210176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00005-of-00010.gguf",
+      "blobId": "8b599dc3ef87b9f1b0995765d4b27cebfc2d1651",
+      "size": 24418715136,
+      "lfs": {
+        "sha256": "86350d9f322d20a515af05b9d1d83033d6c3b65d23cbcd5876cb61289817f1ee",
+        "size": 24418715136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00006-of-00010.gguf",
+      "blobId": "3a7c28229ab2f6800e5511d24ff9c55d48bf690b",
+      "size": 24100210176,
+      "lfs": {
+        "sha256": "871ec01e7d94c339082bebf9d6d96e9d9f764e0a3e0a83d905d445aae6326fca",
+        "size": 24100210176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00007-of-00010.gguf",
+      "blobId": "f0c706915881ffc9aaceeeb7aed5f3a27368eec4",
+      "size": 7644119616,
+      "lfs": {
+        "sha256": "ec71db6a294b6ac54bfea4c9ab5b59fcfaae99b4718617c45db16899f2334be1",
+        "size": 7644119616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00008-of-00010.gguf",
+      "blobId": "c91275440c9969fd1543e37c0b8d7a200ded4742",
+      "size": 104449677888,
+      "lfs": {
+        "sha256": "2108d613e776feab154427a121c838edb6c5b92cef57d8afe625f6652dee1c7f",
+        "size": 104449677888,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00009-of-00010.gguf",
+      "blobId": "9a3cf1bc7166e1195c0ac5418e54edcf6aaa10a5",
+      "size": 104452537696,
+      "lfs": {
+        "sha256": "676b0898ed046e1ab5aab8901fd4e43affdbc074ccf24bf060b56e320f0054d5",
+        "size": 104452537696,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS_GU-Q2_K_Down-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ2_XXS_GU-Q2_K_Down-00010-of-00010.gguf",
+      "blobId": "f81ce9a06d62a40a7e6568cff4a4d0d0b201f1f1",
+      "size": 9647858880,
+      "lfs": {
+        "sha256": "79c65ef98731555e8e8f032b71c168c468ccd01c69313675dee139cf3731be0d",
+        "size": 9647858880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00001-of-00010.gguf",
+      "blobId": "dde87ac1063721fbdd97cc37cc3d243d9589b62d",
+      "size": 36350725824,
+      "lfs": {
+        "sha256": "31f1baf7125bdf558975e140278acacb488485d0c58ba99a7dc34aa90ed29669",
+        "size": 36350725824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00002-of-00010.gguf",
+      "blobId": "0eb69b35c835b5428bbfc4a9bde65ea1ed1f3a00",
+      "size": 34433926656,
+      "lfs": {
+        "sha256": "c07349e6bc1487266fd3fb5ad88b4d3f79f7520881d83cb2abe203a4bc0e3d74",
+        "size": 34433926656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00003-of-00010.gguf",
+      "blobId": "b6408ae6217f2d1b69ee4a4bf96dde2e6d5ce988",
+      "size": 34221590016,
+      "lfs": {
+        "sha256": "6ccce5b74a34a4c0c3749862646fc86361a3ee801428588ba609a07ac087df69",
+        "size": 34221590016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00004-of-00010.gguf",
+      "blobId": "2157dffaa96a0d7bf1f54dc53f6e71ffb9d33c9c",
+      "size": 34221590016,
+      "lfs": {
+        "sha256": "5b01dbd2b4a46e9672cdf36a82549da4beaaf98f5b31a0ae892ba95b3129d34f",
+        "size": 34221590016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00005-of-00010.gguf",
+      "blobId": "282960143cb37a87910c5684b8b8dcb79857fb64",
+      "size": 34433926656,
+      "lfs": {
+        "sha256": "70f7870ad3cd94bcba86d0f17aa194930efe147fe5f04aae94871211e9432da6",
+        "size": 34433926656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00006-of-00010.gguf",
+      "blobId": "84536f9bd9f6679d30c968518837927d51b99f99",
+      "size": 35495609856,
+      "lfs": {
+        "sha256": "e06ab6b0410106214f67e2bf936636707ba8894e8aedea262efd644bdbfdbbc6",
+        "size": 35495609856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00007-of-00010.gguf",
+      "blobId": "32e42de1e71f63353e1cd78ecb6306920a326b68",
+      "size": 11678515776,
+      "lfs": {
+        "sha256": "4f1d3817928efb130e7cf3a45838a8b4ba07c0de9eaa72c5dee801ca1f6da05e",
+        "size": 11678515776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00008-of-00010.gguf",
+      "blobId": "c91275440c9969fd1543e37c0b8d7a200ded4742",
+      "size": 104449677888,
+      "lfs": {
+        "sha256": "2108d613e776feab154427a121c838edb6c5b92cef57d8afe625f6652dee1c7f",
+        "size": 104449677888,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00009-of-00010.gguf",
+      "blobId": "9a3cf1bc7166e1195c0ac5418e54edcf6aaa10a5",
+      "size": 104452537696,
+      "lfs": {
+        "sha256": "676b0898ed046e1ab5aab8901fd4e43affdbc074ccf24bf060b56e320f0054d5",
+        "size": 104452537696,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "IQ3_XS-Q8/DeepSeek-V4.1-Flash-EngramQ8-IQ3_XS-00010-of-00010.gguf",
+      "blobId": "54f04bd3e541a6ce6680338e83fafed08f1dbdaf",
+      "size": 4285795520,
+      "lfs": {
+        "sha256": "48827054cf9b96b281e0bb3661c8594ac84c8003a3bca5490c50787dcdab2ce8",
+        "size": 4285795520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00001-of-00010.gguf",
+      "blobId": "aa9dc8ac9931b06bf2da78de6bdfe0c512fafb2d",
+      "size": 45728927072,
+      "lfs": {
+        "sha256": "191236bf254e8980d82b177c2c7774c608daa379286e36fe4dfc0ecc99764db2",
+        "size": 45728927072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00002-of-00010.gguf",
+      "blobId": "9dcdf0f7c76088e7f807d0862cd1900e8fe772ef",
+      "size": 45723158016,
+      "lfs": {
+        "sha256": "d2ee7129c88315d68afea03c974663bfc52f175e1c031502a38cca0867c1fb9d",
+        "size": 45723158016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00003-of-00010.gguf",
+      "blobId": "faed1558a9fe5eccc429383d4a14fb0d14276ade",
+      "size": 45723158016,
+      "lfs": {
+        "sha256": "bd99ef408948abb83ec75fdba0ca3f7e77d633e87aababefd0ae97a4d6355a5a",
+        "size": 45723158016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00004-of-00010.gguf",
+      "blobId": "f876669960cd7fcd9a005dac047acd0c96986799",
+      "size": 45723158016,
+      "lfs": {
+        "sha256": "496ff13fcefbbe08353a7c5347a59a8c57d1cfc8b17134e156fc2eccee34c518",
+        "size": 45723158016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00005-of-00010.gguf",
+      "blobId": "50c3bbe46c5dd2cff9ae3468719af9601fa8fe3f",
+      "size": 45723158016,
+      "lfs": {
+        "sha256": "d8a068de5d63ffb02b27d2afa8cd8d3dd0753e67e7e992413cb6fcb7f8f7cbfa",
+        "size": 45723158016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00006-of-00010.gguf",
+      "blobId": "d5ef2766b4c9307011f92f0cbb0f2bb4b30fcc9b",
+      "size": 45723158016,
+      "lfs": {
+        "sha256": "fb2a077c38488e517ce2509e437a73239e04afa218e386d01553b5bf54f356c3",
+        "size": 45723158016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00007-of-00010.gguf",
+      "blobId": "95f5aed5296f7a7eb750064eccabbed9fb85faa7",
+      "size": 14438892096,
+      "lfs": {
+        "sha256": "81628ad6b161426feca6e8eaf994afa464594b56fa8061c7c5c0065a2e000d69",
+        "size": 14438892096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00008-of-00010.gguf",
+      "blobId": "e052d8dde622b64a121191df9fffabab7ee544bd",
+      "size": 104449677888,
+      "lfs": {
+        "sha256": "dc05657987ace747fabdf6c9c9b498fd46253329c78e7e795533b1885c292330",
+        "size": 104449677888,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00009-of-00010.gguf",
+      "blobId": "d9d5af9f4f0817d889c5629f6e1c8d3fbc791c3c",
+      "size": 104452537696,
+      "lfs": {
+        "sha256": "f8fe6989ba5956981e1f896167b495b343ce184c24bfdff9eec981c8c541da9d",
+        "size": 104452537696,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "MXFP4/DeepSeek-V4.1-Flash-MXFP4-00010-of-00010.gguf",
+      "blobId": "afbfd434f4d195c83abd407dc4ac9b0dd9f0cf0d",
+      "size": 10268402880,
+      "lfs": {
+        "sha256": "f7f00c58e282623f08e43544dc31581f0e03a527bd05330054bb6bc2cfce384b",
+        "size": 10268402880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00001-of-00010.gguf",
+      "blobId": "fc0a6d5aa100c3666144f48dc53e379325bf373c",
+      "size": 31006920384,
+      "lfs": {
+        "sha256": "8126b49dfcfde02cb3db24b6f98d56b031f0a34eaca2509fc7b2b9d362cf0ac8",
+        "size": 31006920384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00002-of-00010.gguf",
+      "blobId": "9fc0d0c7529ac8905da3daef9315057076ebd2bf",
+      "size": 31461213696,
+      "lfs": {
+        "sha256": "22bb293aee509a348ce32a739e006fa41f2348c6bcfafa3be76a3ee079eadf96",
+        "size": 31461213696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00003-of-00010.gguf",
+      "blobId": "aeee8ab001e48c140ba69a0ba572eaf11e71bc78",
+      "size": 31001150976,
+      "lfs": {
+        "sha256": "db894848b4f14d42c39e18faa907c737cd4850f2fcb9deff9d5ebd86f580aaf7",
+        "size": 31001150976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00004-of-00010.gguf",
+      "blobId": "d44332cef0d048b18b9638b370be85332b7bd0ff",
+      "size": 31001150976,
+      "lfs": {
+        "sha256": "655a3400f2c092d6e3c11b8b18bf319b29563e59b960337115266574321953e3",
+        "size": 31001150976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00005-of-00010.gguf",
+      "blobId": "600fcfc788bf5c155b907628a417780ea2e582f9",
+      "size": 31461213696,
+      "lfs": {
+        "sha256": "4b9378c6819d1130517e8719026b34e5257f1f73bd1d50cf6f30243982100bac",
+        "size": 31461213696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00006-of-00010.gguf",
+      "blobId": "99d8bb320ef09685497cf4ee0ddb70e8770d8459",
+      "size": 31001150976,
+      "lfs": {
+        "sha256": "04f161084d82032c65247c02e6169784a757be7db9e068b0baba6833125b6bb8",
+        "size": 31001150976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00007-of-00010.gguf",
+      "blobId": "7e9ad76f9c272d0d46569a1c66e9b8a91c190789",
+      "size": 9838264896,
+      "lfs": {
+        "sha256": "b1b1bf3cfbbc7388ce49b5ced69c42a13c7c5c5d3d609ac86902897a08d3c88a",
+        "size": 9838264896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00008-of-00010.gguf",
+      "blobId": "a462563063450e8985cd6493ab61d854f166a9ce",
+      "size": 67585085760,
+      "lfs": {
+        "sha256": "fae7f35123ae3557034a541507bb9fc24fb62c2e16ff8441c32e8e0477743d5d",
+        "size": 67585085760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00009-of-00010.gguf",
+      "blobId": "8d1d619a1976a73da865df8021fb17295b904436",
+      "size": 67586936224,
+      "lfs": {
+        "sha256": "781fd69e9dd17c09676865830523a2d077a97544d6a004429aab95d2570f8534",
+        "size": 67586936224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K-Q5/DeepSeek-V4.1-Flash-EngramQ5-Q2_K-00010-of-00010.gguf",
+      "blobId": "747b7d8c2fee2dcc4daff1162d9dbb323cc95c55",
+      "size": 3438927040,
+      "lfs": {
+        "sha256": "fa5affb1f971cd6e7effad5684b73780472b486a46330cd7c5776f87c38fea97",
+        "size": 3438927040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00001-of-00010.gguf",
+      "blobId": "fc0a6d5aa100c3666144f48dc53e379325bf373c",
+      "size": 31006920384,
+      "lfs": {
+        "sha256": "8126b49dfcfde02cb3db24b6f98d56b031f0a34eaca2509fc7b2b9d362cf0ac8",
+        "size": 31006920384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00002-of-00010.gguf",
+      "blobId": "9fc0d0c7529ac8905da3daef9315057076ebd2bf",
+      "size": 31461213696,
+      "lfs": {
+        "sha256": "22bb293aee509a348ce32a739e006fa41f2348c6bcfafa3be76a3ee079eadf96",
+        "size": 31461213696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00003-of-00010.gguf",
+      "blobId": "aeee8ab001e48c140ba69a0ba572eaf11e71bc78",
+      "size": 31001150976,
+      "lfs": {
+        "sha256": "db894848b4f14d42c39e18faa907c737cd4850f2fcb9deff9d5ebd86f580aaf7",
+        "size": 31001150976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00004-of-00010.gguf",
+      "blobId": "d44332cef0d048b18b9638b370be85332b7bd0ff",
+      "size": 31001150976,
+      "lfs": {
+        "sha256": "655a3400f2c092d6e3c11b8b18bf319b29563e59b960337115266574321953e3",
+        "size": 31001150976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00005-of-00010.gguf",
+      "blobId": "600fcfc788bf5c155b907628a417780ea2e582f9",
+      "size": 31461213696,
+      "lfs": {
+        "sha256": "4b9378c6819d1130517e8719026b34e5257f1f73bd1d50cf6f30243982100bac",
+        "size": 31461213696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00006-of-00010.gguf",
+      "blobId": "99d8bb320ef09685497cf4ee0ddb70e8770d8459",
+      "size": 31001150976,
+      "lfs": {
+        "sha256": "04f161084d82032c65247c02e6169784a757be7db9e068b0baba6833125b6bb8",
+        "size": 31001150976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00007-of-00010.gguf",
+      "blobId": "7e9ad76f9c272d0d46569a1c66e9b8a91c190789",
+      "size": 9838264896,
+      "lfs": {
+        "sha256": "b1b1bf3cfbbc7388ce49b5ced69c42a13c7c5c5d3d609ac86902897a08d3c88a",
+        "size": 9838264896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00008-of-00010.gguf",
+      "blobId": "c91275440c9969fd1543e37c0b8d7a200ded4742",
+      "size": 104449677888,
+      "lfs": {
+        "sha256": "2108d613e776feab154427a121c838edb6c5b92cef57d8afe625f6652dee1c7f",
+        "size": 104449677888,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00009-of-00010.gguf",
+      "blobId": "9a3cf1bc7166e1195c0ac5418e54edcf6aaa10a5",
+      "size": 104452537696,
+      "lfs": {
+        "sha256": "676b0898ed046e1ab5aab8901fd4e43affdbc074ccf24bf060b56e320f0054d5",
+        "size": 104452537696,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "Q2_K_Protected-Q8/DeepSeek-V4.1-Flash-EngramQ8-Q2_K_Protected-00010-of-00010.gguf",
+      "blobId": "6ded9a904c13a60e7437c39fe10d8999571cfb73",
+      "size": 7716605120,
+      "lfs": {
+        "sha256": "fbfa660c01dc4e568114839e5bee868abf1af8634bcde2bc2bc2a9d40f0bfcca",
+        "size": 7716605120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c79804e42c132c6ed7a50bbb0d61619a70433d5e",
+      "size": 21764
+    },
+    {
+      "rfilename": "deepseek-ai-DeepSeek-V4.1.jinja",
+      "blobId": "3d94fb9c7939b139c4332b402af34093467ef54b",
+      "size": 7498
+    },
+    {
+      "rfilename": "imatrix-dsv41-262144.gguf",
+      "blobId": "eb36d60ed5143d342d4b175b441e5961cfce2228",
+      "size": 789154336,
+      "lfs": {
+        "sha256": "76728418287bb5af88cb31eb91eab6125a2986426096c63f9f576b5d0918cd21",
+        "size": 789154336,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-DeepSeek-V4.1-Flash-BF16.gguf",
+      "blobId": "554abefc88b84b5f2215bfc4d9cedfe9db84732c",
+      "size": 971003936,
+      "lfs": {
+        "sha256": "3b2c0fc0485c64fde0e923a1291497331fb0e0fbd8c2282e4a0ff3b61d560f3d",
+        "size": 971003936,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "pelic_q4.png",
+      "blobId": "fa062fef8c359a1a1ed9818baf5ae83487dd23c7",
+      "size": 31159
+    },
+    {
+      "rfilename": "pelican_iq2_xxs_q8.png",
+      "blobId": "5a9cc90683185a56221bb54490c909e28df9101b",
+      "size": 139054,
+      "lfs": {
+        "sha256": "44d6d46a46d53464daad172a33a3e5af2aef5f2bd6903d74c359fb0ed9338d4e",
+        "size": 139054,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "pelican_iq3_xs_q8.png",
+      "blobId": "bee99ac4db846f0c8cef463f1ea3e6ac872285a0",
+      "size": 240053,
+      "lfs": {
+        "sha256": "7c2c4c5ff8b9245dcead48e1542cefc70e971e8929ecd744c17e828254e8626d",
+        "size": 240053,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "pelican_mxfp4.png",
+      "blobId": "f7deb9cfe3f2f1b5aa8502b2eb162dbb845a8d57",
+      "size": 97235
+    },
+    {
+      "rfilename": "pelican_q2_q5.png",
+      "blobId": "30aaed1af034009618a33e3410cc1401974c9cbe",
+      "size": 62862
+    },
+    {
+      "rfilename": "wdp.png",
+      "blobId": "8d9628d80c1e9acaa73d00deb5e1f658910fc18a",
+      "size": 179674,
+      "lfs": {
+        "sha256": "ea3ee16bef86493246f84120d309f2afa51eca8743226b6eb8a6de7e1c3ba3af",
+        "size": 179674,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "wdp_iq2_xxs.png",
+      "blobId": "623934313ae73047059a5103b163773409e20f22",
+      "size": 461664,
+      "lfs": {
+        "sha256": "af0075c3836a519ede9a826597dae24dcf8bc56537e5b90f1dab03317355cf62",
+        "size": 461664,
+        "pointerSize": 131
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-12T11:45:31.000Z",
+  "usedStorage": 1588826321469
+}

@@ -1,0 +1,294 @@
+{
+  "_id": "6abe96b847c60c260a3d4649",
+  "id": "bartowski/Cloudflare_clef-flash-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "clef",
+    "cloudflare",
+    "systemone",
+    "qwen3.5",
+    "post-train",
+    "image-text-to-typed-output",
+    "multimodal",
+    "structured-output",
+    "classification",
+    "custom-code",
+    "image-text-to-text",
+    "base_model:Cloudflare/clef-flash",
+    "base_model:quantized:Cloudflare/clef-flash",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "decision-model",
+    "conversational"
+  ],
+  "downloads": 41474,
+  "likes": 59,
+  "modelId": "bartowski/Cloudflare_clef-flash-GGUF",
+  "author": "bartowski",
+  "sha": "5fcdd9ba6d3d5b962ad149e31457de5783e49de5",
+  "lastModified": "2026-10-05T20:47:38.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "license": "apache-2.0",
+    "base_model": "Cloudflare/clef-flash",
+    "base_model_relation": "quantized",
+    "tags": [
+      "clef",
+      "cloudflare",
+      "systemone",
+      "qwen3.5",
+      "post-train",
+      "image-text-to-typed-output",
+      "multimodal",
+      "structured-output",
+      "classification",
+      "custom-code"
+    ]
+  },
+  "gguf": {
+    "total": 9075566084,
+    "architecture": "clef",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "decision_type": "clef",
+    "totalFileSize": 18164488352
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "3bf717e3f3c00ef119bad259c225a57104c89a9b",
+      "size": 3266
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-IQ3_M.gguf",
+      "blobId": "388b9122a9ff4e0be5e9ffe9720f59061f24267c",
+      "size": 4852291744,
+      "lfs": {
+        "sha256": "0204fc3f3f3dbc8ef4a978463a7cbaf5eb21a338f3b5c017dcdeda7be2116703",
+        "size": 4852291744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-IQ4_NL.gguf",
+      "blobId": "235643d733875a5ad28e0f590d5199c98014a6b0",
+      "size": 5633824928,
+      "lfs": {
+        "sha256": "16743f5cca30dcb2416b2fe94162a22ccaab30a573958cf33cd82e75cdd817e4",
+        "size": 5633824928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-IQ4_XS.gguf",
+      "blobId": "f6f5e27367b911bccff6deb3344f59f29f25a61c",
+      "size": 5403859104,
+      "lfs": {
+        "sha256": "2e94d45a26bdaa596fe71127a93119936a02fc2b2d6a77ebf7f02fed6afc0450",
+        "size": 5403859104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q2_K.gguf",
+      "blobId": "8cc0cca51b65a1797cbb5b2b0deeb83fbc67d76b",
+      "size": 4194031776,
+      "lfs": {
+        "sha256": "9aba0ef55d3a144096390d1446bbb19ac494c7290927c3f30fa84dadecba11d3",
+        "size": 4194031776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q3_K_L.gguf",
+      "blobId": "f4f7b14f762751faac2b6a6c5594f7c6db88ddf9",
+      "size": 5240789152,
+      "lfs": {
+        "sha256": "d0e69c7b0a94ab01fee166a6a1e401c6c08f9b9c195fdbb2369fd4453fd29c9c",
+        "size": 5240789152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q3_K_M.gguf",
+      "blobId": "99fbfc9a48cc146b6e6ca2cc4ca842bc2db94745",
+      "size": 5049948320,
+      "lfs": {
+        "sha256": "c109dde6f5f37a79e479a8cd62fc6c3eada2349f8c101e5e064995ea9e65b5b5",
+        "size": 5049948320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q3_K_S.gguf",
+      "blobId": "83a222a8f46208822a49dfd697e76d66e8f6e1e1",
+      "size": 4799076512,
+      "lfs": {
+        "sha256": "665c9f6a33c8c48496e90aef93ae2492de09cd2e418c69c9c442a1b3c137ab21",
+        "size": 4799076512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q4_0.gguf",
+      "blobId": "74f054e0e938f1a7dc9c2ee02dea423068acf5f7",
+      "size": 5600008352,
+      "lfs": {
+        "sha256": "71cfa21bb1d68096c3f2b056169bf0c824f3f591769ad654167912fcd08ffe8c",
+        "size": 5600008352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q4_1.gguf",
+      "blobId": "3b151da0477cde58109fe3bd08519c75fa70de92",
+      "size": 6074620064,
+      "lfs": {
+        "sha256": "3b5e4ccdac1fa94c205cdaf534b5bee6d6c4a28d3b88d17188fb95de01d755d5",
+        "size": 6074620064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q4_K_L.gguf",
+      "blobId": "d264eee5dae6bb01be50d12cbdd4ea753af8902b",
+      "size": 6795434144,
+      "lfs": {
+        "sha256": "9548d67ce24764505ece024f6ee58b8e3996241de105e3b3c01497d3f50158bc",
+        "size": 6795434144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q4_K_M.gguf",
+      "blobId": "bee6d904a49f740bca08f7d4e49e196f72e40878",
+      "size": 6040541344,
+      "lfs": {
+        "sha256": "cf747351878a0e569fd9d6681395bd723e111f63a4f6fe6e26e7563dfdfa9b0a",
+        "size": 6040541344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q4_K_S.gguf",
+      "blobId": "b327d2a93da8ee3b69ce48d049d0313244bc7fec",
+      "size": 5727934624,
+      "lfs": {
+        "sha256": "ec1472cd7c72cf933ca2da528c466e0932d7814aca503de53965417eec5b49c2",
+        "size": 5727934624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q5_K_M.gguf",
+      "blobId": "418209a556ea2caefa3e270dd24316c1544cc51f",
+      "size": 6982686880,
+      "lfs": {
+        "sha256": "c6add40e73fa0c32c7c0e8393e03029677041ce7f1691e8f6cc347bb49651a1c",
+        "size": 6982686880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q5_K_S.gguf",
+      "blobId": "17695dc879e2735786831ae926ee206bfb39f9df",
+      "size": 6656186528,
+      "lfs": {
+        "sha256": "558efc3a51a846f5d30c14da544db5f2d5484e1353a94fdfaea32dae67b5bf25",
+        "size": 6656186528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q6_K.gguf",
+      "blobId": "8718263f78d276b68feed0a733c1b331cae943bb",
+      "size": 7830018208,
+      "lfs": {
+        "sha256": "94e723d7fd4eb618243cb843b506cbe6afdbff592c0e37099df45605971b4182",
+        "size": 7830018208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q6_K_L.gguf",
+      "blobId": "56606529c8e9c223b7994d8554a58ffb5782c0e9",
+      "size": 8322685088,
+      "lfs": {
+        "sha256": "23845513a45f2c6dad44618f0c622cbb3e586cd48718f26fa8ceb9a19066889d",
+        "size": 8322685088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-Q8_0.gguf",
+      "blobId": "3d25660bb3d27dc4a9e25deda84235a4d0c2b3a2",
+      "size": 9675741344,
+      "lfs": {
+        "sha256": "55c222dfc9f5760d06015ee6d6452ea45113bb6f333178c345c489dbc134bcfe",
+        "size": 9675741344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Cloudflare_clef-flash-bf16.gguf",
+      "blobId": "155fd71f6bbcffa588a2c903ca108d810c723af0",
+      "size": 18164488352,
+      "lfs": {
+        "sha256": "1644ceb1f02e01ed02e6fab5b3efe2f47bab858eb121d3c646c88da7caeec710",
+        "size": 18164488352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "19817402ffe456ff40156330691494082e0b17e1",
+      "size": 12551
+    },
+    {
+      "rfilename": "mmproj-Cloudflare_clef-flash-bf16.gguf",
+      "blobId": "40e5054ff364125d449c632a373124c5ae852838",
+      "size": 921704928,
+      "lfs": {
+        "sha256": "3c45b34aee6f353a0d41d6b96ba712a498a17a82f0a6152bf68a5021f9652c0f",
+        "size": 921704928,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-Cloudflare_clef-flash-f16.gguf",
+      "blobId": "ec3d025bc0f56f47e5916ed82399b585fdfc3433",
+      "size": 918165984,
+      "lfs": {
+        "sha256": "c8a6e9e00e1baf6433c4874dbc73bed2a56e887bcbb582fffcb00b533bc638dd",
+        "size": 918165984,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-01T17:22:00.000Z",
+  "usedStorage": 262978058080
+}

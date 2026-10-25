@@ -1,0 +1,162 @@
+{
+  "_id": "6ad21bb8d2af7faaf7255490",
+  "id": "Comfy-Org/MOSS-Image",
+  "private": false,
+  "library_name": "diffusion-single-file",
+  "tags": [
+    "diffusion-single-file",
+    "comfyui",
+    "base_model:OpenMOSS-Team/MOSS-Image-Base",
+    "base_model:finetune:OpenMOSS-Team/MOSS-Image-Base",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 2161961,
+  "likes": 449,
+  "modelId": "Comfy-Org/MOSS-Image",
+  "author": "Comfy-Org",
+  "sha": "24147db865fcdc207270f844777587223fed8d6e",
+  "lastModified": "2026-10-22T05:20:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "tags": [
+      "comfyui",
+      "diffusion-single-file"
+    ],
+    "base_model": [
+      "OpenMOSS-Team/MOSS-Image-Base",
+      "OpenMOSS-Team/MOSS-Image-SFT"
+    ],
+    "license": "apache-2.0"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "45c1154a6b7af0d1625d4ad8f264f0d646a68488",
+      "size": 4047
+    },
+    {
+      "rfilename": "diffusion_models/moss_image_base_bf16.safetensors",
+      "blobId": "61158a04eaa71a4a4d86fb47f4c1efab1580643e",
+      "size": 10164655808,
+      "lfs": {
+        "sha256": "cacd158728a1fb9e57c408a922b54752ec71fceb566b3821269927964e62b41f",
+        "size": 10164655808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/moss_image_base_int8_convrot.safetensors",
+      "blobId": "cbf306749b6619cabddcabcd51043d39b08d1bae",
+      "size": 5413698958,
+      "lfs": {
+        "sha256": "f601c1e1161915fb3fea003da0c1782e374dd960fbb3978bc0e4e3fa1f2d8e6f",
+        "size": 5413698958,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "diffusion_models/moss_image_sft_bf16.safetensors",
+      "blobId": "878ff07839a8c672f09843d5fed027c04f88d87a",
+      "size": 10164655808,
+      "lfs": {
+        "sha256": "f96738d8116d78b7316b57c663d8c98591ddafab7488f48e3099b7655e34ab6f",
+        "size": 10164655808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/moss_image_sft_int8_convrot.safetensors",
+      "blobId": "2000160ae23daf457a1e546422e8fd227e4a08d4",
+      "size": 5413698958,
+      "lfs": {
+        "sha256": "b4d1475bc7eeffd7b809e82ea13a1fba1fb85c4e18365af3813722faa5c0fe4f",
+        "size": 5413698958,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "loras/moss_image_color_depth_control.safetensors",
+      "blobId": "d542fdb75eb5db12e00bf0e51423b1e7106ee108",
+      "size": 313063368,
+      "lfs": {
+        "sha256": "e5c0c3efd05e4269207a39de6005798f14c90c6687c89c54eaffe4b76c43a763",
+        "size": 313063368,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_bf16.safetensors",
+      "blobId": "9b1848cf9bce8447767872eed58cfe0507c0b69f",
+      "size": 19306312328,
+      "lfs": {
+        "sha256": "7e6e9f08d598f829cb940e60ac0c698e1f1c27a47daffd7e598cd78c78b4cc53",
+        "size": 19306312328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_int8_convrot.safetensors",
+      "blobId": "66ea5d5b0567b399a04a0e61b6ea3db26ea9c9d2",
+      "size": 9748121532,
+      "lfs": {
+        "sha256": "32e3787472f708fa5f83624acbf5ef23f7fc89c439e05065ea57cfe5a97f025a",
+        "size": 9748121532,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+      "blobId": "3ff44a430212c413f418755d4e1a803208e8dd1d",
+      "size": 7343591088,
+      "lfs": {
+        "sha256": "4cc6a1543ad2061806da46f35f90cadb4801dcba246c44782cf42ec0feb6407c",
+        "size": 7343591088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "vae/flux2-vae.safetensors",
+      "blobId": "78f8fcf4adb004763e3335b937a9d7a6dfa9f5b5",
+      "size": 336211292,
+      "lfs": {
+        "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3",
+        "size": 336211292,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "vae/flux2-vae_small.safetensors",
+      "blobId": "f179891cafa02689a551273bcb2cf912d05b4bf7",
+      "size": 249521340,
+      "lfs": {
+        "sha256": "d8d52ba036475f5fb07c8b435e176d3d97ebfa82f0d1a1c317f9cc1e25bd013b",
+        "size": 249521340,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "RioShiina/ImageGen",
+    "Gramlin/ImageGennew",
+    "protomoai/moss-image-studio",
+    "Or1290/LP12",
+    "BIGJUTT/model-pulse",
+    "peasd/moss-image-demo",
+    "dfasdfasdfadfasdf/MOSS-Image",
+    "jimlake/moss-image-demo",
+    "henrybit/moss-image",
+    "DollasAndSpence/LP12",
+    "Dekonstruktio/Fluxus"
+  ],
+  "createdAt": "2026-10-16T12:42:32.000Z",
+  "usedStorage": 68457718968
+}

@@ -1,0 +1,268 @@
+{
+  "_id": "6ac464baa027308efcfc5436",
+  "id": "jialinyyzz/humanizer-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "quantized",
+    "imatrix",
+    "humanizer",
+    "text-rewriting",
+    "gemma4",
+    "text-generation",
+    "en",
+    "zh",
+    "base_model:jialinyyzz/humanizer",
+    "base_model:quantized:jialinyyzz/humanizer",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 23156,
+  "likes": 58,
+  "modelId": "jialinyyzz/humanizer-GGUF",
+  "author": "jialinyyzz",
+  "sha": "d9c6be435fe29e6e96dc42f4c3cc185e06ae3eac",
+  "lastModified": "2026-10-08T05:58:39.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "jialinyyzz/humanizer",
+    "base_model_relation": "quantized",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "pipeline_tag": "text-generation",
+    "library_name": "gguf",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "quantized",
+      "imatrix",
+      "humanizer",
+      "text-rewriting",
+      "gemma4"
+    ]
+  },
+  "gguf": {
+    "total": 11907350576,
+    "architecture": "gemma4",
+    "context_length": 262144,
+    "chat_template": "{#-\n  humanizer chat template (stored in the GGUF files as tokenizer.chat_template).\n\n  The model is a text-completion model. It was trained on one plain-text prompt:\n      INSTR + \"\\n\\n\" + draft.strip() + \"\\n\\n### Rewritten:\\n\\n\"\n  and it ends the rewrite with <eos>. This template only lets chat front ends\n  (LM Studio, llama-server --jinja with /v1/chat/completions, ...) build that same\n  string from a chat. It adds no turn markers.\n\n  - The draft is the content of the LAST user message, with leading and trailing\n    whitespace removed (same as draft.strip()). Text parts of a list-style content\n    are joined in order.\n  - System messages, earlier user messages and assistant messages are ignored:\n    every new message is rewritten on its own. (Their content is still read, so\n    llama.cpp does not fold the system prompt into the user message.)\n  - add_generation_prompt=true (what chat front ends send) ends the prompt with\n    \"\\n\\n### Rewritten:\\n\\n\"; the model writes the rewrite and stops on <eos>.\n    With add_generation_prompt=false the separator is left out.\n  - No BOS token here: the runtime adds it (tokenizer.ggml.add_bos_token = true).\n  - With no user message the draft is empty.\n  Must stay byte for byte equal to humanizer/promptfmt.py (build_prompt).\n-#}\n{%- set instr = \"Rewrite the text below so it reads like a person wrote it, not a language model.\\n\\nReorganize it as you see fit. Vary sentence length on purpose. Cut hedging,\\nthroat-clearing, and any sentence that only announces what comes next.\\nPrefer the concrete word over the abstract one. It is fine to sound uneven.\\n\\nEvery fact, number, unit, date, name and quotation must survive unchanged.\" -%}\n{%- set sep = \"\\n\\n### Rewritten:\\n\\n\" -%}\n{%- set ns = namespace(draft=\"\", text=\"\") -%}\n{%- for message in messages -%}\n  {%- set ns.text = \"\" -%}\n  {%- if message[\"content\"] is string -%}\n    {%- set ns.text = message[\"content\"] -%}\n  {%- elif message[\"content\"] is iterable -%}\n    {%- for part in message[\"content\"] -%}\n      {%- if part is mapping and part[\"type\"] == \"text\" -%}\n        {%- set ns.text = ns.text ~ part[\"text\"] -%}\n      {%- endif -%}\n    {%- endfor -%}\n  {%- endif -%}\n  {%- if message[\"role\"] == \"user\" -%}\n    {%- set ns.draft = ns.text -%}\n  {%- endif -%}\n{%- endfor -%}\n{{- instr ~ \"\\n\\n\" ~ (ns.draft | trim) -}}\n{%- if add_generation_prompt -%}\n  {{- sep -}}\n{%- endif -%}\n",
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 23832049568
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "493f44a8807f37a4560d8b849671231f4c3e3b24",
+      "size": 2576
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4df654267469c98ae2b9f80bcba6ea4bba91bf5d",
+      "size": 21322
+    },
+    {
+      "rfilename": "assets/app-en.png",
+      "blobId": "dd80dca8e93c1dc0b90975429590de069fd32b09",
+      "size": 564193,
+      "lfs": {
+        "sha256": "7036cbf414ca5e5c256ca29a477dc03886d1561eea8c23777790e72f782697e5",
+        "size": 564193,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/app-showcase-en.png",
+      "blobId": "e1b3ab31ef037a7f7e52abea2ee26e8d3351acbb",
+      "size": 662117,
+      "lfs": {
+        "sha256": "114a7dd013ff6f2ec3366fc81642a2e88d9e5a9243bb706172267f47d0bc628a",
+        "size": 662117,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/banner-en.png",
+      "blobId": "4b0a12732687c75bbde09e7ba2fefc589a81c759",
+      "size": 210524,
+      "lfs": {
+        "sha256": "3c32b66d7282d635a5c8c0135658b082f2ca33fb8abcf6486026fd4963997637",
+        "size": 210524,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/eval-en.png",
+      "blobId": "9a773f52651d14a05813a58c133817c054a366f3",
+      "size": 602702,
+      "lfs": {
+        "sha256": "a0d9e2fd43bb3aeace2bf9d352006aecd4e6ceafe814b13042a4a494a88252c9",
+        "size": 602702,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/kl-en-zh-by-confidence.png",
+      "blobId": "9f4e954706617ac1d48104e1e7f3fac9c48db947",
+      "size": 299658,
+      "lfs": {
+        "sha256": "f56c534f390c926750d132f0d419df31fa082ef1f672873bf39fcdac456dead1",
+        "size": 299658,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/quant-curve-data.csv",
+      "blobId": "eb6e9eea3d44650dc81e5924dcdcf12c266f93cf",
+      "size": 3509
+    },
+    {
+      "rfilename": "assets/quant-curve-kl.png",
+      "blobId": "137e1b17b4a536007fd267b70a786398fc529a95",
+      "size": 239930,
+      "lfs": {
+        "sha256": "5baf6c3ea1891ba8571b5df81635d5b561d033657b3d6781e8d8a2a6ef3e1990",
+        "size": 239930,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/quant-curve-top1.png",
+      "blobId": "3bc8dddda5cd03622abf111631fdf93f6165b70b",
+      "size": 234523,
+      "lfs": {
+        "sha256": "7c4f76340268d7c2441a74fe46483c28f9b7464015adb51f74f351c6dc53f070",
+        "size": 234523,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/quant-top1-en.png",
+      "blobId": "5f93a51e9523b157b3bb3641e93536417dbda363",
+      "size": 280335,
+      "lfs": {
+        "sha256": "4ee2e9443cc125ad3a58ffbb530efab092c0a331f9f9b610c51364f6ecba1798",
+        "size": 280335,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/quant-top1.csv",
+      "blobId": "166bf27c64669c377c0562facec625fde68f2b2d",
+      "size": 2515
+    },
+    {
+      "rfilename": "assets/results-detector-en.png",
+      "blobId": "894e74668fb68b6d20d76776634372301169c67f",
+      "size": 368131,
+      "lfs": {
+        "sha256": "2399cca785d6e3a69144eb8fdd1d866f0e83e6413061d45ab7a49e60f9919fb5",
+        "size": 368131,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/results-fidelity-en.png",
+      "blobId": "cc2e7b5e1a1fb5495186deb783fc56e28914bed9",
+      "size": 335691,
+      "lfs": {
+        "sha256": "7130711cf787031b31120c270c88a76914957d482211bf185406c7abdabb19a6",
+        "size": 335691,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "humanizer-12b-IQ2_XS-QAT.gguf",
+      "blobId": "ba8fa62ced67bb02e3b0b6797b9c8243631bac1b",
+      "size": 3893632896,
+      "lfs": {
+        "sha256": "383e5ca8f1f48ab5f65013adbc1965fa70d1d1afa6c45d932c34b854e38edbb5",
+        "size": 3893632896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "humanizer-12b-IQ3_XXS-QAT.gguf",
+      "blobId": "9ea313faf1bc337a5833285f071901b14b25a109",
+      "size": 5587794816,
+      "lfs": {
+        "sha256": "307bbfdf66fb22bf98aaa93fe7d54a713bf167e646073dc0cf10870b1525eb94",
+        "size": 5587794816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "humanizer-12b-Q4_K_M.gguf",
+      "blobId": "1d2aa27780ada95bdbef519935baeabfa4f72465",
+      "size": 7625160864,
+      "lfs": {
+        "sha256": "2229574dec5178629575ee4a153dfee7d9e924ab997d0ad9d2ac622b67e44834",
+        "size": 7625160864,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "humanizer-12b-Q6_K.gguf",
+      "blobId": "b5d5a41ee5bd0c9b2e0bcd8e7aa90cff62a626da",
+      "size": 10029799584,
+      "lfs": {
+        "sha256": "c98f03bb9e71456181f99b0e1d3391e07ce1afc357f9db4c33d6d379b8dd9f0d",
+        "size": 10029799584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "humanizer-12b-Q8_0.gguf",
+      "blobId": "fb4c9518c4afe8a7075cb50603d900107f74521f",
+      "size": 12669630368,
+      "lfs": {
+        "sha256": "8d7a457b56de6530eaaf0151ccfa7550a4b20dab979737e259da9c63e960e0b0",
+        "size": 12669630368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "humanizer-12b-bf16.gguf",
+      "blobId": "ac385bd6bb80a1143afda5edf03ac0e7127afc0a",
+      "size": 23832049568,
+      "lfs": {
+        "sha256": "47d79b44c3e15ea2540f4edb63556f2b7e456067d7dd252a42ff103a26a51be9",
+        "size": 23832049568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "prompt_format.json",
+      "blobId": "fc3f918edf51de58ee1e9cc00e59167c6c98f6ca",
+      "size": 553
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-06T03:02:18.000Z",
+  "usedStorage": 63643487233
+}

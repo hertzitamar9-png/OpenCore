@@ -1,0 +1,318 @@
+{
+  "_id": "6723d951659f5ac3114b12a2",
+  "id": "bartowski/SmolLM2-1.7B-Instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "en",
+    "base_model:HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "base_model:quantized:HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 15217,
+  "likes": 22,
+  "modelId": "bartowski/SmolLM2-1.7B-Instruct-GGUF",
+  "author": "bartowski",
+  "sha": "1f03464768bfcc0319fc50da8ff5fb20b6417ba2",
+  "lastModified": "2024-10-31T19:34:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "language": [
+      "en"
+    ],
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "quantized_by": "bartowski"
+  },
+  "gguf": {
+    "total": 1711376384,
+    "architecture": "llama",
+    "context_length": 8192,
+    "chat_template": "{% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system\nYou are a helpful AI assistant named SmolLM, trained by Hugging Face<|im_end|>\n' }}{% endif %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 3424735936
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4662173b0e65f53d24695d62e0dc07a219f82672",
+      "size": 3190
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "24c3b5d9fa2eebbfbf28d917737016064b55bee6",
+      "size": 10039
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-IQ3_M.gguf",
+      "blobId": "b52671f4b4ed07e32fee713b291bac2659410102",
+      "size": 810243040,
+      "lfs": {
+        "sha256": "84b3239ed31d0c66688b41b1d7750717efc6f594174be9a4bcf45931d289365c",
+        "size": 810243040,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-IQ3_XS.gguf",
+      "blobId": "fd74aed9130d23c0e3a445f1edc611d8a4016415",
+      "size": 739070944,
+      "lfs": {
+        "sha256": "f1aec51686c8f97cc578416bdbdcc71d6a3ee136f5d16db63ac26680bd36754e",
+        "size": 739070944,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-IQ4_XS.gguf",
+      "blobId": "3cbf2c89bec24d5508f24e7b564e8f4036790797",
+      "size": 940397536,
+      "lfs": {
+        "sha256": "4d24659a8c0816cc990fe36e55428b918f341a5f36d1432a6cba10d62bd677b4",
+        "size": 940397536,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q2_K.gguf",
+      "blobId": "bc750aac0b20a85bbcc178a53eeb4872d1969a73",
+      "size": 674583520,
+      "lfs": {
+        "sha256": "542b86d51bcb65f455f0311e25426d230b1ba24f35c5a71d1b1ecfe2dcd400c4",
+        "size": 674583520,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q2_K_L.gguf",
+      "blobId": "a3bb24546fe7cc66cb7f5e20c3ee7e6bddd8a0ce",
+      "size": 698962912,
+      "lfs": {
+        "sha256": "df89026b2dd5a65cc8434fad72d88bbf60346d41edba1862b967650ae698f85d",
+        "size": 698962912,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q3_K_L.gguf",
+      "blobId": "515e530b4a2f473a874274e0e5a354bf24d00f64",
+      "size": 932533216,
+      "lfs": {
+        "sha256": "753fc325fad4ad3a7d7753eeb61aa2c64d0971bf77939cebc4ca1c20a7492e00",
+        "size": 932533216,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q3_K_M.gguf",
+      "blobId": "429f8c345aa684fec05ff116bd5603a60cd96c04",
+      "size": 860181472,
+      "lfs": {
+        "sha256": "697f05c62479fc35d0241bb1208763e8e6c24fd6efafe38d6f7d379af7f42a91",
+        "size": 860181472,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q3_K_S.gguf",
+      "blobId": "7736733f42805c36195c05daaf8fe3f85d4a1507",
+      "size": 776819680,
+      "lfs": {
+        "sha256": "89f69b4c4fdc183cd31af86ede80164a6bbc492c263f7b131a1cf5a6df638fc1",
+        "size": 776819680,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q3_K_XL.gguf",
+      "blobId": "692b3226cadb1a5acd14b23bd655b719f11cf7b5",
+      "size": 956912608,
+      "lfs": {
+        "sha256": "22f9469af1e228968d6f9f88823f273e7ac06b4424da2d077d56c5cacb543288",
+        "size": 956912608,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_0.gguf",
+      "blobId": "8ad38c2b0f001cbe349bfc1c80dde223d22312ab",
+      "size": 993874912,
+      "lfs": {
+        "sha256": "99b866e77adee858930244229afa833dbe3372a7bf122905ea506119c6911ae8",
+        "size": 993874912,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_0_4_4.gguf",
+      "blobId": "9cddfe1caae9d85947eccf707be6fb48f50f4c78",
+      "size": 990729184,
+      "lfs": {
+        "sha256": "e0b84868b7cd45d634c949d860393cac3c3ec21dc686bd2677bbd926aad718eb",
+        "size": 990729184,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_0_4_8.gguf",
+      "blobId": "779cefc1de8b9888b886048886cbbe81ec319af7",
+      "size": 990729184,
+      "lfs": {
+        "sha256": "d388d5535ddacd75cf495185433610d5e390eabfc868b331aafc43dee7e4f075",
+        "size": 990729184,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_0_8_8.gguf",
+      "blobId": "6101fa5ca16121a252d3383caf92b33577a195ca",
+      "size": 990729184,
+      "lfs": {
+        "sha256": "ce48e4b56927537dcc72e26491e6a9e6c73671ed87284692fc1689e18ea82483",
+        "size": 990729184,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_K_L.gguf",
+      "blobId": "3a5fd9bdb477db3d1f08f9be28b1861198fa2b28",
+      "size": 1079989216,
+      "lfs": {
+        "sha256": "88f7888c171cd2cf48b923cc19bda56c7988749bd104329649262f268ce62805",
+        "size": 1079989216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_K_M.gguf",
+      "blobId": "92b9da0cb137f5a70eee2f50be92f3831dc5f7e6",
+      "size": 1055609824,
+      "lfs": {
+        "sha256": "77665ea4815999596525c636fbeb56ba8b080b46ae85efef4f0d986a139834d7",
+        "size": 1055609824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q4_K_S.gguf",
+      "blobId": "32a99d51f8ee20804c9123b67449cd77643c237e",
+      "size": 999117792,
+      "lfs": {
+        "sha256": "a2d35b6d17220aae6c95938901c93419bbd602b558c220326bc8d2e2a0d8235c",
+        "size": 999117792,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q5_K_L.gguf",
+      "blobId": "c4cbe73366ae10754b1d0254a307d78dbe4955fe",
+      "size": 1249858528,
+      "lfs": {
+        "sha256": "d145571080158c0f92c6a6644d24e748fcb77077232200e8af21ea27523a6283",
+        "size": 1249858528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q5_K_M.gguf",
+      "blobId": "d7cfc655846ac725c20ff35fea623c37b52dbf30",
+      "size": 1225479136,
+      "lfs": {
+        "sha256": "401022fb56129a2906165e92afd816c70fa91063aecf490701f097c0fb0264e0",
+        "size": 1225479136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q5_K_S.gguf",
+      "blobId": "7cf3917feaf1bab99978b4ce8e433e7b50aab200",
+      "size": 1192055776,
+      "lfs": {
+        "sha256": "6e9655c23e19a5e47d5d7fe5907a822e235c75c20e429ccc6062e13aae1651ff",
+        "size": 1192055776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q6_K.gguf",
+      "blobId": "3a3726007a50d79f35b1b39219a581d18ca08d41",
+      "size": 1405965280,
+      "lfs": {
+        "sha256": "444d078fb1e14d1e35247a4f50f075d75be789713d9274c8f2cb3452b8ea01a3",
+        "size": 1405965280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q6_K_L.gguf",
+      "blobId": "6e51ab59c048306b93d3997e5922240179c58126",
+      "size": 1430344672,
+      "lfs": {
+        "sha256": "70fbcea8cb6b098c09f097315a0225aeb49396411bc5d6ae103c3c4d6a1d68e0",
+        "size": 1430344672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-Q8_0.gguf",
+      "blobId": "c06316819523138df0346459118248997dac5089",
+      "size": 1820414944,
+      "lfs": {
+        "sha256": "0c6e8955788b1253f418c354a4bdc4cf507b8cfe49c48bb10c7c58ae713cfa2a",
+        "size": 1820414944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct-f16.gguf",
+      "blobId": "02b75531ff71463cdbfa9aab4b24e40da0ac6298",
+      "size": 3424735936,
+      "lfs": {
+        "sha256": "cf3f0569a9d0b56d5d3b5b7944768c71bd2fef789f8b36b1b85a05d390850852",
+        "size": 3424735936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SmolLM2-1.7B-Instruct.imatrix",
+      "blobId": "08221e405c00df5297de27128abfb10c01c0b2e9",
+      "size": 1971650,
+      "lfs": {
+        "sha256": "7f8400d7a105f1ade1948e4cc02bb1b1f6774c1e63772c22d31f98e14f0d2d80",
+        "size": 1971650,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [
+    "hari7775/fsconvo",
+    "luokai25/kai-llm",
+    "AdarshRL/medical-diagnostic-rag-dashboard"
+  ],
+  "createdAt": "2024-10-31T19:24:01.000Z",
+  "usedStorage": 26241310146
+}

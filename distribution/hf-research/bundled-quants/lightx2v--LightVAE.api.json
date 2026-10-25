@@ -1,0 +1,192 @@
+{
+  "_id": "6ac9d6cca58766dba43a9f87",
+  "id": "lightx2v/LightVAE",
+  "private": false,
+  "pipeline_tag": "other",
+  "library_name": "wan2.2",
+  "tags": [
+    "wan2.2",
+    "video-vae",
+    "video-generation",
+    "distillation",
+    "image-to-video",
+    "text-to-video",
+    "comfyui",
+    "wan2.1",
+    "minimax-h3",
+    "other",
+    "arxiv:2610.14726",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 819,
+  "likes": 34,
+  "modelId": "lightx2v/LightVAE",
+  "author": "lightx2v",
+  "sha": "4925ea978147b9de492d7a5fd4f9c6d1854ca1cc",
+  "lastModified": "2026-10-14T15:27:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "other",
+    "tags": [
+      "video-vae",
+      "video-generation",
+      "distillation",
+      "image-to-video",
+      "text-to-video",
+      "comfyui",
+      "wan2.1",
+      "wan2.2",
+      "minimax-h3"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4569e8e70cafb9389d8487fdbeb8278e3cda94d1",
+      "size": 5713
+    },
+    {
+      "rfilename": "lightvae-lite-h3-decoder-comfy.safetensors",
+      "blobId": "b856ceb1436ec9cad11539ef8e9d5098ea45afca",
+      "size": 3248357112,
+      "lfs": {
+        "sha256": "9af3547f4a00d358d8742df89480be61a8d834e47085428f36d82322014e59d2",
+        "size": 3248357112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-h3-decoder-int8-convrot.safetensors",
+      "blobId": "4d677f2b4b439ae3b06a8be1d96cf8f8079dbac7",
+      "size": 833732248,
+      "lfs": {
+        "sha256": "247de59ddd078d121ba9ba4bac1bcbf1285c2ce68304d9d78eaea3e5a947a7e8",
+        "size": 833732248,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-h3-decoder.safetensors",
+      "blobId": "b3ba6d165abde3ec9a5792c8fb3e5a3bfea07d55",
+      "size": 3248356840,
+      "lfs": {
+        "sha256": "d060ad616a33f422fcb8395f525d6d71185b5ddb3e016b31cc210ba2c9c06ee9",
+        "size": 3248356840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-h3-encoder-comfy.safetensors",
+      "blobId": "22fc675a25c0509ab2234b0e8050a3353a738a4a",
+      "size": 406335616,
+      "lfs": {
+        "sha256": "f5272977f759ec7a5f05f2f04871b2e0f3366c50a79644dd7dc36ae944d1f7b8",
+        "size": 406335616,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-h3-encoder.safetensors",
+      "blobId": "1b77b6901da8d70465fb43b2462989e6d85f26c9",
+      "size": 406335344,
+      "lfs": {
+        "sha256": "4b0e5af102da19324c64df40abbd95008d8acb0b9cf76e4704d74c8ac20cefac",
+        "size": 406335344,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-wan21-decoder-comfy.safetensors",
+      "blobId": "e3da189a2707fd6c8ee49c3f179876da7f09ea43",
+      "size": 70801436,
+      "lfs": {
+        "sha256": "14064081e6d935cac35997997b2587c52e8176f70024cc1935e29f917f288baa",
+        "size": 70801436,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-wan21-decoder.safetensors",
+      "blobId": "30650e98b3c1f9f52b3bd08d464f83277fcebc3d",
+      "size": 70875748,
+      "lfs": {
+        "sha256": "05cbfff899d1bd8ce5afa0cc5ed03dcd01dd95876a76b1fb7df5427353f822ce",
+        "size": 70875748,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-wan22-decoder-comfy.safetensors",
+      "blobId": "c9340789d6c3aae1b5d10f3fe87a38bd9958cb0a",
+      "size": 609779704,
+      "lfs": {
+        "sha256": "bcb201f852f1c07dab9c7be865f078cef0d0184cf8be8175a8c10daa36e5707b",
+        "size": 609779704,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-lite-wan22-decoder.safetensors",
+      "blobId": "71d89e477a6ea2e5bbb0692f948b0032178279c3",
+      "size": 609707592,
+      "lfs": {
+        "sha256": "455846ab42fe580b82209aec2bee84774860e29a6a66673ec6effe99400b6197",
+        "size": 609707592,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-pro-wan21-decoder-comfy.safetensors",
+      "blobId": "f2a9ce2bcc25370db10d4c91f5fc29fae5d51f9e",
+      "size": 178905228,
+      "lfs": {
+        "sha256": "5122fc474ac88a70380508f7d3a3cff2bc28fea346c6c79b08b4a78126f73239",
+        "size": 178905228,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-pro-wan21-decoder.safetensors",
+      "blobId": "a51ec37a8a2ffd3831ed5f72933cd19523092277",
+      "size": 179047668,
+      "lfs": {
+        "sha256": "15597278a84b3b416f5f41552ed38a6145a403e5792760979f7bb74f7fb5c0eb",
+        "size": 179047668,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "lightvae-pro-wan22-decoder-comfy.safetensors",
+      "blobId": "f53afe8040f235c8c3f2fe7b77d3222230ab2705",
+      "size": 1384713840,
+      "lfs": {
+        "sha256": "b125146ed5999cd54fb7defa80133768a6d920fe99c40c36e343fbad9a3d7c87",
+        "size": 1384713840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "lightvae-pro-wan22-decoder.safetensors",
+      "blobId": "58ff5052bc2c7ed46bef9810e28197051ae6bec1",
+      "size": 1384550888,
+      "lfs": {
+        "sha256": "9985d3b90321f48109c3fed25b526f38d137a1a7a8f34e1afbe41ddfc27d2782",
+        "size": 1384550888,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-10T06:10:20.000Z",
+  "usedStorage": 12631499264
+}

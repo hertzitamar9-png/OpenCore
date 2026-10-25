@@ -1,0 +1,353 @@
+{
+  "_id": "6a720f477f407a785322b31f",
+  "id": "bartowski/LiquidAI_LFM2.5-2.6B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "liquid",
+    "lfm2.5",
+    "edge",
+    "text-generation",
+    "ar",
+    "zh",
+    "en",
+    "fr",
+    "de",
+    "hi",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "pl",
+    "pt",
+    "ru",
+    "es",
+    "th",
+    "vi",
+    "base_model:LiquidAI/LFM2.5-2.6B",
+    "base_model:quantized:LiquidAI/LFM2.5-2.6B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 3224,
+  "likes": 17,
+  "modelId": "bartowski/LiquidAI_LFM2.5-2.6B-GGUF",
+  "author": "bartowski",
+  "sha": "0446ca3a34aea723479864cde5fdb9ef0a8fb3e8",
+  "lastModified": "2026-08-04T16:16:10.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "license_link": "LICENSE",
+    "language": [
+      "ar",
+      "zh",
+      "en",
+      "fr",
+      "de",
+      "hi",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "pl",
+      "pt",
+      "ru",
+      "es",
+      "th",
+      "vi"
+    ],
+    "base_model_relation": "quantized",
+    "base_model": "LiquidAI/LFM2.5-2.6B",
+    "license_name": "lfm1.0",
+    "tags": [
+      "liquid",
+      "lfm2.5",
+      "edge"
+    ],
+    "license": "other"
+  },
+  "gguf": {
+    "total": 2697198592,
+    "architecture": "lfm2",
+    "context_length": 128000,
+    "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n\n{%- macro format_arg_value(arg_value) -%}\n    {%- if arg_value is string -%}\n        {{- \"'\" + (arg_value | replace(\"\\\\\", \"\\\\\\\\\") | replace(\"'\", \"\\\\'\") | replace(\"\\n\", \"\\\\n\") | replace(\"\\r\", \"\\\\r\")) + \"'\" -}}\n    {%- elif arg_value is mapping or arg_value is iterable -%}\n        {{- arg_value | tojson -}}\n    {%- else -%}\n        {{- arg_value | string -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<image>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- set tool_calls_ns = namespace(tool_calls=[]) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_name = func[\"name\"] -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- set args_ns = namespace(arg_strings=[]) -%}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {%- set args_ns.arg_strings = args_ns.arg_strings + [arg_name + \"=\" + format_arg_value(arg_value)] -%}\n            {%- endfor -%}\n        {%- elif func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {%- set tool_calls_ns.tool_calls = tool_calls_ns.tool_calls + [func_name + \"(\" + (args_ns.arg_strings | join(\", \")) + \")\"] -%}\n    {%- endfor -%}\n    {{- \"<|tool_call_start|>[\" + (tool_calls_ns.tool_calls | join(\", \")) + \"]<|tool_call_end|>\" -}}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set ns.system_prompt = ns.system_prompt + (\"\\n\" if ns.system_prompt else \"\") + \"List of tools: [\" -%}\n    {%- for tool in tools -%}\n        {%- if tool is not string -%}\n            {%- set tool = tool | tojson -%}\n        {%- endif -%}\n        {%- set ns.system_prompt = ns.system_prompt + tool -%}\n        {%- if not loop.last -%}\n            {%- set ns.system_prompt = ns.system_prompt + \", \" -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns.system_prompt = ns.system_prompt + \"]\" -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- set thinking = message.thinking or message.reasoning or message.reasoning_content -%}\n        {%- set thinking = thinking if thinking is string else \"\" -%}\n        {%- if thinking and keep_thinking -%}\n            {{- \"<think>\" + thinking + \"</think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking and \"</think>\" in content -%}\n            {%- set content = content.split(\"</think>\")[-1] | trim -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"<|im_start|>assistant\\n<think>\" -}}\n{%- endif -%}\n",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 5403158560
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "91b40e5303cbf0f4176fd6b12a96ae18f7d884c2",
+      "size": 3233
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-IQ2_M.gguf",
+      "blobId": "630b163281e5c8536d3e41a2afd7893677fab854",
+      "size": 1022470432,
+      "lfs": {
+        "sha256": "c4411044044c637274ad07cab250bad3dd9d804b3d5fd823827f78736ea84ce6",
+        "size": 1022470432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-IQ3_M.gguf",
+      "blobId": "8886cc14580b25ab3ff1b0a6930d61924e7af0d5",
+      "size": 1292470560,
+      "lfs": {
+        "sha256": "3e6d4876484c09246831062afc4961efa45405e06c622765f8e5c31c484b4096",
+        "size": 1292470560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-IQ3_XS.gguf",
+      "blobId": "f34f76163639c51847871880b6684645c6c1ed18",
+      "size": 1229596960,
+      "lfs": {
+        "sha256": "6ad8fa13972d24c82527b858f47224344169048cb8481cc2bae029b2f2baae95",
+        "size": 1229596960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-IQ3_XXS.gguf",
+      "blobId": "44b00640bc3bbf0b40a8751ebae97da6889b4dbc",
+      "size": 1130490144,
+      "lfs": {
+        "sha256": "60e72d4976b7a3b43101a05563624d4c55cb5b8e10a1d8f5ea80194cd9b25f08",
+        "size": 1130490144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-IQ4_NL.gguf",
+      "blobId": "6942d239a7467cae31c2929ecf7a6bb3e8d795b4",
+      "size": 1598220576,
+      "lfs": {
+        "sha256": "e6ef7c1c666977f144c23693bdae622775940fb45264f7ae9fbc717488daf355",
+        "size": 1598220576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-IQ4_XS.gguf",
+      "blobId": "6d5e9d2251ef57fda913cd986eb1d0824c094c38",
+      "size": 1522657568,
+      "lfs": {
+        "sha256": "34844da05ab6e4ca773299d97a2691e47f4f0e1587a3a632f4ca82b3916754b6",
+        "size": 1522657568,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q2_K.gguf",
+      "blobId": "ac8b35ea33abe4071964b042eaff611c159dde53",
+      "size": 1102850336,
+      "lfs": {
+        "sha256": "67bc2f2c18cff83ffd82d3c83583f01a1ed937ba860ab7de052235bc8d2ce880",
+        "size": 1102850336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q2_K_L.gguf",
+      "blobId": "56d82a62cfcfe9a9274f5cc7560426339c7b2fc2",
+      "size": 1166338336,
+      "lfs": {
+        "sha256": "455470f8d123d034df5b8fbb2aac1774018a37256c78ff9f3622fc5392ef840d",
+        "size": 1166338336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q3_K_L.gguf",
+      "blobId": "d67fb432a1140cae03b7852eed481bf1bfff893a",
+      "size": 1454008608,
+      "lfs": {
+        "sha256": "e98aec36cffe8f21c37bd1b230caa424e44746b2c4f5a31625e2973b26a7e402",
+        "size": 1454008608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q3_K_M.gguf",
+      "blobId": "e8f47eee796eb2a1036356df2389a9d9b4f1dea7",
+      "size": 1373661472,
+      "lfs": {
+        "sha256": "08dc6cb8cfe80722e20e523564f49d2624265721f7b596d6b9c167001b058ff9",
+        "size": 1373661472,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q3_K_S.gguf",
+      "blobId": "c11b710f7f8cecbda73038614d8d3b2a80a41389",
+      "size": 1277077792,
+      "lfs": {
+        "sha256": "b6c2408cf0d287b51268ba131d43f388fb534ad31719b53cc13df26ece5e2ed7",
+        "size": 1277077792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q3_K_XL.gguf",
+      "blobId": "b5acc08b9711d88166ac9ddd0748ac2c2dd450ba",
+      "size": 1517496608,
+      "lfs": {
+        "sha256": "cad506e52d105bc8138e42cac42f347c320584da9fc966cc35d98b63282512bc",
+        "size": 1517496608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q4_0.gguf",
+      "blobId": "85c8e0e08c25dae2c9e8f7d3c65c55deed56c67b",
+      "size": 1602349344,
+      "lfs": {
+        "sha256": "68b0e51637960e8c75c32ef10b73ed241a2cecbf8224fd8fb720434b15dc304d",
+        "size": 1602349344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q4_1.gguf",
+      "blobId": "7ed963c63329c7a68da38cf4c2d31b4e905c8087",
+      "size": 1749346592,
+      "lfs": {
+        "sha256": "261c0986fb6d97463c16eb0873433ddfe244e03bda2edc0b5da95aa2436eecdf",
+        "size": 1749346592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q4_K_L.gguf",
+      "blobId": "e9702f8007372d8556ce3cc9460d79defb5a6904",
+      "size": 1747511584,
+      "lfs": {
+        "sha256": "240d0d0e2415f297772580c6480eeaab38c65f57676570367fa0300c3cfef8d3",
+        "size": 1747511584,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q4_K_M.gguf",
+      "blobId": "bed4ccda4be25f2bda31247baacd6750c4f63f8e",
+      "size": 1684023584,
+      "lfs": {
+        "sha256": "03ab6106f4636ae7f316245d2adf7394ccf3cd80a684ec0c473b1a4720f3108e",
+        "size": 1684023584,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q4_K_S.gguf",
+      "blobId": "a2edb4e8abfc63bc0eb470942a30b5fa60bac232",
+      "size": 1607002400,
+      "lfs": {
+        "sha256": "d2109c5be64fdbd0a4139d136190be1ef96068cae384beb1fedd51deb8eb40a3",
+        "size": 1607002400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q5_K_L.gguf",
+      "blobId": "77742e9424d0ee929d9112c8a3511119877480cb",
+      "size": 2011031840,
+      "lfs": {
+        "sha256": "3fcf7008dfc678e8129b418d407a5fdce6509338c271b10ecc60790885a97a2b",
+        "size": 2011031840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q5_K_M.gguf",
+      "blobId": "c82df4fe89bc528f10194acaf5ebdf49479db647",
+      "size": 1947543840,
+      "lfs": {
+        "sha256": "89f1f9739a61bd8edf245b7b0c24cb2a20abc287665e35653a3772e7474506a6",
+        "size": 1947543840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q5_K_S.gguf",
+      "blobId": "c7772753d4756b0bb59ac9ad4ce02837e17423d8",
+      "size": 1900472608,
+      "lfs": {
+        "sha256": "73e692b159fea4e02423952bdca1cca5ba694c0ebad2c9293f045e96f2a8f0c3",
+        "size": 1900472608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q6_K.gguf",
+      "blobId": "c8579226d329f3505315baf5632c16df9c90a9ef",
+      "size": 2236852512,
+      "lfs": {
+        "sha256": "499c120820935273c5eec587333ce18e0d4369911bd795b537f041ab4b20052f",
+        "size": 2236852512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q6_K_L.gguf",
+      "blobId": "593505f55ccd4d30e49e428d3113a3ddef68cb27",
+      "size": 2300340512,
+      "lfs": {
+        "sha256": "6ebd3b3d64967bbdbfcf0f0bbacc18686d9faab552c9d369ba18743cd68148c7",
+        "size": 2300340512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-Q8_0.gguf",
+      "blobId": "a17217b83d22ea899bab5cb5ac4550e018820fc0",
+      "size": 2874779936,
+      "lfs": {
+        "sha256": "83bbdbb27c8a2b8636e554f364dad63f76588d4dec4629c819093a0317f07da8",
+        "size": 2874779936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-bf16.gguf",
+      "blobId": "c50753d9acfa58afd02563fd8a667973c29f1f56",
+      "size": 5403158560,
+      "lfs": {
+        "sha256": "917b46ebb876cfbda1243567a819bd754cdaa8d912508e0030938792182ef66a",
+        "size": 5403158560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LiquidAI_LFM2.5-2.6B-imatrix.gguf",
+      "blobId": "8d61872ad30c12c7441cdb2938f0ce28d9328d71",
+      "size": 2430880,
+      "lfs": {
+        "sha256": "b6dfa9f4fac87d56a418a6cb9774c849fc5d375bc08b0dfcfb3ba091c4d79fef",
+        "size": 2430880,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "364c9d276157757b05903dabd09d9227caff14c9",
+      "size": 11122
+    }
+  ],
+  "spaces": [
+    "quaedra/best-local-llm-for-your-gpu"
+  ],
+  "createdAt": "2026-08-04T16:11:51.000Z",
+  "usedStorage": 42754183584
+}

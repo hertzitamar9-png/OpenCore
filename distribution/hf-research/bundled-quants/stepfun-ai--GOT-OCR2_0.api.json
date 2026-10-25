@@ -1,0 +1,217 @@
+{
+  "_id": "66e310947b8ce2359ed82126",
+  "id": "stepfun-ai/GOT-OCR2_0",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "safetensors",
+    "GOT",
+    "got",
+    "vision-language",
+    "ocr2.0",
+    "custom_code",
+    "image-text-to-text",
+    "multilingual",
+    "arxiv:2409.01704",
+    "arxiv:2405.14295",
+    "arxiv:2312.06109",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 282922,
+  "likes": 1575,
+  "modelId": "stepfun-ai/GOT-OCR2_0",
+  "author": "stepfun-ai",
+  "sha": "979938bf89ccdc949c0131ddd3841e24578a4742",
+  "lastModified": "2025-02-04T00:37:25.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "GOTQwenForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "modeling_GOT.GOTConfig",
+      "AutoModel": "modeling_GOT.GOTQwenForCausalLM"
+    },
+    "model_type": "GOT",
+    "tokenizer_config": {
+      "pad_token": "<|endoftext|>"
+    }
+  },
+  "cardData": {
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "multilingual"
+    ],
+    "tags": [
+      "got",
+      "vision-language",
+      "ocr2.0",
+      "custom_code"
+    ],
+    "license": "apache-2.0"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "143dd5a9fb155fe07d8bd198ab28c501e98b3d6c",
+      "size": 3959
+    },
+    {
+      "rfilename": "assets/got_logo.png",
+      "blobId": "a896fa83405eb7e198b0f0099e930a6cfb86cac0",
+      "size": 510573
+    },
+    {
+      "rfilename": "assets/got_support.jpg",
+      "blobId": "0a3a025f682178fa6587498ffd45c491c540a03c",
+      "size": 198197
+    },
+    {
+      "rfilename": "assets/train_sample.jpg",
+      "blobId": "ad3c31a44bdece8f91faef096ea0c15df6a44cf9",
+      "size": 155378
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "ff2eecec298d8b4456a5eec2b431d768e2e033b3",
+      "size": 986
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "1b23b70fa0eabcdd1dc2099c9c3a5e67e2e5022f",
+      "size": 117
+    },
+    {
+      "rfilename": "got_vision_b.py",
+      "blobId": "108fac3e0cd05f0706de8b41d9d28d760c569a25",
+      "size": 16106
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "3a635c1ab2706d82e4f6ca3baa7b236ff68511eb",
+      "size": 1432121416,
+      "lfs": {
+        "sha256": "77d6144039548b14253176b6eb264896bc39eba532f8894700f210a7fd2a5956",
+        "size": 1432121416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_GOT.py",
+      "blobId": "65f5e43cdee0ce2e0565ff52619a4d31deb3906e",
+      "size": 33771
+    },
+    {
+      "rfilename": "qwen.tiktoken",
+      "blobId": "9b9b0e0416d84d7c88333eb261c77e5fe2d7f7be",
+      "size": 2561218
+    },
+    {
+      "rfilename": "render_tools.py",
+      "blobId": "a830ec663f1575b6a7d1adaeb50c18e9d6ca516f",
+      "size": 1992
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "9a7e772d88976469ee300204ae54f912cdb0521e",
+      "size": 149
+    },
+    {
+      "rfilename": "tokenization_qwen.py",
+      "blobId": "f041a9cb10209072c21a0a1efe90e6b7d963f834",
+      "size": 9470
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "6fdd6990cee677399365579a449cd8920bd11e99",
+      "size": 300
+    }
+  ],
+  "spaces": [
+    "stepfun-ai/GOT_official_online_demo",
+    "Tonic/GOT-OCR",
+    "merve/vision_papers",
+    "tonic-ai/ImageEdit-GOT-OCR",
+    "awacke1/TorchTransformers-CV-SFT",
+    "Solo448/OCR_MULTILINGUAL-GOT",
+    "Ansemin101/Markit_v2",
+    "akhil-vaidya/GOT-OCR",
+    "omkar-surve126/Image-to-Text-Using-General-OCR-Theory",
+    "awacke1/ImageToLineDrawingsWithVideo",
+    "Kaballas/MinerU",
+    "yashnd/ocr",
+    "aliarmaghan78/GOT-OCR-Model",
+    "yashnd/stepfun-ai-GOT-OCR2_0",
+    "Satvik-ai/Scan_Master",
+    "khaled06/ocr_to_text",
+    "ppaihack/space1",
+    "SansG2003/OCR2.0_GOT",
+    "SansG2003/GOT_OCR2.0",
+    "sfsfee/fdgdhfdgh",
+    "sfsfee/smithiooou",
+    "sfsfee/Streamlit",
+    "ChinmoyDutta/OCR_demo",
+    "vrh15/OCR_and_Document_Search_Web_Application",
+    "Vinay15/OCR_and_Document_Search_Web_Application",
+    "Divyansh12/OCR_Application",
+    "DeepDiveDev/OCR",
+    "shivamAttarkar/OCR",
+    "aarishshahmohsin/ocr_gradio",
+    "Mandi47/stepfun-ai-GOT-OCR2_0",
+    "omvishesh/OCR-app",
+    "ilovetensor/snap-assist",
+    "justin4602/ocr",
+    "UniquePratham/DualTextOCRFusion",
+    "Rashi123/TEXT_OCR",
+    "TheKnight115/T5_final_project",
+    "yashbyname/OCR_using_GOT_and_Tesseract",
+    "khaled06/ocr_summarization_and_question_answering",
+    "lithish2602/OCR_GOT_2.0_MODEL",
+    "Vinay15/OCR",
+    "hackK/Ocr",
+    "coolfrxcrazy/YOLO_MODEL_DETECTION",
+    "SanyaAhmed/OCR-Document-Search",
+    "Nekorise/nekoSp",
+    "Zienab/ocr-2",
+    "thinler/GOTOCR",
+    "artglobal/GOT_official_online_demo",
+    "kp-forks/GOT_official_online_demo",
+    "artglobal/got_ocr_test",
+    "mashaelalbu/ocrsensitive",
+    "suppg02/stepfun-ai-GOT-OCR2_01",
+    "suppg02/stepfun-ai-GOT-OCR2_0",
+    "alexneakameni/card_id_counter",
+    "VIDraft/GOT-OCR",
+    "MahmoudAbdelmaged/GOT",
+    "Spanicin/pdfextraction",
+    "JabriA/OCR",
+    "mohammedRiad/got-ocr-api",
+    "WACKE127/TorchTransformers-CV-SFT",
+    "anasbkh/got-ocr",
+    "Diggz10/imgtotext",
+    "wanifuck/dots-ocr-space",
+    "Swod/tts",
+    "HarryLovesCode/ocr-test",
+    "Fanoni/fanoni-document-ai",
+    "Riftz/GOT_official_online_demo",
+    "HelloImJoe/GOT_official_online_demo",
+    "multimodalart/GOT_official_online_demo-zerogpu",
+    "SHAON123/indicpage-ocr-demo"
+  ],
+  "createdAt": "2024-09-12T16:02:28.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 716033280
+    },
+    "total": 716033280
+  },
+  "usedStorage": 1432121416
+}

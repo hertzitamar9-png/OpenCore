@@ -1,0 +1,794 @@
+{
+  "_id": "6ac9bfd2b0d942380f5288cb",
+  "id": "reflection/Beam-1.0-501B-A23B-NVFP4",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "safetensors",
+    "beam",
+    "mixture-of-experts",
+    "reasoning",
+    "code",
+    "tool-use",
+    "nvfp4",
+    "text-generation",
+    "conversational",
+    "en",
+    "license:apache-2.0",
+    "8-bit",
+    "modelopt",
+    "deploy:sagemaker",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 3544,
+  "likes": 41,
+  "modelId": "reflection/Beam-1.0-501B-A23B-NVFP4",
+  "author": "reflection",
+  "sha": "f8ecac0e16045babf60156f6ba996a77fcb48cf9",
+  "lastModified": "2026-10-21T21:21:29.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "BeamForCausalLM"
+    ],
+    "model_type": "beam",
+    "num_experts_per_tok": 8,
+    "quantization_config": {
+      "config_groups": {
+        "group_0": {
+          "weights": {
+            "num_bits": 4
+          },
+          "targets": [
+            "Linear"
+          ]
+        }
+      },
+      "ignore": [
+        "lm_head",
+        "model.embed_tokens",
+        "model.layers.0*",
+        "model.layers.1.*",
+        "model.layers.10.mlp.gate",
+        "model.layers.10.self_attn*",
+        "model.layers.11.mlp.gate",
+        "model.layers.11.self_attn*",
+        "model.layers.12.mlp.gate",
+        "model.layers.12.self_attn*",
+        "model.layers.13.mlp.gate",
+        "model.layers.13.self_attn*",
+        "model.layers.14.mlp.gate",
+        "model.layers.14.self_attn*",
+        "model.layers.15.mlp.gate",
+        "model.layers.15.self_attn*",
+        "model.layers.16.mlp.gate",
+        "model.layers.16.self_attn*",
+        "model.layers.17.mlp.gate",
+        "model.layers.17.self_attn*",
+        "model.layers.18.mlp.gate",
+        "model.layers.18.self_attn*",
+        "model.layers.19.mlp.gate",
+        "model.layers.19.self_attn*",
+        "model.layers.2.*",
+        "model.layers.20.mlp.gate",
+        "model.layers.20.self_attn*",
+        "model.layers.21.mlp.gate",
+        "model.layers.21.self_attn*",
+        "model.layers.22.mlp.gate",
+        "model.layers.22.self_attn*",
+        "model.layers.23.mlp.gate",
+        "model.layers.23.self_attn*",
+        "model.layers.24.mlp.gate",
+        "model.layers.24.self_attn*",
+        "model.layers.25.mlp.gate",
+        "model.layers.25.self_attn*",
+        "model.layers.26.mlp.gate",
+        "model.layers.26.self_attn*",
+        "model.layers.27.mlp.gate",
+        "model.layers.27.self_attn*",
+        "model.layers.28.mlp.gate",
+        "model.layers.28.self_attn*",
+        "model.layers.29.mlp.gate",
+        "model.layers.29.self_attn*",
+        "model.layers.3.mlp.gate",
+        "model.layers.3.self_attn*",
+        "model.layers.30.mlp.gate",
+        "model.layers.30.self_attn*",
+        "model.layers.31.mlp.gate",
+        "model.layers.31.self_attn*",
+        "model.layers.32.mlp.gate",
+        "model.layers.32.self_attn*",
+        "model.layers.33.mlp.gate",
+        "model.layers.33.self_attn*",
+        "model.layers.34.mlp.gate",
+        "model.layers.34.self_attn*",
+        "model.layers.35.mlp.gate",
+        "model.layers.35.self_attn*",
+        "model.layers.36.mlp.gate",
+        "model.layers.36.self_attn*",
+        "model.layers.37.mlp.gate",
+        "model.layers.37.self_attn*",
+        "model.layers.38.mlp.gate",
+        "model.layers.38.self_attn*",
+        "model.layers.39.mlp.gate",
+        "model.layers.39.self_attn*",
+        "model.layers.4.mlp.gate",
+        "model.layers.4.self_attn*",
+        "model.layers.40.mlp.gate",
+        "model.layers.40.self_attn*",
+        "model.layers.41.mlp.gate",
+        "model.layers.41.self_attn*",
+        "model.layers.42.mlp.gate",
+        "model.layers.42.self_attn*",
+        "model.layers.43.mlp.gate",
+        "model.layers.43.self_attn*",
+        "model.layers.44.mlp.gate",
+        "model.layers.44.self_attn*",
+        "model.layers.45.mlp.gate",
+        "model.layers.45.self_attn*",
+        "model.layers.46.mlp.gate",
+        "model.layers.46.self_attn*",
+        "model.layers.47.mlp.gate",
+        "model.layers.47.self_attn*",
+        "model.layers.48.mlp.gate",
+        "model.layers.48.self_attn*",
+        "model.layers.49.mlp.gate",
+        "model.layers.49.self_attn*",
+        "model.layers.5.mlp.gate",
+        "model.layers.5.self_attn*",
+        "model.layers.50.mlp.gate",
+        "model.layers.50.self_attn*",
+        "model.layers.51.mlp.gate",
+        "model.layers.51.self_attn*",
+        "model.layers.6.mlp.gate",
+        "model.layers.6.self_attn*",
+        "model.layers.7.mlp.gate",
+        "model.layers.7.self_attn*",
+        "model.layers.8.mlp.gate",
+        "model.layers.8.self_attn*",
+        "model.layers.9.mlp.gate",
+        "model.layers.9.self_attn*"
+      ],
+      "quant_method": "modelopt"
+    },
+    "num_experts": 256,
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|return|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{#-\n  harmony_xml: Harmony wire format with XML tool-call bodies.\n\n  Channels are `analysis` and `final`; there is no commentary channel. Tools\n  are declared as flat TypeScript under `# Tools` and called with\n  `<|constrain|>xml` and `rfl:parameter` bodies.\n\n  Kwargs:\n  - model_identity: defaults to \"You are Beam, an AI assistant trained by\n    Reflection.\"\n  - reasoning_effort: emits `Reasoning effort: N` after the identity line;\n    defaults to 512 (`max`) when unset or null. Accepts an int, or the labels\n    `minimal`/`low`/`medium`/`high`/`xhigh`/`max` mapped to\n    8/32/64/128/256/512. Other strings raise. `minimal` is 8, the smallest\n    effort training sampled: a smaller budget is not respected.\n  - builtin_tools: names from `tools=` to render in the system `# Tools` block,\n    with their own definitions. Only name `search` and `browse`, and only with\n    the definitions Beam was trained with. Every other tool, including a\n    `search` or `browse` with a different definition, belongs in the developer\n    block, where `tools=` renders it by default.\n    Exception: a `bash` tool whose only parameter is an unconstrained `command`\n    string is always declared in the system block with the trained definition,\n    without this kwarg; its own descriptions are not rendered. A `bash` with\n    any other call shape follows the rule above.\n  - allow_missing_thinking: defaults to true. When false, a generation prompt\n    raises when any assistant turn has empty or no reasoning, since dropping it\n    degrades the model's output. Setting it to false is highly recommended for\n    serving.\n\n  OpenAI roles \"system\" and \"developer\" are equivalent and map to the developer\n  `# Instructions` block. Consecutive ones at the start of `messages` join into\n  that one block, a blank line apart; empty content is omitted. A system or\n  developer message after the first message of another role is not rendered.\n  The Reflection system block is injected before the developer block.\n\n  Tool wire:\n  - Calls: `to={name}` + analysis + `<|constrain|>xml` + rfl: body\n  - Results: `{recipient} to=assistant` on analysis\n  - Parallel calls: `<|end|>` between calls, `<|call|>` on the last\n  - `function.arguments` must be a dict (parse JSON strings before apply)\n-#}\n\n{%- macro ts_type_name(type_val) -%}\n    {%- if type_val == \"integer\" -%}\n        {{- \"number\" -}}\n    {%- elif type_val in [\"string\", \"number\", \"boolean\"] -%}\n        {{- type_val -}}\n    {%- else -%}\n        {{- \"any\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- Property defaults render enum strings bare. Generic `oneOf` variants pass\n   false because the reference renderer quotes them in that path. #}\n{%- macro render_default(schema, bare_enum_string=true) -%}\n    {%- set is_enum = schema.get(\"enum\") is sequence and schema.get(\"enum\") is not string and schema.get(\"enum\") -%}\n    {%- if schema.default is string and (not is_enum or not bare_enum_string) -%}\n        {{- '\"' + schema.default + '\"' -}}\n    {%- elif schema.default is string -%}\n        {{- schema.default -}}\n    {%- else -%}\n        {{- schema.default | tojson(separators=(\",\", \":\")) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- The reference renderer checks the complete rendered text for `null`, so\n   this intentionally does the same rather than inspecting schema members. #}\n{%- macro render_nullable_type(schema, indent) -%}\n    {%- set rendered = json_schema_to_typescript(schema, indent) -%}\n    {{- rendered -}}\n    {%- if schema is mapping and schema.get(\"nullable\") and \"null\" not in rendered -%}\n        {{- \" | null\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- Render a JSON-schema node as a TypeScript type.\n\n   `indent` is the leading spaces for properties inside an object; nested\n   objects bump it by 4. Use `schema[\"items\"]` (not `schema.items`), since\n   attribute access would hit dict.items. #}\n{%- macro json_schema_to_typescript(schema, indent=0) -%}\n    {%- if schema is mapping and schema.get(\"oneOf\") is sequence and schema.get(\"oneOf\") is not string -%}\n        {%- for variant in schema.oneOf -%}\n            {{- \"\\n\" + (\" \" * indent) + \" | \" -}}\n            {{- render_nullable_type(variant, indent + 3) -}}\n            {%- if variant is mapping and variant.get(\"description\") is string -%}\n                {{- \" // \" + variant.description -}}\n                {%- if \"default\" in variant -%}\n                    {{- \" default: \" + render_default(variant, false) -}}\n                {%- endif -%}\n            {%- elif variant is mapping and \"default\" in variant -%}\n                {{- \" // default: \" + render_default(variant, false) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {#- Only a string enum becomes a literal union. An integer or untyped enum\n       falls through to its plain type, or to `any` when it has none. #}\n    {%- elif schema is mapping and schema.get(\"enum\") is sequence and schema.get(\"enum\") is not string and schema.get(\"enum\") and schema.get(\"type\") == \"string\" -%}\n        {%- set rendered_enum = namespace(any=false) -%}\n        {%- for val in schema.enum -%}\n            {%- if val is string -%}\n                {%- if rendered_enum.any %} | {% endif -%}\n                {{- val | tojson -}}\n                {%- set rendered_enum.any = true -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if not rendered_enum.any %}string{%- endif -%}\n    {%- elif schema is mapping and schema.get(\"type\") == \"object\" -%}\n        {%- if schema.get(\"description\") is string -%}\n            {{- (\" \" * indent) + \"// \" + schema.description + \"\\n\" -}}\n        {%- endif -%}\n        {{- \"{\\n\" -}}\n        {%- set required = schema.required if schema.get(\"required\") else [] -%}\n        {%- if schema.get(\"properties\") -%}\n            {#- Properties render in insertion order, so a schema controls the\n               order its parameters appear in. #}\n            {%- for prop_name, prop_spec in schema.properties.items() -%}\n                {%- if prop_spec is mapping and prop_spec.get(\"title\") is string -%}\n                    {{- (\" \" * indent) + \"// \" + prop_spec.title + \"\\n\" -}}\n                    {{- (\" \" * indent) + \"//\\n\" -}}\n                {%- endif -%}\n                {%- if prop_spec is mapping and \"oneOf\" not in prop_spec and prop_spec.get(\"description\") is string -%}\n                    {{- (\" \" * indent) + \"// \" + prop_spec.description + \"\\n\" -}}\n                {%- endif -%}\n                {%- if prop_spec is mapping and prop_spec.get(\"examples\") is sequence and prop_spec.get(\"examples\") is not string and prop_spec.get(\"examples\") -%}\n                    {{- (\" \" * indent) + \"// Examples:\\n\" -}}\n                    {%- for example in prop_spec.examples -%}\n                        {%- if example is string -%}\n                            {{- (\" \" * indent) + '// - \"' + example + '\"\\n' -}}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n                {%- if prop_spec is mapping and prop_spec.get(\"oneOf\") is sequence and prop_spec.get(\"oneOf\") is not string -%}\n                    {%- set property_description = prop_spec.get(\"description\") if prop_spec.get(\"description\") is string else none -%}\n                    {%- set first_variant = prop_spec.oneOf[0] if prop_spec.oneOf else {} -%}\n                    {%- set first_description = first_variant.get(\"description\") if first_variant is mapping and first_variant.get(\"description\") is string else none -%}\n                    {%- set render_property_description = property_description and property_description != first_description -%}\n                    {%- if render_property_description -%}\n                        {{- (\" \" * indent) + \"// \" + property_description + \"\\n\" -}}\n                    {%- endif -%}\n                    {%- if \"default\" in prop_spec -%}\n                        {{- (\" \" * indent) + \"// default: \" + render_default(prop_spec) + \"\\n\" -}}\n                    {%- endif -%}\n                    {{- (\" \" * indent) + prop_name -}}\n                    {%- if prop_name not in required -%}?{%- endif -%}\n                    {{- \":\\n\" -}}\n                    {%- for variant in prop_spec.oneOf -%}\n                        {{- (\" \" * indent) + \" | \" -}}\n                        {{- render_nullable_type(variant, indent + 3) -}}\n                        {%- set render_variant_description = variant is mapping and variant.get(\"description\") is string and variant.description != property_description and not (loop.first and render_property_description) -%}\n                        {%- if render_variant_description -%}\n                            {{- \" // \" + variant.description -}}\n                            {%- if \"default\" in variant -%}\n                                {{- \" default: \" + render_default(variant) -}}\n                            {%- endif -%}\n                        {%- elif variant is mapping and \"default\" in variant -%}\n                            {{- \" // default: \" + render_default(variant) -}}\n                        {%- endif -%}\n                        {{- \"\\n\" -}}\n                    {%- endfor -%}\n                    {{- (\" \" * indent) + \",\\n\" -}}\n                {%- else -%}\n                    {{- (\" \" * indent) + prop_name -}}\n                    {%- if prop_name not in required -%}?{%- endif -%}\n                    {{- \": \" -}}\n                    {{- render_nullable_type(prop_spec, indent + 4) -}}\n                    {{- \",\" -}}\n                    {%- if prop_spec is mapping and \"default\" in prop_spec -%}\n                        {{- \" // default: \" + render_default(prop_spec) -}}\n                    {%- endif -%}\n                    {{- \"\\n\" -}}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endif -%}\n        {{- (\" \" * indent) + \"}\" -}}\n    {%- elif schema is mapping and schema.get(\"type\") == \"array\" -%}\n        {%- if schema.get(\"items\") -%}\n            {{- json_schema_to_typescript(schema[\"items\"], indent) + \"[]\" -}}\n        {%- else -%}\n            {{- \"Array<any>\" -}}\n        {%- endif -%}\n    {%- elif schema is mapping and schema.get(\"type\") is string -%}\n        {{- ts_type_name(schema.type) -}}\n    {%- elif schema is mapping and schema.get(\"type\") is sequence -%}\n        {%- set rendered_types = namespace(any=false) -%}\n        {%- for ty in schema.type -%}\n            {%- if ty is string -%}\n                {%- if rendered_types.any %} | {% endif -%}\n                {%- if ty == \"integer\" %}number{%- else %}{{ ty }}{%- endif -%}\n                {%- set rendered_types.any = true -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if not rendered_types.any %}any{%- endif -%}\n    {%- else -%}\n        {{- \"any\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- String-schema tools declare as `## name`; every other tool declares as\n   `type name = (_: {...}) => any;`. Call sites emit XML either way. #}\n{%- macro render_tool_declaration(tool) -%}\n    {%- set tool = tool.function if tool.function is defined else tool -%}\n    {%- if tool.parameters is mapping and tool.parameters.get(\"type\") == \"string\" and (not tool.parameters.get(\"properties\")) -%}\n        {{- \"## \" + tool.name + \"\\n\\n\" -}}\n        {{- tool.description or \"\" -}}\n    {%- else -%}\n        {%- if tool.description -%}\n            {%- for line in tool.description.split(\"\\n\") -%}\n                {{- \"// \" + line + \"\\n\" -}}\n            {%- endfor -%}\n        {%- endif -%}\n        {#- A tool with no parameters keeps the `(_: ...)` form and renders\n           `(_: any)`. #}\n        {{- \"type \" + tool.name + \" = (_: \" + json_schema_to_typescript(tool.parameters) + \") => any;\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools_section(tools) -%}\n    {{- \"# Tools\\n\\n\" -}}\n    {%- for tool in tools -%}\n        {{- render_tool_declaration(tool) -}}\n        {%- if not loop.last -%}\n            {{- \"\\n\\n\" -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{#- String values go out as-is; non-strings are JSON-encoded in their given\n   order, at every depth. Jinja's `tojson` sorts keys by default, so mappings\n   and sequences recurse through this macro instead of being handed to it. #}\n{%- macro render_json_value(value) -%}\n    {%- if value is mapping -%}\n        {{- \"{\" -}}\n        {%- for k, v in value.items() -%}\n            {{- k | tojson }}: {{ render_json_value(v) -}}\n            {%- if not loop.last %}, {% endif -%}\n        {%- endfor -%}\n        {{- \"}\" -}}\n    {%- elif value is sequence and value is not string -%}\n        {{- \"[\" -}}\n        {%- for item in value -%}\n            {{- render_json_value(item) -}}\n            {%- if not loop.last %}, {% endif -%}\n        {%- endfor -%}\n        {{- \"]\" -}}\n    {%- else -%}\n        {{- value | tojson -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_parameter_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- render_json_value(value) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_call_body(tool_call) -%}\n    {%- set fn = tool_call.function if tool_call.function is defined else tool_call -%}\n    {%- set args = fn.arguments if fn.arguments is defined else tool_call.arguments -%}\n    {%- if args is mapping -%}\n        {%- for param_name in args -%}\n            {%- set value_text = render_parameter_value(args[param_name]) -%}\n            {%- if \"</rfl:parameter>\" in value_text -%}\n                {{- raise_exception(\"Tool-call parameter '\" + (param_name | string) + \"' contains the reserved delimiter </rfl:parameter>\") }}\n            {%- endif -%}\n            {%- if not loop.first %}{{- \"\\n\" }}{%- endif -%}\n            {{- '<rfl:parameter name=\"' + param_name + '\">\\n' -}}\n            {{- value_text -}}\n            {{- '\\n</rfl:parameter>' -}}\n        {%- endfor -%}\n    {%- elif args is defined and args is not none -%}\n        {{- raise_exception(\"function.arguments must be a dict; parse JSON strings before apply_chat_template\") }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro build_system_message(builtin_tool_definitions) -%}\n    {%- if model_identity is not defined %}\n        {%- set model_identity = \"You are Beam, an AI assistant trained by Reflection.\" %}\n    {%- endif %}\n    {{- model_identity -}}\n    {#- Served default: effort 512 (`max`) when the kwarg is unset or null. #}\n    {%- if reasoning_effort is not defined or reasoning_effort is none %}\n        {%- set reasoning_effort = 512 %}\n    {%- endif %}\n    {%- if reasoning_effort is string %}\n        {%- if reasoning_effort == \"minimal\" %}\n            {%- set reasoning_effort = 8 %}\n        {%- elif reasoning_effort == \"low\" %}\n            {%- set reasoning_effort = 32 %}\n        {%- elif reasoning_effort == \"medium\" %}\n            {%- set reasoning_effort = 64 %}\n        {%- elif reasoning_effort == \"high\" %}\n            {%- set reasoning_effort = 128 %}\n        {%- elif reasoning_effort == \"xhigh\" %}\n            {%- set reasoning_effort = 256 %}\n        {%- elif reasoning_effort == \"max\" %}\n            {%- set reasoning_effort = 512 %}\n        {%- else %}\n            {{- raise_exception(\"reasoning_effort must be an int or one of: minimal, low, medium, high, xhigh, max\") }}\n        {%- endif %}\n    {%- endif %}\n    {{- \"\\n\\nReasoning effort: \" + (reasoning_effort | string) }}\n    {%- if builtin_tool_definitions -%}\n        {{- \"\\n\\n\" -}}\n        {{- render_tools_section(builtin_tool_definitions) -}}\n    {%- endif -%}\n    {{- \"\\n\\n# Valid channels: analysis, final. Channel must be included for every message.\" -}}\n{%- endmacro -%}\n\n{%- if not messages %}{{ raise_exception(\"messages cannot be empty\") }}{%- endif %}\n\n{#- `tools=` remains the serving engine's complete tool registry. The names in\n   `builtin_tools` only select which definitions move into the system block. #}\n{%- set builtin_tool_names = builtin_tools | default([], true) -%}\n{#- Training declares `bash` in the system block with this definition, so a\n   `bash` whose only parameter is an unconstrained `command` string is declared\n   with it. Only descriptions and `additionalProperties` may differ, since they\n   leave the accepted calls the same; any schema key that constrains the call\n   keeps the supplied definition in the developer block. An omitted `required`\n   is declared as required: every call the trained declaration invites is one\n   the supplied schema accepts. #}\n{%- set trained_bash_tool = {\n    \"name\": \"bash\",\n    \"description\": \"Execute a bash command. The output contains the command's stdout and stderr.\\nCommands time out after 10 minutes. You can set a shorter timeout within the bash command.\",\n    \"parameters\": {\n        \"type\": \"object\",\n        \"properties\": {\"command\": {\"type\": \"string\", \"description\": \"The command to execute\"}},\n        \"required\": [\"command\"],\n    },\n} -%}\n{%- set tool_groups = namespace(builtin=[], regular=[]) -%}\n{%- for tool in tools | default([], true) -%}\n    {%- set tool_definition = tool.function if tool.function is defined else tool -%}\n    {%- set tool_name = tool_definition.name -%}\n    {%- set tool_parameters = tool_definition.parameters if tool_definition.parameters is mapping else {} -%}\n    {%- set tool_properties = tool_parameters.properties if tool_parameters.properties is mapping else {} -%}\n    {%- set bash_shape = namespace(plain=true) -%}\n    {%- for key in tool_parameters -%}\n        {%- if key not in [\"type\", \"properties\", \"required\", \"additionalProperties\", \"description\"] -%}\n            {%- set bash_shape.plain = false -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set command_schema = tool_properties.command if tool_properties.command is mapping else {} -%}\n    {%- for key in command_schema -%}\n        {%- if key not in [\"type\", \"description\"] -%}\n            {%- set bash_shape.plain = false -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set is_trained_bash = tool_name == \"bash\"\n        and bash_shape.plain\n        and tool_parameters.get(\"type\") == \"object\"\n        and (tool_properties | list) == [\"command\"]\n        and command_schema.get(\"type\") == \"string\"\n        and tool_parameters.get(\"required\", [\"command\"]) == [\"command\"] -%}\n    {%- if is_trained_bash -%}\n        {%- set tool_groups.builtin = tool_groups.builtin + [trained_bash_tool] -%}\n    {%- elif tool_name in builtin_tool_names -%}\n        {%- set tool_groups.builtin = tool_groups.builtin + [tool] -%}\n    {%- else -%}\n        {%- set tool_groups.regular = tool_groups.regular + [tool] -%}\n    {%- endif -%}\n{%- endfor -%}\n\n{{- \"<|start|>system<|message|>\" }}\n{{- build_system_message(tool_groups.builtin) }}\n{{- \"<|end|>\" }}\n\n{#- The leading run of system/developer messages joins, a blank line apart,\n   into the one `# Instructions` block. Empty content counts as absent, so a\n   run with no content emits no `# Instructions`. #}\n{%- set leading_instructions = namespace(count=0, parts=[]) %}\n{%- for message in messages %}\n    {%- if loop.index0 == leading_instructions.count and message.role in [\"system\", \"developer\"] %}\n        {%- set leading_instructions.count = leading_instructions.count + 1 %}\n        {%- if message.content %}\n            {%- set leading_instructions.parts = leading_instructions.parts + [message.content] %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- set developer_message = leading_instructions.parts | join(\"\\n\\n\") %}\n{%- set loop_messages = messages[leading_instructions.count:] %}\n\n{%- if add_generation_prompt and allow_missing_thinking is defined and allow_missing_thinking == false %}\n    {%- for message in loop_messages %}\n        {%- if message.role == 'assistant' and not (message.thinking or message.reasoning_content or message.reasoning) %}\n            {{- raise_exception(\"The assistant turn at messages[\" + ((loop.index0 + leading_instructions.count) | string) + \"] is missing its reasoning. Dropping reasoning from earlier turns degrades this model's output. Send it back in 'reasoning_content', or set allow_missing_thinking=true to skip this check.\") }}\n        {%- endif %}\n    {%- endfor %}\n{%- endif %}\n\n{%- set has_tools = tool_groups.regular %}\n\n{%- if developer_message or has_tools %}\n    {{- \"<|start|>developer<|message|>\" }}\n    {%- if developer_message %}\n        {{- \"# Instructions\\n\\n\" }}\n        {{- developer_message }}\n        {%- if has_tools %}\n            {{- \"\\n\\n\" }}\n        {%- endif %}\n    {%- endif %}\n    {%- if has_tools %}\n        {{- render_tools_section(tool_groups.regular) }}\n    {%- endif %}\n    {{- \"<|end|>\" }}\n{%- endif %}\n\n{%- set tool_call_registry = namespace(entries=[]) %}\n\n{%- for message in loop_messages -%}\n    {%- if message.role == 'assistant' -%}\n        {%- if message.content %}\n            {%- if \"<|channel|>analysis<|message|>\" in message.content or \"<|channel|>final<|message|>\" in message.content %}\n                {{- raise_exception(\"Pass plain text in API fields, not Harmony wire tags. Use 'thinking' for analysis and 'content' for final.\") }}\n            {%- endif %}\n        {%- endif %}\n        {%- set thinking_text = message.thinking or message.reasoning_content or message.reasoning %}\n        {%- if thinking_text %}\n            {%- if \"<|channel|>analysis<|message|>\" in thinking_text or \"<|channel|>final<|message|>\" in thinking_text %}\n                {{- raise_exception(\"Pass plain text in 'thinking'/'reasoning_content'/'reasoning' without Harmony wire tags.\") }}\n            {%- endif %}\n        {%- endif %}\n        {{- \"<|start|>assistant\" }}\n        {%- generation %}\n        {{- \"<|channel|>analysis<|message|>\" + (thinking_text or \"\") + \"<|end|>\" }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- set fn = tool_call.function if tool_call.function is defined else tool_call %}\n                {%- set tool_name = fn.name if fn.name is defined else tool_call.name %}\n                {%- set call_id = tool_call.id if tool_call.id is defined else (fn.id if fn.id is defined else none) %}\n                {%- if call_id and tool_name %}\n                    {%- set tool_call_registry.entries = tool_call_registry.entries + [{\"id\": call_id, \"name\": tool_name}] %}\n                {%- endif %}\n                {{- \"<|start|>assistant to=\" + tool_name + \"<|channel|>analysis <|constrain|>xml<|message|>\" }}\n                {{- render_tool_call_body(tool_call) }}\n                {%- if loop.last %}\n                    {{- \"<|call|>\" }}\n                {%- else %}\n                    {{- \"<|end|>\" }}\n                {%- endif %}\n            {%- endfor %}\n        {%- else %}\n            {{- \"<|start|>assistant<|channel|>final<|message|>\" + (message.content or \"\") + \"<|return|>\" }}\n        {%- endif %}\n        {%- endgeneration %}\n    {%- elif message.role == 'tool' -%}\n        {%- set resolved_tool = namespace(name=none) %}\n        {%- if message.name is defined and message.name %}\n            {%- set resolved_tool.name = message.name %}\n        {%- elif message.tool_call_id is defined %}\n            {%- for entry in tool_call_registry.entries %}\n                {%- if entry.id == message.tool_call_id %}\n                    {%- set resolved_tool.name = entry.name %}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {%- if resolved_tool.name is none %}\n            {{- raise_exception(\"Tool message needs 'name' or a matching prior tool_call 'id' / 'tool_call_id'.\") }}\n        {%- endif %}\n        {{- \"<|start|>\" + resolved_tool.name + \" to=assistant<|channel|>analysis<|message|>\" + (message.content or \"\") + \"<|end|>\" }}\n    {%- elif message.role == 'user' -%}\n        {{- \"<|start|>user<|message|>\" + (message.content or \"\") + \"<|end|>\" }}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n<|start|>assistant\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "mixture-of-experts",
+      "reasoning",
+      "code",
+      "tool-use",
+      "nvfp4"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "495a7175bb7b0b48bd0ac67d86f3e0c900127a71",
+      "size": 1584
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f49a4e16e68b128803cc2dcea614603632b04eac",
+      "size": 11356
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a0ba197cb4bc9da88716ee52f1a151507b56eb8e",
+      "size": 42918
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "6f7d854d1a20ce5ef1808e19e2e836b3f5a23e9c",
+      "size": 23761
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "f376e2cd449feb3275f5eac62b22e5e99d9cdafa",
+      "size": 7221
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "38065b46fa14b6098b38a3c00e170004491d76e8",
+      "size": 166
+    },
+    {
+      "rfilename": "hf_quant_config.json",
+      "blobId": "085cdb625d9d7a3fcbebb5b00af1c2162b246487",
+      "size": 4420
+    },
+    {
+      "rfilename": "model-layer-00000.safetensors",
+      "blobId": "57b3dd598138c1a48e555e2603a1212eac33ed74",
+      "size": 838904064,
+      "lfs": {
+        "sha256": "2fa4722c6ac71e3456759d34ebc15e1b6d4407b1a7e1cb1afd4c93630c3f46f3",
+        "size": 838904064,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-layer-00001.safetensors",
+      "blobId": "96837901374731b9680016e03339c53ff8fe2306",
+      "size": 838904064,
+      "lfs": {
+        "sha256": "a33be375f3d614a1031eff56539442fcd55a2649f1872bfbdd33d311dd3473d7",
+        "size": 838904064,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-layer-00002.safetensors",
+      "blobId": "3e4a8839912c551ead2d43e8ca7881d40c90ccb1",
+      "size": 838904064,
+      "lfs": {
+        "sha256": "b95cd8d99d17dd833f7c933720af2ee4db704aadf2d27224a7ae2b02a3cf8c55",
+        "size": 838904064,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-layer-00003.safetensors",
+      "blobId": "c8e85384b7b3c66b7a880c6f743ffc3326529ee3",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "309f9e065813fcd7c1e77f0f52b6ba18ba68ba389e4110373f7c8dd5880eb621",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00004.safetensors",
+      "blobId": "a2148fb32b6906b9331652913964b030f197aa6e",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "723bde5032bf45efa2ec3df65357a7856ce2d9c352ff1d7e297f0f7e39632d20",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00005.safetensors",
+      "blobId": "f9c3b2c351bece602c299ee66e83d5bc9f1b2116",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "13cfd369721060a4d1897dfafded2a8f3653784574550e72c2a5a7344ea60fc2",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00006.safetensors",
+      "blobId": "b5d94a2484662a79828a7f43ad48193f1d1bca31",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "df8cb0fdbe80f9f5ddf740adb83b210633cbb3d52cf836275fa7f71e9d30167a",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00007.safetensors",
+      "blobId": "7d586d25a01cb9e140a74aa19d1cfe0b997a46ec",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "89e6651da671ab5cc7a6e1272cc970ece7e550bd319eb23703e56d1e13980e32",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00008.safetensors",
+      "blobId": "7d0ce6efa8b8c8ce14193a54402628426c8ba94b",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "87e86d2d69a846cc0bb47a75686ee67d774e10f887d45fdbbc5e8c49f1dae526",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00009.safetensors",
+      "blobId": "7710aa7717df93954f8ea734de8c035d9548d8f5",
+      "size": 5877681136,
+      "lfs": {
+        "sha256": "0762272ad87374554e4152bb1621fdefdeda6da7c014a9a67e50e0b727c3851d",
+        "size": 5877681136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00010.safetensors",
+      "blobId": "93e8cd33a35db07d9db756bac1b6a6cb2df50f13",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "5aaed61b2f18db37a1454978c7644e97307c4231b374f94f52692d6cb73e11b1",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00011.safetensors",
+      "blobId": "96bc55bc5c582d9fcfdc06e01f16a6dae8422a13",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "f9b28e50afa781f93b414468caf4f55afba5d1826f16d11541f1a40cfc809158",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00012.safetensors",
+      "blobId": "1d4237d9741960a30b78ad81da0e3cff122f8f15",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "44dbcd50f70fe23eed666f412ea3cabc42d892c13eb8aca4a647b2fb15083045",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00013.safetensors",
+      "blobId": "3240cb1340fad88c060f6aec9cf6c45088eafd0f",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "70e2955c9dd0e32dab939dea93daf7bc33cfb0482cdb64b0197b66a6eedb7287",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00014.safetensors",
+      "blobId": "2a5a07fa488bb41b377bf2a5f4f5c6e881e3b4ef",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "8b3d605b53a31992c1053c6660cf4a05542bab185b27b9291aa6593943f769a5",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00015.safetensors",
+      "blobId": "0b9c799e7fbf277be9523c883481bc1728e9cd66",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "338c9f5d67319b06d22dd9dca9572b9f1361aeee0c16819d69769557c6658f6b",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00016.safetensors",
+      "blobId": "1b551f0f3268ac9307d00ac17b18258e6c182e87",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "7fb9ac6a790e2dfb60e1b7b084f1d90a958afc4c0401138479a5fce6bc939ac0",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00017.safetensors",
+      "blobId": "a38bf67028edd917b0080cb467a004558e850c84",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "d2fc084b7708b8c7199b268ce84a90c519d7595c07a3c96d40f15a4cd4f11693",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00018.safetensors",
+      "blobId": "876b14c83af25babc8f2550f9db3870f30534e81",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "41b9f5130428f0dace1a4fa8c2f8e83a5b543ab64d18184de8c66a9b1a2d035d",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00019.safetensors",
+      "blobId": "303265ba6230801e521def36bc2912a7b16e190b",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "5ea743b62b47fdcebaf95de645fc5c3b2d435149f04f79633af84724d6954e1a",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00020.safetensors",
+      "blobId": "16a81230f62eb89411a8d492863efbbb74ff94ca",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "3b1e7ced61103a65860bdd19887c059bd54409fb6a0b33fc65991a1845e155a2",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00021.safetensors",
+      "blobId": "5248abd506d4ad1eab818afa535f50e656a4f574",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "2d191afa8faa7ea6bc7965c2f7907db69dd152ceba39f9671de086d449919445",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00022.safetensors",
+      "blobId": "820e3346365c32166c3a90349089d574ffc54afa",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "9c8840286095e7f9072bf59b71048d35949bb8c7b40a3e3b8062349a1fc5c9b5",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00023.safetensors",
+      "blobId": "aef28f39efd3847e09016b99b8ff4430ce928b7b",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "f16795c57390a2bed2750e8d952846625f2685574a51f078e16ea9bbec58d6b5",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00024.safetensors",
+      "blobId": "8c00c573eb6ebb2a189f253a2c7fce3e7ffca8fe",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "31582b62f00af47aa80028a3aaa8c6573d7475a6f189879aa3db9720a27abbdd",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00025.safetensors",
+      "blobId": "fdacaae9d2cc6f9a8f4312cfbadcdd0896b2e49f",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "120fd1b9d40ca31a84b57ca8aa5617a1287f1b122950a96e4de062c0f6c06645",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00026.safetensors",
+      "blobId": "9a50be495e053c5e7a9fce3309eda9bb488d2158",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "c94ea0081f5785ebc292e4edfc67d9b616df28f47ca66bbb16abf913898a8046",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00027.safetensors",
+      "blobId": "942bbd57a1fccc779745bb4c71868f0e2b10ba33",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "423d3ec458d04339fc897c82f31298e1f5c5bfe1df04a13619b34e4de8cfa1bd",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00028.safetensors",
+      "blobId": "fb48e65abdcf464d8c2975c284cdfd85b4d683f3",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "09ff38129466cf04711e0763b3636c83b908a96d81881a59c617dd6156557a57",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00029.safetensors",
+      "blobId": "35cae462305b797f372444453e37e64d819b6956",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "c47924c4bfac2a88948a1676915a60a690d65992bfa0c134a2e0e6193a461315",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00030.safetensors",
+      "blobId": "6ae5562d67abefb62b3e9485c1234efddd0b05ee",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "4d7d123b6f69a1d8ddfc1d1f5bfba8b1755d5c34cacff61145a913e4c4dd511d",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00031.safetensors",
+      "blobId": "6010bf30d0cbec970d53205c4d451b4740312947",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "e8c9139e7c46c5cef8bc53ae792256cce7ee9c0a8145c08337c86d2439d5d73d",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00032.safetensors",
+      "blobId": "d951c4c8fb9865dcdc64803f5a5301975a2704a2",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "c85f6c734c4da5ec49537937a6b61a56465482c3716909971ad14a10cc0be8f0",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00033.safetensors",
+      "blobId": "048632535cb4393c0e2933cb34422a7b5b291c9b",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "d0dec1ab4c8c05c5bc9f664948db9a097fa544c1b139c01688de15848822d8ba",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00034.safetensors",
+      "blobId": "b9e13f7aacc5af27b7f5158a7e9db565c712da93",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "ca9bfd116afe8e6aac6a62efbf9035a5d72e87f421d3037fc16a15a5a70b6fb9",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00035.safetensors",
+      "blobId": "bb6d5f48abf52517003c0e9d130b365aa23d41bf",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "d5e838863553d558b4feb3d734d8f7cc4179baebb06bcfe840f2a016a8b33f94",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00036.safetensors",
+      "blobId": "36565d2d001ae2fe8d5239320f0313216b635b1e",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "9baba9c198413adfc5996d85372d42fa44f110d975d35162fe1e9a5d9b99be2c",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00037.safetensors",
+      "blobId": "3ce5efd6651a33ad7fb3af787a31a30efb326141",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "c1064c374ec26694065100279cc9045cb6c39f6ae5a7af7ab037593619e2ce74",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00038.safetensors",
+      "blobId": "c1438fccde5cb27b707c4d5f8f78e8acb5eefc3a",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "71a944659759f52e755741f94d7231884d2227906864da22afd2562943dcf163",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00039.safetensors",
+      "blobId": "11e68727f716ea62021b38afce3a02fb6da0be62",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "81bbb33f91204d3d87ea2f6d7c2e06bc42bbdf3089f5d00725d14c4e1e40c8b4",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00040.safetensors",
+      "blobId": "63db3487fcd8299ec48003ede7eba0849bb1a392",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "4878a5f1f3f778ada93d78883ad87fe4d8d170afec80ba5a1f21d4bf6fe963ae",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00041.safetensors",
+      "blobId": "29cc061a7395efe1765a7c15a1bb0825f4ae9e35",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "4d27d5268e4ba3bcd4fcad5b2f6331b30fef14a04ed94e9ae743da1c5a8da9b1",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00042.safetensors",
+      "blobId": "6c8cc5cffb92887be1136fe04e316c29cca9ccd2",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "7f0aee282a1f97830bcc4412c20c5b0e8611815d7d4216c2d85e7a4435399ebc",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00043.safetensors",
+      "blobId": "cefa60ce5f817a97d0a7ca010ddecfec6874405d",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "52c6143e42db0ee50d5c07bbb1200eb293bdcd5cf78de6207c12cd1835faf209",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00044.safetensors",
+      "blobId": "e0e53a645033824832e0d1b59336ebc170b9516f",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "dc2be9534dd1d28884f66183d85f2172255239773e7d0b62437eda8711b61c2d",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00045.safetensors",
+      "blobId": "0c224336f767034c7c8a472aca4dff3a8676f652",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "b8a03fd44be1da28f4390515ea1b0db5f40acc25e20441a38abc8e883103f2f8",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00046.safetensors",
+      "blobId": "662014ad7598c4e1370ae683f895048bbdcf96d8",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "46ae2505284900d8478134e9b285d3a049e7a7b53b3915a4ebe801425c852b7e",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00047.safetensors",
+      "blobId": "71d2351888978762b50eda87e923f2fbf526629b",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "3e260ec9e52f0c17ec7b1fd24c9503e6b48ad23b069c3bd8ff3da291f315929c",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00048.safetensors",
+      "blobId": "cf42413bb5022a0b76ad574b7f234fa8de61000f",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "67a2102e347dcfcde4ab3fb7c7f7bfa9560d3e2db670c0ed83c8c5958d167b66",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00049.safetensors",
+      "blobId": "203c24a763f2408122cf073776301a11a56aebde",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "7d0bcb62a319982593259b3e656f20615581ca5ee4f97e3cc631f4b379f58f23",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00050.safetensors",
+      "blobId": "dc9216c17fe06a5be603916c77556790322aaabf",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "03054f00564712d7a70abf47eae3262035da14eb5e4caf8153433b795e390c30",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-layer-00051.safetensors",
+      "blobId": "355cbeab6b77ba76e015fb28314b5fbb547c576c",
+      "size": 5877684224,
+      "lfs": {
+        "sha256": "3c04861b0cff952bd7747f9812133b2b51ac4771170ad9e18045c6c0834f1372",
+        "size": 5877684224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-tail.safetensors",
+      "blobId": "04157b3b129570882769e7e134821afc7daa06d7",
+      "size": 3111659816,
+      "lfs": {
+        "sha256": "e9208ae187167ea8d576bc2d9cffb8945832af3e6bdc7a24ba7b9a607fe28d0b",
+        "size": 3111659816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "4bbceb6994cf73179dc66ebc3aad2bb3aea7eaf4",
+      "size": 13985351,
+      "lfs": {
+        "sha256": "5e190cb19c177b2fa1febe607548f900172b9040f9f4af65f582cc8af6be1b26",
+        "size": 13985351,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "cfea4f4f2a49656ee8032f169af5f45aaf163d83",
+      "size": 5971238
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "c40a544488f57a4376ff04791c82189c35055c42",
+      "size": 1695
+    }
+  ],
+  "spaces": [
+    "peterhdd/beam-on-rtx-pro-6000"
+  ],
+  "createdAt": "2026-10-10T04:32:18.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 7953224128,
+      "F32": 64237824,
+      "U8": 246625075200
+    },
+    "total": 254642537152
+  },
+  "usedStorage": 293648862719
+}

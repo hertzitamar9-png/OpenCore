@@ -1,0 +1,131 @@
+{
+  "_id": "6a11146a37f564db4d1d1ad0",
+  "id": "google/gemma-4-12B",
+  "private": false,
+  "pipeline_tag": "any-to-any",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gemma4_unified",
+    "image-text-to-text",
+    "any-to-any",
+    "arxiv:2607.02770",
+    "license:apache-2.0",
+    "eval-results",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 66226,
+  "likes": 817,
+  "modelId": "google/gemma-4-12B",
+  "author": "google",
+  "sha": "023679ed352de9bb66cc873c9009ce3482585c08",
+  "lastModified": "2026-07-15T16:40:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask>",
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Gemma4UnifiedForConditionalGeneration"
+    ],
+    "model_type": "gemma4_unified",
+    "tokenizer_config": {
+      "bos_token": "<bos>",
+      "eos_token": "<eos>",
+      "mask_token": "<mask>",
+      "pad_token": "<pad>",
+      "unk_token": "<unk>"
+    }
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "license_link": "https://ai.google.dev/gemma/docs/gemma_4_license",
+    "pipeline_tag": "any-to-any"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "602d20f6eefed4b62821062891a7a495e25435f9",
+      "size": 1624
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "221970dc42ea6e97090b16ef09790b46777c1d91",
+      "size": 28340
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "6d3994fd0b98fd5eaaaadbf918bd826d778ce5ea",
+      "size": 4383
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "6e4ef65e8cf563a9177fd933423f89eed2f74d74",
+      "size": 233
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "b486eba79038fd235f4fa3b1aa502d3df9a4c23c",
+      "size": 23919549408,
+      "lfs": {
+        "sha256": "fe054ae05ff7f44318fd8ae90d58992531455c7ed31356704088f0f2d8c8009a",
+        "size": 23919549408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "b889adcd78015bf5a0139438c5fb0b7067529a61",
+      "size": 1382
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "890ddaefca8201dd023c4f013db5ce492d12e7e0",
+      "size": 32170070,
+      "lfs": {
+        "sha256": "12bac982b793c44b03d52a250a9f0d0b666813da566b910c24a6da0695fd11e6",
+        "size": 32170070,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "0a3fe0009f6816c5c615c6102eea6599680c1523",
+      "size": 888
+    }
+  ],
+  "spaces": [
+    "EuroEval/euroeval_leaderboard",
+    "build-small-hackathon/multi-agent-lab",
+    "build-small-hackathon/chalchitra",
+    "llmRobert/Gemma4-gtradio",
+    "Angelguava/Gradio_Gemma4",
+    "ZeroJazz/Gemma4_Gradio",
+    "jon5150/Gemma4-gradio",
+    "geraldWang/gemma4_chat",
+    "AdrianLi33/Gemma4-Gradio",
+    "weiyichun/Gradio_Gemma4",
+    "Sandra1165/Gemma4_gradio",
+    "Mikkatsuki/Gemma4_gradio",
+    "medododo159/ai-agent",
+    "hplisiecki/pinocchio-inventory-explorer",
+    "Aman90101/gemma4-academic-zerogpu",
+    "byte-vortex/reward-learned-nothing-changed"
+  ],
+  "createdAt": "2026-05-23T02:43:54.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 11959730224
+    },
+    "total": 11959730224
+  },
+  "usedStorage": 23951719478
+}

@@ -81,7 +81,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python distribution/hf-research/build_catalog.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python distribution/build-publisher-catalog.py
+          python distribution/build-publisher-catalog.py --check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Prepare the verified newer native baseline and current committed frontend
         env:
@@ -95,6 +95,8 @@ jobs:
           node qa-model-install.cjs candidate-dist
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-builtin-presets.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node connector-research/qa-connectors.cjs --patched
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

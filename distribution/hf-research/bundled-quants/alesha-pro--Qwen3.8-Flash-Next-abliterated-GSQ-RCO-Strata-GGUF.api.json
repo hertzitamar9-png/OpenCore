@@ -1,0 +1,213 @@
+{
+  "_id": "6ac1b03cba7bf169f75c30bb",
+  "id": "alesha-pro/Qwen3.8-Flash-Next-abliterated-GSQ-RCO-Strata-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "gsq",
+    "rco",
+    "strata",
+    "abliterated",
+    "control-vector",
+    "image-text-to-text",
+    "arxiv:2604.18556",
+    "arxiv:2605.00649",
+    "base_model:ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "base_model:quantized:ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 250525,
+  "likes": 190,
+  "modelId": "alesha-pro/Qwen3.8-Flash-Next-abliterated-GSQ-RCO-Strata-GGUF",
+  "author": "alesha-pro",
+  "sha": "d4af3be5701549435e0770d625f79dd2def1358f",
+  "lastModified": "2026-10-04T18:20:55.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "qwen-community-license-1.0",
+    "license_link": "LICENSE",
+    "base_model": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "tags": [
+      "gguf",
+      "gsq",
+      "rco",
+      "strata",
+      "abliterated",
+      "control-vector"
+    ]
+  },
+  "gguf": {
+    "total": 120320,
+    "architecture": "controlvector",
+    "totalFileSize": 483520
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52443424b8b895054915d27468bbfef67e1eed77",
+      "size": 2434
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-Flash-Next-refusal-direction-r.gguf",
+      "blobId": "805445c9fc5db7b7bc8f2a5200c56a0c5dc06cae",
+      "size": 483520,
+      "lfs": {
+        "sha256": "59f9ae8b4372107ae79044278a4406bdfe8f8861fe599aa5848515f0d072be38",
+        "size": 483520,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
+      "blobId": "eb44ea761a646baf71f344e4114595d22c81eb84",
+      "size": 39225954592,
+      "lfs": {
+        "sha256": "92cee27ae5bbadcd732416a0f7a7f0acc092399dbbe8f5a5efa707c2ec0a49d7",
+        "size": 39225954592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XS/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00002-of-00002.gguf",
+      "blobId": "5b6ab49f5c8ac8c1ff7f3e9e9c79c7b2212660e6",
+      "size": 28800138432,
+      "lfs": {
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+        "size": 28800138432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+      "blobId": "2969a78cc8593516280eb76fa192acf456e5e81a",
+      "size": 54817524224,
+      "lfs": {
+        "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+        "size": 54817524224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "blobId": "5b6ab49f5c8ac8c1ff7f3e9e9c79c7b2212660e6",
+      "size": 28800138432,
+      "lfs": {
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+        "size": 28800138432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+      "blobId": "669b2e63c1599cefdad9af03cf3825d619b6d409",
+      "size": 47039860096,
+      "lfs": {
+        "sha256": "219ea929900dfa9ef091f3aa473fdba6874b65fcb36526d7d851ac9e95856d15",
+        "size": 47039860096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+      "blobId": "5b6ab49f5c8ac8c1ff7f3e9e9c79c7b2212660e6",
+      "size": 28800138432,
+      "lfs": {
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+        "size": 28800138432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "9557a8961782792814714b7488346732c043793d",
+      "size": 3235
+    },
+    {
+      "rfilename": "Q2_0/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.gguf",
+      "blobId": "99fd9c956afb374223b9326c58904fa20cfea112",
+      "size": 37623740192,
+      "lfs": {
+        "sha256": "69820c02ec7d0b45ef2ebb19d6620299db749fe2aded7f39f93c6b88b199b720",
+        "size": 37623740192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_0/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00002-of-00002.gguf",
+      "blobId": "5b6ab49f5c8ac8c1ff7f3e9e9c79c7b2212660e6",
+      "size": 28800138432,
+      "lfs": {
+        "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113",
+        "size": 28800138432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "af35f09f41afb7f355a83ede11041cc803c1630f",
+      "size": 13223
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "b340ad0745dfa571ee799147d3f3f6d2b92a0e47",
+      "size": 1907
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+      "blobId": "974f4ca87254dcaec0cf82479f4eea73629eef56",
+      "size": 907543008,
+      "lfs": {
+        "sha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0",
+        "size": 907543008,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.rco-allocation.txt",
+      "blobId": "7c05839d6316e350643e0375b86dd3bec68fa565",
+      "size": 39556
+    },
+    {
+      "rfilename": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.rco-allocation.txt",
+      "blobId": "8d567cadd225d8b5133a7ee2ad7ef1c1f01d33ba",
+      "size": 39368
+    },
+    {
+      "rfilename": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.rco-allocation.txt",
+      "blobId": "beb5e7c0bbe56aed2a29121a27baddc1fb89407a",
+      "size": 39445
+    },
+    {
+      "rfilename": "tensor-allocation/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.rco-allocation.txt",
+      "blobId": "12e14056630b318d14d43ce9570ffcf5490c8152",
+      "size": 39062
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-04T01:47:40.000Z",
+  "usedStorage": 208415244064
+}

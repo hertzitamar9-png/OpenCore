@@ -1,0 +1,204 @@
+{
+  "_id": "6888a03396208ad06f42e9ca",
+  "id": "mradermacher/Voxtral-Mini-3B-2507-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "vllm",
+    "en",
+    "fr",
+    "de",
+    "es",
+    "it",
+    "pt",
+    "nl",
+    "hi",
+    "base_model:mistralai/Voxtral-Mini-3B-2507",
+    "base_model:quantized:mistralai/Voxtral-Mini-3B-2507",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 317,
+  "likes": 2,
+  "modelId": "mradermacher/Voxtral-Mini-3B-2507-GGUF",
+  "author": "mradermacher",
+  "sha": "8a964c1feb655990ad1811f565448ba940c31798",
+  "lastModified": "2026-10-21T08:16:21.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "mistralai/Voxtral-Mini-3B-2507",
+    "language": [
+      "en",
+      "fr",
+      "de",
+      "es",
+      "it",
+      "pt",
+      "nl",
+      "hi"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "vllm"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 4014136320,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{#- Copyright 2025-present the Unsloth team. All rights reserved. #}\n{#- Licensed under the Apache License, Version 2.0 (the \"License\") #}\n{#- Edits made by Unsloth #}\n{%- set default_system_message = 'You are Devstral, a helpful agentic model trained by Mistral AI and using the OpenHands scaffold. You can interact with a computer to solve tasks.\\n\\n<ROLE>\\nYour primary role is to assist users by executing commands, modifying code, and solving technical problems effectively. You should be thorough, methodical, and prioritize quality over speed.\\n* If the user asks a question, like \\\"why is X happening\\\", don\\'t try to fix the problem. Just give an answer to the question.\\n</ROLE>\\n\\n<EFFICIENCY>\\n* Each action you take is somewhat expensive. Wherever possible, combine multiple actions into a single action, e.g. combine multiple bash commands into one, using sed and grep to edit/view multiple files at once.\\n* When exploring the codebase, use efficient tools like find, grep, and git commands with appropriate filters to minimize unnecessary operations.\\n</EFFICIENCY>\\n\\n<FILE_SYSTEM_GUIDELINES>\\n* When a user provides a file path, do NOT assume it\\'s relative to the current working directory. First explore the file system to locate the file before working on it.\\n* If asked to edit a file, edit the file directly, rather than creating a new file with a different filename.\\n* For global search-and-replace operations, consider using `sed` instead of opening file editors multiple times.\\n</FILE_SYSTEM_GUIDELINES>\\n\\n<CODE_QUALITY>\\n* Write clean, efficient code with minimal comments. Avoid redundancy in comments: Do not repeat information that can be easily inferred from the code itself.\\n* When implementing solutions, focus on making the minimal changes needed to solve the problem.\\n* Before implementing any changes, first thoroughly understand the codebase through exploration.\\n* If you are adding a lot of code to a function or file, consider splitting the function or file into smaller pieces when appropriate.\\n</CODE_QUALITY>\\n\\n<VERSION_CONTROL>\\n* When configuring git credentials, use \\\"openhands\\\" as the user.name and \\\"openhands@all-hands.dev\\\" as the user.email by default, unless explicitly instructed otherwise.\\n* Exercise caution with git operations. Do NOT make potentially dangerous changes (e.g., pushing to main, deleting repositories) unless explicitly asked to do so.\\n* When committing changes, use `git status` to see all modified files, and stage all files necessary for the commit. Use `git commit -a` whenever possible.\\n* Do NOT commit files that typically shouldn\\'t go into version control (e.g., node_modules/, .env files, build directories, cache files, large binaries) unless explicitly instructed by the user.\\n* If unsure about committing certain files, check for the presence of .gitignore files or ask the user for clarification.\\n</VERSION_CONTROL>\\n\\n<PULL_REQUESTS>\\n* When creating pull requests, create only ONE per session/issue unless explicitly instructed otherwise.\\n* When working with an existing PR, update it with new commits rather than creating additional PRs for the same issue.\\n* When updating a PR, preserve the original PR title and purpose, updating description only when necessary.\\n</PULL_REQUESTS>\\n\\n<PROBLEM_SOLVING_WORKFLOW>\\n1. EXPLORATION: Thoroughly explore relevant files and understand the context before proposing solutions\\n2. ANALYSIS: Consider multiple approaches and select the most promising one\\n3. TESTING:\\n   * For bug fixes: Create tests to verify issues before implementing fixes\\n   * For new features: Consider test-driven development when appropriate\\n   * If the repository lacks testing infrastructure and implementing tests would require extensive setup, consult with the user before investing time in building testing infrastructure\\n   * If the environment is not set up to run tests, consult with the user first before investing time to install all dependencies\\n4. IMPLEMENTATION: Make focused, minimal changes to address the problem\\n5. VERIFICATION: If the environment is set up to run tests, test your implementation thoroughly, including edge cases. If the environment is not set up to run tests, consult with the user first before investing time to run tests.\\n</PROBLEM_SOLVING_WORKFLOW>\\n\\n<SECURITY>\\n* Only use GITHUB_TOKEN and other credentials in ways the user has explicitly requested and would expect.\\n* Use APIs to work with GitHub or other platforms, unless the user asks otherwise or your task requires browsing.\\n</SECURITY>\\n\\n<ENVIRONMENT_SETUP>\\n* When user asks you to run an application, don\\'t stop if the application is not installed. Instead, please install the application and run the command again.\\n* If you encounter missing dependencies:\\n  1. First, look around in the repository for existing dependency files (requirements.txt, pyproject.toml, package.json, Gemfile, etc.)\\n  2. If dependency files exist, use them to install all dependencies at once (e.g., `pip install -r requirements.txt`, `npm install`, etc.)\\n  3. Only install individual packages directly if no dependency files are found or if only specific packages are needed\\n* Similarly, if you encounter missing dependencies for essential tools requested by the user, install them when possible.\\n</ENVIRONMENT_SETUP>\\n\\n<TROUBLESHOOTING>\\n* If you\\'ve made repeated attempts to solve a problem but tests still fail or the user reports it\\'s still broken:\\n  1. Step back and reflect on 5-7 different possible sources of the problem\\n  2. Assess the likelihood of each possible cause\\n  3. Methodically address the most likely causes, starting with the highest probability\\n  4. Document your reasoning process\\n* When you run into any major issue while executing a plan from the user, please don\\'t try to directly work around it. Instead, propose a new plan and confirm with the user before proceeding.\\n</TROUBLESHOOTING>' %}\n\n{{- bos_token }}\n\n{%- if messages[0]['role'] == 'system' %}\n    {%- if messages[0]['content'] is string %}\n        {%- set system_message = messages[0]['content'] %}\n    {%- else %}\n        {%- set system_message = messages[0]['content'][0]['text'] %}\n    {%- endif %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = default_system_message %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{{- '[SYSTEM_PROMPT]' + system_message + '[/SYSTEM_PROMPT]' }}\n\n\n{#- Tool description appended ONLY to last user message. Edits made by Unsloth #}\n{#- Tool description appended also if last message is tool. Edits made by Unsloth #}\n{%- set tools_description = \"\" %}\n{%- set has_tools = false %}\n\n{%- if tools is defined and tools is not none and tools|length > 0 %}\n\n    {%- set has_tools = true %}\n    {%- set tools_description = \"[AVAILABLE_TOOLS]\" + (tools | tojson) + \"[/AVAILABLE_TOOLS]\" %}\n\n    {{- tools_description }}\n\n{%- endif %}\n\n{%- for message in loop_messages %}\n    {%- if message['role'] == 'user' %}\n\n        {%- if message['content'] is string %}\n            {{- '[INST]' + message['content'] + '[/INST]' }}\n        {%- else %}\n            {{- '[INST]' }}\n            {%- for block in message['content'] %}\n                {%- if block['type'] == 'text' %}\n\n                    {#- Original did not have content which is weird. Added by Un-sloth. #}\n                    {%- if block['text'] is defined %}\n                        {{- block['text'] }}\n                    {%- else %}\n                        {{- block['content'] }}\n                    {%- endif %}\n\n                {%- elif block['type'] in ['image', 'image_url'] %}\n                    {{- '[IMG]' }}\n                {%- else %}\n                    {{- raise_exception('Only text and image blocks are supported in message content!') }}\n                {%- endif %}\n            {%- endfor %}\n            {{- '[/INST]' }}\n        {%- endif %}\n\n    {%- elif message['role'] == 'system' %}\n        {%- if message['content'] is string %}\n            {{- '[SYSTEM_PROMPT]' + message['content'] + '[/SYSTEM_PROMPT]' }}\n        {%- else %}\n            {{- '[SYSTEM_PROMPT]' + message['content'][0]['text'] + '[/SYSTEM_PROMPT]' }}\n        {%- endif %}\n        \n\n    {%- elif message['role'] == 'assistant' %}\n        {%- if message['content'] is string %}\n            {{- message['content'] }}\n        {%- else %}\n            {{- message['content'][0]['text'] }}\n        {%- endif %}\n\n        {#- If User,Assistant,Tool,Tool we also need to append tools_description. Edits made by Unsloth #}\n\n        {%- if message['tool_calls'] is defined and message['tool_calls'] is not none %}\n            {%- for tool in message['tool_calls'] %}\n                {%- set arguments = tool['function']['arguments'] %}\n                {%- if arguments is not string %}\n                    {%- set arguments = arguments|tojson %}\n                {%- endif %}\n                {#- Must list tool calls AFTER assistant. Edits made by Un-sloth #}\n                {{- \"[TOOL_CALLS]\" + tool['function']['name'] + \"[ARGS]\" + arguments }}\n            {%- endfor %}\n        {%- endif %}\n\n        {{- eos_token }}\n\n    {%- elif message[\"role\"] == \"tool_results\" or message[\"role\"] == \"tool\" %}\n        {%- if message.content is defined and message.content.content is defined %}\n            {%- set content = message.content.content %}\n        {%- else %}\n            {%- set content = message.content %}\n        {%- endif %}\n        {{- \"[TOOL_RESULTS]\" + content|string + \"[/TOOL_RESULTS]\" }}\n\n    {%- else %}\n        {{- raise_exception('Only user, systemm assistant and tool roles are supported in the custom template made by Unsloth!') }}\n    {%- endif %}\n{%- endfor %}\n{#- Copyright 2025-present the Unsloth team. All rights reserved. #}\n{#- Licensed under the Apache License, Version 2.0 (the \"License\") #}",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 8037058048
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2e4e845306b0cee4e7bf69adf4c622927c2e41d5",
+      "size": 2338
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4c6e2df0ce385a75d5af6b039245bebecc8e0410",
+      "size": 3905
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.IQ4_XS.gguf",
+      "blobId": "7347da86de30d765bc1c3297a92c10c107f006f7",
+      "size": 2284504576,
+      "lfs": {
+        "sha256": "fccd0b69ce7372b9e16244f6224d6ae0bf24100421a8c0ac23ced6391efb7ce7",
+        "size": 2284504576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q2_K.gguf",
+      "blobId": "f5ed042bd9ba45511ed5d48e3b2af9ced1a2343e",
+      "size": 1661552128,
+      "lfs": {
+        "sha256": "40d5bbe50f42deb073e8b47c93586f376e5d4115f2ff11922f8f85b1af5065fd",
+        "size": 1661552128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q3_K_L.gguf",
+      "blobId": "8cd74eadbeac6c3be42c96f773c5ce022fd4d179",
+      "size": 2207483392,
+      "lfs": {
+        "sha256": "e38cfd994e4100c7dd1bc3ec804471e78c44179cb6b3cae56b7b3a485f104345",
+        "size": 2207483392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q3_K_M.gguf",
+      "blobId": "c227c21a732a6fda9564fde64059616b04d190a3",
+      "size": 2058061312,
+      "lfs": {
+        "sha256": "a4c85077d6dad7baf4efff4309aeea54afb8ac4dcbafb593cbb5b59a574f3df2",
+        "size": 2058061312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q3_K_S.gguf",
+      "blobId": "f8aa76094ca798d90f6a402f36bc0804f1f93104",
+      "size": 1891190272,
+      "lfs": {
+        "sha256": "4883dfd81d6c2c38d9808748172dbcd9935830af828f578ed29e273cdbd80563",
+        "size": 1891190272,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q4_K_M.gguf",
+      "blobId": "dd8a53ea2f0744c50320cc6899d1fc081e32e60e",
+      "size": 2473002496,
+      "lfs": {
+        "sha256": "49588ed04186f2b441679b57c2b0fc3b1c724bbd7349b41a4188134e7a31a42b",
+        "size": 2473002496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q4_K_S.gguf",
+      "blobId": "6a7c19b1c8e0d34eea98b05576fede04845f247d",
+      "size": 2381825536,
+      "lfs": {
+        "sha256": "52cb69756249848f17e237e9462a594e26ed0ffa2b865a130b867bfd4952e077",
+        "size": 2381825536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q5_K_M.gguf",
+      "blobId": "fe09a4671cbb94f53e249d56d9bcf542c726112d",
+      "size": 2874869248,
+      "lfs": {
+        "sha256": "f2a8d7025c4f8ebd9b93c163cc1062d54754f1e9e793681b40963e3f0a4193d0",
+        "size": 2874869248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q5_K_S.gguf",
+      "blobId": "d5b9a6e2416207091657fce9407fb955646b9d08",
+      "size": 2822227456,
+      "lfs": {
+        "sha256": "e57e8e258b3036d9abf1dc29ba0e421d0f8b23d0fa82a45067776c64ccd7e548",
+        "size": 2822227456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q6_K.gguf",
+      "blobId": "1818453dd1e2814df1f9095a03d67d24cdcc1087",
+      "size": 3301852672,
+      "lfs": {
+        "sha256": "31bff16edd2b8ab4ff935a0fa3a190a84fc42e7d3fd1b51d8aef6ad297c52f89",
+        "size": 3301852672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.Q8_0.gguf",
+      "blobId": "679c5648ca84d704df8a42776256c67a491c0cc4",
+      "size": 4273980928,
+      "lfs": {
+        "sha256": "11be38ecfffcd02f5a033a3ff12e610e057ef957eb3a596bcd5681a0854bbacb",
+        "size": 4273980928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Voxtral-Mini-3B-2507.f16.gguf",
+      "blobId": "2875442e2dc6fcd06044cbc3dad24e222da905d4",
+      "size": 8037058048,
+      "lfs": {
+        "sha256": "d545ca235fa355a44dadf179f066af638b374cd0768001fd816dbf2d4579f341",
+        "size": 8037058048,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-07-29T10:19:31.000Z",
+  "usedStorage": 36267608064
+}

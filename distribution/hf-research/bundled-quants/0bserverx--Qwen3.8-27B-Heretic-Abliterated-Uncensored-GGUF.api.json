@@ -1,0 +1,1869 @@
+{
+  "_id": "6a7f62fadca4ab8bcc0a546e",
+  "id": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gguf",
+    "qwen3.8",
+    "qwen3.5",
+    "heretic",
+    "abliterated",
+    "uncensored",
+    "roleplay",
+    "imatrix",
+    "text-generation",
+    "conversational",
+    "base_model:Qwen/Qwen3.8-27B",
+    "base_model:quantized:Qwen/Qwen3.8-27B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 1104246,
+  "likes": 761,
+  "modelId": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF",
+  "author": "0bserverx",
+  "sha": "ab8d7bd81d03117501e4da60cccdff4c80f0eea0",
+  "lastModified": "2026-09-20T13:42:25.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "chat_template_jinja": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "Qwen/Qwen3.8-27B"
+    ],
+    "library_name": "transformers",
+    "tags": [
+      "qwen3.8",
+      "qwen3.5",
+      "heretic",
+      "abliterated",
+      "uncensored",
+      "roleplay",
+      "gguf",
+      "imatrix"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 26895998464,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 16547400032
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "651a83beea5f180f82db1da41bc8145b04759f7a",
+      "size": 9879
+    },
+    {
+      "rfilename": "GSQ-3bit/README.md",
+      "blobId": "b5346090b2a0a4ce509a5dbd74322470bbd01da9",
+      "size": 1007
+    },
+    {
+      "rfilename": "GSQ-3bit/config.json",
+      "blobId": "c115d3614ff39a1a45770178fd5dea264f906b68",
+      "size": 3404
+    },
+    {
+      "rfilename": "GSQ-3bit/generation_config.json",
+      "blobId": "023756cfadf88e5bf69eefeee3e172f38c448d64",
+      "size": 202
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00001-of-00065.safetensors",
+      "blobId": "892b314a2dc1fe378845340fbd2a889c109003f1",
+      "size": 5085614360,
+      "lfs": {
+        "sha256": "2fe557b1f1a5c625b09070c2c175ff3be0fb6dd9ce752401141a4040e5e3d9a1",
+        "size": 5085614360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00002-of-00065.safetensors",
+      "blobId": "73ac5096be24ea33db113621aab3540192931984",
+      "size": 369749056,
+      "lfs": {
+        "sha256": "598758abbdb5c95dd9bc1096eeac274767612474c6b95a839e0a8ac781715980",
+        "size": 369749056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00003-of-00065.safetensors",
+      "blobId": "e69ae554ddcbe4658caaa0773241ded69c490020",
+      "size": 369749056,
+      "lfs": {
+        "sha256": "50e0ba4e9b29d10b48e57f0f135d12b7a0429ef6d94cce897a1e02b4f23af620",
+        "size": 369749056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00004-of-00065.safetensors",
+      "blobId": "a8a07ecabfcdec5bc40135576b827ca89685dc03",
+      "size": 369749056,
+      "lfs": {
+        "sha256": "ef3b9d21f5221163a88af4a7d6760bcc0eca9cc44d5e3b74c9effdf851b2d1a7",
+        "size": 369749056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00005-of-00065.safetensors",
+      "blobId": "3082b17c4db92cd2ef093647430c73f05c134541",
+      "size": 347610000,
+      "lfs": {
+        "sha256": "a514a51333c30a4e2009f07141171539bcd90cbffe79c005de361540bcb24a04",
+        "size": 347610000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00006-of-00065.safetensors",
+      "blobId": "f191a387a61d48bfc9fddf6a5b9172c4120d2e5b",
+      "size": 369646256,
+      "lfs": {
+        "sha256": "0bc84d241799b53c0955b5907443057cf3c493ee084db8a65c37aa26d84f8f67",
+        "size": 369646256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00007-of-00065.safetensors",
+      "blobId": "2bb0da3ced3347621b0cbb223fc7f6c93b1025d9",
+      "size": 369646256,
+      "lfs": {
+        "sha256": "a01d7c8193fab4d9514321fa21bf5ef0c305ab09d4c963786bc2fae1de649f74",
+        "size": 369646256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00008-of-00065.safetensors",
+      "blobId": "e45b2041d7d07f2260cd95f9fc3a0e856cad5314",
+      "size": 369646256,
+      "lfs": {
+        "sha256": "8777bf75668f5f6bb0e7209332f248eeac51ac02529a4d2af5241ce3db63ff49",
+        "size": 369646256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00009-of-00065.safetensors",
+      "blobId": "e8a23e3e7a781315d7039ffe48db3efcc77e36d4",
+      "size": 347610000,
+      "lfs": {
+        "sha256": "eb8588a0aac36e0ddbe0bcf40831f51a2216c75b37bcee0d959fe874c0a94a6b",
+        "size": 347610000,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00010-of-00065.safetensors",
+      "blobId": "915a256e1531e90e3e0cdfda9fc48aac31451125",
+      "size": 369646256,
+      "lfs": {
+        "sha256": "21344b409d405fa709893fbe06c44fe13fca5b4703649fe94395561e28dc34e8",
+        "size": 369646256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00011-of-00065.safetensors",
+      "blobId": "e9abf8c41f4bf703fe75c57561778d16053a7c51",
+      "size": 369646256,
+      "lfs": {
+        "sha256": "f1673265119b4288f9963710a9ec21a45e4bfb06543850f2a02b32c418927691",
+        "size": 369646256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00012-of-00065.safetensors",
+      "blobId": "06ecbf038430385f163ff8703b4a40f85807e510",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "42b3a4ffe57525c4e9391fc2c7a42c3726a06ee95d9ea831edd912e41c1382e4",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00013-of-00065.safetensors",
+      "blobId": "9c0420f0d9d113bfd5bee5897ce674ce8acec53b",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "6f50756ad82142622d6ca5dd33d8690f5b9627251c91f591a79814ad904f348a",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00014-of-00065.safetensors",
+      "blobId": "6cba2c384d30c45aa890792b0ba772692a8bd675",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "16f82561ffdc989a010b59eab90a2edf4b60e88993b1b44e65e80f334cb38812",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00015-of-00065.safetensors",
+      "blobId": "318015814793144c567206d2f366cae41c5878cd",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "e80a7040f3663b651baf558a8c5ce1b904a09a1e82b30a556a31e68aa608ddc5",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00016-of-00065.safetensors",
+      "blobId": "9c71541cab0d28f5299787ea668e1b3811768f2b",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "8394fd2f92581f8e834a0017c10f4886873d89c20cd0286b1398c8717e8437f2",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00017-of-00065.safetensors",
+      "blobId": "eac45ee8c0c09ebf21d4dab768be8eb242ebd0df",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "4dfb651f482a5d1936680d6d03c08faf39322e79a273fe0a3f06c95e8308a02e",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00018-of-00065.safetensors",
+      "blobId": "ccbdb7d58f019a79f54807cd9bfe3d76eca0ae33",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "03a7584ece18396a292401c1794d248a79589931b027adefcc3d51c70cf00b8a",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00019-of-00065.safetensors",
+      "blobId": "1b1069a19c801f8d850303c986aa910ccd933a10",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "ca59b1f853982bb02364eceafa932c74e1a8e91eeca3487ceaf75e6e2b707bfd",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00020-of-00065.safetensors",
+      "blobId": "adf56f634231a4e661ddd34d9e862084b337e8e4",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "b4e49393ee83c79e3c1392e2a0075693136aec60fb069eca01bb2ecfe3f6d77f",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00021-of-00065.safetensors",
+      "blobId": "c7bbaaba524548275c6c13b93527609d959c6e28",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "d5fb2cf28fe2bbfd9f09f51916630b82d2498354b0818e1e86f89003ea4c600c",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00022-of-00065.safetensors",
+      "blobId": "e79e0ac59729f3cc68ef6e7633ade89917d1600d",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "e788fd071be5778d3647acf526904fa3ab8356e3f38dfacdbff91f87de6aa6fb",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00023-of-00065.safetensors",
+      "blobId": "ea8ca64d557792f26a67f4afd9d997260f928bf3",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "fc4492d74a36a9a1a5528a6787338d9f2bbf7aa7225f5bad29a6168a009e82ed",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00024-of-00065.safetensors",
+      "blobId": "3ca5461a930c8acfcad28bf27d9390a40f2329fa",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "019c658363fc997562197223740064df18d097d5e9a5aefa19355b41f1a3ded5",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00025-of-00065.safetensors",
+      "blobId": "84b907ee2f36d10244a34f50b2ca4aec7d381a11",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "0d5f3011840be65bfae2bb5384d27d7ad142924d3e821e006791400ac327394d",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00026-of-00065.safetensors",
+      "blobId": "87156c45cd9ba9f0832cf93143fea60d1867dc13",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "5d023952f4350a39fb403e242c1efed11bc81f6975e4e60f881fe78abe413ee0",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00027-of-00065.safetensors",
+      "blobId": "657283af738867140b6f771344bd824db8dc75c9",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "2ac6244578dd69c2e8fa9259ff5b87f8e73545eaca0f6c1b9fd860607c20a9ff",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00028-of-00065.safetensors",
+      "blobId": "75c42feef6f5d96f92e4c7b8fbd582a46e9e1c94",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "ca378de31ea2663de804713a3262b97d4ba8eadb083b9ff5160cec38a97da10a",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00029-of-00065.safetensors",
+      "blobId": "556ed0bce23cfe4d3f17279eed5c571190006122",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "eacf71fb4296544677b275706c5f8248b3facd4705001e93d0466101a54f4ad1",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00030-of-00065.safetensors",
+      "blobId": "e141c4c722a49a44882b24170cabc6e76945514f",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "38c2ad25b1aa80cb201b9eaceee599869ef4a19cf4009112036827c84d3da9b7",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00031-of-00065.safetensors",
+      "blobId": "b72cc07132bdb379c4170729dd46d6b6b22df5ce",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "3bb9d79615bd9264cc8ac6a8bf9350aed818d0593edfa5581056ece23b982623",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00032-of-00065.safetensors",
+      "blobId": "fe3e4ccf22db179c20cb781782b8d8b5092b21f9",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "df6266040ac9bc812df9de716e8cb35701ff3290e5511ea7f9fd75fb100e77a7",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00033-of-00065.safetensors",
+      "blobId": "a76f2ea7174a25753cac52c6d938b1c9f47bf9b3",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "1dff72794fe9c79d4e85f472b19f4a7c376ae03a0cdac4f31b968d488ac7c92b",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00034-of-00065.safetensors",
+      "blobId": "2bda06438a8605422d4a806994600f1364e7b9f8",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "5e46366f7bf8d5ae2730862c4291d66fb84d2106c38490df16536388778caab1",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00035-of-00065.safetensors",
+      "blobId": "fcb4fdeeef6774c93532449cbbde24de889cdf31",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "ed64b85a69da8e25c2d41a88d2e94dca764ed5ef9b9e8e6d8d8373fc157d3df1",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00036-of-00065.safetensors",
+      "blobId": "a21f10c489717875f60d7fe6263e94e9aeef6de9",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "1563ae04492905c5e74f4137819aacf14167e39954e005a3828bee935f55ee6d",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00037-of-00065.safetensors",
+      "blobId": "de85748edb44ea68a73685880e6fe8cd00d27835",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "1d74bdae10d6e9e228b6209d90ff9697d52934376250f645e7c8d97cea6db03a",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00038-of-00065.safetensors",
+      "blobId": "5365dba69728a706949befaacc2d8587d4acf97e",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "81162d266edc89a465d82ca5929f7272a37262f82f26ed706b3bc8acd02349e6",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00039-of-00065.safetensors",
+      "blobId": "4a6e840fd25eb02eb2d461d5cae1cacae1a16ece",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "561a4fc38538770cd24e50a4e92c539fe7eabadd7435489b5df46dd06c683acf",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00040-of-00065.safetensors",
+      "blobId": "6069690667ca23a0344d421538eaa667406eab96",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "7068dcf5912807e42bf4ca7371c1a8e70f57439ce8193bef93d57aa9857b0314",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00041-of-00065.safetensors",
+      "blobId": "1496e674562ad8eac09cd60046c37257ea68a6df",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "36292ac06d25849a9019119e2a6a58fc73eed2ebf2c2c4fb0007873732815f86",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00042-of-00065.safetensors",
+      "blobId": "20885aa058184498d610f7cadcad32d4d567b75b",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "1ca34cabe66b8ba79caa04a25968ac7a9a08c223b8c241d48095bcecf2045e9c",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00043-of-00065.safetensors",
+      "blobId": "b72ff4391a4b5576fe57b98d0934956aff79347c",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "26fa9f9c7b83ca644ba198262b2fc17ae535c3413b9fdb9a6f614f9b92907b11",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00044-of-00065.safetensors",
+      "blobId": "a47a13592c13f13d115b4bcddf46bb9384aeead2",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "2bfa589528c558a17a174647690ab075a68d428738cea9c498dbec04a0dec961",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00045-of-00065.safetensors",
+      "blobId": "b2e0753127d6530f6e081ea8e94fce181e52aa71",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "dc3d080aa5213e822b6337ffaac69a7c07aa0f57f412dcb9f2cb8a0cbeafbed8",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00046-of-00065.safetensors",
+      "blobId": "deeb18617016e8363504f4954535b14a8d8ff3cc",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "99560377dc30ee783624a0306c75d5baa2a64ff11373707b7e1526cdd04f203d",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00047-of-00065.safetensors",
+      "blobId": "17f54abab0a11b2202da0a5d90497ff70cf4ac55",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "583177fbe2722d97eb3ba813fa0d33962c1fce091b80ac810361951a851eba23",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00048-of-00065.safetensors",
+      "blobId": "401f0b9dc7646d92dc4eadaa71a438bfedcc36a0",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "b90cece53165615579a54098011383aab8b83642d8bc899097ad75a4522a25c4",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00049-of-00065.safetensors",
+      "blobId": "1e9f58d6db08c13db9414034f42b5ec6f05df4bb",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "03f43e6819364b72ebe764899c5e0feab269618ebc993b327a0f16e76812a5eb",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00050-of-00065.safetensors",
+      "blobId": "a489f57874bf30bafd88c106cd6ef5ec6c70d77d",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "f0214a9154914e87c99d2d6dda5589197d385ee6e92784c5b175a8a2a1684d19",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00051-of-00065.safetensors",
+      "blobId": "28e6d925319d5b8c840e83f72afa68826ef51eca",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "56644ce5964da168fad6fd0a5a9a736b03dbd95b0fa616cf3a8ed2ee0b30169a",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00052-of-00065.safetensors",
+      "blobId": "ca1a348fd0095349a6944abfb4fae60b1c86b71a",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "952ab17d01f6ee487fca23ec01f7ea5520d6a3d45f716b863d1ad572b0d1f12b",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00053-of-00065.safetensors",
+      "blobId": "773198024da68d9f6224c06c60d346afb3a15037",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "9b474c113f22f8f4a68d6573267d01d96e333e07951a48fb40726afce674b596",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00054-of-00065.safetensors",
+      "blobId": "bee2b75c7f4081c26453d950f69e08d4a284c892",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "b7b130a671ea14b8e0baf5995ef4056c18a58664a5b36bb9bdbc98a8bb90d0dd",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00055-of-00065.safetensors",
+      "blobId": "fef9800ea8e198d3790c3d917376d3f75435ea98",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "d55ba089998e0bac62e59c460b86c31bd9c2d1db1dbcb3ec49f0e8d9f513f9bc",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00056-of-00065.safetensors",
+      "blobId": "607493a6b4dfac99fef9c8a0f953827121ee0bc9",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "121552574d46af1f36dedf1b5d0f292d9b4b420a521405397e4e3bb58a699310",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00057-of-00065.safetensors",
+      "blobId": "bba2d4cd75d8cd8ba48714d976bd1ce47495a0e5",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "a9adb33d4cc4a3b4a8d3ebda9a586c1f2aee4c3d23ec5ae7921120d71b9aa164",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00058-of-00065.safetensors",
+      "blobId": "fa642b6b30dff0519efff803880d93ecfd2aa6b1",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "8e9628bade887006e6361d16ff05e599e56d23925f5f1693d2a2647f28350d94",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00059-of-00065.safetensors",
+      "blobId": "7c7531f6e0aaddcc4712ff3f23161ab763f281b3",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "a8efc23a260a71fa8776993d30c3b0b464e0a5369f47d41287950dc3b28ed3e6",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00060-of-00065.safetensors",
+      "blobId": "e89951bf489203ca75495b90f41f34bc1208e4b5",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "d030e306d3ea85b4d813e4e74b88c293401006305d1f5dda4e98f26899e163b9",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00061-of-00065.safetensors",
+      "blobId": "26049891fcc43f23b6bca2a23abd132e4d904e46",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "0c8a551f87bd4f0114a927e5b8f10f70c0d17270075e082cbb8c157b4ef8d5cf",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00062-of-00065.safetensors",
+      "blobId": "6579552da7c21524840bc00b5feb234626f05acd",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "a804e09176838c2a3d292a2dd6b2ad52428c3301789d9ec85cd514a4832b3916",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00063-of-00065.safetensors",
+      "blobId": "06e2270509a131a4d6683a326ca328aca6bcf33e",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "3f3cad59f290cc8ae309b01b6f2a21b75f6bd0ecbfd9fbbcf48c8069a62d7d98",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00064-of-00065.safetensors",
+      "blobId": "fc6d990bd0dfdaf70db094710e209593155242bb",
+      "size": 369646280,
+      "lfs": {
+        "sha256": "0e87776a0d77e13616355ac631d8fbfa1a2dfdc52ba4d934f930d1909bae17fb",
+        "size": 369646280,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model-00065-of-00065.safetensors",
+      "blobId": "ff399b053a19865f6830683f215b959cb43837f6",
+      "size": 347610016,
+      "lfs": {
+        "sha256": "ddedb61fafef24fbeb9ae97f92dd2da5a4500d24751560e18222aabc7b88aa5e",
+        "size": 347610016,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/model.safetensors.index.json",
+      "blobId": "6de4b849e22611ac4d2b2183fdfdfb4a4c7c0306",
+      "size": 105173
+    },
+    {
+      "rfilename": "GSQ-3bit/receipt.md",
+      "blobId": "e3140d4b7f59c5d2d7393cbdfad08344ac3b7cc6",
+      "size": 1478
+    },
+    {
+      "rfilename": "GSQ-3bit/tokenizer.json",
+      "blobId": "9328ce9c41e80f6dd7bc2c66d8ae1fc93bf87440",
+      "size": 12809320,
+      "lfs": {
+        "sha256": "0997f410c57a1f4e53b09e4be8f4a172d90edd9564368fb0847030937229b9f3",
+        "size": 12809320,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "GSQ-3bit/tokenizer_config.json",
+      "blobId": "5de744b3fca2129d7186979ae47c06be33903243",
+      "size": 17928
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Heretic-Q4_K_M.gguf",
+      "blobId": "c42d0ce14ece18bf1e756acfce4a31b0f8da64f9",
+      "size": 16547400032,
+      "lfs": {
+        "sha256": "5ae89d6720ba0a27f643e6fbb0d1b557870d17aeff23156e5981e863ec16985c",
+        "size": 16547400032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "618fdfe63164d41c91c14e32c55ca1dfacbea569",
+      "size": 35167
+    },
+    {
+      "rfilename": "RVN-BF16-mtp.gguf",
+      "blobId": "f585df9fc3bfb94c44b712911ef90b0e17056d2c",
+      "size": 54259602656,
+      "lfs": {
+        "sha256": "10813b480bd630d8c1148ccdccc9faf70afbf72cb6d46b8cf865c99112bef88f",
+        "size": 54259602656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-BF16.gguf",
+      "blobId": "6a5d65d86329fa6eece6be1d3695be504c8f02e2",
+      "size": 53808281888,
+      "lfs": {
+        "sha256": "461fa227cb3d0bb49a3e8e45ec2b650f9a2e593c51a92144d5ac819f0ee8f37d",
+        "size": 53808281888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-F16-mtp.gguf",
+      "blobId": "76e1fbc5c80767b6dcd89da8f7a65583ea59875c",
+      "size": 54259602656,
+      "lfs": {
+        "sha256": "7b08c52b2168f104aeeef9aaf88f6148f14986ccf03d733e4ddb8bb6daa17784",
+        "size": 54259602656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-F16.gguf",
+      "blobId": "94769336fe698ffcaa445f2a5718421c8a43f71a",
+      "size": 53808281888,
+      "lfs": {
+        "sha256": "f20c72c23a6564211c5e44af35ea1277d697c009ce8a25ab28d100447e0f155a",
+        "size": 53808281888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_M-mtp.gguf",
+      "blobId": "6bc8c82e0d0ad5f1f1b71e0cbdf5eb73224d8d55",
+      "size": 8082404768,
+      "lfs": {
+        "sha256": "5edfe902abc5d2f83942f513f98df919129978b63ed36c8ba63ec4ad6ef8bc5b",
+        "size": 8082404768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_M-multilingual-mtp.gguf",
+      "blobId": "a1fd84f8a3e571f333d0bd89f82c74c965a53fde",
+      "size": 8082404832,
+      "lfs": {
+        "sha256": "04b045b94d02355478865224c7612417f489a36f0d6681450001ad5e5389cd4c",
+        "size": 8082404832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_M-multilingual.gguf",
+      "blobId": "11c132498126d3ea86b659b06c73c8bfcccccc6b",
+      "size": 7631084064,
+      "lfs": {
+        "sha256": "94d02f07eae45f0d71b56e3800ede1d28b9e18b4ab7685f552069a32836039dc",
+        "size": 7631084064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_M.gguf",
+      "blobId": "0588f6f43b1497ec87c0d509acf679f8ba44b4b2",
+      "size": 7631084032,
+      "lfs": {
+        "sha256": "01a709e622165dddc275fb19c12444e20c6ecae18c068725db7d1aa2ee5fa45e",
+        "size": 7631084032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_S-mtp.gguf",
+      "blobId": "958b72ac76cc97f6a0c7cae07b9b4c8f807a98b3",
+      "size": 7601145248,
+      "lfs": {
+        "sha256": "77e292d92da4657f28ab1b8bfefdbadb1552d3e6daa17ff35e9dacce6e9ded59",
+        "size": 7601145248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_S-multilingual-mtp.gguf",
+      "blobId": "a56f75e12598a615c1482b9c0cfc22214e43c37b",
+      "size": 7601145312,
+      "lfs": {
+        "sha256": "912cd2111d20ceab8273966667b79884d1194bd401e182336dac4e2bdf2b5ade",
+        "size": 7601145312,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_S-multilingual.gguf",
+      "blobId": "6fc2a2e7ad913a8c62e444dc7585c9dd417cdc97",
+      "size": 7149824544,
+      "lfs": {
+        "sha256": "14331414fbf959c440d168ea39a005a8a0d8775b853e15f9e1d9df758f479737",
+        "size": 7149824544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ1_S.gguf",
+      "blobId": "434ba5b3fe0bc905f5e9ba7a89fa21992f3af82e",
+      "size": 7149824512,
+      "lfs": {
+        "sha256": "6718c15c056efa65755b9db664925425ad5111fabbf87397b77e82d9c223eee3",
+        "size": 7149824512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_M-mtp.gguf",
+      "blobId": "e3f1b4bde3a5c558ffe40c614258f1fdc6815370",
+      "size": 10455913888,
+      "lfs": {
+        "sha256": "bc5e31bb27ba69ce4a0b0e92b71c4400a509578acc26b5944a64db6c9f2606c0",
+        "size": 10455913888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_M-multilingual-mtp.gguf",
+      "blobId": "df7968e0bcd6a93b81712ec57f2ea101690ba30e",
+      "size": 10455913952,
+      "lfs": {
+        "sha256": "949967fd36fab7dd29f1a886a0e82d9566456e17b6bd1cb9da01983c55a73501",
+        "size": 10455913952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_M-multilingual.gguf",
+      "blobId": "84e2590c88074df675f6e49af9400ede5e32fe87",
+      "size": 10004593184,
+      "lfs": {
+        "sha256": "a0fb26b1bd6fdf9c3eb84cbd97ce9405221bfce979cbf3c00ceaee6848682214",
+        "size": 10004593184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_M.gguf",
+      "blobId": "264698d0c3189d44be761cdcb2d457c8ea6f178b",
+      "size": 10004593152,
+      "lfs": {
+        "sha256": "a531c26993bb9ed91e299a025006915dc343285dc6dfabfd7d477370e42eb189",
+        "size": 10004593152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_S-mtp.gguf",
+      "blobId": "fe1b74dd80aec60c00c5583190d4a1ddd215f6d4",
+      "size": 9814234560,
+      "lfs": {
+        "sha256": "16256ace1d398695150ac971470062e64e6a992ebe6ee05492ef0e7af628dff7",
+        "size": 9814234560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_S-multilingual-mtp.gguf",
+      "blobId": "3621567f4da02f8f341f873ca660569ae7401d5f",
+      "size": 9814234592,
+      "lfs": {
+        "sha256": "f6a7a567e4e789b9391996a7da59d2b11850fc79d167f178575847d5a186d767",
+        "size": 9814234592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_S-multilingual.gguf",
+      "blobId": "0d5ce0f1db2a34c06889d498e85c6adf8291e24e",
+      "size": 9362913824,
+      "lfs": {
+        "sha256": "88c39f3a7297f0f4d3d85a8d02fff40202b0f0d490444f77b2d57fb99a099b8a",
+        "size": 9362913824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_S.gguf",
+      "blobId": "bce264ecfa6163637a8c27a895d6147718b4f12e",
+      "size": 9362913792,
+      "lfs": {
+        "sha256": "8d0973eabea77748e02f114d74f149a74f4d878a09c56d47a3dd0bb9af36fada",
+        "size": 9362913792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XS-mtp.gguf",
+      "blobId": "adf84e2655e13eede85df3c2e4188ea7dbf1338d",
+      "size": 9541911968,
+      "lfs": {
+        "sha256": "f1107edd76991d5faee85781ec20df9511a2a41c19142158e7d14642300fafcf",
+        "size": 9541911968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XS-multilingual-mtp.gguf",
+      "blobId": "09384b43e055396ef639eedb877b7b95f74088f8",
+      "size": 9541912032,
+      "lfs": {
+        "sha256": "4ecdd5d7192cc146078baf601d085eed25acbd6784d9313ad3f955594217cf13",
+        "size": 9541912032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XS-multilingual.gguf",
+      "blobId": "1a1c8f0cf7223a2a28d40540f0ef1fee43ba74e4",
+      "size": 9090591264,
+      "lfs": {
+        "sha256": "9e7995899191c94875b3962443320452cd092608c06caae2b02e84a27bf2ae61",
+        "size": 9090591264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XS.gguf",
+      "blobId": "14ce401620c813643da2dcc5bc30c27347bba0d8",
+      "size": 9090591232,
+      "lfs": {
+        "sha256": "991858c2e6ed47347afbf5a35e47180ec7defd2d7b5e2ffbd705e4163241ea0e",
+        "size": 9090591232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XXS-mtp.gguf",
+      "blobId": "5099e80d3426d7fe94760d3bb834bcaa9d664b24",
+      "size": 8884503968,
+      "lfs": {
+        "sha256": "323b78d7ac87ccb546d885c7dd7f01da79dc97335bdd93e4ca4cf34b1de6d384",
+        "size": 8884503968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XXS-multilingual-mtp.gguf",
+      "blobId": "141fdba818a52adf6d360df0b1e5201886499ec4",
+      "size": 8884504032,
+      "lfs": {
+        "sha256": "4ce488ea9b2ae93216b318df449e0870cf155df27657137a6e0b0d300674700a",
+        "size": 8884504032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XXS-multilingual.gguf",
+      "blobId": "5563974ccf3d997b22fdc6424019fe2e51cfccc8",
+      "size": 8433183264,
+      "lfs": {
+        "sha256": "08a157f354947a47df0aeca69f80d2477419341ab56ed1f5a2eb2f38bc994abd",
+        "size": 8433183264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ2_XXS.gguf",
+      "blobId": "35221f61ce483c9924e315353e6ec3c0dcc20caf",
+      "size": 8433183232,
+      "lfs": {
+        "sha256": "36578db18a17e726ff2de9bb459474d7a32d3822a35429ef026015335a57683f",
+        "size": 8433183232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_M-mtp.gguf",
+      "blobId": "da3e62eee045126ebf5a692ed4b9f4cbbaa33c3a",
+      "size": 13032195520,
+      "lfs": {
+        "sha256": "49b3e9cf17ea9e7de224bb1f4e60930798c99ba07bc2b6765c44f5e27c83304b",
+        "size": 13032195520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_M-multilingual-mtp.gguf",
+      "blobId": "c1b8a7684d738b4461d021479a4643788d6fe4b6",
+      "size": 13032195552,
+      "lfs": {
+        "sha256": "6deae4e6a0883fcf9a0e440902ef05a10b7a029d2717346c53b01c157c8a83db",
+        "size": 13032195552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_M-multilingual.gguf",
+      "blobId": "b95a5fcbb8b509a22b16adbbc9f9b955f393bd5f",
+      "size": 12580874784,
+      "lfs": {
+        "sha256": "d0d060e9f0625e6eaeb40ce35c3344d6d6b8be2231f6f2a44eb19cc380fbf9fa",
+        "size": 12580874784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_M.gguf",
+      "blobId": "8f83c0c42282545c068e371e4739808741408e05",
+      "size": 12580874752,
+      "lfs": {
+        "sha256": "a0f64d73d2ccfb5333a2e9dde9b079200d2a3e46f9ebaf19bc1a3cf14489d06b",
+        "size": 12580874752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_S-mtp.gguf",
+      "blobId": "1acc1a9913623a7db89c7a1374271aad80835c50",
+      "size": 12870649280,
+      "lfs": {
+        "sha256": "7ce579dd7a81067c008089d292c36c451cf00796cb643ee9312d3dde10f7ca49",
+        "size": 12870649280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_S-multilingual-mtp.gguf",
+      "blobId": "aaf25c9530bd55caf0cf7c6afd6ef2c4143c85ba",
+      "size": 12870649312,
+      "lfs": {
+        "sha256": "48766d8382bf4e609402c51b2acc0b591f3d507e9eedc10e2ed7e3aa9030450b",
+        "size": 12870649312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_S-multilingual.gguf",
+      "blobId": "7a1a0654343a121287c7dbdf2ded082cd53240b4",
+      "size": 12419328544,
+      "lfs": {
+        "sha256": "f8babfae3f1ee67f29e0c79154d71838a8f30f18bc7ada16b9e35bbf22dc5e30",
+        "size": 12419328544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_S.gguf",
+      "blobId": "24419021215234d0dc3c13bb7f76617a85af40c2",
+      "size": 12419328512,
+      "lfs": {
+        "sha256": "ea1970358504bc9c0dd2fa8181820b3b6dc46951afe7d4473a06de34711f0606",
+        "size": 12419328512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XS-mtp.gguf",
+      "blobId": "ca5d3b88069d74d575373bc2b2c401ac39548df2",
+      "size": 12418450880,
+      "lfs": {
+        "sha256": "abcb0d6e066209be5703353aa003ae2c393d57527e5c1d1468eafee32b9325c3",
+        "size": 12418450880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XS-multilingual-mtp.gguf",
+      "blobId": "502b2ea9fab3abdce5100b2212c37689a8630cf8",
+      "size": 12418450912,
+      "lfs": {
+        "sha256": "7f01165ccb5e818f44b9d719305cdd37066a2233e1f49d75a8f8557c2a4a46f4",
+        "size": 12418450912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XS-multilingual.gguf",
+      "blobId": "71c60fed5d9019b9dcc7bdeb9f7cdf0518556a20",
+      "size": 11967130144,
+      "lfs": {
+        "sha256": "a4fb2de73a9e61878affec30ba17a864b219f7aab21c26137ded4d7f159ecd00",
+        "size": 11967130144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XS.gguf",
+      "blobId": "b0a96516e7ff1ab1a591406c8a9c1e2a69f0b114",
+      "size": 11967130112,
+      "lfs": {
+        "sha256": "7fadbf639ade9862c426de3fbc0a5330557ba2a871041eef02f1d771701fbdb7",
+        "size": 11967130112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XXS-mtp.gguf",
+      "blobId": "3eb141dde37c0db03c0861a60dbba5d9804b1cf9",
+      "size": 11637691840,
+      "lfs": {
+        "sha256": "99a6d6ae8ab3ecbefb0d1a0830d25f7b25f9168c83dfe8ab0266be023eb2e3f9",
+        "size": 11637691840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XXS-multilingual-mtp.gguf",
+      "blobId": "b9fe33c3aad55d6d49a4552ce9755567e7f743a0",
+      "size": 11637691872,
+      "lfs": {
+        "sha256": "338955bd8d67908afb4093b8a7b386dcfcd6eb6184a2171e5d6731c1d296abf6",
+        "size": 11637691872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XXS-multilingual.gguf",
+      "blobId": "1f70bc4c47a709b24216b6a5e3386957b306bd24",
+      "size": 11186371104,
+      "lfs": {
+        "sha256": "b4460c920ef12ece80f8a7e6896e9e3990cf90f477d7452c044f832a379287d9",
+        "size": 11186371104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ3_XXS.gguf",
+      "blobId": "7bd79c2df9a79044769dafa4bd76098e977783fc",
+      "size": 11186371072,
+      "lfs": {
+        "sha256": "8e0e213d20eb289b081df65a403e118b9e5c5b932f75521703aaffc9d0b6f5e0",
+        "size": 11186371072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_NL-mtp.gguf",
+      "blobId": "8c2a8c43b41cee8211c7e0c6aeedbb3a52b5c141",
+      "size": 16342377696,
+      "lfs": {
+        "sha256": "dae10ccc69361055194867ad25ccb14b4043668d7d666b1028175e0c4bc72200",
+        "size": 16342377696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_NL-multilingual-mtp.gguf",
+      "blobId": "910ec1e38ea13b35a339386c5c7fb2e3f7f9c834",
+      "size": 16253248992,
+      "lfs": {
+        "sha256": "7c443c8910022bc6a11ce0dce1a0157f46df10f7f8030119fb82603dbf836bb7",
+        "size": 16253248992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_NL-multilingual.gguf",
+      "blobId": "019d782caee02a7d08cef5275535ce5b76f6032a",
+      "size": 15801928224,
+      "lfs": {
+        "sha256": "7317d51ad903f9c547450070e3ce2aad74d7f27f6f02784e61446c2d01d0d8bf",
+        "size": 15801928224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_NL.gguf",
+      "blobId": "86fc555375de6ab2da00195e0842582a9dcdd771",
+      "size": 15891056928,
+      "lfs": {
+        "sha256": "38f8e785e6949f88a1027f9f1053df22e389f13a2deabf7877bf6bdef72adf3c",
+        "size": 15891056928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_XS-mtp.gguf",
+      "blobId": "d2dba080536cd45db22d46c2062a2eac38b3bd72",
+      "size": 15645238496,
+      "lfs": {
+        "sha256": "c4052a5904dbf6615a8d6535913ecaa32862bddc9e5353f0a8557e2f95e4017a",
+        "size": 15645238496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_XS-multilingual-mtp.gguf",
+      "blobId": "fdbcaa0496890b3e90417ff2913e1c21ab84e8e5",
+      "size": 15533827552,
+      "lfs": {
+        "sha256": "28a03eb132c45a98d9493f0d51b5db57c38b376ec58e4892d3b441fd02128c86",
+        "size": 15533827552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_XS-multilingual.gguf",
+      "blobId": "f189b7816b81593c5180787881f8d0d7e8166a6a",
+      "size": 15082506784,
+      "lfs": {
+        "sha256": "b615856ba4a620db3be004ff5e5c46b3a6c5c3a17d247bef2cf6cbe1ca325aa4",
+        "size": 15082506784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-IQ4_XS.gguf",
+      "blobId": "36fefc4c4910c2174eb675711c5932048898517b",
+      "size": 15193917728,
+      "lfs": {
+        "sha256": "a3ba83d4f1750c270bc4fd57f0bb053ed52fb637686d5607a3c224f6a8f0de22",
+        "size": 15193917728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K-mtp.gguf",
+      "blobId": "350815da38246eea3910734803581de136c9893a",
+      "size": 11162985888,
+      "lfs": {
+        "sha256": "2bed5048f3cb20ea7420f2d616635bbdf43f6c8e582f841f0d4f31b76fc7c19e",
+        "size": 11162985888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K-multilingual-mtp.gguf",
+      "blobId": "0ae89a38aa7dfdf03d9c87ea4b939e4017a1029c",
+      "size": 11162985952,
+      "lfs": {
+        "sha256": "c5a4fa4cc15a72013e6ab6fe1fea00b2b2eb96c9ed4317f5ec47ba85e86fdd4b",
+        "size": 11162985952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K-multilingual.gguf",
+      "blobId": "80998aae2a4a9a0c0a73620c6502c20423a3c29b",
+      "size": 10711665184,
+      "lfs": {
+        "sha256": "75b631012e4398d809e0c940c4056fbf94c1d0bebb8e179f9c0b9e6127c91cdf",
+        "size": 10711665184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K.gguf",
+      "blobId": "393910a9629aba39cc6970679360b13240dc7c77",
+      "size": 10711665152,
+      "lfs": {
+        "sha256": "3867c3e780fc73817f1c03bb33c869110747712d82d05e667f33e54f30f54259",
+        "size": 10711665152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K_S-mtp.gguf",
+      "blobId": "ec2e4a5288895b6dfd78c81289e15deabaac3f52",
+      "size": 10699646368,
+      "lfs": {
+        "sha256": "2883006f4e6d2b35b8c6ca23ee5a5dcefaf68be0bdaec319ea2b4df40bbfb02b",
+        "size": 10699646368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K_S-multilingual-mtp.gguf",
+      "blobId": "02099318d009b5d0750cfab96af3f02c9e317ef0",
+      "size": 10699646432,
+      "lfs": {
+        "sha256": "698f70289fb99d9321fe8336f45ab8cd737a182af6295833249d2436b64c1cb0",
+        "size": 10699646432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K_S-multilingual.gguf",
+      "blobId": "49f4436c95f9d6fd50707e27bcbcd30f2b9fb6cb",
+      "size": 10248325664,
+      "lfs": {
+        "sha256": "bcac0b9f8ebbd1ec1ec5e76c1d66b7d09cb89c50732cd99dad5ed1a252e3bd4e",
+        "size": 10248325664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q2_K_S.gguf",
+      "blobId": "f968620497b686617acdabc05a097eb5b3b90fec",
+      "size": 10248325632,
+      "lfs": {
+        "sha256": "cdd667b50c79b43f2e560ac27a975c49c3adf22674db551363b94ce5030c43f3",
+        "size": 10248325632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_L-mtp.gguf",
+      "blobId": "aed468cb627b6c76e86092b36bd204b917edfa68",
+      "size": 14796096736,
+      "lfs": {
+        "sha256": "458e4f4d4302e48933545e435d3d5e7444c85632702ab9d9be7f59d3a26a50fb",
+        "size": 14796096736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_L-multilingual-mtp.gguf",
+      "blobId": "5c4d36357990b73b14f0f871da83c94420972947",
+      "size": 14796096992,
+      "lfs": {
+        "sha256": "0010af37eeff334c28cffde0f76c037bf4c093ba3ee7f3a74bb699a0f9ee8dff",
+        "size": 14796096992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_L-multilingual.gguf",
+      "blobId": "2078a82c9466c36e65d0296c74a97a0a6b60a022",
+      "size": 14344776224,
+      "lfs": {
+        "sha256": "d5129d2b03aef634dd42f57ddf08f06a30717c18069d1f7b47d91ad648abcacc",
+        "size": 14344776224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_L.gguf",
+      "blobId": "f9c1fe8d07c44b4983fa6e29056193114dc293a5",
+      "size": 14344775968,
+      "lfs": {
+        "sha256": "b28a18047646dc079a528781b6b30b4a97e31fb246ddb7561d5f15ea8b6c9c96",
+        "size": 14344775968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_M-mtp.gguf",
+      "blobId": "69fe9edee9ebe9e0aca4f0cbc30ad8a49d9c6dcf",
+      "size": 13752763616,
+      "lfs": {
+        "sha256": "249b354e8e0a6984c903d5c099b9e9d054c1d5580b32e8dd818273dbacdb9a2c",
+        "size": 13752763616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_M-multilingual-mtp.gguf",
+      "blobId": "088131160056b296c6255a11ca756bb56bf9a8d3",
+      "size": 13752763872,
+      "lfs": {
+        "sha256": "e268aa26c693011a2c1490fa3daf253a6af61f0c3c1e8ab40d6c0605ebd4742e",
+        "size": 13752763872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_M-multilingual-vision.gguf",
+      "blobId": "e7def9eb5665b201543187453b950b3be7972c59",
+      "size": 16193856544,
+      "lfs": {
+        "sha256": "e54c0a8ddbe9c38b90cf8151c04bc27aceb78e33af954e2be5eb5a0359d49d2c",
+        "size": 16193856544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_M-multilingual.gguf",
+      "blobId": "0cf18eb7cb9a1e9438df2970e855f0a5dfefa072",
+      "size": 13301443104,
+      "lfs": {
+        "sha256": "be2c331e07a86a9243b49f6c17a25e46b5ff47e3b3a3852fa426606c87bfc563",
+        "size": 13301443104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_M-vision.gguf",
+      "blobId": "923ab9e69b766c5e93dee4aca3237fc73156dcb8",
+      "size": 16193856288,
+      "lfs": {
+        "sha256": "02b2dd3542131722703e9863ff16b504f74b248fd01aeba873a88d5f8da857e3",
+        "size": 16193856288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_M.gguf",
+      "blobId": "ea8559ce09ad38f25a39ba9ec72fdc77273b6ff4",
+      "size": 13301442848,
+      "lfs": {
+        "sha256": "08a875dc1cae0eec8ffc6ca529495f55d471d933588188ae49f925607937c3e1",
+        "size": 13301442848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_S-mtp.gguf",
+      "blobId": "b2be7d8b5d3c5d30736f34716bc8a2d85f5f4412",
+      "size": 12525274336,
+      "lfs": {
+        "sha256": "8ae918b94a083a0f7ba9ffa4c25994109d561bc2e9fa87dab6ce2f1a21b4bd9c",
+        "size": 12525274336,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_S-multilingual-mtp.gguf",
+      "blobId": "52577a77d7fdfc21ce6eb1751c8f3c770b02c35c",
+      "size": 12525274592,
+      "lfs": {
+        "sha256": "221249e7b0649a336eb200adaf10357aacf7f3cde95d86165a8ff442070f1c2f",
+        "size": 12525274592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_S-multilingual.gguf",
+      "blobId": "62ba472b59b6186e84ecd95cd374f0def6a0f8ec",
+      "size": 12073953824,
+      "lfs": {
+        "sha256": "981e228e9fcf88366ea1e57b1f16ebb102483177bd36f3348fd188b833ab69a8",
+        "size": 12073953824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q3_K_S.gguf",
+      "blobId": "c6bd5d0e3735c7c4cea09793ae0557f74b30464c",
+      "size": 12073953568,
+      "lfs": {
+        "sha256": "b6419bd23d26ba9f3c2803779171c6e233dbed30631aa8d0350049c4011248a8",
+        "size": 12073953568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_M-mtp.gguf",
+      "blobId": "3e85d2f2a078eca0f045bd04fa2859c396486e5d",
+      "size": 16998720736,
+      "lfs": {
+        "sha256": "5df52200763806fad5c01add7b1be13e9ef96dd1932a41226632693aac321b7b",
+        "size": 16998720736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_M-multilingual-mtp.gguf",
+      "blobId": "0ee7f86cf8274f47325637de207222538b269729",
+      "size": 16998720992,
+      "lfs": {
+        "sha256": "8b20771570e85d1988aa3d1574698370a8b79f746eb02b96f25bf05c48f14b95",
+        "size": 16998720992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_M-multilingual-vision.gguf",
+      "blobId": "757bbae6bf721cb9b1ce1a4ffa91e43af1cae7aa",
+      "size": 18745293344,
+      "lfs": {
+        "sha256": "b19bad318cea96ab21fc4d32a2bc4d05d3865e40e07a40ddb3c5122159232bb6",
+        "size": 18745293344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_M-multilingual.gguf",
+      "blobId": "c0a07d32a1dfa0aec7a756267314404215731b37",
+      "size": 16547400224,
+      "lfs": {
+        "sha256": "9ed40ccc8b8432f38b9a85d0ca67928167f5719e8c10bd299e56d34facaf6e61",
+        "size": 16547400224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_M-vision.gguf",
+      "blobId": "09b3c3be80054de7531f0fb241f3bfe2e7158f6b",
+      "size": 18745293088,
+      "lfs": {
+        "sha256": "331860c191da7601ef277a0f4f4fea9a7e44f5e422a0061dabe66605811c1304",
+        "size": 18745293088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_M.gguf",
+      "blobId": "d9271a5646425605172dca5f2f0685426c855f33",
+      "size": 16547399968,
+      "lfs": {
+        "sha256": "6c6789d3eac010a66dd14fc2e77b83b344d82d541937777cff4ea7b8e91d0a95",
+        "size": 16547399968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_S-mtp.gguf",
+      "blobId": "9d573b0f01450337432dbcf9795befd04240154a",
+      "size": 16037635296,
+      "lfs": {
+        "sha256": "0730d3792f82502dbfbf9c812500cb873ee86bd77dc288485c0079b722b5e654",
+        "size": 16037635296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_S-multilingual-mtp.gguf",
+      "blobId": "58055a6d548805d73d1e54c2a613810bcd019fea",
+      "size": 16037635552,
+      "lfs": {
+        "sha256": "321a29c17b595e696f7c2e2c9e219336ac926179334219f70f51ddc4be609075",
+        "size": 16037635552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_S-multilingual.gguf",
+      "blobId": "b2e6613201096d1b3797e60e83e412b0ab09ba9f",
+      "size": 15586314784,
+      "lfs": {
+        "sha256": "e7f1b7220f7a05a5838d4f30d65799d38a7527f96ca9607019de6894c5e4861b",
+        "size": 15586314784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q4_K_S.gguf",
+      "blobId": "4c7328e7cc2ca6b00260a47b2f5adc2df02e148b",
+      "size": 15586314528,
+      "lfs": {
+        "sha256": "d3e1f1fd867d45c366e79773b106485dffa8efdb01bf3f75916f85a5c001f53b",
+        "size": 15586314528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_M-mtp.gguf",
+      "blobId": "b9b804c167bac63f0fac3c84ebdcadc5585361ec",
+      "size": 19682419936,
+      "lfs": {
+        "sha256": "ef6c307c53da1e0a577b27df0b636c2818880aabe5c132f423a404e36b391365",
+        "size": 19682419936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_M-multilingual-mtp.gguf",
+      "blobId": "3943ce3a730c691d99d92a782a6c34ba20ef89bc",
+      "size": 19682420192,
+      "lfs": {
+        "sha256": "ea26b22990fbb436d3192663fd50b5009385d2d01f86a049003f21c1badeb6a4",
+        "size": 19682420192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_M-multilingual-vision.gguf",
+      "blobId": "0fe696fe8c7fd9902040dd7c00789d83d072f354",
+      "size": 21019351584,
+      "lfs": {
+        "sha256": "101b94796c6343f7ff9a361341d5bdc935d94126222ef37371c90fbd5a84d2ce",
+        "size": 21019351584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_M-multilingual.gguf",
+      "blobId": "0895a932b1c3c8e649b1d507076f315fe42c9fb1",
+      "size": 19231099424,
+      "lfs": {
+        "sha256": "1afe2e3fc7d18fcc3eabee0286b83cbc8d8680a4563722a5c489dc12519d8d02",
+        "size": 19231099424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_M-vision.gguf",
+      "blobId": "80a046027098eeb87479963e3103ccf0b4c99589",
+      "size": 21019351328,
+      "lfs": {
+        "sha256": "b8443359b3ba8fbcafe5ba698de3fbcf50cca4fd6ce33c1368c1c11e808a4016",
+        "size": 21019351328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_M.gguf",
+      "blobId": "8120209ca61b8e24f7219c7c421f4d77ab5a1e7c",
+      "size": 19231099168,
+      "lfs": {
+        "sha256": "3996e017c40d7389a865453e2887d6d2952cbefe44c167bac47f0d9f454b9af0",
+        "size": 19231099168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_S-mtp.gguf",
+      "blobId": "394852050505ec2afca50c97228515e5fd39335c",
+      "size": 19130934496,
+      "lfs": {
+        "sha256": "119db236e256dbaa9dd247d18015caaa94d168d846cda5f888d3db3f0e9b2d67",
+        "size": 19130934496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_S-multilingual-mtp.gguf",
+      "blobId": "181dd6c4edab59a194bce7d686f352e34c283d10",
+      "size": 19130934752,
+      "lfs": {
+        "sha256": "3d18183d05dfd40a0837dd43b4ae956dcc73ea6daa618ecb7273229727840ce9",
+        "size": 19130934752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_S-multilingual.gguf",
+      "blobId": "5619aac4dddcf86264f1927e46a3e8224c5defdf",
+      "size": 18679613984,
+      "lfs": {
+        "sha256": "71415ace64000b64613c999492bbdeaa74892fb4cd3b38aead6067393a3115fe",
+        "size": 18679613984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q5_K_S.gguf",
+      "blobId": "92a8eda23116f0169ac9dd1d0c57f0f515158d0d",
+      "size": 18679613728,
+      "lfs": {
+        "sha256": "0440b346e0ccab79a5138884166b9e85b7d58f5ff68e6d3fe7ad8ec909884308",
+        "size": 18679613728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q6_K-mtp.gguf",
+      "blobId": "e56a4a4c0d8d6ccb5218300ec1bebb8fa3c02bc7",
+      "size": 22533850336,
+      "lfs": {
+        "sha256": "4e47a0e41992de4bed56a3395f6c7e1adb760a1875ed84f836f67d65b2f646ef",
+        "size": 22533850336,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q6_K-multilingual-mtp.gguf",
+      "blobId": "838c7f2a74ff696b72b2f0b04cc48aa3419abe52",
+      "size": 22533850592,
+      "lfs": {
+        "sha256": "1344d07425d73f0d1b8f36213910eae8fec21061b1a90835927e8485238f93a4",
+        "size": 22533850592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q6_K-multilingual.gguf",
+      "blobId": "b3a3f6f7ea498179f56830d313ecda461e7670b0",
+      "size": 22082529824,
+      "lfs": {
+        "sha256": "591be92b29db500eca2c75f8d0f292260426814418e50a8bf2f6e8a1ed29d138",
+        "size": 22082529824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q6_K.gguf",
+      "blobId": "089863f8b12ff861fd440a79438f1c9aa1e2fa1a",
+      "size": 22082529568,
+      "lfs": {
+        "sha256": "484fa7013ebc636fa217d559c30bebdbdca8a1be5d1296c86290acfa2fe8a5f2",
+        "size": 22082529568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q8_0-mtp.gguf",
+      "blobId": "08dd29b227bd7cee96e7900bf32de290fede120f",
+      "size": 29047084256,
+      "lfs": {
+        "sha256": "ea3101568bdebc7374ffa2bda80275862ad3d96a1279921e9b7fd649b82f3ab9",
+        "size": 29047084256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q8_0-multilingual-mtp.gguf",
+      "blobId": "0f5b2e5509d82657df1980a9affc5dc97b184e56",
+      "size": 29047084512,
+      "lfs": {
+        "sha256": "3979ca0b400a091f60108906bd6a22907595e0dead3633bbda29b3400516f7bf",
+        "size": 29047084512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q8_0-multilingual.gguf",
+      "blobId": "7851a1d96504f0faadb406c19de38a6c6c45466d",
+      "size": 28595763744,
+      "lfs": {
+        "sha256": "c1e4974a6b70b58ceb3c255f64003ff69626963fe5ac2b0e122928eff96b737d",
+        "size": 28595763744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "RVN-Q8_0.gguf",
+      "blobId": "e6d4e0034749a495c19db3d6b5268a262e897e7c",
+      "size": 28595763488,
+      "lfs": {
+        "sha256": "ee66079819c13d6359ac0d70345ce39160386936a7f792cb668dfb705fab63c7",
+        "size": 28595763488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "c0c686f9c38d70d179fb7b5f5aa7530bc913dda3",
+      "size": 8952
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-27B-Q8_0.gguf",
+      "blobId": "1f53dcb74687a88208cdea802a0ebdb9efbdef5e",
+      "size": 629247008,
+      "lfs": {
+        "sha256": "2e968a6af97ce35d8971890b257b9b7edabf20ad91450501fa53162a19ee33eb",
+        "size": 629247008,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mtp-RVN.gguf",
+      "blobId": "d2ac284c3cab9c90a7a14a9df0cdb7a32d8bfc6b",
+      "size": 1813125184,
+      "lfs": {
+        "sha256": "655d00f1a1f77e8df0c0820c115347f952f64aff03e6a9daa3560ba4ed171e64",
+        "size": 1813125184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "xet_speed_test.bin",
+      "blobId": "de5729ec81aa23c00401d39235f0d2a34a0ac1d1",
+      "size": 104857600,
+      "lfs": {
+        "sha256": "492becd1a45845adb1106b04fa01a1f4436fc1eaa0c3911244edf305d9c85b87",
+        "size": 104857600,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "xet_test_100mb.bin",
+      "blobId": "0e20887b3af294776d86231c12f2b78753a41f9f",
+      "size": 104857600,
+      "lfs": {
+        "sha256": "e867e2417a3783d784be70f9280c82f39d866f6f931421f690479e505951724c",
+        "size": 104857600,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "ErikrafT/erikraft-ai",
+    "VIDraft/global-llm-leaderboard",
+    "tommytracx/thox-zero-general",
+    "Erinaldordso1996/Udud",
+    "uknutz/qwen38-heretic-chat",
+    "9mrodie/qwen38-heretic-chat"
+  ],
+  "createdAt": "2026-08-14T18:48:26.000Z",
+  "usedStorage": 3991680042032
+}

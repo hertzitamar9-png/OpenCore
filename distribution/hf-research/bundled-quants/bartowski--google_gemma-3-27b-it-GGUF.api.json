@@ -1,0 +1,385 @@
+{
+  "_id": "67d1888f63e526362428a291",
+  "id": "bartowski/google_gemma-3-27b-it-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:google/gemma-3-27b-it",
+    "base_model:quantized:google/gemma-3-27b-it",
+    "license:gemma",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 10998,
+  "likes": 67,
+  "modelId": "bartowski/google_gemma-3-27b-it-GGUF",
+  "author": "bartowski",
+  "sha": "4a05c54413bd0d87d77a97af403266f69cec0ee6",
+  "lastModified": "2025-03-22T19:09:05.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "extra_gated_prompt": "To access Gemma on Hugging Face, you\u2019re required to review and agree to Google\u2019s usage license. To do this, please ensure you\u2019re logged in to Hugging Face and click below. Requests are processed immediately.",
+    "extra_gated_button_content": "Acknowledge license",
+    "license": "gemma",
+    "extra_gated_heading": "Access Gemma on Hugging Face",
+    "base_model": "google/gemma-3-27b-it"
+  },
+  "gguf": {
+    "total": 27009002240,
+    "architecture": "gemma3",
+    "context_length": 131072,
+    "quantize_imatrix_file": "/models_out/gemma-3-27b-it-GGUF/google_gemma-3-27b-it.imatrix",
+    "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 9492834944
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "baa44bce676e5e642287acc21c92fc156f8d2202",
+      "size": 3767
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4407450034d9bae1f3fb83b75eec7ecf17259303",
+      "size": 15200
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ2_M.gguf",
+      "blobId": "a529c2ab2069c460e9be7d07d1f550a9f6fba5f1",
+      "size": 9492834944,
+      "lfs": {
+        "sha256": "3f687dfab9b46921614e4f5d2c58d2a067ddd5a7daba41f9089550656ae77f1f",
+        "size": 9492834944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ2_S.gguf",
+      "blobId": "23f82a0f57e09f3b5c9aa4d5e16df58475678d2c",
+      "size": 8782170752,
+      "lfs": {
+        "sha256": "59c2e6ee8b12fdc1bf56cb57a28c3c316667a683099bbda88457a813c41699f6",
+        "size": 8782170752,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ2_XS.gguf",
+      "blobId": "cd7248958e1b92d7b81e62c31cc314d44da706a8",
+      "size": 8438665856,
+      "lfs": {
+        "sha256": "080150a6758afefb40950f2753ea9f113b3cdc2b8ad4243a3711959748cd4df0",
+        "size": 8438665856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ3_M.gguf",
+      "blobId": "b2aa8937e0b30c1c58a66222545f9ee3e032f068",
+      "size": 12546790016,
+      "lfs": {
+        "sha256": "33c07cf49428853aa63f22f3a95cf05436cdb65ec908d56b02e1098c691e5c1a",
+        "size": 12546790016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ3_XS.gguf",
+      "blobId": "137d35b06c149c61a332752b87887b632bbe3e6a",
+      "size": 11561949824,
+      "lfs": {
+        "sha256": "e6e8bde1bd29dbc765edebce39b83047ab2fbb19cb4763ed70f8ba321e15ab13",
+        "size": 11561949824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ3_XXS.gguf",
+      "blobId": "a29a62b820839178f6d566419b7fa7fc2ec1fd10",
+      "size": 10716240512,
+      "lfs": {
+        "sha256": "194f643e0d6acdd471f2a52f3eef2617aa84b39c23b596ac1619f8fa4fc71606",
+        "size": 10716240512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ4_NL.gguf",
+      "blobId": "69ca973528d7ba482e85570998e79079f311652b",
+      "size": 15567112832,
+      "lfs": {
+        "sha256": "b558d312c8e692d9d367a176efa7d6c8cce07da89cb47cd8b3458bc425d80d89",
+        "size": 15567112832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-IQ4_XS.gguf",
+      "blobId": "73d56851250e856234957e63c8c824a20934dda7",
+      "size": 14767164032,
+      "lfs": {
+        "sha256": "bd2f188c66d8ccb0bffcb0c91e4dbbb72754bb1732e0bca323a2f266a35e01c8",
+        "size": 14767164032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q2_K.gguf",
+      "blobId": "3a5fd639ffb1e0e6f89aff32480a3362f2c6f4f1",
+      "size": 10503436928,
+      "lfs": {
+        "sha256": "a2d0a6dfb1c3fb9d17dae5c8b9eb17cbfeea75280260ea10dc5a9b68691d0e74",
+        "size": 10503436928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q2_K_L.gguf",
+      "blobId": "fe45cf08b3ca6358397ff2df8c0eff87122485f8",
+      "size": 10844748416,
+      "lfs": {
+        "sha256": "c9e920ffb9288c2322e8945d83430620281899a6b0bc65e3acd5b46ad817b943",
+        "size": 10844748416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q3_K_L.gguf",
+      "blobId": "7ba561eaaf84930f85523239b6e965969c9d79e8",
+      "size": 14543178368,
+      "lfs": {
+        "sha256": "83c4e971dbf62bfb9cb4860f372602a83926809ebf2cc57daaf50eca13ab55b3",
+        "size": 14543178368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q3_K_M.gguf",
+      "blobId": "8ecc9661d83421b913803acd4c230dd7638ceae8",
+      "size": 13437356672,
+      "lfs": {
+        "sha256": "9eabf6ef615b50ffb59f52751fe4789a036e0815b0dac42ab9774fd157b54831",
+        "size": 13437356672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q3_K_S.gguf",
+      "blobId": "16de16a20006f85705b8a80ee60a5a0842218397",
+      "size": 12167330432,
+      "lfs": {
+        "sha256": "a8492ad1e76b7f0b2cb6632fa395586e253d4dfd99f8683063f6ec79b73a0797",
+        "size": 12167330432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q3_K_XL.gguf",
+      "blobId": "2efe49d012a6beb81afac0ee8bb6e2df84b3787b",
+      "size": 14884489856,
+      "lfs": {
+        "sha256": "2f99f057733bc422a06b37f8dd532adf70cf862f60d033628fe439175b60d4c8",
+        "size": 14884489856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q4_0.gguf",
+      "blobId": "c2fd341e1d6bd20cf17ca4dd2f3895d8df2005a2",
+      "size": 15617690240,
+      "lfs": {
+        "sha256": "a6edacc9e7bab200eea6dd9ff4568c5838e959235dd0da71309e68ff5c81d775",
+        "size": 15617690240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q4_1.gguf",
+      "blobId": "60bd8673dbf36915cf9b5652d5625cc61af63e26",
+      "size": 17167010432,
+      "lfs": {
+        "sha256": "15774af877b3cb478f4fe5e48b3be7c6972bb315bd4f8fc345cebf0642a35385",
+        "size": 17167010432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q4_K_L.gguf",
+      "blobId": "b3fe8a0bb56ad06b3ccaab395fb98f76acd619b1",
+      "size": 16887716480,
+      "lfs": {
+        "sha256": "96588257d982e43dab39d1bc335111356b7d0df5d175f092b5f98b4eda1ae289",
+        "size": 16887716480,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q4_K_M.gguf",
+      "blobId": "9db6fbd0d4d10e3ab42753fe1e182307b1701450",
+      "size": 16546404992,
+      "lfs": {
+        "sha256": "4e83142e3ad3719ac61334f70a956dcc60bbba8adb29de5114161310bb9f7170",
+        "size": 16546404992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q4_K_S.gguf",
+      "blobId": "9690610a49b1bcdbc2f154d447846d4c9dc86b68",
+      "size": 15673772672,
+      "lfs": {
+        "sha256": "e7e800240905ceaa1266ce7f698bac22fae63e7b956dcf21c63cda34a7f188a2",
+        "size": 15673772672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q5_K_L.gguf",
+      "blobId": "4fe1b499f7eb4bb42638ef76f6e08f2bce1e8f66",
+      "size": 19612703360,
+      "lfs": {
+        "sha256": "504fe8833e5deb8580d6732dd8c232c7de8dd6e5e641652677caf92beb2e7e2a",
+        "size": 19612703360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q5_K_M.gguf",
+      "blobId": "d1e7cd74ceac4ea3b086bedecb82312086f051ca",
+      "size": 19271391872,
+      "lfs": {
+        "sha256": "7babc9bc281f07edae1cbfe519f61b12daa760b36be8ba53e72ddfdc9eceb846",
+        "size": 19271391872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q5_K_S.gguf",
+      "blobId": "b993c00a2d68825d90509163498c9886683e66e1",
+      "size": 18766908032,
+      "lfs": {
+        "sha256": "6b317716786799f999d12b7604e6af278092867a28d0d66e70143a98c0709265",
+        "size": 18766908032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q6_K.gguf",
+      "blobId": "ee869e888129f7289710ec26aa32d7560f87f1f8",
+      "size": 22166690432,
+      "lfs": {
+        "sha256": "bb33daa83fab45a9323358fddc059df9fae3b5934461a7294ad20741ec5c3682",
+        "size": 22166690432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q6_K_L.gguf",
+      "blobId": "210ca65b01ebf4ea8651628a7c686394bb8ef808",
+      "size": 22508001920,
+      "lfs": {
+        "sha256": "5c594848cea498025c6b75b8b109b0676690786529b4b996a2f49b3fbca94d7c",
+        "size": 22508001920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-Q8_0.gguf",
+      "blobId": "e38969da24c6f046db9c19c20e0cb74f82a7bd7d",
+      "size": 28707605120,
+      "lfs": {
+        "sha256": "f997aef7f4ed368819f8bcd3e66262612eab4b9ecd562efbad2a7fdebc872693",
+        "size": 28707605120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-bf16/google_gemma-3-27b-it-bf16-00001-of-00002.gguf",
+      "blobId": "aa966e6e554937db37d33839a2e54eadbca88c04",
+      "size": 39987970624,
+      "lfs": {
+        "sha256": "d766201186b219086aa28a28c4bcb538bb3983defd01712716be5ca4a14f4d5d",
+        "size": 39987970624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it-bf16/google_gemma-3-27b-it-bf16-00002-of-00002.gguf",
+      "blobId": "12fa70ada5a64903bd0ff9982bca641bc804a93d",
+      "size": 14039304192,
+      "lfs": {
+        "sha256": "cd07a0a61035b8dd1f0d16ab48ba545efc225d8a3a079978dc85b4fc5b208b8b",
+        "size": 14039304192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-27b-it.imatrix",
+      "blobId": "1a96b93b508715a2a85b2443da4c5b82982fe541",
+      "size": 13029464,
+      "lfs": {
+        "sha256": "ac6f6b0066ab4ea56c48de45cb7a4086c0b046ef5fa633022a76dfe3df2dd07d",
+        "size": 13029464,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "mmproj-google_gemma-3-27b-it-bf16.gguf",
+      "blobId": "f774a25f0f101e8641c0528a31e45edf8f8063ff",
+      "size": 857739168,
+      "lfs": {
+        "sha256": "6b353b05365f1161276f61a9d6c1c0ba61f8aaffad66fc4f91de15c7d5b02acf",
+        "size": 857739168,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-google_gemma-3-27b-it-f16.gguf",
+      "blobId": "fe41d53d46e4f71320db3a2509323d2f86d796c9",
+      "size": 857739168,
+      "lfs": {
+        "sha256": "54cb61c842fe49ac3c89bc1a614a2778163eb49f3dec2b90ff688b4c0392cb48",
+        "size": 857739168,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-google_gemma-3-27b-it-f32.gguf",
+      "blobId": "145a3d0eba33ea1ca3a908ee77e4395263b9fbad",
+      "size": 1692266400,
+      "lfs": {
+        "sha256": "a8b849e20a59ec2b255d308ec6488a3a44fa6e06b2a0514c59eab983930c0b27",
+        "size": 1692266400,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-03-12T13:13:51.000Z",
+  "usedStorage": 438627414008
+}

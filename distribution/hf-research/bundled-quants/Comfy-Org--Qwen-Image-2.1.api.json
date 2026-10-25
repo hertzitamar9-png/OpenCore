@@ -1,0 +1,231 @@
+{
+  "_id": "6aa99f552859827a8d89cb9d",
+  "id": "Comfy-Org/Qwen-Image-2.1",
+  "private": false,
+  "library_name": "diffusion-single-file",
+  "tags": [
+    "diffusion-single-file",
+    "comfyui",
+    "base_model:Qwen/Qwen-Image-2.1",
+    "base_model:finetune:Qwen/Qwen-Image-2.1",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 10027033,
+  "likes": 1196,
+  "modelId": "Comfy-Org/Qwen-Image-2.1",
+  "author": "Comfy-Org",
+  "sha": "0217efd1d9c9452e84f6448903d6e21bfa171ffd",
+  "lastModified": "2026-10-22T05:20:44.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "qwen-research",
+    "license_link": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+    "tags": [
+      "comfyui",
+      "diffusion-single-file"
+    ],
+    "base_model": [
+      "Qwen/Qwen-Image-2.1"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "04ea4eeebd87bc376dd7252573faff078fb7c015",
+      "size": 6962
+    },
+    {
+      "rfilename": "diffusion_models/qwen_image_2.1_bf16.safetensors",
+      "blobId": "2fcc064b7c792374ee59ee584fd8c12d5421ec16",
+      "size": 14230280616,
+      "lfs": {
+        "sha256": "89f4158d066cc33906a199fca85634f766892dd78f49b6698dabf187ac86c4bc",
+        "size": 14230280616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/qwen_image_2.1_int8_convrot.safetensors",
+      "blobId": "d88351f7550dc2acba5c65a8b1bb782d9466c36b",
+      "size": 7256783064,
+      "lfs": {
+        "sha256": "cb74113cb03faecd79611b01fd7fd642f0aa60d6f0b95086abee214d75eaa57d",
+        "size": 7256783064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "diffusion_models/qwen_image_2.1_turbo_bf16.safetensors",
+      "blobId": "6e7d7013674e99fee304632feb92a68ec72c25b3",
+      "size": 14230280616,
+      "lfs": {
+        "sha256": "8b74237a7f505773e2c66726fa696444b4c704585c93a347cff9044937f7914a",
+        "size": 14230280616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "diffusion_models/qwen_image_2.1_turbo_int8_convrot.safetensors",
+      "blobId": "6db4f9120c73188df82aee4313eb8e1d6529301f",
+      "size": 7256787829,
+      "lfs": {
+        "sha256": "8144a0182964aa8403ad6dbc011db837304167d235161b9aabaa8532e967314c",
+        "size": 7256787829,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "loras/qwen_image_2.1_turbo_lora_avg_rank_178_bf16.safetensors",
+      "blobId": "e4e90a95cfbfd96400a2a6fb488eafbb8009481f",
+      "size": 913314512,
+      "lfs": {
+        "sha256": "208dd43250e1e01467ba190572ae2e7107a7870ec1ff026bc65f791fa1e80e95",
+        "size": 913314512,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model_patches/qwen_image_2.1_fun_controlnet_union_bf16.safetensors",
+      "blobId": "7c7174b6069eed5b4775d096e975b9ee2726be8e",
+      "size": 7550977992,
+      "lfs": {
+        "sha256": "1f9dea8384ba167084f39f624908f1dbf2ea8a223bb4a8108a77dafa9b55bfe1",
+        "size": 7550977992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_patches/qwen_image_2.1_fun_controlnet_union_int8_convrot.safetensors",
+      "blobId": "7afb2287124fcad4e225088e8792f977163b2460",
+      "size": 3779298944,
+      "lfs": {
+        "sha256": "07aa961570ac0e03d4ca936aecd76854d077a33cde69b5092399afba01b3715d",
+        "size": 3779298944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors",
+      "blobId": "2434ddd53e39d3a31396c0933a60eef31f4f406d",
+      "size": 9471072252,
+      "lfs": {
+        "sha256": "32707d01b427e488af252b95c551989aad59f9fec611a694f5db6bde7f0f1f6c",
+        "size": 9471072252,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_qwen_image_2.1_pe_i2i_w4a8.safetensors",
+      "blobId": "2a9d5da6471f72e6876de171998e8d528030cd77",
+      "size": 6724090764,
+      "lfs": {
+        "sha256": "3c7c88f786f1bac5baf2c4b314fe28172cc03d93b29dfc8b445e85a655cbabb1",
+        "size": 6724090764,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors",
+      "blobId": "ae1b35e48be7c856355a625a68bbc77770d8829d",
+      "size": 9471072252,
+      "lfs": {
+        "sha256": "9182abae56fe05459840a86d22abd21f972061c92fce032630af680c8c5178d3",
+        "size": 9471072252,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3.5_9b_qwen_image_2.1_pe_t2i_w4a8.safetensors",
+      "blobId": "bf7022156abc872cf3785fdcb445408c249039ff",
+      "size": 6724090764,
+      "lfs": {
+        "sha256": "bdc244869e71e91f9e66638dd85872d8906ac26ce24ef9f32fecbc488e6bc708",
+        "size": 6724090764,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_8b_bf16.safetensors",
+      "blobId": "96913abdb450c149239bf34d67f9e62b0eafce0a",
+      "size": 17534334616,
+      "lfs": {
+        "sha256": "68bdc82bc1b66851162ae656225e7e2068166b603db19bd5d5a3b90eb12669a9",
+        "size": 17534334616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+      "blobId": "cfd84f4f1f9cd291038fff20fb4f7ff21c43a4b2",
+      "size": 9350798360,
+      "lfs": {
+        "sha256": "8bfd0f6e12abf2d2d697ecc888e5e90b0d6741d6708f05799f53afa560452e8f",
+        "size": 9350798360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_8b_w4a8.safetensors",
+      "blobId": "af701046347d192b3a30303647254927ed87e694",
+      "size": 6312105364,
+      "lfs": {
+        "sha256": "7754425e55e7bea2bfde4dde59a4cc236cb44e5ee9c215ea66ef8d47012824eb",
+        "size": 6312105364,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+      "blobId": "20f289c83f9207ca23f61c008a51ee44d68f0504",
+      "size": 675509688,
+      "lfs": {
+        "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9",
+        "size": 675509688,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "RioShiina/ImageGen",
+    "embedl/hfviewer",
+    "Gramlin/ImageGennew",
+    "alxander84/ImageGen-32",
+    "Or1290/LP12",
+    "BIGJUTT/model-pulse",
+    "emanforhelp/model-pulse",
+    "majoranan/qwen-image-2-1-export-space",
+    "luthkyndir/Qwen-Image-2.1-Create",
+    "KingBacon420/qwen-image-2.1",
+    "Gramlin/ImageGen",
+    "abdullahceylan/qwen-image-2.1",
+    "sos1002/qwen-image-2-1-demo",
+    "junaidmalik/Qwen-Image-2.1",
+    "corvettezo6x/qwen-image-2-1-demo",
+    "Nklin261/ImageGen",
+    "Mebombo321/qwen-image-2.1-demo",
+    "Dekonstruktio/Visual",
+    "wlks12/qwen2.1-lora",
+    "MikeIck/Noct-Q-Uncensored-Qwen-Image-Demo",
+    "dzakamw/noct-q-uncensored-demo",
+    "wlks12/qwen2.1-lora-private-loader",
+    "shinkinokishin/ImageGen2",
+    "oookto/qwen-edit",
+    "KAMARAD366/qwen-image-2.1-demo",
+    "krymwsym4/ImageGen",
+    "yamiuchi/qm-image",
+    "DollasAndSpence/LP12",
+    "Dekonstruktio/Fluxus"
+  ],
+  "createdAt": "2026-09-15T19:41:09.000Z",
+  "usedStorage": 150901417729
+}

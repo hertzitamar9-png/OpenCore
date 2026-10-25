@@ -69,6 +69,9 @@ class ManagedEngineTests(unittest.TestCase):
         self.assertEqual(engines.engine_for({'format': 'gguf', 'modelType': 'flint'}), 'flint-cpu-v1')
         self.assertEqual(engines.engine_for({'format': 'gguf', 'modelType': 'raon1_mini'}), 'raon-cpu-v1')
         self.assertIsNone(engines.engine_for({'format': 'safetensors', 'modelType': 'flint'}))
+        self.assertEqual(engines.engine_for({'format': 'gguf', 'managedEngine': 'flint-cpu-v1'}), 'flint-cpu-v1')
+        self.assertIsNone(engines.engine_for({'format': 'gguf', 'managedEngine': 'arbitrary-path'}))
+        self.assertEqual(engines.engine_for({'format': 'gguf', 'modelType': 'edgerock', 'managedEngine': 'flint-cpu-v1'}), 'edgerock-cpu-v1')
 
 
 class PublisherCatalogTests(unittest.TestCase):
@@ -91,7 +94,7 @@ class PublisherCatalogTests(unittest.TestCase):
             kept = state.entries[entry['id']]
             self.assertEqual(kept['profileId'], 'kept-profile')
             self.assertEqual(kept['runtimePreparation'], {'runtimeReady': True})
-            self.assertEqual(len({x['familyId'] for x in state.entries.values()}), 7)
+            self.assertEqual({x['familyId'] for x in state.entries.values()}, {x['familyId'] for x in seed['entries']})
             self.assertEqual(len({x['id'] for x in state.entries.values()}), count)
 
     def test_ready_requires_current_engine_and_successful_echo_proof(self):

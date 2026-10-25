@@ -1,0 +1,313 @@
+{
+  "_id": "67bfa980302c06f2205a9c4a",
+  "id": "bartowski/microsoft_Phi-4-mini-instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:microsoft/Phi-4-mini-instruct",
+    "base_model:quantized:microsoft/Phi-4-mini-instruct",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 100541,
+  "likes": 52,
+  "modelId": "bartowski/microsoft_Phi-4-mini-instruct-GGUF",
+  "author": "bartowski",
+  "sha": "7ff82c2aaa4dde30121698a973765f39be5288c0",
+  "lastModified": "2025-02-28T15:56:14.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model": "microsoft/Phi-4-mini-instruct"
+  },
+  "gguf": {
+    "total": 3836021856,
+    "architecture": "phi3",
+    "context_length": 131072,
+    "quantize_imatrix_file": "/models_out/Phi-4-mini-instruct-GGUF/microsoft_Phi-4-mini-instruct.imatrix",
+    "chat_template": "{% for message in messages %}{% if message['role'] == 'system' and 'tools' in message and message['tools'] is not none %}{{ '<|' + message['role'] + '|>' + message['content'] + '<|tool|>' + message['tools'] + '<|/tool|>' + '<|end|>' }}{% else %}{{ '<|' + message['role'] + '|>' + message['content'] + '<|end|>' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|assistant|>' }}{% else %}{{ eos_token }}{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 1507424640
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2882de2be2cd00975b7c03d1bfdb47b7e6c679e6",
+      "size": 3377
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bab568b48b5d5bd0235122c55df36c0fd14bdb9f",
+      "size": 14030
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-IQ2_M.gguf",
+      "blobId": "aaf225ff1db4aac6ff9dacf943c779a586b8a4c8",
+      "size": 1507424640,
+      "lfs": {
+        "sha256": "33c12b44229a85d88a3bedfe849e138643bbde5478925d191faeb409bc2ea3ec",
+        "size": 1507424640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-IQ3_M.gguf",
+      "blobId": "83b8909a87a5e93d6d205b5ae4751868559a91ff",
+      "size": 2017656192,
+      "lfs": {
+        "sha256": "0d6a07d53a3ebd474a8ca9abc9415af39e88f041cfbfe388e3bf632b84e7b232",
+        "size": 2017656192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-IQ3_XS.gguf",
+      "blobId": "10656dac07f445dfb19287e0a83fe0299f0039f9",
+      "size": 1840708992,
+      "lfs": {
+        "sha256": "a94bcca75234c1775025a319a1765e3c61c5b18298d0314633f7f7524356ec2e",
+        "size": 1840708992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-IQ3_XXS.gguf",
+      "blobId": "7a48a0082a662405c9b0c9bfbe4651152b85a07a",
+      "size": 1678866816,
+      "lfs": {
+        "sha256": "80c87df8ba98f4e02f5e3bb8b71cab541dafb601ef071a195a4df38c56e213d7",
+        "size": 1678866816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-IQ4_NL.gguf",
+      "blobId": "bd25a3eddd2dee8b578875f0642cb2fc1879c10d",
+      "size": 2325151104,
+      "lfs": {
+        "sha256": "c75b97730ea19e533d5a5fcbb695984bfd6278e170bf49e1251ea4f5e85b7763",
+        "size": 2325151104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-IQ4_XS.gguf",
+      "blobId": "84373bbf97e067662dc042f851556fb88ebb290e",
+      "size": 2224487808,
+      "lfs": {
+        "sha256": "88f5f428d64ea04332eaf3dc19d05ad4df3e04847ad9d2b0e3c947233f361a56",
+        "size": 2224487808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q2_K.gguf",
+      "blobId": "8c0e28ed83e9c826a985fe202b3c275cff458769",
+      "size": 1682636160,
+      "lfs": {
+        "sha256": "85134b59572e8726252f02bae6476ed6cf8c3109f5dc05da363965430157608d",
+        "size": 1682636160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q2_K_L.gguf",
+      "blobId": "fe36d22b36db7e82536c0d42283951dee2fed601",
+      "size": 1831483776,
+      "lfs": {
+        "sha256": "b233015a8c8fbd13f080cbebc9a8dc496c2ce52faed06d17fb0963192e0378b5",
+        "size": 1831483776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q3_K_L.gguf",
+      "blobId": "03831b075ce07a2c99b0d2c05bf36b7aaaf4868d",
+      "size": 2249653632,
+      "lfs": {
+        "sha256": "d04c6c4014f24f56dc3341aa69e198815f2931a8769aeb630ced541f792889b4",
+        "size": 2249653632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q3_K_M.gguf",
+      "blobId": "a1bff29d6e7e0e686cfe4a1487a6a779c7292ef9",
+      "size": 2117533056,
+      "lfs": {
+        "sha256": "514a111e3b847b1698b253bf8e8ada7c1bb81dc10dc4bccab590edaff5aec06c",
+        "size": 2117533056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q3_K_S.gguf",
+      "blobId": "a6942a12c209fd0c7470944f0d94608b419dd2a4",
+      "size": 1897332096,
+      "lfs": {
+        "sha256": "a1dd4dc181bd94e896a947dbf413f04d9cce2b962a22fe363812a28b5ac34826",
+        "size": 1897332096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q3_K_XL.gguf",
+      "blobId": "620305a1b035e41f84d726ce9e10f1e4fa2aee2f",
+      "size": 2398501248,
+      "lfs": {
+        "sha256": "d95f8462d750d574db0c60ed5e83c551a42d94da99b4a5f85d54b5bbbf0c14e0",
+        "size": 2398501248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q4_0.gguf",
+      "blobId": "a50db00cbc93d29be203c5c2aea2895be76efe3a",
+      "size": 2331442560,
+      "lfs": {
+        "sha256": "2124412a2d3410dd05c5d01796457283812210633165a2a86c909f815971518e",
+        "size": 2331442560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q4_1.gguf",
+      "blobId": "7841c08930f6ce30d26106024e474641dc0c50aa",
+      "size": 2526477696,
+      "lfs": {
+        "sha256": "788a028447e152719d2673930fdfb0df5f73cc134b666915565492e32fe93f26",
+        "size": 2526477696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q4_K_L.gguf",
+      "blobId": "a4dc4fe3b241f77246ab370cd82efe62063b9c46",
+      "size": 2640722304,
+      "lfs": {
+        "sha256": "ea4e670db872d1cf505e02bf8f85745ce98a564c1429fc3609cc9462089da13e",
+        "size": 2640722304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+      "blobId": "4620e1647f692a2dc7136004a0cf1dee7c269e63",
+      "size": 2491874688,
+      "lfs": {
+        "sha256": "01999f17c39cc3074afae5e9c539bc82d45f2dd7faa3917c66cbef76fce8c0c2",
+        "size": 2491874688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q4_K_S.gguf",
+      "blobId": "6571ec1b83fcf5e76069133f932b705f5951427a",
+      "size": 2337734016,
+      "lfs": {
+        "sha256": "d75c4e4a4a4f9c775ca5fec8802e7a65bbbe9241034f5b39e6a8d092f3805880",
+        "size": 2337734016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q5_K_L.gguf",
+      "blobId": "8106e6b6188b311fc061273c92a3b37d351b8c49",
+      "size": 2996976000,
+      "lfs": {
+        "sha256": "9e2c332c023f50ae7ed5fd51c8ca3ed846e364ad8a98471da99603082509734b",
+        "size": 2996976000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q5_K_M.gguf",
+      "blobId": "6c3eaff4126f907bb0eecc976f1b067a87af63b7",
+      "size": 2848128384,
+      "lfs": {
+        "sha256": "840ad85cff01e41701e2b2a3826016916f8e51242c8f25d62e59fa7eb93acbc5",
+        "size": 2848128384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q5_K_S.gguf",
+      "blobId": "4dcfc5f0ad96d768ae6083477ae07eae2ca722bf",
+      "size": 2727804288,
+      "lfs": {
+        "sha256": "b027246d847c6d6c5419a14885256061e911cc864001820b16e037868d43d090",
+        "size": 2727804288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q6_K.gguf",
+      "blobId": "1abec4347f5692d3a442184a74d072b5af9b3640",
+      "size": 3155623296,
+      "lfs": {
+        "sha256": "59dba927b98f39c26859aab7fb27d5f577666f8a5db38f0eccf3f207902ba23b",
+        "size": 3155623296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q6_K_L.gguf",
+      "blobId": "3820e14753844b64958a98a9cf7111fa4d311caa",
+      "size": 3304470912,
+      "lfs": {
+        "sha256": "ad6e8f3dbaca28a7d8c269058bd6ba543b7d0932be06927f847f24c9bb0d8408",
+        "size": 3304470912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct-Q8_0.gguf",
+      "blobId": "75784b89113a8c0219261d29db460d936fd073eb",
+      "size": 4084611456,
+      "lfs": {
+        "sha256": "a12f242c4ee379b9da91673e5d78b30bfacfe4fd86a0b2259d2ecad5d93cb6c7",
+        "size": 4084611456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "microsoft_Phi-4-mini-instruct.imatrix",
+      "blobId": "86ceeb45b3c83234b185281085f377ecf4d7ff6a",
+      "size": 2232616,
+      "lfs": {
+        "sha256": "be45717d26324e46f8bba4bc2badd89e7005bb2d6ddb8330749208b992f8ad40",
+        "size": 2232616,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [
+    "pagareajinkya04/phi-4-mini-instruct",
+    "abbasyk60/ai-telegram-bot"
+  ],
+  "createdAt": "2025-02-26T23:53:36.000Z",
+  "usedStorage": 55219533736
+}

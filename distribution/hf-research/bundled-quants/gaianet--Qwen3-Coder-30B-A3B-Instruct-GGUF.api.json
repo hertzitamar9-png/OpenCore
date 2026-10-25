@@ -1,0 +1,243 @@
+{
+  "_id": "68a5365700a4ed7eb378c589",
+  "id": "gaianet/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "qwen3_moe",
+    "text-generation",
+    "base_model:Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "base_model:quantized:Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 4889,
+  "likes": 0,
+  "modelId": "gaianet/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+  "author": "gaianet",
+  "sha": "75ab369d5f68cf61de440040ced7543262995126",
+  "lastModified": "2025-08-20T07:17:35.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3MoeForCausalLM"
+    ],
+    "model_type": "qwen3_moe",
+    "num_experts": 128,
+    "num_experts_per_tok": 8
+  },
+  "cardData": {
+    "base_model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "license": "apache-2.0",
+    "license_link": "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/blob/main/LICENSE",
+    "model_creator": "Qwen",
+    "model_name": "Qwen3-Coder-30B-A3B-Instruct",
+    "quantized_by": "Second State Inc.",
+    "pipeline_tag": "text-generation",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "gguf": {
+    "total": 30532122624,
+    "architecture": "qwen3moe",
+    "context_length": 262144,
+    "chat_template": "{% macro render_extra_keys(json_dict, handled_keys) %}\n    {%- if json_dict is mapping %}\n        {%- for json_key in json_dict if json_key not in handled_keys %}\n            {%- if json_dict[json_key] is mapping %}\n                {{- '\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | tojson | safe) ~ '</' ~ json_key ~ '>' }}\n            {%- else %}\n                {{-'\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | string) ~ '</' ~ json_key ~ '>' }}\n            {%- endif %}\n        {%- endfor %}\n    {%- endif %}\n{% endmacro %}\n\n{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n\n{%- if not tools is defined %}\n    {%- set tools = [] %}\n{%- endif %}\n\n{%- if system_message is defined %}\n    {{- \"<|im_start|>system\\n\" + system_message }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- \"<|im_start|>system\\nYou are Qwen, a helpful AI assistant that can interact with a computer to solve tasks.\" }}\n    {%- endif %}\n{%- endif %}\n{%- if tools is iterable and tools | length > 0 %}\n    {{- \"\\n\\nYou have access to the following functions:\\n\\n\" }}\n    {{- \"<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.function is defined %}\n            {%- set tool = tool.function %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" ~ tool.name ~ \"</name>\" }}\n        {%- if tool.description is defined %}\n            {{- '\\n<description>' ~ (tool.description | trim) ~ '</description>' }}\n        {%- endif %}\n        {{- '\\n<parameters>' }}\n        {%- if tool.parameters is defined and tool.parameters is mapping and tool.parameters.properties is defined and tool.parameters.properties is mapping %}\n            {%- for param_name, param_fields in tool.parameters.properties|items %}\n                {{- '\\n<parameter>' }}\n                {{- '\\n<name>' ~ param_name ~ '</name>' }}\n                {%- if param_fields.type is defined %}\n                    {{- '\\n<type>' ~ (param_fields.type | string) ~ '</type>' }}\n                {%- endif %}\n                {%- if param_fields.description is defined %}\n                    {{- '\\n<description>' ~ (param_fields.description | trim) ~ '</description>' }}\n                {%- endif %}\n                {%- set handled_keys = ['name', 'type', 'description'] %}\n                {{- render_extra_keys(param_fields, handled_keys) }}\n                {{- '\\n</parameter>' }}\n            {%- endfor %}\n        {%- endif %}\n        {% set handled_keys = ['type', 'properties'] %}\n        {{- render_extra_keys(tool.parameters, handled_keys) }}\n        {{- '\\n</parameters>' }}\n        {%- set handled_keys = ['type', 'name', 'description', 'parameters'] %}\n        {{- render_extra_keys(tool, handled_keys) }}\n        {{- '\\n</function>' }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n{%- endif %}\n{%- if system_message is defined %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in loop_messages %}\n    {%- if message.role == \"assistant\" and message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content is defined and message.content is string and message.content | trim | length > 0 %}\n            {{- '\\n' + message.content | trim + '\\n' }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n            {%- if tool_call.arguments is defined %}\n                {%- for args_name, args_value in tool_call.arguments|items %}\n                    {{- '<parameter=' + args_name + '>\\n' }}\n                    {%- set args_value = args_value | tojson | safe if args_value is mapping else args_value | string %}\n                    {{- args_value }}\n                    {{- '\\n</parameter>\\n' }}\n                {%- endfor %}\n            {%- endif %}\n            {{- '</function>\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"user\" or message.role == \"system\" or message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user\\n' }}\n        {%- endif %}\n        {{- '<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>\\n' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 11258611360
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "29a32fdf69ae81a5f061a8aac44298b9bd276366",
+      "size": 2700
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q2_K.gguf",
+      "blobId": "5b031b6069758d6785046658059cf279a6c93f91",
+      "size": 11258611360,
+      "lfs": {
+        "sha256": "ca6feebb651e684b7606841a4e5008b2ff4464f5e7695733a128d5ae35b8ea56",
+        "size": 11258611360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_L.gguf",
+      "blobId": "b4fd464a07a596783e37825439be701611fcd045",
+      "size": 15900671648,
+      "lfs": {
+        "sha256": "3b1693e53f965df4179ba3958944a35d6336fe135124fd91056013aeb4c39ead",
+        "size": 15900671648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_M.gguf",
+      "blobId": "6a65a99044cff011439812121e8f7be5f892d75e",
+      "size": 14711848608,
+      "lfs": {
+        "sha256": "c6c6d553c9bddc569430672ee57e2293c1b9833268c3687bdfe2f12bc5148509",
+        "size": 14711848608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q3_K_S.gguf",
+      "blobId": "339a95b3708c0f5ee6883ab9e58c6ec03e4b2e31",
+      "size": 13292469920,
+      "lfs": {
+        "sha256": "505cb7a5199e681fd70a372d50b2880ea68af757c726eca7f63b2af6b551b395",
+        "size": 13292469920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q4_0.gguf",
+      "blobId": "1c4b0d57359a20f0ad5dedfa7d13407965ce2718",
+      "size": 17304491680,
+      "lfs": {
+        "sha256": "1afa6a166898cd05a6291a4bf5f0204241bc122b4f9b9f1dc5eac9a8f04b7253",
+        "size": 17304491680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf",
+      "blobId": "953c4cd8f03adcd42ca178f84d041d427941e7be",
+      "size": 18556688032,
+      "lfs": {
+        "sha256": "0c111309e37bc5f8ebac319839a8b6e5b4536e9a5804121df63d027bbd55b5b6",
+        "size": 18556688032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q4_K_S.gguf",
+      "blobId": "a533582171bdaa308421e9a4813b206cc55f580d",
+      "size": 17456010912,
+      "lfs": {
+        "sha256": "fb8be748267bb5ba34fe6b88d6cc1061fd5bbe52b89e85e660cf2419d5b04487",
+        "size": 17456010912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q5_0.gguf",
+      "blobId": "6469937d74d63807e08ec2a16c8c232f077dc092",
+      "size": 21080512160,
+      "lfs": {
+        "sha256": "13a370d5adf44b300fd70f96df5a25ad99f3fdf4588fea5a3cb8e13922f1cfec",
+        "size": 21080512160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q5_K_M.gguf",
+      "blobId": "e814a31e21510839a85da0ec833677c84753c38b",
+      "size": 21725583008,
+      "lfs": {
+        "sha256": "9cca9d05d96a6fb431f241b9295efb5a4002e2fdd248afcf1513a7bc5747954d",
+        "size": 21725583008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q5_K_S.gguf",
+      "blobId": "bee39115141ad115e07f005c5f4c60c7f68f437f",
+      "size": 21080512160,
+      "lfs": {
+        "sha256": "f78b3bc3212aadd67e2e1d8d6feb130b2abac75b995ab74317c121217b727919",
+        "size": 21080512160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf",
+      "blobId": "3158e5fa09be2dc3f8362978aa37755c4cd65a56",
+      "size": 25092533920,
+      "lfs": {
+        "sha256": "07a79d3335c97f7ed9e525f17570ae5977f98b68a749353520e4b323940a0b0e",
+        "size": 25092533920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf",
+      "blobId": "10f3038ec318bbf1e94a68ba897d842f75bb0319",
+      "size": 32483933856,
+      "lfs": {
+        "sha256": "f22993e29318b5b9ec2026f6b65802a5ca99b38ab4844aab83aed8a26ce00ff6",
+        "size": 32483933856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-f16-00001-of-00003.gguf",
+      "blobId": "03302f6446a3c12aa3470b04a53a2b1fe2ffb9b9",
+      "size": 29706752288,
+      "lfs": {
+        "sha256": "dfbb2e47a08f0f4266ad8eefbae45611715aca8ce985c6a0e5fe62352e569b27",
+        "size": 29706752288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-f16-00002-of-00003.gguf",
+      "blobId": "20dfbd3951898eaa9ab7afbcf5c47777a373667c",
+      "size": 29557689440,
+      "lfs": {
+        "sha256": "55cb9630a836bfa368f997038f68cf0e413d28b91d9d5a5fdf90a65898cdbee7",
+        "size": 29557689440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3-Coder-30B-A3B-Instruct-f16-00003-of-00003.gguf",
+      "blobId": "91834214c05f23f581ded42aadc2b1e6282a8c2a",
+      "size": 1831363168,
+      "lfs": {
+        "sha256": "a5a87e83e4ae1da831036c353646958df0f070ee4cb51b0c25a8dd4eed74c79f",
+        "size": 1831363168,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "3897f91adf59a586f8f293b35f0f29ef6d5aae31",
+      "size": 769
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "8e73c9776686b3f99c3a76341fe0f87f55da43bf",
+      "size": 992
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-08-20T02:43:35.000Z",
+  "usedStorage": 291039672160
+}

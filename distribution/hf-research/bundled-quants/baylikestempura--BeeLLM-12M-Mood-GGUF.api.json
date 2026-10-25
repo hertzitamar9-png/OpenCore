@@ -1,0 +1,119 @@
+{
+  "_id": "6ace0a35e06a0474a15634e1",
+  "id": "baylikestempura/BeeLLM-12M-Mood-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "bee",
+    "buzz",
+    "tiny",
+    "toy",
+    "toy-model",
+    "text-generation",
+    "conversational",
+    "quantized",
+    "q8_0",
+    "q4_k_m",
+    "en",
+    "base_model:schizophyllume/BeeLLM",
+    "base_model:quantized:schizophyllume/BeeLLM",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 111,
+  "likes": 1,
+  "modelId": "baylikestempura/BeeLLM-12M-Mood-GGUF",
+  "author": "baylikestempura",
+  "sha": "180bd46b0594742b93b9f31bb43de41a463bd5f8",
+  "lastModified": "2026-10-13T10:39:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "schizophyllume/BeeLLM",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "bee",
+      "buzz",
+      "tiny",
+      "toy",
+      "toy-model",
+      "text-generation",
+      "conversational",
+      "quantized",
+      "q8_0",
+      "q4_k_m"
+    ],
+    "pipeline_tag": "text-generation",
+    "license": "apache-2.0"
+  },
+  "gguf": {
+    "total": 11965760,
+    "architecture": "llama",
+    "context_length": 4096,
+    "chat_template": "{% for m in messages %}{% if m['role'] == 'user' %}<|user|>{{ m['content'] }}{% elif m['role'] == 'assistant' %}<|bee|>{{ m['content'] }}</s>{% endif %}{% endfor %}{% if add_generation_prompt %}<|bee|>{% endif %}",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 9154976
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ba4eea54ab7676475dc95c6e93ed0459b9b39838",
+      "size": 1645
+    },
+    {
+      "rfilename": "BeeLLM-12M-Mood-Q4_K_M.gguf",
+      "blobId": "94ef0d0c3c5211aa76de75374e41eeae3b80f21c",
+      "size": 9154976,
+      "lfs": {
+        "sha256": "2fa6904c0031709a23465274c5be6cdd2586c83978409e0c6441ab2219b9c117",
+        "size": 9154976,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "BeeLLM-12M-Mood-Q8_0.gguf",
+      "blobId": "91dd2c54c0a97fdd0f865fe8a98c2dd5f9069e1a",
+      "size": 12779936,
+      "lfs": {
+        "sha256": "6d7b00a12d5d3cd6380ce3341ba90b3d6277eb84a3b3089d1e27fdd6e41851e1",
+        "size": 12779936,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "20871f12f8645ae7410c5dfd7314ceaf22a6d533",
+      "size": 5037
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-13T10:38:45.000Z",
+  "usedStorage": 21934912
+}

@@ -1,0 +1,261 @@
+{
+  "_id": "6acee569c7708d288be1d0fa",
+  "id": "mradermacher/d1-omni-600M-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "liquid",
+    "lfm2.5",
+    "edge",
+    "decision",
+    "classification",
+    "calibration",
+    "system-one",
+    "multimodal",
+    "vision",
+    "audio",
+    "decision-model",
+    "en",
+    "de",
+    "es",
+    "fr",
+    "it",
+    "nl",
+    "pl",
+    "pt",
+    "ar",
+    "hi",
+    "ja",
+    "ru",
+    "tr",
+    "vi",
+    "zh",
+    "base_model:LiquidAI/d1-omni-600M",
+    "base_model:quantized:LiquidAI/d1-omni-600M",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "feature-extraction"
+  ],
+  "downloads": 487,
+  "likes": 0,
+  "modelId": "mradermacher/d1-omni-600M-GGUF",
+  "author": "mradermacher",
+  "sha": "00fcfed5fdceef9950e12e493f56591109b91a88",
+  "lastModified": "2026-10-14T02:18:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "LiquidAI/d1-omni-600M",
+    "language": [
+      "en",
+      "de",
+      "es",
+      "fr",
+      "it",
+      "nl",
+      "pl",
+      "pt",
+      "ar",
+      "hi",
+      "ja",
+      "ru",
+      "tr",
+      "vi",
+      "zh"
+    ],
+    "library_name": "transformers",
+    "license": "other",
+    "license_link": "LICENSE",
+    "license_name": "lfm1.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "liquid",
+      "lfm2.5",
+      "edge",
+      "decision",
+      "classification",
+      "calibration",
+      "system-one",
+      "multimodal",
+      "vision",
+      "audio",
+      "decision-model"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 380732161,
+    "architecture": "lfm2",
+    "context_length": 128000,
+    "causal": false,
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "decision_type": "lfm2-d1-omni",
+    "totalFileSize": 764051552
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "5a2d14f09e1af8ccab172f7c3d70d60b9c14369f",
+      "size": 2373
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "73878b9eaced784a1b0e57e20ffe464fd0b5a6d7",
+      "size": 4085
+    },
+    {
+      "rfilename": "d1-omni-600M.IQ4_XS.gguf",
+      "blobId": "711a42d823078137794b6a31ed71e8bbeb762ac2",
+      "size": 225869920,
+      "lfs": {
+        "sha256": "ff94aecf447167a95e2a85f838f48b2399df3e1ede7d0c56e45f9a626a93ce7e",
+        "size": 225869920,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q2_K.gguf",
+      "blobId": "1ea83395976828b45a20e9098de1878617dbbd93",
+      "size": 171040864,
+      "lfs": {
+        "sha256": "c83d168efd1df89124125d5122bb5176a14555d3d0c56181e63f1727acfb9d8a",
+        "size": 171040864,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q3_K_L.gguf",
+      "blobId": "4ef5444fcab84f663e9874726bfed07febeb8652",
+      "size": 218775648,
+      "lfs": {
+        "sha256": "c4a0d5864f99d639db1c4fc47ca1cefa61fc5137b0d521644fd94dff0045923e",
+        "size": 218775648,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q3_K_M.gguf",
+      "blobId": "d8c02610f3bf4ffcdc3925f19e6bec9e621ca073",
+      "size": 206782560,
+      "lfs": {
+        "sha256": "fb49304ac4344e494a9188add73e41d94ee77af487be71c6f30e783f0c75cf2a",
+        "size": 206782560,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q3_K_S.gguf",
+      "blobId": "d36055d918bc89920a9163c9334b27ccb7dd97ac",
+      "size": 192553056,
+      "lfs": {
+        "sha256": "eda1daba23cf598d3795da871635fc39790582952ec9be07f692f90b3e97f859",
+        "size": 192553056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q4_K_M.gguf",
+      "blobId": "621c47c9d76a0294a1a4b0e706390a8dc891ce87",
+      "size": 246763616,
+      "lfs": {
+        "sha256": "f408be8d9cb4af59d746641dcae848e529a6b0d609d356422f7d207bfabb3c88",
+        "size": 246763616,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q4_K_S.gguf",
+      "blobId": "5d870228fa6a35d6a12cf935d0af8e4b30f8b6c6",
+      "size": 235634784,
+      "lfs": {
+        "sha256": "6f3e0e2cab6e1fe4660142eeeaae6dc20bcb1edde53a43ff76a379ef300e90ae",
+        "size": 235634784,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q5_K_M.gguf",
+      "blobId": "edfc6670f6e78cfc2cd12c02868790259244392b",
+      "size": 279859296,
+      "lfs": {
+        "sha256": "eaec1bd52cfd51a89a8bfd343834ef639188a354a828d2d59a95b3e81e4c3c3e",
+        "size": 279859296,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q5_K_S.gguf",
+      "blobId": "6efb0bcb29933c6e7c2d3f24280f78b8365aca9f",
+      "size": 273383520,
+      "lfs": {
+        "sha256": "584c6d7299d3c57816888ab164fa87fb326ff3cab90e1f5b2ef87e550fe8d8b1",
+        "size": 273383520,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q6_K.gguf",
+      "blobId": "e3cb6f2f69bb271c1e0925812f8014f8d9396a30",
+      "size": 315023456,
+      "lfs": {
+        "sha256": "2c5b85c7ae82c13c257c126f3e04e028c619dff95040be0d3dd2064214491c49",
+        "size": 315023456,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.Q8_0.gguf",
+      "blobId": "2b196dbea3e810f6f75b0cd77827da1d6791628c",
+      "size": 407208032,
+      "lfs": {
+        "sha256": "8094efeb4d08d570952be776b24b26d1085b7867505a6aa963bc93e9d3b62587",
+        "size": 407208032,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.f16.gguf",
+      "blobId": "0564bc980775adfe4c48b3d388cb04b1413409a3",
+      "size": 764051552,
+      "lfs": {
+        "sha256": "cd58a64039780b721912be5664f64fd55aa4cffac1029e79f10b5b313966390a",
+        "size": 764051552,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.mmproj-Q8_0.gguf",
+      "blobId": "943243f14bff9083d3b960c7a878e20d5371810a",
+      "size": 262791232,
+      "lfs": {
+        "sha256": "56756ff7d3ad3c07eaa3ee4292427a78bfe165beeeecd4e90334d9effb9d446d",
+        "size": 262791232,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M.mmproj-f16.gguf",
+      "blobId": "69306bea135cd28ba4bf116c2d63a02f3c41d2f9",
+      "size": 441262144,
+      "lfs": {
+        "sha256": "7701167b50b5115e47a84bab8196e65216d29c23489e1270298382daf6f38056",
+        "size": 441262144,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-14T02:14:01.000Z",
+  "usedStorage": 4240999680
+}

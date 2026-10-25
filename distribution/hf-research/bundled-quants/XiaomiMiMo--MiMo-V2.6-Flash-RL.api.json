@@ -1,0 +1,922 @@
+{
+  "_id": "6ab14fc71e92143b484f4f8c",
+  "id": "XiaomiMiMo/MiMo-V2.6-Flash-RL",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "mimo_v2",
+    "text-generation",
+    "multimodal",
+    "vision-language",
+    "audio",
+    "agent",
+    "video-understanding",
+    "long-context",
+    "conversational",
+    "custom_code",
+    "en",
+    "zh",
+    "license:mit",
+    "eval-results",
+    "8-bit",
+    "fp8",
+    "region:us"
+  ],
+  "downloads": 89572,
+  "likes": 582,
+  "modelId": "XiaomiMiMo/MiMo-V2.6-Flash-RL",
+  "author": "XiaomiMiMo",
+  "sha": "dcd3fd83fb181622fbc606fbb1709901982a62c2",
+  "lastModified": "2026-10-09T06:30:29.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "MiMoV2ForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_mimo_v2.MiMoV2Config",
+      "AutoModel": "modeling_mimo_v2.MiMoV2Model",
+      "AutoModelForCausalLM": "modeling_mimo_v2.MiMoV2ForCausalLM"
+    },
+    "model_type": "mimo_v2",
+    "num_experts_per_tok": 8,
+    "processor_config": {},
+    "quantization_config": {
+      "quant_method": "fp8"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "mit",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "text-generation",
+      "multimodal",
+      "vision-language",
+      "audio",
+      "agent",
+      "video-understanding",
+      "long-context",
+      "mimo_v2",
+      "transformers"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_mimo_v2.MiMoV2ForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "471616313b834bc9770b96862e17c4f863d0c417",
+      "size": 1697
+    },
+    {
+      "rfilename": "MiMo_V2_6_technical_report.pdf",
+      "blobId": "c3874691778c367a58935e5026a408639ca118c5",
+      "size": 3046687,
+      "lfs": {
+        "sha256": "fb81e6e083801b3358f084ed6be953dc23b0d2e434690f4541d5eae03e01e7af",
+        "size": 3046687,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a780c5f93d7d7d78e503e809f335efa39484db9a",
+      "size": 9612
+    },
+    {
+      "rfilename": "assets/architecture.png",
+      "blobId": "5a42079d9e7c8127560a943cd4a5fbe2170ed672",
+      "size": 405440,
+      "lfs": {
+        "sha256": "d288768e1771fec19b39ed7dbac4adcbbd2e490384d4ad3c58d259b0c6c6bdcc",
+        "size": 405440,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "audio_tokenizer/chat_template.jinja",
+      "blobId": "2b156ae9110a5966c5c6f266075a0f2fae7768d0",
+      "size": 5588
+    },
+    {
+      "rfilename": "audio_tokenizer/config.json",
+      "blobId": "e0d6fd1b099bf9d1c0033a7d13ab9c384d2430dc",
+      "size": 1215
+    },
+    {
+      "rfilename": "audio_tokenizer/generation_config.json",
+      "blobId": "c6911e35d75e2ddedbec5716154f0c19442e29e6",
+      "size": 149
+    },
+    {
+      "rfilename": "audio_tokenizer/model.safetensors",
+      "blobId": "d26fff20968c281e2ffb811fa92fbde1ab0bf8ba",
+      "size": 1872618384,
+      "lfs": {
+        "sha256": "077033345d80eef3a315e8d394e0589667e80e4cdaba9bc5a7488410c6657265",
+        "size": 1872618384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "audio_tokenizer/tokenizer_config.json",
+      "blobId": "2063165454f0c8e509fda3de638f065df46165d8",
+      "size": 6059
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "f23265d928b22848e4879cc0f1d6cfe999bf7429",
+      "size": 3868
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "9e0d9673d479e810bb2cd0ff8e581e9f16f702b4",
+      "size": 8068
+    },
+    {
+      "rfilename": "configuration_mimo_v2.py",
+      "blobId": "bb6f447232de5b0a5d773ccd42db63d05ae5acea",
+      "size": 10049
+    },
+    {
+      "rfilename": "dflash/config.json",
+      "blobId": "9d25559ad598fe16076bec44f755f6bec688bbd2",
+      "size": 1242
+    },
+    {
+      "rfilename": "dflash/dflash.py",
+      "blobId": "0aea03fe130ec6070d8d94f8d11c37ee9885782f",
+      "size": 14255
+    },
+    {
+      "rfilename": "dflash/dflash_draft_model.safetensors",
+      "blobId": "06591100b3e0e791b59638ae2a6e9b4d4771bd8a",
+      "size": 2936121080,
+      "lfs": {
+        "sha256": "94d9c02c17e0b469f88699e98424825ebe13a17f07eb3b86727b5e0c8143d287",
+        "size": 2936121080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "dflash/mask_embedding.pt",
+      "blobId": "6ebcfd4abd4d19a215375c7b19684794b1b0fa3c",
+      "size": 9882,
+      "lfs": {
+        "sha256": "b35b379fe0497ffdc0d6407f502622237d9346e0d03f457ec574be60f6c2cee0",
+        "size": 9882,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "dflash/model.safetensors.index.json",
+      "blobId": "aae806350583fa144d148ddc48dd583aa7d1e621",
+      "size": 4689
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "167a2b078ebc16fc7633618141c1f9869783a65c",
+      "size": 195
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "717104e375acc75f79aa378b8dc4705322e3d4f1",
+      "size": 6900294
+    },
+    {
+      "rfilename": "model_mtp.safetensors",
+      "blobId": "9fb6f88a81b1ad50be7aa1463322bc926a55b157",
+      "size": 1189405960,
+      "lfs": {
+        "sha256": "f8f78a78a79e4ec9e42e02ff94790d2a0183995ae278ff521416baa25ae2f38c",
+        "size": 1189405960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep0_shard0.safetensors",
+      "blobId": "8bb1ab16835a58bfa2e5a34556f09365301c299a",
+      "size": 13387692392,
+      "lfs": {
+        "sha256": "88ff485461b925982205b2ffafd5696e4cc69b42bcbf05b00a3915cf17266120",
+        "size": 13387692392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep10_shard0.safetensors",
+      "blobId": "5eca4fe224ce39f29e1a778505fd4e838cdaaa8e",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "da00ca1b796d2f9c44ff523a90cfccde0f1cf63c5ef37120a476f08a3d911c6f",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep11_shard0.safetensors",
+      "blobId": "d10d9029503c2410c192f6b76d0d5c4bdb924317",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "e71b67866924b57684c7234b071fb0c9c8c56bc4cc7cfb225ca4589862090356",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep12_shard0.safetensors",
+      "blobId": "3bd7a3b8c96e3a3041ce2bc01529b0d5cc0960d0",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "415a846ced38b6a158d870dd30e6c9af270b2c4cecfdd70b804e9eff1d961c57",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep13_shard0.safetensors",
+      "blobId": "f5d72fbf2f5bbf6ef2a329e0c0e8b4399b3013f2",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "cfdf506f2f41f799f6d4d0357ea55fc7e57f47c6d5478962e01988eae0c957f7",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep14_shard0.safetensors",
+      "blobId": "615fb5dcce0779f752a290d917ae129d0f6644ee",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "035ec01fe9adcd7d8d47bc6b601193f9a0aa8b7a946992f516007b99e95865f9",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep15_shard0.safetensors",
+      "blobId": "43a84ab3df2aefbac0b5e5df59edadde4b80595b",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "c68e1ccf79a6a0f31588cb85e77252618d86aad58e30a9af5de324a863b4fb3e",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep16_shard0.safetensors",
+      "blobId": "c44731660826779e485d67b321c5bc7449d53b54",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "ff707d5aeaec2301c1b59491718967c96b7dbace4056a569b8c99b164653e3ed",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep17_shard0.safetensors",
+      "blobId": "adf0fa03f61bc7496f96b8135ccc48f1203f736e",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "284187f225f7215953744c629fabd7bbf55953b7eea7d6ed508ae795f5aef093",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep18_shard0.safetensors",
+      "blobId": "d32cdbd1f226b94a298c5841ad5ba564d695cf15",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "f5a701a582e98b80d058897d7ce01ca7883c19e005d2798ff49ab4401cd12da2",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep19_shard0.safetensors",
+      "blobId": "8818bba83749b53c4a94ecf1889a0b2a99765ffe",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "e9f48244d5d0d96af2b0c326716a4550eb2d264280117e4e92ece5453082eaef",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep1_shard0.safetensors",
+      "blobId": "62b125fbad11166f419df5be64c142ab6a5f2ecb",
+      "size": 2513576088,
+      "lfs": {
+        "sha256": "22b6affecd08eec16a4c52fb1c303f1c7533102b7e42535348afde2c2f7aab01",
+        "size": 2513576088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep20_shard0.safetensors",
+      "blobId": "e6d3caa238e352e51c31209ed11a3fcd4fb00668",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "a705193ebcd176bcfd13fd1a711733a62f0f026878c315d2e927cbd1449b89f5",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep21_shard0.safetensors",
+      "blobId": "3c9b739c28eb9dc4de91d72de2d15c03c6e52beb",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "00d5447c5189557a0027591e8d99297b14739a2d20ce9a61244fc04845172de6",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep22_shard0.safetensors",
+      "blobId": "3d7dbf35abdf00054b1511141a0d287b58c8bbad",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "28a81aa95b2c4d1b6b1ec9448d3652b0e8483f9dfcec3adad8ca51c8c50a6999",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep23_shard0.safetensors",
+      "blobId": "0bd2663a7c690b332b183a575b3cde288dab9876",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "9b26e23a99ee8b758bcd74701c8af2186938f2561b20df2694b4b1a3682354ac",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep24_shard0.safetensors",
+      "blobId": "b17ec655b170d3d4c00e4af791b3cae34a5c4d9f",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "5a7d6d132b4e7a03e18503416a30c29e7fd7d66f38ff991a4f523a37008f294c",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep25_shard0.safetensors",
+      "blobId": "05602504de6e983bf8e61e0f9d4b11c2c8ea3736",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "e4381d38a657568ef7682a1d1794f7c07124869cd9680fa858dbf0fd393f7560",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep26_shard0.safetensors",
+      "blobId": "c58eb400d756d1eb7373cc148d3bd16b7a8eee2f",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "e60972151139b905a9854d5b9947bd82c59be6f5dac01d569e09fe74303241b8",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep27_shard0.safetensors",
+      "blobId": "ad15675bdcdac90267e841a3a87d6f339042850c",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "667920e72309345e0ff1f689fd8e7869d715e485e3d3c5d4e17ed8c10d1fd534",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep28_shard0.safetensors",
+      "blobId": "dfd9bb015304f9efc04e2715a094a588c306ba04",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "1276d80fccbb05d0ae25b03f71b8a8d3a897d041472664dda9e86bfca32244db",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep29_shard0.safetensors",
+      "blobId": "87cc05c36535ef9e7d1df374db82a08956eec3a2",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "b14eeeff5a315ede738cdf979f3e70bb3ab0909f0f2174113848b38fbe546f90",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep2_shard0.safetensors",
+      "blobId": "57b1219145940810d0b8df59611acfdc73066cfc",
+      "size": 2513576656,
+      "lfs": {
+        "sha256": "09e0e60b70a493666bb1212a21790cc8cee4b5f408488eb204b1877c3e9b793d",
+        "size": 2513576656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep30_shard0.safetensors",
+      "blobId": "0ddd95a68dbabef2a8b6363948db3c3429032968",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "71a1cafd2049ea436581844805ca535ed847c653f3e8ac07282945457128b1e2",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep31_shard0.safetensors",
+      "blobId": "9315a7b171947f2612213bb50a6621e142c49e99",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "0d63c0b26ffce16c636696b1d9bf6ec9503f8e7a544746f5658e1bd8a8777f79",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep32_shard0.safetensors",
+      "blobId": "52e1f15d42d4f1209fc9dd3c92ecf21e6c44cb78",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "3227c1161ea3191c9532414054e296b177e81b7ba989dd60e05131c5f9e3cb25",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep33_shard0.safetensors",
+      "blobId": "ea2c8f93f321bf9e0ec6f9b96ee4d85aac8bf3ea",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "454ea014bf041c46578a5953a762ddfcfde0449e9440ef1407d7797ac0c23bfe",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep34_shard0.safetensors",
+      "blobId": "519fd8bd8c469d3fedb7d898b6a20774925e386d",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "ca87893994c731b195cf58d61f3b31a6ac55140cd4e57869975f2e62d48d6aaf",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep35_shard0.safetensors",
+      "blobId": "1594f4823f3ba260eeaea34f8013b692a25ca23c",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "d32d422768055b66e02846208510bf3089e57375da2e0dbf2eef9a913fd55e97",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep36_shard0.safetensors",
+      "blobId": "ac18b5955a7fe48434ad0f0ebdb0bb1decba5432",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "f683b4cc856c57ae890ce99cedcfb4aca8da87d92b23d47d38f5b05cc569cb15",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep37_shard0.safetensors",
+      "blobId": "488dc0e8c4685a3d30aa9294a2a3052ed932934a",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "a1ec318aceec1a83b55b5cdf560439bcc2816083836c8503081b08c2a27c2344",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep38_shard0.safetensors",
+      "blobId": "4065c17be4052082ccca8780d02edea1ee30a574",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "dcbdeabcb804f610f5988118f5d1edad68dd637bf9396aca57c87d4128678008",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep39_shard0.safetensors",
+      "blobId": "de195aba1264636dc1565964e871d332741bd64d",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "e2355ec4c04a26b28267852e816377a00b68fffc67ebf15a3187f25660c8fee7",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep3_shard0.safetensors",
+      "blobId": "6522695f1879269679ecd712e966adfab54781e2",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "040c1b7c78193e71ee08c0d0b3cc3a502920b090eec654058e47aef22b61e488",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep40_shard0.safetensors",
+      "blobId": "bcd4b808743fefd8b23f9ac4e9bded803738880d",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "18fb96b145416105ceb43e6f0aec48fd948b55c7d408d864228884f90075106d",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep41_shard0.safetensors",
+      "blobId": "22596eea717a335dcec819a41fbbd0e6b0c32341",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "040930a123bc9d387473ed39daa1e981213bdf87d188cf16ad10bab8019dce84",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep42_shard0.safetensors",
+      "blobId": "af913ddaa38251e117a739e4aae5d78c6e1ff7fd",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "2d6946e3627839b8a20a346528d7d5af8453aa6368e8e2368a15404b6561e31f",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep43_shard0.safetensors",
+      "blobId": "fc15299a535bd72f5ae634e9dcdc80f95352e1f5",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "f7bc2229a9d3cfa1b578ab9246ef716925ae8bc3d0f430a62f0f0b6a23ec285e",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep44_shard0.safetensors",
+      "blobId": "260b4d2c341897660499eea2304e99f0c0cf5f97",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "2cb175e47f442819244a5b634b0d8143eb4f73bfdfd03c2a64a0c231ada1d356",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep45_shard0.safetensors",
+      "blobId": "6781de8c26869646520956092e7c436622c851eb",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "24ddfb9ef70cd6fb4eb91a0e06546d83798e44e5df797ca835818ed19ec9c4fb",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep46_shard0.safetensors",
+      "blobId": "76defa9fa05c53151b614d41e9898a469a9de675",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "1c911acaf7416363d3858fc5ac30e477f3a1c6ec09c254b1d117cbe5e829942f",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep47_shard0.safetensors",
+      "blobId": "f784972df161882857695ced4e43294e84b77435",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "6a3454f4223e945a803803c059e0a04cd34b98cea83f9a9e1cd2b4f538376142",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep48_shard0.safetensors",
+      "blobId": "5239cb81eb4ea4c1b13101e68d3be7e21081dcaa",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "6a72d2de5e67bc787b62e791e92b287d69f3e5568f2a6dfd4eccfe73c64178b6",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep49_shard0.safetensors",
+      "blobId": "99af2fa068be7f69707024e90b91e68f3c20d679",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "34012530cff5362aee440d11b34ae965e2fe8967892222d700f6a28907ab8a00",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep4_shard0.safetensors",
+      "blobId": "b83f012a8f0e5fc739c806f01da7becabffafc77",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "f166afbd8d82ab9fbb9883d773553ef7b4a194cdcf98d706b3fb0600fb814902",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep50_shard0.safetensors",
+      "blobId": "fa7969e637ee45217e3e609b5bee0f4c37a6a470",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "c3d219144d633d20955b7dbddaa64a396cf99410b98d96d17f409d6e3045b228",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep51_shard0.safetensors",
+      "blobId": "47820284ae4f56c1c666202c67dc776100cdb4cf",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "e378611cc5a11c83df4de5fa5a85242b67efa2d1724e8295982c72fbe2bb8a43",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep52_shard0.safetensors",
+      "blobId": "8f24f2472655f9312fcba0bc20b8f4f0970187b5",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "bf3628acbd82dea887c7347b0cbbb8b55278f2a547ab8b9a43c9a78b220e6b82",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep53_shard0.safetensors",
+      "blobId": "9ad950208fbac903c673d367550db51ecf440c33",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "b1847ad14ae334f82df6f36de803b8f3c9051e8df9e001a78b50d25d138812b7",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep54_shard0.safetensors",
+      "blobId": "9ca5f9c7c96428445153da42dea599338306f861",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "26755fdb7dd56d49c290e403676473512892bae9ac0add604008d85a9d254ff6",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep55_shard0.safetensors",
+      "blobId": "3a5c71ec4db52258a2ef69d08ff4f48124530fd2",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "560164ba11d0dd0927fccf85b14bff61ffaed1936d77e9696386b8aa81dffcc9",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep56_shard0.safetensors",
+      "blobId": "4abf279797ce092ec33edaca1d7e682e40f16e43",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "0e7a659c8453ccc78736f2c399a01e568df6d879de613ddf7b1d734c26ca7c21",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep57_shard0.safetensors",
+      "blobId": "34edbb84a7614a53aae3ef06aa6ddd438092c18c",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "401978e73cf93d590147d7d71b525fc64c4c7f12fb8515ac38630cb9b36fc772",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep58_shard0.safetensors",
+      "blobId": "1d81251ac269ad328b2b5b0ccee8bcc7a5e99122",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "e2cc332b6f7c2346d4d0bb92c3695a76388aeb4dcfffa0abebd28c37b656b786",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep59_shard0.safetensors",
+      "blobId": "0bb1a8b0e99e2a7725ffb16a8a5d2bf060404fac",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "442203f3ba2963c9856733c17513a97134696d477288566ed8342abdf1f141df",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep5_shard0.safetensors",
+      "blobId": "84048b2b44f1a6c0fa4189476bfe99e0632247d5",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "bf32dcbbc1bca761483485de3958f52e671763ec08458a261959be433dfbd9cc",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep60_shard0.safetensors",
+      "blobId": "e669675c5337338574e2abaf9883d35a7cac44de",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "60376b2bf894882c39c13d8123ff4f999ae14949f202587aedb824088737d0aa",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep61_shard0.safetensors",
+      "blobId": "e477d378ea099c7ca6f43349c021f9c6685863a8",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "18069789870b405f86e7d1fb5f08c37dcc999048ab0bd9a82c038aecbc570ad1",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep62_shard0.safetensors",
+      "blobId": "7c432381d61e2838596468030dcbe70ad59aaa05",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "deb27097308378aa9436035692144e70413c82b57d4c150526e1b3579dd97304",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep63_shard0.safetensors",
+      "blobId": "0a21b883f94a0b80d185b979d861b5f290ab7540",
+      "size": 2513578344,
+      "lfs": {
+        "sha256": "4c7d30662358df960359be484e5fba64406663859193664bba8d4e3e989816d1",
+        "size": 2513578344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep6_shard0.safetensors",
+      "blobId": "c8fffbc6796a52b6ad8f17dbb7bb9340988ad9e0",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "078ba6e5316ba9aa5b635bbf89be767b41b99c4a03053512ef7e914afea8b758",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep7_shard0.safetensors",
+      "blobId": "30568a1650a69de3474c2bd55307c0011373910e",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "d835940a8c467df1ff5a98cd60808ad36955a310a6cbd8162926cc1cf548d0a3",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep8_shard0.safetensors",
+      "blobId": "a70b6e90b9bad6b39b0de9055fa9fe46b4998cd7",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "8b85464b513d132f07c405231acadf69e7360df336a7d50a6aa77fad9340feb7",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model_pp0_ep9_shard0.safetensors",
+      "blobId": "7ca0d24422185c9edfde2f16292bb18ba700cf45",
+      "size": 2513577216,
+      "lfs": {
+        "sha256": "c4e94cfa075dc36ff69d102a01bc102d6da8869772322cfafb71aa02bc14197f",
+        "size": 2513577216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_mimo_v2.py",
+      "blobId": "40225ab4e30d790eab2a4dbbd74690dbb71c55ad",
+      "size": 85516
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "a4f392e49a1c3a30d21001f6ee3a9138f8d11f6d",
+      "size": 320
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "56aaac0e1d7e15262c3378d1a23ff439be16488f",
+      "size": 11423823,
+      "lfs": {
+        "sha256": "ff15eb925890d6b71b5160de4b846fbd13178438ab463b38ecc953e8cd1dcb3e",
+        "size": 11423823,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "39a944cb3f85e797da58bd4ebd0091c60f7bd6d0",
+      "size": 12150
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "donaldJJ/llm-vram-calculator",
+    "oleksiimarich2015/multi-ai-backend",
+    "quaedra/best-local-llm-for-your-gpu"
+  ],
+  "createdAt": "2026-09-21T15:39:51.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 12032,
+      "BF16": 4101308032,
+      "F8_E4M3": 3859808256,
+      "U8": 302795194368
+    },
+    "total": 310756322688
+  },
+  "usedStorage": 177759177245
+}

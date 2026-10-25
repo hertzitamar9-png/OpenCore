@@ -1,0 +1,215 @@
+{
+  "_id": "68119787183c408107a5aeef",
+  "id": "Qwen/Qwen2.5-Omni-3B",
+  "private": false,
+  "pipeline_tag": "any-to-any",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_5_omni",
+    "multimodal",
+    "any-to-any",
+    "en",
+    "arxiv:2503.20215",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 136655,
+  "likes": 376,
+  "modelId": "Qwen/Qwen2.5-Omni-3B",
+  "author": "Qwen",
+  "sha": "f75b40e3da2003cdd6e1829b1f420ca70797c34e",
+  "lastModified": "2025-04-30T04:01:19.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5OmniModel"
+    ],
+    "model_type": "qwen2_5_omni",
+    "processor_config": {
+      "chat_template": "{% set audio_count = namespace(value=0) %}{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_bos|><|IMAGE|><|vision_eos|>{% elif content['type'] == 'audio' or 'audio' in content or 'audio_url' in content %}{% set audio_count.value = audio_count.value + 1 %}{% if add_audio_id %}Audio {{ audio_count.value }}: {% endif %}<|audio_bos|><|AUDIO|><|audio_eos|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_bos|><|VIDEO|><|vision_eos|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{% set audio_count = namespace(value=0) %}{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_bos|><|IMAGE|><|vision_eos|>{% elif content['type'] == 'audio' or 'audio' in content or 'audio_url' in content %}{% set audio_count.value = audio_count.value + 1 %}{% if add_audio_id %}Audio {{ audio_count.value }}: {% endif %}<|audio_bos|><|AUDIO|><|audio_eos|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_bos|><|VIDEO|><|vision_eos|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "qwen-research",
+    "license_link": "LICENSE",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "multimodal"
+    ],
+    "library_name": "transformers",
+    "pipeline_tag": "any-to-any"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "e01d337d67d910e44ed3d191914ab4a3682e6d7e",
+      "size": 7387
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "5e0410d004426a8bfb6a8ce339798e004932966c",
+      "size": 36788
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "4562256351969d3b68f81fd5623ae42a9c7fbb25",
+      "size": 579
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "e696060ab7ab6e20f60e4e09b18e5da4c1830000",
+      "size": 1313
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "b384ba8df87edb013db2077327643bc3c885e49c",
+      "size": 13183
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "1c1ac9d737684b833c80a438e30fc3ba53e89bd4",
+      "size": 74
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00003.safetensors",
+      "blobId": "2b9ab37d102c09e625a4dc8695e83b2a6ce4d501",
+      "size": 4994850880,
+      "lfs": {
+        "sha256": "349972cebff443030e9e96e1e930d7230979c6961cf046fa29fc580e4bcf49a6",
+        "size": 4994850880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00003.safetensors",
+      "blobId": "86741ed7515aba3e06a5181324b8923e3f389f92",
+      "size": 4999787448,
+      "lfs": {
+        "sha256": "b29a76dfefb3aa33a5bd0faa19c681d039a44de57223653ea0e933df728c6d8c",
+        "size": 4999787448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00003.safetensors",
+      "blobId": "ad5324b523cef836a83f06244c6c4a5f5f8f5832",
+      "size": 1978024880,
+      "lfs": {
+        "sha256": "8f2138170a87ec604b53232491a96d6dcf19e0724aca37e69aace143e508b170",
+        "size": 1978024880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "0f020dad805c3e7ed7f3b5b5f151e51ca58bad6c",
+      "size": 241817
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "63c79f1c43bce173ab13d94096dea54b3688436f",
+      "size": 667
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "8c2a71eaac0f526df324364d953503def113b7a1",
+      "size": 832
+    },
+    {
+      "rfilename": "spk_dict.pt",
+      "blobId": "7c379649ee9423d393e21f4c22fb2478f24b4c17",
+      "size": 259544,
+      "lfs": {
+        "sha256": "6a05609b28f5d42b7b748f0f07592545c8f1f6885b9ae8fff64baf56e86b2a18",
+        "size": 259544,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "0a8d651380b80b1775af303bdabc6da4e6774ce3",
+      "size": 11421870,
+      "lfs": {
+        "sha256": "8441917e39ae0244e06d704b95b3124795cec478e297f9afac39ba670d7e9d99",
+        "size": 11421870,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "22c6d3668a32e4fe6dc09331bff96e7cc3a2290f",
+      "size": 6469
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "tencent/AuK",
+    "FunAudioLLM/PrismAudio",
+    "hugging-apps/drbaph-auk-comfyui",
+    "jawakja/Mulktimodal_chatbot",
+    "Ajeya95/First_agent_template",
+    "Zeyue7/Audio-Omni",
+    "GiorgioV/testovich",
+    "baryonlabs/open-ko-s2s-leaderboard",
+    "Jimmi42/Qwen2.5-Omni-Apple-silicon",
+    "Chi-AI-Rookie/Final_Assignment_AgentJasper",
+    "yarenty/Chat_tester",
+    "Alovestocode/router-router-zero",
+    "ncc01/ZeroGPU-LLM-Inference",
+    "Olicar/test_chateau",
+    "polats/ZeroGPU-LLM-Inference",
+    "ethanfel/PrismAudio",
+    "QinlingJing/PrismAudio",
+    "AliNadhir/zeta-agent",
+    "ai-arenabot/distilledModel",
+    "Pq234/open-ko-s2s-leaderboard",
+    "teamup-tech/UNISON",
+    "ramu23/AuK",
+    "akhaliq/AuK",
+    "tahermotukuna/AudioOmni2",
+    "goooooooooooooooooo/AuK",
+    "alialqasem201/aura-closer-omni"
+  ],
+  "createdAt": "2025-04-30T03:22:47.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 449051296,
+      "BF16": 5088069376
+    },
+    "total": 5537120672
+  },
+  "usedStorage": 11984344622
+}

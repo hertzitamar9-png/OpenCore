@@ -1,0 +1,124 @@
+{
+  "_id": "6a3cb0bbb9ef7094c0c74653",
+  "id": "SanjeevSOLANKI/PaddleOCR-VL-1.6-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "ocr",
+    "document-parsing",
+    "llama.cpp",
+    "vision-language",
+    "ernie",
+    "image-text-to-text",
+    "multilingual",
+    "base_model:PaddlePaddle/PaddleOCR-VL",
+    "base_model:quantized:PaddlePaddle/PaddleOCR-VL",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1295,
+  "likes": 2,
+  "modelId": "SanjeevSOLANKI/PaddleOCR-VL-1.6-GGUF",
+  "author": "SanjeevSOLANKI",
+  "sha": "5621cad76de79b793ae45dbcb48153f12c72a7ac",
+  "lastModified": "2026-06-25T05:07:18.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "PaddlePaddle/PaddleOCR-VL",
+    "base_model_relation": "quantized",
+    "quantized_by": "SanjeevSOLANKI",
+    "language": [
+      "multilingual"
+    ],
+    "tags": [
+      "ocr",
+      "document-parsing",
+      "gguf",
+      "llama.cpp",
+      "vision-language",
+      "ernie"
+    ],
+    "pipeline_tag": "image-text-to-text"
+  },
+  "gguf": {
+    "total": 466654208,
+    "architecture": "paddleocr",
+    "context_length": 131072,
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n    {%- set add_generation_prompt = true -%}\n{%- endif -%}\n{%- if not cls_token is defined -%}\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\n{%- endif -%}\n{%- if not eos_token is defined -%}\n    {%- set eos_token = \"</s>\" -%}\n{%- endif -%}\n{{- cls_token -}}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {{- \"User: \" -}}\n      {%- if message[\"content\"] is string -%}\n        {{- message[\"content\"] }}\n      {%- else -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"image\" -%}\n                {{ \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" }}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n      {%- endif -%}\n        {{ \"\\n\" -}}\n    {%- elif message[\"role\"] == \"assistant\" -%}\n        {{- \"Assistant:\\n\" -}}\n      {%- if message[\"content\"] is string -%}\n        {{- message[\"content\"] }}\n      {%- else -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n      {%- endif -%}\n        {{ eos_token -}}\n    {%- elif message[\"role\"] == \"system\" -%}\n      {%- if message[\"content\"] is string -%}\n        {{- message[\"content\"] }}\n      {%- else -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] + \"\\n\" }}\n            {%- endif -%}\n        {%- endfor -%}\n      {%- endif -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"Assistant:\\n\" -}}\n{%- endif -%}\n",
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "totalFileSize": 300219360
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9d100847feee77aa631f5fdb4c3f63f1ebca4034",
+      "size": 1840
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.6-Q4_K_M.gguf",
+      "blobId": "09513100193ecc9bdcb0b45f3bb14ff01f9ba3df",
+      "size": 300219360,
+      "lfs": {
+        "sha256": "6bfa70392daf88a2562be8a2d0cff5061134f715d2d04a1d7b630a0950313f45",
+        "size": 300219360,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.6-Q5_K_M.gguf",
+      "blobId": "9d63544999ffbd576c477fdd0541d8836eb80ebf",
+      "size": 341474272,
+      "lfs": {
+        "sha256": "5d775957de8da2fded5b488b78743f6a48203377a391913d909372d7ef957ad6",
+        "size": 341474272,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.6-Q6_K.gguf",
+      "blobId": "6f3954c13dcfcf89a8539d61412b6e50bcb077cc",
+      "size": 385307616,
+      "lfs": {
+        "sha256": "a14b07c1bfefddbd320f5d25af8031d986c11c9355633c0405e7678268123206",
+        "size": 385307616,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.6-Q8_0.gguf",
+      "blobId": "8554a58557d11c76f8e3cded9a7d185dcc329487",
+      "size": 498316256,
+      "lfs": {
+        "sha256": "2bda93a416339f2d9f06accae505600544a9e72cc159d0cd1af4c0f679866e1c",
+        "size": 498316256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PaddleOCR-VL-1.6-mmproj.gguf",
+      "blobId": "2f6bcc2bb80689a24e6cd2fe14a8fd5caef82e5f",
+      "size": 881770560,
+      "lfs": {
+        "sha256": "204d757d7610d9b3faab10d506d69e5b244e32bf765e2bab2d0167e65e0a058a",
+        "size": 881770560,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "433a718fd173613945e3a540045891834d084b09",
+      "size": 10340
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-06-25T04:38:19.000Z",
+  "usedStorage": 2407088064
+}

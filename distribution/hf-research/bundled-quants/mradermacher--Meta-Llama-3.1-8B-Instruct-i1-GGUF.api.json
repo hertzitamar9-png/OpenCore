@@ -1,0 +1,333 @@
+{
+  "_id": "66a5cf30dcce325859e216e1",
+  "id": "mradermacher/Meta-Llama-3.1-8B-Instruct-i1-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "facebook",
+    "meta",
+    "pytorch",
+    "llama",
+    "llama-3",
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt",
+    "hi",
+    "es",
+    "th",
+    "base_model:meta-llama/Llama-3.1-8B-Instruct",
+    "base_model:quantized:meta-llama/Llama-3.1-8B-Instruct",
+    "license:llama3.1",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 1964,
+  "likes": 3,
+  "modelId": "mradermacher/Meta-Llama-3.1-8B-Instruct-i1-GGUF",
+  "author": "mradermacher",
+  "sha": "15a6b2be4570af9886c5cde164ddc8f41b4d7520",
+  "lastModified": "2024-12-16T05:01:49.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "meta-llama/Llama-3.1-8B-Instruct",
+    "extra_gated_button_content": "Submit",
+    "extra_gated_fields": {
+      "Affiliation": "text",
+      "By clicking Submit below I accept the terms of the license and acknowledge that the information I provide will be collected stored processed and shared in accordance with the Meta Privacy Policy": "checkbox",
+      "Country": "country",
+      "Date of birth": "date_picker",
+      "First Name": "text",
+      "Job title": {
+        "options": [
+          "Student",
+          "Research Graduate",
+          "AI researcher",
+          "AI developer/engineer",
+          "Reporter",
+          "Other"
+        ],
+        "type": "select"
+      },
+      "Last Name": "text",
+      "geo": "ip_location"
+    },
+    "extra_gated_prompt": "### LLAMA 3.1 COMMUNITY LICENSE AGREEMENT\nLlama 3.1 Version Release Date: July 23, 2024\n\"Agreement\" means the terms and conditions for use, reproduction, distribution and modification of the  Llama Materials set forth herein.\n\"Documentation\" means the specifications, manuals and documentation accompanying Llama 3.1 distributed by Meta at https://llama.meta.com/doc/overview.\n\"Licensee\" or \"you\" means you, or your employer or any other person or entity (if you are entering into this Agreement on such person or entity\u2019s behalf), of the age required under applicable laws, rules or regulations to provide legal consent and that has legal authority to bind your employer or such other person or entity if you are entering in this Agreement on their behalf.\n\"Llama 3.1\" means the foundational large language models and software and algorithms, including machine-learning model code, trained model weights, inference-enabling code, training-enabling code, fine-tuning enabling code and other elements of the foregoing distributed by Meta at https://llama.meta.com/llama-downloads.\n\"Llama Materials\" means, collectively, Meta\u2019s proprietary Llama 3.1 and Documentation (and any portion thereof) made available under this Agreement.\n\"Meta\" or \"we\" means Meta Platforms Ireland Limited (if you are located in or, if you are an entity, your principal place of business is in the EEA or Switzerland) and Meta Platforms, Inc. (if you are located outside of the EEA or Switzerland).\n   \n1. License Rights and Redistribution.\na. Grant of Rights. You are granted a non-exclusive, worldwide, non-transferable and royalty-free limited license under Meta\u2019s intellectual property or other rights owned by Meta embodied in the Llama Materials to use, reproduce, distribute, copy, create derivative works of, and make modifications to the Llama Materials.\nb. Redistribution and Use.\ni. If you distribute or make available the Llama Materials (or any derivative works thereof), or a product or service (including another AI model) that contains any of them, you shall (A) provide a copy of this Agreement with any such Llama Materials; and (B) prominently display \u201cBuilt with Llama\u201d on a related website, user interface, blogpost, about page, or product documentation. If you use the Llama Materials or any outputs or results of the Llama Materials to create, train, fine tune, or otherwise improve an AI model, which is distributed or made available, you shall also include \u201cLlama\u201d at the beginning of any such AI model name.\nii. If you receive Llama Materials, or any derivative works thereof, from a Licensee as part  of an integrated end user product, then Section 2 of this Agreement will not apply to you.\niii. You must retain in all copies of the Llama Materials that you distribute the following attribution notice within a \u201cNotice\u201d text file distributed as a part of such copies: \u201cLlama 3.1 is licensed under the Llama 3.1 Community License, Copyright \u00a9 Meta Platforms, Inc. All Rights Reserved.\u201d\niv. Your use of the Llama Materials must comply with applicable laws and regulations (including trade compliance laws and regulations) and adhere to the Acceptable Use Policy for the Llama Materials (available at https://llama.meta.com/llama3_1/use-policy), which is hereby incorporated by reference into this Agreement.\n2. Additional Commercial Terms. If, on the Llama 3.1 version release date, the monthly active users of the products or services made available by or for Licensee, or Licensee\u2019s affiliates, is greater than 700 million monthly active users in the preceding calendar month, you must request a license from Meta, which Meta may grant to you in its sole discretion, and you are not authorized to exercise any of the rights under this Agreement unless or until Meta otherwise expressly grants you such rights.\n3. Disclaimer of Warranty. UNLESS REQUIRED BY APPLICABLE LAW, THE LLAMA MATERIALS AND ANY OUTPUT AND RESULTS THEREFROM ARE PROVIDED ON AN \u201cAS IS\u201d BASIS, WITHOUT WARRANTIES OF ANY KIND, AND META DISCLAIMS ALL WARRANTIES OF ANY KIND, BOTH EXPRESS AND IMPLIED, INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. YOU ARE SOLELY RESPONSIBLE FOR DETERMINING THE APPROPRIATENESS OF USING OR REDISTRIBUTING THE LLAMA MATERIALS AND ASSUME ANY RISKS ASSOCIATED WITH YOUR USE OF THE LLAMA MATERIALS AND ANY OUTPUT AND RESULTS.\n4. Limitation of Liability. IN NO EVENT WILL META OR ITS AFFILIATES BE LIABLE UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, TORT, NEGLIGENCE, PRODUCTS LIABILITY, OR OTHERWISE, ARISING OUT OF THIS AGREEMENT, FOR ANY LOST PROFITS OR ANY INDIRECT, SPECIAL, CONSEQUENTIAL, INCIDENTAL, EXEMPLARY OR PUNITIVE DAMAGES, EVEN IF META OR ITS AFFILIATES HAVE BEEN ADVISED OF THE POSSIBILITY OF ANY OF THE FOREGOING.\n5. Intellectual Property.\na. No trademark licenses are granted under this Agreement, and in connection with the Llama Materials, neither Meta nor Licensee may use any name or mark owned by or associated with the other or any of its affiliates, except as required for reasonable and customary use in describing and redistributing the Llama Materials or as set forth in this Section 5(a). Meta hereby grants you a license to use \u201cLlama\u201d (the \u201cMark\u201d) solely as required to comply with the last sentence of Section 1.b.i. You will comply with Meta\u2019s brand guidelines (currently accessible at https://about.meta.com/brand/resources/meta/company-brand/ ). All goodwill arising out of your use of the Mark will inure to the benefit of Meta.\nb. Subject to Meta\u2019s ownership of Llama Materials and derivatives made by or for Meta, with respect to any derivative works and modifications of the Llama Materials that are made by you, as between you and Meta, you are and will be the owner of such derivative works and modifications.\nc. If you institute litigation or other proceedings against Meta or any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Llama Materials or Llama 3.1 outputs or results, or any portion of any of the foregoing, constitutes infringement of intellectual property or other rights owned or licensable by you, then any licenses granted to you under this Agreement shall terminate as of the date such litigation or claim is filed or instituted. You will indemnify and hold harmless Meta from and against any claim by any third party arising out of or related to your use or distribution of the Llama Materials.\n6. Term and Termination. The term of this Agreement will commence upon your acceptance of this Agreement or access to the Llama Materials and will continue in full force and effect until terminated in accordance with the terms and conditions herein. Meta may terminate this Agreement if you are in breach of any term or condition of this Agreement. Upon termination of this Agreement, you shall delete and cease use of the Llama Materials. Sections 3, 4 and 7 shall survive the termination of this Agreement.\n7. Governing Law and Jurisdiction. This Agreement will be governed and construed under the laws of the State of California without regard to choice of law principles, and the UN Convention on Contracts for the International Sale of Goods does not apply to this Agreement. The courts of California shall have exclusive jurisdiction of any dispute arising out of this Agreement.\n### Llama 3.1 Acceptable Use Policy\nMeta is committed to promoting safe and fair use of its tools and features, including Llama 3.1. If you access or use Llama 3.1, you agree to this Acceptable Use Policy (\u201cPolicy\u201d). The most recent copy of this policy can be found at [https://llama.meta.com/llama3_1/use-policy](https://llama.meta.com/llama3_1/use-policy)\n#### Prohibited Uses\nWe want everyone to use Llama 3.1 safely and responsibly. You agree you will not use, or allow others to use, Llama 3.1 to:\n 1. Violate the law or others\u2019 rights, including to:\n    1. Engage in, promote, generate, contribute to, encourage, plan, incite, or further illegal or unlawful activity or content, such as:\n        1. Violence or terrorism\n        2. Exploitation or harm to children, including the solicitation, creation, acquisition, or dissemination of child exploitative content or failure to report Child Sexual Abuse Material\n        3. Human trafficking, exploitation, and sexual violence\n        4. The illegal distribution of information or materials to minors, including obscene materials, or failure to employ legally required age-gating in connection with such information or materials.\n        5. Sexual solicitation\n        6. Any other criminal activity\n    3. Engage in, promote, incite, or facilitate the harassment, abuse, threatening, or bullying of individuals or groups of individuals\n    4. Engage in, promote, incite, or facilitate discrimination or other unlawful or harmful conduct in the provision of employment, employment benefits, credit, housing, other economic benefits, or other essential goods and services\n    5. Engage in the unauthorized or unlicensed practice of any profession including, but not limited to, financial, legal, medical/health, or related professional practices\n    6. Collect, process, disclose, generate, or infer health, demographic, or other sensitive personal or private information about individuals without rights and consents required by applicable laws\n    7. Engage in or facilitate any action or generate any content that infringes, misappropriates, or otherwise violates any third-party rights, including the outputs or results of any products or services using the Llama Materials\n    8. Create, generate, or facilitate the creation of malicious code, malware, computer viruses or do anything else that could disable, overburden, interfere with or impair the proper working, integrity, operation or appearance of a website or computer system\n2. Engage in, promote, incite, facilitate, or assist in the planning or development of activities that present a risk of death or bodily harm to individuals, including use of Llama 3.1 related to the following:\n    1. Military, warfare, nuclear industries or applications, espionage, use for materials or activities that are subject to the International Traffic Arms Regulations (ITAR) maintained by the United States Department of State\n    2. Guns and illegal weapons (including weapon development)\n    3. Illegal drugs and regulated/controlled substances\n    4. Operation of critical infrastructure, transportation technologies, or heavy machinery\n    5. Self-harm or harm to others, including suicide, cutting, and eating disorders\n    6. Any content intended to incite or promote violence, abuse, or any infliction of bodily harm to an individual\n3. Intentionally deceive or mislead others, including use of Llama 3.1 related to the following:\n    1. Generating, promoting, or furthering fraud or the creation or promotion of disinformation\n    2. Generating, promoting, or furthering defamatory content, including the creation of defamatory statements, images, or other content\n    3. Generating, promoting, or further distributing spam\n    4. Impersonating another individual without consent, authorization, or legal right\n    5. Representing that the use of Llama 3.1 or outputs are human-generated\n    6. Generating or facilitating false online engagement, including fake reviews and other means of fake online engagement\n4. Fail to appropriately disclose to end users any known dangers of your AI system\nPlease report any violation of this Policy, software \u201cbug,\u201d or other problems that could lead to a violation of this Policy through one of the following means:\n    * Reporting issues with the model: [https://github.com/meta-llama/llama-models/issues](https://github.com/meta-llama/llama-models/issues)\n    * Reporting risky content generated by the model:\n    developers.facebook.com/llama_output_feedback\n    * Reporting bugs and security concerns: facebook.com/whitehat/info\n    * Reporting violations of the Acceptable Use Policy or unlicensed uses of Meta Llama 3: LlamaUseReport@meta.com",
+    "language": [
+      "en",
+      "de",
+      "fr",
+      "it",
+      "pt",
+      "hi",
+      "es",
+      "th"
+    ],
+    "library_name": "transformers",
+    "license": "llama3.1",
+    "quantized_by": "mradermacher",
+    "tags": [
+      "facebook",
+      "meta",
+      "pytorch",
+      "llama",
+      "llama-3"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 8030261312,
+    "architecture": "llama",
+    "context_length": 131072,
+    "quantize_imatrix_file": "Meta-Llama-3.1-8B-Instruct-i1-GGUF/imatrix.dat",
+    "chat_template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|eot_id|>",
+    "totalFileSize": 2161972896
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "5b058f8ef47bb0f7877e49ba09944236e2a068c6",
+      "size": 3195
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ1_M.gguf",
+      "blobId": "da15ddbab33c1288424089f5fe3d04939d0d63e6",
+      "size": 2161972896,
+      "lfs": {
+        "sha256": "9c09f635975e581bbb8bede25c6e96e55e24c543adaa51444f2edf02be60b289",
+        "size": 2161972896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ1_S.gguf",
+      "blobId": "6ef39884e2e408fa5b530d9f87f62389e3ed3d91",
+      "size": 2019628704,
+      "lfs": {
+        "sha256": "7c888308735700ff73586bfdc29d1c088b5a761f3d45ca967ffe2d1388d3052d",
+        "size": 2019628704,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ2_M.gguf",
+      "blobId": "1fbf90acf4acf020c403fa726eb0681873ed325a",
+      "size": 2948282016,
+      "lfs": {
+        "sha256": "d35ac2d2193ea5722e50929183e6d9f88abb79b8fa8c8fac99c9a71ffd179998",
+        "size": 2948282016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ2_S.gguf",
+      "blobId": "d8542f0c0e6e485ca20083f535e79926bee3b908",
+      "size": 2758489760,
+      "lfs": {
+        "sha256": "2fc74e0b6000c9f245909bc0a93e43085f999743ff86d68db18d57fed86dcd60",
+        "size": 2758489760,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ2_XS.gguf",
+      "blobId": "f8477e729abbc381410655d1d48f11d00a546685",
+      "size": 2605782688,
+      "lfs": {
+        "sha256": "5e95f23509ffd8359c207ee8ae3a5c43d6a264887a563850b098096accb8f41c",
+        "size": 2605782688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ2_XXS.gguf",
+      "blobId": "0cbe1b806a829fd95996bea5d61afe4cff383713",
+      "size": 2399213216,
+      "lfs": {
+        "sha256": "f2e5b07b06408f293f9560abdf90e6b46931a30bedef68225be943a845c59264",
+        "size": 2399213216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ3_M.gguf",
+      "blobId": "c3c8b653bd685943f7f7049299277496bc685638",
+      "size": 3784824480,
+      "lfs": {
+        "sha256": "b9d788a51459e26e4efcaeeadaa624fe689e782532ce9a3a04aeb3bbde8b30e1",
+        "size": 3784824480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ3_S.gguf",
+      "blobId": "121651a9a2e695519a637403fff4b0a081843893",
+      "size": 3682326176,
+      "lfs": {
+        "sha256": "54d76deecb4d12ac2cac5e442ca804d1307fd96e8bbbfe484cda38519493cd99",
+        "size": 3682326176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ3_XS.gguf",
+      "blobId": "c61f14c5376aa4d9b10541cf496722ca18657ef7",
+      "size": 3518748320,
+      "lfs": {
+        "sha256": "48d60db44beb1f26111af23483b782fa683aeeeac56f89dad47d7260c6224bf7",
+        "size": 3518748320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ3_XXS.gguf",
+      "blobId": "cb84dc9d87e95e156e6f1ddb83dd148f842cdfbf",
+      "size": 3274913440,
+      "lfs": {
+        "sha256": "5eb74e513a0ee40d08b51acd1eafd192773cf9629229ed6272e763f9cd22c364",
+        "size": 3274913440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-IQ4_XS.gguf",
+      "blobId": "3968d84ebc20c2acf7ecafb2afc1e9fde6f29f50",
+      "size": 4447663776,
+      "lfs": {
+        "sha256": "f38cd67b58bd8eaa64ed308f601f069858c97b53ecc01d1e993ca15ca6959f29",
+        "size": 4447663776,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q2_K.gguf",
+      "blobId": "f2c674695ce04ab40141ceb9a549aff408ce390e",
+      "size": 3179132576,
+      "lfs": {
+        "sha256": "8e5021f2452946b02690956b7a4deff791734a47ed2915ab44f3331d889afbb4",
+        "size": 3179132576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q3_K_L.gguf",
+      "blobId": "bfd12b813fa22437cba802bd469f1a356138fddc",
+      "size": 4321957536,
+      "lfs": {
+        "sha256": "eb82163feb7ea649338c6ae1b366981f6f3e13a05c1d6aaf3dcd0864b62c231e",
+        "size": 4321957536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q3_K_M.gguf",
+      "blobId": "5271ea21d618d53f056c9682f1524bb780b16778",
+      "size": 4018919072,
+      "lfs": {
+        "sha256": "2571f9e6218ffb56904b6b90a0ebf208956435d725f6c1b2390e049e0b8bf34e",
+        "size": 4018919072,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q3_K_S.gguf",
+      "blobId": "2bd04df3546bdb57aa4043c751999932d1ef8ec4",
+      "size": 3664500384,
+      "lfs": {
+        "sha256": "307442cd270128d4118362ee035cffaaca86cbb5e0bb10a68eca8781593de1b5",
+        "size": 3664500384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q4_0.gguf",
+      "blobId": "39ce59857f167e205ad43cbc37beaa1cf630090d",
+      "size": 4675892896,
+      "lfs": {
+        "sha256": "3d6384d8f847b9e565c2f8f271b102f463572eeb45f5b2c1fc5a48ccf666071d",
+        "size": 4675892896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q4_K_M.gguf",
+      "blobId": "e3a45852196938d953af7550e33230f8f4996d4d",
+      "size": 4920735392,
+      "lfs": {
+        "sha256": "85465a58bf902b8fe36e1e719fd1ddc23305110a6b19233f10560dfd1180f77a",
+        "size": 4920735392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q4_K_S.gguf",
+      "blobId": "be58ec1cd45a451c782a3c8ac7c9bc6b8156b6c7",
+      "size": 4692670112,
+      "lfs": {
+        "sha256": "c966e1b55fe574c89c3d648456404ef51d8d2956713ce2f5eb920d123710bd0a",
+        "size": 4692670112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q5_K_M.gguf",
+      "blobId": "d107933ae4e2d5470173160dd2960295a8193daf",
+      "size": 5732988576,
+      "lfs": {
+        "sha256": "7c8b5f92b7ce3f652e5d11086bf3866baf120d5f730947fe1791f0044220ea47",
+        "size": 5732988576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q5_K_S.gguf",
+      "blobId": "64140da1fdf6596863a94b8ff0b9c621c7531b0a",
+      "size": 5599295136,
+      "lfs": {
+        "sha256": "342449aff5599800df729def542a7a00a36ed0790976bfd0ccfb017920251cff",
+        "size": 5599295136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3.1-8B-Instruct.i1-Q6_K.gguf",
+      "blobId": "4527d5889ca507d0b4524fdbffd20389b13daaa0",
+      "size": 6596007584,
+      "lfs": {
+        "sha256": "b3035d2d0c266e834e92299c775bb457e1c38885a84ae8ce3e2a8c2ca5013eac",
+        "size": 6596007584,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "13735854be9cba34e26be655084ebf92efcf0c3f",
+      "size": 18501
+    },
+    {
+      "rfilename": "imatrix.dat",
+      "blobId": "7c8b17e8ab0be6464c15e87244e3b094c974b72e",
+      "size": 4988157,
+      "lfs": {
+        "sha256": "37258dffc62de94169a7d3465d073b4c5ccee5fe18ccbc64be4bbe0ff297b96b",
+        "size": 4988157,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2024-07-28T04:55:12.000Z",
+  "usedStorage": 81008932893
+}

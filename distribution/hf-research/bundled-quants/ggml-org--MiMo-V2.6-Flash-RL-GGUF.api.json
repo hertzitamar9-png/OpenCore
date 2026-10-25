@@ -1,0 +1,197 @@
+{
+  "_id": "6ab21d798eb002fcdd42a4a8",
+  "id": "ggml-org/MiMo-V2.6-Flash-RL-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "quantized",
+    "image-text-to-text",
+    "base_model:XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "base_model:quantized:XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 13768,
+  "likes": 19,
+  "modelId": "ggml-org/MiMo-V2.6-Flash-RL-GGUF",
+  "author": "ggml-org",
+  "sha": "f1ef9bfdc3706af3f807752765e52b885e113aae",
+  "lastModified": "2026-10-19T14:16:11.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "gguf",
+      "quantized"
+    ],
+    "base_model": [
+      "XiaomiMiMo/MiMo-V2.6-Flash-RL"
+    ]
+  },
+  "gguf": {
+    "total": 308778780864,
+    "architecture": "mimo2",
+    "context_length": 1048576,
+    "chat_template": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 167369465152
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "24e68fef198d56e392e3b98243644abeadcd82ee",
+      "size": 2406
+    },
+    {
+      "rfilename": ".src_sha",
+      "blobId": "dc959b3abd0ce144d4444a7fcea62bc0fed71b50",
+      "size": 49
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-MXFP4-00001-of-00002.gguf",
+      "blobId": "f37a43243cc2bfec52488d7119d258ef623cff68",
+      "size": 5948640,
+      "lfs": {
+        "sha256": "a34f63df32086bba7a14aa8a2f6c2f111f6e626ad7b10be18957e42d14d84738",
+        "size": 5948640,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-MXFP4-00002-of-00002.gguf",
+      "blobId": "343158460c29097079e30af6211d65a2c3550817",
+      "size": 167363516512,
+      "lfs": {
+        "sha256": "10b74ff85577de18b336718c19905a50bcbccfee9cae7b9edd446667084f623c",
+        "size": 167363516512,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-Q2_K-00001-of-00002.gguf",
+      "blobId": "f37a43243cc2bfec52488d7119d258ef623cff68",
+      "size": 5948640,
+      "lfs": {
+        "sha256": "a34f63df32086bba7a14aa8a2f6c2f111f6e626ad7b10be18957e42d14d84738",
+        "size": 5948640,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "MiMo-V2.6-Flash-RL-Q2_K-00002-of-00002.gguf",
+      "blobId": "c21c492d8fb436b193055059892e39d69c7f363d",
+      "size": 126360000608,
+      "lfs": {
+        "sha256": "d037fe34f375e55945dbb981ae6bf4bd357cb19ee8c04f56fbd7c4dde4cdbd63",
+        "size": 126360000608,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "14a5d083d758d99ca05c54a599fa16ccb2b2fb62",
+      "size": 1000
+    },
+    {
+      "rfilename": "convert.log",
+      "blobId": "c4a1bad972ad7e8228fc14bf17640869cebf33d8",
+      "size": 481109
+    },
+    {
+      "rfilename": "dflash-MiMo-V2.6-Flash-RL-BF16.gguf",
+      "blobId": "a92023180e87546c03605b22602f7e0c9ebd63aa",
+      "size": 5441972448,
+      "lfs": {
+        "sha256": "02bac7c24be20ee5ca82a3cd368a1d10aa23706ebf6374e572725e79191ffa2e",
+        "size": 5441972448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "dflash-MiMo-V2.6-Flash-RL-Q8_0.gguf",
+      "blobId": "0d543b32074d7341b00bc1b4e37aa93c9d72bc89",
+      "size": 2893932768,
+      "lfs": {
+        "sha256": "54e787fb5c89be3d94c7e7a838e40bf46400db42b99c977f8321e5df954115de",
+        "size": 2893932768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-MiMo-V2.6-Flash-RL-BF16.gguf",
+      "blobId": "fd45f588fb58915eb16c9a0fc1ceec8fa46a8fe8",
+      "size": 2748509792,
+      "lfs": {
+        "sha256": "1561e6127de6c1aa0d11b50c95205b65dbc6e4a4b8a6bf899cac1f7471fa0414",
+        "size": 2748509792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-MiMo-V2.6-Flash-RL-Q8_0.gguf",
+      "blobId": "36ab24eab10809ac237c742dbab01605f1945243",
+      "size": 1564438112,
+      "lfs": {
+        "sha256": "9f3aeb85745e89d3f57af792f3d90704bdf8b4a2340ac5c2abb74ba6498490f4",
+        "size": 1564438112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp-MiMo-V2.6-Flash-RL-BF16.gguf",
+      "blobId": "31f87467f70596cbb0207710488bf6b43d23f230",
+      "size": 4481536224,
+      "lfs": {
+        "sha256": "4719f59c59079fe458da67640719b6a463731c6facb620d7f06e7feb9a7f1441",
+        "size": 4481536224,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp-MiMo-V2.6-Flash-RL-Q4_0.gguf",
+      "blobId": "97de88a7d33aa2ba52f003e9874f8c6c6c5c9458",
+      "size": 1264898272,
+      "lfs": {
+        "sha256": "5318c079bf646ed702271281609abc5b7cfc7fecdd354f42b4296b9aad4a83d7",
+        "size": 1264898272,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp-MiMo-V2.6-Flash-RL-Q8_0.gguf",
+      "blobId": "6afde2518a3c07e1388c4714e6eb3fea65c5e77f",
+      "size": 2383728864,
+      "lfs": {
+        "sha256": "cbcd8a22e62754b4133dc6f9ba87356268aa2d6377ee3e78be5d61172643969e",
+        "size": 2383728864,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "quaedra/best-local-llm-for-your-gpu"
+  ],
+  "createdAt": "2026-09-22T06:17:29.000Z",
+  "usedStorage": 721132193824
+}

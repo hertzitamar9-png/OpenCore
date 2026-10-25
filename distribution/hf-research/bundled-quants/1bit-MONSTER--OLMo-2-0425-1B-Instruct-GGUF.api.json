@@ -1,0 +1,67 @@
+{
+  "_id": "6ab7e7b64edba2b43858668b",
+  "id": "1bit-MONSTER/OLMo-2-0425-1B-Instruct-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "base_model:allenai/OLMo-2-0425-1B-Instruct",
+    "base_model:quantized:allenai/OLMo-2-0425-1B-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 64,
+  "likes": 0,
+  "modelId": "1bit-MONSTER/OLMo-2-0425-1B-Instruct-GGUF",
+  "author": "1bit-MONSTER",
+  "sha": "27584e279b720d3988b4287add93e8ef9761939f",
+  "lastModified": "2026-09-26T15:42:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": [
+      "allenai/OLMo-2-0425-1B-Instruct"
+    ],
+    "tags": [
+      "gguf"
+    ]
+  },
+  "gguf": {
+    "total": 1484916736,
+    "architecture": "olmo2",
+    "context_length": 4096,
+    "chat_template": "{{ bos_token }}{% for message in messages %}{% if message['role'] == 'system' %}{{ '<|system|>\n' + message['content'] + '\n' }}{% elif message['role'] == 'user' %}{{ '<|user|>\n' + message['content'] + '\n' }}{% elif message['role'] == 'assistant' %}{% if not loop.last %}{{ '<|assistant|>\n'  + message['content'] + eos_token + '\n' }}{% else %}{{ '<|assistant|>\n'  + message['content'] + eos_token }}{% endif %}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|assistant|>\n' }}{% endif %}{% endfor %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 935515296
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "dd9129a13530aad7645c5bb51317e4da2b252d1a",
+      "size": 1591
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q4_K_M.gguf",
+      "blobId": "4b524a2c47b8b4218694e9f668a3582f81bb6ea7",
+      "size": 935515296,
+      "lfs": {
+        "sha256": "abd8187934a438fbf7cfff0a1de5b9d2793ce913f158794df1951dcba6c93cc6",
+        "size": 935515296,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "267fb8541f971e7fdab6f9929184ac6c9dbe1c9a",
+      "size": 716
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-26T15:41:42.000Z",
+  "usedStorage": 935515296
+}

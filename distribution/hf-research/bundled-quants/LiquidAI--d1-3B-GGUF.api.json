@@ -1,0 +1,193 @@
+{
+  "_id": "6ac4cf197f6073e1aef9ff43",
+  "id": "LiquidAI/d1-3B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "liquid",
+    "lfm2.5",
+    "edge",
+    "decision",
+    "classification",
+    "calibration",
+    "system-one",
+    "multimodal",
+    "llama.cpp",
+    "image-text-to-text",
+    "ar",
+    "zh",
+    "en",
+    "fr",
+    "de",
+    "hi",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "pl",
+    "pt",
+    "ru",
+    "es",
+    "th",
+    "vi",
+    "base_model:LiquidAI/d1-3B",
+    "base_model:quantized:LiquidAI/d1-3B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "decision-model",
+    "conversational"
+  ],
+  "downloads": 38332,
+  "likes": 63,
+  "modelId": "LiquidAI/d1-3B-GGUF",
+  "author": "LiquidAI",
+  "sha": "bb1e436ea78eb96a3f1acb6da865f70c2fbeb563",
+  "lastModified": "2026-10-07T19:30:08.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "library_name": "gguf",
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "LICENSE",
+    "language": [
+      "ar",
+      "zh",
+      "en",
+      "fr",
+      "de",
+      "hi",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "pl",
+      "pt",
+      "ru",
+      "es",
+      "th",
+      "vi"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "LiquidAI/d1-3B",
+    "tags": [
+      "liquid",
+      "lfm2.5",
+      "edge",
+      "decision",
+      "classification",
+      "calibration",
+      "system-one",
+      "multimodal",
+      "gguf",
+      "llama.cpp"
+    ]
+  },
+  "gguf": {
+    "total": 2697198592,
+    "architecture": "lfm2",
+    "context_length": 32768,
+    "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n\n{%- macro format_arg_value(arg_value) -%}\n    {%- if arg_value is string -%}\n        {{- \"'\" + (arg_value | replace(\"\\\\\", \"\\\\\\\\\") | replace(\"'\", \"\\\\'\") | replace(\"\\n\", \"\\\\n\") | replace(\"\\r\", \"\\\\r\")) + \"'\" -}}\n    {%- elif arg_value is mapping or arg_value is iterable -%}\n        {{- arg_value | tojson -}}\n    {%- else -%}\n        {{- arg_value | string -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<image>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- set tool_calls_ns = namespace(tool_calls=[]) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_name = func[\"name\"] -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- set args_ns = namespace(arg_strings=[]) -%}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {%- set args_ns.arg_strings = args_ns.arg_strings + [arg_name + \"=\" + format_arg_value(arg_value)] -%}\n            {%- endfor -%}\n        {%- elif func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {%- set tool_calls_ns.tool_calls = tool_calls_ns.tool_calls + [func_name + \"(\" + (args_ns.arg_strings | join(\", \")) + \")\"] -%}\n    {%- endfor -%}\n    {{- \"<|tool_call_start|>[\" + (tool_calls_ns.tool_calls | join(\", \")) + \"]<|tool_call_end|>\" -}}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set ns.system_prompt = ns.system_prompt + (\"\\n\" if ns.system_prompt else \"\") + \"List of tools: [\" -%}\n    {%- for tool in tools -%}\n        {%- if tool is not string -%}\n            {%- set tool = tool | tojson -%}\n        {%- endif -%}\n        {%- set ns.system_prompt = ns.system_prompt + tool -%}\n        {%- if not loop.last -%}\n            {%- set ns.system_prompt = ns.system_prompt + \", \" -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns.system_prompt = ns.system_prompt + \"]\" -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- set thinking = message.thinking or message.reasoning or message.reasoning_content -%}\n        {%- set thinking = thinking if thinking is string else \"\" -%}\n        {%- if thinking and keep_thinking -%}\n            {{- \"<think>\" + thinking + \"</think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking and \"</think>\" in content -%}\n            {%- set content = content.split(\"</think>\")[-1] | trim -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"<|im_start|>assistant\\n\" -}}\n{%- endif -%}\n",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "decision_type": "lfm2-d1",
+    "totalFileSize": 5403160160
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7209fa9454741152aac98767ab25536c51097433",
+      "size": 2119
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "25e731c697c4fe4c52ee654cedf7106a827748d2",
+      "size": 10574
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d70c78df38c38af7240862b55bed0cfef9b18626",
+      "size": 2875
+    },
+    {
+      "rfilename": "d1-3B-BF16.gguf",
+      "blobId": "77d9e4a83ea7fcd8072c9615515d57bd4fe47276",
+      "size": 5403160160,
+      "lfs": {
+        "sha256": "a03fdd5b13a93e0c5340ffdded985fbf59fb8d8f1b59ecc367986bb9a8ff2af6",
+        "size": 5403160160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-F16.gguf",
+      "blobId": "9353207dc9b521bc23a748ee9eb942ff7aaf337b",
+      "size": 5403160160,
+      "lfs": {
+        "sha256": "7d5edd2a3e94844d3c8ad79d5eaf043b3c3171c2bc06b555f29cce1c8ff41e34",
+        "size": 5403160160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q4_K_M.gguf",
+      "blobId": "5ff5cc13f71dca80bd605794139357c228040a4c",
+      "size": 1674456672,
+      "lfs": {
+        "sha256": "16aff27ea2eefdc32b9897f43854a5d3170c1dc8dccb9c756905af30a4e22402",
+        "size": 1674456672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "d1-3B-Q8_0.gguf",
+      "blobId": "eebd8d156c0d26bf9533fb2d19096570873e1a9e",
+      "size": 2874781280,
+      "lfs": {
+        "sha256": "2f0942d5a5f64cf69c3356d2be439b71644b1f0eb3a580912a5a0179eeaba77d",
+        "size": 2874781280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-d1-3B-BF16.gguf",
+      "blobId": "0266169449e2cc3054273aa2f1565d14f1ed83a0",
+      "size": 855763168,
+      "lfs": {
+        "sha256": "485cee0b3d7a1784c7643eb44672a680b3baee25b2bf312cd87dffd5243eb6b3",
+        "size": 855763168,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-d1-3B-F16.gguf",
+      "blobId": "9dbbd11e6cbc84a69854cd21964c4f67b717f278",
+      "size": 853993696,
+      "lfs": {
+        "sha256": "093be6e3437800b868bc24df13f1d6f6da877ad28dfa5a5da5db01e9e8df7128",
+        "size": 853993696,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-d1-3B-Q8_0.gguf",
+      "blobId": "bd8cce06d4c56d389d0e80bf38a3d0e55741e095",
+      "size": 583109728,
+      "lfs": {
+        "sha256": "2505920ce464b7c54acd8b7b74a931c0c671f06d0c8833760b2fbceeb253e92a",
+        "size": 583109728,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "HelloSun/d1demo"
+  ],
+  "createdAt": "2026-10-06T10:36:09.000Z",
+  "usedStorage": 17648424864
+}

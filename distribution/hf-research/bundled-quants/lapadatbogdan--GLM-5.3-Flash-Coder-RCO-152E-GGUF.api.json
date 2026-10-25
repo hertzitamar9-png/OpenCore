@@ -1,0 +1,176 @@
+{
+  "_id": "6acd955b81901cf66e21d3b4",
+  "id": "lapadatbogdan/GLM-5.3-Flash-Coder-RCO-152E-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "moe",
+    "expert-pruning",
+    "rco",
+    "code",
+    "agentic",
+    "llama.cpp",
+    "text-generation",
+    "base_model:zai-org/GLM-5.3-Flash",
+    "base_model:quantized:zai-org/GLM-5.3-Flash",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 23536,
+  "likes": 24,
+  "modelId": "lapadatbogdan/GLM-5.3-Flash-Coder-RCO-152E-GGUF",
+  "author": "lapadatbogdan",
+  "sha": "94613287f523a52b5a8d7843db3ff4a1bc8d58c6",
+  "lastModified": "2026-10-25T09:30:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "base_model": "zai-org/GLM-5.3-Flash",
+    "pipeline_tag": "text-generation",
+    "library_name": "gguf",
+    "tags": [
+      "gguf",
+      "moe",
+      "expert-pruning",
+      "rco",
+      "code",
+      "agentic",
+      "llama.cpp"
+    ]
+  },
+  "gguf": {
+    "total": 169556223214,
+    "architecture": "glm5-next",
+    "context_length": 1048576,
+    "chat_template": "[gMASK]<sop>\n{%- set effective_reasoning_effort = reasoning_effort if reasoning_effort is defined and reasoning_effort in ['low', 'high'] else 'max' -%}\n{%- if effective_reasoning_effort is not none -%}<|system|>Reasoning Effort: {{ effective_reasoning_effort | capitalize }}{%- endif -%}\n{%- set clear_thinking = clear_thinking if clear_thinking is defined else false -%}\n{%- if tools -%}\n{%- macro tool_to_json(tool) -%}\n    {%- set ns_tool = namespace(first=true) -%}\n    {{ '{' -}}\n    {%- for k, v in tool.items() -%}\n        {%- if k != 'defer_loading' and k != 'strict' -%}\n            {%- if not ns_tool.first -%}{{- ', ' -}}{%- endif -%}\n            {%- set ns_tool.first = false -%}\n            \"{{ k }}\": {{ v | tojson(ensure_ascii=False) }}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- '}' -}}\n{%- endmacro -%}\n{%- macro tool_references_to_response(refs) -%}\n    {{- '<tool_response><tools>\\n' -}}\n    {%- for tr in refs -%}\n        {%- for tool in tools -%}\n            {%- if 'function' in tool -%}\n                {%- set tool = tool['function'] -%}\n            {%- endif -%}\n            {%- if tool.name == tr.name -%}\n                {{- tool_to_json(tool) + '\\n' -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endfor -%}\n    {{- '</tools></tool_response>' -}}\n{%- endmacro -%}\n<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{%- if 'function' in tool -%}\n    {%- set tool = tool['function'] -%}\n{%- endif -%}\n{% if tool.defer_loading is not defined or not tool.defer_loading %}\n{{ tool_to_json(tool) }}\n{% endif %}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call>{%- endif -%}\n{%- macro emit_image() -%}<|begin_of_image|><|image|><|end_of_image|>{%- endmacro -%}\n{%- macro emit_video() -%}<|begin_of_video|><|video|><|end_of_video|>{%- endmacro -%}\n{%- macro emit_audio() -%}<|begin_of_audio|><|end_of_audio|>{%- endmacro -%}\n{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text -}}\n            {%- elif item is string -%}\n                {{- item -}}\n            {%- elif item is mapping and item.type in ['image', 'image_url'] -%}\n                {{- emit_image() -}}\n            {%- elif item is mapping and item.type in ['video', 'video_url'] -%}\n                {{- emit_video() -}}\n            {%- elif item is mapping and item.type in ['audio', 'audio_url', 'input_audio'] -%}\n                {{- emit_audio() -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- elif content is not none -%}\n        {{- content -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro tool_response(text) -%}\n{{- '<tool_response>' + text + '</tool_response>' -}}\n{%- endmacro -%}\n{%- macro render_tool_response(m) -%}\n{%- if m.content is string -%}\n    {{- tool_response(m.content) -}}\n{%- elif m.content and m.content is not mapping and m.content.0.type == \"tool_reference\" -%}\n    {{- tool_references_to_response(m.content) -}}\n{%- elif is_list_of_outputs(m) -%}\n    {%- for tr in m.content -%}\n        {%- if tr.output is iterable and tr.output is not string and tr.output is not mapping and tr.output and tr.output.0.type == \"tool_reference\" -%}\n            {{- tool_references_to_response(tr.output) -}}\n        {%- else -%}\n            {{- tool_response(visible_text(tr.output)) -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n    {{- tool_response(visible_text(m.content)) -}}\n{%- endif -%}\n{%- endmacro -%}\n{%- macro id_of(obj) -%}\n    {%- if obj.tool_call_id -%}\n        {{- obj.tool_call_id -}}\n    {%- elif obj.id -%}\n        {{- obj.id -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro is_list_of_outputs(m) -%}\n    {%- if m.content and m.content.0.output is defined -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro has_dup_tool_result_id(lo, hi, target) -%}\n    {%- set ns_cnt = namespace(n=0) -%}\n    {%- for k in range(lo, hi + 1) -%}\n        {%- set m = messages[k] -%}\n        {%- if is_list_of_outputs(m) -%}\n            {%- for entry in m.content -%}\n                {%- if id_of(entry) == target -%}\n                    {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- elif id_of(m) == target -%}\n            {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n        {%- endif -%}\n        {%- if ns_cnt.n > 1 -%}{%- break -%}{%- endif -%}\n    {%- endfor -%}\n    {%- if ns_cnt.n > 1 -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro tc_id_exists(tcs, target) -%}\n    {%- set ns_f = namespace(found=false) -%}\n    {%- for tc in tcs -%}\n        {%- if id_of(tc) == target -%}\n            {%- set ns_f.found = true -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if ns_f.found -%}1{%- endif -%}\n{%- endmacro -%}\n{%- set ns = namespace(last_user_index=-1) -%}\n{%- for m in messages %}\n    {%- if m.role == 'user' %}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{%- for m in messages -%}\n{%- if m.role == 'user' -%}<|user|>{{ visible_text(m.content) }}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n    {%- set reasoning_content = m.reasoning_content %}\n{%- elif '</think>' in content %}\n    {%- set reasoning_content = content.split('</think>')[0].split('<think>')[-1] %}\n    {%- set content = content.split('</think>')[-1] %}\n{%- endif %}\n{%- if (not clear_thinking or loop.index0 > ns.last_user_index) and reasoning_content is defined -%}\n{{ '<think>' + reasoning_content +  '</think>'}}\n{%- else -%}\n{{ '<think></think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{% for tc in m.tool_calls %}\n{%- if tc.function %}\n    {%- set tc = tc.function %}\n{%- endif %}\n{{- '<tool_call>' ~ tc.name -}}\n{% set _args = tc.arguments %}{% for k, v in _args.items() %}<arg_key>{{ k }}</arg_key><arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>{% endfor %}</tool_call>{% endfor %}\n{% endif %}\n{%- elif m.role == 'tool' -%}\n{%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n    {{- '<|observation|>' -}}\n    {%- set block_start = loop.index0 -%}\n    {%- set ns_blk = namespace(end=block_start) -%}\n    {%- for j in range(block_start, messages|length) -%}\n        {%- if messages[j].role == 'tool' -%}\n            {%- set ns_blk.end = j -%}\n        {%- else -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns_a = namespace(tool_calls=none) -%}\n    {%- if block_start > 0 and messages[block_start - 1].role == 'assistant' and messages[block_start - 1].tool_calls -%}\n        {%- set ns_a.tool_calls = messages[block_start - 1].tool_calls -%}\n    {%- endif -%}\n    {%- set ns_chk = namespace(can_sort=true) -%}\n    {%- if not ns_a.tool_calls -%}\n        {%- set ns_chk.can_sort = false -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {%- if not ns_chk.can_sort -%}{%- break -%}{%- endif -%}\n            {%- set m = messages[k] -%}\n            {%- if is_list_of_outputs(m) -%}\n                {%- for entry in m.content -%}\n                    {%- if not ns_chk.can_sort -%}{%- break -%}{%- endif -%}\n                    {%- set eid = id_of(entry) -%}\n                    {%- if not eid -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif has_dup_tool_result_id(block_start, ns_blk.end, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif not tc_id_exists(ns_a.tool_calls, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- endif -%}\n                {%- endfor -%}\n            {%- else -%}\n                {%- set tk_id = id_of(m) -%}\n                {%- if not tk_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif has_dup_tool_result_id(block_start, ns_blk.end, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif not tc_id_exists(ns_a.tool_calls, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for i in range(ns_a.tool_calls | length) -%}\n            {%- if not ns_chk.can_sort -%}{%- break -%}{%- endif -%}\n            {%- set tc_id = id_of(ns_a.tool_calls[i]) -%}\n            {%- if not tc_id -%}\n                {%- set ns_chk.can_sort = false -%}\n            {%- endif -%}\n            {%- for j in range(i + 1, ns_a.tool_calls | length) -%}\n                {%- if id_of(ns_a.tool_calls[j]) == tc_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                    {%- break -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endfor -%}\n    {%- endif -%}\n    {%- if ns_chk.can_sort -%}\n        {%- for tc in ns_a.tool_calls -%}\n            {%- set tc_id = id_of(tc) -%}\n            {%- for k in range(block_start, ns_blk.end + 1) -%}\n                {%- set m = messages[k] -%}\n                {%- if is_list_of_outputs(m) -%}\n                    {%- for entry in m.content -%}\n                        {%- set eid = id_of(entry) -%}\n                        {%- if eid == tc_id -%}\n                            {%- if entry.output is iterable and entry.output is not string and entry.output is not mapping and entry.output and entry.output.0.type == \"tool_reference\" -%}\n                                {{- tool_references_to_response(entry.output) -}}\n                            {%- else -%}\n                                {{- tool_response(visible_text(entry.output)) -}}\n                            {%- endif -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- else -%}\n                    {%- set tk_id = id_of(m) -%}\n                    {%- if tk_id == tc_id -%}\n                        {{- render_tool_response(m) -}}\n                    {%- endif -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endfor -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {{- render_tool_response(messages[k]) -}}\n        {%- endfor -%}\n    {%- endif -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<|system|>{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    <|assistant|>{{- '<think>' -}}\n{%- endif -%}\n",
+    "bos_token": "[gMASK]",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 75060507072
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "79daa1b727738581a0aa601e06a8c093df5927b4",
+      "size": 3196
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q3_K-00001-of-00002.gguf",
+      "blobId": "8d207428050a48ab559172e61d639db87b13f6a0",
+      "size": 47634133408,
+      "lfs": {
+        "sha256": "a20fc5ba55bc59212ef703af183a9e26b2e6db9fc5e0f541e5a7ea679edb5795",
+        "size": 47634133408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q3_K-00002-of-00002.gguf",
+      "blobId": "247cc6c7fbbdf59ec204dc80114df015c8970de6",
+      "size": 27426373664,
+      "lfs": {
+        "sha256": "bb8ff823c35d6d40a8d84cdd5a75b396161350459452df4afc4ed83d9d952811",
+        "size": 27426373664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q4_K_M-00001-of-00003.gguf",
+      "blobId": "aefd34a38b68cf272cb56d2ed22622c8865780cc",
+      "size": 47820127616,
+      "lfs": {
+        "sha256": "e1d3aa5fe0585ee19f45e206b589ac123dd80df33fdaf6b6ac9f415a48e39783",
+        "size": 47820127616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q4_K_M-00002-of-00003.gguf",
+      "blobId": "acbb63608b933b59aad7e30a4bf6f77945eb0c4d",
+      "size": 47123178720,
+      "lfs": {
+        "sha256": "cb21bb4b700ecf9264a4cfb3b71677f4005d14899014dd9ddd9928306e5c98f3",
+        "size": 47123178720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q4_K_M-00003-of-00003.gguf",
+      "blobId": "635844982e0b4e0ac6314189091e7b4f7c88e241",
+      "size": 7700516800,
+      "lfs": {
+        "sha256": "5f4a4ff35b75a133da4345d403faf8aa574522096ffef6a96e53bd0c890ca74d",
+        "size": 7700516800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q8_0-00001-of-00004.gguf",
+      "blobId": "8820912610503cfa1a054e0270e549514a498488",
+      "size": 47398440128,
+      "lfs": {
+        "sha256": "16b0410cd2af42264813ac209687cafb36d2ab14cc3f74c14150ce0b1ff89a82",
+        "size": 47398440128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q8_0-00002-of-00004.gguf",
+      "blobId": "52bca79c13ae6c78584b01b46019061ce01e29ea",
+      "size": 47998048416,
+      "lfs": {
+        "sha256": "e5a815e3bbc62c347d452dedd88db0e48204f078ea11814158e59ac9a11f3756",
+        "size": 47998048416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q8_0-00003-of-00004.gguf",
+      "blobId": "a3c781c29a8d09627d6d3fe2a78304fd62171603",
+      "size": 46817370016,
+      "lfs": {
+        "sha256": "6a77d3328a9eab2c7944d4be5a66952f856ed3d9706be9d76996ce3ac675e992",
+        "size": 46817370016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "GLM-5.3-Flash-Coder-RCO-152E-Q8_0-00004-of-00004.gguf",
+      "blobId": "1f6cc275387fe0669ff221ab66105650ff74d0a1",
+      "size": 38162959712,
+      "lfs": {
+        "sha256": "1bd0db0cf92039950cafbead6f7243bf54b6aee5439f704d58c4aac0481caba7",
+        "size": 38162959712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "57b476f4150a2a8bc7c503a87c9141903e4521a9",
+      "size": 7977
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-13T02:20:11.000Z",
+  "usedStorage": 988292714688
+}

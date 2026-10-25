@@ -1,0 +1,204 @@
+{
+  "_id": "6800cca794840aed7736d8f3",
+  "id": "mradermacher/UI-TARS-1.5-7B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "en",
+    "base_model:ByteDance-Seed/UI-TARS-1.5-7B",
+    "base_model:quantized:ByteDance-Seed/UI-TARS-1.5-7B",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 12965,
+  "likes": 29,
+  "modelId": "mradermacher/UI-TARS-1.5-7B-GGUF",
+  "author": "mradermacher",
+  "sha": "ae7049069016c5829821d9af687f144aef72068a",
+  "lastModified": "2026-10-06T14:20:38.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "ByteDance-Seed/UI-TARS-1.5-7B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15237853504
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "094e573aaca9f8e8945a79c53a720efd5fe6740b",
+      "size": 2214
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "1b6c4a1936f35b8b62a9e93e2b1dfe49cf1e695f",
+      "size": 3842
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.IQ4_XS.gguf",
+      "blobId": "f7dc0cfde70c809b56a6c56ec6c7b3a9d5694ca7",
+      "size": 4250298688,
+      "lfs": {
+        "sha256": "ec51b60a6de0d8aa1c1ac650010fd8eda5a94e1f4299ed5c566839c4dfc3c3f1",
+        "size": 4250298688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q2_K.gguf",
+      "blobId": "33b643c3e5e94cb1bb935703ec6c292c9f307b84",
+      "size": 3015940416,
+      "lfs": {
+        "sha256": "20db1790f487602a9bf377d4d8474ed935e03fe8cc52e4bf47816a2395005105",
+        "size": 3015940416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q3_K_L.gguf",
+      "blobId": "9ff1a3f59f77102bdca26c9d21bb7aad6d1bbb1b",
+      "size": 4088459584,
+      "lfs": {
+        "sha256": "8181b5ff7ab16965915c8e727caf1a781f85ea2fbc08136c1adc3d496def5bb2",
+        "size": 4088459584,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q3_K_M.gguf",
+      "blobId": "396bb852ce95d77c035aaff248ad183086e0b88a",
+      "size": 3808391488,
+      "lfs": {
+        "sha256": "7cf97229aebaaebd11e0bdef5d057f6e079c884609dafa7c3dbd804ce4d7c9b7",
+        "size": 3808391488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q3_K_S.gguf",
+      "blobId": "966e9217b4a1bcdf5a37246b5c1eeed1e529cb2f",
+      "size": 3492368704,
+      "lfs": {
+        "sha256": "65b3b3c9a7915e9fe391df6d0f58074f559e0a1dc2fd73b61db8c41e835498b7",
+        "size": 3492368704,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q4_K_M.gguf",
+      "blobId": "074471f2a6120c72bfbd23d12c36512375d7e279",
+      "size": 4683073856,
+      "lfs": {
+        "sha256": "3233f143243135ef458a3e18894c4d6883d384abcef23367a538a3a78003009b",
+        "size": 4683073856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q4_K_S.gguf",
+      "blobId": "515b4e7e9567440684eac15743ffe4cc5f456d92",
+      "size": 4457769280,
+      "lfs": {
+        "sha256": "18841d8a770125d3b759906b688a91a7c22b1a62756d22907b4df65d9828a7f9",
+        "size": 4457769280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q5_K_M.gguf",
+      "blobId": "f5385b1418dc43d86fc9ec531dec94a3f7b8ed6f",
+      "size": 5444831552,
+      "lfs": {
+        "sha256": "e66043e0fa77a3b378fc7c7d84117777b9bd3aad42b9b6cdb5c411879b87aa91",
+        "size": 5444831552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q5_K_S.gguf",
+      "blobId": "67d3f6b3d46f5e3e49a3a03338c3a61f6c92464b",
+      "size": 5315176768,
+      "lfs": {
+        "sha256": "309d1affe9ccd72e310fa50378c9dfdac82ac7e7e90935dafd86ceaaedf99f69",
+        "size": 5315176768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q6_K.gguf",
+      "blobId": "d2c9da348b86beb75ffd224170e9f87c78f06410",
+      "size": 6254199104,
+      "lfs": {
+        "sha256": "a91e7c092d475fecf458aa635b184661aab950f77f5c92a378565a6370d7c7bb",
+        "size": 6254199104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.Q8_0.gguf",
+      "blobId": "e6efb04be0dd3283874b5dfde65a8442cdb3548a",
+      "size": 8098525504,
+      "lfs": {
+        "sha256": "75318ccb51c3bf56257205e379b01d3208fb47cbebd3c772abd0d142a3e9fb73",
+        "size": 8098525504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.f16.gguf",
+      "blobId": "483118870d52b69cfef294dac5eefb0a5c8534cf",
+      "size": 15237853504,
+      "lfs": {
+        "sha256": "cc8418a1fa7550c29024a8c850cd2bd23fb08ff051af0d44cb77435bc0929540",
+        "size": 15237853504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.mmproj-Q8_0.gguf",
+      "blobId": "15416af55cdb640042e70ae9aad5237195ff5c3c",
+      "size": 856130240,
+      "lfs": {
+        "sha256": "31492401b0da4d2fc68e353c66bdcf3837818c68abb5265207ec1923abf738d3",
+        "size": 856130240,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "UI-TARS-1.5-7B.mmproj-f16.gguf",
+      "blobId": "4bff922d0bdb5f98d36057fa285e0469e9b3a078",
+      "size": 1354162880,
+      "lfs": {
+        "sha256": "45fff9aa4ee4dcab82ad668e681b5ce0e061eb52a7dca26ddb8922435c567a8f",
+        "size": 1354162880,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-04-17T09:40:55.000Z",
+  "usedStorage": 70357181568
+}

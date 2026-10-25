@@ -1,0 +1,247 @@
+{
+  "_id": "6a8be5db39eb84b2b273bf00",
+  "id": "XHToken/Spark-X2.5-1.7B",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "spark2_5",
+    "text-generation",
+    "llm",
+    "sparkx2_5",
+    "conversational",
+    "custom_code",
+    "base_model:XHToken/Spark-X2.5-1.7B-Base",
+    "base_model:finetune:XHToken/Spark-X2.5-1.7B-Base",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 3577,
+  "likes": 153,
+  "modelId": "XHToken/Spark-X2.5-1.7B",
+  "author": "XHToken",
+  "sha": "14d6e83c13c7add2b62a7c39b2131f4ed1cddcf8",
+  "lastModified": "2026-09-15T03:15:42.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Spark2_5ForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_spark.Spark2_5Config",
+      "AutoModel": "modeling_spark.Spark2_5Model",
+      "AutoModelForCausalLM": "modeling_spark.Spark2_5ForCausalLM"
+    },
+    "model_type": "spark2_5",
+    "tokenizer_config": {
+      "bos_token": {
+        "__type": "AddedToken",
+        "content": "<\uff5cstart\u2581of\u2581sentence\uff5c>",
+        "lstrip": false,
+        "normalized": true,
+        "rstrip": false,
+        "single_word": false
+      },
+      "eos_token": {
+        "__type": "AddedToken",
+        "content": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+        "lstrip": false,
+        "normalized": true,
+        "rstrip": false,
+        "single_word": false
+      },
+      "pad_token": {
+        "__type": "AddedToken",
+        "content": "<\uff5c\u2581pad\u2581\uff5c>",
+        "lstrip": false,
+        "normalized": true,
+        "rstrip": false,
+        "single_word": false
+      },
+      "unk_token": {
+        "__type": "AddedToken",
+        "content": "<unk>",
+        "lstrip": false,
+        "normalized": true,
+        "rstrip": false,
+        "single_word": false
+      },
+      "chat_template": "{%- if not messages %}{{- raise_exception('No messages provided.') }}{%- endif %}{%- set enable_thinking = enable_thinking | default(true) %}{#- Render a string or a list of text blocks. -#}{%- macro render_content(content, context_name) %}{%- if content is string %}{{- content }}{%- elif content is none or content is undefined %}{{- '' }}{%- elif content is iterable and content is not mapping %}{%- for block in content %}{%- if block.type == 'text' %}{{- block.text }}{%- else %}{{- raise_exception('Unsupported ' ~ context_name ~ ' content block type: ' ~ (block.type | string)) }}{%- endif %}{%- endfor %}{%- else %}{{- raise_exception(context_name ~ ' content must be a string or a list of text blocks') }}{%- endif %}{%- endmacro %}{#- Default system prompt -#}{%- set default_system = 'you are a helpful assistant.' %}{#- The first message-level system is placed in the initial system block. -#}{%- set ns = namespace(initial_system='') %}{%- if messages[0].role == 'system' %}{%- set ns.initial_system = render_content(messages[0].content, 'system') %}{%- endif %}{#- System block -#}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>' + '\n' + default_system }}{%- if tools %}{{- '## Tools' + '\n' + 'You have access to the following functions:' + '\n' + '<tools>' }}{%- for tool in tools %}{{- '\n' + tool.function | tojson}}{%- endfor %}{{- '\n' + '</tools>' }}{%- endif %}{%- if ns.initial_system %}{{- '\n\n' + ns.initial_system }}{%- endif %}{{- '<\uff5cend\u2581of\u2581sentence\uff5c>'}}{#- Conversation turns -#}{%- for message in messages %}{%- if message.role == 'system' %}{#- The first system message was consumed by the initial block. -#}{%- if not loop.first %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>\n' + render_content(message.content, 'system') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- endif %}{%- elif message.role == 'user' %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|User|>' + render_content(message.content, 'user') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- elif message.role == 'assistant' %}{%- set assistant_content = render_content(message.content, 'assistant') %}{%- if message.reasoning_content is defined and message.reasoning_content %}{%- set reasoning_content = message.reasoning_content %}{%- else %}{%- set reasoning_content = '' %}{%- endif %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>'}}{%- if reasoning_content %}{{- '<think>' + reasoning_content + '</think>'}}{%- else %}{{- '</think>' }}{%- endif %}{%- if assistant_content %}{{- assistant_content }}{%- endif %}{%- if message.tool_calls is defined and message.tool_calls is not none %}{%- for tool_call in message.tool_calls %}{%- if tool_call.function.arguments is not mapping %}{{- raise_exception('tool_call.function.arguments must be a dictionary; normalize JSON strings before apply_chat_template') }}{%- endif %}{%- set args = tool_call.function.arguments %}{{- '<tool_call>' + tool_call.function.name }}{%- for k, v in args.items() %}{{- '<arg_key>' ~ k ~ '</arg_key><arg_value>' ~ (v if v is string else v | tojson) ~ '</arg_value>' }}{%- endfor %}{{- '</tool_call>' }}{%- endfor %}{%- endif %}{{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- elif message.role == 'tool' %}{%- if loop.previtem is undefined or loop.previtem.role != 'tool' %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Tool|>' }}{%- endif %}{{- '<tool_response>' ~ message.content ~ '</tool_response>' }}{%- if loop.nextitem is undefined or loop.nextitem.role != 'tool' %}{{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}{%- endif %}{%- else %}{{- raise_exception('Unsupported message role: ' ~ message.role) }}{%- endif %}{%- endfor %}{#- Generation prompt -#}{%- if add_generation_prompt %}{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>' }}{%- if enable_thinking is defined and enable_thinking %}{{- '<think>' }}{%- endif %}{%- if enable_thinking is defined and not enable_thinking %}{{- '</think>' }}{%- endif %}{%- endif %}"
+    },
+    "chat_template_jinja": "{#- 0826\u7248\u672c -#}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set enable_thinking = enable_thinking | default(true) %}\n\n{#- Render a string or a list of text blocks. -#}\n{%- macro render_content(content, context_name) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for block in content %}\n            {%- if block.type == 'text' %}\n                {{- block.text }}\n            {%- else %}\n                {{- raise_exception('Unsupported ' ~ context_name ~ ' content block type: ' ~ (block.type | string)) }}\n            {%- endif %}\n        {%- endfor %}\n    {%- else %}\n        {{- raise_exception(context_name ~ ' content must be a string or a list of text blocks') }}\n    {%- endif %}\n{%- endmacro %}\n\n{#- Default system prompt -#}\n{%- set default_system = \"you are a helpful assistant.\" %}\n\n{#- The first message-level system is placed in the initial system block. -#}\n{%- set ns = namespace(initial_system='') %}\n{%- if messages[0].role == \"system\" %}\n    {%- set ns.initial_system = render_content(messages[0].content, 'system') %}\n{%- endif %}\n\n{#- System block -#}\n{{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>' + '\\n' + default_system }}\n{%- if tools %}\n    {{- '## Tools' + '\\n' + 'You have access to the following functions:' + '\\n' + '<tools>' }}\n    {%- for tool in tools %}\n        {{- '\\n' + tool.function | tojson}}\n    {%- endfor %}\n    {{- '\\n' + '</tools>' }}\n{%- endif %}\n{%- if ns.initial_system %}\n    {{- '\\n\\n' + ns.initial_system }}\n{%- endif %}\n{{- '<\uff5cend\u2581of\u2581sentence\uff5c>'}}\n\n{#- Conversation turns -#}\n{%- for message in messages %}\n    {%- if message.role == \"system\" %}\n        {#- The first system message was consumed by the initial block. -#}\n        {%- if not loop.first %}\n            {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|System|>\\n' + render_content(message.content, 'system') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|User|>' + render_content(message.content, 'user') + '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set assistant_content = render_content(message.content, 'assistant') %}\n        {%- if message.reasoning_content is defined and message.reasoning_content %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- set reasoning_content = '' %}\n        {%- endif %}\n        {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>'}}\n        {%- if reasoning_content %}\n            {{- '<think>' + reasoning_content + '</think>'}}\n        {%- else %}\n            {{- '</think>' }}\n        {%- endif %}\n        {%- if assistant_content %}\n            {{- assistant_content }}\n        {%- endif %}\n        {%- if message.tool_calls is defined and message.tool_calls is not none %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function.arguments is not mapping %}\n                    {{- raise_exception('tool_call.function.arguments must be a dictionary; normalize JSON strings before apply_chat_template') }}\n                {%- endif %}\n                {%- set args = tool_call.function.arguments %}\n                {{- '<tool_call>' + tool_call.function.name }}\n                {%- for k, v in args.items() %}\n                    {{- '<arg_key>' ~ k ~ '</arg_key><arg_value>' ~ (v if v is string else v | tojson) ~ '</arg_value>' }}\n                {%- endfor %}\n                {{- '</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem is undefined or loop.previtem.role != \"tool\" %}\n            {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Tool|>' }}\n        {%- endif %}\n        {{- '<tool_response>' ~ message.content ~ '</tool_response>' }}\n        {%- if loop.nextitem is undefined or loop.nextitem.role != \"tool\" %}\n            {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unsupported message role: ' ~ message.role) }}\n    {%- endif %}\n{%- endfor %}\n\n{#- Generation prompt -#}\n{%- if add_generation_prompt %}\n    {{- '<\uff5cstart\u2581of\u2581sentence\uff5c><|Bot|>' }}\n    {%- if enable_thinking is defined and enable_thinking %}\n        {{- '<think>' }}\n    {%- endif %}\n    {%- if enable_thinking is defined and not enable_thinking %}\n        {{- '</think>' }}\n    {%- endif %}\n{%- endif %}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "transformers",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "llm",
+      "sparkx2_5"
+    ],
+    "base_model": [
+      "XHToken/Spark-X2.5-1.7B-Base"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_spark.Spark2_5ForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9bfe29e47ca5817a9ba9012d8c2cd8b1fb69fcc6",
+      "size": 1793
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "b7456707c547e5df6a88ee0255ad9c422ac52f9b",
+      "size": 11338
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "937ad8962e19796f306a68bb5e6751235428d2a8",
+      "size": 23637
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "6c6617eeee158db844c3b0157a1c38604b395bb4",
+      "size": 4648
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "72d41699fb755b869c5d0b1376a71a97a00b12e6",
+      "size": 1838
+    },
+    {
+      "rfilename": "configuration_spark.py",
+      "blobId": "cca611a0302679df685ca442d21c2756884aa47e",
+      "size": 4329
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "d47d113162317c2d4338dd7f0727663b6aa9fb57",
+      "size": 281
+    },
+    {
+      "rfilename": "images/model-benchmark-comparison.svg",
+      "blobId": "1dea537ae66225f699ac868e894ce63de6d3c4df",
+      "size": 31544
+    },
+    {
+      "rfilename": "images/post_training_pipeline.svg",
+      "blobId": "d76949ed578b4c426205c5abd39b41e7258621dc",
+      "size": 10602
+    },
+    {
+      "rfilename": "images/spark25-hybrid-architecture-light.png",
+      "blobId": "ab92ebdb0e530f5cd4aeca9c9ba891bf99c8513c",
+      "size": 429073,
+      "lfs": {
+        "sha256": "5eddac6baf8e8460cc2a75b96070eff4074428674f3c33665bc2ff9479756bbd",
+        "size": 429073,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/xhtoken-wechat.jpg",
+      "blobId": "d6b44ebbd3ba2e1528a283bbd5f28fe964e49977",
+      "size": 160131,
+      "lfs": {
+        "sha256": "0c3fbd25c987237b383461fdaa96bf6881af615c23ba3baf19e51a7879354ddb",
+        "size": 160131,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "3f921c3aed6a693e3dcfd15b7171467fcade71b3",
+      "size": 1567883
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "9566f6f437c1d406996451498353fbdbf7a55117",
+      "size": 1997108320,
+      "lfs": {
+        "sha256": "b1629719b3f6de5de922abb3c90e45927550dd6f790f43030dc812cafce1af87",
+        "size": 1997108320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "66c234ca5ab40dd1552bc05425892267ca2a7cb6",
+      "size": 1418232176,
+      "lfs": {
+        "sha256": "3537675bfb657cb6d1f70bb1fab9b83fcb79ce5693f2557992548eb6d2bf13a0",
+        "size": 1418232176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "2eba5ebe5a3e1fcbc20ab6f57ca57e98a90cb8a7",
+      "size": 18805
+    },
+    {
+      "rfilename": "modeling_spark.py",
+      "blobId": "4e48c7a98111e2a8457970fad0361db3404c154f",
+      "size": 19418
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "9a77af52dba6347730c06368baa133534a2ac129",
+      "size": 156
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "59e23a7cec1b1f11068e98f357cd441e8dad4a6e",
+      "size": 10115786,
+      "lfs": {
+        "sha256": "710cce15cf3565674c499f9413997c6e8101f2bdd96245cff8f0311fb501248c",
+        "size": 10115786,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "102251cfcc5cd0aa6d2421d84321a45c9476c2cf",
+      "size": 4797
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "9cca33b9d8dc48d4fe1ae44743b0b7c1df5bf0c1",
+      "size": 3032795
+    }
+  ],
+  "spaces": [
+    "SZLHOLDINGS/szl-frontier",
+    "Anmolspace/spark-math-eval-20260908"
+  ],
+  "createdAt": "2026-08-24T06:34:03.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1707657216
+    },
+    "total": 1707657216
+  },
+  "usedStorage": 3426045486
+}

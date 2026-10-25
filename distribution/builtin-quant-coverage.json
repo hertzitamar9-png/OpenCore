@@ -1,0 +1,5237 @@
+{
+  "schema": 1,
+  "requirement": "At least five distinct named published packages per built-in checkpoint",
+  "allModelsMeetMinimum": false,
+  "families": 526,
+  "withFive": 205,
+  "models": [
+    {
+      "id": "qwen-image-21",
+      "label": "Qwen Image 2.1",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ltx-25-distilled-bf16",
+      "label": "LTX 2.5 \u00b7 Distilled BF16",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "flux-2-klein-4b",
+      "label": "FLUX.2 Klein \u00b7 4B distilled",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "z-image-turbo",
+      "label": "Z-Image Turbo \u00b7 6B",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "trellis-2-4b",
+      "label": "TRELLIS.2 \u00b7 4B",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hunyuan-3d-21",
+      "label": "Hunyuan3D 2.1 \u00b7 Shape and PBR",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan-animate-2-base",
+      "label": "Wan Animate 2 \u00b7 14B Base",
+      "category": "2d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-qwen3-customvoice-1-7b",
+      "label": "Qwen3 TTS \u00b7 1.7B CustomVoice",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-qwen3-customvoice-0-6b",
+      "label": "Qwen3 TTS \u00b7 0.6B CustomVoice",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-qwen3-voicedesign-1-7b",
+      "label": "Qwen3 TTS \u00b7 1.7B VoiceDesign",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-qwen3-base-1-7b",
+      "label": "Qwen3 TTS \u00b7 1.7B Base",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-qwen3-base-0-6b",
+      "label": "Qwen3 TTS \u00b7 0.6B Base",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ocr-glm-ocr",
+      "label": "GLM OCR \u00b7 0.9B",
+      "category": "ocr",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ocr-paddleocr-vl-1-6",
+      "label": "PaddleOCR VL \u00b7 1.6",
+      "category": "ocr",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "LunarOilRig/PaddleOCR-VL-1.6-GGUF-Q4",
+        "cstr/paddleocr-vl-1.6-GGUF",
+        "hataphu/PaddleOCR-VL-1.6-vi-gguf"
+      ]
+    },
+    {
+      "id": "omni-voxtral-mini-4b-realtime-2602",
+      "label": "Voxtral Mini \u00b7 4B Realtime 2602",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-gr00t-n1-7-3b",
+      "label": "GR00T N1.7 \u00b7 3B",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "speech-qwen3-asr-1-7b",
+      "label": "Qwen3 ASR \u00b7 1.7B",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "speech-qwen3-asr-0-6b",
+      "label": "Qwen3 ASR \u00b7 0.6B",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "acestep-15-xl-turbo",
+      "label": "ACE-Step 1.5 XL \u00b7 TURBO",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "acestep-15-xl-sft",
+      "label": "ACE-Step 1.5 XL \u00b7 SFT",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "acestep-15-xl-base",
+      "label": "ACE-Step 1.5 XL \u00b7 BASE",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "holo4-35b-a3b",
+      "label": "Holo4 35B A3B",
+      "category": "computer-use",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "abenzerps/Holo4-35B-A3B-GGUF",
+        "bartowski/Hcompany_Holo4-35B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "holotron4-30b-a3b",
+      "label": "Holotron4 \u00b7 30B A3B",
+      "category": "computer-use",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/Hcompany.Holotron4-30B-A3B-GGUF",
+        "abenzerps/Holotron4-30B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "echo",
+      "label": "ECHO 3T",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "native1m",
+      "label": "1M extended",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "doucode",
+      "label": "DuoCore",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "nanbeige-bf16",
+      "label": "Nanbeige BF16",
+      "category": "text",
+      "quantizations": 24,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "nanbeige-bf16-echo",
+      "label": "Nanbeige BF16 ECHO",
+      "category": "text",
+      "quantizations": 24,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "dualcore-kv",
+      "label": "DualCore KV",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "dualcore-echo",
+      "label": "DualCore ECHO",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "fusioncore-kv",
+      "label": "FusionCore KV",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "fusioncore-echo",
+      "label": "FusionCore ECHO",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "reflex-vision",
+      "label": "Holo 3.1 0.8B",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "reflex-policy",
+      "label": "Reflex decision policy",
+      "category": "computer-use",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "whisper-large-v3-turbo",
+      "label": "Whisper large-v3 turbo",
+      "category": "speech",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "whisper-large-v3",
+      "label": "Whisper large-v3",
+      "category": "speech",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "phonon-2",
+      "label": "Phonon-2",
+      "category": "speech",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "swift-27b",
+      "label": "Swift 1.5 27B",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "dirk-27b",
+      "label": "Dirk 27B Vision",
+      "category": "text",
+      "quantizations": 18,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "byteshape/Qwen3.8-27B-GGUF",
+        "ggml-org/Qwen3.8-27B-GGUF",
+        "lmstudio-community/Qwen3.8-27B-GGUF",
+        "unsloth/Qwen3.8-27B-GGUF"
+      ]
+    },
+    {
+      "id": "davidau-27b",
+      "label": "DavidAU Turbo Cold Fusion 27B",
+      "category": "text",
+      "quantizations": 20,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "mirai-s-27b",
+      "label": "Mirai S experimental 27B",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "thinkingcap-27b",
+      "label": "ThinkingCap 27B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bottlecapai/ThinkingCap-Qwen3.8-27B-GGUF",
+        "mradermacher/ThinkingCap-Qwen3.8-27B-GGUF"
+      ]
+    },
+    {
+      "id": "animation-diffusion-2d",
+      "label": "Animation Diffusion \u00b7 2D",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "holo4-27b",
+      "label": "Holo4 27B",
+      "category": "computer-use",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/Hcompany.Holo4-27B-GGUF",
+        "abenzerps/Holo4-27B-GGUF"
+      ]
+    },
+    {
+      "id": "holo15-3b",
+      "label": "Holo1.5 3B",
+      "category": "computer-use",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/Holo1.5-3B-GGUF"
+      ]
+    },
+    {
+      "id": "spar3d",
+      "label": "SPAR3D",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "pixal3d",
+      "label": "Pixal3D",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "triposr",
+      "label": "TripoSR",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hy-motion-1",
+      "label": "HY-Motion 1.0",
+      "category": "3d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hy-motion-1-lite",
+      "label": "HY-Motion 1.0 Lite",
+      "category": "3d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "unimate",
+      "label": "UniMate",
+      "category": "3d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "animate-any-mesh",
+      "label": "AnimateAnyMesh",
+      "category": "3d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tooncrafter",
+      "label": "ToonCrafter",
+      "category": "2d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "yue2",
+      "label": "YuE2",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "oxcoder-9b",
+      "label": "OxCoder 9B",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "nim-2-coder-7b",
+      "label": "NIM-2 Coder 7B",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "NIM-AI/NIM-2-Coder-7B"
+      ]
+    },
+    {
+      "id": "ternary-bonsai-2-27b",
+      "label": "Ternary Bonsai 2 27B",
+      "category": "text",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "CaryPalmer/Ternary-Bonsai-2-27B-262k-GGUF",
+        "ManniX-ITA/Ternary-Bonsai-2-27B-MTP-GGUF",
+        "prism-ml/Ternary-Bonsai-2-27B-gguf"
+      ]
+    },
+    {
+      "id": "mimo-distill-qwen-9b",
+      "label": "MiMo Distill Qwen 9B",
+      "category": "text",
+      "quantizations": 25,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/MiMo-V2.6-Distill-Qwen-9B-GGUF"
+      ]
+    },
+    {
+      "id": "frognano-4b",
+      "label": "FrogNano 4B",
+      "category": "text",
+      "quantizations": 25,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen38-distill-9b",
+      "label": "Qwen 3.8 Distill 9B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "triumvirate-9b-coder",
+      "label": "Triumvirate 9B Coder",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "orion-agentic-9b",
+      "label": "Orion Agentic 9B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "zenith-9b-codecore",
+      "label": "Zenith CodeCore 9B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "neohorse-1-9b",
+      "label": "NeoHorse 1 9B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "boomslang-3b",
+      "label": "Boomslang 3B",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tiel-inspired-coder-9b",
+      "label": "Tiel-Inspired Coder 9B",
+      "category": "text",
+      "quantizations": 6,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "gmcoder",
+      "label": "Gmcoder",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "emperorofrome/Gmcoder"
+      ]
+    },
+    {
+      "id": "ornith-1-5-9b-mtp",
+      "label": "Ornith 1.5 9B MTP",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "moondream3-9b",
+      "label": "Moondream 3.1 9B A2B",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "minicpm5-2b",
+      "label": "MiniCPM5 2B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "abenzerps/MiniCPM5-2B-GGUF"
+      ]
+    },
+    {
+      "id": "echo-native",
+      "label": "ECHO 3T \u00b7 Native",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "native1m-native",
+      "label": "1M extended \u00b7 Native",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "doucode-native",
+      "label": "DuoCore \u00b7 Native",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen-image-21-gguf",
+      "label": "Qwen Image 2.1 \u00b7 Unsloth denoiser F16",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hunyuan-dit-v12-distilled",
+      "label": "Hunyuan-DiT v1.2 Distilled",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "sana-16",
+      "label": "Sana 1.6B \u00b7 FP16",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "mage-flow-turbo",
+      "label": "Mage-Flow Turbo \u00b7 4B",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan2-2-ti2v-5b",
+      "label": "Wan 2.2 TI2V 5B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan2-2-t2v-a14b",
+      "label": "Wan 2.2 T2V A14B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan2-2-i2v-a14b",
+      "label": "Wan 2.2 I2V A14B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan2-1-t2v-1-3b",
+      "label": "Wan 2.1 T2V 1.3B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan2-1-t2v-14b",
+      "label": "Wan 2.1 T2V 14B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "wan2-1-i2v-14b-480p",
+      "label": "Wan 2.1 I2V 14B 480P",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ltx-video",
+      "label": "LTX Video",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ltx-2",
+      "label": "LTX 2",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "cogvideox-2b",
+      "label": "CogVideoX 2B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "cogvideox-5b",
+      "label": "CogVideoX 5B",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-vibevoice-1-5b",
+      "label": "VibeVoice 1.5B",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-vibevoice-realtime-0-5b",
+      "label": "VibeVoice Realtime 0.5B",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-f5-tts",
+      "label": "F5 TTS v1 Base",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-e2-tts",
+      "label": "E2 TTS Base",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-kokoro-82m",
+      "label": "Kokoro 82M",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-csm-1b",
+      "label": "CSM 1B",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-orpheus-3b-0-1-ft",
+      "label": "Orpheus 3B 0.1",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-chatterbox",
+      "label": "Chatterbox",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-chatterbox-turbo",
+      "label": "Chatterbox Turbo",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "tts-xtts-v2",
+      "label": "XTTS v2",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-f5-tts",
+      "label": "F5 TTS reference voice",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-e2-tts",
+      "label": "E2 TTS reference voice",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-xtts-v2",
+      "label": "XTTS v2 reference voice",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-chatterbox",
+      "label": "Chatterbox reference voice",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-chatterbox-turbo",
+      "label": "Chatterbox Turbo reference voice",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-openaudio-s1-mini",
+      "label": "OpenAudio S1 Mini",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-fish-speech-1-5",
+      "label": "Fish Speech 1.5",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-voxcpm-0-5b",
+      "label": "VoxCPM 0.5B",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-cosyvoice2-0-5b",
+      "label": "CosyVoice 2 0.5B",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "voice-cloning-cosyvoice-300m",
+      "label": "CosyVoice 300M",
+      "category": "voice-cloning",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ocr-deepseek-ocr",
+      "label": "DeepSeek OCR",
+      "category": "ocr",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "NexaAI/DeepSeek-OCR-GGUF",
+        "forkjoin-ai/deepseek-ocr-gguf",
+        "sabafallah/DeepSeek-OCR-GGUF"
+      ]
+    },
+    {
+      "id": "ocr-deepseek-ocr-2",
+      "label": "DeepSeek OCR 2",
+      "category": "ocr",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "42ailab/DeepSeek-OCR-2-GGUF",
+        "JamePeng2023/DeepSeek-OCR-2-GGUF"
+      ]
+    },
+    {
+      "id": "ocr-paddleocr-vl",
+      "label": "PaddleOCR VL",
+      "category": "ocr",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Liyulingyue/PaddleOCR-VL-half-GGUF",
+        "SanjeevSOLANKI/PaddleOCR-VL-1.6-GGUF",
+        "cstr/paddleocr-vl-0.9b-GGUF"
+      ]
+    },
+    {
+      "id": "ocr-paddleocr-vl-1-5",
+      "label": "PaddleOCR VL 1.5",
+      "category": "ocr",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "JamePeng2023/PaddleOCR-VL-1.5-GGUF",
+        "emmazzz/PaddleOCR-VL-1.5-Q4_0-GGUF"
+      ]
+    },
+    {
+      "id": "ocr-dots-ocr",
+      "label": "dots.ocr",
+      "category": "ocr",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "prithivMLmods/dots.ocr-GGUF"
+      ]
+    },
+    {
+      "id": "ocr-got-ocr2-0",
+      "label": "GOT OCR 2.0",
+      "category": "ocr",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ocr-trocr-base-printed",
+      "label": "TrOCR Base Printed",
+      "category": "ocr",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ocr-trocr-base-handwritten",
+      "label": "TrOCR Base Handwritten",
+      "category": "ocr",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ocr-olmocr-7b-0225-preview",
+      "label": "olmOCR 7B preview",
+      "category": "ocr",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/allenai_olmOCR-7B-0225-preview-GGUF"
+      ]
+    },
+    {
+      "id": "ocr-olmocr-2-7b-1025",
+      "label": "olmOCR 2 7B",
+      "category": "ocr",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/allenai_olmOCR-2-7B-1025-GGUF"
+      ]
+    },
+    {
+      "id": "omni-qwen2-5-omni-7b",
+      "label": "Qwen 2.5 Omni 7B",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-qwen2-5-omni-3b",
+      "label": "Qwen 2.5 Omni 3B",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-qwen3-omni-30b-a3b-instruct",
+      "label": "Qwen 3 Omni Instruct",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-qwen3-omni-30b-a3b-thinking",
+      "label": "Qwen 3 Omni Thinking",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-qwen2-audio-7b-instruct",
+      "label": "Qwen 2 Audio 7B Instruct",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-qwen2-audio-7b",
+      "label": "Qwen 2 Audio 7B Base",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-minicpm-o-2-6",
+      "label": "MiniCPM o 2.6",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-minicpm-o-4-5",
+      "label": "MiniCPM o 4.5",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "omni-voxtral-mini-3b-2507",
+      "label": "Voxtral Mini 3B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/Voxtral-Mini-3B-2507-GGUF"
+      ]
+    },
+    {
+      "id": "omni-voxtral-small-24b-2507",
+      "label": "Voxtral Small 24B",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-pi0-base",
+      "label": "pi0 Base",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-pi05-base",
+      "label": "pi0.5 Base",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-pi0fast-base",
+      "label": "pi0 FAST Base",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-smolvla-base",
+      "label": "SmolVLA Base",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-openvla-7b",
+      "label": "OpenVLA 7B",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-gr00t-n1-2b",
+      "label": "GR00T N1 2B",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-gr00t-n1-5-3b",
+      "label": "GR00T N1.5 3B",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-gr00t-n1-6-3b",
+      "label": "GR00T N1.6 3B",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-xvla-base",
+      "label": "X VLA Base",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "policy-act-aloha-sim-transfer-cube-human",
+      "label": "ACT ALOHA Transfer Cube",
+      "category": "policy",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "whisper-small",
+      "label": "Whisper Small (publisher SDK)",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "whisper-medium",
+      "label": "Whisper Medium (publisher SDK)",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "musicgen-small",
+      "label": "MusicGen Small",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "musicgen-medium",
+      "label": "MusicGen Medium",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "musicgen-large",
+      "label": "MusicGen Large",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "stable-audio-open-1-0",
+      "label": "Stable Audio Open 1.0",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "triposg",
+      "label": "TripoSG",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "trellis-image-large",
+      "label": "TRELLIS Image Large",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "motiongpt3",
+      "label": "MotionGPT3",
+      "category": "3d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "animatediff",
+      "label": "AnimateDiff motion modules",
+      "category": "2d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "animatediff-motion-adapter-v1-5",
+      "label": "AnimateDiff SD 1.5 adapter",
+      "category": "2d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "animatediff-motion-adapter-v1-5-2",
+      "label": "AnimateDiff SD 1.5 v2 adapter",
+      "category": "2d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "animatediff-motion-adapter-sdxl-beta",
+      "label": "AnimateDiff SDXL beta adapter",
+      "category": "2d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "ui-tars-1-5-7b",
+      "label": "UI TARS 1.5 7B",
+      "category": "computer-use",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "adriabama06/UI-TARS-1.5-7B-GGUF",
+        "mradermacher/UI-TARS-1.5-7B-GGUF"
+      ]
+    },
+    {
+      "id": "omni-qwen3-omni-30b-a3b-captioner",
+      "label": "Qwen 3 Omni \u00b7 Audio Captioner",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "defiant-fable-9b",
+      "label": "Defiant Fable 9B",
+      "category": "text",
+      "quantizations": 25,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "pentacoder-9b",
+      "label": "PentaCoder 9B",
+      "category": "text",
+      "quantizations": 30,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "underdog-woof-4b-11",
+      "label": "Underdog Woof 4B 1.1",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "underdog-saluki-27b",
+      "label": "Underdog Saluki 27B \u00b7 IQ2 mix",
+      "category": "text",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "ConwayResearch/Underdog-Saluki-27B-1.0"
+      ]
+    },
+    {
+      "id": "ista-qwen38-27b",
+      "label": "ISTA Qwen3.8 27B GSQ RCO",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "pentacoder-9b-q8",
+      "label": "PentaCoder 9B \u00b7",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "defiant-fable-9b-q6-mtp",
+      "label": "Defiant Fable 9B \u00b7 Q6_K MTP",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "underdog-woof-4b-11-mlx4",
+      "label": "Underdog Woof 4B 1.1 \u00b7 MLX 4-bit",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen35-4b-q8",
+      "label": "Qwen3.5 4B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Arki05/Qwen3.5-4B-GGUF-shards",
+        "AtomicChat/Qwen3.5-4B-GGUF"
+      ]
+    },
+    {
+      "id": "needle3",
+      "label": "Needle 3",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hy-worldmirror-20",
+      "label": "HY WorldMirror 2.0",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "sam31",
+      "label": "SAM 3.1",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "moss-voicegenerator",
+      "label": "MOSS VoiceGenerator",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "moss-tts-local15",
+      "label": "MOSS TTS Local Transformer 1.5",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "acestep-15",
+      "label": "ACE-Step 1.5",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "unirig",
+      "label": "UniRig",
+      "category": "3d-animation",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "lfm25-350m-q8",
+      "label": "LFM2.5 350M",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "lfm25-230m-q8",
+      "label": "LFM2.5 230M",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "lfm25-12b-q8",
+      "label": "LFM2.5 1.2B Instruct",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen35-08b-q8",
+      "label": "Qwen3.5 0.8B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen35-2b-q8",
+      "label": "Qwen3.5 2B",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "smollm3-3b-q8",
+      "label": "SmolLM3 3B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "gemma4-e2b-q8",
+      "label": "Gemma 4 E2B",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "functiongemma-270m",
+      "label": "FunctionGemma 270M",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "ajmcclary/functiongemma-270m-it-GGUF"
+      ]
+    },
+    {
+      "id": "needle2",
+      "label": "Needle 2",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "needle1",
+      "label": "Needle",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "smollm2-135m",
+      "label": "SmolLM2-135M-Instruct",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "smollm2-360m",
+      "label": "SmolLM2-360M-Instruct",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "smollm2-17b",
+      "label": "SmolLM2-1.7B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/SmolLM2-1.7B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "llama32-1b",
+      "label": "Llama-3.2-1B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Llama-3.2-1B-Instruct-GGUF",
+        "gaianet/Llama-3.2-1B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "llama32-3b",
+      "label": "Llama-3.2-3B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "MaziyarPanahi/Llama-3.2-3B-Instruct-GGUF",
+        "bartowski/Llama-3.2-3B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "olmo2-1b",
+      "label": "OLMo-2-0425-1B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "1bit-MONSTER/OLMo-2-0425-1B-Instruct-GGUF",
+        "allenai/OLMo-2-0425-1B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-06b",
+      "label": "Qwen3-0.6B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen3-17b",
+      "label": "Qwen3-1.7B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen3-4b",
+      "label": "Qwen3-4B-Instruct-2507",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-8b",
+      "label": "Qwen3-8B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Aldaris/Qwen3-8B-Q4_K_M-GGUF",
+        "bartowski/Qwen_Qwen3-8B-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-14b",
+      "label": "Qwen3-14B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Alcoft/Qwen_Qwen3-14B-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-30b-a3b",
+      "label": "Qwen3-30B-A3B-Instruct-2507",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen_Qwen3-30B-A3B-Instruct-2507-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-32b",
+      "label": "Qwen3-32B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen_Qwen3-32B-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-next-80b-a3b",
+      "label": "Qwen3-Next-80B-A3B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "a4lg/Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-GGUF",
+        "bartowski/Qwen_Qwen3-Next-80B-A3B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-235b-a22b",
+      "label": "Qwen3-235B-A22B-Instruct-2507",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen_Qwen3-235B-A22B-Instruct-2507-GGUF"
+      ]
+    },
+    {
+      "id": "qwen25-coder-05b",
+      "label": "Qwen2.5-Coder-0.5B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF",
+        "mradermacher/Qwen2.5-Coder-0.5B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "qwen25-coder-15b",
+      "label": "Qwen2.5-Coder-1.5B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "alphaduriendur/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M-GGUF",
+        "bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "qwen25-coder-3b",
+      "label": "Qwen2.5-Coder-3B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen2.5-Coder-3B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "qwen25-coder-7b",
+      "label": "Qwen2.5-Coder-7B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen2.5-Coder-7B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "qwen25-coder-32b",
+      "label": "Qwen2.5-Coder-32B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "ApolloRaines/Qwen2.5-Coder-32B-Instruct-Jbliterated",
+        "bartowski/Qwen2.5-Coder-32B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "yi15-6b",
+      "label": "Yi-1.5-6B-Chat",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "afrideva/Yi-1.5-6B-Chat-GGUF"
+      ]
+    },
+    {
+      "id": "chatglm3-6b",
+      "label": "chatglm3-6b",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/chatglm3-6b-GGUF"
+      ]
+    },
+    {
+      "id": "phi35-mini",
+      "label": "Phi-3.5-mini-instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AcerTest359/Phi-3.5-mini-instruct-GGUF"
+      ]
+    },
+    {
+      "id": "phi4-mini",
+      "label": "Phi-4-mini-instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Phi-4-mini-instruct-GGUF",
+        "bartowski/microsoft_Phi-4-mini-instruct-GGUF"
+      ]
+    },
+    {
+      "id": "gpt-oss-20b",
+      "label": "gpt-oss-20b",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/openai_gpt-oss-20b-GGUF"
+      ]
+    },
+    {
+      "id": "gpt-oss-120b",
+      "label": "gpt-oss-120b",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/openai.gpt-oss-120b-GGUF",
+        "bartowski/openai_gpt-oss-120b-GGUF"
+      ]
+    },
+    {
+      "id": "deepseek-r1-671b",
+      "label": "DeepSeek-R1",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/DeepSeek-R1-GGUF"
+      ]
+    },
+    {
+      "id": "deepseek-v32-671b",
+      "label": "DeepSeek-V3.2",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/deepseek-ai.DeepSeek-V3.2-GGUF"
+      ]
+    },
+    {
+      "id": "glm5-744b",
+      "label": "GLM-5",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/zai-org.GLM-5-GGUF"
+      ]
+    },
+    {
+      "id": "gemma3-1b",
+      "label": "gemma-3-1b-it",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/google_gemma-3-1b-it-GGUF"
+      ]
+    },
+    {
+      "id": "gemma3-4b",
+      "label": "gemma-3-4b-it",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/google_gemma-3-4b-it-GGUF"
+      ]
+    },
+    {
+      "id": "gemma3-12b",
+      "label": "gemma-3-12b-it",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/google_gemma-3-12b-it-GGUF"
+      ]
+    },
+    {
+      "id": "gemma3-27b",
+      "label": "gemma-3-27b-it",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/google_gemma-3-27b-it-GGUF"
+      ]
+    },
+    {
+      "id": "smolvlm-256m",
+      "label": "SmolVLM-256M-Instruct",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "HarshKalburgi/SmolVLM-256M-Instruct-GGUF",
+        "erectbranch/SmolVLM-256M-Instruct-Q8_0-GGUF",
+        "mradermacher/SmolVLM-256M-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "smolvlm-500m",
+      "label": "SmolVLM-500M-Instruct",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "anquachdev/SmolVLM-500M-Instruct-GGUF",
+        "mradermacher/SmolVLM-500M-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "musicgen-melody",
+      "label": "musicgen-melody",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "audiogen-medium",
+      "label": "audiogen-medium",
+      "category": "music",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "bark-small",
+      "label": "bark-small",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "speecht5-tts",
+      "label": "speecht5_tts",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "whisper-tiny",
+      "label": "whisper-tiny",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "whisper-base",
+      "label": "whisper-base",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "depth-anything-v2-small",
+      "label": "Depth-Anything-V2-Small-hf",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "depth-anything-v2-base",
+      "label": "Depth-Anything-V2-Base-hf",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "depth-anything-v2-large",
+      "label": "Depth-Anything-V2-Large-hf",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen3-4b-official-gguf",
+      "label": "Qwen3-4B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen3-8b-official-gguf",
+      "label": "Qwen3-8B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Aldaris/Qwen3-8B-Q4_K_M-GGUF",
+        "bartowski/Qwen_Qwen3-8B-GGUF"
+      ]
+    },
+    {
+      "id": "qwen3-30b-a3b-official-gguf",
+      "label": "Qwen3-30B-A3B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "deepseek-v41-flash",
+      "label": "DeepSeek-V4.1-Flash",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Solstice-AI/DeepSeek-V4.1-Flash-GGUF",
+        "antirez/deepseek-v4.1-flash-gguf",
+        "smalinin/DeepSeek-V4.1-Flash-GGUF"
+      ]
+    },
+    {
+      "id": "mimo-v26-pro-rl",
+      "label": "MiMo-V2.6-Pro-RL",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/XiaomiMiMo.MiMo-V2.6-Pro-RL-GGUF",
+        "ggml-org/MiMo-V2.6-Pro-RL-GGUF"
+      ]
+    },
+    {
+      "id": "mimo-v26-pro-mopd",
+      "label": "MiMo-V2.6-Pro-MOPD",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AesSedai/MiMo-V2.6-Pro-MOPD-GGUF",
+        "ggml-org/MiMo-V2.6-Pro-MOPD-GGUF"
+      ]
+    },
+    {
+      "id": "mimo-v26-flash-rl",
+      "label": "MiMo-V2.6-Flash-RL",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Baekpica/MiMo-V2.6-Flash-RL-GGUF",
+        "Baekpica/MiMo-V2.6-Flash-RL-Mixed-Quant-GGUF",
+        "ggml-org/MiMo-V2.6-Flash-RL-GGUF"
+      ]
+    },
+    {
+      "id": "qwen-image-21-turbo",
+      "label": "Qwen-Image-2.1-Turbo",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "lfm25-12b-thinking-q4-k-m",
+      "label": "LFM2.5 1.2B Thinking",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "qwen3-4b-thinking-2507-q4-k-m",
+      "label": "Qwen3-4B Thinking 2507",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "octllm-11b",
+      "label": "OctLLM \u00b7 11.1B",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "worldgen-flux-lora",
+      "label": "WorldGen",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "iris-3b",
+      "label": "Iris 3B",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "iris-3b-depth",
+      "label": "Iris 3B Depth",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "iris-3b-upscaler",
+      "label": "Iris 3B Upscaler",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-google-embeddinggemma-2",
+      "label": "embeddinggemma-2",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-jialinyyzz-humanizer",
+      "label": "humanizer",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "jialinyyzz/humanizer"
+      ]
+    },
+    {
+      "id": "hf-openbmb-minicpm-v-4-7-35b-a3b",
+      "label": "MiniCPM-V-4.7-35B-A3B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/MiniCPM-V-4.7-35B-A3B-GGUF",
+        "bartowski/MiniCPM-V-4.7-35B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-fishaudio-drama-3",
+      "label": "drama-3",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-atomicchat-qwen-image-2-1-turbo-uncensored-gguf",
+      "label": "Qwen-Image-2.1-Turbo-Uncensored-GGUF",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-liquidai-lfm2-5-24b-a2b",
+      "label": "LFM2.5-24B-A2B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/LFM2.5-24B-A2B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-meta-models-muse-spark-open-816b-a42b",
+      "label": "Muse-Spark-Open-816B-A42B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Muse-Spark-Open-816B-A42B-GGUF",
+        "DevQuasar/meta-models.Muse-Spark-Open-816B-A42B-GGUF",
+        "ggml-org/Muse-Spark-Open-816B-A42B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-black-forest-labs-flux-3-image-klein-comfy",
+      "label": "flux-3-image-klein-comfy",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-black-forest-labs-flux-3-image-klein",
+      "label": "flux-3-image-klein",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-baidu-unlimited-ocr",
+      "label": "Unlimited-OCR",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar/baidu.Unlimited-OCR-GGUF"
+      ]
+    },
+    {
+      "id": "hf-qwen-qwen3-8-27b",
+      "label": "Qwen3.8-27B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "byteshape/Qwen3.8-27B-GGUF",
+        "ggml-org/Qwen3.8-27B-GGUF",
+        "lmstudio-community/Qwen3.8-27B-GGUF",
+        "unsloth/Qwen3.8-27B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-openbmb-minicpm-v-4-7-1b",
+      "label": "MiniCPM-V-4.7-1B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/MiniCPM-V-4.7-1B-GGUF",
+        "mradermacher/MiniCPM-V-4.7-1B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-mtp-dflash2",
+      "label": "Qwen3.8-27B-Coder390-EfficientThink-Opus5.5-GPT6Astra-Grok4.7-DSV4Pro-K3-SFT-RLOO-MTP-DFlash2",
+      "category": "omni",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "nerkyor/Qwen3.8-27B-Coder390-EfficientThink-Opus5.5-GPT6Astra-Grok4.7-DSV4Pro-K3-SFT-RLOO-MTP-DFlash2"
+      ]
+    },
+    {
+      "id": "hf-facebook-sam3",
+      "label": "sam3",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-vllm-sr-d3",
+      "label": "d3",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-cloudflare-clef",
+      "label": "clef",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "abenzerps/Clef-GGUF"
+      ]
+    },
+    {
+      "id": "hf-pablodawson-minimax-h3-360-orbit-lora",
+      "label": "MiniMax-H3-360-Orbit-LoRA",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-liquidai-lfm2-5-24b-a2b-gguf",
+      "label": "LFM2.5-24B-A2B",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/LFM2.5-24B-A2B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-convaiinnovations-laya",
+      "label": "laya",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-qwen-qwen3-8-flash-next",
+      "label": "Qwen3.8-Flash-Next",
+      "category": "text",
+      "quantizations": 6,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Qwen3.8-Flash-Next-GGUF",
+        "antirez/qwen3.8-flash-next-gguf",
+        "sh0wie/Qwen3.8-Flash-Next-REAP-288-GGUF"
+      ]
+    },
+    {
+      "id": "hf-dealignai-deepseek-v4-1-flash-uncensored-fp8",
+      "label": "DeepSeek-V4.1-Flash-UNCENSORED-FP8",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Adolphsson/DeepSeek-V4.1-Flash-UNCENSORED-GGUF",
+        "pyrodog/DeepSeek-V4.1-Flash-UNCENSORED-DwarfStar-Q2"
+      ]
+    },
+    {
+      "id": "hf-liquidai-d1-3b",
+      "label": "d1-3B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/d1-3B-GGUF",
+        "NANI-Nithin/d1-3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-pyannote-speaker-diarization-community-1",
+      "label": "speaker-diarization-community-1",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-orcarouter-qwen3-8-flash-next-uncensored-gguf",
+      "label": "Qwen3.8-Flash-Next-Uncensored-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "orcarouter/Qwen3.8-Flash-Next-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "hf-openbmb-minicpm-v-4-7-35b-a3b-gguf",
+      "label": "MiniCPM-V-4.7-35B-A3B-gguf",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/MiniCPM-V-4.7-35B-A3B-GGUF",
+        "bartowski/MiniCPM-V-4.7-35B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-autotrust-jev-27b-vl",
+      "label": "JEV-27B-VL",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Atlas3D/JEV-27B-VL-GGUF",
+        "PALLER-NOVUS/JEV-27B-VL-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nvidia-qwen3-8-flash-next-fp4-local",
+      "label": "Qwen3.8-Flash-Next-FP4-Local",
+      "category": "omni",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "hardhant/Qwen3.8-Flash-Next-FP4-Local-Strata"
+      ]
+    },
+    {
+      "id": "hf-meta-models-muse-spark-open-816b-a42b-nvfp4",
+      "label": "Muse-Spark-Open-816B-A42B-NVFP4",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Muse-Spark-Open-816B-A42B-GGUF",
+        "DevQuasar/meta-models.Muse-Spark-Open-816B-A42B-GGUF",
+        "ggml-org/Muse-Spark-Open-816B-A42B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-ista-daslab-qwen3-8-flash-next-gsq-rco-gguf",
+      "label": "Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+      "category": "omni",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "DarkKitsune/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-PLE-50pct",
+        "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF"
+      ]
+    },
+    {
+      "id": "hf-cactus-compute-whistle",
+      "label": "whistle",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-autotrust-glm5-3-flash-e192-dgx-spark",
+      "label": "GLM5.3-Flash-E192-DGX-Spark",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-datalab-to-indra-ocr",
+      "label": "indra-ocr",
+      "category": "ocr",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-qwen3-8-27b-gguf",
+      "label": "Qwen3.8-27B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "byteshape/Qwen3.8-27B-GGUF",
+        "ggml-org/Qwen3.8-27B-GGUF",
+        "lmstudio-community/Qwen3.8-27B-GGUF",
+        "unsloth/Qwen3.8-27B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-akatz-ai-minimax-h3-character-swap-lora",
+      "label": "MiniMax-H3-Character-Swap-LoRA",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "minimax-h3",
+      "label": "MiniMax-H3",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-hauhaucs-qwen3-8-27b-uncensored-hauhaucs-aggressive-mtp-gguf",
+      "label": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF"
+      ]
+    },
+    {
+      "id": "hf-comfy-org-qwen-image-2-1",
+      "label": "Qwen-Image-2.1",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-tencent-hy-memory-30b-a3b",
+      "label": "Hy-Memory-30B-A3B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "abenzerps/Hy-Memory-30B-A3B-Quantized",
+        "tencent/Hy-Memory-30B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nvidia-nvidia-nemotron-3-5-super-vl-120b-a12b-nvfp4",
+      "label": "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+        "DevQuasar/nvidia.NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16-GGUF"
+      ]
+    },
+    {
+      "id": "hf-cloudflare-clef-omni",
+      "label": "clef-omni",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "moss-image-sft",
+      "label": "MOSS-Image-SFT",
+      "category": "image",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-inclusionai-ling-3-1-flash",
+      "label": "Ling-3.1-flash",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Ling-3.1-flash-GGUF",
+        "bartowski/Ling-3.1-flash-GGUF"
+      ]
+    },
+    {
+      "id": "hf-openmoss-team-moss-image-base",
+      "label": "MOSS-Image-Base",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nvidia-nvidia-nemotron-3-5-bolt-74b-a9b-24gb",
+      "label": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-facebook-dinov3-vitl16-pretrain-lvd1689m",
+      "label": "dinov3-vitl16-pretrain-lvd1689m",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-sc117-qwen3-8-flash-next-gsq-rco-abliterated-gguf",
+      "label": "Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "SC117/Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "hf-black-forest-labs-flux-3-image-klein-base",
+      "label": "flux-3-image-klein-base",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-reflection-beam-1-0-501b-a23b",
+      "label": "Beam-1.0-501B-A23B",
+      "category": "text",
+      "quantizations": 6,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Beam-1.0-501B-A23B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-cloudflare-clef-flash",
+      "label": "clef-flash",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Cloudflare_clef-flash-GGUF"
+      ]
+    },
+    {
+      "id": "hf-stepfun-ai-step-5-preview",
+      "label": "Step-5-Preview",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-embeddinggemma-2-gguf",
+      "label": "embeddinggemma-2-GGUF",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-jetbrains-mellum2-1-12b-a2-5b-thinking",
+      "label": "Mellum2.1-12B-A2.5B-Thinking",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Mellum2.1-12B-A2.5B-Thinking-GGUF"
+      ]
+    },
+    {
+      "id": "hf-autotrust-jev-35b",
+      "label": "JEV-35B",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nvidia-nvidia-nemotron-3-5-bolt-74b-a9b-24gb-gguf",
+      "label": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-24GB-GGUF",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-doofz-thx-01",
+      "label": "THX-01",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-aleph-alpha-kolibri-1",
+      "label": "Kolibri-1",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Kolibri-1-GGUF"
+      ]
+    },
+    {
+      "id": "hf-autotrust-glm5-3-flash-e256-dgx-spark",
+      "label": "GLM5.3-Flash-E256-DGX-Spark",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-lightx2v-qwen-image-2-1-lightning",
+      "label": "Qwen-Image-2.1-Lightning",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-alissonerdx-minimax-h3-comfyui",
+      "label": "Minimax-H3-ComfyUI",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-davidau-qwen3-8-27b-turbo-brilliance-50x-reasoning-instruct-neo-max-mtp-gguf",
+      "label": "Qwen3.8-27B-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DavidAU/Qwen3.8-27B-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF"
+      ]
+    },
+    {
+      "id": "hf-openbmb-minicpm-v-4-7-1b-gguf",
+      "label": "MiniCPM-V-4.7-1B-gguf",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/MiniCPM-V-4.7-1B-GGUF",
+        "mradermacher/MiniCPM-V-4.7-1B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-huihui-ai-huihui-qwen3-8-27b-abliterated-gguf",
+      "label": "Huihui-Qwen3.8-27B-abliterated-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "hf-meta-llama-llama-3-1-8b-instruct",
+      "label": "Llama-3.1-8B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/Meta-Llama-3.1-8B-Instruct-i1-GGUF"
+      ]
+    },
+    {
+      "id": "hf-comfy-org-minimax-h3",
+      "label": "MiniMax-H3",
+      "category": "omni",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "hnao23/MiniMax-H3_GGUFs"
+      ]
+    },
+    {
+      "id": "hf-zai-org-glm-5-3-flash",
+      "label": "GLM-5.3-Flash",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "lapadatbogdan/GLM-5.3-Flash-Coder-RCO-152E-GGUF",
+        "patrickbdevaney/GLM-5.3-Flash-REAP50-GGUF"
+      ]
+    },
+    {
+      "id": "hf-zai-org-glm-5-3",
+      "label": "GLM-5.3",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Coder40-95/GLM-5.3-GGUF",
+        "DevQuasar/zai-org.GLM-5.3-GGUF"
+      ]
+    },
+    {
+      "id": "hf-canberkkkkkk-ema-lightning",
+      "label": "ema-lightning",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-vllm-sr-d3-flash",
+      "label": "d3-flash",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-microsoft-aescode-8b",
+      "label": "AesCode-8B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/AesCode-8B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-pyannote-speaker-diarization-3-1",
+      "label": "speaker-diarization-3.1",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-axiomiclabs-gpt-x3-150m",
+      "label": "GPT-X3-150M",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-perplexity-ai-pplx-decider-v1-1-27b",
+      "label": "pplx-decider-v1.1-27b",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-lfm2-5-24b-a2b-gguf",
+      "label": "LFM2.5-24B-A2B-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/LFM2.5-24B-A2B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-jonathancoletti-qwen3-8-27b-uncensored-gguf",
+      "label": "Qwen3.8-27B-Uncensored-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "hf-tencent-youtu-parsing-omni",
+      "label": "Youtu-Parsing-Omni",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-prism-ml-ternary-bonsai-2-9b-gguf",
+      "label": "Ternary-Bonsai-2-9B-gguf",
+      "category": "omni",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "prism-ml/Ternary-Bonsai-2-9B-gguf"
+      ]
+    },
+    {
+      "id": "hf-nvidia-nvidia-nemotron-3-5-super-vl-120b-a12b-bf16",
+      "label": "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+        "DevQuasar/nvidia.NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16-GGUF"
+      ]
+    },
+    {
+      "id": "hf-mistralai-timestral-209m",
+      "label": "Timestral-209M",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-black-forest-labs-flux-2-klein-base-9b-fp8",
+      "label": "FLUX.2-klein-base-9b-fp8",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-krea-krea-2-turbo",
+      "label": "Krea-2-Turbo",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-mrm8488-embeddinggemma-2-ft-typed-decision",
+      "label": "embeddinggemma-2-ft-typed-decision",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-nvidia-nemotron-3-5-bolt-74b-a9b-gguf",
+      "label": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "unsloth/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-wuli-art-minimax-h3-turbo",
+      "label": "MiniMax-H3-Turbo",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-hauhaucs-qwen3-6-35b-a3b-uncensored-hauhaucs-aggressive",
+      "label": "Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive"
+      ]
+    },
+    {
+      "id": "hf-tenstrip-10eros-max",
+      "label": "10Eros-Max",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-kittenml-kitten-tts-2",
+      "label": "kitten-tts-2",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-muse-spark-open-816b-a42b-gguf",
+      "label": "Muse-Spark-Open-816B-A42B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Muse-Spark-Open-816B-A42B-GGUF",
+        "DevQuasar/meta-models.Muse-Spark-Open-816B-A42B-GGUF",
+        "ggml-org/Muse-Spark-Open-816B-A42B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-alesha-pro-qwen3-8-flash-next-abliterated-gsq-rco-strata-gguf",
+      "label": "Qwen3.8-Flash-Next-abliterated-GSQ-RCO-Strata-GGUF",
+      "category": "omni",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "alesha-pro/Qwen3.8-Flash-Next-abliterated-GSQ-RCO-Strata-GGUF"
+      ]
+    },
+    {
+      "id": "hf-dmis-lab-ultrabert-380m",
+      "label": "UltraBERT-380M",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-alissonerdx-bfs-best-face-swap",
+      "label": "BFS-Best-Face-Swap",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-microsoft-aescode-32b",
+      "label": "AesCode-32B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/AesCode-32B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-h2oai-h2o-lightning-4b",
+      "label": "h2o-lightning-4b",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "h2oai/h2o-lightning-4b-gguf",
+        "mradermacher/h2o-lightning-4b-GGUF"
+      ]
+    },
+    {
+      "id": "hf-lightonai-lightonocr-3-4b",
+      "label": "LightOnOCR-3-4B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/LightOnOCR-3-4B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nace-ai-drex-v1-5",
+      "label": "drex-v1.5",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/drex-v1.5-GGUF"
+      ]
+    },
+    {
+      "id": "hf-black-forest-labs-flux-1-schnell",
+      "label": "FLUX.1-schnell",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-krea-krea-2-raw",
+      "label": "Krea-2-Raw",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-orcarouter-qwen3-8-27b-uncensored-gguf",
+      "label": "Qwen3.8-27B-Uncensored-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "orcarouter/Qwen3.8-27B-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "hf-black-forest-labs-flux-1-dev",
+      "label": "FLUX.1-dev",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-huihui-ai-huihui-qwen3-8-flash-next-abliterated-v2-gguf",
+      "label": "Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "huihui-ai/Huihui-Qwen3.8-Flash-Next-abliterated-v2-GGUF"
+      ]
+    },
+    {
+      "id": "hf-meta-llama-meta-llama-3-8b-instruct",
+      "label": "Meta-Llama-3-8B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF",
+        "lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "hf-viggle-qwen-image-2-1-viggle-turbo",
+      "label": "Qwen-Image-2.1-viggle-turbo",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-qnguyen3-quan-transcribe-1-0",
+      "label": "QUAN-Transcribe-1.0",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-google-gemma-4-31b-it",
+      "label": "gemma-4-31B-it",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/gemma-4-31B-it-GGUF"
+      ]
+    },
+    {
+      "id": "hf-madebyollin-texture-fix-vae-for-qwen-image-2-1",
+      "label": "texture-fix-vae-for-qwen-image-2.1",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-ista-daslab-qwen3-8-flash-next-gsq-rco-coder-gguf",
+      "label": "Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+      "category": "omni",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
+        "cleyesode/Qwen3.8-Flash-Next-GSQ-RCO-CODER-GGUF-MTP",
+        "oisee/Qwen3.8-Flash-Next-GSQ-RCO-Coder-192E-GGUF"
+      ]
+    },
+    {
+      "id": "hf-dmis-lab-ultrabert-150m",
+      "label": "UltraBERT-150M",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nvidia-nvidia-nemotron-3-5-super-vl-120b-a12b-base-bf16",
+      "label": "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-Base-BF16",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-codacus-qwen3-6-35b-a3b-microturn-duplex-lora",
+      "label": "Qwen3.6-35B-A3B-MicroTurn-Duplex-LoRA",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-kyutai-pocket-tts",
+      "label": "pocket-tts",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-francisring-prism",
+      "label": "Prism",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-black-forest-labs-flux-3-image-klein-pup",
+      "label": "flux-3-image-klein-pup",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/FLUX-3-Image-Klein-pup-GGUF",
+        "ND911/flux3-image-klein-pup-Q8_0-GGUFs"
+      ]
+    },
+    {
+      "id": "hf-google-gemma-4-e4b-it",
+      "label": "gemma-4-E4B-it",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-moonshotai-kimi-k3",
+      "label": "Kimi-K3",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "6block/Kimi-K3-GGUF",
+        "AtomicChat/Kimi-K3-GGUF",
+        "DevQuasar/moonshotai.Kimi-K3-GGUF"
+      ]
+    },
+    {
+      "id": "hf-agentionai-qwen3-8-flash-next-gyro-gguf",
+      "label": "Qwen3.8-Flash-Next-Gyro-GGUF",
+      "category": "omni",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "agentionai/Qwen3.8-Flash-Next-Gyro-GGUF"
+      ]
+    },
+    {
+      "id": "hf-liquidai-d1-omni-600m",
+      "label": "d1-omni-600M",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/d1-omni-600M-GGUF",
+        "mradermacher/d1-omni-600M-GGUF"
+      ]
+    },
+    {
+      "id": "hf-akhaliq-qwen-image-2-1-multiple-angles-lora",
+      "label": "Qwen-Image-2.1-Multiple-Angles-LoRA",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-peasantsmith-glm-5-3-flash-maya-gguf",
+      "label": "GLM-5.3-Flash-Maya-GGUF",
+      "category": "text",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "peasantsmith/GLM-5.3-Flash-Maya-GGUF"
+      ]
+    },
+    {
+      "id": "hf-k2-fsa-omnivoice",
+      "label": "OmniVoice",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-amazon-alodlm-8b",
+      "label": "ALoDLM-8B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "liodon-ai/ALoDLM-8B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-pyannote-segmentation-3-0",
+      "label": "segmentation-3.0",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-breezeblue-breeze-tts-2",
+      "label": "Breeze-TTS-2",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-dmis-lab-ultrabert-embed-150m",
+      "label": "UltraBERT-Embed-150M",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-hauhaucs-gemma-4-e4b-uncensored-hauhaucs-aggressive",
+      "label": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive"
+      ]
+    },
+    {
+      "id": "hf-meta-models-muse-glimmer-30b",
+      "label": "Muse-Glimmer-30B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Muse-Glimmer-30B-GGUF",
+        "bartowski/Muse-Glimmer-30B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-vllm-sr-d3-edge",
+      "label": "d3-edge",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-stepfun-ai-step-5-preview-bf16",
+      "label": "Step-5-Preview-BF16",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-orcarouter-orcasaq-2-cyber-27b-uncensored-gguf",
+      "label": "OrcaSAQ-2-Cyber-27B-Uncensored-GGUF",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-auroraai-research-auroraimg-6m",
+      "label": "AuroraIMG-6M",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-openai-whisper-large-v3",
+      "label": "whisper-large-v3",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-facebook-sam-3d-body-dinov3",
+      "label": "sam-3d-body-dinov3",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-circlestone-labs-anima",
+      "label": "Anima",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "JusteLeo/Anima2-GGUF",
+        "applispee/Anima-GGUF"
+      ]
+    },
+    {
+      "id": "hf-obliteratus-qwen3-8-27b-obliterated",
+      "label": "Qwen3.8-27B-OBLITERATED",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "OBLITERATUS/Qwen3.8-27B-OBLITERATED"
+      ]
+    },
+    {
+      "id": "hf-unsloth-qwen3-8-flash-next-gguf",
+      "label": "Qwen3.8-Flash-Next-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Qwen3.8-Flash-Next-GGUF",
+        "antirez/qwen3.8-flash-next-gguf",
+        "sh0wie/Qwen3.8-Flash-Next-REAP-288-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nandakishorm-vega-08b-public-intents",
+      "label": "vega-08b-public-intents",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-nvidia-nemotron-3-5-super-vl-120b-a12b-gguf",
+      "label": "NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF",
+        "DevQuasar/nvidia.NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16-GGUF"
+      ]
+    },
+    {
+      "id": "hf-hauhaucs-qwen3-5-9b-uncensored-hauhaucs-aggressive",
+      "label": "Qwen3.5-9B-Uncensored-HauhauCS-Aggressive",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive",
+        "nuofang/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-GGUF"
+      ]
+    },
+    {
+      "id": "hf-akatz-ai-minimax-h3-person-remover-lora",
+      "label": "MiniMax-H3-Person-Remover-LoRA",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-liquidai-lfm2-5-24b-a2b-base",
+      "label": "LFM2.5-24B-A2B-Base",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-0bserverx-qwen3-8-27b-heretic-abliterated-uncensored-gguf",
+      "label": "Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nvidia-nvidia-nemotron-3-5-bolt-74b-a9b-bf16",
+      "label": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "unsloth/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-lodestones-moss-image-sft-8-steps-dmd",
+      "label": "MOSS-Image-SFT-8-steps-dmd",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-qwen-qwen3-6-35b-a3b",
+      "label": "Qwen3.6-35B-A3B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen_Qwen3.6-35B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-dealignai-glm-5-3-cybersecurity-fp8",
+      "label": "GLM-5.3-CYBERSECURITY-FP8",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-ukisai-swift-1-5-qwen3-8-flash-next-gsq-rco-gguf",
+      "label": "Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+      "category": "omni",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF"
+      ]
+    },
+    {
+      "id": "hf-lightricks-ltx-2-5-22b-ic-lora-alpha-gen",
+      "label": "LTX-2.5-22b-IC-LoRA-Alpha-Gen",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-lightonai-colgrep-agent-2b",
+      "label": "colgrep-agent-2B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "liodon-ai/colgrep-agent-2B-imatrix-GGUF",
+        "mradermacher/colgrep-agent-2B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-lightx2v-lightvae",
+      "label": "LightVAE",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-vllm-sr-d3-nano",
+      "label": "d3-nano",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-comfy-org-moss-image",
+      "label": "MOSS-Image",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nvidia-personaplex-7b-v1",
+      "label": "personaplex-7b-v1",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-empero-ai-qwythos-9b-claude-mythos-5-1m-gguf",
+      "label": "Qwythos-9B-Claude-Mythos-5-1M-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nvidia-nemotron-3-diarization",
+      "label": "Nemotron-3-Diarization",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-schizophyllume-beellm",
+      "label": "BeeLLM",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "baylikestempura/BeeLLM-12M-Mood-GGUF"
+      ]
+    },
+    {
+      "id": "hf-atomicchat-minicpm-v-4-7-35b-a3b-uncensored-gguf",
+      "label": "MiniCPM-V-4.7-35B-A3B-Uncensored-GGUF",
+      "category": "omni",
+      "quantizations": 3,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/MiniCPM-V-4.7-35B-A3B-Uncensored-GGUF"
+      ]
+    },
+    {
+      "id": "hf-scratchyone-anon-1b",
+      "label": "anon-1b",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "scratchyone/anon-1b"
+      ]
+    },
+    {
+      "id": "hf-google-gemma-4-26b-a4b-it",
+      "label": "gemma-4-26B-A4B-it",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/gemma-4-26B-A4B-it-GGUF"
+      ]
+    },
+    {
+      "id": "hf-sulphurai-sulphur-2-base",
+      "label": "Sulphur-2-base",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-os-software-ternary-bonsai-2-27b-uncensored-heretic-gguf",
+      "label": "Ternary-Bonsai-2-27B-Uncensored-Heretic-GGUF",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "OS-Software/Ternary-Bonsai-2-27B-Uncensored-Heretic-GGUF"
+      ]
+    },
+    {
+      "id": "hf-mia-ailab-glm-5-3-flash-exl3-4bpw-tensorfold-ablit",
+      "label": "GLM-5.3-Flash-EXL3-4bpw-TensorFold-Ablit",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-neuphonic-neudecide",
+      "label": "neudecide",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-veda-sparse-minimax-h3-r2va-veda-preview",
+      "label": "Minimax-H3-R2VA-Veda-Preview",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-lightonai-lightonocr-3-0-8b",
+      "label": "LightOnOCR-3-0.8B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/LightOnOCR-3-0.8B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-vllm-sr-d3-mini",
+      "label": "d3-mini",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-huihui-ai-huihui-qwen3-8-27b-coder390-efficientthink-abliterated",
+      "label": "Huihui-Qwen3.8-27B-Coder390-EfficientThink-abliterated",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/Huihui-Qwen3.8-27B-Coder390-EfficientThink-abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "hf-gribbliest-qwen-image-2-1-qma-camera-angles",
+      "label": "qwen-image-2.1-qma-camera-angles",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-qwen-qwen3-5-9b",
+      "label": "Qwen3.5-9B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Qwen3.5-9B-GGUF",
+        "bartowski/Qwen_Qwen3.5-9B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-xhtoken-spark-x2-5-4b",
+      "label": "Spark-X2.5-4B",
+      "category": "text",
+      "quantizations": 13,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "XHToken/Spark-X2.5-4B-GGUF",
+        "mradermacher/Spark-X2.5-4B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-audnai-penclaw-glm-5-3-abliterated",
+      "label": "penclaw-GLM-5.3-abliterated",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nvidia-nv-reason-ct",
+      "label": "NV-Reason-CT",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-meta-llama-llama-3-1-8b",
+      "label": "Llama-3.1-8B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "dphn/Dolphin3.0-Llama3.1-8B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-comfy-org-krea-2",
+      "label": "Krea-2",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-lightx2v-minimax-h3-turbo",
+      "label": "Minimax-h3-Turbo",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-warmbloodaban-minimax-h3-singularity",
+      "label": "Minimax-h3_Singularity",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-lessthanthreeai-qwen3-8-27b-humanlike-chat-gguf",
+      "label": "Qwen3.8-27B-Humanlike-Chat-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "LessThanThreeAI/Qwen3.8-27B-Humanlike-Chat-GGUF"
+      ]
+    },
+    {
+      "id": "hf-peculiar-ragdoll-cyber-tiel-coder-35b-a3b-gguf-mtp",
+      "label": "Cyber-Tiel-Coder-35B-A3B-GGUF-MTP",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "peculiar-ragdoll/Cyber-Tiel-Coder-35B-A3B-GGUF-MTP"
+      ]
+    },
+    {
+      "id": "hf-sc117-swift-1-5-qwen3-8-flash-next-gsq-rco-abliterated-gguf",
+      "label": "Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "hf-facebook-dinov3-vitb16-pretrain-lvd1689m",
+      "label": "dinov3-vitb16-pretrain-lvd1689m",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-fishaudio-s2-pro",
+      "label": "s2-pro",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-facebook-vggt-omega",
+      "label": "VGGT-Omega",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-larryvrh-minimax-h3-turbo-lora",
+      "label": "MiniMax-H3-Turbo-Lora",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-moondream-parakeet-redux",
+      "label": "parakeet-redux",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-vllm-sr-d3-lite",
+      "label": "d3-lite",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-hauhaucs-gemma4-12b-qat-uncensored-hauhaucs-balanced",
+      "label": "Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced",
+      "category": "omni",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced"
+      ]
+    },
+    {
+      "id": "hf-lightricks-ltx-2-5-22b-ic-lora-layout-to-render",
+      "label": "LTX-2.5-22b-IC-LoRA-Layout-To-Render",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-winnougan-cobijada-minimax-h3-hybrid-pruned-comfyui",
+      "label": "Cobijada_Minimax-H3_Hybrid_Pruned_ComfyUI",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-mistralai-voxtral-mini-4b-realtime-arabic",
+      "label": "Voxtral-Mini-4B-Realtime-Arabic",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-grio43-oppaioracle-experimental-x1-1",
+      "label": "OppaiOracle-experimental-X1.1",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-skywork-matrix-game-4-0",
+      "label": "Matrix-Game-4.0",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-frontiersmind-lumma-fev-27b",
+      "label": "Lumma-fev-27B",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-qwen-qwen3-5-4b",
+      "label": "Qwen3.5-4B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Arki05/Qwen3.5-4B-GGUF-shards",
+        "AtomicChat/Qwen3.5-4B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-muscriptor-muscriptor-large",
+      "label": "muscriptor-large",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-liquidai-lfm2-5-2-6b",
+      "label": "LFM2.5-2.6B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Arki05/LFM2.5-2.6B-GGUF-shards",
+        "bartowski/LiquidAI_LFM2.5-2.6B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-silveroxides-kroma-quant",
+      "label": "Kroma-Quant",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-inclusionai-ming-image-0-1-design",
+      "label": "Ming-Image-0.1-Design",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-huihui-ai-huihui-glm-5-3-flash-abliterated-gguf",
+      "label": "Huihui-GLM-5.3-Flash-abliterated-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "huihui-ai/Huihui-GLM-5.3-Flash-abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "hf-matlowai-minimax-h3-orb360-cardspin",
+      "label": "MiniMax-H3-ORB360-CardSpin",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-inclusionai-lemondecider",
+      "label": "LemonDecider",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-reflection-beam-1-0-501b-a23b-nvfp4",
+      "label": "Beam-1.0-501B-A23B-NVFP4",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-sabicap-sabi-noema",
+      "label": "sabi-noema",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "owao/Sabi-Noema-GGUF"
+      ]
+    },
+    {
+      "id": "hf-baai-bge-large-en-v1-5",
+      "label": "bge-large-en-v1.5",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-stabilityai-stable-fast-3d",
+      "label": "stable-fast-3d",
+      "category": "3d",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-hauhaucs-qwen3-5-4b-uncensored-hauhaucs-aggressive",
+      "label": "Qwen3.5-4B-Uncensored-HauhauCS-Aggressive",
+      "category": "omni",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "HauhauCS/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive"
+      ]
+    },
+    {
+      "id": "hf-unsloth-qwen3-6-35b-a3b-gguf",
+      "label": "Qwen3.6-35B-A3B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Qwen_Qwen3.6-35B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-venastine-research-xing4-0-29b-a4b-gguf",
+      "label": "Xing4.0-29B-A4B-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Venastine-Research/Xing4.0-29B-A4B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-xiaomimimo-mimo-v2-6-distill-qwen-9b",
+      "label": "MiMo-V2.6-Distill-Qwen-9B",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/MiMo-V2.6-Distill-Qwen-9B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-zhengmingyu-dmad",
+      "label": "DMAD",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-facebook-sam-3d-objects",
+      "label": "sam-3d-objects",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-google-medgemma-1-5-4b-it",
+      "label": "medgemma-1.5-4b-it",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "docvm/medgemma-1.5-4b-it-GGUF",
+        "mradermacher/medgemma-1.5-4b-it-GGUF"
+      ]
+    },
+    {
+      "id": "hf-kijai-minimax-h3-experimental",
+      "label": "MiniMax-H3-experimental",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-akhilaaa3-jev-omni",
+      "label": "Jev-Omni",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-contrastive-lm-clm-v0-1-8b",
+      "label": "CLM-v0.1-8B",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-prism-ml-ternary-bonsai-2-4b-gguf",
+      "label": "Ternary-Bonsai-2-4B-gguf",
+      "category": "omni",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "prism-ml/Ternary-Bonsai-2-4B-gguf"
+      ]
+    },
+    {
+      "id": "hf-ausboss-qwen-image-2-1-outfit-swap-consistency-lora",
+      "label": "Qwen-Image-2.1-Outfit-Swap-Consistency-LoRA",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-qwen-image-2-1-turbo-fp8",
+      "label": "Qwen-Image-2.1-Turbo-FP8",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-fluidinference-unlimited-ocr-mlx-coreml",
+      "label": "unlimited-ocr-mlx-coreml",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-liquidai-lfm2-5-24b-a2b-fp8",
+      "label": "LFM2.5-24B-A2B-FP8",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/LFM2.5-24B-A2B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-mistralai-timestral-5m",
+      "label": "Timestral-5M",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-taoliveaigc-taomate-h3-fl2va",
+      "label": "TaoMate-H3-FL2VA",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nif0-moss-image-sft-comfyui",
+      "label": "MOSS-Image-SFT-ComfyUI",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-autotrust-jev-35b-nvfp4",
+      "label": "JEV-35B-NVFP4",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-mistralai-mistral-7b-v0-3",
+      "label": "Mistral-7B-v0.3",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DevQuasar-8/mistralai.Mistral-7B-v0.3-GGUF"
+      ]
+    },
+    {
+      "id": "hf-microsoft-florence-2-base",
+      "label": "Florence-2-base",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-agents-course-notebooks",
+      "label": "notebooks",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-google-gemma-4-12b",
+      "label": "gemma-4-12B",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-yuxinlu1-gemma-4-12b-coder-fable5-composer2-5-v1-gguf",
+      "label": "gemma-4-12B-coder-fable5-composer2.5-v1-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF"
+      ]
+    },
+    {
+      "id": "hf-audio-cpp-audio-cpp-gguf",
+      "label": "audio.cpp-gguf",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-ukisai-swift-1-5-qwen3-8-27b-gguf",
+      "label": "Swift-1.5-Qwen3.8-27B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "ukisai/Swift-1.5-Qwen3.8-27B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-jialinyyzz-humanizer-gguf",
+      "label": "humanizer-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "jialinyyzz/humanizer"
+      ]
+    },
+    {
+      "id": "hf-kujira-underdog-saluki-27b-1-0-mtp-abliterated-gguf",
+      "label": "Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Kujira/Underdog-Saluki-27B-1.0-MTP-Abliterated-GGUF"
+      ]
+    },
+    {
+      "id": "hf-toyxyz-anima-controlnet-lllite",
+      "label": "Anima_ControlNet-LLLite",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-reflection-beam-1-0-501b-a23b-dflash2",
+      "label": "Beam-1.0-501B-A23B-DFlash2",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-mistralai-timestral-123m",
+      "label": "Timestral-123M",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-deepseek-ai-deepseek-r1-distill-qwen-7b",
+      "label": "DeepSeek-R1-Distill-Qwen-7B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-ibm-granite-granite-embedding-small-english-r2",
+      "label": "granite-embedding-small-english-r2",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-qwen-qwen3-coder-30b-a3b-instruct",
+      "label": "Qwen3-Coder-30B-A3B-Instruct",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "gaianet/Qwen3-Coder-30B-A3B-Instruct-GGUF"
+      ]
+    },
+    {
+      "id": "hf-unsloth-qwen3-5-9b-gguf",
+      "label": "Qwen3.5-9B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/Qwen3.5-9B-GGUF",
+        "bartowski/Qwen_Qwen3.5-9B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-froggeric-qwen-fixed-chat-templates",
+      "label": "Qwen-Fixed-Chat-Templates",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nvidia-nemotron-3-5-asr-streaming-0-6b",
+      "label": "nemotron-3.5-asr-streaming-0.6b",
+      "category": "speech",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-yuxinlu1-gemma-4-12b-agentic-fable5-composer2-5-v2-3-5x-tau2-gguf",
+      "label": "gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF"
+      ]
+    },
+    {
+      "id": "hf-conradlocke-krea2-identity-edit",
+      "label": "krea2-identity-edit",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-ornith-ai-ornith-1-5-9b-gguf",
+      "label": "Ornith-1.5-9B-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "ornith-ai/Ornith-1.5-9B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-orcarouter-qwen3-8-27b-uncensored-nvfp4",
+      "label": "Qwen3.8-27B-Uncensored-NVFP4",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-kasugaisakura-qwen-image-2-1-uncensored-abenzerps-gguf",
+      "label": "Qwen-Image-2.1-Uncensored-Abenzerps-GGUF",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-veda-sparse-minimax-h3-t2va-veda-8nfe-600step-preview",
+      "label": "Minimax-H3-T2VA-Veda-8NFE-600Step-Preview",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-sahilmahendrakar-paradee-8m-v1-0",
+      "label": "Paradee-8M-v1.0",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-liquidai-d1-3b-gguf",
+      "label": "d1-3B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "AtomicChat/d1-3B-GGUF",
+        "NANI-Nithin/d1-3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-akhaliq-qwen-image-2-1-next-scene-lora",
+      "label": "Qwen-Image-2.1-Next-Scene-LoRA",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-openbmb-minicpm-v-4-7-35b-a3b-dspark",
+      "label": "MiniCPM-V-4.7-35B-A3B-DSpark",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "magnitudedev/MiniCPM-V-4.7-35B-A3B-DSpark-GGUF",
+        "openbmb/MiniCPM-V-4.7-35B-A3B-DSpark-gguf"
+      ]
+    },
+    {
+      "id": "hf-kujira-underdog-saluki-27b-1-0-mtp-gguf",
+      "label": "Underdog-Saluki-27B-1.0-MTP-GGUF",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Kujira/Underdog-Saluki-27B-1.0-MTP-GGUF"
+      ]
+    },
+    {
+      "id": "hf-cloud0day3-antalia-mini",
+      "label": "antalia-mini",
+      "category": "tts",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-nlpai-lab-mixlid",
+      "label": "MixLID",
+      "category": "classification",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-stabilityai-stable-diffusion-xl-base-1-0",
+      "label": "stable-diffusion-xl-base-1.0",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-baai-bge-m3",
+      "label": "bge-m3",
+      "category": "embedding",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-xai-org-grok-1",
+      "label": "grok-1",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-deepseek-ai-deepseek-coder-v2-lite-base",
+      "label": "DeepSeek-Coder-V2-Lite-Base",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "alphaduriendur/DeepSeek-Coder-V2-Lite-Base-Q4_K_M-GGUF",
+        "ijohn07/DeepSeek-Coder-V2-Lite-Base-Q6_K-GGUF",
+        "legraphista/DeepSeek-Coder-V2-Lite-Base-IMat-GGUF",
+        "mradermacher/DeepSeek-Coder-V2-Lite-Base-GGUF"
+      ]
+    },
+    {
+      "id": "hf-mistralai-mistral-small-3-1-24b-instruct-2503",
+      "label": "Mistral-Small-3.1-24B-Instruct-2503",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF"
+      ]
+    },
+    {
+      "id": "hf-black-forest-labs-flux-2-klein-9b-fp8",
+      "label": "FLUX.2-klein-9b-fp8",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-prism-ml-bonsai-27b-gguf",
+      "label": "Bonsai-27B-gguf",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Danny-Dasilva/Bonsai-27B-antidoom-1bit-DSpark",
+        "burnboomm/Bonsai-27B-56blk-trim98k",
+        "tokenbrew/Bonsai-27B-Brew-GGUF"
+      ]
+    },
+    {
+      "id": "hf-peculiar-ragdoll-qwen-sharp-chat-templates",
+      "label": "Qwen-Sharp-Chat-Templates",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-fal-minimax-h3-realism-people-lora",
+      "label": "MiniMax-H3-Realism-People-LoRA",
+      "category": "video",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-unsloth-glm-5-3-flash-gguf",
+      "label": "GLM-5.3-Flash-GGUF",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "lapadatbogdan/GLM-5.3-Flash-Coder-RCO-152E-GGUF",
+        "patrickbdevaney/GLM-5.3-Flash-REAP50-GGUF"
+      ]
+    },
+    {
+      "id": "hf-jundot-qwen3-8-flash-next-oq4e-mtp",
+      "label": "Qwen3.8-Flash-Next-oQ4e-mtp",
+      "category": "omni",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-peculiar-ragdoll-cyber-tiel-coder-35b-a3b-gguf",
+      "label": "Cyber-Tiel-Coder-35B-A3B-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "peculiar-ragdoll/Cyber-Tiel-Coder-35B-A3B-GGUF"
+      ]
+    },
+    {
+      "id": "hf-altworld-hemmingway-1",
+      "label": "Hemmingway-1",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/Hemmingway-1-GGUF"
+      ]
+    },
+    {
+      "id": "hf-infatoshi-glm-5-3-uncensored-exl3-3-0bpw",
+      "label": "GLM-5.3-UNCENSORED-EXL3-3.0bpw",
+      "category": "text",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hf-jackrong-qwopus3-5-9b-coder-flash-gguf",
+      "label": "Qwopus3-5-9B-Coder-Flash-GGUF",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "Jackrong/Qwopus3-5-9B-Coder-Flash-GGUF"
+      ]
+    },
+    {
+      "id": "hf-chinhnc-quyet-1-0-large",
+      "label": "Quyet-1.0-Large",
+      "category": "omni",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/Quyet-1.0-Large-GGUF"
+      ]
+    },
+    {
+      "id": "qwen-image-21-uc",
+      "label": "Qwen Image 2.1 Uncensored",
+      "category": "image",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "edgerock-4b",
+      "label": "EdgeRock-4B",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "hkust-aaron/EdgeRock-4B-GGUF"
+      ]
+    },
+    {
+      "id": "hybridagent-8b-agentic",
+      "label": "HybridAgent-8B-Agentic",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "hybridagent-14b-agentic",
+      "label": "HybridAgent-14B-Agentic",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "spark-x25-1-7b",
+      "label": "Spark-X2.5-1.7B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "XHToken/Spark-X2.5-1.7B-GGUF",
+        "ngquocvinh/Spark-X2.5-1.7B-GGUF"
+      ]
+    },
+    {
+      "id": "mellum21-12b-thinking",
+      "label": "Mellum2.1-12B-A2.5B-Thinking",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/Mellum2.1-12B-A2.5B-Thinking-GGUF"
+      ]
+    },
+    {
+      "id": "lfm25-24b-uncensored",
+      "label": "LFM2.5-24B-A2B-Uncensored",
+      "category": "text",
+      "quantizations": 6,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "lfm25-24b-turbo-neo",
+      "label": "LFM2.5-24B Turbo Brilliance NEO",
+      "category": "text",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "DavidAU/LFM2.5-24B-A2B-Turbo-Brilliance-50X-NEO-MAX-Imatrix-GGUF"
+      ]
+    },
+    {
+      "id": "kromoss",
+      "label": "Kromoss",
+      "category": "image",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "dory-4b",
+      "label": "NVIDIA Nemotron Labs Dory1.0 4B",
+      "category": "text",
+      "quantizations": 8,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "spark-x26-4b",
+      "label": "Spark X2.6 4B",
+      "category": "text",
+      "quantizations": 22,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "XHToken/Spark-X2.6-4B-GGUF",
+        "bartowski/Spark-X2.6-4B-GGUF"
+      ]
+    },
+    {
+      "id": "qwen35-9b-c3sm-sdm-coder",
+      "label": "Qwen3.5 9B C3SM SDM Agentic Coder",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "OliviaRossi/Qwen3.5-9B-C3SM-SDM-Agentic-Coder-GGUF"
+      ]
+    },
+    {
+      "id": "ozygram-neural-7b-coder",
+      "label": "Ozygram Neural 7B Coder MCTS",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "mradermacher/ozyvler-Ozygram-Neural-7B-Coder-MCTS-GGUF"
+      ]
+    },
+    {
+      "id": "hf-nerkyor-qwen3-8-27b-coder390-efficientthink-opus5-5-gpt6astra-grok4-7-dsv4pro-k3-sft-rloo-gguf-ninfer",
+      "label": "Coder390 EfficientThink 27B",
+      "category": "text",
+      "quantizations": 9,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "nerkyor-efficientthink-27b",
+      "label": "EfficientThink SimPO 27B",
+      "category": "text",
+      "quantizations": 6,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "orcacyber-nano-1",
+      "label": "OrcaCyber Nano 1.0",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "orcarouter/OrcaCyber-Nano-1.0"
+      ]
+    },
+    {
+      "id": "tess-45-27b",
+      "label": "Tess 4.5 27B",
+      "category": "text",
+      "quantizations": 25,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "bartowski/migtissera_Tess-4.5-27B-GGUF"
+      ]
+    },
+    {
+      "id": "sage-a15-q4-k-m",
+      "label": "Sage-A1.5 Q4_K_M",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "InternScience/Sage-A1.5-Q4_K_M-GGUF",
+        "InternScience/Sage-A1.5-Q6_K-GGUF",
+        "gbuzhf/Sage-A1.5-Sangreal-ICE",
+        "mradermacher/Sage-A1.5-GGUF"
+      ]
+    },
+    {
+      "id": "sage-a15-q6-k",
+      "label": "Sage-A1.5 Q6_K",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "InternScience/Sage-A1.5-Q4_K_M-GGUF",
+        "InternScience/Sage-A1.5-Q6_K-GGUF",
+        "gbuzhf/Sage-A1.5-Sangreal-ICE",
+        "mradermacher/Sage-A1.5-GGUF"
+      ]
+    },
+    {
+      "id": "flint",
+      "label": "Flint 40B A2.5B",
+      "category": "text",
+      "quantizations": 27,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "RecursiveSI/flint",
+        "RecursiveSI/flint-int4",
+        "RecursiveSI/flint-int4-gguf",
+        "RecursiveSI/flint-nvfp4-gguf",
+        "bartowski/RecursiveSI_flint-GGUF"
+      ]
+    },
+    {
+      "id": "ornith-15-122b",
+      "label": "Ornith 1.5 122B",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "native catalog",
+      "repositories": []
+    },
+    {
+      "id": "raon-1-mini",
+      "label": "Raon 1 mini",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "KRAFTON/Raon-1-mini-preview-gguf",
+        "KRAFTON/Raon-1-mini-preview-mlx",
+        "KRAFTON/Raon-1-mini-preview-nvfp4"
+      ]
+    }
+  ]
+}

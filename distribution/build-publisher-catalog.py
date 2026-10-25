@@ -1,5 +1,6 @@
 """Expose curated publisher families through the owned managed-inference bridge."""
 import copy
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -92,13 +93,28 @@ def build():
                 entries.append(entry)
                 seen.add(entry['id'])
                 quantizations.add(entry['quantization'])
+    from bundled_catalog import append_presets
+    entries = append_presets(catalog, entries, HERE / 'hf-research/bundled-quantizations.json', HERE / 'hf-research/bundled-quants')
+    for entry in entries:
+        entry['builtIn'] = True
     entries.sort(key=lambda e: (e['familyId'], e['format'] != 'gguf', e['bytes'], e['id']))
     return {'schema': 1, 'entries': entries}
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--check', action='store_true')
+    args = parser.parse_args()
     result = build()
-    target = EXTENSION / 'publisher-models.json'
-    target.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    from bundled_catalog import coverage
+    catalog = json.loads((HERE / 'hf-research/expanded-catalog.json').read_text(encoding='utf-8'))
+    outputs = {EXTENSION / 'publisher-models.json': json.dumps(result, ensure_ascii=False, indent=2) + '\n',
+               HERE / 'builtin-quant-coverage.json': json.dumps(coverage(catalog, result['entries']), indent=2) + '\n'}
+    for target, source in outputs.items():
+        if args.check:
+            if not target.is_file() or target.read_text(encoding='utf-8') != source:
+                raise ValueError('Regenerate the bundled quant catalog: ' + str(target))
+        else:
+            target.write_text(source, encoding='utf-8')
     print(json.dumps({'families': len({e['familyId'] for e in result['entries']}), 'variants': len(result['entries']),
                       'windowsGgufVariants': sum(e['format'] == 'gguf' for e in result['entries'])}))

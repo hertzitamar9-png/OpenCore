@@ -1,0 +1,309 @@
+{
+  "_id": "621ffdc136468d709f17df10",
+  "id": "microsoft/trocr-base-printed",
+  "private": false,
+  "pipeline_tag": "image-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "safetensors",
+    "vision-encoder-decoder",
+    "image-text-to-text",
+    "trocr",
+    "image-to-text",
+    "arxiv:2109.10282",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 212964,
+  "likes": 233,
+  "modelId": "microsoft/trocr-base-printed",
+  "author": "microsoft",
+  "sha": "93450be3f1ed40a930690d951ef3932687cc1892",
+  "lastModified": "2024-05-27T20:11:53.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask>",
+  "widgetData": [
+    {
+      "src": "https://layoutlm.blob.core.windows.net/trocr/dataset/SROIE2019Task2Crop/train/X00016469612_1.jpg",
+      "example_title": "Printed 1"
+    },
+    {
+      "src": "https://layoutlm.blob.core.windows.net/trocr/dataset/SROIE2019Task2Crop/train/X51005255805_7.jpg",
+      "example_title": "Printed 2"
+    },
+    {
+      "src": "https://layoutlm.blob.core.windows.net/trocr/dataset/SROIE2019Task2Crop/train/X51005745214_6.jpg",
+      "example_title": "Printed 3"
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "VisionEncoderDecoderModel"
+    ],
+    "model_type": "vision-encoder-decoder",
+    "tokenizer_config": {
+      "unk_token": {
+        "content": "<unk>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "bos_token": {
+        "content": "<s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "eos_token": {
+        "content": "</s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "sep_token": {
+        "content": "</s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "cls_token": {
+        "content": "<s>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "pad_token": {
+        "content": "<pad>",
+        "single_word": false,
+        "lstrip": false,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      },
+      "mask_token": {
+        "content": "<mask>",
+        "single_word": false,
+        "lstrip": true,
+        "rstrip": false,
+        "normalized": true,
+        "__type": "AddedToken"
+      }
+    }
+  },
+  "cardData": {
+    "tags": [
+      "trocr",
+      "image-to-text"
+    ],
+    "widget": [
+      {
+        "src": "https://layoutlm.blob.core.windows.net/trocr/dataset/SROIE2019Task2Crop/train/X00016469612_1.jpg",
+        "example_title": "Printed 1"
+      },
+      {
+        "src": "https://layoutlm.blob.core.windows.net/trocr/dataset/SROIE2019Task2Crop/train/X51005255805_7.jpg",
+        "example_title": "Printed 2"
+      },
+      {
+        "src": "https://layoutlm.blob.core.windows.net/trocr/dataset/SROIE2019Task2Crop/train/X51005745214_6.jpg",
+        "example_title": "Printed 3"
+      }
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2bf99854609538f90af03c921c41a0cbde670b2f",
+      "size": 1229
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b0d958ceeef82e59d3d401b817edee57cc08f617",
+      "size": 2976
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "f8ab62765e1cf93efbd327b8b2817433158212bd",
+      "size": 4126
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "209d1d39a6767d115b4ebff7ba46fe9c1739e90e",
+      "size": 190
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "226b0752cac7789c48f0cb3ec53eda48b7be36cc",
+      "size": 456318
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "cc21eac0a07b170e481075dee3669ec4512e3278",
+      "size": 1333384464,
+      "lfs": {
+        "sha256": "1cf4a6eedab26afaaf505f1c7f73d9634944924dbd1ed049d569db98039cd596",
+        "size": 1333384464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "f6f37e38a43eb75f83f8413557dd71ec2168185b",
+      "size": 224
+    },
+    {
+      "rfilename": "pytorch_model.bin",
+      "blobId": "31f68c331acf699d93cf18a1bbb2bb3dac34c7ab",
+      "size": 1333508485,
+      "lfs": {
+        "sha256": "a67665277b31df7da142e76e5247d2f464d9914cd5ccf7edaf83c1e79547a130",
+        "size": 1333508485,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "e97d1993365bb21c88f390e8703e4c1af564821f",
+      "size": 772
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "8a1587ff662748498a14db272b5c3eb58ec7da95",
+      "size": 1118
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "0a39732b2d8be8e493cab3da68b68cc3e28221de",
+      "size": 898822
+    }
+  ],
+  "spaces": [
+    "microsoft/HuggingGPT",
+    "taesiri/HuggingGPT-Lite",
+    "liminghao1630/TrOCR-printed",
+    "NeerajCodz/image-captcha-solver",
+    "xiatao/microsoft-trocr-base-printed",
+    "muddokon/captcha-text-solver",
+    "Really-amin/PersianOCR",
+    "boulahia/PFE",
+    "BMukhtar/BMA",
+    "ccarr0807/HuggingGPT",
+    "theholycityweb/HuggingGPT",
+    "CNXT/PiX2TXT",
+    "Alfasign/HuggingGPT-Lite",
+    "Garfy/get_number",
+    "saurshaz/HuggingGPT",
+    "chanelcolgate/captcha",
+    "ChronoStellar/IndonesianALPR_TrOCR",
+    "ChronoStellar/Indonesian_ALPR_model_comparison",
+    "JarvisOnSolana/Jarvis",
+    "prajyot2003/Pic2WordsAI-Captions_OCR_Stories",
+    "GermanySutherland/Image-to-text",
+    "Poweral/TicketScanner",
+    "Sripriya16/kmrl-document-analyzer",
+    "Safe-Drive-TN/Tunisian-License-Plate-Detection-OCR",
+    "Ryanfafa/docmind-ai",
+    "Shahbaz0901/receipt-demo1",
+    "Singhp08/Daimond-Batch",
+    "etienne0114/vibeon-translator",
+    "varshi0905/traffic_violation_detection",
+    "aaryanshah/wearwise-ai-backend",
+    "FlufffyMelon/PriceLens",
+    "madarauchihagmailcom/My",
+    "mikegerber/TrOCR-printed-historical",
+    "ahmedabouzaid/microsoft-trocr-base-printed",
+    "keaneu/HuggingGPT",
+    "viscosity/HuggingGPT",
+    "Mcdof/HuggingGPT",
+    "manu1435/HuggingGPT",
+    "chrisW6825/HuggingGPT",
+    "Shenziqian/HuggingGPT",
+    "lokutus/HuggingGPT",
+    "ryan12439/HuggingGPTpub",
+    "mimiqiao/HuggingGPT",
+    "trhacknon/HuggingGPT",
+    "tsgbalakarthik/HuggingGPT",
+    "wowochkin/HuggingGPT",
+    "Msp/HuggingGPT",
+    "yancey001/microsoft-trocr-base-printed",
+    "Betacuckgpt/HuggingGPT",
+    "cashqin/HuggingGPT",
+    "felixfriday/MICROSOFTT_JARVIS_HuggingGPT",
+    "apgarmd/jarvis2",
+    "apgarmd/jarvis",
+    "Meffordh/HuggingGPT",
+    "mukulnag/HuggingGPT1",
+    "NaamanSaif/HuggingGPT",
+    "lzqfree/HuggingGPT",
+    "bountyfuljr/HuggingGPTplaypublic",
+    "Codemonster808/microsoft-trocr-base-printed",
+    "ZeyuWang/microsoft-trocr-base-printed",
+    "mearjunsha/HuggingGPT",
+    "lugifudun/HuggingGPT",
+    "leadmaister/HuggingGPT",
+    "pors/HuggingGPT",
+    "vs4vijay/HuggingGPT",
+    "turbowed/HuggingGPT",
+    "Chokyounghoon/HuggingGPT",
+    "lollo21/Will-GPT",
+    "Pfs2021Funny/HuggingGPT",
+    "irritablebro/HuggingGPT",
+    "mckeeboards/HuggingGPT",
+    "MagKoz/HuggingGPT",
+    "zhangdream/HuggingGPT",
+    "calliber/HuggingGPT",
+    "Pitak/HuggingGPT",
+    "gaocegege/HuggingGPT",
+    "headbrian/microsoft-trocr-base-printed",
+    "mastere00/JarvisMeetsProfessor",
+    "passthebutter/HuggingGPT",
+    "CollaalloC/HuggingGPT",
+    "EinfachOlder/HuggingGPT-Lite",
+    "dwolfe66/HuggingGPT",
+    "xian-sheng/HuggingGPT",
+    "Aygtljl518866/HuggingGPT",
+    "innovativeillusions/HuggingGPT",
+    "nrivard/microsoft-trocr-base-printed",
+    "Hemi1403/HuggingGPT",
+    "Vito99/HuggingGPT-Lite",
+    "ldemiguel/microsoft-trocr-base-printed",
+    "chenglu/microsoft-trocr-base-printed",
+    "Sakai3279/eq-detector",
+    "xelpmocAI/TrOCR_demo",
+    "ylavie/HuggingGPT3",
+    "ylavie/HuggingGPT-Lite",
+    "dfghdrg/microsoft-trocr-base-printed",
+    "CCYAO/HuggingGPT",
+    "dcams/HuggingGPT",
+    "mertbozkurt/license-plate-detector",
+    "mkadir/microsoft-trocr-base-printed",
+    "ZackBradshaw/omni_bot"
+  ],
+  "createdAt": "2022-03-02T23:29:05.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 333331200
+    },
+    "total": 333331200
+  },
+  "usedStorage": 2666892949
+}

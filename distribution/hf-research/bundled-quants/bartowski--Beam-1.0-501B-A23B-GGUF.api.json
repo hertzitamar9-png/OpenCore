@@ -1,0 +1,2071 @@
+{
+  "_id": "6ada64aac9fff2f6dbbe935d",
+  "id": "bartowski/Beam-1.0-501B-A23B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "mixture-of-experts",
+    "reasoning",
+    "code",
+    "tool-use",
+    "text-generation",
+    "en",
+    "base_model:reflection/Beam-1.0-501B-A23B",
+    "base_model:quantized:reflection/Beam-1.0-501B-A23B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 1557,
+  "likes": 0,
+  "modelId": "bartowski/Beam-1.0-501B-A23B-GGUF",
+  "author": "bartowski",
+  "sha": "5e3b7140cfaf0e9b55893931cbe51dfac0859ffb",
+  "lastModified": "2026-10-23T21:32:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "mixture-of-experts",
+      "reasoning",
+      "code",
+      "tool-use"
+    ],
+    "base_model_relation": "quantized",
+    "license": "apache-2.0",
+    "base_model": "reflection/Beam-1.0-501B-A23B"
+  },
+  "gguf": {
+    "total": 501267612352,
+    "architecture": "beam",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "/models_out/Beam-1.0-501B-A23B-GGUF/Beam-1.0-501B-A23B-imatrix.gguf",
+    "chat_template": "{#-\n  harmony_xml: Harmony wire format with XML tool-call bodies.\n\n  Channels are `analysis` and `final`; there is no commentary channel. Tools\n  are declared as flat TypeScript under `# Tools` and called with\n  `<|constrain|>xml` and `rfl:parameter` bodies.\n\n  Kwargs:\n  - model_identity: defaults to \"You are Beam, an AI assistant trained by\n    Reflection.\"\n  - reasoning_effort: emits `Reasoning effort: N` after the identity line;\n    defaults to 512 (`max`) when unset or null. Accepts an int, or the labels\n    `minimal`/`low`/`medium`/`high`/`xhigh`/`max` mapped to\n    8/32/64/128/256/512. Other strings raise. `minimal` is 8, the smallest\n    effort training sampled: a smaller budget is not respected.\n  - builtin_tools: names from `tools=` to render in the system `# Tools` block,\n    with their own definitions. Only name `search` and `browse`, and only with\n    the definitions Beam was trained with. Every other tool, including a\n    `search` or `browse` with a different definition, belongs in the developer\n    block, where `tools=` renders it by default.\n    Exception: a `bash` tool whose only parameter is an unconstrained `command`\n    string is always declared in the system block with the trained definition,\n    without this kwarg; its own descriptions are not rendered. A `bash` with\n    any other call shape follows the rule above.\n  - allow_missing_thinking: defaults to true. When false, a generation prompt\n    raises when any assistant turn has empty or no reasoning, since dropping it\n    degrades the model's output. Setting it to false is highly recommended for\n    serving.\n\n  OpenAI roles \"system\" and \"developer\" are equivalent and map to the developer\n  `# Instructions` block. Consecutive ones at the start of `messages` join into\n  that one block, a blank line apart; empty content is omitted. A system or\n  developer message after the first message of another role is not rendered.\n  The Reflection system block is injected before the developer block.\n\n  Tool wire:\n  - Calls: `to={name}` + analysis + `<|constrain|>xml` + rfl: body\n  - Results: `{recipient} to=assistant` on analysis\n  - Parallel calls: `<|end|>` between calls, `<|call|>` on the last\n  - `function.arguments` must be a dict (parse JSON strings before apply)\n-#}\n\n{%- macro ts_type_name(type_val) -%}\n    {%- if type_val == \"integer\" -%}\n        {{- \"number\" -}}\n    {%- elif type_val in [\"string\", \"number\", \"boolean\"] -%}\n        {{- type_val -}}\n    {%- else -%}\n        {{- \"any\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- Property defaults render enum strings bare. Generic `oneOf` variants pass\n   false because the reference renderer quotes them in that path. #}\n{%- macro render_default(schema, bare_enum_string=true) -%}\n    {%- set is_enum = schema.get(\"enum\") is sequence and schema.get(\"enum\") is not string and schema.get(\"enum\") -%}\n    {%- if schema.default is string and (not is_enum or not bare_enum_string) -%}\n        {{- '\"' + schema.default + '\"' -}}\n    {%- elif schema.default is string -%}\n        {{- schema.default -}}\n    {%- else -%}\n        {{- schema.default | tojson(separators=(\",\", \":\")) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- The reference renderer checks the complete rendered text for `null`, so\n   this intentionally does the same rather than inspecting schema members. #}\n{%- macro render_nullable_type(schema, indent) -%}\n    {%- set rendered = json_schema_to_typescript(schema, indent) -%}\n    {{- rendered -}}\n    {%- if schema is mapping and schema.get(\"nullable\") and \"null\" not in rendered -%}\n        {{- \" | null\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- Render a JSON-schema node as a TypeScript type.\n\n   `indent` is the leading spaces for properties inside an object; nested\n   objects bump it by 4. Use `schema[\"items\"]` (not `schema.items`), since\n   attribute access would hit dict.items. #}\n{%- macro json_schema_to_typescript(schema, indent=0) -%}\n    {%- if schema is mapping and schema.get(\"oneOf\") is sequence and schema.get(\"oneOf\") is not string -%}\n        {%- for variant in schema.oneOf -%}\n            {{- \"\\n\" + (\" \" * indent) + \" | \" -}}\n            {{- render_nullable_type(variant, indent + 3) -}}\n            {%- if variant is mapping and variant.get(\"description\") is string -%}\n                {{- \" // \" + variant.description -}}\n                {%- if \"default\" in variant -%}\n                    {{- \" default: \" + render_default(variant, false) -}}\n                {%- endif -%}\n            {%- elif variant is mapping and \"default\" in variant -%}\n                {{- \" // default: \" + render_default(variant, false) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {#- Only a string enum becomes a literal union. An integer or untyped enum\n       falls through to its plain type, or to `any` when it has none. #}\n    {%- elif schema is mapping and schema.get(\"enum\") is sequence and schema.get(\"enum\") is not string and schema.get(\"enum\") and schema.get(\"type\") == \"string\" -%}\n        {%- set rendered_enum = namespace(any=false) -%}\n        {%- for val in schema.enum -%}\n            {%- if val is string -%}\n                {%- if rendered_enum.any %} | {% endif -%}\n                {{- val | tojson -}}\n                {%- set rendered_enum.any = true -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if not rendered_enum.any %}string{%- endif -%}\n    {%- elif schema is mapping and schema.get(\"type\") == \"object\" -%}\n        {%- if schema.get(\"description\") is string -%}\n            {{- (\" \" * indent) + \"// \" + schema.description + \"\\n\" -}}\n        {%- endif -%}\n        {{- \"{\\n\" -}}\n        {%- set required = schema.required if schema.get(\"required\") else [] -%}\n        {%- if schema.get(\"properties\") -%}\n            {#- Properties render in insertion order, so a schema controls the\n               order its parameters appear in. #}\n            {%- for prop_name, prop_spec in schema.properties.items() -%}\n                {%- if prop_spec is mapping and prop_spec.get(\"title\") is string -%}\n                    {{- (\" \" * indent) + \"// \" + prop_spec.title + \"\\n\" -}}\n                    {{- (\" \" * indent) + \"//\\n\" -}}\n                {%- endif -%}\n                {%- if prop_spec is mapping and \"oneOf\" not in prop_spec and prop_spec.get(\"description\") is string -%}\n                    {{- (\" \" * indent) + \"// \" + prop_spec.description + \"\\n\" -}}\n                {%- endif -%}\n                {%- if prop_spec is mapping and prop_spec.get(\"examples\") is sequence and prop_spec.get(\"examples\") is not string and prop_spec.get(\"examples\") -%}\n                    {{- (\" \" * indent) + \"// Examples:\\n\" -}}\n                    {%- for example in prop_spec.examples -%}\n                        {%- if example is string -%}\n                            {{- (\" \" * indent) + '// - \"' + example + '\"\\n' -}}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n                {%- if prop_spec is mapping and prop_spec.get(\"oneOf\") is sequence and prop_spec.get(\"oneOf\") is not string -%}\n                    {%- set property_description = prop_spec.get(\"description\") if prop_spec.get(\"description\") is string else none -%}\n                    {%- set first_variant = prop_spec.oneOf[0] if prop_spec.oneOf else {} -%}\n                    {%- set first_description = first_variant.get(\"description\") if first_variant is mapping and first_variant.get(\"description\") is string else none -%}\n                    {%- set render_property_description = property_description and property_description != first_description -%}\n                    {%- if render_property_description -%}\n                        {{- (\" \" * indent) + \"// \" + property_description + \"\\n\" -}}\n                    {%- endif -%}\n                    {%- if \"default\" in prop_spec -%}\n                        {{- (\" \" * indent) + \"// default: \" + render_default(prop_spec) + \"\\n\" -}}\n                    {%- endif -%}\n                    {{- (\" \" * indent) + prop_name -}}\n                    {%- if prop_name not in required -%}?{%- endif -%}\n                    {{- \":\\n\" -}}\n                    {%- for variant in prop_spec.oneOf -%}\n                        {{- (\" \" * indent) + \" | \" -}}\n                        {{- render_nullable_type(variant, indent + 3) -}}\n                        {%- set render_variant_description = variant is mapping and variant.get(\"description\") is string and variant.description != property_description and not (loop.first and render_property_description) -%}\n                        {%- if render_variant_description -%}\n                            {{- \" // \" + variant.description -}}\n                            {%- if \"default\" in variant -%}\n                                {{- \" default: \" + render_default(variant) -}}\n                            {%- endif -%}\n                        {%- elif variant is mapping and \"default\" in variant -%}\n                            {{- \" // default: \" + render_default(variant) -}}\n                        {%- endif -%}\n                        {{- \"\\n\" -}}\n                    {%- endfor -%}\n                    {{- (\" \" * indent) + \",\\n\" -}}\n                {%- else -%}\n                    {{- (\" \" * indent) + prop_name -}}\n                    {%- if prop_name not in required -%}?{%- endif -%}\n                    {{- \": \" -}}\n                    {{- render_nullable_type(prop_spec, indent + 4) -}}\n                    {{- \",\" -}}\n                    {%- if prop_spec is mapping and \"default\" in prop_spec -%}\n                        {{- \" // default: \" + render_default(prop_spec) -}}\n                    {%- endif -%}\n                    {{- \"\\n\" -}}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endif -%}\n        {{- (\" \" * indent) + \"}\" -}}\n    {%- elif schema is mapping and schema.get(\"type\") == \"array\" -%}\n        {%- if schema.get(\"items\") -%}\n            {{- json_schema_to_typescript(schema[\"items\"], indent) + \"[]\" -}}\n        {%- else -%}\n            {{- \"Array<any>\" -}}\n        {%- endif -%}\n    {%- elif schema is mapping and schema.get(\"type\") is string -%}\n        {{- ts_type_name(schema.type) -}}\n    {%- elif schema is mapping and schema.get(\"type\") is sequence -%}\n        {%- set rendered_types = namespace(any=false) -%}\n        {%- for ty in schema.type -%}\n            {%- if ty is string -%}\n                {%- if rendered_types.any %} | {% endif -%}\n                {%- if ty == \"integer\" %}number{%- else %}{{ ty }}{%- endif -%}\n                {%- set rendered_types.any = true -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if not rendered_types.any %}any{%- endif -%}\n    {%- else -%}\n        {{- \"any\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- String-schema tools declare as `## name`; every other tool declares as\n   `type name = (_: {...}) => any;`. Call sites emit XML either way. #}\n{%- macro render_tool_declaration(tool) -%}\n    {%- set tool = tool.function if tool.function is defined else tool -%}\n    {%- if tool.parameters is mapping and tool.parameters.get(\"type\") == \"string\" and (not tool.parameters.get(\"properties\")) -%}\n        {{- \"## \" + tool.name + \"\\n\\n\" -}}\n        {{- tool.description or \"\" -}}\n    {%- else -%}\n        {%- if tool.description -%}\n            {%- for line in tool.description.split(\"\\n\") -%}\n                {{- \"// \" + line + \"\\n\" -}}\n            {%- endfor -%}\n        {%- endif -%}\n        {#- A tool with no parameters keeps the `(_: ...)` form and renders\n           `(_: any)`. #}\n        {{- \"type \" + tool.name + \" = (_: \" + json_schema_to_typescript(tool.parameters) + \") => any;\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools_section(tools) -%}\n    {{- \"# Tools\\n\\n\" -}}\n    {%- for tool in tools -%}\n        {{- render_tool_declaration(tool) -}}\n        {%- if not loop.last -%}\n            {{- \"\\n\\n\" -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{#- String values go out as-is; non-strings are JSON-encoded in their given\n   order, at every depth. Jinja's `tojson` sorts keys by default, so mappings\n   and sequences recurse through this macro instead of being handed to it. #}\n{%- macro render_json_value(value) -%}\n    {%- if value is mapping -%}\n        {{- \"{\" -}}\n        {%- for k, v in value.items() -%}\n            {{- k | tojson }}: {{ render_json_value(v) -}}\n            {%- if not loop.last %}, {% endif -%}\n        {%- endfor -%}\n        {{- \"}\" -}}\n    {%- elif value is sequence and value is not string -%}\n        {{- \"[\" -}}\n        {%- for item in value -%}\n            {{- render_json_value(item) -}}\n            {%- if not loop.last %}, {% endif -%}\n        {%- endfor -%}\n        {{- \"]\" -}}\n    {%- else -%}\n        {{- value | tojson -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_parameter_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- render_json_value(value) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_call_body(tool_call) -%}\n    {%- set fn = tool_call.function if tool_call.function is defined else tool_call -%}\n    {%- set args = fn.arguments if fn.arguments is defined else tool_call.arguments -%}\n    {%- if args is mapping -%}\n        {%- for param_name in args -%}\n            {%- set value_text = render_parameter_value(args[param_name]) -%}\n            {%- if \"</rfl:parameter>\" in value_text -%}\n                {{- raise_exception(\"Tool-call parameter '\" + (param_name | string) + \"' contains the reserved delimiter </rfl:parameter>\") }}\n            {%- endif -%}\n            {%- if not loop.first %}{{- \"\\n\" }}{%- endif -%}\n            {{- '<rfl:parameter name=\"' + param_name + '\">\\n' -}}\n            {{- value_text -}}\n            {{- '\\n</rfl:parameter>' -}}\n        {%- endfor -%}\n    {%- elif args is defined and args is not none -%}\n        {{- raise_exception(\"function.arguments must be a dict; parse JSON strings before apply_chat_template\") }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro build_system_message(builtin_tool_definitions) -%}\n    {%- if model_identity is not defined %}\n        {%- set model_identity = \"You are Beam, an AI assistant trained by Reflection.\" %}\n    {%- endif %}\n    {{- model_identity -}}\n    {#- Served default: effort 512 (`max`) when the kwarg is unset or null. #}\n    {%- if reasoning_effort is not defined or reasoning_effort is none %}\n        {%- set reasoning_effort = 512 %}\n    {%- endif %}\n    {%- if reasoning_effort is string %}\n        {%- if reasoning_effort == \"minimal\" %}\n            {%- set reasoning_effort = 8 %}\n        {%- elif reasoning_effort == \"low\" %}\n            {%- set reasoning_effort = 32 %}\n        {%- elif reasoning_effort == \"medium\" %}\n            {%- set reasoning_effort = 64 %}\n        {%- elif reasoning_effort == \"high\" %}\n            {%- set reasoning_effort = 128 %}\n        {%- elif reasoning_effort == \"xhigh\" %}\n            {%- set reasoning_effort = 256 %}\n        {%- elif reasoning_effort == \"max\" %}\n            {%- set reasoning_effort = 512 %}\n        {%- else %}\n            {{- raise_exception(\"reasoning_effort must be an int or one of: minimal, low, medium, high, xhigh, max\") }}\n        {%- endif %}\n    {%- endif %}\n    {{- \"\\n\\nReasoning effort: \" + (reasoning_effort | string) }}\n    {%- if builtin_tool_definitions -%}\n        {{- \"\\n\\n\" -}}\n        {{- render_tools_section(builtin_tool_definitions) -}}\n    {%- endif -%}\n    {{- \"\\n\\n# Valid channels: analysis, final. Channel must be included for every message.\" -}}\n{%- endmacro -%}\n\n{%- if not messages %}{{ raise_exception(\"messages cannot be empty\") }}{%- endif %}\n\n{#- `tools=` remains the serving engine's complete tool registry. The names in\n   `builtin_tools` only select which definitions move into the system block. #}\n{%- set builtin_tool_names = builtin_tools | default([], true) -%}\n{#- Training declares `bash` in the system block with this definition, so a\n   `bash` whose only parameter is an unconstrained `command` string is declared\n   with it. Only descriptions and `additionalProperties` may differ, since they\n   leave the accepted calls the same; any schema key that constrains the call\n   keeps the supplied definition in the developer block. An omitted `required`\n   is declared as required: every call the trained declaration invites is one\n   the supplied schema accepts. #}\n{%- set trained_bash_tool = {\n    \"name\": \"bash\",\n    \"description\": \"Execute a bash command. The output contains the command's stdout and stderr.\\nCommands time out after 10 minutes. You can set a shorter timeout within the bash command.\",\n    \"parameters\": {\n        \"type\": \"object\",\n        \"properties\": {\"command\": {\"type\": \"string\", \"description\": \"The command to execute\"}},\n        \"required\": [\"command\"],\n    },\n} -%}\n{%- set tool_groups = namespace(builtin=[], regular=[]) -%}\n{%- for tool in tools | default([], true) -%}\n    {%- set tool_definition = tool.function if tool.function is defined else tool -%}\n    {%- set tool_name = tool_definition.name -%}\n    {%- set tool_parameters = tool_definition.parameters if tool_definition.parameters is mapping else {} -%}\n    {%- set tool_properties = tool_parameters.properties if tool_parameters.properties is mapping else {} -%}\n    {%- set bash_shape = namespace(plain=true) -%}\n    {%- for key in tool_parameters -%}\n        {%- if key not in [\"type\", \"properties\", \"required\", \"additionalProperties\", \"description\"] -%}\n            {%- set bash_shape.plain = false -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set command_schema = tool_properties.command if tool_properties.command is mapping else {} -%}\n    {%- for key in command_schema -%}\n        {%- if key not in [\"type\", \"description\"] -%}\n            {%- set bash_shape.plain = false -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set is_trained_bash = tool_name == \"bash\"\n        and bash_shape.plain\n        and tool_parameters.get(\"type\") == \"object\"\n        and (tool_properties | list) == [\"command\"]\n        and command_schema.get(\"type\") == \"string\"\n        and tool_parameters.get(\"required\", [\"command\"]) == [\"command\"] -%}\n    {%- if is_trained_bash -%}\n        {%- set tool_groups.builtin = tool_groups.builtin + [trained_bash_tool] -%}\n    {%- elif tool_name in builtin_tool_names -%}\n        {%- set tool_groups.builtin = tool_groups.builtin + [tool] -%}\n    {%- else -%}\n        {%- set tool_groups.regular = tool_groups.regular + [tool] -%}\n    {%- endif -%}\n{%- endfor -%}\n\n{{- \"<|start|>system<|message|>\" }}\n{{- build_system_message(tool_groups.builtin) }}\n{{- \"<|end|>\" }}\n\n{#- The leading run of system/developer messages joins, a blank line apart,\n   into the one `# Instructions` block. Empty content counts as absent, so a\n   run with no content emits no `# Instructions`. #}\n{%- set leading_instructions = namespace(count=0, parts=[]) %}\n{%- for message in messages %}\n    {%- if loop.index0 == leading_instructions.count and message.role in [\"system\", \"developer\"] %}\n        {%- set leading_instructions.count = leading_instructions.count + 1 %}\n        {%- if message.content %}\n            {%- set leading_instructions.parts = leading_instructions.parts + [message.content] %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- set developer_message = leading_instructions.parts | join(\"\\n\\n\") %}\n{%- set loop_messages = messages[leading_instructions.count:] %}\n\n{%- if add_generation_prompt and allow_missing_thinking is defined and allow_missing_thinking == false %}\n    {%- for message in loop_messages %}\n        {%- if message.role == 'assistant' and not (message.thinking or message.reasoning_content or message.reasoning) %}\n            {{- raise_exception(\"The assistant turn at messages[\" + ((loop.index0 + leading_instructions.count) | string) + \"] is missing its reasoning. Dropping reasoning from earlier turns degrades this model's output. Send it back in 'reasoning_content', or set allow_missing_thinking=true to skip this check.\") }}\n        {%- endif %}\n    {%- endfor %}\n{%- endif %}\n\n{%- set has_tools = tool_groups.regular %}\n\n{%- if developer_message or has_tools %}\n    {{- \"<|start|>developer<|message|>\" }}\n    {%- if developer_message %}\n        {{- \"# Instructions\\n\\n\" }}\n        {{- developer_message }}\n        {%- if has_tools %}\n            {{- \"\\n\\n\" }}\n        {%- endif %}\n    {%- endif %}\n    {%- if has_tools %}\n        {{- render_tools_section(tool_groups.regular) }}\n    {%- endif %}\n    {{- \"<|end|>\" }}\n{%- endif %}\n\n{%- set tool_call_registry = namespace(entries=[]) %}\n\n{%- for message in loop_messages -%}\n    {%- if message.role == 'assistant' -%}\n        {%- if message.content %}\n            {%- if \"<|channel|>analysis<|message|>\" in message.content or \"<|channel|>final<|message|>\" in message.content %}\n                {{- raise_exception(\"Pass plain text in API fields, not Harmony wire tags. Use 'thinking' for analysis and 'content' for final.\") }}\n            {%- endif %}\n        {%- endif %}\n        {%- set thinking_text = message.thinking or message.reasoning_content or message.reasoning %}\n        {%- if thinking_text %}\n            {%- if \"<|channel|>analysis<|message|>\" in thinking_text or \"<|channel|>final<|message|>\" in thinking_text %}\n                {{- raise_exception(\"Pass plain text in 'thinking'/'reasoning_content'/'reasoning' without Harmony wire tags.\") }}\n            {%- endif %}\n        {%- endif %}\n        {{- \"<|start|>assistant\" }}\n        {%- generation %}\n        {{- \"<|channel|>analysis<|message|>\" + (thinking_text or \"\") + \"<|end|>\" }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- set fn = tool_call.function if tool_call.function is defined else tool_call %}\n                {%- set tool_name = fn.name if fn.name is defined else tool_call.name %}\n                {%- set call_id = tool_call.id if tool_call.id is defined else (fn.id if fn.id is defined else none) %}\n                {%- if call_id and tool_name %}\n                    {%- set tool_call_registry.entries = tool_call_registry.entries + [{\"id\": call_id, \"name\": tool_name}] %}\n                {%- endif %}\n                {{- \"<|start|>assistant to=\" + tool_name + \"<|channel|>analysis <|constrain|>xml<|message|>\" }}\n                {{- render_tool_call_body(tool_call) }}\n                {%- if loop.last %}\n                    {{- \"<|call|>\" }}\n                {%- else %}\n                    {{- \"<|end|>\" }}\n                {%- endif %}\n            {%- endfor %}\n        {%- else %}\n            {{- \"<|start|>assistant<|channel|>final<|message|>\" + (message.content or \"\") + \"<|return|>\" }}\n        {%- endif %}\n        {%- endgeneration %}\n    {%- elif message.role == 'tool' -%}\n        {%- set resolved_tool = namespace(name=none) %}\n        {%- if message.name is defined and message.name %}\n            {%- set resolved_tool.name = message.name %}\n        {%- elif message.tool_call_id is defined %}\n            {%- for entry in tool_call_registry.entries %}\n                {%- if entry.id == message.tool_call_id %}\n                    {%- set resolved_tool.name = entry.name %}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {%- if resolved_tool.name is none %}\n            {{- raise_exception(\"Tool message needs 'name' or a matching prior tool_call 'id' / 'tool_call_id'.\") }}\n        {%- endif %}\n        {{- \"<|start|>\" + resolved_tool.name + \" to=assistant<|channel|>analysis<|message|>\" + (message.content or \"\") + \"<|end|>\" }}\n    {%- elif message.role == 'user' -%}\n        {{- \"<|start|>user<|message|>\" + (message.content or \"\") + \"<|end|>\" }}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n<|start|>assistant\n{%- endif -%}\n",
+    "eos_token": "<|return|>",
+    "totalFileSize": 123555142208
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4cf4488206f8057e37ca32d3f7f1799bdb46add0",
+      "size": 20375
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_M/Beam-1.0-501B-A23B-IQ1_M-00001-of-00004.gguf",
+      "blobId": "32f8220f23a6dd484f2374a0a851097a312e0f4d",
+      "size": 39604106752,
+      "lfs": {
+        "sha256": "3ffd73be60cb639966610b821408cc9ccc4ad03dab0f7997f864afffe9b3eb81",
+        "size": 39604106752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_M/Beam-1.0-501B-A23B-IQ1_M-00002-of-00004.gguf",
+      "blobId": "819198d9a822c89d4aeea79a9ddbb7cb1a593bf1",
+      "size": 39480481504,
+      "lfs": {
+        "sha256": "afc16152735b44440ac3941b4c9bb2da2b4d426ec36b6ce292f1eeaccccec228",
+        "size": 39480481504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_M/Beam-1.0-501B-A23B-IQ1_M-00003-of-00004.gguf",
+      "blobId": "8fa0d56b202ab43d88335fbdb6f736b3956266e8",
+      "size": 39799430976,
+      "lfs": {
+        "sha256": "33590a8a5ea05be706f2471f74f6b4975dc154f7c47a2863dd3a6753143d0e91",
+        "size": 39799430976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_M/Beam-1.0-501B-A23B-IQ1_M-00004-of-00004.gguf",
+      "blobId": "bf9e18e010e0bc0d36498f1ecb9f88618a0ccc3c",
+      "size": 4671122976,
+      "lfs": {
+        "sha256": "b5ea9e738627eef899f140c54fa49c00becf76f2afe75dd0e9d4ab8effc117c9",
+        "size": 4671122976,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_S/Beam-1.0-501B-A23B-IQ1_S-00001-of-00003.gguf",
+      "blobId": "fc3d80694a9fd944fb8015d7787228c751b14347",
+      "size": 39515557824,
+      "lfs": {
+        "sha256": "b338f24c6ed84d68c662a66c943aba2c54db9de1725248247d63bf652dc62dbc",
+        "size": 39515557824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_S/Beam-1.0-501B-A23B-IQ1_S-00002-of-00003.gguf",
+      "blobId": "3aec620a1e3724423cfd601d7b6c103251700a04",
+      "size": 39390949536,
+      "lfs": {
+        "sha256": "566c43a44180b1fbca80c886c8c31db67383dad8929740b2e481fdb5b9256912",
+        "size": 39390949536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ1_S/Beam-1.0-501B-A23B-IQ1_S-00003-of-00003.gguf",
+      "blobId": "c0d9aaa8ba1e9eac18b75fb5fcdf2b0fe3ccd55e",
+      "size": 30679964032,
+      "lfs": {
+        "sha256": "5047330e55147eb30159b7874708f75ddbb9d30605890343db1cdef10f76f085",
+        "size": 30679964032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_M/Beam-1.0-501B-A23B-IQ2_M-00001-of-00005.gguf",
+      "blobId": "ec69ef31e09d6fe13258ab28787f35ef08531731",
+      "size": 39555125632,
+      "lfs": {
+        "sha256": "f05649d386c4ec6a1882d9b6d68486803d089cc4183492b9fa533c50f968d27f",
+        "size": 39555125632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_M/Beam-1.0-501B-A23B-IQ2_M-00002-of-00005.gguf",
+      "blobId": "3d6055195dcc9cfb249cd32faa1eff923b0f988d",
+      "size": 39557259008,
+      "lfs": {
+        "sha256": "b53fbd47cb6e3228e8c6d1c2efac69aa3e307af5f7e222b38cafc03790dab3bb",
+        "size": 39557259008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_M/Beam-1.0-501B-A23B-IQ2_M-00003-of-00005.gguf",
+      "blobId": "5cb96bf63c5b6ca1045588d01af54d123a7a9ad1",
+      "size": 39996639840,
+      "lfs": {
+        "sha256": "a1d7560b855eb3b2a54178354bc17f1b9548a5b1b4e482bc777af046534e1d2c",
+        "size": 39996639840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_M/Beam-1.0-501B-A23B-IQ2_M-00004-of-00005.gguf",
+      "blobId": "e5a9f8bfe5380804b27d79eb050207184beff355",
+      "size": 39295114848,
+      "lfs": {
+        "sha256": "d636e90839c8a665517f7b95269ffb829edd8d9fc663e55a8608777f37141aae",
+        "size": 39295114848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_M/Beam-1.0-501B-A23B-IQ2_M-00005-of-00005.gguf",
+      "blobId": "d36d00a6537e84bb2110465ad01ea01dd6514c1c",
+      "size": 20082991488,
+      "lfs": {
+        "sha256": "90bf179763cf662c678709878b978ba5b38d5350f32302a3f18407ca2be6bb1c",
+        "size": 20082991488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_S/Beam-1.0-501B-A23B-IQ2_S-00001-of-00005.gguf",
+      "blobId": "0cb01b434f2ba55b9e285a713544676603d081fa",
+      "size": 39081976480,
+      "lfs": {
+        "sha256": "f607376175d505c4c80242c81a49e85d89a3b6a5efab1418b9ba07c2cd12864a",
+        "size": 39081976480,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_S/Beam-1.0-501B-A23B-IQ2_S-00002-of-00005.gguf",
+      "blobId": "679ddd3adab6903119e0b76d76f030ac78a2fc5f",
+      "size": 39564453792,
+      "lfs": {
+        "sha256": "bf3eb68000348d53e6688bc260605381e47c4edd32a9b817b87a2db9e929ca86",
+        "size": 39564453792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_S/Beam-1.0-501B-A23B-IQ2_S-00003-of-00005.gguf",
+      "blobId": "718f0778ffd096827579c04927e82e95f17304d6",
+      "size": 39092594592,
+      "lfs": {
+        "sha256": "751ec3586a3141d10c91cb42637c50d2cc26f2dc04f7760985484fd7ae74e5c8",
+        "size": 39092594592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_S/Beam-1.0-501B-A23B-IQ2_S-00004-of-00005.gguf",
+      "blobId": "cc52bed6f33227bc354d880274d78e12e3df3489",
+      "size": 38514792096,
+      "lfs": {
+        "sha256": "bd1adf3ce16f9cace5b7a5cc2a98875c70eebe78797725777bc328d895ec2ab2",
+        "size": 38514792096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_S/Beam-1.0-501B-A23B-IQ2_S-00005-of-00005.gguf",
+      "blobId": "2e1442105a77077ec296ef6fdbcfe5b8b5c69072",
+      "size": 5012255296,
+      "lfs": {
+        "sha256": "b646c7449da442ce79797e478bab8f7bf12742355ce765752cd1c16d0e23cce1",
+        "size": 5012255296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XS/Beam-1.0-501B-A23B-IQ2_XS-00001-of-00004.gguf",
+      "blobId": "f73522a3df790fbfd99153925bffc674467ce1ce",
+      "size": 39828748320,
+      "lfs": {
+        "sha256": "bc5e9860514125d0ab0fbd0918ecadde5fd391466d40aa8666ffd9743c2973f3",
+        "size": 39828748320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XS/Beam-1.0-501B-A23B-IQ2_XS-00002-of-00004.gguf",
+      "blobId": "6f728e1f54debe7a909188de7d4daa1b89ca9e7d",
+      "size": 39841548288,
+      "lfs": {
+        "sha256": "5ccefdd3ec348a9b9c3a4a01866bc802607b1dc814096ce235879a96f70f3445",
+        "size": 39841548288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XS/Beam-1.0-501B-A23B-IQ2_XS-00003-of-00004.gguf",
+      "blobId": "5e6ee9eec1fa6110ec6ee5f5b9963534b6a4560b",
+      "size": 39862417504,
+      "lfs": {
+        "sha256": "2d92bf1dfba521d6dcfd4b0b50c8e6b75a5504a6f20f5ee12d038a8c30c2ecc9",
+        "size": 39862417504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XS/Beam-1.0-501B-A23B-IQ2_XS-00004-of-00004.gguf",
+      "blobId": "9cf82e2921df61775cd1065164e4b477e84bae41",
+      "size": 32187875808,
+      "lfs": {
+        "sha256": "b3cba8e7a07fcbb91ed9af3da766f689bcea35f2e3a182037f873acb67357e6f",
+        "size": 32187875808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XXS/Beam-1.0-501B-A23B-IQ2_XXS-00001-of-00004.gguf",
+      "blobId": "80cbde79773a56f86e4ccd5af66973f99684c365",
+      "size": 39518531456,
+      "lfs": {
+        "sha256": "b21e3eb55f359cf55aeb41fab5b529a6bb6e80ea362c441326109f0a1331bef2",
+        "size": 39518531456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XXS/Beam-1.0-501B-A23B-IQ2_XXS-00002-of-00004.gguf",
+      "blobId": "a36389d4a2da56af36d20cca55d56ca361cf239e",
+      "size": 39264202912,
+      "lfs": {
+        "sha256": "00948ddcbabdaf0cb160e62c61c15ff3d23fcb3641e1053434203fdd9e907379",
+        "size": 39264202912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XXS/Beam-1.0-501B-A23B-IQ2_XXS-00003-of-00004.gguf",
+      "blobId": "e25546c1b881352bd8572b5b62992fce78c35653",
+      "size": 39187727680,
+      "lfs": {
+        "sha256": "004756af6d5d2e0555d058175be3d847576a56cb99f8dc11dd2664054dbcb18f",
+        "size": 39187727680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ2_XXS/Beam-1.0-501B-A23B-IQ2_XXS-00004-of-00004.gguf",
+      "blobId": "887e11da0af275baad9f96b9728b334f84700d04",
+      "size": 27305112832,
+      "lfs": {
+        "sha256": "a957109e42f438e8de596f846a269b7511705c65e4fb23929c9570abfb77691b",
+        "size": 27305112832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00001-of-00007.gguf",
+      "blobId": "6650474f02d30d3e2def85be96ca01d660a3a6d3",
+      "size": 37722910528,
+      "lfs": {
+        "sha256": "084ff0989cb4b1b85a41a251c06e66a95d441b16f10532f5c2869b1102d5e12e",
+        "size": 37722910528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00002-of-00007.gguf",
+      "blobId": "e951cd78d6b9c2258cf3cf1c0fc56c9062ee96a2",
+      "size": 38770362784,
+      "lfs": {
+        "sha256": "b4bbe3875b67f3cb4bf3955b36ac78bc40403e8f63062d783537f669838d9a06",
+        "size": 38770362784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00003-of-00007.gguf",
+      "blobId": "760acfcb82d8b5fcf242c510ba9073736e424c28",
+      "size": 39710275616,
+      "lfs": {
+        "sha256": "35b276ce58415dbe0a1cfc87671fa24036855119513c08352d1a5a8e4518f444",
+        "size": 39710275616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00004-of-00007.gguf",
+      "blobId": "a600ae10526880f6af00e1c22995b510e1203b4b",
+      "size": 38872769408,
+      "lfs": {
+        "sha256": "984197655c97ed64b1cd0682c36bf1ded62768fc2116d8c8bbfd406b3dfab466",
+        "size": 38872769408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00005-of-00007.gguf",
+      "blobId": "b2c41ee560bec879a293993b61c9740570741b6a",
+      "size": 38320912416,
+      "lfs": {
+        "sha256": "003a6d387eacfbd724edac0df214bba82757ec4db164a27c1b654967e74e1730",
+        "size": 38320912416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00006-of-00007.gguf",
+      "blobId": "85676a5c064f481d76c66ffd3f7ee7419c93cf5e",
+      "size": 39332746816,
+      "lfs": {
+        "sha256": "89fcbfa0a9fdc07df984c032568c7378e7ea22b4f691c75ae73fe031bb511875",
+        "size": 39332746816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_M/Beam-1.0-501B-A23B-IQ3_M-00007-of-00007.gguf",
+      "blobId": "5fcc806ad40de862d917a62f2cd4589b675cb229",
+      "size": 22926121184,
+      "lfs": {
+        "sha256": "7839ef2082b8ac3e2bdca093271f4dd0b1defe5277e6c8b6cba097e430d1e270",
+        "size": 22926121184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XS/Beam-1.0-501B-A23B-IQ3_XS-00001-of-00006.gguf",
+      "blobId": "869a7d21c7a6bef99ca9c7dde7926fb9896f9cc0",
+      "size": 38795249888,
+      "lfs": {
+        "sha256": "fc77793e73a28d44ed6599a3372b0a306177ea0d87eaaf76227a5b7352377c04",
+        "size": 38795249888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XS/Beam-1.0-501B-A23B-IQ3_XS-00002-of-00006.gguf",
+      "blobId": "37fc094e6fea3428fc431091b9597331c884401e",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "e2937eb8cda4957b7f88d60e2da32487ce88d43015a2f1a578599ab79b03d4b6",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XS/Beam-1.0-501B-A23B-IQ3_XS-00003-of-00006.gguf",
+      "blobId": "238f9159e025c938ffa964e794264ee465a2a150",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "870e23a0941295929b1fece0d2a48fec2a47eaad4c893087a2d130dabc4e5017",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XS/Beam-1.0-501B-A23B-IQ3_XS-00004-of-00006.gguf",
+      "blobId": "27ea7f41a0956278bea3cbb877a8c749ba80b719",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "aaf86ce26b7d49bd7946f7f34263ec8ab9f4a935e276d4e2b78237d4ef2d4100",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XS/Beam-1.0-501B-A23B-IQ3_XS-00005-of-00006.gguf",
+      "blobId": "48701d1c80a153440e859dd2a8827757495f14bf",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "a6e6aabc90027189da94d1d882197d4173e2a8d20368608d70c986b06bc7d7ff",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XS/Beam-1.0-501B-A23B-IQ3_XS-00006-of-00006.gguf",
+      "blobId": "4ce53d6c3eca6c791a0aa44ce88fb76c09510490",
+      "size": 25828204928,
+      "lfs": {
+        "sha256": "23c224cdb4444352a4b6f53bb82d0590ebf472f2ff55b5417eba51978e47e738",
+        "size": 25828204928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XXS/Beam-1.0-501B-A23B-IQ3_XXS-00001-of-00006.gguf",
+      "blobId": "761b5ee947848e9bbf1874e81b110e95d43a66bf",
+      "size": 39451899936,
+      "lfs": {
+        "sha256": "21b2033ba36c5e2aef87c3ba4ad2fcbee1104dfbeb9f0f727fa5cf44e28002a0",
+        "size": 39451899936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XXS/Beam-1.0-501B-A23B-IQ3_XXS-00002-of-00006.gguf",
+      "blobId": "0938cacbc21b05e5dbd94636e1d2715e8e222bbf",
+      "size": 39459112192,
+      "lfs": {
+        "sha256": "0bd54864cf2164ca2a456191f87aa54554c947cb02d9a91a32ace0c85fc46969",
+        "size": 39459112192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XXS/Beam-1.0-501B-A23B-IQ3_XXS-00003-of-00006.gguf",
+      "blobId": "98c9f6aa318a5e8554bec39d6eb6b1922380eeba",
+      "size": 39626375456,
+      "lfs": {
+        "sha256": "945d431acebd450945ffe34e72309d7fa2db2cd3a7e563e7d67ab9591793d8c6",
+        "size": 39626375456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XXS/Beam-1.0-501B-A23B-IQ3_XXS-00004-of-00006.gguf",
+      "blobId": "8af015bfe8bc1ed291a6f48494b8f046b415fb00",
+      "size": 38842298432,
+      "lfs": {
+        "sha256": "322608c77aa4ea7503a559eb95355d321aad762b053cd253ce158e943498a297",
+        "size": 38842298432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XXS/Beam-1.0-501B-A23B-IQ3_XXS-00005-of-00006.gguf",
+      "blobId": "a1e56c4859ced30d5fa9517ad579af19d4e12304",
+      "size": 39050659072,
+      "lfs": {
+        "sha256": "9bf6c8dc17e5308e55e057bde4594c40079629eaece4f101e38a711681fc947d",
+        "size": 39050659072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ3_XXS/Beam-1.0-501B-A23B-IQ3_XXS-00006-of-00006.gguf",
+      "blobId": "9d9c37eb848f0845aea2c50c5299b5d8266fd246",
+      "size": 14674298848,
+      "lfs": {
+        "sha256": "81cfdbb4c0dd56e89bb82c0f3f28b6f8de24ee3e24eb0d53f3152ab465df66f4",
+        "size": 14674298848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00001-of-00009.gguf",
+      "blobId": "7e8e51355a86237ca92b5b75cf442fecbd7c9b5d",
+      "size": 37789672064,
+      "lfs": {
+        "sha256": "660ea8bcc8305c599b3820a4f7c3c85ab7057e7de22858f5cfd2a0579bfae898",
+        "size": 37789672064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00002-of-00009.gguf",
+      "blobId": "f9354adc829689836d9575632d222a7371707499",
+      "size": 37546000544,
+      "lfs": {
+        "sha256": "172e9c6fd3bab39207ebbc0b8305c61e0b703503f0f17a6ca0a5f8b621e6b207",
+        "size": 37546000544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00003-of-00009.gguf",
+      "blobId": "fd969b59a8ca4d8ea9ac8228933519c55b664fe5",
+      "size": 39425722816,
+      "lfs": {
+        "sha256": "ace19dd3297fd4d1377be7658d4b41184de69e54e376cc4439cc487a42b7c620",
+        "size": 39425722816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00004-of-00009.gguf",
+      "blobId": "048d6eac30583d43341b82918a65de37f5d7e202",
+      "size": 38565911104,
+      "lfs": {
+        "sha256": "3ffff03e423f8232be88355f169de6b14733c27a790e1b789d3dbf53cfda27bd",
+        "size": 38565911104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00005-of-00009.gguf",
+      "blobId": "681daa819095e1bf606d79da216d3f1252aa7576",
+      "size": 38454435488,
+      "lfs": {
+        "sha256": "86ae5cd4a18ab18db7f06b32ab53a3557e40d52d9d88d81ce6bb5923feb5864d",
+        "size": 38454435488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00006-of-00009.gguf",
+      "blobId": "36977aebb520c6b0fe01dc17354bf85bfa23014f",
+      "size": 39425722816,
+      "lfs": {
+        "sha256": "4519212a1ef97a4a86d135fe7561970364d6226497051ca609b11cd48fbfcd12",
+        "size": 39425722816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00007-of-00009.gguf",
+      "blobId": "787f09e03861aec5a5fbdcb59fe745b1a9a94df4",
+      "size": 39083581024,
+      "lfs": {
+        "sha256": "f5d6b4b9fc53a3aa6a894573c74aa83de57bbed77bef57c8d3fee9566819311a",
+        "size": 39083581024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00008-of-00009.gguf",
+      "blobId": "eee6d73e1a88c51d9e3f1bb1a690f45dfcc6f1e9",
+      "size": 38055955872,
+      "lfs": {
+        "sha256": "67939a0271e23d2b39481a4ddf221e150a4e6d119ac88990fab51a4d5b3fb331",
+        "size": 38055955872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_NL/Beam-1.0-501B-A23B-IQ4_NL-00009-of-00009.gguf",
+      "blobId": "13fd6da0047225a40f0d12c3cbcdcf220758d120",
+      "size": 3565199680,
+      "lfs": {
+        "sha256": "3146ef19970bd71960f7eccca27bfc7dd34c9498cc806a77b971dbc7892ce8a5",
+        "size": 3565199680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00001-of-00008.gguf",
+      "blobId": "759f08391bcfeb2714dab885568276bb48ee564e",
+      "size": 38306245440,
+      "lfs": {
+        "sha256": "da247714e11c89b8abbf09e1b992edb91a3b0abb5c8c9bef57525a2ce73bb3a5",
+        "size": 38306245440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00002-of-00008.gguf",
+      "blobId": "a5fd3a1fdc8d1a59877a56e0940c98590271e83c",
+      "size": 38356195968,
+      "lfs": {
+        "sha256": "4ee3dc664f8715fc2a8080726ca4ade29e0d843e832c033fc96a5855c732391d",
+        "size": 38356195968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00003-of-00008.gguf",
+      "blobId": "f3a19a51373b1d7273030626714f2e9e07f62760",
+      "size": 38251338368,
+      "lfs": {
+        "sha256": "dce2aa83121b2644dc1b09f2be057a58af827ffd0be86b602d2b3335e70e7816",
+        "size": 38251338368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00004-of-00008.gguf",
+      "blobId": "e0c4ae922d5031d1343ac75acfae8706e1846add",
+      "size": 38251338368,
+      "lfs": {
+        "sha256": "c827df5feafb0b1185192b8e61c3d4078b7806beff0346f7d857903c50c82e17",
+        "size": 38251338368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00005-of-00008.gguf",
+      "blobId": "7da950b4c5b2900148039da3325d4959eff4308a",
+      "size": 38251338368,
+      "lfs": {
+        "sha256": "bc38aac42356d4b60cbe65294fa32655c5e91fa71b6e0324e844cabbbefe908c",
+        "size": 38251338368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00006-of-00008.gguf",
+      "blobId": "305c256d440f0f5020d5ad122696a9df22567729",
+      "size": 38251338368,
+      "lfs": {
+        "sha256": "6d150f7e18d39138cc1b08bcc402d67c66b8ed827b5255fbd7132c847024625b",
+        "size": 38251338368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00007-of-00008.gguf",
+      "blobId": "a9997ac616bac03c6deb01631a2768970f09951a",
+      "size": 38775626368,
+      "lfs": {
+        "sha256": "3f79d2a1d8d0f87f651ad81a18f0e306dfa9c8473a512ce086f6eac97787df0c",
+        "size": 38775626368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-IQ4_XS/Beam-1.0-501B-A23B-IQ4_XS-00008-of-00008.gguf",
+      "blobId": "7cb81ced4dbf51d1c76bc6036e3fd4746b449ddb",
+      "size": 4619039232,
+      "lfs": {
+        "sha256": "3376de8af744d278ef35bb5b3126e9ca0e26153f31daefa6515284931ef1674e",
+        "size": 4619039232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q2_K/Beam-1.0-501B-A23B-Q2_K-00001-of-00005.gguf",
+      "blobId": "6e64fbecfaef0f0dc9fd70751764ee8d720b4ba0",
+      "size": 39892629536,
+      "lfs": {
+        "sha256": "1210641c4192178bcd736b8715fa2fe8bb91faf977be9ded0071357f27d50676",
+        "size": 39892629536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q2_K/Beam-1.0-501B-A23B-Q2_K-00002-of-00005.gguf",
+      "blobId": "a38013b2e8566bf7c140fdc1259cc6431651ff1d",
+      "size": 39175016928,
+      "lfs": {
+        "sha256": "6e7a45a626757d14fa9607216d3ec7e1c4c384e2d333207756c172fd09e7d1b5",
+        "size": 39175016928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q2_K/Beam-1.0-501B-A23B-Q2_K-00003-of-00005.gguf",
+      "blobId": "bb048d8b3f2c5aa9891b1569e3bcb8cff7d1f650",
+      "size": 39839353344,
+      "lfs": {
+        "sha256": "fffb3fbd6e26aaf0e6f3b7daa9b72ed3499d882eedbd9c6fd872ba28280b69c1",
+        "size": 39839353344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q2_K/Beam-1.0-501B-A23B-Q2_K-00004-of-00005.gguf",
+      "blobId": "6a6150180b0fca61739b8bd0ae0a5e18eb06933f",
+      "size": 39826017760,
+      "lfs": {
+        "sha256": "fff1c502c403fd721d2fa3d82ff9d3d0888622c348ed1eb81d68a94c6ecd274c",
+        "size": 39826017760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q2_K/Beam-1.0-501B-A23B-Q2_K-00005-of-00005.gguf",
+      "blobId": "92c6241cb2e7fe349c12f3d69fd0925b2b734429",
+      "size": 31924639968,
+      "lfs": {
+        "sha256": "5e0252c24f691cf2e0fb60c0eff1fb19f6f6fc8c9fa36e1e40ff7ce0a433fec8",
+        "size": 31924639968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00001-of-00007.gguf",
+      "blobId": "f4bcb5f47f35b42e6a8d3d680a8b690195d14aed",
+      "size": 38862011392,
+      "lfs": {
+        "sha256": "ddabef39839e38f41c735948f95b1954b995974cbfc67b951c828cfe56acba3f",
+        "size": 38862011392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00002-of-00007.gguf",
+      "blobId": "54ecc9a9bad09aa61816bb9737eb9e6328015d65",
+      "size": 39437604512,
+      "lfs": {
+        "sha256": "6fe539986444d180d3ca20a96c6e0310a91a310f32e2c1da2356032d120de500",
+        "size": 39437604512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00003-of-00007.gguf",
+      "blobId": "1fe9325c4921ed5a78ef76b880ee090927ba9b62",
+      "size": 39102080864,
+      "lfs": {
+        "sha256": "b98a0fb35e404cb90bf1d3b8339954bd1f10660c867988512d2d4d97485e3456",
+        "size": 39102080864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00004-of-00007.gguf",
+      "blobId": "94245c4178a05e1bb0e432a079a13a1f3ea2ce00",
+      "size": 38982890464,
+      "lfs": {
+        "sha256": "ede66ac911e5820968506ba78015333b0337e6897d1a642e750dad6e3992fa2b",
+        "size": 38982890464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00005-of-00007.gguf",
+      "blobId": "97a2583a56f4c270cdec2c8fbf8b2c2fc5890a80",
+      "size": 38210791264,
+      "lfs": {
+        "sha256": "89b4f963b0798c884bf660afe7f9413d49a8714bc625b940fefd5f0153581bb3",
+        "size": 38210791264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00006-of-00007.gguf",
+      "blobId": "430e19cc5a6aeb0e56008e5d6da3142defa3f178",
+      "size": 39221271232,
+      "lfs": {
+        "sha256": "d71abd50136e23981eaed8e7e3f8f7a3dade1e7c3c71095b5e986c092d04c635",
+        "size": 39221271232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_L/Beam-1.0-501B-A23B-Q3_K_L-00007-of-00007.gguf",
+      "blobId": "78b6e58fd4e2a3fd85a66fb3f1e9ba3f82bef833",
+      "size": 15705279424,
+      "lfs": {
+        "sha256": "b84424783d5874ef2ff8401d41a8af659062fd2592922e58caa1f91e8adbd2ff",
+        "size": 15705279424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00001-of-00007.gguf",
+      "blobId": "b2eaf29e224f7588b2ed928b6059d61bca13f276",
+      "size": 38442580992,
+      "lfs": {
+        "sha256": "3ff91dbd47df4e8d1a7c49d48a0645b4f95eee15762be63effd4a617114c10ad",
+        "size": 38442580992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00002-of-00007.gguf",
+      "blobId": "fc319fe77123367b7a9c24e8c4a99dde58b235f0",
+      "size": 38656436064,
+      "lfs": {
+        "sha256": "ea69e78158977e4ee10fcdc10ec81c985d6f08405bea376aa8d1e5cc4dbd6ce6",
+        "size": 38656436064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00003-of-00007.gguf",
+      "blobId": "467d42d89f84002fdff4747266e10fa7e7c349c0",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "2cbca0f49018870117aa828c38009b3c4e36b9a01ba0c7001a3018d97ffdac01",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00004-of-00007.gguf",
+      "blobId": "0560aae4923b10e550c747c2eb94ac3ee9bf6ae3",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "8f46f73493a89f0b9f1c628502fc93a5fd063615185ae503f714b509dc2e4821",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00005-of-00007.gguf",
+      "blobId": "385c0e5aabd05a4f95821fc9446df73645bd59b5",
+      "size": 39318414112,
+      "lfs": {
+        "sha256": "eb828a9b40c8cb5520a3d86bc58faef74807d44f5367b574dc19c029333ede02",
+        "size": 39318414112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00006-of-00007.gguf",
+      "blobId": "97166caec8e4ca41aabfa09d86864a0f2c29d63f",
+      "size": 37942029184,
+      "lfs": {
+        "sha256": "2f489ca5aca5d620a020486ba0b82616084af1dc6f9bec90d762ddfae682f649",
+        "size": 37942029184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_M/Beam-1.0-501B-A23B-Q3_K_M-00007-of-00007.gguf",
+      "blobId": "f77bda8c825002c2a8525fe2bbeb00a191340642",
+      "size": 2306908480,
+      "lfs": {
+        "sha256": "72355c38711f2ef80ca674f88973a78703841c7de70c92a4bc3b833c031445b9",
+        "size": 2306908480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_S/Beam-1.0-501B-A23B-Q3_K_S-00001-of-00006.gguf",
+      "blobId": "33253e6096af017424819c9ccc817ff0c307137e",
+      "size": 39712753888,
+      "lfs": {
+        "sha256": "93d791a1e949f7eef59c114a04b4705f6ff8e107b7ee34a4e88d7a2554c85dd1",
+        "size": 39712753888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_S/Beam-1.0-501B-A23B-Q3_K_S-00002-of-00006.gguf",
+      "blobId": "525ab1bf586d635022dd46c80b58518a13931eca",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "bd1b1f4b1625364e38255768328cd164979a892e3074e2053253b5091cd22b57",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_S/Beam-1.0-501B-A23B-Q3_K_S-00003-of-00006.gguf",
+      "blobId": "a29abb07ca55e6f58a158349d2170f7957a1d77c",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "d476eb5cd2d998f3e15d47e8d3939dbbfe9b1ecefe7a73f64fc972ccd61c2628",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_S/Beam-1.0-501B-A23B-Q3_K_S-00004-of-00006.gguf",
+      "blobId": "ed8758056701dbc12788b4bc0e66d66139b8b244",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "f0fbfb0925cf925ddee99293e9ab882b4892f79992b0d42119b71ebc9c2b76bf",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_S/Beam-1.0-501B-A23B-Q3_K_S-00005-of-00006.gguf",
+      "blobId": "9e15cefafc2c9b5ddf9203f6bfebd6f863a44143",
+      "size": 39979037760,
+      "lfs": {
+        "sha256": "65571d7c90a92d07cde522355d950379cd7d4739abbcb354d992381becbbe1ff",
+        "size": 39979037760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q3_K_S/Beam-1.0-501B-A23B-Q3_K_S-00006-of-00006.gguf",
+      "blobId": "6a765dc151cdda254e39f7505637475a24b10a00",
+      "size": 26247635328,
+      "lfs": {
+        "sha256": "6fcdee8e45a03660900b94ae95294f2141a12e9ec8bd2d8ddfaa901f844d3dca",
+        "size": 26247635328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00001-of-00008.gguf",
+      "blobId": "382050a79359f96bad1b06b1b59d0c2a4aa28609",
+      "size": 39483041600,
+      "lfs": {
+        "sha256": "c4305608ca73f5b6c77cf903f8bdd8a7acacd5454b7d02bffb236064f3d198a9",
+        "size": 39483041600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00002-of-00008.gguf",
+      "blobId": "3478f49fa457715065aa10a69ed7b7afccd50d48",
+      "size": 38251829792,
+      "lfs": {
+        "sha256": "15e54cb77f1e311d0c4f38394b5d1d1e57af074a4bcceaf26f3112a7982084f6",
+        "size": 38251829792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00003-of-00008.gguf",
+      "blobId": "dfc06f479abebe5be536ad8a46de3acfcf5b0a68",
+      "size": 38187540128,
+      "lfs": {
+        "sha256": "45268d231430a55bbfc3b18c30480135b930ae26c4e3a4c3479886346dcb5af5",
+        "size": 38187540128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00004-of-00008.gguf",
+      "blobId": "4ebbed359b344f65eeba874a12aa2034b31b075d",
+      "size": 38254676416,
+      "lfs": {
+        "sha256": "8bdd5dae6a7c9a10bfae41c7a296c167737e647604f218bcd0284ca56e549fe8",
+        "size": 38254676416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00005-of-00008.gguf",
+      "blobId": "e540707a3746967133e5b0f22476e8ffb99e0dc0",
+      "size": 38251829824,
+      "lfs": {
+        "sha256": "263c7d4f21feaa97afbeeaeaf69b1d1e4bf7cdfcb61f90eaffec0d128ea967d2",
+        "size": 38251829824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00006-of-00008.gguf",
+      "blobId": "518cae096bd8600800d817e8b3a04503d57af06f",
+      "size": 38187540128,
+      "lfs": {
+        "sha256": "2ee8c0f6c7b7a64498fe92105901bc5c5e9edeaa395ffce9be994c57e25ab09a",
+        "size": 38187540128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00007-of-00008.gguf",
+      "blobId": "79e803b46c7152e37df8b62a34fedab5d61a4bd6",
+      "size": 38279006656,
+      "lfs": {
+        "sha256": "897928a808e31f325a59e99dcbff2d03ebb3a05c9390c6f48759ae35788561a2",
+        "size": 38279006656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_0/Beam-1.0-501B-A23B-Q4_0-00008-of-00008.gguf",
+      "blobId": "29369c2eb5e2f7060d2ca4de5c0aec81181b4e80",
+      "size": 15260126144,
+      "lfs": {
+        "sha256": "3900f02da8d4613b54a910d595b0bbbd172521b54c52fa079d78182f869ad5c2",
+        "size": 15260126144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00001-of-00009.gguf",
+      "blobId": "f43df1e42d52172f8f9711b8a6c60e470324c17e",
+      "size": 38078008128,
+      "lfs": {
+        "sha256": "1c80aadb082cbfa6e30578ab092bed2cefb405a2f6001e6ba0052688badb8f53",
+        "size": 38078008128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00002-of-00009.gguf",
+      "blobId": "fdc5efd0e17d4c37433ae5b99d282692d5051587",
+      "size": 38213733760,
+      "lfs": {
+        "sha256": "a4b239ca152a5ba22beb883a8c42b85ebb373ac4e2f7161bf4c84ea0b7ba9660",
+        "size": 38213733760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00003-of-00009.gguf",
+      "blobId": "c97b71d05acf20cae06cfa558e84e8595d8a38b4",
+      "size": 38213733792,
+      "lfs": {
+        "sha256": "f2423947eecc62dd319f388a3fe63e6d6a064b91c01a1fbc785475646fc4f704",
+        "size": 38213733792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00004-of-00009.gguf",
+      "blobId": "25b1cf6fbabae916f18cc0346ccde9ffe9f16aaf",
+      "size": 38213733792,
+      "lfs": {
+        "sha256": "dadca7f9c32a3187986a545ebecf7ad4808f2d27cc4b416f0e75ac63c212bcee",
+        "size": 38213733792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00005-of-00009.gguf",
+      "blobId": "f4326b842e9586f43ba1ea106b9a8989682a8e04",
+      "size": 38213733792,
+      "lfs": {
+        "sha256": "126ae1dd47629b4fa4dea518569b3a2fecb0f0cc466a07827032ca770723d1fa",
+        "size": 38213733792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00006-of-00009.gguf",
+      "blobId": "3b156a3a66a8cda304b2d75706bc5d36d87a14ed",
+      "size": 38213733792,
+      "lfs": {
+        "sha256": "a22699d4c58b261926a6bcd029d8df73993b06e0fafd1859d2d84cb911af147a",
+        "size": 38213733792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00007-of-00009.gguf",
+      "blobId": "bdf5c35a5fc692dbc3a674bd797d252d1d201afd",
+      "size": 38213733792,
+      "lfs": {
+        "sha256": "b9c10c20a81f4dc0c018b4832d9695fde3e6c1dcc2f27b6dbb8379816f7f715a",
+        "size": 38213733792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00008-of-00009.gguf",
+      "blobId": "ea529f4dea1dd5babe725b1a937886d51748cb31",
+      "size": 38238309792,
+      "lfs": {
+        "sha256": "11b536217821ed9ae53525af3294fb80bab1c380eb75ad57c80d82b9c16a0844",
+        "size": 38238309792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_1/Beam-1.0-501B-A23B-Q4_1-00009-of-00009.gguf",
+      "blobId": "764ff2ad5f5cd3dcb7a11d2adec7a1ce15c52831",
+      "size": 8470244896,
+      "lfs": {
+        "sha256": "f7a93eec98036c625ac9fad5394b66befc8da818cbfa3202f1fc0daddf77e4ca",
+        "size": 8470244896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00001-of-00009.gguf",
+      "blobId": "5ae5e6c9a4aef2f41e6897da93cc1113883bd917",
+      "size": 37789672064,
+      "lfs": {
+        "sha256": "6afaf7dc2c498caed833db889dd28a79da85551a913b8bd9ce5f0fa78405c0e1",
+        "size": 37789672064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00002-of-00009.gguf",
+      "blobId": "2fb2cfd1045484c5b9be5eb1609cff6e3da544af",
+      "size": 37546000544,
+      "lfs": {
+        "sha256": "bf01ab0c235c2659c0e32efb5aae789cd7796957ec66e7c6a6e45ca75cb51def",
+        "size": 37546000544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00003-of-00009.gguf",
+      "blobId": "22ad50692c2cda5cf494d410b7b6586d2ca02b51",
+      "size": 39425722816,
+      "lfs": {
+        "sha256": "1016360034f8c265a6fdab4b77c02eac48a58b2945c5a48507f279bf97df8010",
+        "size": 39425722816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00004-of-00009.gguf",
+      "blobId": "260e0972c0873b949f8d2e1a7d7f541fbaee97e2",
+      "size": 38565911104,
+      "lfs": {
+        "sha256": "659977a36f4ad7e6f16849ad123639552d4210742bde359f2ebe1f01beb65261",
+        "size": 38565911104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00005-of-00009.gguf",
+      "blobId": "40b4ecb04db537d214fb68e68126b4f3db7501b3",
+      "size": 38454435488,
+      "lfs": {
+        "sha256": "b6704cd952005425648ac15ab3fc7e0b28c03d1acc530da298ba769253e7d004",
+        "size": 38454435488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00006-of-00009.gguf",
+      "blobId": "59885d6d2518b1f0f4a428c058a809657dd6dc9c",
+      "size": 39425722816,
+      "lfs": {
+        "sha256": "b24e682dcd5d902007cfa789f601467687d1bc29bc79912660680c416d6ce685",
+        "size": 39425722816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00007-of-00009.gguf",
+      "blobId": "55b6be506ee1520c0f8ed2b68479bef438caf8e2",
+      "size": 39419104672,
+      "lfs": {
+        "sha256": "3ad228fcbdbe47be3e70227b0f46dc97ddb5ffb25940f4642b1af0563e0a5e7b",
+        "size": 39419104672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00008-of-00009.gguf",
+      "blobId": "af21732432454523d957b7f55afa8937840d8967",
+      "size": 36771450272,
+      "lfs": {
+        "sha256": "e26d2a0976655708d7fa43283c3437c3558aad8d2e18777b7b89d49b3686b10d",
+        "size": 36771450272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_M/Beam-1.0-501B-A23B-Q4_K_M-00009-of-00009.gguf",
+      "blobId": "a56d6d49c20123cdd949e43ec160d64adce56f23",
+      "size": 7135621632,
+      "lfs": {
+        "sha256": "60f42710e9e72dbac20f004ac601220932f04876b054b8fa6b42b315e7fb9b8e",
+        "size": 7135621632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00001-of-00008.gguf",
+      "blobId": "0edb9cc011af831ced39074bae3b52e8f3483267",
+      "size": 38771486528,
+      "lfs": {
+        "sha256": "614087cfc2f13a62f219933365575523e18b927c8f18484c20d0e6b5ec363224",
+        "size": 38771486528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00002-of-00008.gguf",
+      "blobId": "db0bef10cc0a28f695be336287a2533f9e1f3042",
+      "size": 38560647584,
+      "lfs": {
+        "sha256": "62fe9801533871f268c225ad1d5bf0d23ba847739c3d9513e97299b15d15566b",
+        "size": 38560647584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00003-of-00008.gguf",
+      "blobId": "01b1c901ff4dbf4bd59912015efc59834617b844",
+      "size": 38565911104,
+      "lfs": {
+        "sha256": "e1f95b5bbe7e1f87d4e60dd3227a412658e9687eb9f0557cb694edef2e76b3e3",
+        "size": 38565911104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00004-of-00008.gguf",
+      "blobId": "351566e7f346b3d62c167ae1b0b05c6473a2f146",
+      "size": 38454435488,
+      "lfs": {
+        "sha256": "8e4f7fde2f4efae1769f49056a5666c7b8a694e48058fa17b986f0721c3f16c5",
+        "size": 38454435488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00005-of-00008.gguf",
+      "blobId": "8c8e97310f7024610250e177f9c8b8516a7c2b6b",
+      "size": 38560647616,
+      "lfs": {
+        "sha256": "26e7e8bb20b055c9cd9cd04a9c4c3d57522740d3c083701242a96b55d969f6bc",
+        "size": 38560647616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00006-of-00008.gguf",
+      "blobId": "a0f4d4d001e9d90f7748af46c9905563308a622c",
+      "size": 38565911104,
+      "lfs": {
+        "sha256": "61bc590469f1eb3d84f7078a1d21dfb28788403231897ddf7bcb2cf7e394ca07",
+        "size": 38565911104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00007-of-00008.gguf",
+      "blobId": "4160901390b3ecf750bc6dfea3ae4b92c76631bb",
+      "size": 38454435488,
+      "lfs": {
+        "sha256": "c365fc083b4c699424976e9fe0e4a07bdb1549ad3a5e38ce1f8d5172ba7edf29",
+        "size": 38454435488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q4_K_S/Beam-1.0-501B-A23B-Q4_K_S-00008-of-00008.gguf",
+      "blobId": "c1a42bf42e3ec5e86a047c9cd8b60ffbd1e6d05b",
+      "size": 23445145568,
+      "lfs": {
+        "sha256": "6275be84e04b26287b2ef5addfef9b12baa9ecc6987c7e08039d6a8d3a885f67",
+        "size": 23445145568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00001-of-00010.gguf",
+      "blobId": "561eceb6bd9c943e9b50f4150b6d5710c7ef4b39",
+      "size": 37646718368,
+      "lfs": {
+        "sha256": "46f368b3016c5a82d9e441311b5721851df78a2f7fb5bacfe1ba78bce5052b2c",
+        "size": 37646718368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00002-of-00010.gguf",
+      "blobId": "1a9f711f5a4bbfa373f337ad6c7976fd25d352ca",
+      "size": 38215693248,
+      "lfs": {
+        "sha256": "de26193b623db1086c08552079fad78128eaedba75ef355cb540c7cf9032c8c1",
+        "size": 38215693248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00003-of-00010.gguf",
+      "blobId": "c3c408b4a073b41faad8780fc8c71e2f365c2973",
+      "size": 39166029824,
+      "lfs": {
+        "sha256": "b39a6bfd79f7fb48253618d8c449cb7daec77cb39206f0ff309d057186a49aea",
+        "size": 39166029824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00004-of-00010.gguf",
+      "blobId": "81f2124323e7dbd7076407cd891719c12076dd47",
+      "size": 39917178208,
+      "lfs": {
+        "sha256": "b88f11aae338948021fa3077a2d7f4b9eefb254182115dc6b2400ae3d266db68",
+        "size": 39917178208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00005-of-00010.gguf",
+      "blobId": "735f9b742211798c411f48a7c60f900ea24f59a8",
+      "size": 39805702624,
+      "lfs": {
+        "sha256": "f6e101d317a7e504805d7de97fb50544944d5fa6a1b2e357f9792a7bc3fe1f57",
+        "size": 39805702624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00006-of-00010.gguf",
+      "blobId": "f897068ad3f50a2d86abb2abeeccfd998d3e365e",
+      "size": 39911914720,
+      "lfs": {
+        "sha256": "c8b0f8eaae6d5af24d04ca5a521c497dad9714dd0738cd4a326fdc19e53afe35",
+        "size": 39911914720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00007-of-00010.gguf",
+      "blobId": "b33c9dbe28d00b26df881e1dee316c545c6908d4",
+      "size": 39917178208,
+      "lfs": {
+        "sha256": "1f6df29b2968c6daff092cb33f3fc232eeb019334e4c7d18027a215b31f5ce01",
+        "size": 39917178208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00008-of-00010.gguf",
+      "blobId": "4c84d5e5d750bb33f64aa2422e96ed683879a0df",
+      "size": 39721795872,
+      "lfs": {
+        "sha256": "c9aee33dd10dd6dfc2a3863cc26cb097ab7f7112fad8afd2a06db1f7a924f325",
+        "size": 39721795872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00009-of-00010.gguf",
+      "blobId": "850ee53928f314c45104a0fbe8a2cff700d9409b",
+      "size": 39281414528,
+      "lfs": {
+        "sha256": "f68c2dfff10f48704b334c3b30a60fda72d03d12fd2f3984f24a83cb3fcc9b11",
+        "size": 39281414528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_M/Beam-1.0-501B-A23B-Q5_K_M-00010-of-00010.gguf",
+      "blobId": "16280fc164edad1571ad671ac34e8840d43273a8",
+      "size": 27193804768,
+      "lfs": {
+        "sha256": "40b70c4484904023416d0571ff3a9e6b9f28c37650f0b6c2cabb28ba6d754a84",
+        "size": 27193804768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00001-of-00009.gguf",
+      "blobId": "344328ee6571f10573e4a990b06b201341fc636f",
+      "size": 38471246464,
+      "lfs": {
+        "sha256": "c1c218f47b29aba196b5be74e32ee6d89419499c52e3e718d57fe04c079a6051",
+        "size": 38471246464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00002-of-00009.gguf",
+      "blobId": "2882e4a4df3eaeb9232453d7044f5295bf338950",
+      "size": 38496336992,
+      "lfs": {
+        "sha256": "cc96cf8e24cddac14743467786f49fa4dd39b597f902d2fd408ed3235dfff69e",
+        "size": 38496336992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00003-of-00009.gguf",
+      "blobId": "4aa71e2f0c5c0301170bfe7ca9fe9217709e291a",
+      "size": 39805702624,
+      "lfs": {
+        "sha256": "cb9325c4da599d43f9f2b012182c4596e5970f2bd2d5118319c0164e180ca00b",
+        "size": 39805702624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00004-of-00009.gguf",
+      "blobId": "1cabc4414eb819d174075b5d45526e65bf82782d",
+      "size": 39911914720,
+      "lfs": {
+        "sha256": "2dae067dad5ef893ddadf889bee347d2a50a14c81b45de88764ea320b37aa652",
+        "size": 39911914720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00005-of-00009.gguf",
+      "blobId": "94c5d694ba06a38e652ce0b2f78ac2714293fc89",
+      "size": 39917178208,
+      "lfs": {
+        "sha256": "f691f21ef38bbc0bd14788eb06e206d22dc0a9e2f443ecdee8d5a71126c801d0",
+        "size": 39917178208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00006-of-00009.gguf",
+      "blobId": "ec643ef7753757a006397974a2547f541590a800",
+      "size": 39805702624,
+      "lfs": {
+        "sha256": "8a6476719e0582f0b7dc545b216702d5d6165a9e568f0c2b00536640a7ab1747",
+        "size": 39805702624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00007-of-00009.gguf",
+      "blobId": "a8ba20005a75f5b626b4e8ea85f3c55c71647c85",
+      "size": 39911914720,
+      "lfs": {
+        "sha256": "1c8d92a12c429efe7aed41159899512db3a02ff122347e771f370700e0c6e198",
+        "size": 39911914720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00008-of-00009.gguf",
+      "blobId": "4e8d64c160979a76159b7343abf467a0a06f2f69",
+      "size": 39917178208,
+      "lfs": {
+        "sha256": "6c770bc9f25dda1f0f2614f71aafb8968e2c477886184657c57b678adb29a0cc",
+        "size": 39917178208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q5_K_S/Beam-1.0-501B-A23B-Q5_K_S-00009-of-00009.gguf",
+      "blobId": "a91e0d10c65c1ddf335421d4c2c7d170729423d9",
+      "size": 38850143680,
+      "lfs": {
+        "sha256": "1c260e6d6f0a6289019ab532cf7c5a04547cabd6536462bcd45cd5308f9d1aff",
+        "size": 38850143680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00001-of-00012.gguf",
+      "blobId": "9e0f8ec1bde708c47df968618fd82b0bec6b42b6",
+      "size": 39429297568,
+      "lfs": {
+        "sha256": "4155edbc556619dcc8fae5398c2af285e2393bc88134fe2e37f888554b0a4820",
+        "size": 39429297568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00002-of-00012.gguf",
+      "blobId": "69c9eed678f8e269eb8714669f15bd68f2e4486e",
+      "size": 39998272448,
+      "lfs": {
+        "sha256": "4c4b734e324e859192937c6c88cd696671990bcf5f4649b8d90713d48d68592f",
+        "size": 39998272448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00003-of-00012.gguf",
+      "blobId": "166221ff382b427251903c967057036bcb7e7539",
+      "size": 37560333280,
+      "lfs": {
+        "sha256": "5e1f3f5ee6d67d9957ae0863768e11bb3a1a654871f413825b9edc9a48d42d57",
+        "size": 37560333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00004-of-00012.gguf",
+      "blobId": "bd66d1a0581df6d848dc0192deb298296526a899",
+      "size": 39113601024,
+      "lfs": {
+        "sha256": "d75cb63506cbe9264428ba30ea5eb7468d60861ee43f3db20b0ef1d2b8946087",
+        "size": 39113601024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00005-of-00012.gguf",
+      "blobId": "24ee546e69877e7450f0e63d5119cdda06811c6e",
+      "size": 39118864512,
+      "lfs": {
+        "sha256": "a031e8912fd414d8e64cb6b0c2c00fb8e001f0f98254e02d461e242d207f7d19",
+        "size": 39118864512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00006-of-00012.gguf",
+      "blobId": "a076b61fd2c2d3c18ebc13a69ce7cfbaff41ca20",
+      "size": 39007388928,
+      "lfs": {
+        "sha256": "5545a798653e1e643665393e668e3ab178d85f13bbf324ff46ddededb8604e3d",
+        "size": 39007388928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00007-of-00012.gguf",
+      "blobId": "9b1eefa32e0d4e2f386ce6839193235188ea8f6b",
+      "size": 39113601024,
+      "lfs": {
+        "sha256": "26ec358592ca1a35ee52bb08bfe187cf3d9dc79b37b8343ed84523926191c5e3",
+        "size": 39113601024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00008-of-00012.gguf",
+      "blobId": "0e0af64890d5c6690206e2feaa3e27afad4e1676",
+      "size": 39118864512,
+      "lfs": {
+        "sha256": "9be8b64d96dd1ad6d41c023ce612ed08044a8f8e43dc0a5893b981785d6cbcbe",
+        "size": 39118864512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00009-of-00012.gguf",
+      "blobId": "4da460b7c6104b77b3506e212b5af33377d7a01b",
+      "size": 39500198976,
+      "lfs": {
+        "sha256": "ef7e79a947dd122a3dd467ef4871a6ba6e92b6ae0a20185092f43f96ad8e92a2",
+        "size": 39500198976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00010-of-00012.gguf",
+      "blobId": "b9ceff4b99da5205b39108c611321ffbda3216f4",
+      "size": 39505462432,
+      "lfs": {
+        "sha256": "6147b07160f4978d830e890db993176b439a0492d868106c94bfab009c888c7c",
+        "size": 39505462432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00011-of-00012.gguf",
+      "blobId": "fba10c13a2e0d631dabc5c5a5656b048dbc57378",
+      "size": 39611674560,
+      "lfs": {
+        "sha256": "91931f6a53b11685f53fc167bafac9d90bce0fe39de4bc9b129723ed83be494a",
+        "size": 39611674560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K/Beam-1.0-501B-A23B-Q6_K-00012-of-00012.gguf",
+      "blobId": "d9489d1f0c4724c2d5550945170c5e4e6df6ebdb",
+      "size": 10700780096,
+      "lfs": {
+        "sha256": "530558f4ff00ec2eec709b83c5c827f19102e36c281c390fdec6ea27c7b8ebe4",
+        "size": 10700780096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00001-of-00011.gguf",
+      "blobId": "2b42dc73be20dbd5939f04d47e10650c5acb3075",
+      "size": 39855346016,
+      "lfs": {
+        "sha256": "cd3db0ed5d0ecb7262a69a5dbe5638c140f3c75c398b84b39dd61b6f0a1ebc4b",
+        "size": 39855346016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00002-of-00011.gguf",
+      "blobId": "8d6e1e36cdf18ea7e938c79b54f798139049fb3d",
+      "size": 37874906112,
+      "lfs": {
+        "sha256": "ab3cc0b7a23265178c7d7ab0f21944fbdf4f8887a316f7545706ebdcf32560bd",
+        "size": 37874906112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00003-of-00011.gguf",
+      "blobId": "3ce420b59acd5e9877016551ca1a779c44b1685f",
+      "size": 39118864512,
+      "lfs": {
+        "sha256": "e7fde659eb0096cef0d33b3891f9f545c0a96a7448e3e27206ae660e100bdf07",
+        "size": 39118864512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00004-of-00011.gguf",
+      "blobId": "506b9b89afcf9c0e5ef808c35cb85d56885782a8",
+      "size": 39007388928,
+      "lfs": {
+        "sha256": "e6dd0cde9139e58b6d8b186a8d7d4497f521248ad57d4c5ee592be7fb95c737b",
+        "size": 39007388928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00005-of-00011.gguf",
+      "blobId": "252471e9377b7bf0bd747474403bf65ba57c54d5",
+      "size": 39113601024,
+      "lfs": {
+        "sha256": "9349140c08a88e2a604a4dca369c6933811cd22d45bb8d905392d24584376c03",
+        "size": 39113601024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00006-of-00011.gguf",
+      "blobId": "0e9a724a529e316ecf0144bea7ad9e957df62d2a",
+      "size": 39118864512,
+      "lfs": {
+        "sha256": "801bc097618f152b561f144b30be87fc18f43b5d323f16b6c980f52dbce46604",
+        "size": 39118864512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00007-of-00011.gguf",
+      "blobId": "2197a92d1ef5facc7fa1bf536dbb04211968904e",
+      "size": 39007388928,
+      "lfs": {
+        "sha256": "6eab0b7443a193377a2a60d948147fa7e5d719c810b469e197d630bb81dd8415",
+        "size": 39007388928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00008-of-00011.gguf",
+      "blobId": "19cdcd01b35f8b95295671f753986132482448b1",
+      "size": 39113601024,
+      "lfs": {
+        "sha256": "c1586db8b73e483cc8ad4f575a58e2847a2837438e913bd401fbe9815bbf8117",
+        "size": 39113601024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00009-of-00011.gguf",
+      "blobId": "7a16a26d9d2fefa1ef462761f225ece4aee15a53",
+      "size": 39118864512,
+      "lfs": {
+        "sha256": "d9632c122b9d241c45017ac4bce9e491290bb785dcff794958afee5e47fef579",
+        "size": 39118864512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00010-of-00011.gguf",
+      "blobId": "91d321a353ab02ab20d22c9df3a3b329ec1b559a",
+      "size": 39007388928,
+      "lfs": {
+        "sha256": "0d3e364407f86f309e64672e982a57cad1cc6eedff7248f7b0dbc042a2469ac4",
+        "size": 39007388928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q6_K_S/Beam-1.0-501B-A23B-Q6_K_S-00011-of-00011.gguf",
+      "blobId": "334e6723432c6fc3ad77a1105a841828f3dbc616",
+      "size": 30313318368,
+      "lfs": {
+        "sha256": "f30d0671509e213bd3667b1e50cc13270901c64c38c4fc587040c33b562cc5d1",
+        "size": 30313318368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00001-of-00014.gguf",
+      "blobId": "141aea26e8a79e14da02a96772a54fdc34f2304e",
+      "size": 39109460896,
+      "lfs": {
+        "sha256": "1b85c208a205a590d02860f92a9e7867c19abc4818251b1014f649db16e86b96",
+        "size": 39109460896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00002-of-00014.gguf",
+      "blobId": "812f482e10a31dbb70f8fd9bd105008d0dce469a",
+      "size": 39683699552,
+      "lfs": {
+        "sha256": "b08437d41cf59f072882dcfef70396c3793f1cac8f8c419a0b6d22cec3600a43",
+        "size": 39683699552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00003-of-00014.gguf",
+      "blobId": "fd06ef0ea2ab4d4f3f85985f4fe4e13e2f4a4fbb",
+      "size": 39572224032,
+      "lfs": {
+        "sha256": "eb6307505946397cdcb7f7ad40fd78847e12cafd7025c2955d6cdd64ce75dc32",
+        "size": 39572224032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00004-of-00014.gguf",
+      "blobId": "585b3290ad5f2fdb03bc1077d2ca86caa9051cd6",
+      "size": 39678436128,
+      "lfs": {
+        "sha256": "b3c4da379ec4bd235f0ef52b89fc57f8f3c78b7007721d2992942948e6fa9941",
+        "size": 39678436128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00005-of-00014.gguf",
+      "blobId": "fa63383c2784a60b5e1f8c031658dedd32f51c9e",
+      "size": 39683699616,
+      "lfs": {
+        "sha256": "eed18fe141ec427a7e75247c0dd0ec485abee1b3e354fe7eb59267e3d327cf8c",
+        "size": 39683699616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00006-of-00014.gguf",
+      "blobId": "6ad909640d6bba991310de75136dd1e9bfa267b1",
+      "size": 39572224032,
+      "lfs": {
+        "sha256": "42e0fca079ad87c755770938e76ac50c5cd07e047e17351ad82f9b80659f3bd0",
+        "size": 39572224032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00007-of-00014.gguf",
+      "blobId": "4a63003366074c0061c64a4d8dc75d4b7208f258",
+      "size": 39678436128,
+      "lfs": {
+        "sha256": "bee120c5adcbb719f22732c85df0bd2a8296bb0f922218165fafc3213f9f442a",
+        "size": 39678436128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00008-of-00014.gguf",
+      "blobId": "51cf97720e434119e18ecf3c5ec8f330c3c38167",
+      "size": 39683699616,
+      "lfs": {
+        "sha256": "8013656dac4621ecb116c18e070c38b97cbe9c84a49a36bf36aff351f1036da4",
+        "size": 39683699616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00009-of-00014.gguf",
+      "blobId": "268fb3ee3480a420dd7e23262fba0127053286e2",
+      "size": 39572224032,
+      "lfs": {
+        "sha256": "222dc30b841a082aa0d75bf5e9ca372ffcbd7cc2ccdba65a32b5edb184c0c92b",
+        "size": 39572224032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00010-of-00014.gguf",
+      "blobId": "3803f95bebe0a157bb6d5c3dbb7cce0559059ce9",
+      "size": 39678436128,
+      "lfs": {
+        "sha256": "548aa4ca98c88b11ccef19d3c184d4e290916f9b3cd2e24b1e987fb0019b3ec6",
+        "size": 39678436128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00011-of-00014.gguf",
+      "blobId": "8aa555ed8f5204be862ca949bf8760236358ea5c",
+      "size": 39683699616,
+      "lfs": {
+        "sha256": "5c73e58df1f64915728c6d67acb0b1bdb8fdb463915a4bca62b4907f02b2e108",
+        "size": 39683699616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00012-of-00014.gguf",
+      "blobId": "792f9ae0190d27b61d6682b34eb8584638412b50",
+      "size": 39572224032,
+      "lfs": {
+        "sha256": "24373acfa405186752687a42fc1cd60fd3cd762f46cfa3a57691d765a5c1d360",
+        "size": 39572224032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00013-of-00014.gguf",
+      "blobId": "8c284b9f2966ca5eb56b7aaea8326be8c2f510e2",
+      "size": 39678436128,
+      "lfs": {
+        "sha256": "5f9b488f3a17f39402af902b371ad99c76cf2c13179138ba78795a76636b0b94",
+        "size": 39678436128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-Q8_0/Beam-1.0-501B-A23B-Q8_0-00014-of-00014.gguf",
+      "blobId": "592c93515cbb5d4014d244451e0b54a72e5ae104",
+      "size": 17947836128,
+      "lfs": {
+        "sha256": "859ad7d11675820ffcc9316e0da5f5879edd4149a7a510db3249b9297d16e12d",
+        "size": 17947836128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-calibration-v6.txt",
+      "blobId": "8748943789d726c7f38a88f5005bd3199cfef3c2",
+      "size": 1099088
+    },
+    {
+      "rfilename": "Beam-1.0-501B-A23B-imatrix.gguf",
+      "blobId": "0cdcbe2a716254dce3d1165b19d9eb8e677a07cc",
+      "size": 1298636000,
+      "lfs": {
+        "sha256": "fb3c425a5d923d95f8ddf40c170afc7dd78a9cf0e2c85c79368618950d79da8e",
+        "size": 1298636000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "af282a64caefaafb732702a37231e615a762e812",
+      "size": 18038
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ1_M.layout.json",
+      "blobId": "65aaf2ce4f2ef47d879251c363a849c76265b056",
+      "size": 2265
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ1_M.tensor-types.txt",
+      "blobId": "266cd8f52dd16fa03cef29ccda8a42515f513054",
+      "size": 14451
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ1_S.layout.json",
+      "blobId": "ca14c91422e720a9ca7a88449f92cb29f3c9613f",
+      "size": 2248
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ1_S.tensor-types.txt",
+      "blobId": "5c281fe267793b12038cad959c0799f1a0e43c8b",
+      "size": 14518
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_M.layout.json",
+      "blobId": "bfd4442bed986471378c97385d2c9499e9b6de6c",
+      "size": 2152
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_M.tensor-types.txt",
+      "blobId": "6344dd32fe2c1cb3611bddac86a52e565945771f",
+      "size": 14379
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_S.layout.json",
+      "blobId": "3ace45d37c91603d8c52f6cba3268f8e2c9732e0",
+      "size": 2189
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_S.tensor-types.txt",
+      "blobId": "1e82933b4391f2ba54dc4e78c7cb664242d145ed",
+      "size": 14511
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_XS.layout.json",
+      "blobId": "e113ac43fd43515033f3b0dd37acdc0a6b167512",
+      "size": 2209
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_XS.tensor-types.txt",
+      "blobId": "9a1131c895f8b874e51f3e97e8106c480121025f",
+      "size": 14519
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_XXS.layout.json",
+      "blobId": "e6a2cc97e9c49ae5036df2dcef5f48581bde93ed",
+      "size": 2271
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ2_XXS.tensor-types.txt",
+      "blobId": "b7f3e776bc98ab0454e286e6171fc58390ddac7b",
+      "size": 14645
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ3_M.layout.json",
+      "blobId": "798696b2b83643664e045c8e52e8737743dd2499",
+      "size": 2127
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ3_M.tensor-types.txt",
+      "blobId": "a6e575e896ab33d924f0b3736da1efc9b70bf551",
+      "size": 14329
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ3_XS.layout.json",
+      "blobId": "158f88f312d1209327e1223401650bc25971aed3",
+      "size": 2091
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ3_XS.tensor-types.txt",
+      "blobId": "a7d981885aa8cf6ce0f49bf6ef85ce83fc9d934b",
+      "size": 14372
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ3_XXS.layout.json",
+      "blobId": "7c2118194a3c18f586cf41c2b6f9e1666a308f52",
+      "size": 2145
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ3_XXS.tensor-types.txt",
+      "blobId": "f1eda26325ddfdd9db08e6ae70b69e5283bc5c40",
+      "size": 14624
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ4_NL.layout.json",
+      "blobId": "b22636988c181a6e5fc82eceb3ddf7a9efbfcacc",
+      "size": 2112
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ4_NL.tensor-types.txt",
+      "blobId": "1a70247c92d45377509c9416a9295b3d7dd579cc",
+      "size": 14453
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ4_XS.layout.json",
+      "blobId": "a2404dffcb4469955594e6ea1bbffb5bd17df274",
+      "size": 2097
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-IQ4_XS.tensor-types.txt",
+      "blobId": "c9e5ebcd3e3be9ab3e57afafb26bc06071151a42",
+      "size": 14497
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q2_K.layout.json",
+      "blobId": "73a82b8be42805d1e28cfc4a1a639069a4615531",
+      "size": 2098
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q2_K.tensor-types.txt",
+      "blobId": "9834c8b53a2acf6a94987e118f7f31c7c309ec35",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q3_K_L.layout.json",
+      "blobId": "a0bf8cc53418777dd58c7e7fb6def7b6f970d98f",
+      "size": 2088
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q3_K_L.tensor-types.txt",
+      "blobId": "02626cf2c1b17ea94c6eaea513335ace9e001733",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q3_K_M.layout.json",
+      "blobId": "c396e517fffeff39a15b74845f9046e7f80a0f46",
+      "size": 2086
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q3_K_M.tensor-types.txt",
+      "blobId": "6dc44c980b4f0906e199d55458ab4af5c1c37fd7",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q3_K_S.layout.json",
+      "blobId": "628a43888eac64026687e726b66079d4242153db",
+      "size": 2069
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q3_K_S.tensor-types.txt",
+      "blobId": "b82a859adc550e5cf17541a873a1171dab62a679",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q4_K_M.layout.json",
+      "blobId": "04da9d926d81aba0c8aa5e6068b1893dcb2dd04b",
+      "size": 2101
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q4_K_M.tensor-types.txt",
+      "blobId": "f717ddb69b4a126595ad26e9be56706bc4b23266",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q4_K_S.layout.json",
+      "blobId": "0ac73ff1afbc029fd2015819133e27d38b78fff1",
+      "size": 2084
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q4_K_S.tensor-types.txt",
+      "blobId": "baa5de214155e079deb2c4bca121866d9be5d3c2",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q5_K_M.layout.json",
+      "blobId": "ee41e6db134b906897878bf9b3df07bf85e443e5",
+      "size": 2069
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q5_K_M.tensor-types.txt",
+      "blobId": "c7ec8e6f36c3cbc95238b05c42702814ca710f0d",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q5_K_S.layout.json",
+      "blobId": "f1a8ab78adce10462558cfd8bae0bca9c851c30f",
+      "size": 2069
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q5_K_S.tensor-types.txt",
+      "blobId": "c6d13db4c1974a464271dbaa9ee097c21a3bb2f6",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q6_K.layout.json",
+      "blobId": "5e3391953e9bc5f6228a2c4b37c3786f7a81fec4",
+      "size": 2047
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q6_K.tensor-types.txt",
+      "blobId": "3750781a984e9f3d62c7ce2abb9f6f0924359cd4",
+      "size": 14223
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q6_K_S.layout.json",
+      "blobId": "08b5ea419e09e85d831b560df3567f4ab3f71b39",
+      "size": 2050
+    },
+    {
+      "rfilename": "layouts/Beam-1.0-501B-A23B-Q6_K_S.tensor-types.txt",
+      "blobId": "ebe443aa27b1d4daa55df5635c9a25e4d5cdba1f",
+      "size": 14223
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-22T19:31:54.000Z",
+  "usedStorage": 6387369374208
+}

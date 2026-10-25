@@ -1,0 +1,202 @@
+{
+  "_id": "67aa311a52161362fa756fe6",
+  "id": "agents-course/notebooks",
+  "private": false,
+  "tags": [
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 1037,
+  "modelId": "agents-course/notebooks",
+  "author": "agents-course",
+  "sha": "cecf8edffb02101c90634b84076bd93b1a20c713",
+  "lastModified": "2026-04-27T08:00:30.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c2ae1cff1db267442f552daabd324c15da0cbab7",
+      "size": 3011
+    },
+    {
+      "rfilename": "bonus-unit1/.DS_Store",
+      "blobId": "0a0161c7592c1f0eca157416a8514b136e6df0a9",
+      "size": 6148
+    },
+    {
+      "rfilename": "bonus-unit1/bonus-unit1.ipynb",
+      "blobId": "49b50338e41c6c826e676a0262d7a7d342cd5c2c",
+      "size": 208605
+    },
+    {
+      "rfilename": "bonus-unit2/monitoring-and-evaluating-agents.ipynb",
+      "blobId": "90f396cdbcff2841b105ffb5b13373c680d7a7d0",
+      "size": 26296
+    },
+    {
+      "rfilename": "fr/bonus-unit1/bonus-unit1.ipynb",
+      "blobId": "403cfad5caa2eb4c91825f8577cf1f6ca90f9284",
+      "size": 210573
+    },
+    {
+      "rfilename": "fr/bonus-unit2/monitoring-and-evaluating-agents.ipynb",
+      "blobId": "a5bd25e08ded2f8fdc2fb01f4580c3393bf3d52c",
+      "size": 26271
+    },
+    {
+      "rfilename": "fr/unit1/dummy_agent_library.ipynb",
+      "blobId": "7ad848c759cacbfc2590a0c3698ad3b568dc0463",
+      "size": 20466
+    },
+    {
+      "rfilename": "fr/unit2/langgraph/agent.ipynb",
+      "blobId": "3b479be92f70a5db8b0bdab822bfd15d0d0c94c3",
+      "size": 11458
+    },
+    {
+      "rfilename": "fr/unit2/langgraph/mail_sorting.ipynb",
+      "blobId": "b62e51492fc103b2ae9f5cbf9b229c42e51ed794",
+      "size": 16412
+    },
+    {
+      "rfilename": "fr/unit2/llama-index/agents.ipynb",
+      "blobId": "3f61bd91a47fd0bf634497c3eb5bde4d58c1b9b2",
+      "size": 10879
+    },
+    {
+      "rfilename": "fr/unit2/llama-index/components.ipynb",
+      "blobId": "817be51271d44c494b6f7dfbb8d2ef736ccb2fd9",
+      "size": 121917
+    },
+    {
+      "rfilename": "fr/unit2/llama-index/tools.ipynb",
+      "blobId": "a4707cb36f57f81a70cadb21b43b2dbb0becdacd",
+      "size": 16077
+    },
+    {
+      "rfilename": "fr/unit2/llama-index/workflows.ipynb",
+      "blobId": "03d966f8b8f12843dd7de09d09608349caa25dc9",
+      "size": 13362
+    },
+    {
+      "rfilename": "fr/unit2/smolagents/code_agents.ipynb",
+      "blobId": "c21ed1f0fe65378c84f2e23e084e4f5a203a88af",
+      "size": 861004
+    },
+    {
+      "rfilename": "fr/unit2/smolagents/multiagent_notebook.ipynb",
+      "blobId": "d083d2a9ccf917b2363c1ca8e796e1f09bba6238",
+      "size": 1112566
+    },
+    {
+      "rfilename": "fr/unit2/smolagents/retrieval_agents.ipynb",
+      "blobId": "8242191e0fd95afd0690b19892289e0a53e95d4c",
+      "size": 398743
+    },
+    {
+      "rfilename": "fr/unit2/smolagents/tool_calling_agents.ipynb",
+      "blobId": "2cb0118b9f082f7db66e3ba825ff326aca655030",
+      "size": 61276
+    },
+    {
+      "rfilename": "fr/unit2/smolagents/tools.ipynb",
+      "blobId": "22fba72864f7d24ae369882cacceb3d1f309b38f",
+      "size": 4402685
+    },
+    {
+      "rfilename": "fr/unit2/smolagents/vision_agents.ipynb",
+      "blobId": "bf265d21add2c0d9dc303eb0da42686bb4e05bca",
+      "size": 70705
+    },
+    {
+      "rfilename": "unit1/dummy_agent_library.ipynb",
+      "blobId": "1c32b3db3dbfe50bcfad456aab3e18ca23e144fc",
+      "size": 11365
+    },
+    {
+      "rfilename": "unit2/langgraph/agent.ipynb",
+      "blobId": "23023c96e1e990a4ab1076573ac8b03009bd83ee",
+      "size": 11141
+    },
+    {
+      "rfilename": "unit2/langgraph/mail_sorting.ipynb",
+      "blobId": "a94334c884d66f0c71181a2dd4a583b4bee6cddb",
+      "size": 15559
+    },
+    {
+      "rfilename": "unit2/llama-index/agents.ipynb",
+      "blobId": "d973627f501d4b4b62284754a1f8625e7dda128c",
+      "size": 10474
+    },
+    {
+      "rfilename": "unit2/llama-index/components.ipynb",
+      "blobId": "db417efad33ccf0e5ee12e23adf01f2dc4ab7bbf",
+      "size": 121222
+    },
+    {
+      "rfilename": "unit2/llama-index/tools.ipynb",
+      "blobId": "0f144bc57fe2b14703cb1490ce359a2e9ff57bf7",
+      "size": 15886
+    },
+    {
+      "rfilename": "unit2/llama-index/workflows.ipynb",
+      "blobId": "d5285d0d5505cb34f7ba11a777f096b5b1e0be29",
+      "size": 12827
+    },
+    {
+      "rfilename": "unit2/smolagents/code_agents.ipynb",
+      "blobId": "3d14b8c099c31cd223796acd4301d13f7b166bba",
+      "size": 922146
+    },
+    {
+      "rfilename": "unit2/smolagents/multiagent_notebook.ipynb",
+      "blobId": "39903e2e571197bfc447d3678dd2dd139decb925",
+      "size": 1173338
+    },
+    {
+      "rfilename": "unit2/smolagents/retrieval_agents.ipynb",
+      "blobId": "d847925ab2b9a7b65201ebd82e704d1debe6819f",
+      "size": 416191
+    },
+    {
+      "rfilename": "unit2/smolagents/tool_calling_agents.ipynb",
+      "blobId": "6a14e16a38c7bfa4bde8ab4d1ecb3f29e59bf26a",
+      "size": 64126
+    },
+    {
+      "rfilename": "unit2/smolagents/tools.ipynb",
+      "blobId": "561a9f8520a167bba0ffd3be92b600d36364afbd",
+      "size": 4409572
+    },
+    {
+      "rfilename": "unit2/smolagents/vision_agents.ipynb",
+      "blobId": "fb575d558ff1cd5053977005ceda97fbe5304e99",
+      "size": 72884
+    },
+    {
+      "rfilename": "unit2/smolagents/vision_web_browser.py",
+      "blobId": "c0505778f6ff2268d70488f6d5f20d05ec28346d",
+      "size": 7694
+    }
+  ],
+  "spaces": [
+    "JayosChaos/Fine_tuning_my_first_model_or_agent",
+    "veidosclicker/Fine_tuning_my_first_model_or_agent",
+    "sminichiello/my-agent-demo",
+    "sky-meilin/my_first_model_or_agent"
+  ],
+  "createdAt": "2025-02-10T17:02:18.000Z",
+  "usedStorage": 11564978
+}

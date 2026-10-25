@@ -1,0 +1,76 @@
+{
+  "_id": "6ace67b742d1686a0804bbc0",
+  "id": "reflection/Beam-1.0-501B-A23B-DFlash2",
+  "private": false,
+  "tags": [
+    "safetensors",
+    "qwen3",
+    "dflash2",
+    "speculative-decoding",
+    "beam",
+    "base_model:reflection/Beam-1.0-501B-A23B",
+    "base_model:finetune:reflection/Beam-1.0-501B-A23B",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 1112,
+  "likes": 34,
+  "modelId": "reflection/Beam-1.0-501B-A23B-DFlash2",
+  "author": "reflection",
+  "sha": "163b276be744c8ce2b8385ea85de54edb3088211",
+  "lastModified": "2026-10-16T12:53:56.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "DFlash2BeamDraftModel"
+    ],
+    "model_type": "qwen3"
+  },
+  "cardData": {
+    "base_model": "reflection/Beam-1.0-501B-A23B",
+    "tags": [
+      "dflash2",
+      "speculative-decoding",
+      "beam"
+    ],
+    "license": "apache-2.0"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ecb89777edf404ee91f7ee7f190ec9a970b1fc34",
+      "size": 20325
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "6740acaee1e8d3d1a78c3b789411a775cd46cdd3",
+      "size": 1296
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "0f4f1def5290037e478379cf6d5be7452e5e8481",
+      "size": 3854978296,
+      "lfs": {
+        "sha256": "34b99ca539b1d595d0db0edf072158173d89411eca0e6b1dd2c2601437352bf4",
+        "size": 3854978296,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-13T17:17:43.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1927484672
+    },
+    "total": 1927484672
+  },
+  "usedStorage": 3854978296
+}

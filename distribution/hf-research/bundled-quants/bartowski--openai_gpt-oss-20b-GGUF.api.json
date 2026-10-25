@@ -1,0 +1,359 @@
+{
+  "_id": "689277cb60b4c9edeb2c2696",
+  "id": "bartowski/openai_gpt-oss-20b-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:openai/gpt-oss-20b",
+    "base_model:quantized:openai/gpt-oss-20b",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 11199,
+  "likes": 39,
+  "modelId": "bartowski/openai_gpt-oss-20b-GGUF",
+  "author": "bartowski",
+  "sha": "e39ba3aa000c47c83dacdc9e1ca2c9dd0808c205",
+  "lastModified": "2025-08-11T17:36:29.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model_relation": "quantized",
+    "base_model": "openai/gpt-oss-20b"
+  },
+  "gguf": {
+    "total": 20914757184,
+    "architecture": "gpt-oss",
+    "context_length": 131072,
+    "chat_template": "{#-\n  In addition to the normal inputs of `messages` and `tools`, this template also accepts the\n  following kwargs:\n  - \"builtin_tools\": A list, can contain \"browser\" and/or \"python\".\n  - \"model_identity\": A string that optionally describes the model identity.\n  - \"reasoning_effort\": A string that describes the reasoning effort, defaults to \"medium\".\n #}\n\n{#- Tool Definition Rendering ============================================== #}\n{%- macro render_typescript_type(param_spec, required_params, is_nullable=false) -%}\n    {%- if param_spec.type == \"array\" -%}\n        {%- if param_spec['items'] -%}\n            {%- if param_spec['items']['type'] == \"string\" -%}\n                {{- \"string[]\" }}\n            {%- elif param_spec['items']['type'] == \"number\" -%}\n                {{- \"number[]\" }}\n            {%- elif param_spec['items']['type'] == \"integer\" -%}\n                {{- \"number[]\" }}\n            {%- elif param_spec['items']['type'] == \"boolean\" -%}\n                {{- \"boolean[]\" }}\n            {%- else -%}\n                {%- set inner_type = render_typescript_type(param_spec['items'], required_params) -%}\n                {%- if inner_type == \"object | object\" or inner_type|length > 50 -%}\n                    {{- \"any[]\" }}\n                {%- else -%}\n                    {{- inner_type + \"[]\" }}\n                {%- endif -%}\n            {%- endif -%}\n            {%- if param_spec.nullable -%}\n                {{- \" | null\" }}\n            {%- endif -%}\n        {%- else -%}\n            {{- \"any[]\" }}\n            {%- if param_spec.nullable -%}\n                {{- \" | null\" }}\n            {%- endif -%}\n        {%- endif -%}\n    {%- elif param_spec.type is defined and param_spec.type is iterable and param_spec.type is not string and param_spec.type is not mapping and param_spec.type[0] is defined -%}\n        {#- Handle array of types like [\"object\", \"object\"] from Union[dict, list] #}\n        {%- if param_spec.type | length > 1 -%}\n            {{- param_spec.type | join(\" | \") }}\n        {%- else -%}\n            {{- param_spec.type[0] }}\n        {%- endif -%}\n    {%- elif param_spec.oneOf -%}\n        {#- Handle oneOf schemas - check for complex unions and fallback to any #}\n        {%- set has_object_variants = false -%}\n        {%- for variant in param_spec.oneOf -%}\n            {%- if variant.type == \"object\" -%}\n                {%- set has_object_variants = true -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if has_object_variants and param_spec.oneOf|length > 1 -%}\n            {{- \"any\" }}\n        {%- else -%}\n            {%- for variant in param_spec.oneOf -%}\n                {{- render_typescript_type(variant, required_params) -}}\n                {%- if variant.description %}\n                    {{- \"// \" + variant.description }}\n                {%- endif -%}\n                {%- if variant.default is defined %}\n                    {{ \"// default: \" + variant.default|tojson }}\n                {%- endif -%}\n                {%- if not loop.last %}\n                    {{- \" | \" }}\n                {% endif -%}\n            {%- endfor -%}\n        {%- endif -%}\n    {%- elif param_spec.type == \"string\" -%}\n        {%- if param_spec.enum -%}\n            {{- '\"' + param_spec.enum|join('\" | \"') + '\"' -}}\n        {%- else -%}\n            {{- \"string\" }}\n            {%- if param_spec.nullable %}\n                {{- \" | null\" }}\n            {%- endif -%}\n        {%- endif -%}\n    {%- elif param_spec.type == \"number\" -%}\n        {{- \"number\" }}\n    {%- elif param_spec.type == \"integer\" -%}\n        {{- \"number\" }}\n    {%- elif param_spec.type == \"boolean\" -%}\n        {{- \"boolean\" }}\n\n    {%- elif param_spec.type == \"object\" -%}\n        {%- if param_spec.properties -%}\n            {{- \"{\n\" }}\n            {%- for prop_name, prop_spec in param_spec.properties.items() -%}\n                {{- prop_name -}}\n                {%- if prop_name not in (param_spec.required or []) -%}\n                    {{- \"?\" }}\n                {%- endif -%}\n                {{- \": \" }}\n                {{ render_typescript_type(prop_spec, param_spec.required or []) }}\n                {%- if not loop.last -%}\n                    {{-\", \" }}\n                {%- endif -%}\n            {%- endfor -%}\n            {{- \"}\" }}\n        {%- else -%}\n            {{- \"object\" }}\n        {%- endif -%}\n    {%- else -%}\n        {{- \"any\" }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_namespace(namespace_name, tools) -%}\n    {{- \"## \" + namespace_name + \"\n\n\" }}\n    {{- \"namespace \" + namespace_name + \" {\n\n\" }}\n    {%- for tool in tools %}\n        {%- set tool = tool.function %}\n        {{- \"// \" + tool.description + \"\n\" }}\n        {{- \"type \"+ tool.name + \" = \" }}\n        {%- if tool.parameters and tool.parameters.properties %}\n            {{- \"(_: {\n\" }}\n            {%- for param_name, param_spec in tool.parameters.properties.items() %}\n                {%- if param_spec.description %}\n                    {{- \"// \" + param_spec.description + \"\n\" }}\n                {%- endif %}\n                {{- param_name }}\n                {%- if param_name not in (tool.parameters.required or []) -%}\n                    {{- \"?\" }}\n                {%- endif -%}\n                {{- \": \" }}\n                {{- render_typescript_type(param_spec, tool.parameters.required or []) }}\n                {%- if param_spec.default is defined -%}\n                    {%- if param_spec.enum %}\n                        {{- \", // default: \" + param_spec.default }}\n                    {%- elif param_spec.oneOf %}\n                        {{- \"// default: \" + param_spec.default }}\n                    {%- else %}\n                        {{- \", // default: \" + param_spec.default|tojson }}\n                    {%- endif -%}\n                {%- endif -%}\n                {%- if not loop.last %}\n                    {{- \",\n\" }}\n                {%- else %}\n                    {{- \"\n\" }}\n                {%- endif -%}\n            {%- endfor %}\n            {{- \"}) => any;\n\n\" }}\n        {%- else -%}\n            {{- \"() => any;\n\n\" }}\n        {%- endif -%}\n    {%- endfor %}\n    {{- \"} // namespace \" + namespace_name }}\n{%- endmacro -%}\n\n{%- macro render_builtin_tools(browser_tool, python_tool) -%}\n    {%- if browser_tool %}\n        {{- \"## browser\n\n\" }}\n        {{- \"// Tool for browsing.\n\" }}\n        {{- \"// The `cursor` appears in brackets before each browsing display: `[{cursor}]`.\n\" }}\n        {{- \"// Cite information from the tool using the following format:\n\" }}\n        {{- \"// `\u3010{cursor}\u2020L{line_start}(-L{line_end})?\u3011`, for example: `\u30106\u2020L9-L11\u3011` or `\u30108\u2020L3\u3011`.\n\" }}\n        {{- \"// Do not quote more than 10 words directly from the tool output.\n\" }}\n        {{- \"// sources=web (default: web)\n\" }}\n        {{- \"namespace browser {\n\n\" }}\n        {{- \"// Searches for information related to `query` and displays `topn` results.\n\" }}\n        {{- \"type search = (_: {\n\" }}\n        {{- \"query: string,\n\" }}\n        {{- \"topn?: number, // default: 10\n\" }}\n        {{- \"source?: string,\n\" }}\n        {{- \"}) => any;\n\n\" }}\n        {{- \"// Opens the link `id` from the page indicated by `cursor` starting at line number `loc`, showing `num_lines` lines.\n\" }}\n        {{- \"// Valid link ids are displayed with the formatting: `\u3010{id}\u2020.*\u3011`.\n\" }}\n        {{- \"// If `cursor` is not provided, the most recent page is implied.\n\" }}\n        {{- \"// If `id` is a string, it is treated as a fully qualified URL associated with `source`.\n\" }}\n        {{- \"// If `loc` is not provided, the viewport will be positioned at the beginning of the document or centered on the most relevant passage, if available.\n\" }}\n        {{- \"// Use this function without `id` to scroll to a new location of an opened page.\n\" }}\n        {{- \"type open = (_: {\n\" }}\n        {{- \"id?: number | string, // default: -1\n\" }}\n        {{- \"cursor?: number, // default: -1\n\" }}\n        {{- \"loc?: number, // default: -1\n\" }}\n        {{- \"num_lines?: number, // default: -1\n\" }}\n        {{- \"view_source?: boolean, // default: false\n\" }}\n        {{- \"source?: string,\n\" }}\n        {{- \"}) => any;\n\n\" }}\n        {{- \"// Finds exact matches of `pattern` in the current page, or the page given by `cursor`.\n\" }}\n        {{- \"type find = (_: {\n\" }}\n        {{- \"pattern: string,\n\" }}\n        {{- \"cursor?: number, // default: -1\n\" }}\n        {{- \"}) => any;\n\n\" }}\n        {{- \"} // namespace browser\n\n\" }}\n    {%- endif -%}\n\n    {%- if python_tool %}\n        {{- \"## python\n\n\" }}\n        {{- \"Use this tool to execute Python code in your chain of thought. The code will not be shown to the user. This tool should be used for internal reasoning, but not for code that is intended to be visible to the user (e.g. when creating plots, tables, or files).\n\n\" }}\n        {{- \"When you send a message containing Python code to python, it will be executed in a stateful Jupyter notebook environment. python will respond with the output of the execution or time out after 120.0 seconds. The drive at '/mnt/data' can be used to save and persist user files. Internet access for this session is UNKNOWN. Depends on the cluster.\n\n\" }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- System Message Construction ============================================ #}\n{%- macro build_system_message() -%}\n    {%- if model_identity is not defined %}\n        {%- set model_identity = \"You are ChatGPT, a large language model trained by OpenAI.\" %}\n    {%- endif %}\n    {{- model_identity + \"\n\" }}\n    {{- \"Knowledge cutoff: 2024-06\n\" }}\n    {{- \"Current date: \" + strftime_now(\"%Y-%m-%d\") + \"\n\n\" }}\n    {%- if reasoning_effort is not defined %}\n        {%- set reasoning_effort = \"medium\" %}\n    {%- endif %}\n    {{- \"Reasoning: \" + reasoning_effort + \"\n\n\" }}\n    {%- if builtin_tools %}\n        {{- \"# Tools\n\n\" }}\n        {%- set available_builtin_tools = namespace(browser=false, python=false) %}\n        {%- for tool in builtin_tools %}\n            {%- if tool == \"browser\" %}\n                {%- set available_builtin_tools.browser = true %}\n            {%- elif tool == \"python\" %}\n                {%- set available_builtin_tools.python = true %}\n            {%- endif %}\n        {%- endfor %}\n        {{- render_builtin_tools(available_builtin_tools.browser, available_builtin_tools.python) }}\n    {%- endif -%}\n    {{- \"# Valid channels: analysis, commentary, final. Channel must be included for every message.\" }}\n    {%- if tools -%}\n        {{- \"\nCalls to these tools must go to the commentary channel: 'functions'.\" }}\n    {%- endif -%}\n{%- endmacro -%}\n\n{#- Main Template Logic ================================================= #}\n{#- Set defaults #}\n\n{#- Render system message #}\n{{- \"<|start|>system<|message|>\" }}\n{{- build_system_message() }}\n{{- \"<|end|>\" }}\n\n{#- Extract developer message #}\n{%- if messages[0].role == \"developer\" or messages[0].role == \"system\" %}\n    {%- set developer_message = messages[0].content %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set developer_message = \"\" %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n\n{#- Render developer message #}\n{%- if developer_message or tools %}\n    {{- \"<|start|>developer<|message|>\" }}\n    {%- if developer_message %}\n        {{- \"# Instructions\n\n\" }}\n        {{- developer_message }}\n    {%- endif %}\n    {%- if tools -%}\n        {{- \"\n\n\" }}\n        {{- \"# Tools\n\n\" }}\n        {{- render_tool_namespace(\"functions\", tools) }}\n    {%- endif -%}\n    {{- \"<|end|>\" }}\n{%- endif %}\n\n{#- Render messages #}\n{%- set last_tool_call = namespace(name=none) %}\n{%- for message in loop_messages -%}\n    {#- At this point only assistant/user/tool messages should remain #}\n    {%- if message.role == 'assistant' -%}\n        {#- Checks to ensure the messages are being passed in the format we expect #}\n        {%- if \"content\" in message %}\n            {%- if \"<|channel|>analysis<|message|>\" in message.content or \"<|channel|>final<|message|>\" in message.content %}\n                {{- raise_exception(\"You have passed a message containing <|channel|> tags in the content field. Instead of doing this, you should pass analysis messages (the string between '<|message|>' and '<|end|>') in the 'thinking' field, and final messages (the string between '<|message|>' and '<|end|>') in the 'content' field.\") }}\n            {%- endif %}\n        {%- endif %}\n        {%- if \"thinking\" in message %}\n            {%- if \"<|channel|>analysis<|message|>\" in message.thinking or \"<|channel|>final<|message|>\" in message.thinking %}\n                {{- raise_exception(\"You have passed a message containing <|channel|> tags in the thinking field. Instead of doing this, you should pass analysis messages (the string between '<|message|>' and '<|end|>') in the 'thinking' field, and final messages (the string between '<|message|>' and '<|end|>') in the 'content' field.\") }}\n            {%- endif %}\n        {%- endif %}\n        {%- if \"tool_calls\" in message %}\n            {#- We assume max 1 tool call per message, and so we infer the tool call name #}\n            {#- in \"tool\" messages from the most recent assistant tool call name #}\n            {%- set tool_call = message.tool_calls[0] %}\n            {%- if tool_call.function %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {%- if message.content and message.thinking %}\n                {{- raise_exception(\"Cannot pass both content and thinking in an assistant message with tool calls! Put the analysis message in one or the other, but not both.\") }}\n            {%- elif message.content %}\n                {{- \"<|start|>assistant<|channel|>analysis<|message|>\" + message.content + \"<|end|>\" }}\n            {%- elif message.thinking %}\n                {{- \"<|start|>assistant<|channel|>analysis<|message|>\" + message.thinking + \"<|end|>\" }}\n            {%- endif %}\n            {{- \"<|start|>assistant to=\" }}\n            {{- \"functions.\" + tool_call.name + \"<|channel|>commentary \" }}\n            {{- (tool_call.content_type if tool_call.content_type is defined else \"json\") + \"<|message|>\" }}\n            {{- tool_call.arguments|tojson }}\n            {{- \"<|call|>\" }}\n            {%- set last_tool_call.name = tool_call.name %}\n        {%- elif loop.last and not add_generation_prompt %}\n            {#- Only render the CoT if the final turn is an assistant turn and add_generation_prompt is false #}\n            {#- This is a situation that should only occur in training, never in inference. #}\n            {%- if \"thinking\" in message %}\n                {{- \"<|start|>assistant<|channel|>analysis<|message|>\" + message.thinking + \"<|end|>\" }}\n            {%- endif %}\n            {#- <|return|> indicates the end of generation, but <|end|> does not #}\n            {#- <|return|> should never be an input to the model, but we include it as the final token #}\n            {#- when training, so the model learns to emit it. #}\n            {{- \"<|start|>assistant<|channel|>final<|message|>\" + message.content + \"<|return|>\" }}\n        {%- else %}\n            {#- CoT is dropped during all previous turns, so we never render it for inference #}\n            {{- \"<|start|>assistant<|channel|>final<|message|>\" + message.content + \"<|end|>\" }}\n            {%- set last_tool_call.name = none %}\n        {%- endif %}\n    {%- elif message.role == 'tool' -%}\n        {%- if last_tool_call.name is none %}\n            {{- raise_exception(\"Message has tool role, but there was no previous assistant message with a tool call!\") }}\n        {%- endif %}\n        {{- \"<|start|>functions.\" + last_tool_call.name }}\n        {{- \" to=assistant<|channel|>commentary<|message|>\" + message.content|tojson + \"<|end|>\" }}\n    {%- elif message.role == 'user' -%}\n        {{- \"<|start|>user<|message|>\" + message.content + \"<|end|>\" }}\n    {%- endif -%}\n{%- endfor -%}\n\n{#- Generation prompt #}\n{%- if add_generation_prompt -%}\n<|start|>assistant\n{%- endif -%}",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|return|>",
+    "totalFileSize": 13792637760
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ff9ed188b0e657d4d7320d230497a816f774450e",
+      "size": 3450
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "aef9371907f26bedb7d0cbbd9a33fcaf5f87344c",
+      "size": 14378
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ2_M.gguf",
+      "blobId": "fe6b431775f1443b40c5f67984b7d0bb51a2dffd",
+      "size": 11545731136,
+      "lfs": {
+        "sha256": "2fd37f06a84aa0b2853212cf216c496ee862c9cdec79b8dea3a090228cb33821",
+        "size": 11545731136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ2_S.gguf",
+      "blobId": "cdd87799f2cabe13ebb2c4813270ac2666233414",
+      "size": 11545731136,
+      "lfs": {
+        "sha256": "067f1205918e462ad7673ef1d73a7b9c23d1e4ac93f1255809de0f4d85ff88d0",
+        "size": 11545731136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ2_XS.gguf",
+      "blobId": "ae007aad83481b50d2b92484f26165278fe7bb46",
+      "size": 11510341696,
+      "lfs": {
+        "sha256": "f321e29c742909c64e802e12078fd2aa4d4fb2bf84d3015294fa86c989e6848b",
+        "size": 11510341696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ2_XXS.gguf",
+      "blobId": "94ac49a64253ebac6ef6f62df7ea4664c5ff279c",
+      "size": 11510341696,
+      "lfs": {
+        "sha256": "2febf437ea662c0ea120db2ee463eeb4beaa2762ae21226abeaf0f6a8393ae0e",
+        "size": 11510341696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ3_M.gguf",
+      "blobId": "5c907608b41605c860e931e90f4da6716a9e1078",
+      "size": 11559002176,
+      "lfs": {
+        "sha256": "e7cd11d429a5de243b719f11be276ec0496f44de3258c1291c4100e0d3833a90",
+        "size": 11559002176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ3_XS.gguf",
+      "blobId": "640ba6309cbd77c45ee4086a475154bcc7c53239",
+      "size": 11559002176,
+      "lfs": {
+        "sha256": "ab0da71b68743683d0aa60e29b34aeba443c2232aaa49e2ea61c05aab60103a1",
+        "size": 11559002176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ3_XXS.gguf",
+      "blobId": "a1b217dffd75f58d6b7547fd86c5915a62e83e03",
+      "size": 11559002176,
+      "lfs": {
+        "sha256": "5b1e095f0612bb5ed57c9ac65fbd3dfe03f672a69fc38664e422bc773c157dec",
+        "size": 11559002176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ4_NL.gguf",
+      "blobId": "9e5b7fc07fd640c7d1916be5d490d8a65497ee1e",
+      "size": 11561214016,
+      "lfs": {
+        "sha256": "8b45d47cfc71488312abeef82a4306466c24fb3f5acbc0f18d010751f5835534",
+        "size": 11561214016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-IQ4_XS.gguf",
+      "blobId": "b68d82cad6d62b06c89d45896ba75356b6db894f",
+      "size": 11561214016,
+      "lfs": {
+        "sha256": "a9163d6362ab14e86dcf55c390fa51b4c1f2ac9c13333a8d7d94b5195511348c",
+        "size": 11561214016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-MXFP4.gguf",
+      "blobId": "39aafa16aba9f9dc2051395a2c60f4afdcba58fc",
+      "size": 12109565760,
+      "lfs": {
+        "sha256": "75acd89545d50126692df2116bc3fdf700408b4be1d74d58e8eed13bca028f17",
+        "size": 12109565760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q2_K.gguf",
+      "blobId": "1949b8f808733940f1434125e535a06df8baf32b",
+      "size": 11559002176,
+      "lfs": {
+        "sha256": "c4a6b12da1c9590c8088934ba1f12175b684255b7f139eccff4bd3989d008492",
+        "size": 11559002176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q2_K_L.gguf",
+      "blobId": "03779e995e90653a6c51d2b2e0dec0769be5bc40",
+      "size": 11848568896,
+      "lfs": {
+        "sha256": "1f1516b9d227c7281b185ca6bfe7e5e87b62afaf04f1a0b350ce9fb679d31e4c",
+        "size": 11848568896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q3_K_L.gguf",
+      "blobId": "dc7c5e6c7c7c78a32eb871979977cbe65a9c01bc",
+      "size": 11488223296,
+      "lfs": {
+        "sha256": "95bc2d163e120303d718c748550385a6c954fe91420ad787fe717e2dc16dfaee",
+        "size": 11488223296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q3_K_M.gguf",
+      "blobId": "27ffaa7eeac1dbd3b520df8a05aa5c1b9e8e359e",
+      "size": 11559186496,
+      "lfs": {
+        "sha256": "7db29251d05f1a6a0c8ebaf89cdca8c5e6ce3a97c33cbf3723307a91ab578eba",
+        "size": 11559186496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q3_K_S.gguf",
+      "blobId": "06b40216dc788d91ea44a0625e4baca60c003d10",
+      "size": 11554578496,
+      "lfs": {
+        "sha256": "eddc3bd1a4b0ba03251f7635ea60922820c5e63cad457f75f0d7a0fef8d6898e",
+        "size": 11554578496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q3_K_XL.gguf",
+      "blobId": "998b256318a9ddcbdcc042ff80a784db266daa30",
+      "size": 11777790016,
+      "lfs": {
+        "sha256": "140d5369ae532a22912f202f114728fca789b12453169ca11bbce6cf997cc39f",
+        "size": 11777790016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q4_0.gguf",
+      "blobId": "2d01a17ef5fceed7f9159f4989b9575a6e207356",
+      "size": 11519189056,
+      "lfs": {
+        "sha256": "a5867cd5c9e86942a006fac54e8a4c4a4276eaa1c96675cb5e907d09f65c4bd5",
+        "size": 11519189056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q4_1.gguf",
+      "blobId": "65031bc0ac8264a89bb16f210a041424418340be",
+      "size": 11592986176,
+      "lfs": {
+        "sha256": "d5f026e98aea9dbed97c7ab975918c2c449d0d1b4782d8a3f56ad6be90f4c807",
+        "size": 11592986176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q4_K_L.gguf",
+      "blobId": "9aee07751ed9c7492e703ef2d3cd1e0842ff5bb7",
+      "size": 11890593856,
+      "lfs": {
+        "sha256": "9320f11166c81266cda323625528edddbe8e2b8bffdcae9cbc2ab5cd371d218d",
+        "size": 11890593856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q4_K_M.gguf",
+      "blobId": "e5977ff225d51e7582d5d9371f35b84e10ebeb21",
+      "size": 11673418816,
+      "lfs": {
+        "sha256": "86a21df11afa5a40031ec1974e368ae0ab561ee3995f4d08ff432e8b2b7af9fc",
+        "size": 11673418816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q4_K_S.gguf",
+      "blobId": "b5334dde022e44800a5a0eccf080438ea27c8929",
+      "size": 11667151936,
+      "lfs": {
+        "sha256": "a746c1fb418b45293def5170faa17cacea27fa9ac467d5774b7a6f4280284a68",
+        "size": 11667151936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q5_K_L.gguf",
+      "blobId": "bbe43955f1db7f4b88d2e398405f5e2a06947822",
+      "size": 11909394496,
+      "lfs": {
+        "sha256": "9549f737a6a4b608e4ac77d30186ff784cc2dfd298f6c74cc815be4c65c75f6e",
+        "size": 11909394496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q5_K_M.gguf",
+      "blobId": "d8caa0ceddcc438432eb7b3b3ea0e6af01cdf8f7",
+      "size": 11728415296,
+      "lfs": {
+        "sha256": "c23cdd1057e1cef1d17ff077275eb2282a2a311133b5d518272dbce287954466",
+        "size": 11728415296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q5_K_S.gguf",
+      "blobId": "015acac40dafd94367c1fea90cdfc4035eee6d3a",
+      "size": 11722885696,
+      "lfs": {
+        "sha256": "0251e7e6cb40bed7acf72d6265dff144b6026beb62a057be40864cf0e88dc2f0",
+        "size": 11722885696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q6_K.gguf",
+      "blobId": "9b000006df63176ce9eea0767e4b5ddb7858157b",
+      "size": 12040998976,
+      "lfs": {
+        "sha256": "e729b05fa245760f29e230c71aa7a8afa3065838dd95dea169d50788babb10c5",
+        "size": 12040998976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q6_K_L.gguf",
+      "blobId": "9b000006df63176ce9eea0767e4b5ddb7858157b",
+      "size": 12040998976,
+      "lfs": {
+        "sha256": "e729b05fa245760f29e230c71aa7a8afa3065838dd95dea169d50788babb10c5",
+        "size": 12040998976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-Q8_0.gguf",
+      "blobId": "6bd5b74b1b0750bdd184ed43ea462c2ad22d4e45",
+      "size": 12109566016,
+      "lfs": {
+        "sha256": "a08385caa6348cb5b0837f20c97360344a0dd25aba8eaf36251a5d9aae244730",
+        "size": 12109566016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-bf16.gguf",
+      "blobId": "caeeb38700a1616ac8c367772e602304073539ae",
+      "size": 13792637760,
+      "lfs": {
+        "sha256": "5cf32dc225be2115513bcb6480d2f4eff95c6f58355639a679fe93454bbce8bc",
+        "size": 13792637760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "openai_gpt-oss-20b-imatrix.gguf",
+      "blobId": "7423e44f650288af346cf80f16425c21a4dfcbb3",
+      "size": 28079776,
+      "lfs": {
+        "sha256": "7128c5e1ee4854781103b47b5d41303741ed734bb410bdfdeaa93d52b40fc890",
+        "size": 28079776,
+        "pointerSize": 133
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-08-05T21:29:47.000Z",
+  "usedStorage": 317483813216
+}

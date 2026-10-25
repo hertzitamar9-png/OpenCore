@@ -1,0 +1,70 @@
+{
+  "_id": "67ccce45cf0454aa7903a03b",
+  "id": "alphaduriendur/DeepSeek-Coder-V2-Lite-Base-Q4_K_M-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "llama-cpp",
+    "gguf-my-repo",
+    "base_model:deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "base_model:quantized:deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 65,
+  "likes": 0,
+  "modelId": "alphaduriendur/DeepSeek-Coder-V2-Lite-Base-Q4_K_M-GGUF",
+  "author": "alphaduriendur",
+  "sha": "90a75643c0b3b1b5a8798fabac5b5ae0b9f69608",
+  "lastModified": "2025-03-08T23:10:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "deepseek-ai/DeepSeek-Coder-V2-Lite-Base",
+    "license": "other",
+    "license_name": "deepseek-license",
+    "license_link": "LICENSE",
+    "tags": [
+      "llama-cpp",
+      "gguf-my-repo"
+    ]
+  },
+  "gguf": {
+    "total": 15706484224,
+    "architecture": "deepseek2",
+    "context_length": 163840,
+    "chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 10364416800
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "0de181a88cc0431ab7d15c6578ff033d1f3504e4",
+      "size": 1595
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "76f43ef36951ed93c39237ee2be64418dfdc721d",
+      "size": 1981
+    },
+    {
+      "rfilename": "deepseek-coder-v2-lite-base-q4_k_m.gguf",
+      "blobId": "76976cdfcf414287a32ceb2952bf269c823fe3d0",
+      "size": 10364416800,
+      "lfs": {
+        "sha256": "4e01ad8eb4879f7a42fc533e5a9da8ad6fae6604004aa9de4f931a3116ffed77",
+        "size": 10364416800,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-03-08T23:09:57.000Z",
+  "usedStorage": 10364416800
+}

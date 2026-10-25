@@ -1,0 +1,883 @@
+{
+  "_id": "6acffefac1c99e2a23eed846",
+  "id": "ggml-org/Muse-Spark-Open-816B-A42B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "quantized",
+    "image-text-to-text",
+    "base_model:meta-models/Muse-Spark-Open-816B-A42B",
+    "base_model:quantized:meta-models/Muse-Spark-Open-816B-A42B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2479,
+  "likes": 12,
+  "modelId": "ggml-org/Muse-Spark-Open-816B-A42B-GGUF",
+  "author": "ggml-org",
+  "sha": "ada96652107984f184027153a77ec250d67ed271",
+  "lastModified": "2026-10-15T20:05:54.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "muse-model-license",
+    "license_link": "LICENSE.md",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "gguf",
+      "quantized"
+    ],
+    "base_model": [
+      "meta-models/Muse-Spark-Open-816B-A42B"
+    ]
+  },
+  "gguf": {
+    "total": 819991575808,
+    "architecture": "muse-spark",
+    "context_length": 1048576,
+    "chat_template": "{%- set tools = tools | default(none) -%}\n{%- set add_generation_prompt = add_generation_prompt | default(false) -%}\n{%- set reasoning_effort = reasoning_effort | default('xhigh', true) -%}\n{%- set cutoff_date = cutoff_date | default('2026-01-04') -%}\n{%- set current_date = current_date | default(strftime_now('%Y-%m-%d') if strftime_now is defined else none) -%}\n{%- set reasoning_effort_map = {'low': 8, 'medium': 32, 'high': 256, 'xhigh': 512} -%}\n{%- if not (reasoning_effort is string and reasoning_effort in reasoning_effort_map) -%}\n    {{- raise_exception('Unsupported reasoning_effort: ' ~ reasoning_effort ~ '. Expected one of: low, medium, high, xhigh.') -}}\n{%- endif -%}\n\n{#- Neutralise control sequences in caller-supplied text so it cannot be\n    tokenized as structure. \"<|\" is broken because every special token has the\n    form \"<|...|>\"; the bare media placeholders are broken because the\n    multimodal processor rewrites them positionally and a literal one in text\n    would desynchronise placeholders from the attached media. -#}\n{%- macro esc(value) -%}\n    {{- value | string\n        | replace('<|', '< |')\n        | replace('<image>', '< image>')\n        | replace('<video>', '< video>')\n        | replace('<audio>', '< audio>') -}}\n{%- endmacro -%}\n\n{%- macro esc_header(value) -%}\n    {{- esc(value) | replace('\\r', ' ') | replace('\\n', ' ') -}}\n{%- endmacro -%}\n\n{%- macro esc_attr(value) -%}\n    {{- esc_header(value)\n        | replace('&', '&amp;')\n        | replace('\"', '&quot;')\n        | replace(\"'\", '&#39;')\n        | replace('<', '&lt;')\n        | replace('>', '&gt;') -}}\n{%- endmacro -%}\n\n{%- macro render_content(content) -%}\n    {%- if content is string -%}\n        {{- esc(content) -}}\n    {%- elif content is not none -%}\n        {%- for part in content -%}\n            {%- set part_type = part.get('type', '') -%}\n            {%- if part_type in ['image', 'input_image', 'image_url'] -%}\n                {{- '<|patch|>' -}}\n            {%- elif part_type in ['video', 'input_video', 'video_url'] -%}\n                {{- '<|video|>' -}}\n            {%- elif part_type in ['audio', 'input_audio', 'audio_url'] -%}\n                {{- '<|audio|>' -}}\n            {%- elif part_type in ['text', 'input_text', 'output_text'] -%}\n                {{- esc(part.get('text', '')) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_atem(tc) -%}\n    {%- set args = tc.function.arguments -%}\n    {%- if args is not mapping -%}\n        {{- raise_exception('This chat template requires tool_call.function.arguments to be a dict (mapping). The jinja sandbox has no JSON parser, so deserialize the arguments string before calling apply_chat_template.') -}}\n    {%- endif -%}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"' -}}{{- esc_attr(tc.function.name) -}}{{- '\">\\n' -}}\n    {%- for k, v in args.items() -%}\n        {{- '<atem:parameter name=\"' -}}{{- esc_attr(k) -}}{{- '\">' -}}\n        {%- if v is boolean -%}\n            {%- if v -%}\n                true\n            {%- else -%}\n                false\n            {%- endif -%}\n        {%- elif v is none -%}\n            null\n        {%- elif v is mapping or (v is iterable and v is not string) -%}\n            {{- esc(v | tojson) -}}\n        {%- else -%}\n            {{- esc(v) -}}\n        {%- endif -%}\n        {{- '</atem:parameter>\\n' -}}\n    {%- endfor -%}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_defs(tools) -%}\n    {{- 'In this environment you have access to a set of tools you can use to answer the user\\'s question.\\n\\n' -}}\n    {{- 'You can invoke a function by writing a \"<atem:function_calls>\" block like the following as part of your reply to the user:\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"$FUNCTION_NAME\">\\n<atem:parameter name=\"$PARAMETER_NAME\">$PARAMETER_VALUE</atem:parameter>\\n...\\n</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'String and scalar parameters should be specified as is, while lists and objects should use JSON format. Note that spaces for string values are not stripped. The output is not expected to be valid XML and is parsed with regular expressions.\\n' -}}\n    {{- 'Here are the functions available in JSONSchema format:\\n' -}}\n    {{- '// Tool metadata\\n{\"name\": \"\", \"description\": \"\"}\\n' -}}\n    {{- '// Function schemas' -}}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {{- '\\n{\"name\": ' -}}{{- esc(fn.name | tojson) -}}\n        {{- ', \"description\": ' -}}{{- esc((fn.description if fn.description is defined and fn.description else '') | tojson) -}}\n        {{- ', \"parameters\": ' -}}{{- esc((fn.parameters if fn.parameters is defined and fn.parameters else {}) | tojson) -}}{{- '}' -}}\n    {%- endfor -%}\n    {{- '\\n\\n' -}}\n    {{- 'Here are examples of how to call functions in the tool set. To make parallel tool calls, emit each call as its own message (one tool call per message) in consecutive messages, as shown below:\\n' -}}\n    {{- '(If the tool namespace is not specified, invoke the function directly as `example_function_name_1` rather than `example_tool_name_1.example_function_name_1`)\\n\\n' -}}\n    {{- 'to=example_tool_name_1.example_function_name_1\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name_1.example_function_name_1\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_1\">value_1</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'to=example_tool_name_2.example_function_name_2\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name_2.example_function_name_2\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_2\">This is the value for the second parameter\\nthat can span\\n\"multiple\" lines\\n</atem:parameter>\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_3\">value_3</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n\n{%- macro render_valid_recipients(tools) -%}\n    {%- set rns = namespace(recipients=[]) -%}\n    {{- 'Use the appropriate recipient for each message:\\n\\n' -}}\n    {%- set rns.recipients = rns.recipients + ['\"self\"'] -%}\n    {{- '- \"self\": private reasoning and tool planning.\\n' -}}\n    {%- set rns.recipients = rns.recipients + ['\"commentary\"'] -%}\n    {{- '- \"commentary\": user-visible intermediate updates while the assistant will continue working, including messages sent to the user before or between tool calls.\\n' -}}\n    {%- if tools -%}\n        {%- set first_tool = tools | first -%}\n        {%- set first_fn = (first_tool.function if first_tool.function is defined else first_tool).name -%}\n        {%- set rns.recipients = rns.recipients + ['\"[func_name] (e.g., ' ~ esc_header(first_fn) ~ ')\"'] -%}\n        {{- '- \"tool\" or \"[tool name]\": the name of the tool to call.\\n' -}}\n    {%- endif -%}\n    {%- set rns.recipients = rns.recipients + ['\"user\"'] -%}\n    {{- '- \"user\": messages that end the assistant turn, such as a completed response or clarification question that waits for the user\\'s reply; do not use for pre-tool updates or partial responses.\\n' -}}\n    {{- '\\n# Valid recipients: ' ~ rns.recipients | join(', ') ~ '.' -}}\n{%- endmacro -%}\n\n{{- bos_token -}}\n{%- set ns = namespace(instructions=none, rest=messages) -%}\n{%- if messages and messages[0]['role'] in ['system', 'developer'] -%}\n    {%- set ns.instructions = render_content(messages[0]['content'])\n          | replace('Reasoning effort', 'Reasoning strength')\n          | replace('Reasoning Effort', 'Reasoning Strength')\n          | replace('reasoning effort', 'reasoning strength')\n          | replace('REASONING EFFORT', 'REASONING STRENGTH') -%}\n    {%- set ns.rest = messages[1:] -%}\n{%- endif -%}\n{%- set sys = namespace(parts=['You are a helpful AI assistant.', 'Knowledge cutoff: ' ~ cutoff_date ~ '.']) -%}\n{%- if current_date -%}\n    {%- set sys.parts = sys.parts + ['Current date: ' ~ current_date ~ '.'] -%}\n{%- endif -%}\n{%- if ns.instructions -%}\n    {%- set sys.parts = sys.parts + [ns.instructions] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set sys.parts = sys.parts + [render_tool_defs(tools) | trim] -%}\n{%- endif -%}\n{%- if 'reasoning strength:' not in ((ns.instructions if ns.instructions else '') | lower) -%}\n    {%- set sys.parts = sys.parts + ['Reasoning strength: ' ~ reasoning_effort_map[reasoning_effort] ~ '.'] -%}\n{%- endif -%}\n{%- set sys.parts = sys.parts + [render_valid_recipients(tools) | trim] -%}\n{{- '<|start|>system<|message|>' ~ sys.parts | join('\\n\\n') ~ '<|eot|>' -}}\n{%- for message in ns.rest -%}\n    {%- set role = message['role'] -%}\n    {%- set end_token = '<|eom|>' if (not loop.last and ns.rest[loop.index0 + 1]['role'] == role) else '<|eot|>' -%}\n    {%- if role in ['system', 'developer'] -%}\n        {{- '<|start|>' + role + '<|message|>' -}}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'user' -%}\n        {{- '<|start|>user<|message|>' -}}\n        {%- if message.get('render_timestamp') and message.get('timestamp') -%}\n            {%- set ts = message['timestamp'] -%}\n            {%- if ts is string -%}\n                {{- '[' ~ esc_header(ts) ~ '] ' -}}\n            {%- elif ts.strftime is defined -%}\n                {{- '[' ~ (ts.strftime('%a %Y-%m-%d %H:%M %Z') | trim) ~ '] ' -}}\n            {%- endif -%}\n        {%- endif -%}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'tool' -%}\n        {%- set tname = message.get('name') -%}\n        {%- if not tname -%}\n            {%- set tcid = message.get('tool_call_id') -%}\n            {%- set tns = namespace(name=tcid if tcid else '') -%}\n            {%- for m in messages -%}\n                {%- if m.get('tool_calls') -%}\n                    {%- for tc in m['tool_calls'] -%}\n                        {%- if tcid is not none and tc.id is defined and tc.id == tcid -%}\n                            {%- set tns.name = tc.function.name -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n            {%- endfor -%}\n            {%- set tname = tns.name -%}\n        {%- endif -%}\n        {%- if not tname -%}\n            {{- raise_exception('tool message has no name and no matching tool_call_id') -}}\n        {%- endif -%}\n        {{- '<|start|>tool ' -}}{{- esc_header(tname) -}}{{- '<|message|><tool_output name=\"' -}}{{- esc_attr(tname) -}}{{- '\">\\n' -}}\n        {{- render_content(message['content']) -}}\n        {{- '\\n</tool_output><|eot|>' -}}\n    {%- elif role == 'assistant' -%}\n        {%- generation %}\n        {%- set reasoning = message.get('reasoning_content') or message.get('reasoning') -%}\n        {%- if reasoning -%}\n            {{- '<|start|>assistant to=self<|message|>' -}}{{- esc(reasoning) -}}{{- '<|eom|>' -}}\n        {%- endif -%}\n        {%- set body = render_content(message.get('content')) -%}\n        {%- if message.get('tool_calls') -%}\n            {%- if body -%}\n                {{- '<|start|>assistant to=commentary<|message|>' + body + '<|eom|>' -}}\n            {%- endif -%}\n            {%- for tc in message['tool_calls'] -%}\n                {{- '<|start|>assistant to=' -}}{{- esc_header(tc.function.name) -}}{{- '<|message|>' -}}\n                {{- render_atem(tc) -}}\n                {{- (end_token if loop.last else '<|eom|>') -}}\n            {%- endfor -%}\n        {%- elif body or not reasoning -%}\n            {%- set recipient = message.get('recipient') or 'user' -%}\n            {%- if recipient == 'user' -%}\n                {%- set end_turn = true -%}\n            {%- elif recipient in ['self', 'commentary'] -%}\n                {%- set end_turn = false -%}\n            {%- elif message.get('end_turn') is not none -%}\n                {%- set end_turn = message.get('end_turn') -%}\n            {%- else -%}\n                {%- set end_turn = false -%}\n            {%- endif -%}\n            {{- '<|start|>assistant to=' -}}{{- esc_header(recipient) -}}{{- '<|message|>' -}}\n            {{- body -}}\n            {{- ('<|eot|>' if end_turn else '<|eom|>') -}}\n        {%- endif -%}\n        {%- endgeneration %}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- '<|start|>assistant' -}}\n{%- endif -%}\n",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|end_of_text|>",
+    "totalFileSize": 1640264556374
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "5b38e4a67547447f596ad41add7d1f3ca91dbb51",
+      "size": 12673
+    },
+    {
+      "rfilename": "LICENSE.md",
+      "blobId": "425b4e8bd18106f70cc707f2717cdb81b252b020",
+      "size": 8299
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00001-of-00022.gguf",
+      "blobId": "76be25b90d527a8fa9bc7af39841ae3708a3b733",
+      "size": 13075766,
+      "lfs": {
+        "sha256": "6905e84a445bea02a0028026416b2a8bfce45d352e7465c715618981a90e14a6",
+        "size": 13075766,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00002-of-00022.gguf",
+      "blobId": "2e02970c088c1f3cd3aae53cb57b406b8e1b2818",
+      "size": 79265245984,
+      "lfs": {
+        "sha256": "833d1a050dbf2d0df1ab0434862ab952351f43fcbeb4afe9602d599dc0bb364c",
+        "size": 79265245984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00003-of-00022.gguf",
+      "blobId": "a2896a5e361717866420206ef66db52a788c3274",
+      "size": 79323441184,
+      "lfs": {
+        "sha256": "38cb0d7f6518ebf311d5fe7cfb9df1090d88ca2c4745496a170fe11810c90a0e",
+        "size": 79323441184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00004-of-00022.gguf",
+      "blobId": "31f3d5697e7c2e4db3b6e20cb9e1b97fe5820343",
+      "size": 78945625088,
+      "lfs": {
+        "sha256": "ae8c70830a9402a76cd5d74a713f75dfeb8a0e21353f1af3323ddf57bc28c1f6",
+        "size": 78945625088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00005-of-00022.gguf",
+      "blobId": "30814ed07ba50e885def8aeb3937e1304dce3622",
+      "size": 78383536320,
+      "lfs": {
+        "sha256": "92b16e78262d91bbbc11ad8598b759a022302a3384f21f54af5c94fbf8c8d335",
+        "size": 78383536320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00006-of-00022.gguf",
+      "blobId": "411a455e600d2771ef4ad7e1f07806b5c50b9c11",
+      "size": 79021615840,
+      "lfs": {
+        "sha256": "61af56ce1e52da414f8abc990510e4bb391083dd556a511ca2bbf785c285b629",
+        "size": 79021615840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00007-of-00022.gguf",
+      "blobId": "86333ac9f5743bf5b854bd89a2600816331e81e1",
+      "size": 79298211808,
+      "lfs": {
+        "sha256": "db388f8242f50c3fb30fab17f28a8deb7d3be7703b754d5ca847758c45b68f62",
+        "size": 79298211808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00008-of-00022.gguf",
+      "blobId": "0db0f9ae65651003cdf4f73fe9fee5ca9b7292ee",
+      "size": 78971120544,
+      "lfs": {
+        "sha256": "9aa5d4c423fa6e1dad1a676fd0d2350eb7a8765b4f4a682ce8628e9828032af7",
+        "size": 78971120544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00009-of-00022.gguf",
+      "blobId": "9354120fdfa5fdd29e44c29d9ec75cef6076c97f",
+      "size": 79163799008,
+      "lfs": {
+        "sha256": "d3eb0a97f0d831745277f26dfb1fc859679136d21151601cb2af230d912623c9",
+        "size": 79163799008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00010-of-00022.gguf",
+      "blobId": "af293ad46829499a41de1a24fd3b2b5eb28a2561",
+      "size": 78946315680,
+      "lfs": {
+        "sha256": "23e210077767f50798be69e3858a7b3cf950e768c684b89146128d694d3681fb",
+        "size": 78946315680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00011-of-00022.gguf",
+      "blobId": "94cc332669d47f97e9b942e8f53c7367108565f0",
+      "size": 79063346496,
+      "lfs": {
+        "sha256": "8be485922a54e13a7e80c2216b318986e41a2180475ecce5881413d6ad05caaa",
+        "size": 79063346496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00012-of-00022.gguf",
+      "blobId": "d9a6dbe0c810a76d8e0e398dde0fb35b79f6fb09",
+      "size": 73179501920,
+      "lfs": {
+        "sha256": "17b0a5b891c49280de1a453f15b451d0d897bc5d31ae5a4ef52e90b96960de67",
+        "size": 73179501920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00013-of-00022.gguf",
+      "blobId": "9daf29b8ef8a5e5078976c4dbb245f9bccc0f21a",
+      "size": 73607108000,
+      "lfs": {
+        "sha256": "10a1c105deea5d825f8747bc47522d1615102fe713fc910bf3b8a636de1bcd68",
+        "size": 73607108000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00014-of-00022.gguf",
+      "blobId": "478d215c9d6d1f956cab10bed7065b3cb2984713",
+      "size": 78979536576,
+      "lfs": {
+        "sha256": "657a9809b41ca31718e39070fb5e235b80097cbccdff617d6a7425e51f15c2b8",
+        "size": 78979536576,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00015-of-00022.gguf",
+      "blobId": "ea0b214e46d2234256eaac3f21461ea3c5326bea",
+      "size": 78963105120,
+      "lfs": {
+        "sha256": "5083f9a1381acc8f69e904b035a2a7146f1684684335d7ed4a368d86323ba3e6",
+        "size": 78963105120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00016-of-00022.gguf",
+      "blobId": "f75bbe69ddcfd2e1c6c5bf511c0e6c9d6b76a13a",
+      "size": 79088789792,
+      "lfs": {
+        "sha256": "11c721bb388e36d9140ad3807f28fa0b2ba5888847d3707278ce78915aae4031",
+        "size": 79088789792,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00017-of-00022.gguf",
+      "blobId": "54a2f4f4ba395a6d39b161074bce382a6f8a9e88",
+      "size": 79130906624,
+      "lfs": {
+        "sha256": "dbad3ab22b1bf04d48d39aae1c6bdf5f57df3a9cd48902f86e84d9699d5dd658",
+        "size": 79130906624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00018-of-00022.gguf",
+      "blobId": "e9cbace26c88647a17583a8ecbe150679f20efe6",
+      "size": 78937528800,
+      "lfs": {
+        "sha256": "bcf23da60623c24c890f7079bdd76f8ba9204cb543f5de9e237eee2dae48826a",
+        "size": 78937528800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00019-of-00022.gguf",
+      "blobId": "c892935b81cb7e6193e4c60692fe85b147132a6e",
+      "size": 79088229568,
+      "lfs": {
+        "sha256": "160a75d1b6ccd30ae694d3fb8aca975ec82005587ec5e845963205ac693e7586",
+        "size": 79088229568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00020-of-00022.gguf",
+      "blobId": "0259586b25140b7a8ce15e4d40678ac8bc7272fb",
+      "size": 79005260448,
+      "lfs": {
+        "sha256": "0fbede542e0b8adb7caa8297dc3a124c30493b2178d8d5bfbeaeb96e9052aa31",
+        "size": 79005260448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00021-of-00022.gguf",
+      "blobId": "3da9a68a95a6e2b48aad96d5347f08557f42412f",
+      "size": 79046615136,
+      "lfs": {
+        "sha256": "0a54efeabb8aabe1c8cd70223d8c8721fb271f1905d7780cd9d5ca82acf60ffe",
+        "size": 79046615136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-BF16-00022-of-00022.gguf",
+      "blobId": "9d0910aae28c8a07e26cfce90c5d26f9c5822a6a",
+      "size": 70842640672,
+      "lfs": {
+        "sha256": "310c0237f4b95ad6f20c6fcd1af57d6970ac16a1f1e770a295b0d2d21d08faa0",
+        "size": 70842640672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00001-of-00022.gguf",
+      "blobId": "375b6221e153a1b0d1a18e2f779c9cae892e7d5b",
+      "size": 13076032,
+      "lfs": {
+        "sha256": "b2eb6f55ee80b4e444fb1bde4dc89d1181fb9d159758307bf91a4118cce8b267",
+        "size": 13076032,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00002-of-00022.gguf",
+      "blobId": "06b14e79dbb8120e6348a687d1e87d694aa3e632",
+      "size": 14478453536,
+      "lfs": {
+        "sha256": "95521bb77482a1add2fe0904231989ffcf71d2d23fc9d1f0bcaa8946abf85505",
+        "size": 14478453536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00003-of-00022.gguf",
+      "blobId": "9fa97b6c9744f40ee325cf6bd5aa369ab33a2912",
+      "size": 14491559968,
+      "lfs": {
+        "sha256": "41475994c673ff77b45fde5c08c78f1f6076e4dfaed357379df6c2fe4ec01d6f",
+        "size": 14491559968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00004-of-00022.gguf",
+      "blobId": "320042f7224af53c36517103c44b581b7bb9a3d8",
+      "size": 14457152512,
+      "lfs": {
+        "sha256": "bfcf1ec3b2e4b7e17d2c81b40f58898a247e595660c9f8a8a9097c1f8dcd1b6c",
+        "size": 14457152512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00005-of-00022.gguf",
+      "blobId": "b815b57625a232a470fbef1e2f2665699a98142e",
+      "size": 14274123968,
+      "lfs": {
+        "sha256": "5df604a09e98b3f8826baa824b4907c5fdec8fc24fa2b9dcefe3cbd6a500cd18",
+        "size": 14274123968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00006-of-00022.gguf",
+      "blobId": "05d9487e008dc26e094aad541e2cafd33d746465",
+      "size": 14593436384,
+      "lfs": {
+        "sha256": "6dd515ac8bad381e27deec63b5bbb41af1ceaeae70a96738ec7dbbd58cc59e28",
+        "size": 14593436384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00007-of-00022.gguf",
+      "blobId": "e64c60a6ff49746e741829eaed2f24b870557b5c",
+      "size": 14468952032,
+      "lfs": {
+        "sha256": "f3d1a3d2a8f3e7684424a8d8792bdd61e5f81e759d389132e5aaa81667a68152",
+        "size": 14468952032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00008-of-00022.gguf",
+      "blobId": "7cafa03e17703b384be855826e381da75eebe903",
+      "size": 14482647968,
+      "lfs": {
+        "sha256": "c679ee13740e5749224e6a7048da9905b26c5f5ac4f41fed69ec3d77aec822c7",
+        "size": 14482647968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00009-of-00022.gguf",
+      "blobId": "0beab6b18db4e6e60a102ed8f66dea4846e73f81",
+      "size": 14560507360,
+      "lfs": {
+        "sha256": "3051913d103acd1f586c3f800057a519520fb2655c12dc1ad909d89d9ea7bc4e",
+        "size": 14560507360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00010-of-00022.gguf",
+      "blobId": "8f8e040aa516cc42e619d2030d6dc3bbdb13711b",
+      "size": 14401744288,
+      "lfs": {
+        "sha256": "04e4dd83a1c6df022bfd5c984fefeeeee17fa1137364b90d50d39247e720714a",
+        "size": 14401744288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00011-of-00022.gguf",
+      "blobId": "29d5ecea2d6c4a5c42380bbfc815e10d55cfd1e9",
+      "size": 14389144896,
+      "lfs": {
+        "sha256": "a2b0e2388ec4dddd78395c111d2ec3a0488f14bbab5d81d080ba9e1f643dd30b",
+        "size": 14389144896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00012-of-00022.gguf",
+      "blobId": "cde10798596e38e7d6eba2c64ac989655650555e",
+      "size": 13435123040,
+      "lfs": {
+        "sha256": "00a5e2d7552de0827d38d96babf4820387f5ea4980092bed389a0b6289d11e09",
+        "size": 13435123040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00013-of-00022.gguf",
+      "blobId": "ffccc914142e617ba3ac1d3385f9e15eb99db047",
+      "size": 14500832672,
+      "lfs": {
+        "sha256": "8e8635adbef292dd6ef2343c9d8948590d9e8a3b3a910c64740bd128161c81ef",
+        "size": 14500832672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00014-of-00022.gguf",
+      "blobId": "073c8b2d92045913a67bf4e4f7c484b69676b796",
+      "size": 14786238144,
+      "lfs": {
+        "sha256": "2dc5ea2e430dad4817c7c8b53a0e2eb4dd4d9c353cc57989f1d4d7ab5271e9d6",
+        "size": 14786238144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00015-of-00022.gguf",
+      "blobId": "9e247c8eaad525c100f364355bd19787788e932d",
+      "size": 14805982560,
+      "lfs": {
+        "sha256": "554ad60488a19822d4f5de376cdbcd264bd1916f7eb6a0ea4f0e4fa69ecfa07c",
+        "size": 14805982560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00016-of-00022.gguf",
+      "blobId": "9cfd620371abc42a624254d3fef97c30323c501d",
+      "size": 14826285344,
+      "lfs": {
+        "sha256": "4b806c37c4d4099c82170072f218badaea37b4b5818edbe886b01040b00d8601",
+        "size": 14826285344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00017-of-00022.gguf",
+      "blobId": "24ebb9e073e1a1c21ed36af2159d1720f30745fe",
+      "size": 14624608256,
+      "lfs": {
+        "sha256": "a2182d35b1e22f2d82cc211b8ed643c4b5dbb7fe17873a33a3c388b876cfdc8c",
+        "size": 14624608256,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00018-of-00022.gguf",
+      "blobId": "b1450636f8406757721c05b40cc2dd70b95e383c",
+      "size": 14695471584,
+      "lfs": {
+        "sha256": "7f8804ef10ea21286f81c8318831531134126e33ae87bc5ae36c6e08411aaaa1",
+        "size": 14695471584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00019-of-00022.gguf",
+      "blobId": "f2b708d72192405036756e3327a27c63bd1b0c8c",
+      "size": 14953127104,
+      "lfs": {
+        "sha256": "b248998747703705164c70abdbc89ad2f36d02d8adefc5349a6e556e84ea25b4",
+        "size": 14953127104,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00020-of-00022.gguf",
+      "blobId": "510b431caf94e40dd2c5a54887fd2d0f4469920b",
+      "size": 14731745952,
+      "lfs": {
+        "sha256": "63a656b76e06a653c692c0bf2a00c41da04f67e7457e1338be2ea13b114a7cc7",
+        "size": 14731745952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00021-of-00022.gguf",
+      "blobId": "b5deb928de2be123e7a3bca5b93859ccec5f328b",
+      "size": 14858035296,
+      "lfs": {
+        "sha256": "66d559fb0ca7d696e65945874979cd036e6ab2947d92f842ab211d706c24ee7d",
+        "size": 14858035296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q2_K-00022-of-00022.gguf",
+      "blobId": "7d0d9abea00a59b2407b8c5f51c98a14bf939918",
+      "size": 13252225312,
+      "lfs": {
+        "sha256": "e92b426bda3c944df756c1f3d37ea79b99cc0b6012f289660665fda102b108ca",
+        "size": 13252225312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00001-of-00022.gguf",
+      "blobId": "23c44982253ff49f7d30ea268375c92d663ae049",
+      "size": 13075766,
+      "lfs": {
+        "sha256": "a07d2a1f310d8c96c419a37dd6b92d4216e6b12bea76edefe9c517bb09d9e78d",
+        "size": 13075766,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00002-of-00022.gguf",
+      "blobId": "4bdb2e0d1d2f30a2b0aa999df13353c7c5887512",
+      "size": 23994805024,
+      "lfs": {
+        "sha256": "91381753cc67848ddee2910bcc2db37c5199235e8c42a705d46e66a74f8c9300",
+        "size": 23994805024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00003-of-00022.gguf",
+      "blobId": "2e3a60a239681097599dd3009d141d0ee37fe1e4",
+      "size": 24021542944,
+      "lfs": {
+        "sha256": "eb816acd2d281eeabfb6bb9e04767f0ddcfc71865890521a1c184b5ad05b8428",
+        "size": 24021542944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00004-of-00022.gguf",
+      "blobId": "083c0117cbddfb975cf2db19ea2282577bccba80",
+      "size": 22859392000,
+      "lfs": {
+        "sha256": "d1fe570e9977d156e5e4f5b0e6b84fdbc75523de470afdbaf1335808aa1e2a8b",
+        "size": 22859392000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00005-of-00022.gguf",
+      "blobId": "f5b3487b5d9d63aab9bed9ab18297cbd1e9b9870",
+      "size": 22112753856,
+      "lfs": {
+        "sha256": "9a3f0242098b7b8d2073661193830f5e41281bbe0822e35d977076284251b58a",
+        "size": 22112753856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00006-of-00022.gguf",
+      "blobId": "2d0b655284e795521dfcd85aa54e599cbac83c6c",
+      "size": 22434163424,
+      "lfs": {
+        "sha256": "6c8cbe29efb5dbb25356ee6c91ca3260d163c7607fc0a7dda13e8a84d77baec6",
+        "size": 22434163424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00007-of-00022.gguf",
+      "blobId": "c621789abf6e7b28b5c74a823848035950a6857a",
+      "size": 22383603680,
+      "lfs": {
+        "sha256": "402775e8f598db4d3aaf88383a5a016f945aa259fc9a0f86adf788ce07851af5",
+        "size": 22383603680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00008-of-00022.gguf",
+      "blobId": "3741be1f3d83efeb073dbe7dfabf95d17c4f360f",
+      "size": 22348016544,
+      "lfs": {
+        "sha256": "92f35b3802e2976062d8466b688f8edd7fd9438e8a1c8a8a19f297b5ac0c217b",
+        "size": 22348016544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00009-of-00022.gguf",
+      "blobId": "a3362dae31bc0e9b571ca287b470531bfa8f3710",
+      "size": 22446323168,
+      "lfs": {
+        "sha256": "2d3d86d83729f3704c515362cc00fb3c1c407b2514c84ab37a50c39931f8fa5c",
+        "size": 22446323168,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00010-of-00022.gguf",
+      "blobId": "171299fd98ace798c390b2eb322c398cdb90ddf8",
+      "size": 22289657248,
+      "lfs": {
+        "sha256": "2f7f05f2fd834679455fd766b3396c51cf45871527bb7af88c360122e9e8fd82",
+        "size": 22289657248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00011-of-00022.gguf",
+      "blobId": "d84bab8e11b0649cef6d2498caf9716a09da68c1",
+      "size": 22305500480,
+      "lfs": {
+        "sha256": "1753f5f216941d2e62d64fee8430af0d887e9cef3609c2ab027399e85cab2a04",
+        "size": 22305500480,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00012-of-00022.gguf",
+      "blobId": "cc06f94e86d7519f612567236a707b97125482f1",
+      "size": 20642600288,
+      "lfs": {
+        "sha256": "14fae0eec77fae3020801cea2759a34f48524ab2353194e74aeb8e223b24c75a",
+        "size": 20642600288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00013-of-00022.gguf",
+      "blobId": "c1a2c27450065cc466053778dcf303f71bb187e8",
+      "size": 21263099296,
+      "lfs": {
+        "sha256": "938e2ebc286055d095fc036d0570dd5bcc750b107f6d54c662f33f02005f9d88",
+        "size": 21263099296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00014-of-00022.gguf",
+      "blobId": "7a7404f459c0f4b8649051f84e028cae30d092be",
+      "size": 22555137728,
+      "lfs": {
+        "sha256": "88887ea7d2b083b3d5e71b8f931e5ddc28623b348f3441147be00f72d1b60d04",
+        "size": 22555137728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00015-of-00022.gguf",
+      "blobId": "b01ade44bbdb8933a50fc30adf621855a858e1de",
+      "size": 22574882144,
+      "lfs": {
+        "sha256": "f1a7a9ac95b6ec4e972885874d73d622235145e3df0665759853c3da088b781f",
+        "size": 22574882144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00016-of-00022.gguf",
+      "blobId": "61fa706a529dd0a190246c974777a1c2e6f955ea",
+      "size": 22604097824,
+      "lfs": {
+        "sha256": "8324b3046756ac9e7dea408c0353681dac3e516aeff2d48487514b3e9274cff9",
+        "size": 22604097824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00017-of-00022.gguf",
+      "blobId": "abba6217909c83d0302490896e5597b24b870e94",
+      "size": 22446985216,
+      "lfs": {
+        "sha256": "a4065d88b568f073c16e7435ce6df3a68349135ebc172ffce92f91c06bef5790",
+        "size": 22446985216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00018-of-00022.gguf",
+      "blobId": "5042df2b5f1df07610156f883d98090a1bc16b34",
+      "size": 22482196960,
+      "lfs": {
+        "sha256": "1383d8a418493a09b3c63274d7ebd82860643cd9f00f9204c4b466e1e252df16",
+        "size": 22482196960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00019-of-00022.gguf",
+      "blobId": "2afe8619666475c35b05f6239cd962743979c1d1",
+      "size": 22704200896,
+      "lfs": {
+        "sha256": "c23e8f8d7dce41c4fb05bd926b9b8b1e176b49d6c5791fb30ae020c6fbedd441",
+        "size": 22704200896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00020-of-00022.gguf",
+      "blobId": "65c99524e4f1d9d42b5921cb8e8b421da26d5c71",
+      "size": 22518471328,
+      "lfs": {
+        "sha256": "912f571ed46f392182228b2a3939409fe6d5ce416564309d02d928b60bc5c332",
+        "size": 22518471328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00021-of-00022.gguf",
+      "blobId": "2d843a35b2409fc9b3b9e47a867d1c0ac9784796",
+      "size": 22626934880,
+      "lfs": {
+        "sha256": "83bfb163e08ccab81c9682158ec72979b989ad52405abb407e03960d612cf1e9",
+        "size": 22626934880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q4_K_S-00022-of-00022.gguf",
+      "blobId": "be1f923c1460f8dd4797024821aeb9b8497da932",
+      "size": 20441786656,
+      "lfs": {
+        "sha256": "11bfa1873f74e86b462c91b417de437126bf7e84f2f45d30365c50335e329ce0",
+        "size": 20441786656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00001-of-00010.gguf",
+      "blobId": "163285066f03eaed7f01261ba856874bc8b478a8",
+      "size": 13075817,
+      "lfs": {
+        "sha256": "f5d73f5091cfc885efcf98c976a4e5b611ac401a47620f71b57624ff51d9c9f0",
+        "size": 13075817,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00002-of-00010.gguf",
+      "blobId": "6503c62c9141026a7c22c6af42e64d731bed27d5",
+      "size": 98230657216,
+      "lfs": {
+        "sha256": "a07475b341428f341edc1e12c0215806755f93970f16335a25082ad9b422bfb9",
+        "size": 98230657216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00003-of-00010.gguf",
+      "blobId": "61e503070b7d59ef9feab1785214c3533e78ef4d",
+      "size": 97674219648,
+      "lfs": {
+        "sha256": "26b1e7453dbe3a7096d9c5ef4e2706e85eb24f6c6553ad0bf2be4c3aa0f509da",
+        "size": 97674219648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00004-of-00010.gguf",
+      "blobId": "f54036d4e7196d4e96e5b3f3a87554efa859ab70",
+      "size": 98064474912,
+      "lfs": {
+        "sha256": "d50a9401d98942ea10219e8e03e0f08c3ecb2cce1f3aaa23c5cc6c5db4ea8297",
+        "size": 98064474912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00005-of-00010.gguf",
+      "blobId": "786644d8c9a29f33d7b9bfb3ad25175d09f13b21",
+      "size": 98039295264,
+      "lfs": {
+        "sha256": "22532f74b32c43081b16bcc2ef65df03041a1574c183f7262e3e8a42f42dabc8",
+        "size": 98039295264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00006-of-00010.gguf",
+      "blobId": "153e2e6bf72381132ffc6119047d953a26407d3b",
+      "size": 99523447872,
+      "lfs": {
+        "sha256": "702124c9dc6642c061533ad38ef3e078b4ffb3fbe4b078e62a45fc60fd6d5b7d",
+        "size": 99523447872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00007-of-00010.gguf",
+      "blobId": "51c284e4c8329e4f196296c1653d4c177e0aa2f9",
+      "size": 99888285472,
+      "lfs": {
+        "sha256": "a7e78d2e9e38dcf9d80915f7d6925b09d118026adba39ea4a1b491dac4988cee",
+        "size": 99888285472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00008-of-00010.gguf",
+      "blobId": "e5c0fd2cb89ecb1c8ddfb71cd0c813e0a89c44c0",
+      "size": 97987574816,
+      "lfs": {
+        "sha256": "8ce1282f6fcd2ed99e6e2dc6c3c12efc645722bc28e6c5e00dca5ec263e7e40d",
+        "size": 97987574816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00009-of-00010.gguf",
+      "blobId": "6581cc6e039d8559cbeaa7f8b96e1c98f2ef6959",
+      "size": 97987148288,
+      "lfs": {
+        "sha256": "22d2058a342277869f86f59fe359cd3c4886c03d99c96ed4d5fdbc55128e7504",
+        "size": 97987148288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Muse-Spark-Open-816B-A42B-Q8_0-00010-of-00010.gguf",
+      "blobId": "30577076f9bb47c4cb9b8f5bae1706f26e46c1a3",
+      "size": 84240009568,
+      "lfs": {
+        "sha256": "1f386c819dea90ec04056d9115edaa6f23bd756c7dd0bf002aabed6bce095208",
+        "size": 84240009568,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a588a6dbd506b62b77e2d5d52175ca4d008bb602",
+      "size": 1597
+    },
+    {
+      "rfilename": "imatrix.gguf",
+      "blobId": "c62ba271900552a84ace0612dfe6d7e285a1e98e",
+      "size": 795674208,
+      "lfs": {
+        "sha256": "0bbfbd024708ffabe39ea42ed82b24b2e90e38ac0cfdd2d2ddaa269a03ce6247",
+        "size": 795674208,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-Muse-Spark-Open-816B-A42B-BF16.gguf",
+      "blobId": "8ca2f7b4da2254edda853a08bc4ffe56dd26b77a",
+      "size": 4097601888,
+      "lfs": {
+        "sha256": "5730a0433da65c61965319083d25fc7428800beb7bf76251b50109509be28558",
+        "size": 4097601888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-Muse-Spark-Open-816B-A42B-F16.gguf",
+      "blobId": "5e7d626df0e9dce320a34afe441f3ea5a68e6fe0",
+      "size": 4095795552,
+      "lfs": {
+        "sha256": "03301ea4888d6db20514f340edd29a3399741816df10a67f324cb1af0d1cd3ff",
+        "size": 4095795552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-Muse-Spark-Open-816B-A42B-Q8_0.gguf",
+      "blobId": "155c6254ca1b87a75f0bd58a159d8fe631ff0b0e",
+      "size": 2183868768,
+      "lfs": {
+        "sha256": "c3a0613bb2be1dde38faec3d1d1bf2c118013626ab9623936de500a656232ed3",
+        "size": 2183868768,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-14T22:15:22.000Z",
+  "usedStorage": 3297235387221
+}

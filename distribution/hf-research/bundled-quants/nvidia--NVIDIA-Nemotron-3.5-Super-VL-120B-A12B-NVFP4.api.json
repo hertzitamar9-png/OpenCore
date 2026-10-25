@@ -1,0 +1,1451 @@
+{
+  "_id": "6accfd8e4cd2223002a71284",
+  "id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "nemotron_h_omni",
+    "image-text-to-text",
+    "nvidia",
+    "pytorch",
+    "nemotron-3.5",
+    "conversational",
+    "custom_code",
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "ja",
+    "base_model:nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+    "base_model:quantized:nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+    "license:other",
+    "eval-results",
+    "endpoints_compatible",
+    "8-bit",
+    "modelopt_mixed",
+    "deploy:sagemaker",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 17283,
+  "likes": 229,
+  "modelId": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4",
+  "author": "nvidia",
+  "sha": "da5b2650a835292c678994a1fa3fb653250fb508",
+  "lastModified": "2026-10-23T21:46:53.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "NemotronH_Omni_Reasoning_V3"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_nemotron_h_omni.NemotronH_Omni_Reasoning_V3_Config",
+      "AutoModel": "modeling_nemotron_h_omni.NemotronH_Omni_Reasoning_V3",
+      "AutoModelForCausalLM": "modeling_nemotron_h_omni.NemotronH_Omni_Reasoning_V3",
+      "AutoModelForImageTextToText": "modeling_nemotron_h_omni.NemotronH_Omni_Reasoning_V3"
+    },
+    "model_type": "nemotron_h_omni",
+    "quantization_config": {
+      "config_groups": {
+        "group_0": {
+          "weights": {
+            "num_bits": 8
+          },
+          "targets": [
+            "language_model.backbone.layers.0.mixer.in_proj",
+            "language_model.backbone.layers.0.mixer.out_proj",
+            "language_model.backbone.layers.11.mixer.in_proj",
+            "language_model.backbone.layers.11.mixer.out_proj",
+            "language_model.backbone.layers.13.mixer.in_proj",
+            "language_model.backbone.layers.13.mixer.out_proj",
+            "language_model.backbone.layers.15.mixer.in_proj",
+            "language_model.backbone.layers.15.mixer.out_proj",
+            "language_model.backbone.layers.16.mixer.k_proj",
+            "language_model.backbone.layers.16.mixer.o_proj",
+            "language_model.backbone.layers.16.mixer.q_proj",
+            "language_model.backbone.layers.16.mixer.v_proj",
+            "language_model.backbone.layers.18.mixer.in_proj",
+            "language_model.backbone.layers.18.mixer.out_proj",
+            "language_model.backbone.layers.2.mixer.in_proj",
+            "language_model.backbone.layers.2.mixer.out_proj",
+            "language_model.backbone.layers.20.mixer.in_proj",
+            "language_model.backbone.layers.20.mixer.out_proj",
+            "language_model.backbone.layers.22.mixer.in_proj",
+            "language_model.backbone.layers.22.mixer.out_proj",
+            "language_model.backbone.layers.24.mixer.in_proj",
+            "language_model.backbone.layers.24.mixer.out_proj",
+            "language_model.backbone.layers.25.mixer.k_proj",
+            "language_model.backbone.layers.25.mixer.o_proj",
+            "language_model.backbone.layers.25.mixer.q_proj",
+            "language_model.backbone.layers.25.mixer.v_proj",
+            "language_model.backbone.layers.27.mixer.in_proj",
+            "language_model.backbone.layers.27.mixer.out_proj",
+            "language_model.backbone.layers.29.mixer.in_proj",
+            "language_model.backbone.layers.29.mixer.out_proj",
+            "language_model.backbone.layers.31.mixer.in_proj",
+            "language_model.backbone.layers.31.mixer.out_proj",
+            "language_model.backbone.layers.33.mixer.in_proj",
+            "language_model.backbone.layers.33.mixer.out_proj",
+            "language_model.backbone.layers.35.mixer.in_proj",
+            "language_model.backbone.layers.35.mixer.out_proj",
+            "language_model.backbone.layers.36.mixer.k_proj",
+            "language_model.backbone.layers.36.mixer.o_proj",
+            "language_model.backbone.layers.36.mixer.q_proj",
+            "language_model.backbone.layers.36.mixer.v_proj",
+            "language_model.backbone.layers.38.mixer.in_proj",
+            "language_model.backbone.layers.38.mixer.out_proj",
+            "language_model.backbone.layers.4.mixer.in_proj",
+            "language_model.backbone.layers.4.mixer.out_proj",
+            "language_model.backbone.layers.40.mixer.in_proj",
+            "language_model.backbone.layers.40.mixer.out_proj",
+            "language_model.backbone.layers.42.mixer.in_proj",
+            "language_model.backbone.layers.42.mixer.out_proj",
+            "language_model.backbone.layers.44.mixer.in_proj",
+            "language_model.backbone.layers.44.mixer.out_proj",
+            "language_model.backbone.layers.46.mixer.in_proj",
+            "language_model.backbone.layers.46.mixer.out_proj",
+            "language_model.backbone.layers.47.mixer.k_proj",
+            "language_model.backbone.layers.47.mixer.o_proj",
+            "language_model.backbone.layers.47.mixer.q_proj",
+            "language_model.backbone.layers.47.mixer.v_proj",
+            "language_model.backbone.layers.49.mixer.in_proj",
+            "language_model.backbone.layers.49.mixer.out_proj",
+            "language_model.backbone.layers.51.mixer.in_proj",
+            "language_model.backbone.layers.51.mixer.out_proj",
+            "language_model.backbone.layers.53.mixer.in_proj",
+            "language_model.backbone.layers.53.mixer.out_proj",
+            "language_model.backbone.layers.55.mixer.in_proj",
+            "language_model.backbone.layers.55.mixer.out_proj",
+            "language_model.backbone.layers.57.mixer.in_proj",
+            "language_model.backbone.layers.57.mixer.out_proj",
+            "language_model.backbone.layers.58.mixer.k_proj",
+            "language_model.backbone.layers.58.mixer.o_proj",
+            "language_model.backbone.layers.58.mixer.q_proj",
+            "language_model.backbone.layers.58.mixer.v_proj",
+            "language_model.backbone.layers.6.mixer.in_proj",
+            "language_model.backbone.layers.6.mixer.out_proj",
+            "language_model.backbone.layers.60.mixer.in_proj",
+            "language_model.backbone.layers.60.mixer.out_proj",
+            "language_model.backbone.layers.62.mixer.in_proj",
+            "language_model.backbone.layers.62.mixer.out_proj",
+            "language_model.backbone.layers.64.mixer.in_proj",
+            "language_model.backbone.layers.64.mixer.out_proj",
+            "language_model.backbone.layers.66.mixer.in_proj",
+            "language_model.backbone.layers.66.mixer.out_proj",
+            "language_model.backbone.layers.68.mixer.in_proj",
+            "language_model.backbone.layers.68.mixer.out_proj",
+            "language_model.backbone.layers.69.mixer.k_proj",
+            "language_model.backbone.layers.69.mixer.o_proj",
+            "language_model.backbone.layers.69.mixer.q_proj",
+            "language_model.backbone.layers.69.mixer.v_proj",
+            "language_model.backbone.layers.7.mixer.k_proj",
+            "language_model.backbone.layers.7.mixer.o_proj",
+            "language_model.backbone.layers.7.mixer.q_proj",
+            "language_model.backbone.layers.7.mixer.v_proj",
+            "language_model.backbone.layers.71.mixer.in_proj",
+            "language_model.backbone.layers.71.mixer.out_proj",
+            "language_model.backbone.layers.73.mixer.in_proj",
+            "language_model.backbone.layers.73.mixer.out_proj",
+            "language_model.backbone.layers.75.mixer.in_proj",
+            "language_model.backbone.layers.75.mixer.out_proj",
+            "language_model.backbone.layers.77.mixer.in_proj",
+            "language_model.backbone.layers.77.mixer.out_proj",
+            "language_model.backbone.layers.78.mixer.k_proj",
+            "language_model.backbone.layers.78.mixer.o_proj",
+            "language_model.backbone.layers.78.mixer.q_proj",
+            "language_model.backbone.layers.78.mixer.v_proj",
+            "language_model.backbone.layers.80.mixer.in_proj",
+            "language_model.backbone.layers.80.mixer.out_proj",
+            "language_model.backbone.layers.82.mixer.in_proj",
+            "language_model.backbone.layers.82.mixer.out_proj",
+            "language_model.backbone.layers.84.mixer.in_proj",
+            "language_model.backbone.layers.84.mixer.out_proj",
+            "language_model.backbone.layers.86.mixer.in_proj",
+            "language_model.backbone.layers.86.mixer.out_proj",
+            "language_model.backbone.layers.9.mixer.in_proj",
+            "language_model.backbone.layers.9.mixer.out_proj",
+            "language_model.lm_head"
+          ]
+        },
+        "group_1": {
+          "weights": {
+            "num_bits": 4
+          }
+        }
+      },
+      "ignore": [
+        "language_model.backbone.embeddings",
+        "language_model.backbone.layers.0.mixer.conv1d",
+        "language_model.backbone.layers.1.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.1.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.1.mixer.gate",
+        "language_model.backbone.layers.10.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.10.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.10.mixer.gate",
+        "language_model.backbone.layers.11.mixer.conv1d",
+        "language_model.backbone.layers.12.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.12.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.12.mixer.gate",
+        "language_model.backbone.layers.13.mixer.conv1d",
+        "language_model.backbone.layers.14.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.14.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.14.mixer.gate",
+        "language_model.backbone.layers.15.mixer.conv1d",
+        "language_model.backbone.layers.17.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.17.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.17.mixer.gate",
+        "language_model.backbone.layers.18.mixer.conv1d",
+        "language_model.backbone.layers.19.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.19.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.19.mixer.gate",
+        "language_model.backbone.layers.2.mixer.conv1d",
+        "language_model.backbone.layers.20.mixer.conv1d",
+        "language_model.backbone.layers.21.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.21.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.21.mixer.gate",
+        "language_model.backbone.layers.22.mixer.conv1d",
+        "language_model.backbone.layers.23.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.23.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.23.mixer.gate",
+        "language_model.backbone.layers.24.mixer.conv1d",
+        "language_model.backbone.layers.26.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.26.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.26.mixer.gate",
+        "language_model.backbone.layers.27.mixer.conv1d",
+        "language_model.backbone.layers.28.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.28.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.28.mixer.gate",
+        "language_model.backbone.layers.29.mixer.conv1d",
+        "language_model.backbone.layers.3.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.3.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.3.mixer.gate",
+        "language_model.backbone.layers.30.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.30.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.30.mixer.gate",
+        "language_model.backbone.layers.31.mixer.conv1d",
+        "language_model.backbone.layers.32.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.32.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.32.mixer.gate",
+        "language_model.backbone.layers.33.mixer.conv1d",
+        "language_model.backbone.layers.34.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.34.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.34.mixer.gate",
+        "language_model.backbone.layers.35.mixer.conv1d",
+        "language_model.backbone.layers.37.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.37.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.37.mixer.gate",
+        "language_model.backbone.layers.38.mixer.conv1d",
+        "language_model.backbone.layers.39.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.39.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.39.mixer.gate",
+        "language_model.backbone.layers.4.mixer.conv1d",
+        "language_model.backbone.layers.40.mixer.conv1d",
+        "language_model.backbone.layers.41.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.41.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.41.mixer.gate",
+        "language_model.backbone.layers.42.mixer.conv1d",
+        "language_model.backbone.layers.43.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.43.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.43.mixer.gate",
+        "language_model.backbone.layers.44.mixer.conv1d",
+        "language_model.backbone.layers.45.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.45.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.45.mixer.gate",
+        "language_model.backbone.layers.46.mixer.conv1d",
+        "language_model.backbone.layers.48.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.48.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.48.mixer.gate",
+        "language_model.backbone.layers.49.mixer.conv1d",
+        "language_model.backbone.layers.5.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.5.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.5.mixer.gate",
+        "language_model.backbone.layers.50.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.50.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.50.mixer.gate",
+        "language_model.backbone.layers.51.mixer.conv1d",
+        "language_model.backbone.layers.52.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.52.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.52.mixer.gate",
+        "language_model.backbone.layers.53.mixer.conv1d",
+        "language_model.backbone.layers.54.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.54.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.54.mixer.gate",
+        "language_model.backbone.layers.55.mixer.conv1d",
+        "language_model.backbone.layers.56.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.56.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.56.mixer.gate",
+        "language_model.backbone.layers.57.mixer.conv1d",
+        "language_model.backbone.layers.59.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.59.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.59.mixer.gate",
+        "language_model.backbone.layers.6.mixer.conv1d",
+        "language_model.backbone.layers.60.mixer.conv1d",
+        "language_model.backbone.layers.61.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.61.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.61.mixer.gate",
+        "language_model.backbone.layers.62.mixer.conv1d",
+        "language_model.backbone.layers.63.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.63.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.63.mixer.gate",
+        "language_model.backbone.layers.64.mixer.conv1d",
+        "language_model.backbone.layers.65.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.65.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.65.mixer.gate",
+        "language_model.backbone.layers.66.mixer.conv1d",
+        "language_model.backbone.layers.67.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.67.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.67.mixer.gate",
+        "language_model.backbone.layers.68.mixer.conv1d",
+        "language_model.backbone.layers.70.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.70.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.70.mixer.gate",
+        "language_model.backbone.layers.71.mixer.conv1d",
+        "language_model.backbone.layers.72.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.72.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.72.mixer.gate",
+        "language_model.backbone.layers.73.mixer.conv1d",
+        "language_model.backbone.layers.74.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.74.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.74.mixer.gate",
+        "language_model.backbone.layers.75.mixer.conv1d",
+        "language_model.backbone.layers.76.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.76.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.76.mixer.gate",
+        "language_model.backbone.layers.77.mixer.conv1d",
+        "language_model.backbone.layers.79.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.79.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.79.mixer.gate",
+        "language_model.backbone.layers.8.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.8.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.8.mixer.gate",
+        "language_model.backbone.layers.80.mixer.conv1d",
+        "language_model.backbone.layers.81.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.81.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.81.mixer.gate",
+        "language_model.backbone.layers.82.mixer.conv1d",
+        "language_model.backbone.layers.83.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.83.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.83.mixer.gate",
+        "language_model.backbone.layers.84.mixer.conv1d",
+        "language_model.backbone.layers.85.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.85.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.85.mixer.gate",
+        "language_model.backbone.layers.86.mixer.conv1d",
+        "language_model.backbone.layers.87.mixer.fc1_latent_proj",
+        "language_model.backbone.layers.87.mixer.fc2_latent_proj",
+        "language_model.backbone.layers.87.mixer.gate",
+        "language_model.backbone.layers.9.mixer.conv1d",
+        "language_model.mtp.layers.0.eh_proj",
+        "language_model.mtp.layers.0.mixer.k_proj",
+        "language_model.mtp.layers.0.mixer.o_proj",
+        "language_model.mtp.layers.0.mixer.q_proj",
+        "language_model.mtp.layers.0.mixer.v_proj",
+        "language_model.mtp.layers.1.mixer.fc1_latent_proj",
+        "language_model.mtp.layers.1.mixer.fc2_latent_proj",
+        "language_model.mtp.layers.1.mixer.gate",
+        "mlp1.*",
+        "vision_model.*",
+        "vision_projector.*"
+      ],
+      "quant_method": "modelopt_mixed"
+    },
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|im_end|>",
+      "unk_token": "<unk>"
+    },
+    "chat_template_jinja": "{% macro render_extra_keys(json_dict, handled_keys) %}\n    {%- if json_dict is mapping %}\n        {%- for json_key in json_dict if json_key not in handled_keys %}\n            {%- if json_dict[json_key] is mapping or (json_dict[json_key] is sequence and json_dict[json_key] is not string) %}\n                {{- '\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | tojson | safe) ~ '</' ~ json_key ~ '>' }}\n            {%- else %}\n                {{-'\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | string) ~ '</' ~ json_key ~ '>' }}\n            {%- endif %}\n        {%- endfor %}\n    {%- endif %}\n{% endmacro %}\n{%- macro render_content(content) -%}\n    {%- if content is none -%}\n        {{- '' -}}\n    {%- elif content is string -%}\n        {{- content | string -}}\n    {%- else -%}\n        {%- set text_ns = namespace(val='') -%}\n        {%- set counters = namespace(images=0, videos=0) -%}\n        {%- for part in content -%}\n            {%- if part['type'] == 'image' or part['type'] == 'image_url' or part['type'] == 'input_image' -%}\n                {%- set counters.images = counters.images + 1 -%}\n            {%- elif part['type'] == 'video' or part['type'] == 'video_url' or part['type'] == 'input_video' -%}\n                {%- set counters.videos = counters.videos + 1 -%}\n            {%- elif part['type'] == 'text' or part['type'] == 'input_text' -%}\n                {%- set text_ns.val = text_ns.val + (part['text'] | default('', true)) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if '<image>' in text_ns.val -%}\n            {%- set counters.images = 0 -%}\n        {%- endif -%}\n        {%- if '<video>' in text_ns.val -%}\n            {%- set counters.videos = 0 -%}\n        {%- endif -%}\n        {%- set content_ns = namespace(val='') -%}\n        {%- set render_ns = namespace(image_index=0, after_text=false) -%}\n        {%- for part in content -%}\n            {%- set sep = '\\n' if render_ns.after_text and not content_ns.val.endswith('\\n') else '' -%}\n            {%- if part['type'] == 'image' or part['type'] == 'image_url' or part['type'] == 'input_image' -%}\n                {%- set render_ns.image_index = render_ns.image_index + 1 -%}\n                {%- if counters.images > 0 -%}\n                    {%- if counters.images > 1 -%}\n                        {%- set content_ns.val = content_ns.val + sep\n                            + '<image ' + render_ns.image_index|string + '><image>' -%}\n                    {%- else -%}\n                        {%- set content_ns.val = content_ns.val + sep + '<image>' -%}\n                    {%- endif -%}\n                    {%- set render_ns.after_text = false -%}\n                {%- endif -%}\n            {%- elif part['type'] == 'video' or part['type'] == 'video_url' or part['type'] == 'input_video' -%}\n                {%- if counters.videos > 0 -%}\n                    {%- set content_ns.val = content_ns.val + sep + '<video>' -%}\n                    {%- set render_ns.after_text = false -%}\n                {%- endif -%}\n            {%- elif part['type'] == 'text' or part['type'] == 'input_text' -%}\n                {%- set content_ns.val = content_ns.val + (part['text'] | default('', true)) -%}\n                {%- if part['text'] | default('', true) -%}\n                    {%- set render_ns.after_text = true -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- content_ns.val -}}\n    {%- endif -%}\n{%- endmacro %}\n{%- set enable_thinking = enable_thinking if enable_thinking is defined else True %}\n{%- set medium_effort = medium_effort if medium_effort is defined else False %}\n{%- set truncate_history_thinking = truncate_history_thinking if truncate_history_thinking is defined else True %}\n{%- set ns = namespace(last_user_idx = -1) %}\n{%- set loop_messages = messages %}\n{%- for m in loop_messages %}\n  {%- if m[\"role\"] == \"user\" %}\n    {%- set ns.last_user_idx = loop.index0 %}\n  {%- endif %}\n{%- endfor %}\n{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = [] %}\n{%- endif %}\n{%- set ns = namespace(last_user_idx = -1) %}\n{%- for m in loop_messages %}\n  {%- if m[\"role\"] == \"user\" %}\n    {%- set ns.last_user_idx = loop.index0 %}\n  {%- endif %}\n{%- endfor %}\n{%- if system_message is defined %}\n    {{- \"<|im_start|>system\\n\" ~ render_content(system_message) }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- \"<|im_start|>system\\n\" }}\n    {%- endif %}\n{%- endif %}\n{%- if tools is iterable and tools | length > 0 %}\n    {%- if system_message is defined and system_message | length > 0 %}\n        {{- \"\\n\\n\" }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n\" }}\n    {{- \"<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.function is defined %}\n            {%- set tool = tool.function %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" ~ tool.name ~ \"</name>\" }}\n        {%- if tool.description is defined %}\n            {{- '\\n<description>' ~ (tool.description | trim) ~ '</description>' }}\n        {%- endif %}\n        {{- '\\n<parameters>' }}\n        {%- if tool.parameters is defined and tool.parameters is mapping and tool.parameters.properties is defined and tool.parameters.properties is mapping %}\n            {%- for param_name, param_fields in tool.parameters.properties|items %}\n                {{- '\\n<parameter>' }}\n                {{- '\\n<name>' ~ param_name ~ '</name>' }}\n                {%- if param_fields.type is defined %}\n                    {{- '\\n<type>' ~ (param_fields.type | string) ~ '</type>' }}\n                {%- endif %}\n                {%- if param_fields.description is defined %}\n                    {{- '\\n<description>' ~ (param_fields.description | trim) ~ '</description>' }}\n                {%- endif %}\n                {%- if param_fields.enum is defined %}\n                    {{- '\\n<enum>' ~ (param_fields.enum | tojson | safe) ~ '</enum>' }}\n                {%- endif %}\n                {%- set handled_keys = ['name', 'type', 'description', 'enum'] %}\n                {{- render_extra_keys(param_fields, handled_keys) }}\n                {{- '\\n</parameter>' }}\n            {%- endfor %}\n        {%- endif %}\n        {% set handled_keys = ['type', 'properties', 'required'] %}\n        {{- render_extra_keys(tool.parameters, handled_keys) }}\n        {%- if tool.parameters is defined and tool.parameters.required is defined %}\n            {{- '\\n<required>' ~ (tool.parameters.required | tojson | safe) ~ '</required>' }}\n        {%- endif %}\n        {{- '\\n</parameters>' }}\n        {%- set handled_keys = ['type', 'name', 'description', 'parameters'] %}\n        {{- render_extra_keys(tool, handled_keys) }}\n        {{- '\\n</function>' }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n{%- endif %}\n{%- if system_message is defined %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in loop_messages %}\n    {%- set content = render_content(message.content | default('', true)) %}\n    {%- if message.role == \"assistant\" %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is string and message.reasoning_content | trim | length > 0 %}\n            {%- set content = \"<think>\\n\" ~ message.reasoning_content ~ \"</think>\" ~ content %}\n        {%- else %}\n            {%- if content is string -%}\n                {%- if '<think>' not in content and '</think>' not in content -%}\n                    {%- set content = \"<think></think>\" ~ content -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endif %}\n        {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 %}\n            {{- '<|im_start|>assistant\\n' }}\n                {%- set include_content = not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}\n                {%- if content is string and content | trim | length > 0 %}\n                    {%- if include_content %}\n                        {{- (content | trim) ~ '\\n' -}}\n                    {%- else %}\n                        {%- set c = (content | string) %}\n                        {%- if '</think>' in c %}\n                            {%- set c = c.split('</think>')[-1] %}\n                        {%- elif '<think>' in c %}\n                            {%- set c = c.split('<think>')[0] %}\n                        {%- endif %}\n                        {%- set c = \"<think></think>\" ~ c %}\n                        {%- if c | length > 0 %}\n                            {{- c ~ '\\n' -}}\n                        {%- endif %}\n                    {%- endif %}\n                {%- else %}\n                    {{- \"<think></think>\" -}}\n                {%- endif %}\n                {%- for tool_call in message.tool_calls %}\n                    {%- if tool_call.function is defined %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {{- '<tool_call>\\n<function=' ~ tool_call.name ~ '>\\n' -}}\n                        {%- if tool_call.arguments is defined %}\n                            {%- for args_name, args_value in tool_call.arguments|items %}\n                                {{- '<parameter=' ~ args_name ~ '>\\n' -}}\n                                    {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                                {{- args_value ~ '\\n</parameter>\\n' -}}\n                            {%- endfor %}\n                        {%- endif %}\n                    {{- '</function>\\n</tool_call>\\n' -}}\n                {%- endfor %}\n                {{- '<|im_end|>\\n' }}\n        {%- else %}\n            {%- if not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}\n                {{- '<|im_start|>assistant\\n' ~ (content | default('', true) | string | trim) ~ '<|im_end|>\\n' }}\n            {%- else %}\n                {%- set c = (content | default('', true) | string) %}\n                {%- if '<think>' in c and '</think>' in c %}\n                    {%- set c = \"<think></think>\" ~ c.split('</think>')[-1] %}\n                {%- endif %}\n                {%- set c = c | trim %}\n                {%- if c | length > 0 %}\n                    {{- '<|im_start|>assistant\\n' ~ c ~ '<|im_end|>\\n' }}\n                {%- else %}\n                    {{- '<|im_start|>assistant\\n<|im_end|>\\n' }}\n                {%- endif %}\n            {%- endif %}\n        {%- endif %}\n    {%- elif message.role == \"user\" or message.role == \"system\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {#- Render structured image/video content in its original order. -#}\n        {%- if message.role == \"user\" and loop.index0 == ns.last_user_idx and medium_effort %}\n            {{- content + '\\n\\n{reasoning effort: efficient}' }}\n        {%- else %}\n            {{- content }}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user\\n' }}\n        {%- endif %}\n        {{- '<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>\\n' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ content ~ '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {%- if enable_thinking %}\n        {{- '<|im_start|>assistant\\n<think>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>assistant\\n<think></think>' }}\n    {%- endif %}\n{%- endif %}\n"
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "other",
+    "license_name": "openmdw-1.1",
+    "license_link": "https://openmdw.ai/license/1-1/",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "it",
+      "ja"
+    ],
+    "tags": [
+      "nvidia",
+      "pytorch",
+      "nemotron-3.5"
+    ],
+    "track_downloads": true,
+    "base_model": [
+      "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16"
+    ],
+    "base_model_relation": "quantized"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9986f7e74f9e0c06e66c6c5235fda0a1b20cb115",
+      "size": 1903
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2ba59bbf20fa213579e93a14361ce26aeea29174",
+      "size": 98048
+    },
+    {
+      "rfilename": "__init__.py",
+      "blobId": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "rfilename": "accuracy_plot.png",
+      "blobId": "c7bffdcf3f9fa15bccea6a6f567d61831b57ea8c",
+      "size": 1756481,
+      "lfs": {
+        "sha256": "06abbc64e8658a9c360e65044269f5fa6429715eb9446a33941844af92c9c27a",
+        "size": 1756481,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "bias.md",
+      "blobId": "cdcc8055f965222fabddabcabf22885d3a8bacc1",
+      "size": 3263
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "4ff5d8f17312a12dacef8ef522c9635c0f308835",
+      "size": 12927
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "79191b4ba8c6ca9b07883641524fb2d5cd3cd18c",
+      "size": 8668620
+    },
+    {
+      "rfilename": "configuration_nemotron_h_omni.py",
+      "blobId": "532e5baaf37bc8fd0b525ce2e28b84062e1d8ad2",
+      "size": 7140
+    },
+    {
+      "rfilename": "configuration_radio.py",
+      "blobId": "dc247f8cfe7c4827ffebe742913c30488abe9884",
+      "size": 4219
+    },
+    {
+      "rfilename": "explainability.md",
+      "blobId": "2435f23c865e7daba6a6eceef2f214b86df75d24",
+      "size": 2699
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "ea74519ecd977880565c074cd30b256efb290e70",
+      "size": 209
+    },
+    {
+      "rfilename": "harness_comparisons.png",
+      "blobId": "7865b7fab31a3b9646e4a1154a27e06e806a775b",
+      "size": 255501,
+      "lfs": {
+        "sha256": "aca282a7f7191693018f30210f5ffec1e19a63bf959eda08772304846b57f3b6",
+        "size": 255501,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "hf_quant_config.json",
+      "blobId": "10e1e2c6e29453b8127a6cff97416fb91a505add",
+      "size": 5631355
+    },
+    {
+      "rfilename": "image_processing_nemotron_h_omni.py",
+      "blobId": "1bcf1090b9b8c5498f07139592b3d6e004dfaf17",
+      "size": 10159
+    },
+    {
+      "rfilename": "model-00001-of-00088.safetensors",
+      "blobId": "d83e47e505a2aeab553f907278742af2c695c23d",
+      "size": 2868224280,
+      "lfs": {
+        "sha256": "6f41915eae39faf9eea1b8edbbc8a4ffcab6c7b8a3288e872c65457c86fa1438",
+        "size": 2868224280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00088.safetensors",
+      "blobId": "dbdbdfd19312a1bd7f501ca926506f3e6e2044b1",
+      "size": 1631773032,
+      "lfs": {
+        "sha256": "5579cbc0f0e71cb2616e9f5b2c4250fb48a4cbea454186aa964f310670eae027",
+        "size": 1631773032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00088.safetensors",
+      "blobId": "8fe70ae939ea468a2d6b89d005f1f84fe552e35e",
+      "size": 109705480,
+      "lfs": {
+        "sha256": "18829df5916e1e388046848b4af922e7a15990957b93269a58924df4806069eb",
+        "size": 109705480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00088.safetensors",
+      "blobId": "c78d2d0ad21fcdb51758629160f076115e02e545",
+      "size": 1631773032,
+      "lfs": {
+        "sha256": "2175d9a2ea3850af25b172391c5d0b82a356a098635adc431cd15bf9c6b8a18e",
+        "size": 1631773032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00088.safetensors",
+      "blobId": "6ba4d602357ebcd2ec8fe5ca89328e35300286ae",
+      "size": 109705480,
+      "lfs": {
+        "sha256": "7cddde605ad54afe7696b6fb3be4ce317354da1d1b3333aa4da2fdabc473ac10",
+        "size": 109705480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00088.safetensors",
+      "blobId": "b84c636172abc0b7f9be2fa7cff73385aca340ce",
+      "size": 1631773032,
+      "lfs": {
+        "sha256": "10f2874c36f60cafe49f0e6c3481d60503dc57f2d85bd75b367d39454d8d8b1f",
+        "size": 1631773032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00088.safetensors",
+      "blobId": "41edd117badf1d371580cdd2959cf1093f3491a9",
+      "size": 109705480,
+      "lfs": {
+        "sha256": "cb511368ac106f9d896e5968a5445e89f4aa40304d85d03fddfc0cb7e616f55f",
+        "size": 109705480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00008-of-00088.safetensors",
+      "blobId": "76c31597a5c8a08728be41ca38feaefa2cd71337",
+      "size": 35661352,
+      "lfs": {
+        "sha256": "5ae1f86003d237659f6fb990ce55e2f4adeb9c0e81ac484b63de066b60746418",
+        "size": 35661352,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00009-of-00088.safetensors",
+      "blobId": "c9a15459d42cd5e9760614cfef2bed4b728d29b1",
+      "size": 1631773032,
+      "lfs": {
+        "sha256": "9b2a2bfaaa5fd0a34578fce54e587ce0b0aa5c7f5ff123a1578ad97488429f89",
+        "size": 1631773032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00010-of-00088.safetensors",
+      "blobId": "a8affcc1b7e9e8b37be7d15266db47bffea6a368",
+      "size": 109705480,
+      "lfs": {
+        "sha256": "5b807b58002dc5db72d71f7bfb183ed8ec852879b7644ed73971f716cc6dc7fa",
+        "size": 109705480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00011-of-00088.safetensors",
+      "blobId": "e825a1297ba5a970ba8ff7f2302d6df96be82792",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "c180c31d09574e02ffa57f74a17e51a75d92fa1a95bfbb4003e0abd18cafdf48",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00012-of-00088.safetensors",
+      "blobId": "002d1f7206627562379ef764b0027a9c6c527553",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "793dafe8bbaefc1ceafd077f09ab8418efe5885cb6233928a194f6514e88a132",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00013-of-00088.safetensors",
+      "blobId": "9339756b2f3cb3f962ee733323cfc38998242f57",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "037feb9fcbb67c7f3974bc5eaf942519b5e5d61de26acc98807c4b9eb1465cd9",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00014-of-00088.safetensors",
+      "blobId": "4dc316400e05bb3c696eddfd265806547030f808",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "7e6f86059a4d672405591262e4c972faeeda7bea8df2e4d4e4948ef12333e13e",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00015-of-00088.safetensors",
+      "blobId": "3c4ef1cfe3ce2807a20fcef32707fb2dac6de300",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "48a44458600b0b9d36fb89010f6d812c3637f0a8267e2cdb4910e5f592721c54",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00016-of-00088.safetensors",
+      "blobId": "b4e83ec59e60cc1e97c140ac9bf6552d8d11f271",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "744d5f9f795a57c7ca6902a62122a14804a456bc4789fed042bdc77996e17fee",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00017-of-00088.safetensors",
+      "blobId": "eb40742ba3f21538b2ef2b3ca5d7c050ef3071b3",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "bc6360d6d77e7011ff2bc7d40e13ade7dc80e27fbb221ecd5aae1b45436573e2",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00018-of-00088.safetensors",
+      "blobId": "c68e633ae319879253dfd513179de6b66245f47b",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "15e7faad91d67e12bcfe186f0a8e75602cf5fa157e137dc2600e888f7b974594",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00019-of-00088.safetensors",
+      "blobId": "95b26cb4693c288cb3591e1c262f77bf2f619186",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "c267e9f16333437161c03793ffe919989cca60c6fec7006ea941de933ea617d7",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00020-of-00088.safetensors",
+      "blobId": "228a42d07e5fb1c73b64f732cbb2d3f7fc29c830",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "02789117d4e9b77304ef02e0699084085fb3cfcbd5c6632897997b650c42d825",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00021-of-00088.safetensors",
+      "blobId": "1ad47ad3a2787b837c9d32068ad227ab7845e8c2",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "c2bcfbb23075c1dcb07cc1a21f8253e674c31fea4bb81163fc004ac79a8773ca",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00022-of-00088.safetensors",
+      "blobId": "15048fc032215acd06bb9ef64f1bc040f3334b23",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "b2eac4a1082e898c7ba673fa128c4470f1975b30df3fae0ec51bc49d6a84a993",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00023-of-00088.safetensors",
+      "blobId": "099e8d3abcb49751f9dfcf366a12799e55b4a499",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "b0d4cf25a480c5213b6dc9dd85b53d0b70a520f06600dd344b8e3772de580dbf",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00024-of-00088.safetensors",
+      "blobId": "e89faf994e29a09ccd0f279a612b5324b506f0bb",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "c5f00189536c5f008b0a3cfcaec1d1755e078dfe7666bf81a9783936cb35eccb",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00025-of-00088.safetensors",
+      "blobId": "4a525ce5bb03dbbc3885b03dd77afe87b39320b7",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "42168f15fc92eac997af7be049d2ce2d50fe282fbbcb13d00e9a9bd4ec82540c",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00026-of-00088.safetensors",
+      "blobId": "794855fbd0823cce442d0adb89f7d5e325808c00",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "00c41541c7f59164f64d6387f099693ec2250613bb26a7ec843d612ab0f7ed23",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00027-of-00088.safetensors",
+      "blobId": "69c55c838eadaaa8da93a10c103b454a036501a8",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "702eb4481debb5b5c95f26f5eccd3ce885e9eca26300a963a30219ca996c72fa",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00028-of-00088.safetensors",
+      "blobId": "7ee661e901baf9773de284078dbd00d4e4f7bb8a",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "37bd9377bd368a4308ed25d9817978b8362791910ee450c7fcc409ef0fd731bf",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00029-of-00088.safetensors",
+      "blobId": "cf4f55299a3aba0f1536111b6cd9798ce77744cb",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "791f997bd0486a1841c227a80b3e7883ba273493dd2623a0625be4bee02a54d0",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00030-of-00088.safetensors",
+      "blobId": "871bb5a5ca7d9f4416df38abbbbf7b857f857c10",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "1589f152eb639ff15c904d5307de2f262c3e083b1b56d0718b6c3b8e0af24b26",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00031-of-00088.safetensors",
+      "blobId": "76126ee9c3e0f0e5104cee16917f7384587c9f0d",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "ffd15f64d1fbc7d5cc706e7124ff1d41a121894ff09e38d9c8fcb0042fb84a41",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00032-of-00088.safetensors",
+      "blobId": "8f69eed9e7df8007eacb05a26bb2516261838312",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "7cb09e5020596ad69e943bba89e8d1a8f6470402f3e67236b6094d910d9fb40c",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00033-of-00088.safetensors",
+      "blobId": "010c97c243f2029840d5658824ca63609064745d",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "97c251bfcc856b7688a8f54d5e0789d83512be3a08e64d8e64f5f7858adbbb6a",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00034-of-00088.safetensors",
+      "blobId": "8e7fe39d6d3ccc6e4780d83e244dbd1989e72017",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "56dd383919ec1c97fa443dbc4055e4040f06a45caf9efd4c17502a2c94284dc5",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00035-of-00088.safetensors",
+      "blobId": "582c1d244864600eb4ddfa94932b559b5c6ca0b5",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "66c3d62af12b2b9c930e36adff13665d521ba82eb0e473cf651b0597a8bb12c4",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00036-of-00088.safetensors",
+      "blobId": "fa2f5875a554950271ee243284937c9ad9098d8a",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "423477a6882922a85ababafc8146598ff255a5a57b19e2115df854c2a1e2fce5",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00037-of-00088.safetensors",
+      "blobId": "791858ee440bb5664812b8fff5d0b99157870a90",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "fa9e7f89224662e792694fc290aa295d941668234899d1d2734fd1702c7a3c1e",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00038-of-00088.safetensors",
+      "blobId": "e9ad0393503599ac2d37c6e2d2560f23d7181b35",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "ba2238df3ebae6a9f3817bb0a0c627abd2ceb5fc05ddee7b09969c587d3dcc4b",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00039-of-00088.safetensors",
+      "blobId": "771f430d0f65b69c2ec6639e46d82fcfde998cfc",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "dc07e34448f1f281228a61ad204c0cf4f01c363ae26a19f5d881b7b099d3b349",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00040-of-00088.safetensors",
+      "blobId": "05e2564412b626b178c080fd9b20f1daa8839244",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "e9e363b9e3e8d6a079b8cbc83202ff816baf5930464c3ebb33bc9fea110fec02",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00041-of-00088.safetensors",
+      "blobId": "29bc3f43a46cfde50308d80c4b9fc3a7164ed6a3",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "b7954bd274ec7767d2911fc2a5d9535c26349ea00a68b1fc8b060c01d8432947",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00042-of-00088.safetensors",
+      "blobId": "a68cc7f20fb6d79c4dbf6572cfdb1d3f5a404292",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "dd848c6299b73e66329e8239f6657230d77e29dc3b61e998e5f9bcdd78d15b35",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00043-of-00088.safetensors",
+      "blobId": "1d6d44e81c92a726daaff7fa00f03549157a93cf",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "2760662fbd08b56babc72bc6a95b502465deb8eb422e4be2bb2b7ba365db6ee2",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00044-of-00088.safetensors",
+      "blobId": "d87ae9f61f342ee0f01b1d8eb11d1855f6dd7ee9",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "26d72fef9caad970619be872f8f9c5eb9011487699b43bd43120f0fd793578e4",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00045-of-00088.safetensors",
+      "blobId": "0bf5786364728a5621980f9f29d1670b5b9cfd48",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "5b33832e6031f67775e186cadfa4e320362c1830b85b8084f8b717a6f13c5f57",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00046-of-00088.safetensors",
+      "blobId": "7cb74f2627dfe0f80af98fe370c65a20b6ee4377",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "98ee0cd33c63b53d12e9a9a126a93b220efb801d5626f9c325f1dc4f7dfe4ab0",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00047-of-00088.safetensors",
+      "blobId": "9e3aa44c964291ab1ccdb61a5f5bc82367dacb3f",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "1400a275bea74b0657fada69b32252ff6b51059de7ae4be6ce61cdc5e5b4085e",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00048-of-00088.safetensors",
+      "blobId": "ca2be0b3901bceba6a1231decbe72a0c0bcf332b",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "71d80d08153f098c7b1870877dd3b3e391e423d8ce6196ee8bd5fadebfd63077",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00049-of-00088.safetensors",
+      "blobId": "c0adccfb7d061ea370a8dde8577bcefa81f2d36e",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "62cf886c959e267d6b59681ddf689cb4a7c74695ce18d6a40cb69a603b3685b9",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00050-of-00088.safetensors",
+      "blobId": "f74df9991bb997d731f3c1f8989e5823b91610d4",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "7e40d1843df007c50af02ee93f0c19a9feddc742701d8ba786d25ccdab791810",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00051-of-00088.safetensors",
+      "blobId": "69e8ac19cddd9ad6582668f69a83ca2a1a175ed1",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "e8134d14dbe802581bdf1384dbfc3ca73f557207367b331f5f72900687175840",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00052-of-00088.safetensors",
+      "blobId": "97f0051fcc85446b08f0489c9a5a1fce80c798ec",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "b9702f2de4430e64d273f1f3ef37514e3cfb4df00392ed553ebe2237c3943c30",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00053-of-00088.safetensors",
+      "blobId": "cf2eae2de28bb4373e247c44a4cbaa49bc76a8e6",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "406c1109b3ec86027c8853e11fb7a18120d51cc1539cacb6fde0af75a14f5337",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00054-of-00088.safetensors",
+      "blobId": "7a834f76c58bc50370277251a5be885f8391ff71",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "305c48c4057efdd12c1238fc86b234103f1eb5fdaf71309b11c905673d008592",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00055-of-00088.safetensors",
+      "blobId": "35a1e7ff3221448afb82e7db7497c0ad377ef0a0",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "b59fd31cd4f371581281a71928af390772e6cbf658376ea4715efc32ea5f3982",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00056-of-00088.safetensors",
+      "blobId": "b874db35d8f4ca1d56fa2355d1f57f3fee3fc3cb",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "59927af12b8442bd0adc82bacf8ffd16a8c77f3adbc7ff95278bd855e5fe0351",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00057-of-00088.safetensors",
+      "blobId": "41854b4183f741c1a179f2b5ef30f71546413975",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "9bb05a91a17fede4861e1d94dff255410b9893832ff094503b7c3de8a9b5c2e5",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00058-of-00088.safetensors",
+      "blobId": "434e5cd3b7de5e6bf840966c5355c002065810fd",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "14b2a580e67eebc92c7daeffe87ff06ee4a48d65fe8c61d118ef98923d4122e4",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00059-of-00088.safetensors",
+      "blobId": "f24747f01b1814977b5e607e50e7e2791c9b0628",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "6e5cfd45c75815fc8f0472a806770993f19e3a612caa5d1cf2bcb28eedf56b71",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00060-of-00088.safetensors",
+      "blobId": "502ffef9428fdd0e86cb7423cb8c45aadca88cb4",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "18e1617933e6b5f8b2b697b5a36d7fc4353e2aa46b7131fbd420cc31991f433f",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00061-of-00088.safetensors",
+      "blobId": "13d7af91b3491ceac5a7538f7f21ab590884d253",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "96ae4395ebcb9576f1779d1e26b2fc8aa80d2d495b78553eec2c925793d1e7e3",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00062-of-00088.safetensors",
+      "blobId": "c102cc346499626bb717122557735a4dc6bc10fc",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "4eb47a166711b16ed9cff0b5de6b35d1d4e4c4a55b90efbec7f97e7c3db060dd",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00063-of-00088.safetensors",
+      "blobId": "1961b3957d3047bf6dd39acf7b7885217cec1059",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "d6d52d2d1fb97ab2950b4a525ddfc3d08418747a5cef7b30eb3c3ee0efe752d8",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00064-of-00088.safetensors",
+      "blobId": "0ba6c3d71a63b84523f6a0f04a8ce3d2a4a6b252",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "baf4b2d137e7b4ff01b2a09821b881624b79191c7941668210d4b55ac139e4f9",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00065-of-00088.safetensors",
+      "blobId": "a6e9ca136fe004fa612dea280651dd32909a6a79",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "f3286f5b4839da6f39f0fb81f3ff363b569a2e9a06f65110494908f6846881d4",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00066-of-00088.safetensors",
+      "blobId": "17c45792dc0e4b5c3a22fc4c3a0d1683198243be",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "62fb403c7dbc1b859888b1f4ce968654b983d32e456639b4b0b6c2bef310dc9a",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00067-of-00088.safetensors",
+      "blobId": "ec0aa0aa15b0fae4f109be564875d996162ac6a9",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "71e30a1baa4d952cef92cb2112ba4fcc3a258bcf3386c83310d4e34499e63e20",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00068-of-00088.safetensors",
+      "blobId": "8fd215a662586c49e8087f64969e7ef84fcba2a8",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "72b7f7d7527f0d55638c158e3804b72df2e9e58bea32e7295357bb62290c9601",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00069-of-00088.safetensors",
+      "blobId": "d515343ca656e8cc60fbbaed4724bfca558dda99",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "0120919a4d75f38be4efa3272ff31061c1733e2e8b05131b6fb1ee9574b0d271",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00070-of-00088.safetensors",
+      "blobId": "1bd7e4958d0e2a90fb7d5bd1fcdc7a4f2ead294a",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "d1893626de20be153946a89d10b78f0c49bb2c9d668521311af7daf7ee76a103",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00071-of-00088.safetensors",
+      "blobId": "ee5dfe06711f5612f294b0cca7b919301fca8c0b",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "cb1ff9a5e0675f9c2853046355b2c52b372734476eada8b842445d4b9d91bf2b",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00072-of-00088.safetensors",
+      "blobId": "640ec871b9a56ae383d6206e0c683849ec0cf3e2",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "6b5550553d314258d05047e5459ccd11c6c64046f3cc72f4634f4c68b48226fc",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00073-of-00088.safetensors",
+      "blobId": "6bd3d6eb1eee200b61a242f964d2c24e4ac3329e",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "49bc3077777db67d047dd7be6aefa9151ef216a5b22183d463c0dbb0629b8325",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00074-of-00088.safetensors",
+      "blobId": "b85c88e6d7691e9abd9fffd5fdd38e5d73fa2878",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "f4eedd847384946e2a48f6b5a089fedc990cf3603b2dc8a543528d7c4e4bc4cf",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00075-of-00088.safetensors",
+      "blobId": "bfc4993830b8952ec0091e57e4c19413ebb3e835",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "b8ccaaa2566487d7b4a9b62f47a8a7d182394831871a7d39d4d8c38b4dd529f6",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00076-of-00088.safetensors",
+      "blobId": "b5898db01c3160fa99e28d6964740652b8ba84b3",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "d81a94179ba3882c619d30bccdb7ab0f1e7bbc9005989d4c2afdfa3956bdd9ee",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00077-of-00088.safetensors",
+      "blobId": "28db1c500b1bb1e17c6f73357db4c930e06efa5a",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "5520b6e5538b842e1bd732e4f7f18da43f2fc6ea7a52db4e9dc635f25765c2f9",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00078-of-00088.safetensors",
+      "blobId": "26c63f6dfc6dee7be615265846b60a4bc2bed5ca",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "be0ad7debfcc928632c0ea2a1960f81fc6d5b10bd667e5aef64eed0a64f6a42b",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00079-of-00088.safetensors",
+      "blobId": "a9fb3b510974cf51af7283b845f0444833b9c7ff",
+      "size": 35661360,
+      "lfs": {
+        "sha256": "aa4b44ce3a0fb19d01cf3a42b1b3ca7440c3c753d776516b5dd7118351b7bc47",
+        "size": 35661360,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "model-00080-of-00088.safetensors",
+      "blobId": "aa61f6c485d6799fd116fba367ea403d6404f723",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "ab0ecd6a48fc3209f5cb230f49aa5296ac39eb324e2517c726e5bc98690142c0",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00081-of-00088.safetensors",
+      "blobId": "5bcc4b3d1406f4a7b3151c85d2bc32ef3d819221",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "6e4b06244ab661e7c0280e14ea5c381ba7f7db16764b4d99a58487b665bb958d",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00082-of-00088.safetensors",
+      "blobId": "0b019576bb0bda3c5733ab47111e645d96ddcc48",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "c15e7926cfc22e88fd0736257a6c0f4b8c0838e9d7397f86497722d84cb3be60",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00083-of-00088.safetensors",
+      "blobId": "e47dd7df720deba7fc6d0ba17209ea9b5f5a385f",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "5a13e46428f89d489080cf7128160c7334c82bf77818d05acdbb9d154497bdd8",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00084-of-00088.safetensors",
+      "blobId": "5bc9e48096dfbbe64e2d90f0922292ceee774ad9",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "ad356ff2414f9123a5859f112c63bb1fcc0e6b1270e796a144bf733ba77aa467",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00085-of-00088.safetensors",
+      "blobId": "1766ed370b59e2f2d7922b54ea611d2b05ed76d4",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "dba638bd7910d5c84574c070c74b487a45a0b4d13379828532b9571db8613fff",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00086-of-00088.safetensors",
+      "blobId": "488ddb405ea7658e0b06b9e4349e00546635363a",
+      "size": 1631777144,
+      "lfs": {
+        "sha256": "992ccd2c56c9a1ee79f5c4907bee0aa12517204bbd2e65a3d86469fa1dee7b47",
+        "size": 1631777144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00087-of-00088.safetensors",
+      "blobId": "cc15cfca717f27b96044804ce5712bb009074dc4",
+      "size": 109705488,
+      "lfs": {
+        "sha256": "26361d65e034375d00b1ac09e4cc436132dbc2895f315c0a679218b0b18eea52",
+        "size": 109705488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model-00088-of-00088.safetensors",
+      "blobId": "2f2e6a5b8e0765a8cea94f9a15665a6c84c79891",
+      "size": 3938866920,
+      "lfs": {
+        "sha256": "6e576283e02f46a5a547e08a892515cd4e77a0fa4e6955325cfbbfab24e37479",
+        "size": 3938866920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "a184ddfa5297fa1703c39b8ace5e606a5a5ee678",
+      "size": 19521590,
+      "lfs": {
+        "sha256": "c368acdbcfe882236af1ec79df4a1fb6127e6ed9f742d59c01c21fe96ddc2741",
+        "size": 19521590,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "modeling_nemotron_h_omni.py",
+      "blobId": "9d97b6e85b2d52c28221bcdafa71d7e0fbd4e20d",
+      "size": 22566
+    },
+    {
+      "rfilename": "modeling_radio.py",
+      "blobId": "136f2e23655fadaf1f9f149b77476a8169b6d170",
+      "size": 22804
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "fb02315551fe0fbcdc43e91d74b6d0007de64297",
+      "size": 693
+    },
+    {
+      "rfilename": "privacy.md",
+      "blobId": "ce2834e22d60e308351e4ff45246021048fe252f",
+      "size": 827
+    },
+    {
+      "rfilename": "processing_nemotron_h_omni.py",
+      "blobId": "272ec9a12c02f9209e07377516f72f48207ee7a4",
+      "size": 16450
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "34a8e057ecdd6cc6358e3dd46d2b17585b6b2cb1",
+      "size": 1062
+    },
+    {
+      "rfilename": "safety.md",
+      "blobId": "f53bf94a4635862eed5cf3e0bc799b93f81d20ac",
+      "size": 2145
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "ee0bd0e605325f9e51c06d99065913c5a0b41de0",
+      "size": 17077366,
+      "lfs": {
+        "sha256": "d0432ad8b1c2984a2e2dca82e1933e3fd5628df6e95c51fba4c3ee9950dce299",
+        "size": 17077366,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "7ba490ca61e32559b802be4f7b3ad2ae5132c54a",
+      "size": 619
+    },
+    {
+      "rfilename": "ultra_v3_reasoning_parser.py",
+      "blobId": "ad6d9c4a4ab820b936eb8a92c94f02fb48c3efd8",
+      "size": 2490
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-10-12T15:32:30.000Z",
+  "safetensors": {
+    "parameters": {
+      "I64": 2,
+      "F32": 21000,
+      "BF16": 1881132032,
+      "F8_E4M3": 5205131264,
+      "U8": 58683555840
+    },
+    "total": 65769840138
+  },
+  "usedStorage": 75049013059
+}

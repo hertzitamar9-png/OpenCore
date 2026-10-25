@@ -1,0 +1,281 @@
+{
+  "_id": "67770ef91478d3b83fc2d4a5",
+  "id": "dphn/Dolphin3.0-Llama3.1-8B-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "en",
+    "dataset:OpenCoder-LLM/opc-sft-stage1",
+    "dataset:OpenCoder-LLM/opc-sft-stage2",
+    "dataset:microsoft/orca-agentinstruct-1M-v1",
+    "dataset:microsoft/orca-math-word-problems-200k",
+    "dataset:NousResearch/hermes-function-calling-v1",
+    "dataset:AI-MO/NuminaMath-CoT",
+    "dataset:AI-MO/NuminaMath-TIR",
+    "dataset:allenai/tulu-3-sft-mixture",
+    "dataset:cognitivecomputations/dolphin-coder",
+    "dataset:HuggingFaceTB/smoltalk",
+    "dataset:cognitivecomputations/samantha-data",
+    "dataset:m-a-p/CodeFeedback-Filtered-Instruction",
+    "dataset:m-a-p/Code-Feedback",
+    "base_model:meta-llama/Llama-3.1-8B",
+    "base_model:quantized:meta-llama/Llama-3.1-8B",
+    "license:llama3.1",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 39602,
+  "likes": 243,
+  "modelId": "dphn/Dolphin3.0-Llama3.1-8B-GGUF",
+  "author": "dphn",
+  "sha": "be0be5e42b14c7b0052705d146a79a9e9ee8e6eb",
+  "lastModified": "2025-01-05T17:17:21.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "llama3.1",
+    "datasets": [
+      "OpenCoder-LLM/opc-sft-stage1",
+      "OpenCoder-LLM/opc-sft-stage2",
+      "microsoft/orca-agentinstruct-1M-v1",
+      "microsoft/orca-math-word-problems-200k",
+      "NousResearch/hermes-function-calling-v1",
+      "AI-MO/NuminaMath-CoT",
+      "AI-MO/NuminaMath-TIR",
+      "allenai/tulu-3-sft-mixture",
+      "cognitivecomputations/dolphin-coder",
+      "HuggingFaceTB/smoltalk",
+      "cognitivecomputations/samantha-data",
+      "m-a-p/CodeFeedback-Filtered-Instruction",
+      "m-a-p/Code-Feedback"
+    ],
+    "language": [
+      "en"
+    ],
+    "base_model": [
+      "meta-llama/Llama-3.1-8B"
+    ]
+  },
+  "gguf": {
+    "total": 8030277696,
+    "architecture": "llama",
+    "context_length": 131072,
+    "chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 16068924224
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c8dc12a3cca2ea2533935b8ddd95e42c711f2a16",
+      "size": 2774
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-F16.gguf",
+      "blobId": "5e17943d4a78677757d2a5a1d0473234573a667a",
+      "size": 16068924224,
+      "lfs": {
+        "sha256": "14fdfbe35aeaaf5e45d2a2501ac19c35c7e815485d202369dcfd6a64bd631349",
+        "size": 16068924224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q2_K.gguf",
+      "blobId": "b844fc12c177d1c1756ee03852553ffe371ac6be",
+      "size": 3179141120,
+      "lfs": {
+        "sha256": "ec650d59cf577807a54ab34db97cf336f52632a2bdb4aeb43ebf8ad7c033c68c",
+        "size": 3179141120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q3_K.gguf",
+      "blobId": "dd0a2255aa5c163cb0aede8bb08ceee1f3af39a1",
+      "size": 4018928448,
+      "lfs": {
+        "sha256": "0db68e50eba9cd35ff2f1b42b082abb8fd5b96c44bd3d86cff03593a541c7639",
+        "size": 4018928448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q3_K_L.gguf",
+      "blobId": "dc6ac60d1e82e1c25aec81d5076b195e1809d9f0",
+      "size": 4321966912,
+      "lfs": {
+        "sha256": "cf112efd428704e8059aa4300ee4b271d96f82858871c04534bdc244cefa4bc6",
+        "size": 4321966912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q3_K_M.gguf",
+      "blobId": "dd0a2255aa5c163cb0aede8bb08ceee1f3af39a1",
+      "size": 4018928448,
+      "lfs": {
+        "sha256": "0db68e50eba9cd35ff2f1b42b082abb8fd5b96c44bd3d86cff03593a541c7639",
+        "size": 4018928448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q3_K_S.gguf",
+      "blobId": "ce5626b946d7a063df8da091bd3d23d960b32f2b",
+      "size": 3664509760,
+      "lfs": {
+        "sha256": "718577bb800aba95387e82c7c213c924a52b95de5a227ee9d6fb5148707e3af4",
+        "size": 3664509760,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q4_0.gguf",
+      "blobId": "7eb0f8c9bbc3185e067f092c938fcaddc0f57bb0",
+      "size": 4661223296,
+      "lfs": {
+        "sha256": "56d0c669d970ae38ef2ff7b9d7588ef32783b9bd0484b413dc5dd866b739b058",
+        "size": 4661223296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q4_1.gguf",
+      "blobId": "e988bf3a2d9bc2a780f414b2d2127847de1bb771",
+      "size": 5130264960,
+      "lfs": {
+        "sha256": "63b0b50a1e4c26b9ef4530c3daeeede1ef02362cda5673c056f8303f2407795c",
+        "size": 5130264960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q4_K.gguf",
+      "blobId": "68994c75497edf1b8fbaa50162008692ea18b77d",
+      "size": 4920745856,
+      "lfs": {
+        "sha256": "4c001f29d4edbd9327a6df8e16e2b7907a64e0e31b0a7abe9c779a96773f304e",
+        "size": 4920745856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q4_K_M.gguf",
+      "blobId": "68994c75497edf1b8fbaa50162008692ea18b77d",
+      "size": 4920745856,
+      "lfs": {
+        "sha256": "4c001f29d4edbd9327a6df8e16e2b7907a64e0e31b0a7abe9c779a96773f304e",
+        "size": 4920745856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q4_K_S.gguf",
+      "blobId": "c0898bc05c28d12e3b177f5913d9961dd2b9699f",
+      "size": 4692680576,
+      "lfs": {
+        "sha256": "b2dc713de16917ccc66ff7266943aa43e504ecc06114f6b5a3040e9d7fcd3243",
+        "size": 4692680576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q5_0.gguf",
+      "blobId": "0b930a033846e83470bef92f22b3da5df6180a7e",
+      "size": 5599306624,
+      "lfs": {
+        "sha256": "f9b162e131259cf3c0f0eb444b65037e2ff4286e700c5a1019be23d794a5dbee",
+        "size": 5599306624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q5_1.gguf",
+      "blobId": "5abb524bebbdf7484095711b8d5ab776eab0e6d7",
+      "size": 6068348288,
+      "lfs": {
+        "sha256": "f498bfb4a9238c6c7137a59f372e771e4c9c88bc7132a0914d09554ead57ac32",
+        "size": 6068348288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q5_K.gguf",
+      "blobId": "24dc333d945b5697108cd7dbebca975dcc34685b",
+      "size": 5733000064,
+      "lfs": {
+        "sha256": "116e555282adf1747fb925482db84f236ae6c7012e6ea9f2b2a7653fd9340624",
+        "size": 5733000064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q5_K_M.gguf",
+      "blobId": "24dc333d945b5697108cd7dbebca975dcc34685b",
+      "size": 5733000064,
+      "lfs": {
+        "sha256": "116e555282adf1747fb925482db84f236ae6c7012e6ea9f2b2a7653fd9340624",
+        "size": 5733000064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q5_K_S.gguf",
+      "blobId": "301d6bea67ab722ba61857b22cf724e301ac45f8",
+      "size": 5599306624,
+      "lfs": {
+        "sha256": "a4d2ec58ec805c08ca1473fdca91a985a30acbb4c2e0613044f89c19ec6289fe",
+        "size": 5599306624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q6_K.gguf",
+      "blobId": "55e4c18ebf70b9aba0d48b83903f2e364cff9cbd",
+      "size": 6596020160,
+      "lfs": {
+        "sha256": "386ef45007b55d205f784b4d174aee2e3410a77ab9656af0e40436e6e5dafc39",
+        "size": 6596020160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Dolphin3.0-Llama3.1-8B-Q8_0.gguf",
+      "blobId": "633bfef06ec505f90e9902501a765603ff64e79b",
+      "size": 8540788544,
+      "lfs": {
+        "sha256": "715cb8cb7674b0989f84a93ba0ce111c661bbb37a35ca5f19b75613104ff2308",
+        "size": 8540788544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Modelfile",
+      "blobId": "e602e23bfd469698bb3994cc78de32bb69b866e2",
+      "size": 831
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "55ed6ca5a54a671611308972b827522a2c75f56a",
+      "size": 6021
+    },
+    {
+      "rfilename": "quant_sizes",
+      "blobId": "8f396c192010f1628ac36f2a18cf189113362dcf",
+      "size": 98
+    }
+  ],
+  "spaces": [
+    "educatedlucifer12/whisper-ai",
+    "probablytaha/dolphinz3",
+    "kines9661/whisper-ai",
+    "Roma123886/OMEN"
+  ],
+  "createdAt": "2025-01-02T22:11:05.000Z",
+  "usedStorage": 88795155456
+}

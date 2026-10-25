@@ -1,0 +1,256 @@
+{
+  "_id": "6a832587e74e9a9edfb67ff9",
+  "id": "HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "uncensored",
+    "qwen3.8",
+    "multimodal",
+    "vision",
+    "mtp",
+    "speculative-decoding",
+    "fastmtp",
+    "image-text-to-text",
+    "en",
+    "zh",
+    "multilingual",
+    "base_model:Qwen/Qwen3.8-27B",
+    "base_model:quantized:Qwen/Qwen3.8-27B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2310117,
+  "likes": 2085,
+  "modelId": "HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF",
+  "author": "HauhauCS",
+  "sha": "993a5971fda8f30dd1b7eb2654792ba4415c7460",
+  "lastModified": "2026-08-17T22:02:10.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "tags": [
+      "uncensored",
+      "qwen3.8",
+      "gguf",
+      "multimodal",
+      "vision",
+      "mtp",
+      "speculative-decoding",
+      "fastmtp"
+    ],
+    "language": [
+      "en",
+      "zh",
+      "multilingual"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "Qwen/Qwen3.8-27B"
+  },
+  "gguf": {
+    "total": 1863907840,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 903453952
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "759c985ca2421330434a50a0b9a97e946973aaee",
+      "size": 2619
+    },
+    {
+      "rfilename": "FastMTP-PROVENANCE.json",
+      "blobId": "3945ae8ada9d004198e85d193778439ea37bed49",
+      "size": 882
+    },
+    {
+      "rfilename": "FastMTP-PROVENANCE.json.sig",
+      "blobId": "0432acbeac6299582954d234d292b0426ad6d549",
+      "size": 64
+    },
+    {
+      "rfilename": "HauhauCS-FastMTP-Ed25519-PUBLIC.pem",
+      "blobId": "cbf7c078a1cfb7a3e762ecbc432be6f11113b312",
+      "size": 113
+    },
+    {
+      "rfilename": "HauhauCS-FastMTP-llama.cpp.patch",
+      "blobId": "7e761c48179ba70c50420c908069fd1562295419",
+      "size": 2445
+    },
+    {
+      "rfilename": "HauhauCS-RELEASE-MANIFEST.json",
+      "blobId": "d7da57755717b7c79f8e491f5f1f8952f3627f23",
+      "size": 4828
+    },
+    {
+      "rfilename": "HauhauCS-RELEASE-MANIFEST.json.sig",
+      "blobId": "e58dd6e7c46b49e00c0bd054803a907c14fc0838",
+      "size": 64
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-FastMTP-32K.gguf",
+      "blobId": "95512b4feaf51cfb6d93b823ffdeeca2f16e32e7",
+      "size": 903453952,
+      "lfs": {
+        "sha256": "115e618e1f73cb50817ed5856f0551c6bf9c3d94df96f440eaca78dc63b8968b",
+        "size": 903453952,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-IQ2_M.gguf",
+      "blobId": "f4baef37a0e5b00a71d4d1cab7e42e977e1f4d07",
+      "size": 10319906944,
+      "lfs": {
+        "sha256": "5e14825174e02733b873cc01358787d570b648dd530c061623764aba743512ce",
+        "size": 10319906944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-IQ3_M.gguf",
+      "blobId": "ff27d1f74399d75cce40f66d19e8f9329218e7a1",
+      "size": 12789303424,
+      "lfs": {
+        "sha256": "3cc4a8a9e1903c12e1b5c25df8921e7989a425a4998d2bc7ab9a9f303cebb2fa",
+        "size": 12789303424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-IQ3_XS.gguf",
+      "blobId": "c20e6a707dbf2b52296fa1da8c868108024faa0d",
+      "size": 12175558784,
+      "lfs": {
+        "sha256": "e22208325e05d8561b51829048e52512da57c2bf8d54866199c4126c45bd3504",
+        "size": 12175558784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-IQ4_XS.gguf",
+      "blobId": "e900c20dda42eb45bd34d4f3a953f712e8fb2da5",
+      "size": 15705860224,
+      "lfs": {
+        "sha256": "034b4c6b7c5cd9f4a2f99570d5097698f9d1e265a0fb000207223cbf9f9bd0b0",
+        "size": 15705860224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q2_K_P.gguf",
+      "blobId": "29dc413b379ad319bebdb158dda54110818e94ad",
+      "size": 10676422784,
+      "lfs": {
+        "sha256": "f778a15fa0393b38e473b954b39a793543fc424838e7af8c0f6bd27b6cc11ca7",
+        "size": 10676422784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q3_K_P.gguf",
+      "blobId": "15dff41eb98fa2569bd2c094a00de6de49f2031a",
+      "size": 13441058944,
+      "lfs": {
+        "sha256": "582b80812df428af61cd77891c703b4f0ac388fc22759a159a6c408886ba7a2b",
+        "size": 13441058944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q4_K_P.gguf",
+      "blobId": "ac1820e09a32dd01163c9976fd2fda834abcd21f",
+      "size": 17923393664,
+      "lfs": {
+        "sha256": "ba36dc3c2b2ff5e0aa5d71092a8894546996a6a119ae391803dda07cdc08516d",
+        "size": 17923393664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q5_K_P.gguf",
+      "blobId": "c5e6e4379503597042b727321b2733b2074afac6",
+      "size": 20218177664,
+      "lfs": {
+        "sha256": "a21e22af885bd2f7c430a72b550a78f5445966e6a72d3143b0950baa0bd6d411",
+        "size": 20218177664,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q6_K_P.gguf",
+      "blobId": "335d0ba951f0d22675596fc84e8b869e76204e0a",
+      "size": 25924151424,
+      "lfs": {
+        "sha256": "70c8139f4dcd05d3818bc9843cde7301faa44f66321e5966965929baa9c24a6a",
+        "size": 25924151424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q8_K_P.gguf",
+      "blobId": "39f53df4a535386d1bb34c2444f4a5d6ecb6322c",
+      "size": 31457990784,
+      "lfs": {
+        "sha256": "4e7735df4d1e2ec721f2551f531b815702a2f89123238c564797eda4b0304bc2",
+        "size": 31457990784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bd8328e84e47a14abf05e5e7887db823c1f9cb7c",
+      "size": 16474
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "6b50064a4dece98ad7de117a819e7c15aa4a11f1",
+      "size": 2119
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-BF16.gguf",
+      "blobId": "0dc229e3083f14997ed7674337f76005f36212de",
+      "size": 931146624,
+      "lfs": {
+        "sha256": "5681b690bcb8eb10cd28d62d078cb4e01521a3ea4880a3fc7d54de72de2dd142",
+        "size": 931146624,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "zk-Armor/qwen3.8-27b-uncensored-chatbot",
+    "BIGJUTT/model-pulse",
+    "emanforhelp/model-pulse",
+    "HollyDm/qwen3.8-27b-uncensored-aggressive",
+    "sgmm0hammad/test",
+    "Gembid/qwen3.8-27b-uncensored-chat"
+  ],
+  "createdAt": "2026-08-17T15:15:19.000Z",
+  "usedStorage": 172466425216
+}

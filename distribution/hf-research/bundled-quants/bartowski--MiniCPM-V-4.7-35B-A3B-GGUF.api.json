@@ -1,0 +1,590 @@
+{
+  "_id": "6ad46527372f0f5579905e76",
+  "id": "bartowski/MiniCPM-V-4.7-35B-A3B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "minicpm-v",
+    "multimodal",
+    "On-Device Model",
+    "lightweight",
+    "moe",
+    "image-text-to-text",
+    "base_model:openbmb/MiniCPM-V-4.7-35B-A3B",
+    "base_model:quantized:openbmb/MiniCPM-V-4.7-35B-A3B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 3908,
+  "likes": 1,
+  "modelId": "bartowski/MiniCPM-V-4.7-35B-A3B-GGUF",
+  "author": "bartowski",
+  "sha": "098bdee54114f39f7b2246e3d4632aaa05f0da78",
+  "lastModified": "2026-10-18T07:43:35.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "base_model_relation": "quantized",
+    "license": "apache-2.0",
+    "base_model": "openbmb/MiniCPM-V-4.7-35B-A3B",
+    "tags": [
+      "minicpm-v",
+      "multimodal",
+      "On-Device Model",
+      "lightweight",
+      "moe"
+    ]
+  },
+  "gguf": {
+    "total": 34659889792,
+    "architecture": "qwen35moe",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/MiniCPM-V-4.7-35B-A3B-GGUF/MiniCPM-V-4.7-35B-A3B-imatrix.gguf",
+    "chat_template": "{%- macro render_content(content, is_system_content=false) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns = namespace(parts=[]) -%}\n        {%- for item in content -%}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain images.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|image_pad|>'] -%}\n            {%- elif 'video' in item or item.type == 'video' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain videos.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|video_pad|>'] -%}\n            {%- elif 'text' in item -%}\n                {%- set ns.parts = ns.parts + [item.text] -%}\n            {%- else -%}\n                {{- raise_exception('Unexpected item type in content.') -}}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns.parts | join('\\n') -}}\n    {%- elif content is none or content is undefined -%}\n        {{- '' -}}\n    {%- else -%}\n        {{- raise_exception('Unexpected content type.') -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index and reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}\n",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 13233035456
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a47389ea612bcd15b76574e8c305e65b3be6a009",
+      "size": 3628
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ2_M.gguf",
+      "blobId": "1207992933791999917d533376f266487a038ac1",
+      "size": 13233035456,
+      "lfs": {
+        "sha256": "3947e3f6c948fb609522e2265663f6bd91e7b19b9c211eabf96983b1c623ca52",
+        "size": 13233035456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ2_S.gguf",
+      "blobId": "c0414783a2f38288484924cd712c5c09aac01c9a",
+      "size": 11978909888,
+      "lfs": {
+        "sha256": "88915ca393f5b62e77753cf7566138c19b1f0f5aa7e32fecbfc410a8c86432a9",
+        "size": 11978909888,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ2_XS.gguf",
+      "blobId": "cd8d3051aec7c0644398b22fc5f08436e435742b",
+      "size": 11264624832,
+      "lfs": {
+        "sha256": "03ba9e8bc1d182c3259319f99aa85ea23496b6418d28867ece8771a15f6b8658",
+        "size": 11264624832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ2_XXS.gguf",
+      "blobId": "b43762d7e6afdfe84a9070596386e8ff0d8a5523",
+      "size": 10792560832,
+      "lfs": {
+        "sha256": "cc10853407630e54272fc1ef9c393c52c17477ee3d3f0d9ceef529d36947ba68",
+        "size": 10792560832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ3_M.gguf",
+      "blobId": "5dc360ef8c4bdb7b67fb9f0285c7041cb8a06d87",
+      "size": 18957449408,
+      "lfs": {
+        "sha256": "ee989fdf13e88cf913e4950b8c2bf462c715f5368b224be2737d0be214fcb02a",
+        "size": 18957449408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ3_XS.gguf",
+      "blobId": "3da690c056e82fbf2e424288e55d0842543585fc",
+      "size": 16317921472,
+      "lfs": {
+        "sha256": "5163e194f8b81d9518b35a952fe3eab61c3ced52b0a31e9483a1e902ba44c185",
+        "size": 16317921472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ3_XXS.gguf",
+      "blobId": "d6fe7f545250e2facfee0e7a0475cfe2174c24d5",
+      "size": 15580903616,
+      "lfs": {
+        "sha256": "cc757448cf0d4dbfb7d5186c7c81f7a656e8541c5e8457b52005df558cb093cf",
+        "size": 15580903616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ4_NL.gguf",
+      "blobId": "8d2f51d04233961ca138f22b4466661b9649da1c",
+      "size": 22317742272,
+      "lfs": {
+        "sha256": "d5750ff1f79c1aec735cc5d162f1f8931a05da390921b6d30210eedf9e810b37",
+        "size": 22317742272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-IQ4_XS.gguf",
+      "blobId": "5a701c6ddb35660749b9afd59896a262272abcce",
+      "size": 19886160064,
+      "lfs": {
+        "sha256": "57c3698be9383a510f08e52895755e691f14ca01bd76003371f06f92a5470620",
+        "size": 19886160064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q2_K.gguf",
+      "blobId": "da9c1b68fafdd09998d750d392a1bf8dbf611e99",
+      "size": 13838698688,
+      "lfs": {
+        "sha256": "0cec9fdead03d178776715c7c0bd15c34e9920033b1a4ce3480cb61df24eda3e",
+        "size": 13838698688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q3_K_L.gguf",
+      "blobId": "0982d9abb2b086141d891ab3f899446351787e51",
+      "size": 18266306752,
+      "lfs": {
+        "sha256": "c46e0d2752634c3505f1135d82233734acdae0ff8f4a7eb59cf2131b93a2d835",
+        "size": 18266306752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q3_K_M.gguf",
+      "blobId": "2c60af84e065c1cd7dc3a87092e87c30ea69630d",
+      "size": 17343559872,
+      "lfs": {
+        "sha256": "6676a80fecc31617e6b7be7809240ca17da4ff73b846910b8434c111ef264ab1",
+        "size": 17343559872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q3_K_S.gguf",
+      "blobId": "34292afcb3fd3c48bd4e39283cd2566a2d25c4d7",
+      "size": 16317921472,
+      "lfs": {
+        "sha256": "46e8c5c8e732168d280e3f31dcb0a6f5dc03c516f5ca4b35896c35ad3352173b",
+        "size": 16317921472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q4_0.gguf",
+      "blobId": "608701fb67a0c2f0a7ae97bafb517ca6b3fc476a",
+      "size": 19942108608,
+      "lfs": {
+        "sha256": "95e806ec3eac894f514f87b2475a6260901233a71562500ea95df819c042d3e9",
+        "size": 19942108608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q4_1.gguf",
+      "blobId": "1cbaccc0daab90e602e0e2250609bb8e5cd25a88",
+      "size": 21973243328,
+      "lfs": {
+        "sha256": "69e5d7ad1dce9a9836c66c4c5cc8753f71791d61dbe3a50d102006c2c47bd02c",
+        "size": 21973243328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q4_K_L.gguf",
+      "blobId": "b5bda28b0b8f697f363f7518352cb6671f573dd2",
+      "size": 24112904384,
+      "lfs": {
+        "sha256": "ead8dd47c966fb3ff7768f927e7fc7697ffff434b3bc8519653bd3117d075490",
+        "size": 24112904384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q4_K_M.gguf",
+      "blobId": "4637008408d4a681b0a4bb1be841e429a0a73ab0",
+      "size": 22317742272,
+      "lfs": {
+        "sha256": "ca6830e2d3a28942e5c3e053ffce93543fd6ecbd7c1c9f6fb53f402e8aa1d37e",
+        "size": 22317742272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q4_K_S.gguf",
+      "blobId": "072351a04033f4720a6b5d46e50e17f1fee2de12",
+      "size": 20946204864,
+      "lfs": {
+        "sha256": "7f0cf7821f0596e0811a83d8aef20436737ae3033529f7255785a6c5dbc8b02e",
+        "size": 20946204864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q5_K_M.gguf",
+      "blobId": "9ef58ef046a141efdf212b04b9b609f5c9f29084",
+      "size": 26983905472,
+      "lfs": {
+        "sha256": "00b539f920168eaeb7c55cd1b84ff5e17a15e21ef6feb626b5d52dab84d68361",
+        "size": 26983905472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q5_K_S.gguf",
+      "blobId": "024e9f59dd6b57a9d3adf239a065d2dab61e3b85",
+      "size": 25136314560,
+      "lfs": {
+        "sha256": "c135169e6798a9388f5549e212aba463a33dcc55e2eff7bf60e3d23b72bc0ab8",
+        "size": 25136314560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q6_K.gguf",
+      "blobId": "9a717d1d2b5395c8ff0fd9164fcac2c8d326fd00",
+      "size": 30737807552,
+      "lfs": {
+        "sha256": "01c1d16f1c0eb7612c0e935b1ac62adc070e2d64081dab4d3a5d12861e290bd6",
+        "size": 30737807552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q6_K_L.gguf",
+      "blobId": "82b8fe1e1708a1b9a46813d989a82f9a44ce7be2",
+      "size": 32298088640,
+      "lfs": {
+        "sha256": "83b6f180fada49105d5ed51067558300348f2dac0369f20e282cf50cd365493b",
+        "size": 32298088640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q6_K_S.gguf",
+      "blobId": "d1ddecf02b965980ee551ccdd0b2ebb2f0a7a69c",
+      "size": 29372561600,
+      "lfs": {
+        "sha256": "da30f9e468ba2432331c858afcc45cea471649e42650077dc086e4a78a88c341",
+        "size": 29372561600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-Q8_0.gguf",
+      "blobId": "320482074ddbade1050949bb38437b191358d6fc",
+      "size": 36913920192,
+      "lfs": {
+        "sha256": "f94c6855d8ef1dfb4f87a4ac18295377d27803ff0716159d5837b4dd8650825f",
+        "size": 36913920192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-bf16/MiniCPM-V-4.7-35B-A3B-bf16-00001-of-00002.gguf",
+      "blobId": "a32e3433641eab33a7daa80b0cd705ce82f268de",
+      "size": 39752658752,
+      "lfs": {
+        "sha256": "339657fae274c31a54916e31068efc1de566d22cce5415f9fc23d2a0485f37d7",
+        "size": 39752658752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-bf16/MiniCPM-V-4.7-35B-A3B-bf16-00002-of-00002.gguf",
+      "blobId": "820875720450d9dce445bb0e9f162e8800f4c12d",
+      "size": 29622532352,
+      "lfs": {
+        "sha256": "025ecd436f7dc3f92be639fc7681b3e0633c227036a1a1d74481c16f5436c790",
+        "size": 29622532352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-calibration-v6.txt",
+      "blobId": "14d808dde86e2928d38a28bf6f35c60020bda4eb",
+      "size": 1174214
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-35B-A3B-imatrix.gguf",
+      "blobId": "4b457ed3f8b99cc4150c6e76b064182f5a9686dc",
+      "size": 384343136,
+      "lfs": {
+        "sha256": "8dd6034c66d4deb037bd2ba9699531d50c21c2341bbc66331b6b4769ec8f1830",
+        "size": 384343136,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "86f52781ac894d4466757591cb729367acbf0279",
+      "size": 20320
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_M.layout.json",
+      "blobId": "af88c24fe770b7a65f5938d890cef1ad19e69fd6",
+      "size": 9048
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_M.tensor-types.txt",
+      "blobId": "513349b5ab75d3d61138d1e826fdc9dd2868a6ed",
+      "size": 15359
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_S.layout.json",
+      "blobId": "040ce7f42d10a057bf39abe809259f2d1115d898",
+      "size": 9108
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_S.tensor-types.txt",
+      "blobId": "496c7fc4f2bb202b9a4bab5eefdf60ccf40cc4db",
+      "size": 15519
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_XS.layout.json",
+      "blobId": "ca7330964a3d5960e09c8c9cb9b00c076de4297f",
+      "size": 8984
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_XS.tensor-types.txt",
+      "blobId": "547dd82f6530ff44aa7649bb15f8c3d1bf5faed8",
+      "size": 15572
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_XXS.layout.json",
+      "blobId": "61a014f8674a6a4df53cbb0800205708f2a8a2cf",
+      "size": 9125
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ2_XXS.tensor-types.txt",
+      "blobId": "0731815affb731c7d8a881ef5cba46bac67748df",
+      "size": 15761
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ3_M.layout.json",
+      "blobId": "c3666d3d282e0e6c73417822305b5a0f8b7cb33d",
+      "size": 8956
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ3_M.tensor-types.txt",
+      "blobId": "b4d315b39276371b3072a847478e12cc0ecfdcf4",
+      "size": 15307
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ3_XS.layout.json",
+      "blobId": "e49d74e974d0c76317d09a85c9f9e743b83c4451",
+      "size": 8955
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ3_XS.tensor-types.txt",
+      "blobId": "4616471c91f2f24f53ed6de0b2b9ae612139150c",
+      "size": 15348
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ3_XXS.layout.json",
+      "blobId": "fbdfe32d761e1f79bb08372a8707d65bb849a403",
+      "size": 9024
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ3_XXS.tensor-types.txt",
+      "blobId": "ce61ac45e573cc8c234a8e18af2d17452868c580",
+      "size": 15564
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ4_NL.layout.json",
+      "blobId": "75e2e2d5242398ff8c993fa3c5cf5af0f73b73db",
+      "size": 8910
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ4_NL.tensor-types.txt",
+      "blobId": "480577f1d0fc1383b41f2ad2a83f58f79bd99dc9",
+      "size": 15426
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ4_XS.layout.json",
+      "blobId": "8e408dcc9517f48ecc5c3e4a2fea22d927920c34",
+      "size": 8893
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-IQ4_XS.tensor-types.txt",
+      "blobId": "041f0b39ec8a79aaf214b8ac3b998067eeed8df2",
+      "size": 15466
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q2_K.layout.json",
+      "blobId": "43528b2759107176e164946779fd119e67dc5609",
+      "size": 8944
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q2_K.tensor-types.txt",
+      "blobId": "5b96684c30aa15665a85e73f1bdb67b085e2aad9",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q3_K_L.layout.json",
+      "blobId": "a9b5807d125db3f8a55b760c3aa7dfd187e15939",
+      "size": 8952
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q3_K_L.tensor-types.txt",
+      "blobId": "0114690e4a8777eaf4feaaa8ac6987dd2729931c",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q3_K_M.layout.json",
+      "blobId": "c3bc7dbae3682ddfe82df777cf0d6f261726662c",
+      "size": 8934
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q3_K_M.tensor-types.txt",
+      "blobId": "0a791a1fc5dfacd1d017778a8d202792f7a971a7",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q3_K_S.layout.json",
+      "blobId": "2e17b0d5f1587197cec7942d47debe3ad1adfa0c",
+      "size": 8932
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q3_K_S.tensor-types.txt",
+      "blobId": "89a1e9df73d8a098d37f8f72deca2427b4697b23",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q4_K_L.layout.json",
+      "blobId": "6d6d19e63dc334c616997ade79d129a104d42bb8",
+      "size": 8903
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q4_K_L.tensor-types.txt",
+      "blobId": "dc4051c8714bd57524975fb2405601bcd828bb76",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q4_K_M.layout.json",
+      "blobId": "322b20b7e79ac4f6a1efdf934a60a1b9a6afd1af",
+      "size": 8902
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q4_K_M.tensor-types.txt",
+      "blobId": "05a6c8431081eb08f51220a08e6a5f593579a423",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q4_K_S.layout.json",
+      "blobId": "b8319a4439a71ddcbf3cd3abd96ec80cd2a4025b",
+      "size": 8831
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q4_K_S.tensor-types.txt",
+      "blobId": "0548a29b7ebfd0b4b8196479ebe7f89cb57ef14d",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q5_K_M.layout.json",
+      "blobId": "b92ef76d3220d353dafb60b92bb820407b84730e",
+      "size": 8866
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q5_K_M.tensor-types.txt",
+      "blobId": "6fda03984a80f9f54fa36287cc01e1b732cb105d",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q5_K_S.layout.json",
+      "blobId": "3706033376f2bbeea63171022ac61f9e9add7a9a",
+      "size": 8850
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q5_K_S.tensor-types.txt",
+      "blobId": "b3840626e1f8e71716249a88998ed249be6c210a",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q6_K.layout.json",
+      "blobId": "6add852a990b74419a07d9bcb7af5c939b0b1ac4",
+      "size": 8845
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q6_K.tensor-types.txt",
+      "blobId": "4450c2d38d1ab9cce45e2b4f816d2bb640b0c2b3",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q6_K_L.layout.json",
+      "blobId": "e9f081d3d81ac8634a745a192a1f7a180103b95f",
+      "size": 8849
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q6_K_L.tensor-types.txt",
+      "blobId": "200da02ea866841920a4e87252ae2bdd440fa502",
+      "size": 15230
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q6_K_S.layout.json",
+      "blobId": "5a019cc649dc94d8cf40db9a07d321f0bfcae72f",
+      "size": 8848
+    },
+    {
+      "rfilename": "layouts/MiniCPM-V-4.7-35B-A3B-Q6_K_S.tensor-types.txt",
+      "blobId": "43e70620c9c0960edc6b3195b800ab7a500f48de",
+      "size": 15230
+    },
+    {
+      "rfilename": "mmproj-MiniCPM-V-4.7-35B-A3B-bf16.gguf",
+      "blobId": "183fc24bc2983882748cd6f0a8c779bcbf84c67e",
+      "size": 1119576064,
+      "lfs": {
+        "sha256": "5afe8c18ef7741a401ab0edd526208149d125d3dc26e51b6af4b7725702f395e",
+        "size": 1119576064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-MiniCPM-V-4.7-35B-A3B-f16.gguf",
+      "blobId": "a366dce6487d16631a7a775a7c16a3a78fa18263",
+      "size": 1118221312,
+      "lfs": {
+        "sha256": "a9932934c048aff373208095cbb7bd0c404a1b01a23ef9ca308dd1c6cb9ee2a4",
+        "size": 1118221312,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-18T06:20:23.000Z",
+  "usedStorage": 568827927712
+}

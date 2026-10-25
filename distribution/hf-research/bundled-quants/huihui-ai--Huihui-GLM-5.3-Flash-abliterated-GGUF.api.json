@@ -1,0 +1,569 @@
+{
+  "_id": "6ab74f96122ef418c3a08839",
+  "id": "huihui-ai/Huihui-GLM-5.3-Flash-abliterated-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "abliterated",
+    "uncensored",
+    "huihui",
+    "unsloth",
+    "glm5_next",
+    "image-text-to-text",
+    "en",
+    "zh",
+    "base_model:zai-org/GLM-5.3-Flash",
+    "base_model:quantized:zai-org/GLM-5.3-Flash",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 45911,
+  "likes": 301,
+  "modelId": "huihui-ai/Huihui-GLM-5.3-Flash-abliterated-GGUF",
+  "author": "huihui-ai",
+  "sha": "c43a994637c10f5c376b7a471b3afc7663f80b9b",
+  "lastModified": "2026-10-09T11:24:45.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en",
+      "zh"
+    ],
+    "library_name": "transformers",
+    "license": "mit",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": [
+      "zai-org/GLM-5.3-Flash"
+    ],
+    "tags": [
+      "abliterated",
+      "uncensored",
+      "huihui",
+      "unsloth",
+      "glm5_next"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 320759404382,
+    "architecture": "glm5-next",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "GLM-5.3-Flash-GGUF/imatrix_unsloth.gguf",
+    "chat_template": "[gMASK]<sop>\n{%- set effective_reasoning_effort = reasoning_effort if reasoning_effort is defined and reasoning_effort in ['low', 'high'] else 'max' -%}\n{%- if effective_reasoning_effort is not none -%}<|system|>Reasoning Effort: {{ effective_reasoning_effort | capitalize }}{%- endif -%}\n{%- set clear_thinking = clear_thinking if clear_thinking is defined else false -%}\n{%- if tools -%}\n{%- macro tool_to_json(tool) -%}\n    {%- set ns_tool = namespace(first=true) -%}\n    {{ '{' -}}\n    {%- for k, v in tool.items() -%}\n        {%- if k != 'defer_loading' and k != 'strict' -%}\n            {%- if not ns_tool.first -%}{{- ', ' -}}{%- endif -%}\n            {%- set ns_tool.first = false -%}\n            \"{{ k }}\": {{ v | tojson(ensure_ascii=False) }}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- '}' -}}\n{%- endmacro -%}\n{%- macro tool_references_to_response(refs) -%}\n    {{- '<tool_response><tools>\\n' -}}\n    {%- for tr in refs -%}\n        {%- for tool in tools -%}\n            {%- if 'function' in tool -%}\n                {%- set tool = tool['function'] -%}\n            {%- endif -%}\n            {%- if tool.name == tr.name -%}\n                {{- tool_to_json(tool) + '\\n' -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endfor -%}\n    {{- '</tools></tool_response>' -}}\n{%- endmacro -%}\n<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{%- if 'function' in tool -%}\n    {%- set tool = tool['function'] -%}\n{%- endif -%}\n{% if tool.defer_loading is not defined or not tool.defer_loading %}\n{{ tool_to_json(tool) }}\n{% endif %}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call>{%- endif -%}\n{%- macro emit_image() -%}<|begin_of_image|><|image|><|end_of_image|>{%- endmacro -%}\n{%- macro emit_video() -%}<|begin_of_video|><|video|><|end_of_video|>{%- endmacro -%}\n{%- macro emit_audio() -%}<|begin_of_audio|><|end_of_audio|>{%- endmacro -%}\n{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text -}}\n            {%- elif item is string -%}\n                {{- item -}}\n            {%- elif item is mapping and item.type in ['image', 'image_url'] -%}\n                {{- emit_image() -}}\n            {%- elif item is mapping and item.type in ['video', 'video_url'] -%}\n                {{- emit_video() -}}\n            {%- elif item is mapping and item.type in ['audio', 'audio_url', 'input_audio'] -%}\n                {{- emit_audio() -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro tool_response(text) -%}\n{{- '<tool_response>' + text + '</tool_response>' -}}\n{%- endmacro -%}\n{%- macro render_tool_response(m) -%}\n{%- if m.content is string -%}\n    {{- tool_response(m.content) -}}\n{%- elif m.content and m.content is not mapping and m.content[0].type == \"tool_reference\" -%}\n    {{- tool_references_to_response(m.content) -}}\n{%- elif is_list_of_outputs(m) -%}\n    {%- for tr in m.content -%}\n        {%- if tr.output is iterable and tr.output is not string and tr.output is not mapping and tr.output and tr.output[0].type == \"tool_reference\" -%}\n            {{- tool_references_to_response(tr.output) -}}\n        {%- else -%}\n            {{- tool_response(visible_text(tr.output)) -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n    {{- tool_response(visible_text(m.content)) -}}\n{%- endif -%}\n{%- endmacro -%}\n{%- macro id_of(obj) -%}\n    {%- if obj.tool_call_id -%}\n        {{- obj.tool_call_id -}}\n    {%- elif obj.id -%}\n        {{- obj.id -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro is_list_of_outputs(m) -%}\n    {%- if m.content and m.content[0].output is defined -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro has_dup_tool_result_id(lo, hi, target) -%}\n    {%- set ns_cnt = namespace(n=0) -%}\n    {%- for k in range(lo, hi + 1) -%}\n        {%- set m = messages[k] -%}\n        {%- if is_list_of_outputs(m) -%}\n            {%- for entry in m.content -%}\n                {%- if id_of(entry) == target -%}\n                    {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- elif id_of(m) == target -%}\n            {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n        {%- endif -%}\n        {%- if ns_cnt.n > 1 -%}{%- break -%}{%- endif -%}\n    {%- endfor -%}\n    {%- if ns_cnt.n > 1 -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro tc_id_exists(tcs, target) -%}\n    {%- set ns_f = namespace(found=false) -%}\n    {%- for tc in tcs -%}\n        {%- if id_of(tc) == target -%}\n            {%- set ns_f.found = true -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if ns_f.found -%}1{%- endif -%}\n{%- endmacro -%}\n{%- set ns = namespace(last_user_index=-1) -%}\n{%- for m in messages %}\n    {%- if m.role == 'user' %}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{%- for m in messages -%}\n{%- if m.role == 'user' -%}<|user|>{{ visible_text(m.content) }}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n    {%- set reasoning_content = m.reasoning_content %}\n{%- elif '</think>' in content %}\n    {%- set reasoning_content = content.split('</think>')[0].split('<think>')[-1] %}\n    {%- set content = content.split('</think>')[-1] %}\n{%- endif %}\n{%- if (not clear_thinking or loop.index0 > ns.last_user_index) and reasoning_content is defined -%}\n{{ '<think>' + reasoning_content +  '</think>'}}\n{%- else -%}\n{{ '<think></think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{% for tc in m.tool_calls %}\n{%- if tc.function %}\n    {%- set tc = tc.function %}\n{%- endif %}\n{{- '<tool_call>' + tc.name -}}\n{% set _args = tc.arguments %}{% for k, v in _args.items() %}<arg_key>{{ k }}</arg_key><arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>{% endfor %}</tool_call>{% endfor %}\n{% endif %}\n{%- elif m.role == 'tool' -%}\n{%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n    {{- '<|observation|>' -}}\n    {%- set block_start = loop.index0 -%}\n    {%- set ns_blk = namespace(end=block_start) -%}\n    {%- for j in range(block_start, messages|length) -%}\n        {%- if messages[j].role == 'tool' -%}\n            {%- set ns_blk.end = j -%}\n        {%- else -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns_a = namespace(tool_calls=none) -%}\n    {%- if block_start > 0 and messages[block_start - 1].role == 'assistant' and messages[block_start - 1].tool_calls -%}\n        {%- set ns_a.tool_calls = messages[block_start - 1].tool_calls -%}\n    {%- endif -%}\n    {%- set ns_chk = namespace(can_sort=true) -%}\n    {%- if not ns_a.tool_calls -%}\n        {%- set ns_chk.can_sort = false -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {%- set m = messages[k] -%}\n            {%- if is_list_of_outputs(m) -%}\n                {%- for entry in m.content -%}\n                    {%- set eid = id_of(entry) -%}\n                    {%- if not eid -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif has_dup_tool_result_id(block_start, ns_blk.end, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif not tc_id_exists(ns_a.tool_calls, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- endif -%}\n                {%- endfor -%}\n            {%- else -%}\n                {%- set tk_id = id_of(m) -%}\n                {%- if not tk_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif has_dup_tool_result_id(block_start, ns_blk.end, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif not tc_id_exists(ns_a.tool_calls, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for i in range(ns_a.tool_calls | length) -%}\n            {%- set tc_id = id_of(ns_a.tool_calls[i]) -%}\n            {%- if not tc_id -%}\n                {%- set ns_chk.can_sort = false -%}\n            {%- endif -%}\n            {%- for j in range(i + 1, ns_a.tool_calls | length) -%}\n                {%- if id_of(ns_a.tool_calls[j]) == tc_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endfor -%}\n    {%- endfor -%}\n    {%- endif -%}\n    {%- if ns_chk.can_sort -%}\n        {%- for tc in ns_a.tool_calls -%}\n            {%- set tc_id = id_of(tc) -%}\n            {%- for k in range(block_start, ns_blk.end + 1) -%}\n                {%- set m = messages[k] -%}\n                {%- if is_list_of_outputs(m) -%}\n                    {%- for entry in m.content -%}\n                        {%- set eid = id_of(entry) -%}\n                        {%- if eid == tc_id -%}\n                            {%- if entry.output is iterable and entry.output is not string and entry.output is not mapping and entry.output and entry.output[0].type == \"tool_reference\" -%}\n                                {{- tool_references_to_response(entry.output) -}}\n                            {%- else -%}\n                                {{- tool_response(visible_text(entry.output)) -}}\n                            {%- endif -%}\n                        {%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n                    {%- set tk_id = id_of(m) -%}\n                    {%- if tk_id == tc_id -%}\n                        {{- render_tool_response(m) -}}\n                    {%- endif -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endfor -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {{- render_tool_response(messages[k]) -}}\n        {%- endfor -%}\n    {%- endif -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<|system|>{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    <|assistant|>{{- '<think>' -}}\n{%- endif -%}\n",
+    "bos_token": "[gMASK]",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 97579345056
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c78e33df28667a8df6f6c645fdbd579b65f2d68c",
+      "size": 5785
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c26e747ff59a06a22959115407304a98723096b7",
+      "size": 2900
+    },
+    {
+      "rfilename": "UD-IQ1_M/GLM-5.3-Flash-UD-IQ1_M-00001-of-00003.gguf",
+      "blobId": "92d15ff66ca43b794deaa7876929d12b307a64a9",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "6f7ec41c00e65d5d4524eb4e6516e1346710ce47d7f18bec18ea96dc00fc4880",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ1_M/GLM-5.3-Flash-UD-IQ1_M-00002-of-00003.gguf",
+      "blobId": "43ca7750ccdc7b402c3b5f3a343cb247743f1c85",
+      "size": 49996246720,
+      "lfs": {
+        "sha256": "bb600aa507ad6acd0d224d970149849ce484ea43f99416787dc3cdfa9906c4f1",
+        "size": 49996246720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ1_M/GLM-5.3-Flash-UD-IQ1_M-00003-of-00003.gguf",
+      "blobId": "7a2a1f0e3f2d30be5998ad96d147abd1a99e6a4f",
+      "size": 47573668224,
+      "lfs": {
+        "sha256": "40997af58f05b3628fac94a2b86a194d78e597d8a20f848524ea932baa1c78e2",
+        "size": 47573668224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ1_S/GLM-5.3-Flash-UD-IQ1_S-00001-of-00003.gguf",
+      "blobId": "c43ed8890337489cbb635457096141d056178003",
+      "size": 9429984,
+      "lfs": {
+        "sha256": "909a8a2dedb493c5a694facfd1e0e9a3309ac66fbb9d270c024ff5d12e0d565f",
+        "size": 9429984,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ1_S/GLM-5.3-Flash-UD-IQ1_S-00002-of-00003.gguf",
+      "blobId": "2b571736164ac4cae2a849e14a193acc3a2617ea",
+      "size": 49621122656,
+      "lfs": {
+        "sha256": "43da40c25ea07e1e77df84dd631a3da7da1dd54bd44fa7fdfd72c14ebee03060",
+        "size": 49621122656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ1_S/GLM-5.3-Flash-UD-IQ1_S-00003-of-00003.gguf",
+      "blobId": "fa903078c4e98563518489b946cb41f56306c99e",
+      "size": 43456692768,
+      "lfs": {
+        "sha256": "4dd80f68448de1a9e32a2c0393db6c5fd76e2b9ccfdf5f11a99cf2ec6b74576a",
+        "size": 43456692768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/GLM-5.3-Flash-UD-IQ2_XXS-00001-of-00004.gguf",
+      "blobId": "f4fb5b1639ffb186b7eac598b8f1344095f775e4",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "7b186e9d2fa818be92f64f0eda1b6c24b0fa6901856a6f26e85d7a674538c148",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/GLM-5.3-Flash-UD-IQ2_XXS-00002-of-00004.gguf",
+      "blobId": "5e472b7fdb8de23a1f4d1b0ce9a9bb2b52b64c73",
+      "size": 49896298208,
+      "lfs": {
+        "sha256": "63896652030f8922897f1259c74c175bbbb40635b4e518bd259cd3b9ed55f54c",
+        "size": 49896298208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/GLM-5.3-Flash-UD-IQ2_XXS-00003-of-00004.gguf",
+      "blobId": "b6d440d906b1f7815e28ce54764165fb9f77eb0a",
+      "size": 49248507968,
+      "lfs": {
+        "sha256": "e502a9a6d8960ee53a7b375e001130f796d073650e4b3aa08ddae7adb04d96fc",
+        "size": 49248507968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ2_XXS/GLM-5.3-Flash-UD-IQ2_XXS-00004-of-00004.gguf",
+      "blobId": "077df459f94a866be9f17d31a28854a0205fab2b",
+      "size": 2690716128,
+      "lfs": {
+        "sha256": "881f5a31fae00289a03a0a2742bd93345e2cb4909de6ddb5347e83729be70fdb",
+        "size": 2690716128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/GLM-5.3-Flash-UD-IQ3_XXS-00001-of-00004.gguf",
+      "blobId": "ef2137267130a3c6b25b0e2cfeb045f4c5b2f459",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "bbbb5a2945c37b113405c9a4ce21053b661d5ee5f0e2544eb0e1fca3695a50bc",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/GLM-5.3-Flash-UD-IQ3_XXS-00002-of-00004.gguf",
+      "blobId": "7dd7a99461b1f6465b6c4390f1113ff93cf6cefd",
+      "size": 49261511712,
+      "lfs": {
+        "sha256": "aa567c6ca40e589f3698ae984b7355c7bd7a95b185d221ad0dbdac9dbd3165e9",
+        "size": 49261511712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/GLM-5.3-Flash-UD-IQ3_XXS-00003-of-00004.gguf",
+      "blobId": "0ca3b6a5af6de46db4d9e645e5742e42f3f59abe",
+      "size": 49075832608,
+      "lfs": {
+        "sha256": "43e2a9e88795276495c518faf08e0217238a3e986afb83c88237fa6e25725bcb",
+        "size": 49075832608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ3_XXS/GLM-5.3-Flash-UD-IQ3_XXS-00004-of-00004.gguf",
+      "blobId": "e8837d7a4f026d2f8b3ea80171389362a00935a0",
+      "size": 22020797920,
+      "lfs": {
+        "sha256": "5c72c2b4c179f79c24bf1fe93ab549e5285cf17e080de8a48041c469a794a574",
+        "size": 22020797920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00001-of-00005.gguf",
+      "blobId": "ae9678293eaa97c6708ba5c7224219cfddb9e5c2",
+      "size": 9429984,
+      "lfs": {
+        "sha256": "c2f3b6ab98d3df844f322ea376059202d2eaeedcee1f0eff455345b86a137dbd",
+        "size": 9429984,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00002-of-00005.gguf",
+      "blobId": "780625b9eca36463d31cde67d0b0be9cb01c5124",
+      "size": 49989334368,
+      "lfs": {
+        "sha256": "b2b6d0f519f25e1f6adfb6ce81375d58666bdb99731ba402fc361e81e2c02a9d",
+        "size": 49989334368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00003-of-00005.gguf",
+      "blobId": "fd618c3d47bbc4f15db4d350cfbd85ebed1b8020",
+      "size": 49607025472,
+      "lfs": {
+        "sha256": "f4eceffc465d44ea81c243f1332c6e3b2f4ae59ac70bb77890bb3befe87377d5",
+        "size": 49607025472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00004-of-00005.gguf",
+      "blobId": "5c5b1ae54f5fec12a74ad373706174811bf87ef7",
+      "size": 49486530304,
+      "lfs": {
+        "sha256": "ff6a85441a5e8d7805d81f162dd37eec16a6b29bf9df0b000a8df365d2d67bb1",
+        "size": 49486530304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-IQ4_XS/GLM-5.3-Flash-UD-IQ4_XS-00005-of-00005.gguf",
+      "blobId": "a6aa6826c769a765b07679cac1dad724508900ff",
+      "size": 7729791808,
+      "lfs": {
+        "sha256": "d7e1e587c756bac31cd74b7456e18b36bbe4be7ec3ffffd090053e3acea52d9f",
+        "size": 7729791808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/GLM-5.3-Flash-UD-Q2_K_XL-00001-of-00004.gguf",
+      "blobId": "9e715d3a0d8508b740577173cc1b11b639663b2a",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "faf5d5ba25954a2c1cbc78c50760e1a76fdc70c5a4b737adc5b39b4afb549a3d",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/GLM-5.3-Flash-UD-Q2_K_XL-00002-of-00004.gguf",
+      "blobId": "e1509dc106e1e7a224cd187a43c69a7c1e6d316f",
+      "size": 49294976064,
+      "lfs": {
+        "sha256": "31aefea9acef3aac7de7c8f428f4bf610ffdcbf61f04501b67f63668d21a62bc",
+        "size": 49294976064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/GLM-5.3-Flash-UD-Q2_K_XL-00003-of-00004.gguf",
+      "blobId": "7519f099f242efa637541cd845b31fe7440cf548",
+      "size": 49949266176,
+      "lfs": {
+        "sha256": "920e266344e8545d085c761214a8060bd80fedaf22631fcfc3c49139ea40901c",
+        "size": 49949266176,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q2_K_XL/GLM-5.3-Flash-UD-Q2_K_XL-00004-of-00004.gguf",
+      "blobId": "9776616f4da8aee83eda9b72be54de657af24edc",
+      "size": 9466399712,
+      "lfs": {
+        "sha256": "80797dab6507510f5e4149ea02cc50470a9be2883bcd873c99d2fdc384037671",
+        "size": 9466399712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/GLM-5.3-Flash-UD-Q3_K_XL-00001-of-00004.gguf",
+      "blobId": "43b07929fc1e154e8328697c0206234483a18fc1",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "1d8240406d3371157c04846efbdce830a303861b8fab99905f77498392052c33",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/GLM-5.3-Flash-UD-Q3_K_XL-00002-of-00004.gguf",
+      "blobId": "df9d5d31ed6caa7e9c62adf7923691b8b48fea9f",
+      "size": 49609243680,
+      "lfs": {
+        "sha256": "3f1c3107fc07bb4dddb42dff048f4ed26e843a0aa799fb8f1c321160421e46de",
+        "size": 49609243680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/GLM-5.3-Flash-UD-Q3_K_XL-00003-of-00004.gguf",
+      "blobId": "65623af7a85923ce5f1a2b335b98deda52426353",
+      "size": 49623486144,
+      "lfs": {
+        "sha256": "eb490d5e6f17b639b3bdd9472cdda213cd124fbe908bafebe85fd7a09bfb725d",
+        "size": 49623486144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q3_K_XL/GLM-5.3-Flash-UD-Q3_K_XL-00004-of-00004.gguf",
+      "blobId": "745ca56ed57848c2a2b50efc0c94d26175121e73",
+      "size": 48293762624,
+      "lfs": {
+        "sha256": "9ca01847fbfd16adb19977652b531327950d018ff59ed4f77f60852d52284d8c",
+        "size": 48293762624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00001-of-00006.gguf",
+      "blobId": "55aa523736499e3cd3efd9add44d029e40b27ed5",
+      "size": 9429984,
+      "lfs": {
+        "sha256": "b59c030090f012b38213bc8c4f78ce10767f2693d730d0dbcd3dc16a5f69e2bc",
+        "size": 9429984,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00002-of-00006.gguf",
+      "blobId": "665bfdb7d95ccd735712175130f9337d4cba454f",
+      "size": 49198039392,
+      "lfs": {
+        "sha256": "8731c940c7b7a980cb7e4cce89f6e218f544c17ea076ebb47aeeea885b2d905f",
+        "size": 49198039392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00003-of-00006.gguf",
+      "blobId": "be4043dc8b6a3f26833973c6613985c39a481ffb",
+      "size": 49988626464,
+      "lfs": {
+        "sha256": "7ec9740148702149d67455a104dadec29b1fb94731a6995a40e19a99b39584df",
+        "size": 49988626464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00004-of-00006.gguf",
+      "blobId": "07666945e937ae08657a003379ef582a02235bef",
+      "size": 48700701504,
+      "lfs": {
+        "sha256": "3cf71f88ce285885c884a4caff7e63459eb049688fa41f1a115c762e35cd4621",
+        "size": 48700701504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00005-of-00006.gguf",
+      "blobId": "9eac3659d01b7c5379552cabe9ba912e1bb2e31f",
+      "size": 49026026912,
+      "lfs": {
+        "sha256": "9e55e6be21b068ebec48129fe7a3b307c6005d451bcf2540c3110808c9389763",
+        "size": 49026026912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00006-of-00006.gguf",
+      "blobId": "7d789d4b9da7a505e2f80e947522012932490c41",
+      "size": 2784498048,
+      "lfs": {
+        "sha256": "cbce8cca70019bef74b2ec6f225e807ad37f941bb33152091c4a5d6c44463f1e",
+        "size": 2784498048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/GLM-5.3-Flash-UD-Q5_K_XL-00001-of-00006.gguf",
+      "blobId": "b82c044317ee2e2fbd3ff02a88e4829c87b0856b",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "6b6965cc54073ccb442f0f83a36482b1c9343ac035a91cbc58a034f264d56683",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/GLM-5.3-Flash-UD-Q5_K_XL-00002-of-00006.gguf",
+      "blobId": "127612bc928cf647262674953d9a808d6dfdf3f1",
+      "size": 48806959456,
+      "lfs": {
+        "sha256": "332c4a9b0313e39644d9323747c6cffb152139cd14124627c923c63adacb763d",
+        "size": 48806959456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/GLM-5.3-Flash-UD-Q5_K_XL-00003-of-00006.gguf",
+      "blobId": "671fac55e370018922fb8a0e5c45c573ee3b6417",
+      "size": 48557435840,
+      "lfs": {
+        "sha256": "f14b88c3e8557ab7b76aa0544fc19b5969e4e7c01b35c7404ee3aa7b61cb1df4",
+        "size": 48557435840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/GLM-5.3-Flash-UD-Q5_K_XL-00004-of-00006.gguf",
+      "blobId": "ea2e481dbd64578b098ad0cc4ed0bf305570945c",
+      "size": 49317045248,
+      "lfs": {
+        "sha256": "497817f7e6ee0e6078377bb0c68bf0d3e9b26ca2510e206f7a0f870fc6ed7909",
+        "size": 49317045248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/GLM-5.3-Flash-UD-Q5_K_XL-00005-of-00006.gguf",
+      "blobId": "9822f4aff128025655dcd2202cf73e7e9f75d148",
+      "size": 49317045248,
+      "lfs": {
+        "sha256": "68bfd1277fb8408135a4b78c4101ee436d09617cd35d3b8c681fb588c32083fc",
+        "size": 49317045248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/GLM-5.3-Flash-UD-Q5_K_XL-00006-of-00006.gguf",
+      "blobId": "f4278e3127ccc1b73af710884ebfc44f09bb530d",
+      "size": 44298171872,
+      "lfs": {
+        "sha256": "ea8e14184fedf58deb7bfb76dfe16b857e89b4fd0dfe71aa9cdae8ac3d16b0f0",
+        "size": 44298171872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00001-of-00007.gguf",
+      "blobId": "414fa0088de3d2bdbab3f20291b937cf114dbaa7",
+      "size": 9430112,
+      "lfs": {
+        "sha256": "423aef9608ff4af76fe813c3008c9201b456c1670f1ee8524470c9e640520e4f",
+        "size": 9430112,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00002-of-00007.gguf",
+      "blobId": "7dbe7b814dc8bdb4c8eedee8c15aa6e87903b621",
+      "size": 49354106816,
+      "lfs": {
+        "sha256": "0f840b25f7d534cb1e98078cd4d8b297b2ce08db5de7aa85fa78dda2965cadee",
+        "size": 49354106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00003-of-00007.gguf",
+      "blobId": "939a8f30179a4297b59565acf6eb2ba2f59161ba",
+      "size": 48109732832,
+      "lfs": {
+        "sha256": "275d2eed7485145c0da99a200720606b51f7dd506078e351195c3746fd114659",
+        "size": 48109732832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00004-of-00007.gguf",
+      "blobId": "f79f975ce005361f871a9658c566371b6267e19e",
+      "size": 49515349120,
+      "lfs": {
+        "sha256": "0abecc98d4ac8d1491984147f004a744f0e1c633dda96d542b088564b2656f77",
+        "size": 49515349120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00005-of-00007.gguf",
+      "blobId": "675be44ee290027ee7528bb65ed262b6ead220f3",
+      "size": 48930700480,
+      "lfs": {
+        "sha256": "935c8be838de2c1b6ef2a3bd1032292a358aa201bec3c1585f047d2921980782",
+        "size": 48930700480,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00006-of-00007.gguf",
+      "blobId": "10b52ae9d4c81dd43e07f6db02c85a1f1945d0a0",
+      "size": 49077752416,
+      "lfs": {
+        "sha256": "038854a90f233e5a2de3cc498f820757f6af20f8e351a5996fec53ffebc6608d",
+        "size": 49077752416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/GLM-5.3-Flash-UD-Q6_K_XL-00007-of-00007.gguf",
+      "blobId": "1dcb9bf10efce987a1ea2734adfb96824c1e87b9",
+      "size": 46836040928,
+      "lfs": {
+        "sha256": "cb936db325a181175ed44386c2287873de45533dc0cede8b5563355d0bbb2fe8",
+        "size": 46836040928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "mmproj-model-bf16.gguf",
+      "blobId": "342a8c221b04afcb695b3370e791dd0e31cf2243",
+      "size": 1164010176,
+      "lfs": {
+        "sha256": "82b7adb44411dbb298b1c689567804e5ed0790d80f308ed8b5b6b8ac0527d2ac",
+        "size": 1164010176,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "Phantom15/Huihui-GLM-5.3-Flash-abliterated-Space"
+  ],
+  "createdAt": "2026-09-26T04:52:38.000Z",
+  "usedStorage": 1560161388123
+}

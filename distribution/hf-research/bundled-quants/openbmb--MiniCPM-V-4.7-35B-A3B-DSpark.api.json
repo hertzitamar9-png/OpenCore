@@ -1,0 +1,113 @@
+{
+  "_id": "6ac71b6c5be985dedba17264",
+  "id": "openbmb/MiniCPM-V-4.7-35B-A3B-DSpark",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3",
+    "minicpmv",
+    "minicpmv4.7",
+    "text-generation",
+    "vision-understanding",
+    "tool-calling",
+    "on-device",
+    "edge-ai",
+    "en",
+    "zh",
+    "arxiv:2607.05147",
+    "license:apache-2.0",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 30348,
+  "likes": 26,
+  "modelId": "openbmb/MiniCPM-V-4.7-35B-A3B-DSpark",
+  "author": "openbmb",
+  "sha": "55249d3e69315892ca07bc956228b404f2526f9a",
+  "lastModified": "2026-10-15T04:23:28.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3DSparkModel"
+    ],
+    "model_type": "qwen3"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "library_name": "transformers",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "minicpmv",
+      "minicpmv4.7",
+      "text-generation",
+      "vision-understanding",
+      "tool-calling",
+      "on-device",
+      "edge-ai"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "580d310c2d211aca166288a207e972ced9bb0100",
+      "size": 50
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ca2c573814b953bcc4db27c116503f50162b61e1",
+      "size": 4408
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "1b4b84d998b422f24cd4beb4ae104a0742dd85ba",
+      "size": 1410
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "08c700258916fabdf3bb230f2502a9576cd62ff4",
+      "size": 778452858,
+      "lfs": {
+        "sha256": "211eda7b962795ba727b0d7db072d8c474dc3b94075f85f123fe363caf5e9679",
+        "size": 778452858,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-08T04:26:20.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 389223169
+    },
+    "total": 389223169
+  },
+  "usedStorage": 1556905716
+}

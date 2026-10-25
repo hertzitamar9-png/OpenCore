@@ -1,0 +1,386 @@
+{
+  "_id": "6538e659a608e1c3a212cb75",
+  "id": "zai-org/chatglm3-6b",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "safetensors",
+    "chatglm",
+    "glm",
+    "thudm",
+    "custom_code",
+    "zh",
+    "en",
+    "arxiv:2103.10360",
+    "arxiv:2210.02414",
+    "arxiv:2406.12793",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 42617,
+  "likes": 1176,
+  "modelId": "zai-org/chatglm3-6b",
+  "author": "zai-org",
+  "sha": "e9e0406d062cdb887444fe5bd546833920abd4ac",
+  "lastModified": "2024-12-05T07:23:32.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "model_type": "chatglm",
+    "architectures": [
+      "ChatGLMModel"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_chatglm.ChatGLMConfig",
+      "AutoModel": "modeling_chatglm.ChatGLMForConditionalGeneration",
+      "AutoModelForCausalLM": "modeling_chatglm.ChatGLMForConditionalGeneration",
+      "AutoModelForSeq2SeqLM": "modeling_chatglm.ChatGLMForConditionalGeneration",
+      "AutoModelForSequenceClassification": "modeling_chatglm.ChatGLMForSequenceClassification"
+    },
+    "tokenizer_config": {
+      "chat_template": "{% for message in messages %}{% if loop.first %}[gMASK]sop<|{{ message['role'] }}|>\n {{ message['content'] }}{% else %}<|{{ message['role'] }}|>\n {{ message['content'] }}{% endif %}{% endfor %}{% if add_generation_prompt %}<|assistant|>{% endif %}",
+      "eos_token": "</s>",
+      "pad_token": "<unk>",
+      "unk_token": "<unk>"
+    }
+  },
+  "cardData": {
+    "language": [
+      "zh",
+      "en"
+    ],
+    "tags": [
+      "glm",
+      "chatglm",
+      "thudm"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "MODEL_LICENSE",
+      "blobId": "f35379578271e2e0af8480b14cc33f9525b501fe",
+      "size": 5178
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2be647008e0de7e35f35dc1863e389a2b82a6308",
+      "size": 8571
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "37933c87f711fa0815a7712880bbf83eac4299c5",
+      "size": 1317
+    },
+    {
+      "rfilename": "configuration_chatglm.py",
+      "blobId": "35600185f5a26951081de0f3a41a913eaf06af99",
+      "size": 2332
+    },
+    {
+      "rfilename": "model-00001-of-00007.safetensors",
+      "blobId": "d9e2ba577f4697181a6b03805c0e0ee94413d03f",
+      "size": 1827774160,
+      "lfs": {
+        "sha256": "b1052386eac358a18add3d0f92521c85ab338979da8eeb08a6499555b857f80d",
+        "size": 1827774160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00007.safetensors",
+      "blobId": "72ecc21963118ec1816dab2b90fdfa9eb6be349c",
+      "size": 1968291888,
+      "lfs": {
+        "sha256": "f88d7f69a3940711b87308eb20dd0544df22aff81134fa0d5160d3c859f5d321",
+        "size": 1968291888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00007.safetensors",
+      "blobId": "ad3143879144aae134f89b377054145f5b2633b9",
+      "size": 1927406936,
+      "lfs": {
+        "sha256": "447d41b7c5e7b2558905c98733469aa9e132540c91e13c4cdd7bfc58b60cc650",
+        "size": 1927406936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00007.safetensors",
+      "blobId": "6ac5b2985b46a0d6eab2f657e1b51f9310ff012d",
+      "size": 1815217640,
+      "lfs": {
+        "sha256": "386305288e2bcc4a26fcffef433c94592d155bf36e365f054f63d3e6b55a1429",
+        "size": 1815217640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00007.safetensors",
+      "blobId": "14ba90f8c07d26aa40c444ae0200734c876d0097",
+      "size": 1968291920,
+      "lfs": {
+        "sha256": "6c304e2821774d649997d1f5ae5fa12afd4d1dc5fea2bf6e8b829405b81fa7f2",
+        "size": 1968291920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00007.safetensors",
+      "blobId": "953fdc7d9c1575d310461fcbe5595eb7728fb8ca",
+      "size": 1927406960,
+      "lfs": {
+        "sha256": "ef45bbd33d6d540d3d3523bb169b52b91b9e265176ab7efc6838233bc3b7e95d",
+        "size": 1927406960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00007.safetensors",
+      "blobId": "2686f913b4c19351f72615f060563c84dd7c9d50",
+      "size": 1052805400,
+      "lfs": {
+        "sha256": "6eb545c6aa8a839c56a78b80331fcb4fa403341925f79fb6a761e2e847bf1e40",
+        "size": 1052805400,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "9af0a18f06cd3b286ebc328878e325808f9574f1",
+      "size": 21249
+    },
+    {
+      "rfilename": "modeling_chatglm.py",
+      "blobId": "8ab8b33536f099d0e29ecfa7c6d7c3845d058256",
+      "size": 56521
+    },
+    {
+      "rfilename": "pytorch_model-00001-of-00007.bin",
+      "blobId": "60684369c9662f8bec19e84335f5b223df729829",
+      "size": 1827781090,
+      "lfs": {
+        "sha256": "4d5567466e89625dbd10e51c69a02982f233a10108cf232a379defdbb065ae0b",
+        "size": 1827781090,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model-00002-of-00007.bin",
+      "blobId": "757ecc50e39f03d6aae2fee4da59b1f109685b10",
+      "size": 1968299480,
+      "lfs": {
+        "sha256": "4ad41534016ac4a2431fa2d4b08efbe28f963744135ec52b2ea13cc86730fa2a",
+        "size": 1968299480,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model-00003-of-00007.bin",
+      "blobId": "1100399a10901ffefc26b928c3cdbbcd57c0649d",
+      "size": 1927415036,
+      "lfs": {
+        "sha256": "a2be9b17c332a8345e787953d4879caee4747ad4b263f013aa3c4654c94c3d24",
+        "size": 1927415036,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model-00004-of-00007.bin",
+      "blobId": "bf75214fd965edb4e9a9b787bd0f5660002992d0",
+      "size": 1815225998,
+      "lfs": {
+        "sha256": "b5526891e1b4c8edd2e3688df5156aa107e2140fe7e3f9d0d54f9cbe3b6ee3b5",
+        "size": 1815225998,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model-00005-of-00007.bin",
+      "blobId": "8dd945aa4e92570245a6997ec799c64dba5892b2",
+      "size": 1968299544,
+      "lfs": {
+        "sha256": "84bb18a476f74beaf4d941733bd1c475791eba799b228f78d0165de989cb7a40",
+        "size": 1968299544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model-00006-of-00007.bin",
+      "blobId": "ff0ff392ba4b2d2b77cf4e282efdcfcf4eca5d4f",
+      "size": 1927415036,
+      "lfs": {
+        "sha256": "1181875a2dc30fba968d72d0fc4628b9a60d3866bf680eb14b9822b5b504830f",
+        "size": 1927415036,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model-00007-of-00007.bin",
+      "blobId": "cc2f19e83aebaf89a623891a11ceb1e72f87985a",
+      "size": 1052808542,
+      "lfs": {
+        "sha256": "1271b638dc0a88206d1c7a51bcaa862410eb56f3e59fd0068a96e96cb5e3f4f0",
+        "size": 1052808542,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pytorch_model.bin.index.json",
+      "blobId": "cd6a94a411934e8cc04e271f169a68754d14733d",
+      "size": 20437
+    },
+    {
+      "rfilename": "quantization.py",
+      "blobId": "af7a0534ceba49af286f9339da7546a06756d3a5",
+      "size": 14687
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "0967ef424bce6791893e9a57bb952f80fd536e93",
+      "size": 3
+    },
+    {
+      "rfilename": "tokenization_chatglm.py",
+      "blobId": "9c0f025e3308e1eb00c86bd4bce60b1ff8d80347",
+      "size": 13096
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "8a8007697b7cc3d3868dcffbbebf8c1f2bd690ba",
+      "size": 1018370,
+      "lfs": {
+        "sha256": "e7dc4c393423b76e4373e5157ddc34803a0189ba96b21ddbb40269d31468a6f2",
+        "size": 1018370,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "fbcb2c80d92f54a1dcdccb7990b59e2e0cedd9da",
+      "size": 1395
+    }
+  ],
+  "spaces": [
+    "qingxu98/gpt-academic",
+    "lightmate/llm-chatbot",
+    "yhavinga/dutch-tokenizer-arena",
+    "bharatgenai/BhashaBench-Leaderboard",
+    "linxianzhong0128/Linly-Talker",
+    "officialhimanshu595/llama-factory",
+    "silk-road/Zero-Haruhi-50_Novels-Playground-API",
+    "Zulelee/langchain-chatchat",
+    "Osborn-bh/ChatGLM3-6B-Osborn",
+    "kakuguo/ChatGLM3",
+    "hzwluoye/gpt-academic",
+    "justest/GPT-Academic-with-B3n-AI",
+    "zjuzjw/gpt-academic",
+    "hm666/chatglm3",
+    "malvika2003/openvino_notebooks",
+    "Yuan2006/gpt-academic-siliconflow-free",
+    "TIHIGTG/ALIGNMENT-AGENT",
+    "Nerva5678/Excel-QA-bot",
+    "IS2Lab/S-Eval",
+    "asifHuggingFace/webui",
+    "fagun18/fagun-browser-testing",
+    "jinyang756/my-ai-assistant",
+    "durukan/gptacademic",
+    "silk-road/Zero-Haruhi-50_Novels-Playground",
+    "dbasu/multilingual-chatbot-arena-leaderboard",
+    "kakuguo/testChatGLM3",
+    "simonnsanita/browseruseapiv2",
+    "cming0420/gpt-academic",
+    "mkhatcha/CUA",
+    "hengkai/gpt-academic",
+    "QLWD/gpt-academic",
+    "qinglin96/gpt-academic3.6",
+    "DrBadass/gpt-academic",
+    "darren1231/gpt-academic_2",
+    "DuanSuKa/gpt-academic2",
+    "BuzzHr/gpt-academic002",
+    "kevinwang676/ChatGLM3-demo",
+    "xiaohua1011/gpt-academic",
+    "SincoMao/test",
+    "zhaomuqing/gpt-academic",
+    "zhlinh/gpt-academic",
+    "forever-yu/gpt-academic",
+    "BuzzHr/gpt-academic001",
+    "adminstr/gpt-academic",
+    "JACK-Chen/gpt-academic-private",
+    "new-ames/gpt-academic-Joy",
+    "CaiRou-Huang/gpt-academic-test",
+    "kuxian/gpt-academic",
+    "Ayndpa/gpt-academic",
+    "leong001/gpt-academic",
+    "JerryYin777/gpt-academic-hust",
+    "yl5545/gpt-academic",
+    "everr/gpt-academicrrrr",
+    "Cyburger/die",
+    "smith8/gpt1",
+    "oncehere/gpt-academic",
+    "fengzhiyi/chatglm-6b-test",
+    "oneapi/gpt-academic",
+    "justseemore/gpt-academic",
+    "Rong233/gpt-academic-for-Jiang",
+    "abing0215/gpt-academic-final",
+    "gordonchan/embedding-m3e-large",
+    "xinyun99/first_demo",
+    "amber0628h/gpt-academic",
+    "viod/gpt-academic",
+    "helenai/dataset-token-distribution",
+    "li0808/gpt-academic",
+    "Liyu910228/gpt-academic",
+    "caodan/xueshugpt",
+    "thepianist9/LinlyTalk",
+    "zhou005/gpt-academic2",
+    "szdavidxiong/gpt-academic2",
+    "Harrison3/gpt-academic",
+    "onlyyoufabian/gpt-academic",
+    "behindeu/gpt-academic",
+    "Chuanming/gpt-academic",
+    "eastsheng/gpt_academic",
+    "zhou005/gpt-academic",
+    "stack86/gpt-academic",
+    "Alanxxk/gpt-academic",
+    "BLDC888/gpt-academic72",
+    "xiaohua1011/gpt-academicc",
+    "hf5566/gpt-academic",
+    "leexiaoyao/gpt-academic222",
+    "xiangbin-bupt/gpt-academic2",
+    "Soullqs1/gpt-academic",
+    "houin/gpt-academic",
+    "wangdii/konwledge",
+    "JerryZhouYG/gpt-academic",
+    "thepianist9/Linly",
+    "Appledum/academic",
+    "cd2000/gpt-academic",
+    "hiro086/boxapi-gpt-academic",
+    "Lyccc0210/gpt-academic",
+    "united-avatars/linly",
+    "ask-lin/gpt-academic",
+    "JiakaiDu/RAG_Test",
+    "jianuo/LLMwatermark",
+    "bioinfoark/academic",
+    "bioinfoark/academic_docker"
+  ],
+  "createdAt": "2023-10-25T09:56:41.000Z",
+  "safetensors": {
+    "parameters": {
+      "F16": 6243584032
+    },
+    "total": 6243584032
+  },
+  "usedStorage": 37462649896
+}

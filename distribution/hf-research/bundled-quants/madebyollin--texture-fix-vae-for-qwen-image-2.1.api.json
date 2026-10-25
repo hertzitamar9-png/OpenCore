@@ -1,0 +1,211 @@
+{
+  "_id": "6ab46b54c74e133b1b42bfa8",
+  "id": "madebyollin/texture-fix-vae-for-qwen-image-2.1",
+  "private": false,
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "safetensors",
+    "vae",
+    "qwen-image",
+    "arxiv:2410.10733",
+    "base_model:Qwen/Qwen-Image-2.1",
+    "base_model:finetune:Qwen/Qwen-Image-2.1",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 97084,
+  "likes": 193,
+  "modelId": "madebyollin/texture-fix-vae-for-qwen-image-2.1",
+  "author": "madebyollin",
+  "sha": "9a10df811f183323e4e94d255c18add1924ce340",
+  "lastModified": "2026-10-22T12:52:16.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "qwen-research",
+    "license_link": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+    "base_model": "Qwen/Qwen-Image-2.1",
+    "library_name": "diffusers",
+    "tags": [
+      "vae",
+      "qwen-image"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "608553844c03cb2492ed50757ebd4b7d12e825b1",
+      "size": 2049
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "13ae08d5a5828f508cf0e852b1b316c0c0bbb9b3",
+      "size": 7831
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "db49fd17bf259b24a8a7749049c1de7ca766b1a3",
+      "size": 566
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0fe4b84e65f6cabf4c4dcc2e9b1c7b78766c69ed",
+      "size": 7388
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "ac6fe795d898a5eff16e4527256c2d039f5b0d4b",
+      "size": 2079
+    },
+    {
+      "rfilename": "diffusion_pytorch_model.safetensors",
+      "blobId": "0ea37097b717b908eec2c3bf5645830283eec008",
+      "size": 1350989544,
+      "lfs": {
+        "sha256": "9c4a3e6b970fe82e99fae227b70529646427333c4378a51b2e853c93f492a6a8",
+        "size": 1350989544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "fp16_demo.py",
+      "blobId": "e477a7812b1a496d86b72702a7a4b59f2548989c",
+      "size": 1881
+    },
+    {
+      "rfilename": "images/decode-qwen-image-2.1-vae-full.png",
+      "blobId": "38d2aa972ad4e4feca57f55436a04d8b5decb5fb",
+      "size": 8607232,
+      "lfs": {
+        "sha256": "67ec3282af65ff0706100426d4de2d8249cc66f70834a273557a9e66e58d8c57",
+        "size": 8607232,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/decode-qwen-image-2.1-vae-zoomed-1.png",
+      "blobId": "fb72008e461df5ae51eebc3f70230d493808f28e",
+      "size": 63106
+    },
+    {
+      "rfilename": "images/decode-qwen-image-2.1-vae-zoomed-2.png",
+      "blobId": "e71731b3c816c32df5ccaaa5408e23abf374e866",
+      "size": 62153
+    },
+    {
+      "rfilename": "images/decode-qwen-image-2.1-vae.png",
+      "blobId": "62c5336556ecf777966f094f0397902bc83de440",
+      "size": 2356968,
+      "lfs": {
+        "sha256": "69f69e123f0d49cdf3a365308e3acf67fe5c4f350c80b4babeed89cdebb916d2",
+        "size": 2356968,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/decode-texture-fix-vae-full.png",
+      "blobId": "2a4a41dff7f0fdb0df069b080012e95916ccff4b",
+      "size": 8858274,
+      "lfs": {
+        "sha256": "b73b03aed6b7795255ec6861ce89ad809d76c3365b2a74b52da2218957363edc",
+        "size": 8858274,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/decode-texture-fix-vae-zoomed-1.png",
+      "blobId": "9f6f90ab2afb538cbbca8114f4362e76c3aed64c",
+      "size": 65909
+    },
+    {
+      "rfilename": "images/decode-texture-fix-vae-zoomed-2.png",
+      "blobId": "12789d3f49682cc702197a67904965b82127b33b",
+      "size": 64764
+    },
+    {
+      "rfilename": "images/decode-texture-fix-vae.png",
+      "blobId": "cf451efe3e0323e4c604160c96dcee91d65e77df",
+      "size": 2393413,
+      "lfs": {
+        "sha256": "02672d5f9090ddb9ef595c1629bd1d993675a67323a28f1c13964dbd04b75012",
+        "size": 2393413,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/fp16-demo-official-bf16.png",
+      "blobId": "3110d4756ad2ed5c13f8eebff0ca5c3970636d93",
+      "size": 656663,
+      "lfs": {
+        "sha256": "f686673dd714dafab661c2ce3ce3c5a6760ca8915a40b3f10ace32d4f080ff38",
+        "size": 656663,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/fp16-demo-official-fp16.png",
+      "blobId": "8dd8af9d74282ee2f167535bd65b68b833aefa82",
+      "size": 547333,
+      "lfs": {
+        "sha256": "5c8cab8eeb55cdc28cc4d70d1022232ce9fd781cbbb48c852d9eae2523bc1f8d",
+        "size": 547333,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/fp16-demo-texture-fix-fp16.png",
+      "blobId": "0a4c02f657dc7552bbb94eb1324f6db34bde3eac",
+      "size": 505940,
+      "lfs": {
+        "sha256": "acd2eba8720b1835a52ad63b3344395a8d5c2a8d29ab9a8578790c9f1605dd92",
+        "size": 505940,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/pnw_meadow_stream_2048.latent.pt",
+      "blobId": "e0aca0a3608edc7b970b005e53224f7fd935df05",
+      "size": 4196163,
+      "lfs": {
+        "sha256": "275f20620ff1fb6ef6c9803a46d0bb177d27e723d668d1cd677dfb2bde4ce87f",
+        "size": 4196163,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/rgba_dragon_sticker_1024.latent.pt",
+      "blobId": "523093a205e78eba1a8d546f3eb7c5125db0b774",
+      "size": 1050449,
+      "lfs": {
+        "sha256": "160f59aa4100538ac7ea79386e7b179afbd0c2cc56ca9ef0c763386e850dda3f",
+        "size": 1050449,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "texture_fix_vae_for_qwen_image_2.1_bf16.safetensors",
+      "blobId": "492cf11b7eb7f033a9e0262515e9f498f14d9cd4",
+      "size": 675509688,
+      "lfs": {
+        "sha256": "36f56608b02077a50a08ea3dbcdb88351298ceba49948f41f9f87186378e6908",
+        "size": 675509688,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "mrfakename/qwen-image-texture-fix-vae"
+  ],
+  "createdAt": "2026-09-24T00:14:12.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 337740404
+    },
+    "total": 337740404
+  },
+  "usedStorage": 4093466188
+}

@@ -1,0 +1,361 @@
+{
+  "_id": "68873d4dee75eb2e795cfbf0",
+  "id": "bartowski/Qwen_Qwen3-30B-A3B-Instruct-2507-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "base_model:quantized:Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 62224,
+  "likes": 30,
+  "modelId": "bartowski/Qwen_Qwen3-30B-A3B-Instruct-2507-GGUF",
+  "author": "bartowski",
+  "sha": "6c6e8692f43e4ca663f7ece8229a1361090d3a4c",
+  "lastModified": "2025-07-29T16:53:23.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model_relation": "quantized",
+    "base_model": "Qwen/Qwen3-30B-A3B-Instruct-2507"
+  },
+  "gguf": {
+    "total": 30532122624,
+    "architecture": "qwen3moe",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/models_out/Qwen3-30B-A3B-Instruct-2507-GGUF/Qwen_Qwen3-30B-A3B-Instruct-2507-imatrix.gguf",
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 9870270464
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "fd0927e57f602e65aea1a40bbbe19755e53e6c8a",
+      "size": 3961
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ2_M.gguf",
+      "blobId": "f9a54aabc5dbbcf30699efe32ef830ba2681aeb7",
+      "size": 9870270464,
+      "lfs": {
+        "sha256": "f2dc78edd3ec0171904f1945d8c05a948131b1103172b1710b763db2eb65f52a",
+        "size": 9870270464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ2_S.gguf",
+      "blobId": "85ea477a0d2dcf86c369634476059d69fa24b4bf",
+      "size": 8744099840,
+      "lfs": {
+        "sha256": "25f1c668eb39e41b22b98c73922d6b4e8d43dda073a825504c54355a2f475219",
+        "size": 8744099840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ2_XS.gguf",
+      "blobId": "1fc674391cfb03a1ed29080b42576a7a5fbd01e6",
+      "size": 8662165504,
+      "lfs": {
+        "sha256": "860aee36b63bde83571a35e56ed87b69c07f242aff84c2ea493a1f61c8a9bc7b",
+        "size": 8662165504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ2_XXS.gguf",
+      "blobId": "54c460eb3e03bc08060304321f70e00c7c1aa45f",
+      "size": 7569025024,
+      "lfs": {
+        "sha256": "a9bfa56e091a8812926999bf8954f443a8dfad3e85a37cda6595092588f253ac",
+        "size": 7569025024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ3_M.gguf",
+      "blobId": "bfe72c24f3c7b7e8ab0d227c799dcf6a038f1133",
+      "size": 14076540928,
+      "lfs": {
+        "sha256": "82668726e8279c00fe657b160d8088d91689076005092f2f9fa79436d6068098",
+        "size": 14076540928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ3_XS.gguf",
+      "blobId": "1d5297edaabfccb79010a4281e7bb0f0f472507a",
+      "size": 12736460800,
+      "lfs": {
+        "sha256": "00941f5286d5ce3cbfe809c65a42ce8f090ca7c9644dcaad812901aefe56816f",
+        "size": 12736460800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ3_XXS.gguf",
+      "blobId": "d1281944a2d163c5724b717b21f2922ea49693a6",
+      "size": 12216983552,
+      "lfs": {
+        "sha256": "292daa2b66aec59d075532d0bcf05010bf4a3b012a4216c28dc021b73d1e9ab4",
+        "size": 12216983552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ4_NL.gguf",
+      "blobId": "97d4816f12eb66cfed585cca870c468777fa1f78",
+      "size": 17386278912,
+      "lfs": {
+        "sha256": "b36fa8f3e70e58ce09f9cd78d3f4186a7e1aa2de1510c3704b7a75ba00516d42",
+        "size": 17386278912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-IQ4_XS.gguf",
+      "blobId": "b87fb3b38e2da0e09d3628717f87a185cc02c993",
+      "size": 16458002432,
+      "lfs": {
+        "sha256": "9338f2172f1c5451962bb159591792919410abb6ad4702f5edcee72d050e8964",
+        "size": 16458002432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q2_K.gguf",
+      "blobId": "9d0df43a1c2acde942f80ebcc161352972797b4c",
+      "size": 10908647424,
+      "lfs": {
+        "sha256": "2ccd0ec15fd8c128613623ed0cc489e7c7462d6d61889d661d8a22ddadbf3781",
+        "size": 10908647424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q2_K_L.gguf",
+      "blobId": "42174c1d26a5a3fe100c57a8667d3064fd239b79",
+      "size": 11212519424,
+      "lfs": {
+        "sha256": "2ce6e6a71bc117d8293f3b4e0bb8436dda128e6d06676ad375383a9581aef22a",
+        "size": 11212519424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q3_K_L.gguf",
+      "blobId": "435a9ac750e382e118036c945ea88acf20cd2b12",
+      "size": 14583003136,
+      "lfs": {
+        "sha256": "61016d6234d7c2f187a2f90d80a2628637484081482a247c97eb5f05acd58c71",
+        "size": 14583003136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q3_K_M.gguf",
+      "blobId": "8a4f72f52c9b7ca9c3ad85647ed990417daefcea",
+      "size": 14076803072,
+      "lfs": {
+        "sha256": "327c6e0826bee8f19172e96c94bb7bba385f7a39d08314803652df9942401c4f",
+        "size": 14076803072,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q3_K_S.gguf",
+      "blobId": "1f4ab7bf9e76f0e2b0abb1d513da7fa28d5e04f8",
+      "size": 13428127744,
+      "lfs": {
+        "sha256": "13ae55e8eba134355c43e6d3b192b5b85b265efbda5542b48da11a868a5b86c3",
+        "size": 13428127744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q3_K_XL.gguf",
+      "blobId": "fea5983235e38f663f7f0e2452f8d34c8f50bee0",
+      "size": 14855272448,
+      "lfs": {
+        "sha256": "d6b7427047c5f2f51f840fa1e8d059a85d19817404166214579fc7042754f60a",
+        "size": 14855272448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q4_0.gguf",
+      "blobId": "07234fc177358f684688aa4f1dc137de521118b5",
+      "size": 17631645696,
+      "lfs": {
+        "sha256": "d73126b2647928f5279e9dda48978ccc7d17128f36a93f4410a55222aebdc566",
+        "size": 17631645696,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q4_1.gguf",
+      "blobId": "684c8714087009f9fb1e54f92aed3cd459c04e44",
+      "size": 19214520320,
+      "lfs": {
+        "sha256": "16c1f689aed54c9d74102e664af4345b87e8bd14bfc87b0ebae29ebf37e23120",
+        "size": 19214520320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q4_K_L.gguf",
+      "blobId": "1d0dbdaf15d01704142024a8433266eaadd8f874",
+      "size": 18863126528,
+      "lfs": {
+        "sha256": "0a150e8f2bf763dceaed1e99f3547adcd26ef4ce9fe1b335d0d3cc93cf0b79e7",
+        "size": 18863126528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+      "blobId": "5421ef9cc76441b4de91b78ca6e486d3ec328d23",
+      "size": 18632183808,
+      "lfs": {
+        "sha256": "382b4f5a164d200f93790ee0e339fae12852896d23485cfb203ce868fea33a95",
+        "size": 18632183808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q4_K_S.gguf",
+      "blobId": "558a8e4317d21c44527d3e1f08fd53685f56599c",
+      "size": 17984491520,
+      "lfs": {
+        "sha256": "c6cf00aa338f4eaffd3503339e180bd381ced9bedb55862fd04358b97fc85c1b",
+        "size": 17984491520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q5_K_L.gguf",
+      "blobId": "286fa41d3cc7b26dea97448a8844c2adbd29f1b4",
+      "size": 21936502784,
+      "lfs": {
+        "sha256": "73d058559387c786c2cdb9b44b3462dcd21f403d8d7e87977464979ccd493505",
+        "size": 21936502784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q5_K_M.gguf",
+      "blobId": "4caaacfc86c69aae628a1620991316b405db48c7",
+      "size": 21744455680,
+      "lfs": {
+        "sha256": "3233326af36eddfa675de49ba0d6098cd043f86ddc6de40cdef2b3ac64992581",
+        "size": 21744455680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q5_K_S.gguf",
+      "blobId": "3cd85e90621079b7a0005763e3141ca9e7ebcff9",
+      "size": 21099384832,
+      "lfs": {
+        "sha256": "9420703b199c839d4304eba2412f9cee53999588a6cd980f3d69cdbb96517b27",
+        "size": 21099384832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q6_K.gguf",
+      "blobId": "972905d92a9f366091719d420733571cd9341370",
+      "size": 25104721920,
+      "lfs": {
+        "sha256": "fb16c141ecbafc40d36b329ce92e34a3171d01c1ecf283e30a9a61ee45be94cd",
+        "size": 25104721920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q6_K_L.gguf",
+      "blobId": "105dd664b0d6908e7acfc65b795026c10e78cc4a",
+      "size": 25255442432,
+      "lfs": {
+        "sha256": "c6e70cc6234908b2bd0bb7fd40754803657162f92a83d510bbebfe5ee27e066f",
+        "size": 25255442432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-Q8_0.gguf",
+      "blobId": "54e56bffc6863185dc544191ecf3be954fa5c20b",
+      "size": 32483932160,
+      "lfs": {
+        "sha256": "c2b7658bc62282083a8296a535400520b612a1044322be77ad7a53fa4d4fb92c",
+        "size": 32483932160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-bf16/Qwen_Qwen3-30B-A3B-Instruct-2507-bf16-00001-of-00002.gguf",
+      "blobId": "5b9c639a304e4df1568a2936095d67145508cb6e",
+      "size": 39718700640,
+      "lfs": {
+        "sha256": "c0574aa9c0e48438c3e3c4d6e3907953d6aee96e2b157b5d37338a16b81e6c67",
+        "size": 39718700640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-bf16/Qwen_Qwen3-30B-A3B-Instruct-2507-bf16-00002-of-00002.gguf",
+      "blobId": "836f022a58d14ec8af448aea59a558d71d4b48d7",
+      "size": 21377102144,
+      "lfs": {
+        "sha256": "2d3cdb5ec4d3b2a03b4454af9ef4b70348d6b41007ec93fe1850db1a7ccdc685",
+        "size": 21377102144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen_Qwen3-30B-A3B-Instruct-2507-imatrix.gguf",
+      "blobId": "f8a19235efbda790b93baef6c16883df5795b5c0",
+      "size": 122029312,
+      "lfs": {
+        "sha256": "a00b789ceda56a93e50a562c2d24dff6a98f369a4b7f1c2d1f392bb1bf11ae96",
+        "size": 122029312,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4370638a9a0479cd7c6438e5800af7296a279c1b",
+      "size": 15115
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-07-28T09:05:17.000Z",
+  "usedStorage": 954405752960
+}

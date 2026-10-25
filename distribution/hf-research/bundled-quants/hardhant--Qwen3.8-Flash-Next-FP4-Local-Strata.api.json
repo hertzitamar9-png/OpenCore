@@ -1,0 +1,217 @@
+{
+  "_id": "6ad3a1c2b7fe1f8dfb033acd",
+  "id": "hardhant/Qwen3.8-Flash-Next-FP4-Local-Strata",
+  "private": false,
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "strata",
+    "nvfp4",
+    "moe",
+    "fp4-local",
+    "base_model:nvidia/Qwen3.8-Flash-Next-FP4-Local",
+    "base_model:quantized:nvidia/Qwen3.8-Flash-Next-FP4-Local",
+    "region:us"
+  ],
+  "downloads": 28022,
+  "likes": 7,
+  "modelId": "hardhant/Qwen3.8-Flash-Next-FP4-Local-Strata",
+  "author": "hardhant",
+  "sha": "50cc704afacd80dc254a5197e9a5099797f4932c",
+  "lastModified": "2026-10-17T16:53:56.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+    "library_name": "gguf",
+    "tags": [
+      "strata",
+      "gguf",
+      "nvfp4",
+      "moe",
+      "fp4-local"
+    ]
+  },
+  "gguf": {
+    "total": 51200245760,
+    "architecture": "strata-ple",
+    "totalFileSize": 102400491744
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "8711cf13916ebf8f0f3fa2b1e55a970f793a4165",
+      "size": 1781
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "21abc2536da120aaf0f81281704d5e5c88d721cd",
+      "size": 7344
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "8b8d8e4d6924c04666f95b5f4d964b852fe3fb64",
+      "size": 2003
+    },
+    {
+      "rfilename": "SIZES.txt",
+      "blobId": "d8f145378fe070d3c16385221031c13a639a43c6",
+      "size": 871
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+      "blobId": "974f4ca87254dcaec0cf82479f4eea73629eef56",
+      "size": 907543008,
+      "lfs": {
+        "sha256": "b1a82259702816a5330d7bd7607cd9676b11780e79ff7348c21103ff3ce49bd0",
+        "size": 907543008,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mtp/rt/dense.bin",
+      "blobId": "952dda56c20bfed823682d8dc1a6d3553b5a35b3",
+      "size": 116099072,
+      "lfs": {
+        "sha256": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a",
+        "size": 116099072,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mtp/rt/dense.txt",
+      "blobId": "e726e275f346dfc00e2504bba2696273e881fe99",
+      "size": 1851
+    },
+    {
+      "rfilename": "mtp/rt/draft_vocab.bin",
+      "blobId": "c2208b305f2e84aa3fd4431b98e73ec1396da317",
+      "size": 235852,
+      "lfs": {
+        "sha256": "25d7fd1670a2e0ec885868d1718d410a3baab03bceeacf0a156cf93ffe4e1ef4",
+        "size": 235852,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "mtp/rt/experts.bin",
+      "blobId": "7804acaa65ac699ebd4199a136f865ffd4d7e9d6",
+      "size": 707788800,
+      "lfs": {
+        "sha256": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f",
+        "size": 707788800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "pack/conversions.json",
+      "blobId": "94b5db4473e4a06ba1ceeea4c122f8513626be67",
+      "size": 183
+    },
+    {
+      "rfilename": "pack/dense.bin",
+      "blobId": "f10166349eac6dc8afca9f1dce4c68cb871f256c",
+      "size": 1538625024,
+      "lfs": {
+        "sha256": "d95c06b2e9adf3e41a625a7d5ba28a32decafc8c1e2f28c69250f9e05862da5a",
+        "size": 1538625024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "pack/experts.bin",
+      "blobId": "93c89c3aab1e82202eb7eba1750b82eba1d1232f",
+      "size": 67948118016,
+      "lfs": {
+        "sha256": "1e124ee94b7c921a7c895d2898bfa4ddc2d8111f3fd3e8b94207759c363291a5",
+        "size": 67948118016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "pack/experts.bin.src.json",
+      "blobId": "e38c6c02c14c161a638af34208fddf74e6d1c856",
+      "size": 240
+    },
+    {
+      "rfilename": "pack/index.txt",
+      "blobId": "4d2dd9085bb7ce3245b173c2db8239feb2b58883",
+      "size": 117493
+    },
+    {
+      "rfilename": "pack/native_experts.txt",
+      "blobId": "9837d3efb75d757dcdae85b52528937a33a01345",
+      "size": 1582
+    },
+    {
+      "rfilename": "pack/tokenizer/chat_template.jinja",
+      "blobId": "c0c686f9c38d70d179fb7b5f5aa7530bc913dda3",
+      "size": 8952
+    },
+    {
+      "rfilename": "pack/tokenizer/merges.txt",
+      "blobId": "8a3e6bda772e39bf37ee230954da5fd472ad2e01",
+      "size": 3353258
+    },
+    {
+      "rfilename": "pack/tokenizer/token_type.json",
+      "blobId": "135db3207db449b0be0704e7a6c86cf35dbca36a",
+      "size": 744960
+    },
+    {
+      "rfilename": "pack/tokenizer/tokenizer.json",
+      "blobId": "911836323abf8b7022c6e97ade2dcdf0c86e0410",
+      "size": 541
+    },
+    {
+      "rfilename": "pack/tokenizer/vocab.json",
+      "blobId": "5104e655af5680f9c7b56da25c71eccb4e860a6a",
+      "size": 5737005
+    },
+    {
+      "rfilename": "ple-fp4local-bf16.gguf",
+      "blobId": "b8cdfa1a6b1b6faadcd1af5acffd6d3d8fe38562",
+      "size": 102400491744,
+      "lfs": {
+        "sha256": "a579afcfd57345ea2fa7b2420b2c19ccce72110ac6b7d79ec61b4b7d648d997e",
+        "size": 102400491744,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "ple-fp4local-bf16.gguf.manifest.json",
+      "blobId": "a9695ac026865300abb873496ebf469fcc0a4856",
+      "size": 553
+    },
+    {
+      "rfilename": "qwen-fp4local-csf-dense.gguf",
+      "blobId": "b9ffcb8613f99e1377db653fa72a8a8bd16ea82b",
+      "size": 73939912352,
+      "lfs": {
+        "sha256": "e60d0c9eb190dd2254c55ec744f0a62219e2a7756ef9025a38012fef059dc0c2",
+        "size": 73939912352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "qwen-fp4local-csf-dense.gguf.manifest.json",
+      "blobId": "a9695ac026865300abb873496ebf469fcc0a4856",
+      "size": 553
+    },
+    {
+      "rfilename": "token-embd-fp4local-bf16.gguf",
+      "blobId": "6f3314aa472182de2910e7052a64df9ec68e7b25",
+      "size": 1271398656,
+      "lfs": {
+        "sha256": "fa0ee784314167430ed636eae8c5b0a8bc6d7d0e6fce6dfd95e7784569762fa5",
+        "size": 1271398656,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-17T16:26:42.000Z",
+  "usedStorage": 248830212524
+}

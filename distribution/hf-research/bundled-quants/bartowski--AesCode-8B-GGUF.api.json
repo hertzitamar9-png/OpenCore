@@ -1,0 +1,522 @@
+{
+  "_id": "6acb3b9bb0d942380f95dc3f",
+  "id": "bartowski/AesCode-8B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "code-generation",
+    "html",
+    "multimodal",
+    "reinforcement-learning",
+    "design",
+    "image-text-to-text",
+    "en",
+    "base_model:microsoft/AesCode-8B",
+    "base_model:quantized:microsoft/AesCode-8B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 6261,
+  "likes": 14,
+  "modelId": "bartowski/AesCode-8B-GGUF",
+  "author": "bartowski",
+  "sha": "17695dfd5fd4c8622a676f53bb37cd732d7eea5e",
+  "lastModified": "2026-10-11T07:45:01.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "base_model_relation": "quantized",
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "code-generation",
+      "html",
+      "multimodal",
+      "reinforcement-learning",
+      "design"
+    ],
+    "base_model": "microsoft/AesCode-8B"
+  },
+  "gguf": {
+    "total": 8190735360,
+    "architecture": "qwen3vl",
+    "context_length": 262144,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' }}\n        {%- if messages[0].content is string %}\n            {{- messages[0].content }}\n        {%- else %}\n            {%- for content in messages[0].content %}\n                {%- if 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- for message in messages %}\n    {%- if message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content in message.content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                    {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                    <|vision_start|><|image_pad|><|vision_end|>\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                    {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                    <|vision_start|><|video_pad|><|vision_end|>\n                {%- elif 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content_item in message.content %}\n                {%- if 'text' in content_item %}\n                    {{- content_item.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and message.content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {%- if message.content is string %}\n            {{- message.content }}\n        {%- else %}\n            {%- for content in message.content %}\n                {%- if content.type == 'image' or 'image' in content or 'image_url' in content %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                    {%- if add_vision_id %}Picture {{ image_count.value }}: {% endif -%}\n                    <|vision_start|><|image_pad|><|vision_end|>\n                {%- elif content.type == 'video' or 'video' in content %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                    {%- if add_vision_id %}Video {{ video_count.value }}: {% endif -%}\n                    <|vision_start|><|video_pad|><|vision_end|>\n                {%- elif 'text' in content %}\n                    {{- content.text }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 16388045504
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c75e38f9339a4747c2fdfe840642a78612b37f9b",
+      "size": 2991
+    },
+    {
+      "rfilename": "AesCode-8B-IQ2_M.gguf",
+      "blobId": "62c8cb3f1b824e4aa285921dd2b30880c816e8b6",
+      "size": 3139898336,
+      "lfs": {
+        "sha256": "b5bc9259c86f649e7601e02e199c3052bdf1e3de74c4321c4a9aedb916905a45",
+        "size": 3139898336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-IQ3_M.gguf",
+      "blobId": "825278750c496e8ae5124e7a5133018120586998",
+      "size": 4475763680,
+      "lfs": {
+        "sha256": "3ea74b6bc2e2ed724d47c8a94de3cc6b70ac58b89d154f434f59a96ad8febc81",
+        "size": 4475763680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-IQ3_XS.gguf",
+      "blobId": "67e83137f4257bfaafd9b355de5a1333d314670d",
+      "size": 3886431200,
+      "lfs": {
+        "sha256": "a7e7e7db0960b906b4f713e556e9ee2bc1efd74036c2e4a77f4e0fef14ef94fe",
+        "size": 3886431200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-IQ3_XXS.gguf",
+      "blobId": "922a24d459ea0feb75da92f6415aebd7794fce0f",
+      "size": 3684383712,
+      "lfs": {
+        "sha256": "0169ae37cba9dcc29e21d8b180aaee1708a1796e98d8a8c0b1237e08f12acc35",
+        "size": 3684383712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-IQ4_NL.gguf",
+      "blobId": "328c71338c682bd5d908b2952ec5d7933c648fc8",
+      "size": 5178452960,
+      "lfs": {
+        "sha256": "e1e7f80aa95117bd22ae47670fe377d1c07014c5a8d0f31ce9f5586276d4a9c4",
+        "size": 5178452960,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-IQ4_XS.gguf",
+      "blobId": "995f2025fab3f5d01d59bff2306c0b89ee922c66",
+      "size": 4688030688,
+      "lfs": {
+        "sha256": "859f3f865e62204c4ac200867ced4fee245d68f9b7548eb4dbf4d2bdb9a8a840",
+        "size": 4688030688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q2_K.gguf",
+      "blobId": "7715d713377e76303aa2b1ae9610d5f623844a7b",
+      "size": 3299576800,
+      "lfs": {
+        "sha256": "b91392dd83819f42a657729cf413855aa07d1fb95288cb206537a480ac13afdb",
+        "size": 3299576800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q3_K_L.gguf",
+      "blobId": "0736226a7419d67db37eb7eeb8ae981d979a0fac",
+      "size": 4230691808,
+      "lfs": {
+        "sha256": "f1c62a2bcdca16678794f3dd750e6e45831c9770b0d516cc27b42870c51c01e6",
+        "size": 4230691808,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q3_K_M.gguf",
+      "blobId": "65d5ec1a90092facce4000b3091359eefc38a7c7",
+      "size": 4039424992,
+      "lfs": {
+        "sha256": "08c001dca3da35a5f0292d7431257b59f8fe372674f186c76c692ba353acfcf2",
+        "size": 4039424992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q3_K_S.gguf",
+      "blobId": "f51327f37a79a304f19373d21c4866f3023d52fb",
+      "size": 3870899168,
+      "lfs": {
+        "sha256": "7faf0c1cb5eadc77779d54b38365027de6f7780910e387f83ea4ebce8c464b48",
+        "size": 3870899168,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q4_0.gguf",
+      "blobId": "8b3bda064682e02383e6e5e090ea2d10627b34ee",
+      "size": 4865190880,
+      "lfs": {
+        "sha256": "371b252a695cdfda9e768976e8000dd56ec96641e151ebb8b9e13cb6d406e632",
+        "size": 4865190880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q4_1.gguf",
+      "blobId": "75a6c77d3f83c1c60122547d0b94a89479e5b23c",
+      "size": 5306739680,
+      "lfs": {
+        "sha256": "3ce09d055a2fdf28d7898d68d71761d22310a52c845151c212c2c0c2680c4a25",
+        "size": 5306739680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q4_K_L.gguf",
+      "blobId": "37cb95fe978789ee0699b415d96d6a03c169134f",
+      "size": 5586119648,
+      "lfs": {
+        "sha256": "52bcd46331b19e2e7b97f8960243d6db3524b4e253ebfaabba6d4656b8e8350f",
+        "size": 5586119648,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q4_K_M.gguf",
+      "blobId": "4e330bdbef96f2ca69cfa8814202f2e0160f67ff",
+      "size": 5211515872,
+      "lfs": {
+        "sha256": "dda496dc12784f5b5297d56d6ab0d7b5ccd4dd53018257f59732c18525f81490",
+        "size": 5211515872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q4_K_S.gguf",
+      "blobId": "78abc69c75279607f2a73ca5c6c40f991749612b",
+      "size": 4928039904,
+      "lfs": {
+        "sha256": "1e31e3efe296361bd828fb928c22e6b5d9d1faf1539512ad48cd8c4ae536fdf8",
+        "size": 4928039904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q5_K_M.gguf",
+      "blobId": "1897fe80f6a45059a9de65741abb451372451fa0",
+      "size": 6242790368,
+      "lfs": {
+        "sha256": "c4a6869b799a05891320917ecd9c56843e73b42bca4195e34919465507d62a7b",
+        "size": 6242790368,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q5_K_S.gguf",
+      "blobId": "a86b9869520506b315732729d2a35fa952f52330",
+      "size": 5891845088,
+      "lfs": {
+        "sha256": "bf8a96dcc1ee646c73e065d47129a94affe9507119d9ea0ec9935ba7cf2d7be9",
+        "size": 5891845088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q6_K.gguf",
+      "blobId": "dead3c7b056a04293c2e07e5503c32a6fdf7dbc5",
+      "size": 7140350944,
+      "lfs": {
+        "sha256": "faab3b4ce6f6e7aa942ffcabccbe239cd5a2a03041c2afd2604683e8bf765e29",
+        "size": 7140350944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q6_K_L.gguf",
+      "blobId": "bcc896a9569ce8237e7f7a6d386c7ab33bbda825",
+      "size": 7457283040,
+      "lfs": {
+        "sha256": "f5ce886f34f7fea92b8f617a75baa46d78d89029546547a0cf25929f90761372",
+        "size": 7457283040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q6_K_S.gguf",
+      "blobId": "fd3e20b7a0eb4e3085e05ade4927b8909076cb09",
+      "size": 6857956320,
+      "lfs": {
+        "sha256": "1d21efc6eaf344bc795992afb3ad26e6e5631e86d8f295ea24244e48c9ac9482",
+        "size": 6857956320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-Q8_0.gguf",
+      "blobId": "19007b9cee4f566a1d4674765a4c908b3903d4b7",
+      "size": 8709520352,
+      "lfs": {
+        "sha256": "2323e12ccab51525909e09e5e5fd2918fe02537528f1e7ff5322b04f99fe5157",
+        "size": 8709520352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-bf16.gguf",
+      "blobId": "950f255e0ee64680c09b7163e5151ef60b89a45e",
+      "size": 16388045504,
+      "lfs": {
+        "sha256": "5a410dada55fb8e9ae0c8b4cb3b5b52eddb07097177c9da5ee085c10e6744304",
+        "size": 16388045504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "AesCode-8B-calibration-v6.txt",
+      "blobId": "3c594a5aa4021f2a3e44be154147875150af0d81",
+      "size": 1017465
+    },
+    {
+      "rfilename": "AesCode-8B-imatrix.gguf",
+      "blobId": "8c71a4563a0d0e61022356b967d320328dfa04a7",
+      "size": 10701984,
+      "lfs": {
+        "sha256": "02faefe510ba0ae0f688737942e19c967a559f75edc72aae2b690729b71e5c87",
+        "size": 10701984,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "52c9ab576268d9f931510121de09ab396144b145",
+      "size": 17569
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ2_M.layout.json",
+      "blobId": "866a40a38011b95f95763c55bde3bc51851c065a",
+      "size": 1970
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ2_M.tensor-types.txt",
+      "blobId": "6e2028d5a6b06c56f0199e4ca6cb78129edc177e",
+      "size": 8420
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ3_M.layout.json",
+      "blobId": "cd93b2403dfb6c060a38c5dc36d258d99b90d7b9",
+      "size": 1918
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ3_M.tensor-types.txt",
+      "blobId": "1e66c88080eafe5d7c6286d6c602f026d18f27d3",
+      "size": 8228
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ3_XS.layout.json",
+      "blobId": "188159ce5ba6729603c0b1c9c90ad94b7592ff72",
+      "size": 1850
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ3_XS.tensor-types.txt",
+      "blobId": "c9684f8b59e63b1d17043f883adc1a3f738d0f50",
+      "size": 8294
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ3_XXS.layout.json",
+      "blobId": "5808bd6638ef1dc85433ff5fb7af3d9053e4f44b",
+      "size": 1926
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ3_XXS.tensor-types.txt",
+      "blobId": "2ac8579bdc855119b0f8f9105b03b30630c39ac0",
+      "size": 8601
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ4_NL.layout.json",
+      "blobId": "c068cc62207f0de45e1f9358de6a427b2512cbbe",
+      "size": 1915
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ4_NL.tensor-types.txt",
+      "blobId": "3b564f4756c4b7d5dc0a3b16330bcfe3a1dfb2fd",
+      "size": 8406
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ4_XS.layout.json",
+      "blobId": "89cd8f246fe87abb5088ca04b7b6fd22eb1af940",
+      "size": 1897
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-IQ4_XS.tensor-types.txt",
+      "blobId": "c72a3a35921660380d486c715af134d46a5e39d5",
+      "size": 8480
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q2_K.layout.json",
+      "blobId": "3798897417320213c4a6790d4d4634759c8b57ee",
+      "size": 1871
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q2_K.tensor-types.txt",
+      "blobId": "e8dbc34c390a049ec51b8220376b049c714de23c",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q3_K_L.layout.json",
+      "blobId": "44f2490bff9519d497b628d7824228271d17f64f",
+      "size": 1914
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q3_K_L.tensor-types.txt",
+      "blobId": "28e948ed508bf2c98146d9f2485dffc731402152",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q3_K_M.layout.json",
+      "blobId": "8693bc6fa13bd11d2cb6a1af752ee396ee6278ec",
+      "size": 1877
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q3_K_M.tensor-types.txt",
+      "blobId": "fa51117d2afe4057dcdfbe714d3d6593fa1ba7cd",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q3_K_S.layout.json",
+      "blobId": "081c6e1887d0f32f2804c3536074f82c5c23746d",
+      "size": 1861
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q3_K_S.tensor-types.txt",
+      "blobId": "b3e6c1cb173a85243aa9109a873b5e76dc539731",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q4_K_L.layout.json",
+      "blobId": "1bbddece6a76c954084f31206c086ecb635a88a7",
+      "size": 1929
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q4_K_L.tensor-types.txt",
+      "blobId": "900db3056c6e383d760b9616acaf0f1abc3bb974",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q4_K_M.layout.json",
+      "blobId": "457127694eb017633d6c3ad0b4fdcd68420872ef",
+      "size": 1878
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q4_K_M.tensor-types.txt",
+      "blobId": "2410d073642ce5681a74c351bdf46afad9098f1f",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q4_K_S.layout.json",
+      "blobId": "6064a08a37e3f764c939217958823188a6872e2d",
+      "size": 1843
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q4_K_S.tensor-types.txt",
+      "blobId": "d4fd48e61b8be48571488c5abda41a83044104b0",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q5_K_M.layout.json",
+      "blobId": "0ec54cea14bf04a461c32d95550af79a956cdfd9",
+      "size": 1878
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q5_K_M.tensor-types.txt",
+      "blobId": "0733112641ce9650c30796d6773256f268afa185",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q5_K_S.layout.json",
+      "blobId": "fe432251dc2a89a2905b206f5f142b5374606027",
+      "size": 1861
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q5_K_S.tensor-types.txt",
+      "blobId": "b6442796dfcf5ee7f9f7bc1d29df8dd1ba633de4",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q6_K.layout.json",
+      "blobId": "8e01b2479959359f856d5df09e717a78079e3c6b",
+      "size": 1819
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q6_K.tensor-types.txt",
+      "blobId": "be08c49d22f762dbb9c5ca6d856f183e44555b4a",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q6_K_L.layout.json",
+      "blobId": "2fc723ada2f05cb44a4c5edc2ce396898374e7cd",
+      "size": 1844
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q6_K_L.tensor-types.txt",
+      "blobId": "f25de8c0ed6dc879b2358507f69a66f0ecbc3792",
+      "size": 8114
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q6_K_S.layout.json",
+      "blobId": "b1ec96e6e39a69e89c34b4d51f8e56dc6035806d",
+      "size": 1843
+    },
+    {
+      "rfilename": "layouts/AesCode-8B-Q6_K_S.tensor-types.txt",
+      "blobId": "f5b65fc22ad5c333202b79ad58ef75e748ecfc7f",
+      "size": 8114
+    },
+    {
+      "rfilename": "mmproj-AesCode-8B-bf16.gguf",
+      "blobId": "8e8eaae55cab5810a628b20f40393bbcd1324995",
+      "size": 1162569376,
+      "lfs": {
+        "sha256": "1c346bdc38669f9b5dd656063b83488978529f52d4dd849cfefb0d745918910a",
+        "size": 1162569376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-AesCode-8B-f16.gguf",
+      "blobId": "dbd4d6da02329ef93f17af075cd2c6b4fcaab3f9",
+      "size": 1159030432,
+      "lfs": {
+        "sha256": "809cb49ebe86de6982de0ff9d855f1d2d8e350f816293c1ae8613ead329f729d",
+        "size": 1159030432,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-11T07:32:43.000Z",
+  "usedStorage": 127411252736
+}

@@ -1,0 +1,249 @@
+{
+  "_id": "67ff7b22b5ba13b43f0c3811",
+  "id": "ByteDance-Seed/UI-TARS-1.5-7B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_5_vl",
+    "image-text-to-text",
+    "multimodal",
+    "gui",
+    "conversational",
+    "en",
+    "arxiv:2501.12326",
+    "arxiv:2404.07972",
+    "arxiv:2409.08264",
+    "arxiv:2401.13919",
+    "arxiv:2504.01382",
+    "arxiv:2405.14573",
+    "arxiv:2410.23218",
+    "arxiv:2504.07981",
+    "license:apache-2.0",
+    "eval-results",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 103286,
+  "likes": 615,
+  "modelId": "ByteDance-Seed/UI-TARS-1.5-7B",
+  "author": "ByteDance-Seed",
+  "sha": "683d002dd99d8f95104d31e70391a39348857f4e",
+  "lastModified": "2025-04-18T01:35:38.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "model_type": "qwen2_5_vl",
+    "processor_config": {
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "multimodal",
+      "gui"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "8e135f3fdd0c65430f16bf2ea759a8b1f8d1d7f8",
+      "size": 8370
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "482ced4679301bf287ebb310bdd1790eb4514232",
+      "size": 605
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "732bd68bc5427d1fb6c06a59b3bf2456b2155d24",
+      "size": 1050
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "58ee12a9fb3d8708a1e41e49cb9aa5ac5017b6a6",
+      "size": 1374
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00007.safetensors",
+      "blobId": "cee16388346179b6b6a76ab1efab4033790d9a1a",
+      "size": 4952311608,
+      "lfs": {
+        "sha256": "791690d15fbd7cb35c5024562a333b6962b4f399e8e00c1d039d516744fd8a9c",
+        "size": 4952311608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00007.safetensors",
+      "blobId": "197a984a4cccb8ce2e3af23bbab9242bc2a20dd6",
+      "size": 4984124272,
+      "lfs": {
+        "sha256": "63fdb5528959e72f74516d7e4a5e66337e129428ad49ed82acef03ef648991ca",
+        "size": 4984124272,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00007.safetensors",
+      "blobId": "2b8335600f7f35133b834c84725be27b29ab9aff",
+      "size": 4932743936,
+      "lfs": {
+        "sha256": "8cd4f439df9219991790e0bd557176445165bfcdcae6b98acd4b2a4e70b4adfb",
+        "size": 4932743936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00007.safetensors",
+      "blobId": "ee329f0205daf1f06afc69618180bc166f800cef",
+      "size": 4998852296,
+      "lfs": {
+        "sha256": "8cd5267eecb26fd6c77a88cf76a52805b887f2c571c424eb244b97464d3071f2",
+        "size": 4998852296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00007.safetensors",
+      "blobId": "263a00ef33ac65e56c0553932c8d497cabeb97ca",
+      "size": 4984124336,
+      "lfs": {
+        "sha256": "68774baed4c0324a411f21b30d3a9e69959f0ac0713eef456dbaaa798d0076d0",
+        "size": 4984124336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00006-of-00007.safetensors",
+      "blobId": "2389daa2e873024994399ac63033840f299d888b",
+      "size": 4932743992,
+      "lfs": {
+        "sha256": "4fce8e78b8af34aa378ab2e6b627711a2527a4de66256d81d444b5e95b956c05",
+        "size": 4932743992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00007-of-00007.safetensors",
+      "blobId": "3ef826bcd4e88c410b1443f8508cf271932dd98e",
+      "size": 3383846800,
+      "lfs": {
+        "sha256": "7b9c3b8638e8cab6cacf3315f2326816ceef2afc0706647d71be37494b462d9c",
+        "size": 3383846800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "80f386c21099e316f5547a1449bc642dd3694a03",
+      "size": 57619
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "7f3b746825e5eef53ed8ed57a91df9e86ee62c0a",
+      "size": 350
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "51ebb3ba93988c73bbd83a3c163a14343fbc5b06",
+      "size": 11421896,
+      "lfs": {
+        "sha256": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+        "size": 11421896,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "d24b2b81da60e4e29f925c292a0d77bd4ddf935c",
+      "size": 7253
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "aquanode/gpu-vram-calculator",
+    "prithivMLmods/CUA-GUI-Operator",
+    "Mungert/UI-TARS-1.5-7B",
+    "Stremly/uitars",
+    "omar0scarf/ui-tars-api",
+    "premuim89/GUI",
+    "premuim89/GUITARS",
+    "sharathmajjigi/UITARS_Grounding_Model",
+    "what2up/qwen3",
+    "liyuanyou/UI-TARS-1.5-7B",
+    "dpv007/ui",
+    "amwipai/amwipai",
+    "sudipbiswas/ByteDance-Seed-UI-TARS-1.5-7B",
+    "Code-maker05/ByteDance-Seed-UI-TARS-1.5-7B",
+    "himanshu84037/CUA-GUI-Operator"
+  ],
+  "createdAt": "2025-04-16T09:40:50.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 8292166656
+    },
+    "total": 8292166656
+  },
+  "usedStorage": 33180169136
+}

@@ -1,0 +1,227 @@
+{
+  "_id": "696730ee8124d834c2873c81",
+  "id": "mradermacher/medgemma-1.5-4b-it-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "medical",
+    "radiology",
+    "clinical-reasoning",
+    "dermatology",
+    "pathology",
+    "ophthalmology",
+    "chest-x-ray",
+    "en",
+    "base_model:google/medgemma-1.5-4b-it",
+    "base_model:quantized:google/medgemma-1.5-4b-it",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 742,
+  "likes": 3,
+  "modelId": "mradermacher/medgemma-1.5-4b-it-GGUF",
+  "author": "mradermacher",
+  "sha": "8e13792a0cfcf33bdefb0a8e9de48fcb3a2101b2",
+  "lastModified": "2026-01-14T06:22:14.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "google/medgemma-1.5-4b-it",
+    "extra_gated_button_content": "Acknowledge license",
+    "extra_gated_heading": "Access MedGemma on Hugging Face",
+    "extra_gated_prompt": "To access MedGemma on Hugging Face, you're required to review and agree to [Health AI Developer Foundation's terms of use](https://developers.google.com/health-ai-developer-foundations/terms). To do this, please ensure you're logged in to Hugging Face and click below. Requests are processed immediately.",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "other",
+    "license_link": "https://developers.google.com/health-ai-developer-foundations/terms",
+    "license_name": "health-ai-developer-foundations",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "medical",
+      "radiology",
+      "clinical-reasoning",
+      "dermatology",
+      "pathology",
+      "ophthalmology",
+      "chest-x-ray"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 3880263168,
+    "architecture": "gemma3",
+    "context_length": 131072,
+    "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 7767804384
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "86500c3d3f78628b0399670c9a8aae66f28413a6",
+      "size": 2457
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4fbe7fa1b0e72b796d7d47f1e32b73c863f5b4a5",
+      "size": 4561
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.IQ4_XS.gguf",
+      "blobId": "452ddcf6f1096efbf4151e203d664b00c4ae3776",
+      "size": 2279626464,
+      "lfs": {
+        "sha256": "5bb76474783737fbfc74e92a9012fa56e580f80eb2e623eb7e6da3dd0d5c6ebf",
+        "size": 2279626464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q2_K.gguf",
+      "blobId": "343b3fecd24f9bf8e162dc7fba9249d73e26a250",
+      "size": 1729165024,
+      "lfs": {
+        "sha256": "20046ab2aacaf67659cb156046dfe057766d1857009d7b189bd46a518f8ab0d0",
+        "size": 1729165024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q3_K_L.gguf",
+      "blobId": "538cf01301b1bca8786751ffcf10a9944ffc3695",
+      "size": 2236085984,
+      "lfs": {
+        "sha256": "cd0829fa25943ab4ebdb51b0480bb979f035734f2b8937fb6a849ff18f230e07",
+        "size": 2236085984,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q3_K_M.gguf",
+      "blobId": "dccc42d0e041812b463b31aee3871abe5505c7e5",
+      "size": 2098460384,
+      "lfs": {
+        "sha256": "8e4ad7d0d874a687a4b119e7eeb36b7f9bc46b8c86586e691512dc3fc7c001bc",
+        "size": 2098460384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q3_K_S.gguf",
+      "blobId": "07d703ca52b7dc2e5ffc307d850d78a77f9e9353",
+      "size": 1937364704,
+      "lfs": {
+        "sha256": "5418d5b0bb052326324561c6a19d5e5284d12a4b200ff8eb525b11808f3e29fb",
+        "size": 1937364704,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q4_K_M.gguf",
+      "blobId": "729c3325927be0df953e3a3716625017d999c521",
+      "size": 2489894624,
+      "lfs": {
+        "sha256": "ee5121f1b6ffda000f65bcf14b86a653f1beae2438663381f61980e3cf639454",
+        "size": 2489894624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q4_K_S.gguf",
+      "blobId": "42f7eb425d8cf957c71160fe135d623b311b3dee",
+      "size": 2377930464,
+      "lfs": {
+        "sha256": "071c4bb27a3ab1922a08589d99d28053f0549cf1ee64f2ed945f004a3322fa7e",
+        "size": 2377930464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q5_K_M.gguf",
+      "blobId": "14a25885d001c044ae372e270bf1b8e3a6db4064",
+      "size": 2829698784,
+      "lfs": {
+        "sha256": "c90336396b8d0cac1379367161b8f83feefd163aa0faafd6ddeeefff54f1fcf7",
+        "size": 2829698784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q5_K_S.gguf",
+      "blobId": "529df853522cb20eeacf7073c040583d2e28a100",
+      "size": 2764592864,
+      "lfs": {
+        "sha256": "3de4b6c3775ddf8de5832dfff9ec4a059e598c7005a5ff8f1926e7f126dbf9a3",
+        "size": 2764592864,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q6_K.gguf",
+      "blobId": "fbaa51b71fdaf63d0db2fbd6b9b223a581b14de5",
+      "size": 3190740704,
+      "lfs": {
+        "sha256": "20a7af9d34bfa3cc38880a199a9b53a57f46effd860017edab732286e18c7fc1",
+        "size": 3190740704,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.Q8_0.gguf",
+      "blobId": "ecb13f4d3a9a6d4330f2e69cba09f02923c176ba",
+      "size": 4130402784,
+      "lfs": {
+        "sha256": "69947ec05613ed10c94677fc2fc41fd5ed386f48f47b0ff937c80ec5c71bb254",
+        "size": 4130402784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.f16.gguf",
+      "blobId": "d61ba9f046b21f47abc611dea396324e9b08c25d",
+      "size": 7767804384,
+      "lfs": {
+        "sha256": "b8cb20190762d3a2eb44e667104f4dacac9f62b6353e083faf7ef52c87796f6a",
+        "size": 7767804384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.mmproj-Q8_0.gguf",
+      "blobId": "699053610d6319b95625483aa2c5b62304d55f53",
+      "size": 591377888,
+      "lfs": {
+        "sha256": "51b3afea721c89e03e83abe7e80a536271016554aaf853ed5c587230c4dc0cf0",
+        "size": 591377888,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it.mmproj-f16.gguf",
+      "blobId": "633b9a0c646387531817d7d50089c00d090f5d17",
+      "size": 851251808,
+      "lfs": {
+        "sha256": "e546959e3e39dc8225e5bef3c0b630594f504b4d6d84cf46a0f73a516e13bc4d",
+        "size": 851251808,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-01-14T06:00:14.000Z",
+  "usedStorage": 37274396864
+}

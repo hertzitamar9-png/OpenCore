@@ -8,6 +8,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 from urllib.request import Request
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -41,6 +42,48 @@ class FakeRuntime:
 
 
 class BridgeTests(unittest.TestCase):
+    def test_health_probe_does_not_scan_or_return_the_model_catalog(self):
+        with patch.object(self.state, 'catalog', side_effect=AssertionError('Health must not scan model files')):
+            status, _, value = self.request('GET', '/health')
+        self.assertEqual(status, 200)
+        self.assertTrue(value['healthy'])
+        self.assertNotIn('catalog', value)
+        self.assertLess(len(json.dumps(value)), 1024)
+
+    def test_progress_poll_keeps_progress_fresh_without_rereading_the_catalog(self):
+        self.state.progress = {'jobId': 'qa-job', 'status': 'running', 'bytesDone': 0}
+        first = self.state.status()
+        self.state.progress['bytesDone'] = 1234
+        with patch.object(self.state, 'catalog', side_effect=AssertionError('Catalog reread during progress poll')):
+            status, _, value = self.request('GET', '/api/status', headers={bridge.CATALOG_HEADER: first['catalogRevision']})
+        self.assertEqual(status, 200)
+        self.assertNotIn('catalog', value)
+        self.assertEqual(value['progress']['bytesDone'], 1234)
+        self.assertEqual(value['catalogRevision'], first['catalogRevision'])
+
+    def test_catalog_mutation_invalidates_the_progress_poll_revision(self):
+        first = self.state.status()
+        self.seed()
+        status, _, value = self.request('GET', '/api/status', headers={bridge.CATALOG_HEADER: first['catalogRevision']})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(value['catalog']), 1)
+        self.assertNotEqual(value['catalogRevision'], first['catalogRevision'])
+        self.assertEqual(self.request('GET', '/api/status', headers={bridge.CATALOG_HEADER: 'invalid'})[0], 400)
+
+    def test_repository_import_does_not_search_community_repositories(self):
+        calls = []
+        def metadata(repository):
+            calls.append(repository)
+            return {'id': repository, 'sha': 'a' * 40, 'config': {'model_type': 'llama'}, 'siblings': [
+                {'rfilename': 'model-Q4_K_M.gguf', 'size': 10, 'lfs': {'sha256': 'b' * 64, 'size': 10}}]}
+        self.state.client.metadata = metadata
+        self.state.client.search_quantizations = lambda query: self.fail('The importer must not search other repositories')
+        self.state.client.quantization_derivatives = lambda repository: self.fail('The importer must not inspect community derivatives')
+        status, _, plan = self.request('POST', '/api/plan', {'repository': 'owner/Model', 'includeCommunity': True})
+        self.assertEqual(status, 200)
+        self.assertEqual(calls, ['owner/Model'])
+        self.assertEqual(len(plan['variants']), 1)
+
     def test_catalog_roundtrip_supports_five_variants_for_hundreds_of_families(self):
         import copy
         base = self.entry()
@@ -130,6 +173,8 @@ class BridgeTests(unittest.TestCase):
     def test_preflight_allows_only_tauri_and_approved_headers(self):
         headers = {"Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "Content-Type,X-OpenCore-Hub-Secret"}
         self.assertEqual(self.request("OPTIONS", "/api/plan", secret=None, origin="http://tauri.localhost", headers=headers)[0], 204)
+        revised = {'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'Content-Type,X-OpenCore-Hub-Secret,X-OpenCore-Catalog-Revision'}
+        self.assertEqual(self.request('OPTIONS', '/api/status', secret=None, origin='http://tauri.localhost', headers=revised)[0], 204)
         self.assertEqual(self.request("OPTIONS", "/api/plan", secret=None, origin="https://evil.example", headers=headers)[0], 403)
         headers["Access-Control-Request-Headers"] = "X-Unapproved"
         self.assertEqual(self.request("OPTIONS", "/api/plan", secret=None, origin="http://tauri.localhost", headers=headers)[0], 403)

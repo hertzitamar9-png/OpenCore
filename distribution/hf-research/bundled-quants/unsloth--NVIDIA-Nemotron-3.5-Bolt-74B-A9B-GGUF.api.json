@@ -1,0 +1,366 @@
+{
+  "_id": "6acf9edc106c22391a4e2f16",
+  "id": "unsloth/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "nvidia",
+    "pytorch",
+    "nemotron-3.5",
+    "unsloth",
+    "image-text-to-text",
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "ja",
+    "dataset:nvidia/nemotron-post-training-v3",
+    "dataset:nvidia/nemotron-pre-training-datasets",
+    "arxiv:2605.07182",
+    "base_model:nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16",
+    "base_model:quantized:nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 53185,
+  "likes": 86,
+  "modelId": "unsloth/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-GGUF",
+  "author": "unsloth",
+  "sha": "34841e360524d421c564cc3ed247aa04a865473b",
+  "lastModified": "2026-10-16T13:25:22.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "openmdw-1.1",
+    "license_link": "https://openmdw.ai/license/1-1/",
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "it",
+      "ja"
+    ],
+    "tags": [
+      "nvidia",
+      "pytorch",
+      "nemotron-3.5",
+      "unsloth"
+    ],
+    "base_model": [
+      "nvidia/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16"
+    ],
+    "datasets": [
+      "nvidia/nemotron-post-training-v3",
+      "nvidia/nemotron-pre-training-datasets"
+    ]
+  },
+  "gguf": {
+    "total": 74042720848,
+    "architecture": "nemotron_h_moe",
+    "context_length": 262144,
+    "chat_template": "{% macro render_extra_keys(json_dict, handled_keys) %}\n    {%- if json_dict is mapping %}\n        {%- for json_key in json_dict if json_key not in handled_keys %}\n            {%- if json_dict[json_key] is mapping or (json_dict[json_key] is sequence and json_dict[json_key] is not string) %}\n                {{- '\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | tojson | safe) ~ '</' ~ json_key ~ '>' }}\n            {%- else %}\n                {{-'\\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | string) ~ '</' ~ json_key ~ '>' }}\n            {%- endif %}\n        {%- endfor %}\n    {%- endif %}\n{% endmacro %}\n{%- macro render_content(content) -%}\n    {%- if content is none -%}\n        {{- '' -}}\n    {%- elif content is string -%}\n        {{- content | string -}}\n    {%- else -%}\n        {%- set text_ns = namespace(val='') -%}\n        {%- set counters = namespace(images=0, videos=0) -%}\n        {%- for part in content -%}\n            {%- if part['type'] == 'image' or part['type'] == 'image_url' or part['type'] == 'input_image' -%}\n                {%- set counters.images = counters.images + 1 -%}\n            {%- elif part['type'] == 'video' or part['type'] == 'video_url' or part['type'] == 'input_video' -%}\n                {%- set counters.videos = counters.videos + 1 -%}\n            {%- elif part['type'] == 'text' or part['type'] == 'input_text' -%}\n                {%- set text_ns.val = text_ns.val + (part['text'] | default('', true)) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- if '<image>' in text_ns.val -%}\n            {%- set counters.images = 0 -%}\n        {%- endif -%}\n        {%- if '<video>' in text_ns.val -%}\n            {%- set counters.videos = 0 -%}\n        {%- endif -%}\n        {%- set content_ns = namespace(val='') -%}\n        {%- set render_ns = namespace(image_index=0) -%}\n        {%- for part in content -%}\n            {%- if part['type'] == 'image' or part['type'] == 'image_url' or part['type'] == 'input_image' -%}\n                {%- set render_ns.image_index = render_ns.image_index + 1 -%}\n                {%- if counters.images > 0 -%}\n                    {%- if counters.images > 1 -%}\n                        {%- set content_ns.val = content_ns.val\n                            + '<image ' + render_ns.image_index|string + '><image>' -%}\n                    {%- else -%}\n                        {%- set content_ns.val = content_ns.val + '<image>' -%}\n                    {%- endif -%}\n                {%- endif -%}\n            {%- elif part['type'] == 'video' or part['type'] == 'video_url' or part['type'] == 'input_video' -%}\n                {%- if counters.videos > 0 -%}\n                    {%- set content_ns.val = content_ns.val + '<video>' -%}\n                {%- endif -%}\n            {%- elif part['type'] == 'text' or part['type'] == 'input_text' -%}\n                {%- set content_ns.val = content_ns.val + (part['text'] | default('', true)) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- content_ns.val -}}\n    {%- endif -%}\n{%- endmacro %}\n{%- set enable_thinking = enable_thinking if enable_thinking is defined else True %}\n{%- set medium_effort = medium_effort if medium_effort is defined else False %}\n{%- set truncate_history_thinking = truncate_history_thinking if truncate_history_thinking is defined else True %}\n{%- set ns = namespace(last_user_idx = -1) %}\n{%- set loop_messages = messages %}\n{%- for m in loop_messages %}\n  {%- if m[\"role\"] == \"user\" %}\n    {%- set ns.last_user_idx = loop.index0 %}\n  {%- endif %}\n{%- endfor %}\n{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = \"\" %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = [] %}\n{%- endif %}\n{%- set ns = namespace(last_user_idx = -1) %}\n{%- for m in loop_messages %}\n  {%- if m[\"role\"] == \"user\" %}\n    {%- set ns.last_user_idx = loop.index0 %}\n  {%- endif %}\n{%- endfor %}\n{%- if system_message is defined %}\n    {{- \"<|im_start|>system\\n\" ~ render_content(system_message) }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- \"<|im_start|>system\\n\" }}\n    {%- endif %}\n{%- endif %}\n{%- if tools is iterable and tools | length > 0 %}\n    {%- if system_message is defined and system_message | length > 0 %}\n        {{- \"\\n\\n\" }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n\" }}\n    {{- \"<tools>\" }}\n    {%- for tool in tools %}\n        {%- if tool.function is defined %}\n            {%- set tool = tool.function %}\n        {%- endif %}\n        {{- \"\\n<function>\\n<name>\" ~ tool.name ~ \"</name>\" }}\n        {%- if tool.description is defined %}\n            {{- '\\n<description>' ~ (tool.description | trim) ~ '</description>' }}\n        {%- endif %}\n        {{- '\\n<parameters>' }}\n        {%- if tool.parameters is defined and tool.parameters is mapping and tool.parameters.properties is defined and tool.parameters.properties is mapping %}\n            {%- for param_name, param_fields in tool.parameters.properties|items %}\n                {{- '\\n<parameter>' }}\n                {{- '\\n<name>' ~ param_name ~ '</name>' }}\n                {%- if param_fields.type is defined %}\n                    {{- '\\n<type>' ~ (param_fields.type | string) ~ '</type>' }}\n                {%- endif %}\n                {%- if param_fields.description is defined %}\n                    {{- '\\n<description>' ~ (param_fields.description | trim) ~ '</description>' }}\n                {%- endif %}\n                {%- if param_fields.enum is defined %}\n                    {{- '\\n<enum>' ~ (param_fields.enum | tojson | safe) ~ '</enum>' }}\n                {%- endif %}\n                {%- set handled_keys = ['name', 'type', 'description', 'enum'] %}\n                {{- render_extra_keys(param_fields, handled_keys) }}\n                {{- '\\n</parameter>' }}\n            {%- endfor %}\n        {%- endif %}\n        {% set handled_keys = ['type', 'properties', 'required'] %}\n        {{- render_extra_keys(tool.parameters, handled_keys) }}\n        {%- if tool.parameters is defined and tool.parameters.required is defined %}\n            {{- '\\n<required>' ~ (tool.parameters.required | tojson | safe) ~ '</required>' }}\n        {%- endif %}\n        {{- '\\n</parameters>' }}\n        {%- set handled_keys = ['type', 'name', 'description', 'parameters'] %}\n        {{- render_extra_keys(tool, handled_keys) }}\n        {{- '\\n</function>' }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n{%- endif %}\n{%- if system_message is defined %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if tools is iterable and tools | length > 0 %}\n        {{- '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in loop_messages %}\n    {%- set content = render_content(message.content | default('', true)) %}\n    {%- if message.role == \"assistant\" %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is string and message.reasoning_content | trim | length > 0 %}\n            {%- set content = \"<think>\\n\" ~ message.reasoning_content ~ \"</think>\" ~ content %}\n        {%- else %}\n            {%- if content is string -%}\n                {%- if '<think>' not in content and '</think>' not in content -%}\n                    {%- set content = \"<think></think>\" ~ content -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endif %}\n        {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 %}\n            {{- '<|im_start|>assistant\\n' }}\n                {%- set include_content = not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}\n                {%- if content is string and content | trim | length > 0 %}\n                    {%- if include_content %}\n                        {{- (content | trim) ~ '\\n' -}}\n                    {%- else %}\n                        {%- set c = (content | string) %}\n                        {%- if '</think>' in c %}\n                            {%- set c = c.split('</think>')[-1] %}\n                        {%- elif '<think>' in c %}\n                            {%- set c = c.split('<think>')[0] %}\n                        {%- endif %}\n                        {%- set c = \"<think></think>\" ~ c %}\n                        {%- if c | length > 0 %}\n                            {{- c ~ '\\n' -}}\n                        {%- endif %}\n                    {%- endif %}\n                {%- else %}\n                    {{- \"<think></think>\" -}}\n                {%- endif %}\n                {%- for tool_call in message.tool_calls %}\n                    {%- if tool_call.function is defined %}\n                        {%- set tool_call = tool_call.function %}\n                    {%- endif %}\n                    {{- '<tool_call>\\n<function=' ~ tool_call.name ~ '>\\n' -}}\n                        {%- if tool_call.arguments is defined %}\n                            {%- for args_name, args_value in tool_call.arguments|items %}\n                                {{- '<parameter=' ~ args_name ~ '>\\n' -}}\n                                    {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                                {{- args_value ~ '\\n</parameter>\\n' -}}\n                            {%- endfor %}\n                        {%- endif %}\n                    {{- '</function>\\n</tool_call>\\n' -}}\n                {%- endfor %}\n                {{- '<|im_end|>\\n' }}\n        {%- else %}\n            {%- if not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}\n                {{- '<|im_start|>assistant\\n' ~ (content | default('', true) | string | trim) ~ '<|im_end|>\\n' }}\n            {%- else %}\n                {%- set c = (content | default('', true) | string) %}\n                {%- if '<think>' in c and '</think>' in c %}\n                    {%- set c = \"<think></think>\" ~ c.split('</think>')[-1] %}\n                {%- endif %}\n                {%- set c = c | trim %}\n                {%- if c | length > 0 %}\n                    {{- '<|im_start|>assistant\\n' ~ c ~ '<|im_end|>\\n' }}\n                {%- else %}\n                    {{- '<|im_start|>assistant\\n<|im_end|>\\n' }}\n                {%- endif %}\n            {%- endif %}\n        {%- endif %}\n    {%- elif message.role == \"user\" or message.role == \"system\" %}\n        {{- '<|im_start|>' + message.role + '\\n' }}\n        {#- Render structured image/video content in its original order. -#}\n        {%- if message.role == \"user\" and loop.index0 == ns.last_user_idx and medium_effort %}\n            {{- content + '\\n\\n{reasoning effort: efficient}' }}\n        {%- else %}\n            {{- content }}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user\\n' }}\n        {%- endif %}\n        {{- '<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>\\n' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ content ~ '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {%- if enable_thinking %}\n        {{- '<|im_start|>assistant\\n<think>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>assistant\\n<think></think>' }}\n    {%- endif %}\n{%- endif %}\n",
+    "bos_token": "<s>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 22018326464
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "bf8b0ec61db73afc9dd992b3a33bc1b8a171f911",
+      "size": 4829
+    },
+    {
+      "rfilename": "BF16/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16-00001-of-00004.gguf",
+      "blobId": "8771041f515f697b1a24e5a42b441b6eded56047",
+      "size": 7875840,
+      "lfs": {
+        "sha256": "d0d572f38132f5391efc168912200c567f9569020262ad3b031a852a9d377519",
+        "size": 7875840,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "BF16/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16-00002-of-00004.gguf",
+      "blobId": "e66183922a8bbb2cdee9880a76dc4ae3095c46d1",
+      "size": 49352781152,
+      "lfs": {
+        "sha256": "79c5be4867088b25fc8e4d164a14f3f6eb5622ca5349089c2d59063d41bf1f35",
+        "size": 49352781152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "BF16/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16-00003-of-00004.gguf",
+      "blobId": "47fc9b00e421b9069d1d0c42ed65605e93c68edf",
+      "size": 49110267008,
+      "lfs": {
+        "sha256": "1b00aa9e2438ba1f7aa5a9d00d49c9b0204b88a1a0eb79b9ac365a72d55293a6",
+        "size": 49110267008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "BF16/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-BF16-00004-of-00004.gguf",
+      "blobId": "ada307e3522d256df481d9bddd495b9e6dbaaae7",
+      "size": 49741225408,
+      "lfs": {
+        "sha256": "77ad52da090741f05276b87ffcd8d283e9c9166afaa69485cab58eec6d36e375",
+        "size": 49741225408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-IQ2_XXS.gguf",
+      "blobId": "fa49793f4f5953fc6f30c076237e980527f924b8",
+      "size": 22018326464,
+      "lfs": {
+        "sha256": "30c4eac4cdd63a7c73fcf29254a9fd3f40ab7ef09b555c1dd6653140cc94108f",
+        "size": 22018326464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-IQ1_M.gguf",
+      "blobId": "f1c578edd033c5736c2302be093138e4a2469e10",
+      "size": 20307471360,
+      "lfs": {
+        "sha256": "854f33d8d3f711e36a963b257ae8dd536c0749e422d0b8438bc8dadeba32c012",
+        "size": 20307471360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-IQ1_S.gguf",
+      "blobId": "5a4fafcb7ca31f82e216315d8eb7875d1b64fb3b",
+      "size": 18507811840,
+      "lfs": {
+        "sha256": "8dcad45f7e22096aae7af820598aa323a577c5bb3ab43bbe3d1aba4136cb79b9",
+        "size": 18507811840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-IQ2_M.gguf",
+      "blobId": "e515676cd3470f8c89ce868fd54b825940d85f7c",
+      "size": 24607493120,
+      "lfs": {
+        "sha256": "b9f7565104d39cc0f85b8bda4f6bfef8d6ca6a52940f9d185b472d02940fe5bd",
+        "size": 24607493120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-IQ2_XXS.gguf",
+      "blobId": "240ec5dffa4d76b2f74622ea0c39b4d5a8f90c16",
+      "size": 22018255872,
+      "lfs": {
+        "sha256": "ca066649ee6707dab84aebaeff6455905d91c49dde21d174dad0d232da765cf5",
+        "size": 22018255872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-IQ3_XXS.gguf",
+      "blobId": "949b3aea4012448db689f1101d3cf37da2fe348b",
+      "size": 31561116672,
+      "lfs": {
+        "sha256": "ab8be730b85721d32aca61a81252cc95e682efd93cb8363fee425e4a90bc5cf5",
+        "size": 31561116672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q2_K_XL.gguf",
+      "blobId": "fbb19eba79a1720e2ccbd365a364426f0be46749",
+      "size": 28753128448,
+      "lfs": {
+        "sha256": "5bbe3ec6af8f80cbf1035711b265f3e1f7aaf52f8429e989c4101084916135f7",
+        "size": 28753128448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q3_K_XL.gguf",
+      "blobId": "fdc8fdc9203138b31613fe5faef5ad8088b6c31a",
+      "size": 39027158016,
+      "lfs": {
+        "sha256": "51077d511c769efb299073cc7b33d31bb007eb4fdaed60938dc1133146b708e3",
+        "size": 39027158016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-Q8_0-00001-of-00003.gguf",
+      "blobId": "57bdfe345cea18ea253befa75c8dc768b8a2ff0f",
+      "size": 7875840,
+      "lfs": {
+        "sha256": "4ec3e6e0accf307a5fda127faf4bbde416d6f7b30e95fd989d159fca3613f29d",
+        "size": 7875840,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-Q8_0-00002-of-00003.gguf",
+      "blobId": "67cc15e2cb7d81a900f059b473f7851c24d5d945",
+      "size": 49471816768,
+      "lfs": {
+        "sha256": "94a37b15c6716c249be2328ccd80c17861aba99d5152a283f362cbb10ef92f66",
+        "size": 49471816768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q8_0/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-Q8_0-00003-of-00003.gguf",
+      "blobId": "62f15554759cc6dd664ceabbce65ef69776785fd",
+      "size": 29373086432,
+      "lfs": {
+        "sha256": "83964b5aeaa8e865517e9d3fed4f0aa28f1b35e22a4f7a5ede05a3b9de4f6ae3",
+        "size": 29373086432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2fe8b447294bda74996ea2d57e8cf66b40712cf5",
+      "size": 79231
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q4_K_XL-00001-of-00003.gguf",
+      "blobId": "98bf1a36396e460e2d5e8ec4641b8cc1caa8a3e8",
+      "size": 7876160,
+      "lfs": {
+        "sha256": "d6f33b5e8a49ea57a0a3ae922dfd0b3033a19429993d3215fc4992f4270aa2df",
+        "size": 7876160,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q4_K_XL-00002-of-00003.gguf",
+      "blobId": "70b5041dda46c6f824f2fed9c4f77d26eec79f2c",
+      "size": 49524981280,
+      "lfs": {
+        "sha256": "93c8485db6f9e9d26085acc368ca3b0993a36aa870e8f8b7748c1fbd174c6276",
+        "size": 49524981280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q4_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q4_K_XL-00003-of-00003.gguf",
+      "blobId": "94fa9080659d43039d35a4740984977874b9d7ab",
+      "size": 686620928,
+      "lfs": {
+        "sha256": "f97b7a5443b3f77150a1bf7bac6c00862411ee2f26b7bf57a599fb61dbe867df",
+        "size": 686620928,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q5_K_XL-00001-of-00003.gguf",
+      "blobId": "2143225e7535e24f4fcd97b0dafb5e6659f6772e",
+      "size": 7876064,
+      "lfs": {
+        "sha256": "5bb0b06d303ccc6d4d0c8c230d5afd70600bf557059a4ba40c338e9451cd3033",
+        "size": 7876064,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q5_K_XL-00002-of-00003.gguf",
+      "blobId": "220829b8ca4086325fd1fbf0ae58c3488c2bf7a7",
+      "size": 49594839136,
+      "lfs": {
+        "sha256": "f634851a11898c88a6e3a7f162e7dbb6f018def08220e6ada7180a835ca3ec81",
+        "size": 49594839136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q5_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q5_K_XL-00003-of-00003.gguf",
+      "blobId": "3aa4c49b6d099bafe285ac8bc2967a23f785cbd4",
+      "size": 9309916864,
+      "lfs": {
+        "sha256": "a847a83a82152143b09dc66a3e397a372bc2d15cbd633cc0ce74efc566068213",
+        "size": 9309916864,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q6_K_XL-00001-of-00003.gguf",
+      "blobId": "11f7a6eb07198d1964859b6fdca29ca3ff606804",
+      "size": 7876064,
+      "lfs": {
+        "sha256": "16c7d4843585c59a8e972b98028119afd44d2b5f328094af8e072ea7348d599e",
+        "size": 7876064,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q6_K_XL-00002-of-00003.gguf",
+      "blobId": "00c0add042022953e4638be6dbff8de23f8ab745",
+      "size": 49977932896,
+      "lfs": {
+        "sha256": "9fe42ee8f72251a9dd7d379f32ae2040e82c309d56248b075d5729d19adfa392",
+        "size": 49977932896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "UD-Q6_K_XL/NVIDIA-Nemotron-3.5-Bolt-74B-A9B-UD-Q6_K_XL-00003-of-00003.gguf",
+      "blobId": "7cd3a9c4a30b3f6617a385933e022cc132683e42",
+      "size": 22404629184,
+      "lfs": {
+        "sha256": "4f7e61f21cd723f4f817a2ae024bfe2e117b8d6e287c9518da6bc4761ef1d5f4",
+        "size": 22404629184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "dflash-NVIDIA-Nemotron-3.5-Bolt-74B-A9B-NVFP4.gguf",
+      "blobId": "24f89248750a4aee7b1b135f88b5e2057d583952",
+      "size": 998242560,
+      "lfs": {
+        "sha256": "080e1ea41c9562a7804dbf30c6fbd4d17e216c6b8ff666f88e6edb1816010194",
+        "size": 998242560,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-BF16.gguf",
+      "blobId": "c0c43e17aad9f41c9a104f7a5948f2d43c113ef7",
+      "size": 1733692672,
+      "lfs": {
+        "sha256": "acad03175d80ce7caea6854795e9ecc978e86d4b4caae0125efba5f970216f4f",
+        "size": 1733692672,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-10-14T15:25:16.000Z",
+  "usedStorage": 618120174048
+}

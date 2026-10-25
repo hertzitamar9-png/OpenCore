@@ -1,0 +1,129 @@
+{
+  "_id": "6a734faa5ac966acf63360e4",
+  "id": "a4lg/Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-GGUF",
+  "private": false,
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "qwen3-next",
+    "speculative-decoding",
+    "mtp",
+    "mtp only",
+    "base_model:Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "base_model:quantized:Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 320,
+  "likes": 0,
+  "modelId": "a4lg/Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-GGUF",
+  "author": "a4lg",
+  "sha": "0bcd3befa9489aaab3d161902f2a980ae16e2ece",
+  "lastModified": "2026-08-06T09:53:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "library_name": "gguf",
+    "license": "apache-2.0",
+    "license_link": "https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/blob/9c7f2fbe84465e40164a94cc16cd30b6999b0cc7/LICENSE",
+    "base_model": [
+      "Qwen/Qwen3-Next-80B-A3B-Instruct"
+    ],
+    "base_model_relation": "quantized",
+    "tags": [
+      "qwen3-next",
+      "speculative-decoding",
+      "mtp",
+      "mtp only",
+      "gguf"
+    ]
+  },
+  "gguf": {
+    "total": 2272803328,
+    "architecture": "qwen3next",
+    "context_length": 262144,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 4553667200
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "8cf5a9cdb5ecff7cccb6bebfb36d1b9e7819fb5f",
+      "size": 98
+    },
+    {
+      "rfilename": ".gitignore",
+      "blobId": "d3c939aa669ac5198abbd2e196ea3f510871f1c3",
+      "size": 14
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "6634c8cc3133b3848ec74b9f275acaaa1ea618ab",
+      "size": 11343
+    },
+    {
+      "rfilename": "Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-BF16.gguf",
+      "blobId": "15acb82371f0aa25baf003e9e80d1a77b0d377e1",
+      "size": 4553667200,
+      "lfs": {
+        "sha256": "5fe2e741f427e40986f23a5444f02c61f4ddcb56fd84851f9edbfcc2430fdeb8",
+        "size": 4553667200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-Q4_K_M.gguf",
+      "blobId": "4177b42318086252489fc776cbf63a592916dfb1",
+      "size": 1507216000,
+      "lfs": {
+        "sha256": "1f7813cd8c944d208183ff81c83de31b82d72dbea5b45d4343ba72c1d37ee4c5",
+        "size": 1507216000,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-Q5_K_M.gguf",
+      "blobId": "537e3cbd24fb79912809dd38722608c5b1dc02c6",
+      "size": 1684916864,
+      "lfs": {
+        "sha256": "7703ce6f2e25598f50f71ac7b73114074857878c562b4afde2c5731d0aabdb56",
+        "size": 1684916864,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-Q6_K.gguf",
+      "blobId": "10904dcecaa4ffff563ec0b30139f4fbe577562a",
+      "size": 1873724032,
+      "lfs": {
+        "sha256": "182e4d9b28a05b47af4a96b343c77fba4f0d9b203b1aeaa78a8ccc17f3027973",
+        "size": 1873724032,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3-Next-80B-A3B-Instruct-MTP-ONLY-Q8_0.gguf",
+      "blobId": "40b194fbe19c487a5dc891751e55e8d256ac3542",
+      "size": 2423911040,
+      "lfs": {
+        "sha256": "3200449f5387858ff9a6570728f409962fbac1443828fe01cea95653b2355729",
+        "size": 2423911040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "cee8fc05e4eb155b876813baf8ea1bc5265c9828",
+      "size": 5585
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-05T14:58:50.000Z",
+  "usedStorage": 12043435136
+}

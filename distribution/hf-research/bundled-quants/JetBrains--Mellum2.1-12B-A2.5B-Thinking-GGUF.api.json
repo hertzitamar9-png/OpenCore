@@ -1,0 +1,206 @@
+{
+  "_id": "6ac692e81c227fc9f95195ce",
+  "id": "JetBrains/Mellum2.1-12B-A2.5B-Thinking-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "mellum",
+    "llama.cpp",
+    "quantized",
+    "moe",
+    "thinking",
+    "mtp",
+    "speculative-decoding",
+    "text-generation",
+    "en",
+    "base_model:JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+    "base_model:quantized:JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 230743,
+  "likes": 147,
+  "modelId": "JetBrains/Mellum2.1-12B-A2.5B-Thinking-GGUF",
+  "author": "JetBrains",
+  "sha": "4159d684ffdb09ba89dc2a58feb3e75c54eef036",
+  "lastModified": "2026-10-22T02:35:26.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "JetBrains/Mellum2.1-12B-A2.5B-Thinking",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "pipeline_tag": "text-generation",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "mellum",
+      "gguf",
+      "llama.cpp",
+      "quantized",
+      "moe",
+      "thinking",
+      "mtp",
+      "speculative-decoding"
+    ],
+    "license": "apache-2.0"
+  },
+  "gguf": {
+    "total": 12149923072,
+    "architecture": "mellum",
+    "context_length": 131072,
+    "chat_template": "{%- macro normalize_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns_c = namespace(text='') -%}\n        {%- for part in content -%}\n            {%- if part is mapping -%}\n                {%- if part.type == 'text' -%}\n                    {%- set ns_c.text = ns_c.text + (part.text or '') -%}\n                {%- elif part.type == 'tool-result' and part.output is mapping and part.output.type == 'text' -%}\n                    {%- set ns_c.text = ns_c.text + (part.output.value or '') -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns_c.text -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- normalize_content(messages[0].content) + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + normalize_content(messages[0].content) + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- set msg_content = normalize_content(message.content) %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and not(msg_content.startswith('<tool_response>') and msg_content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- set content = normalize_content(message.content) %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if reasoning_content %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 24311970080
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4d42fa9a06425e8702ecf8937c3b3e6015b7f19c",
+      "size": 2402
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-BF16.gguf",
+      "blobId": "932f6c82b85e2ba5523b65d19869e075cab750c3",
+      "size": 24311970080,
+      "lfs": {
+        "sha256": "e49e3920b55e848f02e372741a0035ad8d7ebc56b1623f14a4e18734bf35c280",
+        "size": 24311970080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-MXFP4_MOE.gguf",
+      "blobId": "81e0f5f1f1d8a88de5c3330d6d6d6beee05e03fd",
+      "size": 7029537056,
+      "lfs": {
+        "sha256": "cf09584a30423f6f80b0c9fe2f42e152520dabf08fecd1cad641ce21a7588166",
+        "size": 7029537056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.gguf",
+      "blobId": "171dfafd5fdccce437355105faffbadab09fc005",
+      "size": 8071295264,
+      "lfs": {
+        "sha256": "ecc4d5b8107fc219e23c494b2d107552137637b6c6002ee713e0ba8af7fa2755",
+        "size": 8071295264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q6_K.gguf",
+      "blobId": "3ac3544eae391881756e1882f534e89c6a82ef29",
+      "size": 10879834400,
+      "lfs": {
+        "sha256": "12aec619f6a2c82b1ea8998f03665b3b5fc5bb758af97efdf4b1ec7a822b8668",
+        "size": 10879834400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Mellum2.1-12B-A2.5B-Thinking-Q8_0.gguf",
+      "blobId": "8615a044e2a45044e2d82b35fb931ef4aa854de0",
+      "size": 12925417760,
+      "lfs": {
+        "sha256": "69e0ac02a16586c2c9e991f1e3b8a1eb403882e7ab9e69ea01eb23dbbbc6841f",
+        "size": 12925417760,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a1747953877a7c2e9d6c344b79d6e7078b62f52e",
+      "size": 8207
+    },
+    {
+      "rfilename": "mtp-Mellum2.1-12B-A2.5B-Thinking-BF16.gguf",
+      "blobId": "7d44afcbd1ff987d90cc9cd0ea95fcc9e1ab66f1",
+      "size": 1766609280,
+      "lfs": {
+        "sha256": "9c7b2c37dcdcb28140118debc81175cfc22bb00a7aa51bcaf0be1768bcfd139b",
+        "size": 1766609280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp/Mellum2.1-12B-A2.5B-Thinking-MTP-BF16.gguf",
+      "blobId": "4fae2f65d5878f39c908ad832e858e0fe63d04a5",
+      "size": 25169032160,
+      "lfs": {
+        "sha256": "29f01705725f5c68351df0fca07b7d30e67c0efe57a9bdc061332c2f71316522",
+        "size": 25169032160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "mtp/Mellum2.1-12B-A2.5B-Thinking-MTP-MXFP4_MOE.gguf",
+      "blobId": "f54569bd13674bac8ffaf21ca4686ee8041be159",
+      "size": 7274583008,
+      "lfs": {
+        "sha256": "70aedec8cd44828d5cbe8ec69c1c748db9f41412d01cb6b2a19e7d4067f42d57",
+        "size": 7274583008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp/Mellum2.1-12B-A2.5B-Thinking-MTP-Q4_K_M.gguf",
+      "blobId": "65823d247da5a3285d64144931ce6268b592ba3c",
+      "size": 8329317344,
+      "lfs": {
+        "sha256": "51fe54045179ee755bcca8c18a7acdc2bc861203a67e129f20dcd80ff6fbaa4c",
+        "size": 8329317344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mtp/Mellum2.1-12B-A2.5B-Thinking-MTP-Q6_K.gguf",
+      "blobId": "2f65f0328f475f367830956fdd40e76a3817b277",
+      "size": 11263737824,
+      "lfs": {
+        "sha256": "2ca9fc4c9cf26cec0db4470f9fea4fcf77232c6904a341eac2681f986d7ad6e0",
+        "size": 11263737824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "mtp/Mellum2.1-12B-A2.5B-Thinking-MTP-Q8_0.gguf",
+      "blobId": "23d654426195d21992de1c8a93df330a46941ba2",
+      "size": 13381030880,
+      "lfs": {
+        "sha256": "9aa353c71e5b80126438c45ae4d7cb847c9c7f863683c389fc946398a0a3c14d",
+        "size": 13381030880,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse",
+    "VIDraft/global-llm-leaderboard"
+  ],
+  "createdAt": "2026-10-07T18:43:52.000Z",
+  "usedStorage": 130402365056
+}

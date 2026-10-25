@@ -1,0 +1,202 @@
+{
+  "_id": "6aa49210e29d415b0d586896",
+  "id": "antirez/deepseek-v4.1-flash-gguf",
+  "private": false,
+  "tags": [
+    "gguf",
+    "deepseek",
+    "metal",
+    "base_model:deepseek-ai/DeepSeek-V4.1-Flash",
+    "base_model:quantized:deepseek-ai/DeepSeek-V4.1-Flash",
+    "license:mit",
+    "region:us",
+    "imatrix"
+  ],
+  "downloads": 1347336,
+  "likes": 80,
+  "modelId": "antirez/deepseek-v4.1-flash-gguf",
+  "author": "antirez",
+  "sha": "9dcee51692e6540f697141fc98b097e3c96492a3",
+  "lastModified": "2026-10-19T09:15:23.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "base_model": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "tags": [
+      "gguf",
+      "deepseek",
+      "metal"
+    ]
+  },
+  "gguf": {
+    "total": 754638867584,
+    "architecture": "deepseek41",
+    "quantize_imatrix_file": "bootstrap-calibration-8192.dat",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 365713686528
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c9c632694ac1f4961955251f70c3ec76c3f73b6d",
+      "size": 2733
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-IQ2_XXS-Q2_K-imatrix.gguf",
+      "blobId": "e67b88e22a47fcc156365f29fa29dfb2bf881ce9",
+      "size": 365713686528,
+      "lfs": {
+        "sha256": "5296e85ff64b42ecb62c8d0c0c54e1caa07e3df8e93112f2365ebbaed62ce93a",
+        "size": 365713686528,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00001-of-00009.gguf",
+      "blobId": "89926dc8749e82c6ca6011c206673cce734a4b22",
+      "size": 49353784544,
+      "lfs": {
+        "sha256": "636918b09de6253bf41af29f06aac3ceeda220e46379d8a2058ef92c4e433ed8",
+        "size": 49353784544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00002-of-00009.gguf",
+      "blobId": "ab804848b909f2632c8e0d2c662fb76db536037b",
+      "size": 49412635712,
+      "lfs": {
+        "sha256": "b26d3fc1e6ae1be6c52665542f3c1fee6a33791478f26e6cd90b5a75940a9f96",
+        "size": 49412635712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00003-of-00009.gguf",
+      "blobId": "535b4a73455c9692feb88366f04369cb5557d2a5",
+      "size": 49582960352,
+      "lfs": {
+        "sha256": "20c7fe7adb0578336d8a5e5f9eed521aeb88e8c119ba46e0916cdaab28931c80",
+        "size": 49582960352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00004-of-00009.gguf",
+      "blobId": "8088042bc4333ac72a2f99569fd2b5c38ede02f1",
+      "size": 49418206432,
+      "lfs": {
+        "sha256": "67592ba15870c4292a615666adcc2736b53cc345b2cccb1c36710a0a6caf15b4",
+        "size": 49418206432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00005-of-00009.gguf",
+      "blobId": "9ad1a30387fb5980d5f273c9d5defb91184a3d19",
+      "size": 49412829632,
+      "lfs": {
+        "sha256": "ecd04e0aa71bfab8cfe79ea7fef7f35b6be0b6772455139e2081d6ce1dcc18ed",
+        "size": 49412829632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00006-of-00009.gguf",
+      "blobId": "5a1c718e3eb721d65df3b576d810e8b74a805723",
+      "size": 49257603776,
+      "lfs": {
+        "sha256": "88214e0cc80fbae578b80c114527e6ce725199684e0b6849475c7d00b3d0f54c",
+        "size": 49257603776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00007-of-00009.gguf",
+      "blobId": "31e89a21adf01d43c1e6bce1cfd18e1becd1696e",
+      "size": 2406482112,
+      "lfs": {
+        "sha256": "38939faf3e4258f3ae333f0fa1954ce89515b75ceee90d37bf4ebe5fafe285e6",
+        "size": 2406482112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00008-of-00009.gguf",
+      "blobId": "bd6e2955d6ef2caee0174695be57ef1826f57352",
+      "size": 101377628544,
+      "lfs": {
+        "sha256": "a9d1634da2ac57459a64b10b69ddedfadda7dcde0e71ca6e55bea7c293c4a9f0",
+        "size": 101377628544,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-1017-MXFP4-experts-00009-of-00009.gguf",
+      "blobId": "288c80b8f9a60df5099059d6739541f3b04ab35c",
+      "size": 101380404256,
+      "lfs": {
+        "sha256": "b9832b355288c005da6ef444d02424464dd27f6ebdefeadbec2244264eb65285",
+        "size": 101380404256,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q2.gguf",
+      "blobId": "321988d029cd2eff1145d07c452289708af9c13f",
+      "size": 365713686528,
+      "lfs": {
+        "sha256": "1ce6a8f8806205c13330d7ca287bd198331dc5ca35ccc5d8a9a92a188a6f6f42",
+        "size": 365713686528,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4.gguf.part1",
+      "blobId": "de1bad0f33cdfb026deb73dccb631d1284718c47",
+      "size": 480000000000,
+      "lfs": {
+        "sha256": "6442b1f9224079662c02003c0ef9ef6be6e2aff509510f681dab9e6cc41df246",
+        "size": 480000000000,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4.gguf.part2",
+      "blobId": "e337b3dc6906df9346f7ab69d3ef582b6ccb58d3",
+      "size": 38596067328,
+      "lfs": {
+        "sha256": "7c3e10646c918eeaffbc39305a75ec96117450262c61454ff194cef00d7617f0",
+        "size": 38596067328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Vision.gguf",
+      "blobId": "81fe40e9dac53afd0b35c63148512b99bd0b8827",
+      "size": 970555552,
+      "lfs": {
+        "sha256": "cc283f032b3e8b8d78aeb5fccaa14e97b859b0c53aae3cd6bffa690ddf0e9e15",
+        "size": 970555552,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d62e3bef9f054f21b7fc616365850fbf879a99ff",
+      "size": 1084
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d084db1ece6cf875c31091fbcc6433f51c4fc4d0",
+      "size": 2420
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-11T23:43:12.000Z",
+  "usedStorage": 2118310217824
+}

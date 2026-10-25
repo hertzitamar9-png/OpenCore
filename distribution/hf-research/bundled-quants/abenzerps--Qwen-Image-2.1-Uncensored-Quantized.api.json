@@ -1,0 +1,324 @@
+{
+  "_id": "6ab000f1a587030ee97d13cf",
+  "id": "abenzerps/Qwen-Image-2.1-Uncensored-Quantized",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "qwen",
+    "image-generation",
+    "comfyui",
+    "comfyui-gguf",
+    "mlx",
+    "fp8",
+    "nvfp4",
+    "text-to-image",
+    "base_model:Qwen/Qwen-Image-2.1",
+    "base_model:quantized:Qwen/Qwen-Image-2.1",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 2235846,
+  "likes": 5013,
+  "modelId": "abenzerps/Qwen-Image-2.1-Uncensored-Quantized",
+  "author": "abenzerps",
+  "sha": "7959e658915f52274897fb573ffeda49de8dc16b",
+  "lastModified": "2026-10-12T07:10:55.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "qwen-research",
+    "base_model": [
+      "Qwen/Qwen-Image-2.1"
+    ],
+    "base_model_relation": "quantized",
+    "pipeline_tag": "text-to-image",
+    "library_name": "gguf",
+    "tags": [
+      "gguf",
+      "qwen",
+      "image-generation",
+      "comfyui",
+      "comfyui-gguf",
+      "mlx",
+      "fp8",
+      "nvfp4"
+    ]
+  },
+  "gguf": {
+    "total": 7115124736,
+    "architecture": "qwen_image21",
+    "totalFileSize": 14230272800
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ca0c09aa939e92a6bfcc88086f87517d5b580245",
+      "size": 2353
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4657d98ee9365470882e40792eed60a150e4743c",
+      "size": 8511
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "083ebd8d745c4eae595719f90895888ffd8cf48c",
+      "size": 1774
+    },
+    {
+      "rfilename": "assets/Qwen-Image-2.1-Benchmark.png",
+      "blobId": "14282a74516cc423e0a5f3da7d5d809fe755be45",
+      "size": 269621,
+      "lfs": {
+        "sha256": "66a1481f7e03491f42ecc0dc2380afdb97e6144759900317be857696e7038ac5",
+        "size": 269621,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-BF16.gguf",
+      "blobId": "201c1bbc43c0a93ab3fd5a288116ef8329c29b0b",
+      "size": 14230272800,
+      "lfs": {
+        "sha256": "f151c683a8aed4b310777017ebbbe3f2180f1180f7867115171adb7d50b0762a",
+        "size": 14230272800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-MLX-4bit.safetensors",
+      "blobId": "1d1f4b21c81796950c240580b360fb5eb4c6501c",
+      "size": 4002363741,
+      "lfs": {
+        "sha256": "7a89c59097586b18a987ce798f6540d9d856243b78aaec784b1d6dded819b72a",
+        "size": 4002363741,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-MLX-6bit.safetensors",
+      "blobId": "e447f3a6c1c18287580036c142f19465ff89f695",
+      "size": 5781141974,
+      "lfs": {
+        "sha256": "874977a9d1e196ee38220dc0d9bd0be3a583a039bdf07a62b60daadd8577c397",
+        "size": 5781141974,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-MLX-8bit.safetensors",
+      "blobId": "800bb012c6faca448cf3bc4e496a64e7e8bee884",
+      "size": 7559920348,
+      "lfs": {
+        "sha256": "ed221106d3a61da7d913fcc0d24a77fbe3bd218ff220af3ef04b83484ca79cf2",
+        "size": 7559920348,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-NVFP4.safetensors",
+      "blobId": "3189bf88cbb2651c644e5c1b40430c838d47e339",
+      "size": 4197574696,
+      "lfs": {
+        "sha256": "7cdf87660e84aecf740b5b0f65c848549ba8a74d88ac201976931ca4c780d121",
+        "size": 4197574696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-Q4_0.gguf",
+      "blobId": "12f102e30011ed86ec36f2780f001a718f621f77",
+      "size": 4151573280,
+      "lfs": {
+        "sha256": "13f59f20656efc0aa385d03c1fcac1a9dc2ad6e5ccc0ea9bfe1d6ac636f2c5b9",
+        "size": 4151573280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-Q4_K_M.gguf",
+      "blobId": "1578d347dfe82c9d6e1ef9e624bb36e314d4327c",
+      "size": 4604558112,
+      "lfs": {
+        "sha256": "e79c8a009f2ecbdb6c70fd663d9aea9ee304a0d91f347e4169a756b8ad141b41",
+        "size": 4604558112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-Q5_K_M.gguf",
+      "blobId": "f69c81d32646d8a330c5f4f061e43e73bf3b8714",
+      "size": 5221284640,
+      "lfs": {
+        "sha256": "af0bf278cf16d204fb31c384dc82fd41dca82d976b15fe9305a60c726fd6f821",
+        "size": 5221284640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-Q6_K.gguf",
+      "blobId": "c9fc45f10d8e832d285181b10fa62afb8fd5b8f8",
+      "size": 5876556576,
+      "lfs": {
+        "sha256": "e14bb312109333b3d73b92ad9b9ac8b29b51f2edca1e7b86d1af1981bf1c4ee3",
+        "size": 5876556576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-Q8_0.gguf",
+      "blobId": "1dae02bb354670b96de95c89ff736d4cbb5483a7",
+      "size": 7591557920,
+      "lfs": {
+        "sha256": "cde456c72ea3ecebfc1be783300e972711d875e0c5f1bed33d42b66b156affa8",
+        "size": 7591557920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-fp8.safetensors",
+      "blobId": "2f28ef5283a844eff8b48256307b771c2b421ffc",
+      "size": 7116818183,
+      "lfs": {
+        "sha256": "877b77290339986bca8f771aead381c7a5777347c27d252bbaa915f76667ab0b",
+        "size": 7116818183,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-UC-int8_convrot.safetensors",
+      "blobId": "f547ac7f03cf78702660327df74b19199cfd097c",
+      "size": 7256796840,
+      "lfs": {
+        "sha256": "5bc5a6c007eff1e0d4004344a24c4af966b9d2c83d142e613b0d456ccceb19ae",
+        "size": 7256796840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "qwen-image-2.1-uncensored-lora.safetensors",
+      "blobId": "4eb2d31d9532d08581849976c7fa0787a6053e79",
+      "size": 33586704,
+      "lfs": {
+        "sha256": "00ee2cb7f00a37b097640c1880ed0d17e368e30599f34bb348fee0e8c2cc4ca1",
+        "size": 33586704,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_8b_bf16.safetensors",
+      "blobId": "96913abdb450c149239bf34d67f9e62b0eafce0a",
+      "size": 17534334616,
+      "lfs": {
+        "sha256": "68bdc82bc1b66851162ae656225e7e2068166b603db19bd5d5a3b90eb12669a9",
+        "size": 17534334616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+      "blobId": "cfd84f4f1f9cd291038fff20fb4f7ff21c43a4b2",
+      "size": 9350798360,
+      "lfs": {
+        "sha256": "8bfd0f6e12abf2d2d697ecc888e5e90b0d6741d6708f05799f53afa560452e8f",
+        "size": 9350798360,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "vae/qwen_image_2.1_vae_bf16.safetensors",
+      "blobId": "20f289c83f9207ca23f61c008a51ee44d68f0504",
+      "size": 675509688,
+      "lfs": {
+        "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9",
+        "size": 675509688,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "fishpasters/uncensored-imageTOimage2Ref",
+    "assembledchaos/qwen-image-2-1-studio",
+    "RioShiina/ImageGen",
+    "Gramlin/ImageGennew",
+    "4friendZone/qwen-image-2-1-studio",
+    "alxander84/ImageGen-32",
+    "a-test-user-in-the-wrold/qwen-image-21-uncensored",
+    "BIGJUTT/model-pulse",
+    "Or1290/LP12",
+    "majoranan/qwen-image-2-1-export-space",
+    "devalenya/qwen-image-2-1-studio",
+    "r100kano/qwen-image-2-1-studio",
+    "fuck666/qwen-image-2-1-studio",
+    "Gramlin/ImageGen",
+    "Juno360219/video-face-swap",
+    "pedromaartz/qwen-image-2-1-studio",
+    "zennvhs/qwen-image-2-1-uncensored-demo",
+    "Manidfkstfu/qwen-image-2-1-studio",
+    "Sebad203/qwen-image-2.1-demo",
+    "Alex00168/qwen-image-2-1-studio",
+    "PP12546/qwen-image-21-uncensored",
+    "taiheard/qwen-image-2-1-studio",
+    "sfawefefdd/qwen-image-21-uncensored",
+    "Scorpio1111/qwen-image-2-1-studio",
+    "CharismaGR/Qwen-Image-2.1-Demo",
+    "P2sHm/qwen-image-2-1-studio-meu",
+    "sudeepmishra/qwen-image-2-1-uncensored-quantized",
+    "Manor12/qwen-image-2.1",
+    "yamguchi/qwen-image-studio",
+    "Ronburgendy/qwen-image-2-1-studio",
+    "Tr9272/LP12",
+    "phongjalvn/qwen-image-2-1-studio",
+    "nioLi/2img",
+    "GeekLord/qwen-image-2-1-studio",
+    "Juan33333/qwen-image-21-uncensored",
+    "Kkss0001/qwen-image-2-1-studio",
+    "kosmotaur/qwen-image-21-uncensored-quantized",
+    "nikotodorov/qwen-image-2-1-studio",
+    "DiveMonkey714/qwen-image-21-studio",
+    "gunnersakku/idgaf-ai-image",
+    "Karseadel/clone",
+    "gunnersakku/idgaf-ai-backup",
+    "FelyaHuhing/qwen-image-21-uncensored",
+    "wudijie/my-qwen-image-demo",
+    "guykoko/qwen-image-21-uncensored",
+    "Roh29/qwen-image-2-1-studio",
+    "aaserag/qwen-image-2-1-demo",
+    "blackauditgov/qwen-image-2-1-studio",
+    "sistalani/qwen-image-21-uncensored",
+    "tmtmtm8/qwen-image-2-1-studio",
+    "MattBarker481/qwen-image-2-1-demo",
+    "tamam12345a/qwen-image-2-1-studio",
+    "qxqiz/qwen-image-2-1-studio",
+    "shinkinokishin/ImageGen2",
+    "agentbonniebond/qwen-image-2-1-uncensored-demo",
+    "Samsepiolx/qwen-image-2.1-uncensored-demo",
+    "sos1002/Qwen-Image-2-1-Uncensored-Demo",
+    "krymwsym4/ImageGen",
+    "marketingmultiverse/uncensored-imageTOimage2Ref",
+    "ahmadnader/qwen-image-2-1-studio",
+    "Omar1318/qwen-image-2-1-uncensored-demo",
+    "Dentcity/qwen-image-2-1-studio",
+    "idnplay/qwen-image-21-demo",
+    "feeday/qwen-image-2-1-studio",
+    "StableDefiance222/uncensored-imageTOimage2Ref",
+    "DollasAndSpence/LP12",
+    "plane911/qwen-image-21-uncensored-demo",
+    "Dekonstruktio/Fluxus",
+    "SeymourFroyo/uncensored-imageTOimage2Ref",
+    "Lakerfan5858/qwen-image-21-studio",
+    "arizawan/fairpose_qwen_2_1",
+    "r4vnathan/qwen-image-21-studio",
+    "Broped/uncensored-imageTOimage2Ref",
+    "LinmingXHL/uncensored-imageTOimage2Ref",
+    "blonderichandskinny/uncensored-imageTOimage2Ref",
+    "iKaco/ImageTOimageEdit"
+  ],
+  "createdAt": "2026-09-20T15:51:13.000Z",
+  "usedStorage": 151288650183
+}

@@ -1,0 +1,210 @@
+{
+  "_id": "6ad9c35e68b76d07c3ca7b77",
+  "id": "mradermacher/Sage-A1.5-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "moe",
+    "vlm",
+    "vision",
+    "agentic",
+    "code",
+    "tool-use",
+    "en",
+    "base_model:InternScience/Sage-A1.5",
+    "base_model:quantized:InternScience/Sage-A1.5",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1739,
+  "likes": 1,
+  "modelId": "mradermacher/Sage-A1.5-GGUF",
+  "author": "mradermacher",
+  "sha": "fedd56b69117f706f48d0ac4ec565e9211d4407d",
+  "lastModified": "2026-10-22T09:09:00.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "InternScience/Sage-A1.5",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "moe",
+      "vlm",
+      "vision",
+      "agentic",
+      "code",
+      "tool-use"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 35505251456,
+    "architecture": "qwen35moe",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{#- Verification protocol switch, turned on with chat_template_kwargs={\"verification\": true}.\n    At training time this exact suffix is appended to the end of the system content\n    (script/build_verify_trigger.py); it must stay byte-for-byte identical here. #}\n{%- set verify_tail = 'Verification protocol: enabled' %}\n{%- set verify_trigger = '\\n\\n' + verify_tail %}\n{%- set verify_on = verification is defined and verification %}\n{%- if verify_on and verification is string and verification|lower not in ['true', '1', 'yes', 'on'] %}\n    {{- raise_exception('verification must be a boolean, not the string ' ~ verification|tojson ~ '. Send a JSON boolean: {\"chat_template_kwargs\": {\"verification\": true}}.') }}\n{%- endif %}\n{%- if verify_on and (messages[0].role != 'system' or not render_content(messages[0].content, false, true)|trim) %}\n    {{- raise_exception('verification=true requires a non-empty system message: the verification protocol trigger is appended to the end of the system content.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- set content = content + verify_trigger if (verify_on and not content.endswith(verify_tail)) else content %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- set content = content + verify_trigger if (verify_on and not content.endswith(verify_tail)) else content %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if (preserve_thinking is defined and preserve_thinking is true) or (loop.index0 > ns.last_query_index) %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 19390057472
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "956b19269746c8cdac5880e8df4d477b3524f31e",
+      "size": 2276
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "5405516858f93c9cee1d929bc74a7cd9a64c54c0",
+      "size": 3792
+    },
+    {
+      "rfilename": "Sage-A1.5.IQ4_XS.gguf",
+      "blobId": "92bc3072b0ee9526bbdd2f24c7cedddb91a1bbde",
+      "size": 19390057472,
+      "lfs": {
+        "sha256": "9ae206b09ed32df00a4fbcb2f836fefe34e2c72d3565908b3484efc4140850a7",
+        "size": 19390057472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q2_K.gguf",
+      "blobId": "5441122e234835a2b70895746ad633fc1d4472f7",
+      "size": 13247183872,
+      "lfs": {
+        "sha256": "de210dbf16edc5d63573f3b9c04844d25552108f0a5b6eb5525fec2c34b0a71a",
+        "size": 13247183872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q3_K_L.gguf",
+      "blobId": "d17007d5e687c83342138f68f08bfeee6652bc78",
+      "size": 18552091648,
+      "lfs": {
+        "sha256": "11f3d9f602a90b24dbc649422c59a5a01a0e35214a54d6444eab6fb321959d78",
+        "size": 18552091648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q3_K_M.gguf",
+      "blobId": "d5015f6977101f0074b727e0d466d9e5032276df",
+      "size": 17166660608,
+      "lfs": {
+        "sha256": "bea2083c8c5520a4c9dc6bfca2c20e4f07537ab048e3db41976e91070fdd86ef",
+        "size": 17166660608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q3_K_S.gguf",
+      "blobId": "a50798639d7ed311ce96776222e22344949a307e",
+      "size": 15547036672,
+      "lfs": {
+        "sha256": "0bf9c1b761b4253ffe057a06b63588366fc7df54a0ace43666c45e236a17fada",
+        "size": 15547036672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q4_K_M.gguf",
+      "blobId": "dda8ec341bf1f282e654e1530384516e770e1941",
+      "size": 21713464320,
+      "lfs": {
+        "sha256": "43ff9ee24508e58c1bdebb1987dffa14e86d77a3d916eb2c33eeba3757ddad9d",
+        "size": 21713464320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q4_K_S.gguf",
+      "blobId": "5dd887a9338cd6fa71594c654e1f0780ba12daf2",
+      "size": 20366863360,
+      "lfs": {
+        "sha256": "004c8d1fd985202e417298e08c540a6f98826607058a77a0d36a1051952fb708",
+        "size": 20366863360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q5_K_M.gguf",
+      "blobId": "c96d47e62f8fe9a046ad81ea5df941192e9a03cf",
+      "size": 25347533824,
+      "lfs": {
+        "sha256": "ead0e9758e4b90d846f5b2a8bc909a84b10b30d6e32ba269d54327c42ca31049",
+        "size": 25347533824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q5_K_S.gguf",
+      "blobId": "21df26cbd65495c86a0c00eda5ff77bc207add39",
+      "size": 24563756032,
+      "lfs": {
+        "sha256": "08a2732dd2d4ce9adcf3cc6783596a4432eb3a30e08d540a5a30ad1bb147005b",
+        "size": 24563756032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q6_K.gguf",
+      "blobId": "b137779d6907c3375a98b54a497ca50163b76c92",
+      "size": 29208732672,
+      "lfs": {
+        "sha256": "852dffdde471f41b15c264c35944e1ca8b380e68e823679ea816f3ca664b2fe4",
+        "size": 29208732672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.Q8_0.gguf",
+      "blobId": "9e20315819c3b048aaa781a4f7a31420fb819aaa",
+      "size": 37802150912,
+      "lfs": {
+        "sha256": "11c0f706dd62626195bca91c2eb58fcea9c0900e23c690de50d63f20f48a711c",
+        "size": 37802150912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.mmproj-Q8_0.gguf",
+      "blobId": "45a20e68ebade2bd5e3f5c94aaccd6efdad82f37",
+      "size": 614194144,
+      "lfs": {
+        "sha256": "ab17f45504d8b7ea8afb17b327874bdf742998e79524c208948b6211f2253c00",
+        "size": 614194144,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Sage-A1.5.mmproj-f16.gguf",
+      "blobId": "99982f91928eb761a9d30959be6baa0775ad8c97",
+      "size": 899283040,
+      "lfs": {
+        "sha256": "adc9c659d66e8d63667f0a8c25da8df14ebc601617e3a9acea64893d80295cf1",
+        "size": 899283040,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-22T08:03:42.000Z",
+  "usedStorage": 244419008576
+}

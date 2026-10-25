@@ -1,0 +1,286 @@
+{
+  "_id": "68f0c595e3672bf94c8932c0",
+  "id": "PaddlePaddle/PaddleOCR-VL",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "PaddleOCR",
+  "tags": [
+    "PaddleOCR",
+    "safetensors",
+    "paddleocr_vl",
+    "ERNIE4.5",
+    "PaddlePaddle",
+    "image-to-text",
+    "ocr",
+    "document-parse",
+    "layout",
+    "table",
+    "formula",
+    "chart",
+    "image-text-to-text",
+    "conversational",
+    "custom_code",
+    "en",
+    "zh",
+    "multilingual",
+    "arxiv:2510.14528",
+    "base_model:baidu/ERNIE-4.5-0.3B-Paddle",
+    "base_model:finetune:baidu/ERNIE-4.5-0.3B-Paddle",
+    "license:apache-2.0",
+    "eval-results",
+    "region:us"
+  ],
+  "downloads": 7928,
+  "likes": 1675,
+  "modelId": "PaddlePaddle/PaddleOCR-VL",
+  "author": "PaddlePaddle",
+  "sha": "7fa00a8c55b735ba51ba49a9058f3f9c57a99a11",
+  "lastModified": "2026-08-08T14:33:12.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<mask:1>",
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "PaddleOCRVLForConditionalGeneration"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_paddleocr_vl.PaddleOCRVLConfig",
+      "AutoModel": "modeling_paddleocr_vl.PaddleOCRVLForConditionalGeneration",
+      "AutoModelForCausalLM": "modeling_paddleocr_vl.PaddleOCRVLForConditionalGeneration"
+    },
+    "model_type": "paddleocr_vl",
+    "tokenizer_config": {
+      "bos_token": "<s>",
+      "cls_token": "<|begin_of_sentence|>",
+      "eos_token": "</s>",
+      "mask_token": "<mask:1>",
+      "pad_token": "<unk>",
+      "sep_token": "<|end_of_sentence|>",
+      "unk_token": "<unk>",
+      "use_default_system_prompt": false
+    },
+    "chat_template_jinja": "{%- if not add_generation_prompt is defined -%}\n    {%- set add_generation_prompt = true -%}\n{%- endif -%}\n{%- if not cls_token is defined -%}\n    {%- set cls_token = \"<|begin_of_sentence|>\" -%}\n{%- endif -%}\n{%- if not eos_token is defined -%}\n    {%- set eos_token = \"</s>\" -%}\n{%- endif -%}\n{{- cls_token -}}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {{- \"User: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"image\" -%}\n                {{ \"<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>\" }}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ \"\\n\" -}}\n    {%- elif message[\"role\"] == \"assistant\" -%}\n        {{- \"Assistant: \" -}}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] }}\n            {%- endif -%}\n        {%- endfor -%}\n        {{ eos_token -}}\n    {%- elif message[\"role\"] == \"system\" -%}\n        {%- for content in message[\"content\"] -%}\n            {%- if content[\"type\"] == \"text\" -%}\n                {{ content[\"text\"] + \"\\n\" }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"Assistant: \" -}}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "ERNIE4.5",
+      "PaddleOCR",
+      "PaddlePaddle",
+      "image-to-text",
+      "ocr",
+      "document-parse",
+      "layout",
+      "table",
+      "formula",
+      "chart"
+    ],
+    "base_model": "baidu/ERNIE-4.5-0.3B-Paddle",
+    "language": [
+      "en",
+      "zh",
+      "multilingual"
+    ],
+    "library_name": "PaddleOCR",
+    "new_version": "PaddlePaddle/PaddleOCR-VL-1.6"
+  },
+  "siblings": [
+    {
+      "rfilename": ".eval_results/real5_omnidocbench.yaml",
+      "blobId": "f721da8d189e5ea0dc4be36ced5ef28b78099952",
+      "size": 1418
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c81c579984486b44bc321792d68fcbe010e112ba",
+      "size": 1659
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "0491a00e80b424eb709078b57e35d8b83ffee985",
+      "size": 11376
+    },
+    {
+      "rfilename": "PP-DocLayoutV2/config.json",
+      "blobId": "16a3e88b81ec3ad30dbaba930d3707ad86a2ec16",
+      "size": 4535
+    },
+    {
+      "rfilename": "PP-DocLayoutV2/inference.pdiparams",
+      "blobId": "278c0ec2696c53c84932672a85a95272a6fa6d69",
+      "size": 212170944,
+      "lfs": {
+        "sha256": "45404a84c9fdf91d7bbc94bd47ac4c03649bda84167de04c62bff4726657869a",
+        "size": 212170944,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "PP-DocLayoutV2/inference.pdmodel",
+      "blobId": "87a33b0019d2d47873e52164efe6f0aa7e1ee85f",
+      "size": 1515181,
+      "lfs": {
+        "sha256": "fddd4b4359b95e6f1dd86c86f05e9516517bead9089287681838cdcbf003563b",
+        "size": 1515181,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "PP-DocLayoutV2/inference.yml",
+      "blobId": "5cc9ec8970c00fc1b0ca7a37824d9e09acbb451e",
+      "size": 1482
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "74d25efb4f5c4e7aff3b6e3678595ae3f92ce9f0",
+      "size": 26406
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "6a2790e1462ecb007f9b92dfb00f594701462889",
+      "size": 25381
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "7b55077ebff1def62b6170843569332368291a88",
+      "size": 1472
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "c54711466ae75457f8e57b909a49dae570bfa5c5",
+      "size": 2059
+    },
+    {
+      "rfilename": "configuration_paddleocr_vl.py",
+      "blobId": "a8fd139287293301b287db6dfdaac21d7ad1a236",
+      "size": 8104
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "ba87d71b9881c1d52f0be4286fb63e381ce3febf",
+      "size": 133
+    },
+    {
+      "rfilename": "image_processing_paddleocr_vl.py",
+      "blobId": "f7e28fd3c1971331581f73d573b9c4a2a4ce7a58",
+      "size": 25032
+    },
+    {
+      "rfilename": "inference.yml",
+      "blobId": "65349b5c7425e7cda4d54b636b8f74b833b2dccc",
+      "size": 39
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "f3dd703d2af3f0a7f70ca531a018625c8d7f2410",
+      "size": 1917255968,
+      "lfs": {
+        "sha256": "3085f1042e184f68f8a412aa0f64f2c4b8562989598bbfba326aaa11fc685de8",
+        "size": 1917255968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_paddleocr_vl.py",
+      "blobId": "25dc764ca4878836ed630ec83fbcedbe5ec2d0f3",
+      "size": 103889
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "039dc0b08e9940654682d5415c2178e3275644d7",
+      "size": 641
+    },
+    {
+      "rfilename": "processing_paddleocr_vl.py",
+      "blobId": "73c3faeff201555fc7b52709848e3c669419dbb1",
+      "size": 12253
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "033053ac4d8b5de2e47884ce85a6b4939cc58e87",
+      "size": 137
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "3c4aec2f502327373e3524be6ac37ff9070dec8b",
+      "size": 1152
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "44c2e443564a0b79b6eb594bea84fabec088f722",
+      "size": 11187679,
+      "lfs": {
+        "sha256": "f90f04fd8e5eb6dfa380f37d10c87392de8438dccb6768a2486b5a96ee76dba6",
+        "size": 11187679,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "81e33aa7fdb8ef76fceb1a69f1997021f3056770",
+      "size": 1614363,
+      "lfs": {
+        "sha256": "34ef7db83df785924fb83d7b887b6e822a031c56e15cff40aaf9b982988180df",
+        "size": 1614363,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "c8a4f4bd7949428b0c3ad4ce53354c22413db332",
+      "size": 185587
+    }
+  ],
+  "spaces": [
+    "PaddlePaddle/PaddleOCR-VL_Online_Demo",
+    "Upsampler/paddleocr-vl",
+    "markobinario/PaddleOCR-VL_Online_Demo",
+    "waytoAGI/PaddleOCR-VL_Online_Demo",
+    "Eathprompt/OCRtest",
+    "IFMedTech/OCR",
+    "bu-kaixinya/PaddleOCR-VL_Online_Demo",
+    "myosm/test_paddle_vl",
+    "rogergou/PaddleOCR-VL_Online_Demo",
+    "LJKJHI/PaddleOCR-VL_Online_Demo",
+    "saul31/PaddleOCR-VL_Online_Demo",
+    "XuNick/PaddleOCR-VL_Online_Demo",
+    "Unspoiled-Egg/Fin-RAG",
+    "hc7131/PaddleOCR-VL_Online_Demo",
+    "Healer1108/PaddleOCR-VL_Online_Demo",
+    "raghu8096/PaddleOCR-VL_Online_Demo",
+    "eoeooe/PaddleOCR-VL-Request",
+    "cronos3k/document-integrity-verifier",
+    "tangxiaobao33333/familyreader-ocr",
+    "ParasBista/Financial-RAG",
+    "cwaber1985/PaddleOCR-VL_Online_Demo",
+    "Tutel314/PaddleOCR-VL-Demo",
+    "studentoflife/paddleocr-vl-demo",
+    "SSSOUPPP/paddleocr-vl-demo",
+    "vivekreddyr/PaddleOCR-VL-Doc-Editor",
+    "vivekreddyr/OCR-Compare"
+  ],
+  "createdAt": "2025-10-16T10:14:45.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 958588736
+    },
+    "total": 958588736
+  },
+  "usedStorage": 2156679874
+}

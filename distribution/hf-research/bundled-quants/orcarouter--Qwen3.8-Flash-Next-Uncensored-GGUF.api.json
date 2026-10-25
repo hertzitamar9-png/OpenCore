@@ -1,0 +1,643 @@
+{
+  "_id": "6a8ecac19808154a6906b9bd",
+  "id": "orcarouter/Qwen3.8-Flash-Next-Uncensored-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "abliterated",
+    "uncensored",
+    "qwen",
+    "qwen3.8",
+    "qwen4",
+    "flash-next",
+    "moe",
+    "llama.cpp",
+    "vision-language",
+    "mmproj",
+    "function-calling",
+    "reasoning",
+    "ai-red-team",
+    "red-teaming",
+    "image-text-to-text",
+    "en",
+    "zh",
+    "base_model:Qwen/Qwen3.8-Flash-Next",
+    "base_model:quantized:Qwen/Qwen3.8-Flash-Next",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 1016935,
+  "likes": 1110,
+  "modelId": "orcarouter/Qwen3.8-Flash-Next-Uncensored-GGUF",
+  "author": "orcarouter",
+  "sha": "d366e279688c1f2fd6e75e2f98475d38db534f1d",
+  "lastModified": "2026-10-18T13:59:35.000Z",
+  "gated": "auto",
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "Qwen/Qwen3.8-Flash-Next",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "abliterated",
+      "uncensored",
+      "qwen",
+      "qwen3.8",
+      "qwen4",
+      "flash-next",
+      "moe",
+      "gguf",
+      "llama.cpp",
+      "vision-language",
+      "mmproj",
+      "function-calling",
+      "reasoning",
+      "ai-red-team",
+      "red-teaming"
+    ]
+  },
+  "gguf": {
+    "total": 176943899520,
+    "architecture": "qwen4exp",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/data/models/Qwen3.8-Flash-Next-abliterated-GGUF/imatrix.gguf",
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 80086292992
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e6dc8824ebe22b1c41a8728e1a24deee72beb2af",
+      "size": 6472
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ2_M-00001-of-00002.gguf",
+      "blobId": "6915eeab4eecb879020fde0d0efcf4a54911651f",
+      "size": 44775849152,
+      "lfs": {
+        "sha256": "3affc683530fa7874776eed2d4d72f26268a3184463f53e0284dacb3d01653a7",
+        "size": 44775849152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ2_M-00002-of-00002.gguf",
+      "blobId": "33bcaf02ec9dd98d65d8cf05a0340f942781527e",
+      "size": 35310443840,
+      "lfs": {
+        "sha256": "f4435dbacdca4d78b9aa50703bccd494386b27395bc82e4f7a3d15181d028fde",
+        "size": 35310443840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ2_XXS-00001-of-00002.gguf",
+      "blobId": "890d6045887d2c25f513818100abf9e7bb1313da",
+      "size": 44615966944,
+      "lfs": {
+        "sha256": "d66805dbefb19297da7ac875a48bebc54a107320cb08353211ac84d917c31396",
+        "size": 44615966944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ2_XXS-00002-of-00002.gguf",
+      "blobId": "b85177e68c8a272e2bc7d1fb540e2c2b84c40774",
+      "size": 30232371488,
+      "lfs": {
+        "sha256": "aab9b15ca64c456e80a03f84ddbbd140504a2b38d5c02af9ddc97e8e75fe7763",
+        "size": 30232371488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ3_M-00001-of-00002.gguf",
+      "blobId": "7db0124109c3065409e6c4553cccedd015d2a873",
+      "size": 44706357824,
+      "lfs": {
+        "sha256": "eb0c528143e6a5d6f2ba6b73a5ea62ca76dc3e51fe9bef74d61939edaf55549c",
+        "size": 44706357824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ3_M-00002-of-00002.gguf",
+      "blobId": "1456ed743820952d9b52f2359740dcd56705f70c",
+      "size": 44834460608,
+      "lfs": {
+        "sha256": "720c880f3ebbb3a314e71ec123b4e0cef6493719bedfaa5f147d6de60418443f",
+        "size": 44834460608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ3_XXS-00001-of-00002.gguf",
+      "blobId": "2ad0c0f2c36197f95d6aa941ee502ea9c3bc183d",
+      "size": 44637691008,
+      "lfs": {
+        "sha256": "aaf57046943c6638480e8984835ce5ec29c486180ff71169d3c22c6929851b7b",
+        "size": 44637691008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ3_XXS-00002-of-00002.gguf",
+      "blobId": "124f43ff27fb2a36ab314eb62a4863dadd35862a",
+      "size": 40564977024,
+      "lfs": {
+        "sha256": "a19cf9bbe87bce45f312ef11401c88b675f3784c927d02fa2272822229e6a224",
+        "size": 40564977024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ4_XS-00001-of-00003.gguf",
+      "blobId": "339646831e724fe46eb51ca4799c263d6840a320",
+      "size": 44766155936,
+      "lfs": {
+        "sha256": "28a99b125cb905fc3bdc06baf6266a56b0cbd1b27e833b9142acc2017b673704",
+        "size": 44766155936,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ4_XS-00002-of-00003.gguf",
+      "blobId": "e42b022846167d9c615a9a992e39d8cad4b92121",
+      "size": 44735995008,
+      "lfs": {
+        "sha256": "2a309e0b112fde96ba3bcba5a6b58cc05e5df7bb7fad5a990eaa51df335b0e43",
+        "size": 44735995008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ4_XS-00003-of-00003.gguf",
+      "blobId": "cf88ce38f35e98098dd6208dcbdbf10d3b6b0df3",
+      "size": 7971004256,
+      "lfs": {
+        "sha256": "ebc43c58e2eaeba1d5bdf62c8cb1f0eac198c4dc01941f771921edeebf574bc3",
+        "size": 7971004256,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ4_XS-MTP-00001-of-00003.gguf",
+      "blobId": "90bde51acb50f0f5f9ed680ba7cab42ad511691b",
+      "size": 46663299456,
+      "lfs": {
+        "sha256": "8ea9e1bfac3317ca6b11fef94575f24db7fc90de02069ba18ff2ed8c877445fa",
+        "size": 46663299456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ4_XS-MTP-00002-of-00003.gguf",
+      "blobId": "9c92fcf8cfa5a1c52bf7993467acbdbeac45a8fb",
+      "size": 46601152320,
+      "lfs": {
+        "sha256": "96c0a635c1d9dfef5eadcd2065953daeec099974472b3175dcb0906d7505e4d8",
+        "size": 46601152320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-IQ4_XS-MTP-00003-of-00003.gguf",
+      "blobId": "0a0009fc7bbf27f7b196141d7df0cdb465b0de37",
+      "size": 6982791168,
+      "lfs": {
+        "sha256": "831e9e84794e76dc1dbecee7c732b4c60befa0bdc79a9c570e79a917211aa750",
+        "size": 6982791168,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-MTP-draft.gguf",
+      "blobId": "3707e2d9349c71f6111b13a6a26382058ca46827",
+      "size": 4135893632,
+      "lfs": {
+        "sha256": "ff803fb437e90567c27991fecae2537ea1ed63e8842b0399aa53820f02ae8882",
+        "size": 4135893632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q2_K-00001-of-00002.gguf",
+      "blobId": "b1673e516a93f9305963c1c60aeb741a04f10d03",
+      "size": 44893254944,
+      "lfs": {
+        "sha256": "405a1799684d4ab3ac23ce1190ff80e71a25215eb8a73480a6feafb01da30faf",
+        "size": 44893254944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q2_K-00002-of-00002.gguf",
+      "blobId": "f52aab41e6c4bece1c640a38a392c6540e1af17d",
+      "size": 35554194880,
+      "lfs": {
+        "sha256": "4745f4b18d64fe7ae13713946f586da535076a32081fbd046dd42f236c35d002",
+        "size": 35554194880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_L-00001-of-00003.gguf",
+      "blobId": "d249b5e4bccdcb7c0df04cb6993c63bd5d1cf3c9",
+      "size": 44998470112,
+      "lfs": {
+        "sha256": "c96216e5416424b2a6aa994b7e03898e003ecd3e8dcdbfe8d47da37d24efa029",
+        "size": 44998470112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_L-00002-of-00003.gguf",
+      "blobId": "6aefa7e7fbde9656fb0938fc39f83aa609b34080",
+      "size": 44703161920,
+      "lfs": {
+        "sha256": "99473ebbcde45c9a88d710f6556582381ae5eae64494f324799a267a81e2c3fc",
+        "size": 44703161920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_L-00003-of-00003.gguf",
+      "blobId": "3c2e85c0b6352da51fc33b9a95e29914b9ef171c",
+      "size": 6954767936,
+      "lfs": {
+        "sha256": "f8cac2783d848142af07ab5a9980531c760b1342f32ade47c31f6c8a761b7ee9",
+        "size": 6954767936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_M-00001-of-00003.gguf",
+      "blobId": "04dcd8e432ea63e27fdd1fb99102b6c0a11f17d5",
+      "size": 44560035232,
+      "lfs": {
+        "sha256": "31a933bdcf34a3936509ae70ba635205eed293aa30c81593d9840ba758c33db3",
+        "size": 44560035232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_M-00002-of-00003.gguf",
+      "blobId": "13b60aafcd965fa69042824215c3c2a24581f7d6",
+      "size": 44814036288,
+      "lfs": {
+        "sha256": "a954fa74540a8e58e742976b0d2c9a6ace524b08b02019e7102a463b03a5999f",
+        "size": 44814036288,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_M-00003-of-00003.gguf",
+      "blobId": "d96932d09967cdd7858417947feacc1248964fa0",
+      "size": 4763021984,
+      "lfs": {
+        "sha256": "1317753140e70f29dd30346259a524284611439379d89b7240907071fbad525f",
+        "size": 4763021984,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_S-00001-of-00002.gguf",
+      "blobId": "b1badc53be9c7a18ad218c8a360893c31d8f9ab8",
+      "size": 44897102432,
+      "lfs": {
+        "sha256": "fefb702637fc2ed03aa7dc1dd82b3b729aee42ce731410e67a478cc938994fdd",
+        "size": 44897102432,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q3_K_S-00002-of-00002.gguf",
+      "blobId": "391a658095024b6a844e32fbf22ce99bdb3738fb",
+      "size": 43858236352,
+      "lfs": {
+        "sha256": "bd5fb9d51ace95f698f44f54cdf3871efea7946ec25c215ddd577fcc7a787a48",
+        "size": 43858236352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q4_K_M-00001-of-00003.gguf",
+      "blobId": "cbaf0859b718a4744afb7af0d3c594d820103fd0",
+      "size": 44598509600,
+      "lfs": {
+        "sha256": "fa6b8ea03042a47575c039b84af57e0169e0f1ceab539ab9edba08937bb237ef",
+        "size": 44598509600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q4_K_M-00002-of-00003.gguf",
+      "blobId": "1b7b175cf91b3ae6fc14bc511fc21a775469e54b",
+      "size": 44693535520,
+      "lfs": {
+        "sha256": "6fb88b39f4b6e15d8acac6172faf65fcc2503703375440eb71d557161ed20df8",
+        "size": 44693535520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q4_K_M-00003-of-00003.gguf",
+      "blobId": "b0bb10f5359998902193830667523c29023c36b4",
+      "size": 29858677824,
+      "lfs": {
+        "sha256": "f2fc849eb4c14ac58253cc326f057b2f606f394004c1172e6c61c56dd0b0a075",
+        "size": 29858677824,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q4_K_S-00001-of-00003.gguf",
+      "blobId": "dbc1d6946496de863b4633e72d9010c065b27522",
+      "size": 44888775360,
+      "lfs": {
+        "sha256": "8f940bf64c9a62a4dce1935999ac8ed287bb90ff5a4e5cc22ddac767cd56557d",
+        "size": 44888775360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q4_K_S-00002-of-00003.gguf",
+      "blobId": "02b3efc93cbf55eb79b430005f24e2660bc9fa51",
+      "size": 44934400672,
+      "lfs": {
+        "sha256": "d19d80982e5fa2416a21342be71e5d8041c0c088720ac5cc54bca79a9eafb10c",
+        "size": 44934400672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q4_K_S-00003-of-00003.gguf",
+      "blobId": "388486eec02ef9c0d2a6754a89a7747c1b65e5f1",
+      "size": 21946739488,
+      "lfs": {
+        "sha256": "6be547f9575cfdf23314426d62fb65ef4052841dd156f7b77dd79a93da3e4087",
+        "size": 21946739488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q5_K_M-00001-of-00003.gguf",
+      "blobId": "78a759eb9c3250b7c1da86ec2159f5840f9856bd",
+      "size": 44537339136,
+      "lfs": {
+        "sha256": "e08f971c3af78aa879b82c6761f89ac0bf9e96fd94ba74d07398d503e992e097",
+        "size": 44537339136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q5_K_M-00002-of-00003.gguf",
+      "blobId": "2b9112572b44292fed6e55a500c9a87190eac2db",
+      "size": 44714628064,
+      "lfs": {
+        "sha256": "360d391d10374e1987e5f91027447402542dfc281fbf92bdc1190865a7a97aa2",
+        "size": 44714628064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q5_K_M-00003-of-00003.gguf",
+      "blobId": "33a5aab6eed3ba64364e7b00357c46f7ac4b3395",
+      "size": 44854700960,
+      "lfs": {
+        "sha256": "25c257f7a70596356fe5e12e1c5e97cc881286c57749b06a372b813509bea4a4",
+        "size": 44854700960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q5_K_S-00001-of-00003.gguf",
+      "blobId": "2c481ab0590561ad4d7a7a1ca85939e0d13717c6",
+      "size": 44953947904,
+      "lfs": {
+        "sha256": "c789c1e7445e6fe90707ec13461dd1e0cf5343d374b5ac7ee1c8eeef604dd19c",
+        "size": 44953947904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q5_K_S-00002-of-00003.gguf",
+      "blobId": "03d487d7cbc223a390631c16b905803d75927358",
+      "size": 44796192320,
+      "lfs": {
+        "sha256": "d43111ec60a5868cdb60bdcffed89454ac8d51b911d5a847f7d2c2f6f20c6b7a",
+        "size": 44796192320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q5_K_S-00003-of-00003.gguf",
+      "blobId": "9467bf8ccc178b965b1b1e82bbefd4b36272b0cc",
+      "size": 37978625856,
+      "lfs": {
+        "sha256": "1cf59e7ae710a43b5dfc3fe03f16fa74ae752f18ea1c555dc87a1c2678401366",
+        "size": 37978625856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q6_K-00001-of-00005.gguf",
+      "blobId": "534f2d12899b7d5b2246aff55cbcbab1af96889d",
+      "size": 538628576,
+      "lfs": {
+        "sha256": "24cf0996d7c342471b184910608d60e245774691112d44f17aac9b5a3f72f77c",
+        "size": 538628576,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q6_K-00002-of-00005.gguf",
+      "blobId": "766778caaa60509ea54718bf10bf8a31a6261ad0",
+      "size": 54400261312,
+      "lfs": {
+        "sha256": "8aeb4c8e478809a91b2094f61ba276265d10425d036a3a9c5c9959ea650858d4",
+        "size": 54400261312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q6_K-00003-of-00005.gguf",
+      "blobId": "918ccfef4a2641cd05f8a2abc13db7f390e40394",
+      "size": 46573481408,
+      "lfs": {
+        "sha256": "0bc41ac1ec1665e255b479e6be1d60f8481f0857bdcb93fa123e9eaf900c649b",
+        "size": 46573481408,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q6_K-00004-of-00005.gguf",
+      "blobId": "c54c27255a4fb06717a526b710b93a88db010d8b",
+      "size": 46730163488,
+      "lfs": {
+        "sha256": "4e48150f8e4cb10355c801c6c3bf1df879ac30db3e3c02b7075a8d2de832119f",
+        "size": 46730163488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q6_K-00005-of-00005.gguf",
+      "blobId": "cee53ef64717e861c5a72c6b6b7b1cf8976cb648",
+      "size": 19397304512,
+      "lfs": {
+        "sha256": "be611c1a1219d7f23fef9dc5a3361c5729f512e074b3010e2d10c295c3e3d6da",
+        "size": 19397304512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-00001-of-00005.gguf",
+      "blobId": "9557727fbf1236755518880c83ef9c1d43075d8d",
+      "size": 5566294560,
+      "lfs": {
+        "sha256": "6c1d18b5aaba1d73bdf00302db966d335a324b2a903d912e97ed3ae303297d25",
+        "size": 5566294560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-00002-of-00005.gguf",
+      "blobId": "766778caaa60509ea54718bf10bf8a31a6261ad0",
+      "size": 54400261312,
+      "lfs": {
+        "sha256": "8aeb4c8e478809a91b2094f61ba276265d10425d036a3a9c5c9959ea650858d4",
+        "size": 54400261312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-00003-of-00005.gguf",
+      "blobId": "18e2398ecc1bdb42b00e697baf4d8b25cf420448",
+      "size": 46969998688,
+      "lfs": {
+        "sha256": "ca119a8c3b95c864024aa23eb9bedfb5c2f2b7ca1ab581cf532a488b81a8f523",
+        "size": 46969998688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-00004-of-00005.gguf",
+      "blobId": "641b7665a284a51a4c6a920a170edfed853faf9f",
+      "size": 46887247200,
+      "lfs": {
+        "sha256": "e05d708a25944b1ee189fd401bd2d81e179c96cfa919ff6c3295f447069581ad",
+        "size": 46887247200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-00005-of-00005.gguf",
+      "blobId": "b7a1a85b642d19093797ab75881ce596cb9879fb",
+      "size": 34382716608,
+      "lfs": {
+        "sha256": "972d95d3a8349e28925b56165eff191463a6a1ddf20aac8c6ee956f75589765c",
+        "size": 34382716608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-MTP-00001-of-00005.gguf",
+      "blobId": "f2709aee765b8ee911b5688013678b4a42810317",
+      "size": 5566294592,
+      "lfs": {
+        "sha256": "43342ff367e12ffa6c2190b9f370f8474958d9cdd79a5510f61d44131ea8ca59",
+        "size": 5566294592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-MTP-00002-of-00005.gguf",
+      "blobId": "45e8a8121b3813937d246512f0ed5e547db32fe8",
+      "size": 54400261312,
+      "lfs": {
+        "sha256": "4455d42a0a2953ff88599c69cc4c44dccf83aeacdbd764dd8bbcce5d1be1874e",
+        "size": 54400261312,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-MTP-00003-of-00005.gguf",
+      "blobId": "144a1d5914fc4b78a3c7571a61b718bff8950229",
+      "size": 46903029984,
+      "lfs": {
+        "sha256": "be1cbe60c00834da0b41ae6e776553165c890fe93875970bb1bc1f776ab87674",
+        "size": 46903029984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-MTP-00004-of-00005.gguf",
+      "blobId": "d6435bfd21bf2f583e32c7263720c862752b119f",
+      "size": 46901260896,
+      "lfs": {
+        "sha256": "828feab8e067720a4b72a1034fd189182856dca2e770fe51fcbb53e96d05a065",
+        "size": 46901260896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-Flash-Next-Uncensored-Q8_0-MTP-00005-of-00005.gguf",
+      "blobId": "23870c3888d8616c9abdddc37127a94e7cde9bc3",
+      "size": 37209759328,
+      "lfs": {
+        "sha256": "7da9224f9906a608d5185b4c82eb29edeb6ae3dc2eeec91d4ccb4c877f423106",
+        "size": 37209759328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "1d5c77b794c5ac30c95549ec2e6ca884b1632847",
+      "size": 14688
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-Flash-Next-Uncensored-F16.gguf",
+      "blobId": "ab01df4996577d4f12ba75ae97d7a84b733964f6",
+      "size": 907543296,
+      "lfs": {
+        "sha256": "f0f352a97a62a057f3aecdb597cac664762cea2ca23f7b16ec92eee28c5572d9",
+        "size": 907543296,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse"
+  ],
+  "createdAt": "2026-08-26T11:15:13.000Z",
+  "usedStorage": 2465555388960
+}

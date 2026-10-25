@@ -53,6 +53,8 @@ def engine_for(entry):
         return 'flint-cpu-v1'
     if model_type in ('raon1_mini', 'raon', 'raon1') or repository.startswith('krafton/raon-1-mini-preview'):
         return 'raon-cpu-v1'
+    if entry.get('managedEngine') == 'flint-cpu-v1':
+        return 'flint-cpu-v1'
     return None
 
 

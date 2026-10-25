@@ -1,0 +1,256 @@
+{
+  "_id": "6aac336b14c3540ca7e6c39a",
+  "id": "Venastine-Research/Xing4.0-29B-A4B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gguf",
+    "xing4_0",
+    "text-generation",
+    "conversational",
+    "custom_code",
+    "arxiv:2512.24157",
+    "arxiv:2507.18013",
+    "base_model:XingChen-AGI/Xing4.0-29B-A4B",
+    "base_model:quantized:XingChen-AGI/Xing4.0-29B-A4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 67082,
+  "likes": 742,
+  "modelId": "Venastine-Research/Xing4.0-29B-A4B-GGUF",
+  "author": "Venastine-Research",
+  "sha": "34c436266b29856a3ff5fe60010813fee1c2b844",
+  "lastModified": "2026-10-11T13:34:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Xing4_0ForCausalLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_xing4_0.Xing4_0Config",
+      "AutoModel": "modeling_xing4_0.Xing4_0Model",
+      "AutoModelForCausalLM": "modeling_xing4_0.Xing4_0ForCausalLM"
+    },
+    "model_type": "xing4_0",
+    "num_experts_per_tok": 4,
+    "tokenizer_config": {
+      "bos_token": "<_start>",
+      "eos_token": "<_end>",
+      "pad_token": "<_pad>"
+    },
+    "chat_template_jinja": "{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text }}\n            {%- elif item is string -%}\n                {{- item }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = [] %}\n{%- endif %}\n{%- set default_system = \"\u4f60\u662f\u4e2d\u56fd\u7535\u4fe1\u661f\u8fb0\u8bed\u4e49\u5927\u6a21\u578b\uff0c\u82f1\u6587\u540d\u662fXing\uff0c\u4f60\u662f\u7531\u4e2d\u7535\u4fe1\u4eba\u5de5\u667a\u80fd\u79d1\u6280\u6709\u9650\u516c\u53f8\u7814\u53d1\u7684\u4eba\u5de5\u667a\u80fd\u52a9\u624b\u3002\\n\" %}\n{%- if system_message is defined %}\n    {{- \"<_system>\" + default_system + \"\\n\" + visible_text(system_message)}}\n{%- else %}\n    {{- \"<_system>\" + default_system }}\n{%- endif %}\n{% if tools is iterable and tools | length > 0 %}\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{{ tool | tojson(ensure_ascii=False) }}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<param_key>{param-key-1}</param_key><param_value>{param-value-1}</param_value><param_key>{param-key-2}</param_key><param_value>{param-value-2}</param_value>...</tool_call>\n{%- endif %}\n\n\n{%- set ns = namespace(last_user_index=-1) %}\n{%- for m in loop_messages %}\n    {%- if m.role == 'user' %}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{%- for m in loop_messages %}\n{%- if m.role == 'user' -%}<_user>{{ visible_text(m.content) }}\n{%- elif m.role == 'assistant' or m.role == 'bot' -%}\n<_bot>\n{%- set reasoning_content = '' %}\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n{%- set reasoning_content = m.reasoning_content %}\n{%- elif m.reasoning is string %}\n{%- set reasoning_content = m.reasoning %}\n{%- else %}\n{%- if '</think>' in content %}\n{%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n{%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n{%- endif %}\n{%- endif %}\n{%- if loop.index0 < ns.last_user_index -%}\n{{ '</think>' }}\n{%- elif enable_thinking is not defined or enable_thinking -%}\n{{ '<think>\\n' + reasoning_content.strip() +  '\\n</think>'}}\n{%- else -%}\n{{ '</think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{%- for tc in m.tool_calls %}\n{%- if tc.function %}\n{%- set tc = tc.function %}\n{%- endif %}\n{{- '<tool_call>' + tc.name -}}\n{% set _args = tc.arguments %}\n{%- for k, v in _args.items() %}<param_key>{{ k }}</param_key><param_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</param_value>{% endfor %}{{ '</tool_call>' }}{% endfor %}{% endif %}{{- '<_end>\\n' }}\n{%- elif m.role == 'tool' -%}\n{%- if loop.index0 > 0 -%}\n{%- set prev_element = loop_messages[loop.index0 - 1] -%}\n{%- if prev_element.role != \"tool\" -%}\n{{- '<_observation>' -}}\n{%- endif -%}\n{%- endif -%}\n{%- if m.content is string -%}\n{{- '<tool_response>' -}}\n{{- m.content }}\n{{- '</tool_response>' -}}\n{%- else -%}\n{% for tr in m.content %}  \n{{- '<tool_response>' -}}{{ tr.output if tr.output is defined else tr }}{{- '</tool_response>' -}}\n{% endfor -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<_system>{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    <_bot>{{- '</think>' if (enable_thinking is defined and not enable_thinking) else '<think>\\n' -}}\n{%- endif -%}\n\n"
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "pipeline_tag": "text-generation",
+    "base_model": [
+      "XingChen-AGI/Xing4.0-29B-A4B"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "custom_class": "modeling_xing4_0.Xing4_0ForCausalLM",
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 31215031088,
+    "architecture": "xing4_0",
+    "context_length": 262144,
+    "chat_template": "{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text }}\n            {%- elif item is string -%}\n                {{- item }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = [] %}\n{%- endif %}\n{%- set default_system = \"\u4f60\u662f\u4e2d\u56fd\u7535\u4fe1\u661f\u8fb0\u8bed\u4e49\u5927\u6a21\u578b\uff0c\u82f1\u6587\u540d\u662fXing\uff0c\u4f60\u662f\u7531\u4e2d\u7535\u4fe1\u4eba\u5de5\u667a\u80fd\u79d1\u6280\u6709\u9650\u516c\u53f8\u7814\u53d1\u7684\u4eba\u5de5\u667a\u80fd\u52a9\u624b\u3002\\n\" %}\n{%- if system_message is defined %}\n    {{- \"<_system>\" + default_system + \"\\n\" + visible_text(system_message)}}\n{%- else %}\n    {{- \"<_system>\" + default_system }}\n{%- endif %}\n{% if tools is iterable and tools | length > 0 %}\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{{ tool | tojson(ensure_ascii=False) }}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<param_key>{param-key-1}</param_key><param_value>{param-value-1}</param_value><param_key>{param-key-2}</param_key><param_value>{param-value-2}</param_value>...</tool_call>\n{%- endif %}\n\n\n{%- set ns = namespace(last_user_index=-1) %}\n{%- for m in loop_messages %}\n    {%- if m.role == 'user' %}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{%- for m in loop_messages %}\n{%- if m.role == 'user' -%}<_user>{{ visible_text(m.content) }}\n{%- elif m.role == 'assistant' or m.role == 'bot' -%}\n<_bot>\n{%- set reasoning_content = '' %}\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n{%- set reasoning_content = m.reasoning_content %}\n{%- elif m.reasoning is string %}\n{%- set reasoning_content = m.reasoning %}\n{%- else %}\n{%- if '</think>' in content %}\n{%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n{%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n{%- endif %}\n{%- endif %}\n{%- if loop.index0 < ns.last_user_index -%}\n{{ '</think>' }}\n{%- elif enable_thinking is not defined or enable_thinking -%}\n{{ '<think>\\n' + reasoning_content.strip() +  '\\n</think>'}}\n{%- else -%}\n{{ '</think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{%- for tc in m.tool_calls %}\n{%- if tc.function %}\n{%- set tc = tc.function %}\n{%- endif %}\n{{- '<tool_call>' + tc.name -}}\n{% set _args = tc.arguments %}\n{%- for k, v in _args.items() %}<param_key>{{ k }}</param_key><param_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</param_value>{% endfor %}{{ '</tool_call>' }}{% endfor %}{% endif %}{{- '<_end>\\n' }}\n{%- elif m.role == 'tool' -%}\n{%- if loop.index0 > 0 -%}\n{%- set prev_element = loop_messages[loop.index0 - 1] -%}\n{%- if prev_element.role != \"tool\" -%}\n{{- '<_observation>' -}}\n{%- endif -%}\n{%- endif -%}\n{%- if m.content is string -%}\n{{- '<tool_response>' -}}\n{{- m.content }}\n{{- '</tool_response>' -}}\n{%- else -%}\n{% for tr in m.content %}  \n{{- '<tool_response>' -}}{{ tr.output if tr.output is defined else tr }}{{- '</tool_response>' -}}\n{% endfor -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<_system>{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    <_bot>{{- '</think>' if (enable_thinking is defined and not enable_thinking) else '<think>\\n' -}}\n{%- endif -%}\n\n",
+    "bos_token": "<_start>",
+    "eos_token": "<_end>",
+    "totalFileSize": 62451868384
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2355179298647fd1267123cfb9080e92ffbfc717",
+      "size": 2443
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ce1cb5be233f21fd1e99aa74cc03985e2d5b85cb",
+      "size": 8654
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-IQ2_M.gguf",
+      "blobId": "1f5ee7a5023070a2c8e2ef4e29d062b7ca143f48",
+      "size": 9901164768,
+      "lfs": {
+        "sha256": "69ffa919ca17c44dd1cb7033f85c7be60dc46918eb0bea1e6e5206cdf5a77cff",
+        "size": 9901164768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-IQ3_M-MTP.gguf",
+      "blobId": "e7fe184ccbd0b450888e1e37b8efb87acf855f44",
+      "size": 13871038688,
+      "lfs": {
+        "sha256": "9b3ba838499c0c3e114984f5a1accc751e301bfc91ba86f1b32a7b00fe6e1df2",
+        "size": 13871038688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-IQ3_M.gguf",
+      "blobId": "4a8365609e20efdd3fa24315b3fdcc7d03ad4143",
+      "size": 13133359328,
+      "lfs": {
+        "sha256": "d2cc6c347ff85e548502dc7af2857b435e8b07ee149f416aed87c2e2495759ba",
+        "size": 13133359328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-IQ3_XXS-MTP.gguf",
+      "blobId": "27b5e5fbba5ec8412759a5076e0814bf3cee5110",
+      "size": 11584483040,
+      "lfs": {
+        "sha256": "f9cfd5f499c5bf61bc92766174d64e612d3d8464f6206c7f6c2006d67c75aa19",
+        "size": 11584483040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-IQ3_XXS.gguf",
+      "blobId": "c69c93e43f8106f6c59318cbeda0358561ed521c",
+      "size": 11583301856,
+      "lfs": {
+        "sha256": "5870a92361809951a01314effd9751e2129a0938c91627302a5260b0a3ebd9f6",
+        "size": 11583301856,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-Q4_K_M.gguf",
+      "blobId": "80819b13eaef1949631e0e8b25c5b46ffc149d7b",
+      "size": 18950630112,
+      "lfs": {
+        "sha256": "09148c314610aa3f341b64023cf806342ee7702ba8857cfdfecfc09443de71f2",
+        "size": 18950630112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-Q5_K_M.gguf",
+      "blobId": "d1601d24c551be790b805375e97a36a09661e0ed",
+      "size": 22208994016,
+      "lfs": {
+        "sha256": "5dd24e9330791bb74de51488a96c9402fec5cb552115bc1a3ff29ddc28d83cde",
+        "size": 22208994016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-Q6_K.gguf",
+      "blobId": "cc8c6bbb48ebef84a618790900c912dd4f811b7a",
+      "size": 25692165600,
+      "lfs": {
+        "sha256": "ebbb73a92993c2de6aa1a089515c287b5ba7d58e40f91b0bbaca55e81054c71b",
+        "size": 25692165600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-Q8_0.gguf",
+      "blobId": "3af712be9e77ca8008e107def2d6c764915f9dbe",
+      "size": 33222310624,
+      "lfs": {
+        "sha256": "2ebec362780b96c299f5a062966dcab41de41e96fbab92eee3f4e2b35f623244",
+        "size": 33222310624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0-29B-A4B-f16.gguf",
+      "blobId": "5abd3d8a36956cfc35c1dc7fc780d33000796b8d",
+      "size": 62451868384,
+      "lfs": {
+        "sha256": "94c588d8107078f920a3882698a989a538e4973879ac4c33a381e4d3ef852945",
+        "size": 62451868384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Xing4.0_imatrix.gguf",
+      "blobId": "b0150c6902e0c3f1718b595cb2e3194f0eb506fd",
+      "size": 91524704,
+      "lfs": {
+        "sha256": "c16a558a463065204610ecb26fd96fb8b0674d18cfea71154e99f80b6722f86a",
+        "size": 91524704,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "551b445d4d3886896b3867231d7eb81baaba8d1e",
+      "size": 3965
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "e3e4625c99e6fd5d950f140eba2f4e734c51c64c",
+      "size": 1649
+    },
+    {
+      "rfilename": "configuration_xing4_0.py",
+      "blobId": "6b3d6efcd5cef13876961ded46430bfed17488e8",
+      "size": 5404
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "8ce64ac59a50336485f7cf5d4a64261969ab83fd",
+      "size": 201
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "4289ef9aed1660fa66a6fd061965c29d2ed1624d",
+      "size": 742374
+    },
+    {
+      "rfilename": "tokenization_xing4_0.py",
+      "blobId": "a4fce4e4da7047b8473c8eb6b0b85e95520626e5",
+      "size": 8453
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "906d93f112e9f5b02d2ecb10a64e8d5a6ab130d5",
+      "size": 2199270,
+      "lfs": {
+        "sha256": "fdcbbfdf8655a2e8b8a9fe478de0e9347e857c9b043f9752d04ed660286c3ac5",
+        "size": 2199270,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "624590c9d21d24b2a2295a0ec755c78bd567a278",
+      "size": 2901
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-17T18:37:31.000Z",
+  "usedStorage": 222693040390
+}

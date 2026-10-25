@@ -1,0 +1,1658 @@
+{
+  "_id": "6ab964aea03bba13480de26e",
+  "id": "DevQuasar/XiaomiMiMo.MiMo-V2.6-Pro-RL-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:XiaomiMiMo/MiMo-V2.6-Pro-RL",
+    "base_model:quantized:XiaomiMiMo/MiMo-V2.6-Pro-RL",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1077,
+  "likes": 1,
+  "modelId": "DevQuasar/XiaomiMiMo.MiMo-V2.6-Pro-RL-GGUF",
+  "author": "DevQuasar",
+  "sha": "f675ac563765238d699c297560864c722e220ea0",
+  "lastModified": "2026-09-30T05:41:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "XiaomiMiMo/MiMo-V2.6-Pro-RL"
+    ],
+    "pipeline_tag": "image-text-to-text"
+  },
+  "gguf": {
+    "total": 1021248126336,
+    "architecture": "mimo2",
+    "context_length": 1048576,
+    "chat_template": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 554211768736
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "b45ae4e0fe5c28b206db8686be5cf4411c21bdb1",
+      "size": 19435
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00001-of-00042.gguf",
+      "blobId": "134cc98db7a544d0aef53637999702afe00437ce",
+      "size": 13448387520,
+      "lfs": {
+        "sha256": "0c36c772d8fd1dd0b217c95533214bc583990c8c03c99a760c134e142cadb201",
+        "size": 13448387520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00002-of-00042.gguf",
+      "blobId": "d460b8735b7f51700ecf3bf8fd71b59250d3f7d3",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "cf2b14804188a10a01f926298de210643e6124f5edd79438d9a8552fdec6c5e4",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00003-of-00042.gguf",
+      "blobId": "310f7d1b4c0be742aacf5b09819b2d21d18508ae",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "aeabf8d22fbe6ba6e945610766f0024e0c8b1ddfec3e4cae32d7172fe3f70e11",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00004-of-00042.gguf",
+      "blobId": "1733f853f191a5fe90e0cccfaa4cc4c528c64db7",
+      "size": 13412282976,
+      "lfs": {
+        "sha256": "c077bbaab4943381f2cafb65c26228f45764f5f225e6bcafa2a8753cf09e3241",
+        "size": 13412282976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00005-of-00042.gguf",
+      "blobId": "e9988e7aa97e089e1ba79547878e8654bfad7e26",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "de4e5b1cd452fede62724df75457ffa65967cdd9320e7dfa996b40459c0d6409",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00006-of-00042.gguf",
+      "blobId": "237ecd0292a6d821611c92df0c9257cb5a28d53e",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "3dd43d91428176f3b2b8aa19990229d51315922248af1124844a0850dc9ee460",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00007-of-00042.gguf",
+      "blobId": "86906b27c03f312516139380c00be887594f8a8d",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "5bc359ff5b7862e7431ab92e81cdd2f3e6b45805429ecd6aa3b9387c634cfafd",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00008-of-00042.gguf",
+      "blobId": "6f07f87e0e32d81969406c1b2ea549286795f1e8",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "c5435bebf3ed89170e57ebf0b3dbb7be6b76efbb97b7e63230ae754293f14fb7",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00009-of-00042.gguf",
+      "blobId": "d17658ee2ccceee8355341f38e7f88407c5867a5",
+      "size": 13137619392,
+      "lfs": {
+        "sha256": "7044f75ca95a77bc6601fb578cfee2f487c0c899621d7bbc1def0061d118bcfc",
+        "size": 13137619392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00010-of-00042.gguf",
+      "blobId": "049f47343d416b1f8d1aaf4cabd034d05e1b0a6b",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "013aac0d2a7cfce3b3c8e1d86925ceabbc794a89c59e42d917bdf638e3a0a513",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00011-of-00042.gguf",
+      "blobId": "c4ff907aca38e069735efb3a78c1e8b77ec771ce",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "2fc99b0946313fcc265e3f9d627a700f18400020c71143e2114a7506327a7e93",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00012-of-00042.gguf",
+      "blobId": "fe143c76ec4ee9da76f8d50b758ed7737b21125e",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "8822d31a1378604451ab6067bb0b8fbfdf2d6480aeb1bab3757fc1c7b502462e",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00013-of-00042.gguf",
+      "blobId": "6a4af3d47e9b311ddd665906ab260847cf0479e5",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "f462c1aa9cce4b29cd1a13652468d72e4bc14702f94be8f5adc44953af6268db",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00014-of-00042.gguf",
+      "blobId": "03a388a256265428c54fc786d2b37e27ce594d4a",
+      "size": 13421744864,
+      "lfs": {
+        "sha256": "b5e5ca929b5b0ae0f5ff4a0768fd5692c7ad2c49fda5cf4f1c7227093610f104",
+        "size": 13421744864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00015-of-00042.gguf",
+      "blobId": "963b9c0b79dd0d3d81697692903aca7086bf1551",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "ea96d1d435f3bd7c1ffbb4c36cc3bea35fe3c9cef586f82baceb6732be32be3d",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00016-of-00042.gguf",
+      "blobId": "2ddc13daadc58f8062168c3d7b64508413a91737",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "c626bbe3a6a1e88864d309ab9d480f2d8bf4358f12ced3198150ef7f2a77b192",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00017-of-00042.gguf",
+      "blobId": "d9e7fe62b98fed18748d6b12c59233afaccd2f61",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "79a2f70a7c302a9ad846282bc8a48266dd563254db5515bd038f8d937f9ba5fd",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00018-of-00042.gguf",
+      "blobId": "f33530c7cd1c9b7b2d846bc74de2dfcd0a2c12fb",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "c7dff0769a479678fd872dc5af1bffc25fb9bdca4dc8766cf2b82082caa79e44",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00019-of-00042.gguf",
+      "blobId": "ba3cdaa14d2e8e1cb9cd0bf5449490b4f5eba91b",
+      "size": 13412283008,
+      "lfs": {
+        "sha256": "eb5b4d1289ef134305c73b768000ae077dec62502da65bd7ff3f0c5aebf1b561",
+        "size": 13412283008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00020-of-00042.gguf",
+      "blobId": "6cedebb4c7da37db6f1171bc3119143a19d20ae0",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "ddec6778052864ad3d07f23bef6d3afa6f3c64b64813bd805e1e15d6b81164de",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00021-of-00042.gguf",
+      "blobId": "9fcaf9430e47d7f4ebb33031953b056a41ba6026",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "effd12b914f41870385d237efcb9ff7aea744f2ab5556ec63648cc9f0791f8ef",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00022-of-00042.gguf",
+      "blobId": "3d6bb1fbfc1e0dd25016b0334522e11ba1ea19ef",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "48adb75fd0f86ad2158f8df8c61c6d0c2f732f20ebadf92717797aa4a8d1a025",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00023-of-00042.gguf",
+      "blobId": "39c58b818e8947c2df7a8e6b7e123b205ca6d7e1",
+      "size": 13421744864,
+      "lfs": {
+        "sha256": "fa3f1a03dbb3d1989e51cdfd665a4e918ef834c91449f7e7c3b51c4009144f24",
+        "size": 13421744864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00024-of-00042.gguf",
+      "blobId": "294d687d071cc1af0d67546df2b50e988de89553",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "a89d88c1b33fe38996ebdfad7359b431b0173cc799556674c1ef8817a6e1c5a3",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00025-of-00042.gguf",
+      "blobId": "fd54dcd732eae26eb8a473c734ed6947e71f4d6e",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "cdcc5a50f6b8a4fb41692c2c570b62628c667493a7cd2d128987dda099ade896",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00026-of-00042.gguf",
+      "blobId": "4b87b4260b2310488048d95994d2af01c0eaa203",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "aab6bed3f2b5cc38793c1ce2d88f6eb948285b24ce09788155127253020b2b73",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00027-of-00042.gguf",
+      "blobId": "7a6c582a541dba4be86978b64b8edfad1cb59abe",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "8ca21c81a2a1adf61f0a00651d65fea48744193b433086ff10cbf04ee90c2a46",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00028-of-00042.gguf",
+      "blobId": "493c4e1ed085c43940e242ea3e4623276eb4401b",
+      "size": 13412283008,
+      "lfs": {
+        "sha256": "23a7b7b0856687de6196011cdbc547df7d62b2430ebc3e10eec8e04a9e7486ca",
+        "size": 13412283008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00029-of-00042.gguf",
+      "blobId": "b0cf6e40b3b2c4e87a2073789d323ca501862392",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "22e08b1ef98dafc5c865962e52e9a593cf6aaf839f997e2185b74304f96b28e9",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00030-of-00042.gguf",
+      "blobId": "27849bb26f22726623876c99cbe09baede1c76b7",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "b44ae45a39eeee0cac15624de5d023242d133190cf5c9d015ca0b996badfa1e6",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00031-of-00042.gguf",
+      "blobId": "f6285167ea79b73270d1f487cc883536023f8335",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "cc1e43d8672928592c0fa2bc147bdc1b53dd306f41fc1a4048718d74541d086d",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00032-of-00042.gguf",
+      "blobId": "adcb3cff4a83b58488ca8dd259b9455e87f99d84",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "e3b61d258fa307af3ce4da489ea2e30e7fdeb5c2fb58a54cfbbaa4726fad122f",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00033-of-00042.gguf",
+      "blobId": "081c3ea9972efe981926af7b99cda5e8dc17ab70",
+      "size": 13137619392,
+      "lfs": {
+        "sha256": "24f5ef11afab42cabe6abdd670eb2650c8d43f7512b7b92e672a5749c356637f",
+        "size": 13137619392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00034-of-00042.gguf",
+      "blobId": "6d9cb84a8a1f7ab67946df878517b39f07769aaf",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "d626f7884135e851e3b362aa8fa42a2ee6ceb0ed200bad1b3219079bdce05c28",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00035-of-00042.gguf",
+      "blobId": "6d0bc561791562c7d987eb7115fb2d58eec81ff5",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "8863c55989f59784c845a985d595f5dd0da9aa4c1f3799ff6358b95a2276d54b",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00036-of-00042.gguf",
+      "blobId": "c2f2344fe65589dd3d8258896933f4fdc3a047e7",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "9ea9b906e4e63fde124a59f07300cb00b4816e518c6aeec51fec12d5f756af22",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00037-of-00042.gguf",
+      "blobId": "7f2c2faa728c088269f28c91f506b092f72c72a5",
+      "size": 13412283008,
+      "lfs": {
+        "sha256": "fa8c53b6827437a9b2812f3a7e2f08ef97668d86f1f0ba26fb1f5767871da31a",
+        "size": 13412283008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00038-of-00042.gguf",
+      "blobId": "1014fe31c73940c7a9fbc4715177807a326c4011",
+      "size": 13421745440,
+      "lfs": {
+        "sha256": "fd8ad8e0935e95e2eb4fc0f16b6611f9452e38e91f0243a6e847e5abd5979ab3",
+        "size": 13421745440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00039-of-00042.gguf",
+      "blobId": "2e2cfafa2ae10b41d6499af057002cd76e59f618",
+      "size": 13137619968,
+      "lfs": {
+        "sha256": "4e3fc66bd242caf2e1f015c6c2d5811d724322d3b7b33b10bed1b07a49a760d2",
+        "size": 13137619968,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00040-of-00042.gguf",
+      "blobId": "6b2c8ad6a3ae7d13510870e15aac11ccdf29659a",
+      "size": 13412283552,
+      "lfs": {
+        "sha256": "7f0e6644572e9d5d59a04ec8bbad9a79272df00704685235eddf8e3aafcde824",
+        "size": 13412283552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00041-of-00042.gguf",
+      "blobId": "595dee2484a6ffb2fd93cecfedbdd9b4a4d83e8a",
+      "size": 13421744864,
+      "lfs": {
+        "sha256": "5b3e275aa9c1d754054793609f1c8ca61a3295b9d04fe921394c3260e1ad5f37",
+        "size": 13421744864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MXFP4_MOE/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.MXFP4_MOE.gguf-00042-of-00042.gguf",
+      "blobId": "b4da40e2efefac07cff5eb73ed2691e5842cb81b",
+      "size": 7710204384,
+      "lfs": {
+        "sha256": "8d52a317133d0be57f6ead1c0ea2e031569ea04e7331bf4d01bb8be78bf83146",
+        "size": 7710204384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00001-of-00028.gguf",
+      "blobId": "0f7758ebc8ccb9f970fd3655b1e56d4fb30cc257",
+      "size": 12253210080,
+      "lfs": {
+        "sha256": "ebdcc331530960abe488aa1e0a6299720ae702e11d5e4ae2e95ba9ca474f17d6",
+        "size": 12253210080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00002-of-00028.gguf",
+      "blobId": "fe63433f1b16ed255be3eee759b0c72a2bb72a2f",
+      "size": 12863378848,
+      "lfs": {
+        "sha256": "2c55f2c325c5bab3a38440d6f17b5266852fd01511ef3740529dd2a7f7628f6a",
+        "size": 12863378848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00003-of-00028.gguf",
+      "blobId": "64e3b0bc9667a6a40e5d4afb33d5b62cd8d26459",
+      "size": 13967578208,
+      "lfs": {
+        "sha256": "d695ecc32591a88182f13138da88eedb42006bd538b56a035eef8a804b807137",
+        "size": 13967578208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00004-of-00028.gguf",
+      "blobId": "f01beb7adc064eebc34432556d407331796bc03e",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "eaf0796b7987b36375883e65dcb044896bd7aade7868ac4bdfd6d485a8cecaaa",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00005-of-00028.gguf",
+      "blobId": "3e696f99b6d96c421bbb8eaf46e6ad13708a48d0",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "5c5f563fe307dd21200941ff6fbb9d73412ff86be865de47db01cae757e2068e",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00006-of-00028.gguf",
+      "blobId": "457fa3679a91099a87594631e226d246c1e2a664",
+      "size": 13000416384,
+      "lfs": {
+        "sha256": "696a6b9bf09a6e7083a642e036d7a2862e28fdd5ea0c5fb49dbaa7d2c65526b2",
+        "size": 13000416384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00007-of-00028.gguf",
+      "blobId": "4307076cf2d0d378ddcf8ed8d948bf7bce7788f6",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "4edfc732934b4062e38dff5da206afdb1e16f6e01646fc03e7630f6ae9f99cb1",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00008-of-00028.gguf",
+      "blobId": "580c0f58ca607350b75c3d2acc30adb4d647eb25",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "95f4f3ce555b36b3dba451c5aa8eb09bf907eb2bc038cb49bacd5cc644121e8a",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00009-of-00028.gguf",
+      "blobId": "a845bef2257e49f4472b9d1d17d78834e3919ec6",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "f1dde14458fe8f0706ff246ffd69566f8965d3d2d6a053c23f111f3027571bd6",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00010-of-00028.gguf",
+      "blobId": "c5e026c4d1666df08b38c6b66058abe281b967fa",
+      "size": 13000416384,
+      "lfs": {
+        "sha256": "c404d61a7ce44ce01ec5c22a4c7cab1cf5d11d8e05990844e16efdfcf85d0abe",
+        "size": 13000416384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00011-of-00028.gguf",
+      "blobId": "1a016598e05c4c84ce29437cc5c3dd52cd0d7210",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "1ba8430c211fd0da73b11a4470147b5ae3937026d604664ec52de02d38e4fa02",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00012-of-00028.gguf",
+      "blobId": "a922233447e3b4b87d62ec61edb6483e1dc527c3",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "52f7881b39c06ada2ee37a772fb9a32e670fffea26d0dc1cafddf039f6538d41",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00013-of-00028.gguf",
+      "blobId": "879c73e0c3fc6d3f881d3da67c52ec9648e82f49",
+      "size": 13967578240,
+      "lfs": {
+        "sha256": "188599235ca92dfa2514cba049f2719a0dc3d6e140c53dd6881edf371fc34bb7",
+        "size": 13967578240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00014-of-00028.gguf",
+      "blobId": "5cdb1d01acd121a6b9d935f1c8e033c485f352c3",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "4a15e4a03511d5e4d6ef87a82e30e5f3afdadbf1faa65b08dfe68b98003601ff",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00015-of-00028.gguf",
+      "blobId": "96dca8f9e089f36ef1ae6136d0b62866d38629d9",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "127529f27f9bd543d894703579d383560a4b92c23cf80bbe6324001184354a7c",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00016-of-00028.gguf",
+      "blobId": "fb4d23d6f725261deeb13eab98bf4c5bf5e10ab3",
+      "size": 13000416384,
+      "lfs": {
+        "sha256": "0f157030e62f6b4e705a4305689adc8570f6597619c9ff72f80efdc4ad5a80a5",
+        "size": 13000416384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00017-of-00028.gguf",
+      "blobId": "a1780aa07a53f09dc60683ce6893d965104b9f99",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "73e2e955274433b6f43625fbd273e50479a76589d2f95970193c80168687de29",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00018-of-00028.gguf",
+      "blobId": "1c40064e7e70e19dc3324e1604f2b7b7bf6a04ad",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "60281c511a125f276b170c576843b6c3f25089657f7bff2aa4615961d164e211",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00019-of-00028.gguf",
+      "blobId": "5f8bb2dfd60e1c6e50629792e2f466e631b353ba",
+      "size": 13967578240,
+      "lfs": {
+        "sha256": "167810d701bcba59e4416476933cd92377bb185b09bf78f2ed1d571d29c9c395",
+        "size": 13967578240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00020-of-00028.gguf",
+      "blobId": "d166769af5a08d1bf3d6938c35b6f7ccb300467f",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "fef863d860adc3728ac0a52b4598dab1571f65b2685d3503b1e553651b5e7006",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00021-of-00028.gguf",
+      "blobId": "a638200de68fc3e40c22fdb17747ae0c0d9302e8",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "56dfe8991b1218eb72ea07d431c90573e8382f58eeba9c296caf20d1c312a4b1",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00022-of-00028.gguf",
+      "blobId": "36a2d3684f320caaca508e1c9bf5442bdf85ed8a",
+      "size": 13000416384,
+      "lfs": {
+        "sha256": "a7e3f94061ad44aa1bef483c0e0bcc0b9e27128b75d80e5e44057d34c8b8949d",
+        "size": 13000416384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00023-of-00028.gguf",
+      "blobId": "5e6899962aeb7eec2b2253ba603c72f07d7f6be4",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "6aceaa608dd95d2145e77338b0d1247d5753fbc42af1a192a6abc1e1411f598e",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00024-of-00028.gguf",
+      "blobId": "5ea8b367d9f65847cb1c4efd573d086d7c4de214",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "52034fd73270eb9d75cab37a4e42f20901b1b2d2c4080f5a0e193d9519ab118b",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00025-of-00028.gguf",
+      "blobId": "4cbc6a90e23f0155b2a49de2416547ca532f2b86",
+      "size": 13967578240,
+      "lfs": {
+        "sha256": "0517780abe565730a622000ef3bd087a162ecd10775311550ee0b9a57d217a40",
+        "size": 13967578240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00026-of-00028.gguf",
+      "blobId": "64325eab66ffea0b3914d588db36eb8997642fe5",
+      "size": 13000416928,
+      "lfs": {
+        "sha256": "51da50d69b2ca759a65794fd97776ff37905b92924f9038205030d4d2bebc442",
+        "size": 13000416928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00027-of-00028.gguf",
+      "blobId": "82645ac1c72c43bc0599ddd3fe4d329a05b0862f",
+      "size": 13967578816,
+      "lfs": {
+        "sha256": "eabe4c4b4e5878461627b1ca6c418f5d1f3bad9fde0e54829f550c7331f44568",
+        "size": 13967578816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q2_K.gguf-00028-of-00028.gguf",
+      "blobId": "94b74241fc29c82f16bb9cf10e293834dcf3c882",
+      "size": 10787173120,
+      "lfs": {
+        "sha256": "b5c100ace4652b52c37e7c2187c19ae70cdc42ecff971c6cd780666369ffb78d",
+        "size": 10787173120,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00001-of-00048.gguf",
+      "blobId": "c74a502b01f9750065200146bef90e59b21fe1da",
+      "size": 11487247232,
+      "lfs": {
+        "sha256": "a0b3f614e415ef53703f5bec5c5544bce90aae3e952fc143f54dd88dccc72136",
+        "size": 11487247232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00002-of-00048.gguf",
+      "blobId": "ca2a80fd6d5b49d81a72ea3515f957fccf9fe002",
+      "size": 13565930304,
+      "lfs": {
+        "sha256": "d4aa2e783db179413e54967d4d85cec1f8853fb46b023aed58d5544222e21354",
+        "size": 13565930304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00003-of-00048.gguf",
+      "blobId": "1578496b99c9ccbe0d51fda70fff41421ae848d6",
+      "size": 12329683872,
+      "lfs": {
+        "sha256": "60039900d6b6d2e733e5da98cc8ca643017fbf02a1d10beb4ed7eaa82243a7bf",
+        "size": 12329683872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00004-of-00048.gguf",
+      "blobId": "9beae9c3249c13ed69b3a20dd64dd54b3db315ac",
+      "size": 12513637472,
+      "lfs": {
+        "sha256": "97d7ff8688bf0cadcde4d0d334d9a29b5e8ae6ac8da500dca4f4d127db02f74b",
+        "size": 12513637472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00005-of-00048.gguf",
+      "blobId": "896b7efa07559cd8effede92fb9dccc33b976550",
+      "size": 13565929728,
+      "lfs": {
+        "sha256": "44b68354e4795e8d78eb189158397d791219b9e2725c34ec693b7003884282ad",
+        "size": 13565929728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00006-of-00048.gguf",
+      "blobId": "bd3c545b2c42ccfebab0aa8acfcb1f903208213c",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "79d40d4de621bfb7723195b51fc6378d2adb9cb2aa7f521c19fd3963f4a24afe",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00007-of-00048.gguf",
+      "blobId": "f207e5ae2cb9e2a792aba3032d05c247bee2fab5",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "e5e5a01653808d2b6b39eae58f07c83bb9f7247cb5189be345f71264a3bba0dd",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00008-of-00048.gguf",
+      "blobId": "59827aee65be6142f14a9107c59da452ac347b50",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "29e3095fe2d9ebfc0990d05ae38a92b9ec094657445f5bcdcefc7b1c1c38626b",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00009-of-00048.gguf",
+      "blobId": "3374b9094a075c0dc70b1ea93960877de03581da",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "130a652fe657c3d92f9cf1a4b8d5a777866c77b60365b288623379652d92a8fc",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00010-of-00048.gguf",
+      "blobId": "5619c1bd4b4cf92b90e44b6f16160982c7063df0",
+      "size": 13909332704,
+      "lfs": {
+        "sha256": "786be8b5176ea54be3c13dd7de965b63c3e07bdc55b12af092a5320931d7b98d",
+        "size": 13909332704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00011-of-00048.gguf",
+      "blobId": "f704ea90dee979410a72c1d7f9337259fdcb05df",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "5309f870d76793ed006469b0357173715538176f1cafce6ecf70e4b2e07c2c23",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00012-of-00048.gguf",
+      "blobId": "f5a3be5123825737044a6f939bc8d512dfa522a0",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "90013a8a1a9f68f445b1affe073f7cd74c9162bddcc7d857c06669eec6087a49",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00013-of-00048.gguf",
+      "blobId": "62ea1453dc3371549372b2aaae335c4eb6dfa1c6",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "6a9faca2c131b92348d0b998111a9652316d9a7052acbdbfc1f5f53c93177868",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00014-of-00048.gguf",
+      "blobId": "c55b816660006dc302f2bc3c616badf1878d9864",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "cc3c02a90e400b44cb6a6616fd8921ca3052ae33eed60542a741ecd80497d167",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00015-of-00048.gguf",
+      "blobId": "16f3e4f3125afa63318980174cef3190a51259cd",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "1ee17d350baf672661b04d33422e1d133414d7a62c09a31a483c1a0c759aea3c",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00016-of-00048.gguf",
+      "blobId": "b060781fcfdd5d488b4a2193655e5549dda39f79",
+      "size": 13909332704,
+      "lfs": {
+        "sha256": "796cdfdbed8da39a03803a383cc9d402789da456e9aab0c8e243870dcf232ad2",
+        "size": 13909332704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00017-of-00048.gguf",
+      "blobId": "f33d3408576f72f274dfd69e1006ad57510f7517",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "fca01a36e507a8f3b1cc6c6621e0b11bcd309210947b9e9fe5e568cfb24eb0ef",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00018-of-00048.gguf",
+      "blobId": "e7b963680ed064f49c213c5fcde98400238353e6",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "4815f2234afe37d269bcff7ea6cfbd29b53e3cae65f3f92ce7952626f3116df7",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00019-of-00048.gguf",
+      "blobId": "dc9faaae12593a083ee13e629ee695aef98acc5d",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "f886b1b09ab718afbb8d8ddeb7dc84a96fc8f5d6b0711eb481ce2c2ce8bb15e9",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00020-of-00048.gguf",
+      "blobId": "b9d60ac0841a374d764074bb50e405aa89b89701",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "755cbc97baffaaea1341dc660247b4757844db998efb0d374a877f8bb0b00450",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00021-of-00048.gguf",
+      "blobId": "acf8c28c361c05fe8f7b6379827f23fffc616af5",
+      "size": 12320221440,
+      "lfs": {
+        "sha256": "00d28eb51811cc8ebe5536ed85ff0c89a2bbc068b36d15084baaf992953f8816",
+        "size": 12320221440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00022-of-00048.gguf",
+      "blobId": "f2b45fe8bdbe76ad854b16430649fa63fbc5b69c",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "1a4f9e363c4313901c6ceff4a20e791368ab622f05a9b590ae129dbf49f5ddf8",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00023-of-00048.gguf",
+      "blobId": "ad255ad99ff3cf959c8cc2c1560fae4bed709eca",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "0457b1882536b53d505f266aa3a1dae034fbb7afbff3498b103cdb9ec90fd069",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00024-of-00048.gguf",
+      "blobId": "21f084a43b8619be563e2d0ac9c7b7c80df9c41b",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "b0c3a150d8a23adaa1c708a1a72329855578d7532013c0825d25e3d2e8e2f31a",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00025-of-00048.gguf",
+      "blobId": "337b332812817cfeaedd18a724cf240924626e34",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "1a5ce081e0ac0eaca289cb9d235ec1f014cdb2e535deb60fcc0322de55ff31c6",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00026-of-00048.gguf",
+      "blobId": "84cc88452d9cc53b9745bf9830c287d7e60b0fef",
+      "size": 13909332704,
+      "lfs": {
+        "sha256": "d80d2a6b198f0ee58e0be108ca560495f4d34034ca703e2cd913ccbfbee9a81f",
+        "size": 13909332704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00027-of-00048.gguf",
+      "blobId": "06b69d64ff2dafe2cdbf852056465018d62f034f",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "104711ef4de27a9fe3e5661b722b6ee1aa83fc0bd024d1af8f4ef39c423818ad",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00028-of-00048.gguf",
+      "blobId": "96701fd489414057eaf4d5ce69b6c74d2a72d252",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "69b2b27c6753448f1c8cd8048536f28f0e2a4d8ff8bb294f85fa4e04899c651f",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00029-of-00048.gguf",
+      "blobId": "d19b5a7da0ac94d2c6271305fd6045f5fd4794c6",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "e71f9943ebfe6ee508493a1213f5f0342a0e160b4e76da9a721619ee1a81b6c1",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00030-of-00048.gguf",
+      "blobId": "4b864ebe0d980df64c1eb138afe6377e13c602ce",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "e6776cc7c0f3fe46d9d2caca879aef5569ad94ab22c1bef25eed338c8f682817",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00031-of-00048.gguf",
+      "blobId": "4e8ee3c181d85129f3ecff25168decfab4b089c6",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "3a66360eb81599b7d43b101ff3b5c5b019e69113e5d5da8ad76a099f05870ccd",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00032-of-00048.gguf",
+      "blobId": "cee423e2aeac10eab98377507fa85cecb3b6e2a3",
+      "size": 13909332704,
+      "lfs": {
+        "sha256": "a9759767e80f6be18dd26bad255c2d80de45f6e295efa759f1369d2e324bec4d",
+        "size": 13909332704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00033-of-00048.gguf",
+      "blobId": "29b8fe01c06cd35655542162634b0b74979f3acd",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "8c9b7c3784eadacffe5348e6d696244555770f871222fc421eb62f5e11f88fa3",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00034-of-00048.gguf",
+      "blobId": "c074832e276c6ac9b23470230b819c26dcce5ee7",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "fe2d317f54307b508bd186f82bcd7e74126f1c84dd202030a863950e057fc43e",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00035-of-00048.gguf",
+      "blobId": "f8dc4e6e6d26e5166f33a4ee6644ed66e13cc3dc",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "41b16ecf0d648331b175cede53bb3f603fb4de5c4fcd3261c299d0f44bfb6c7a",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00036-of-00048.gguf",
+      "blobId": "5529399b2c27e8eaae9c9b335c887c66d08093ac",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "d90cacb56e8dd9f50c674705db68ad761f51ac34f4014e045aca06a5ca16a113",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00037-of-00048.gguf",
+      "blobId": "3360b78f1c3a68eb5bec83391d201117d9ca826e",
+      "size": 12320221440,
+      "lfs": {
+        "sha256": "8f4b6637f31f93a7e7a63df101b57b526822549d55bc058a01d2f7664881a9ca",
+        "size": 12320221440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00038-of-00048.gguf",
+      "blobId": "b5761352656c2bb181182d4daf68424619014f60",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "9e62463860d2dcd80c49a24184d981565a68b61e84d9f816e72f27f2b2294029",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00039-of-00048.gguf",
+      "blobId": "37c646d6c4e4730de2a8eb30bbd45db96a1596a5",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "a95f04321ad9afc3e10c2ef3886c256b284c931c877c2ec502b6774b9d540650",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00040-of-00048.gguf",
+      "blobId": "29a61b24b8e25bd9ced17ea85a3ee4412b046427",
+      "size": 13909333280,
+      "lfs": {
+        "sha256": "2ee21ce1ed4439dcd20ac878322a145e692ee35071fa772cf584d1d6e9f0c150",
+        "size": 13909333280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00041-of-00048.gguf",
+      "blobId": "65f8accdf18037e5c572fd6631486bbf2d14066a",
+      "size": 12320222016,
+      "lfs": {
+        "sha256": "66b3cce468780d50c9ca0769a52a0524a022b561b5126ff0969db595185f66e8",
+        "size": 12320222016,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00042-of-00048.gguf",
+      "blobId": "7d8ba5d403d6fe902522312d8c08a7aa88b358b3",
+      "size": 12329683328,
+      "lfs": {
+        "sha256": "6c649522102a65b1267b66762a1a3e0cefda5bf50eee6cd3cb9fc9647efbb46f",
+        "size": 12329683328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00043-of-00048.gguf",
+      "blobId": "e08a9cba9a967a20c25988e6bf9e33a508f2f1f9",
+      "size": 12513637472,
+      "lfs": {
+        "sha256": "4a78f1771b8d11d89eb8f120af942eb893b7524a4f88d9546ae039b28675df72",
+        "size": 12513637472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00044-of-00048.gguf",
+      "blobId": "5b430b568d8c07e51ee4836845d645696cdbc69c",
+      "size": 13565930304,
+      "lfs": {
+        "sha256": "bedf89c100a5aad78ec6d1f5d0d4e52efb448bb7ac81efce3e0ebaaf51084c71",
+        "size": 13565930304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00045-of-00048.gguf",
+      "blobId": "12ee702689d67b00ffd6e5c2f625cfa057c9ea89",
+      "size": 12329683904,
+      "lfs": {
+        "sha256": "55127052490d12cb6eae382e466502f5362a6cd69c8120d07fc7595c0895ebaa",
+        "size": 12329683904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00046-of-00048.gguf",
+      "blobId": "d5b7baa52c314c85a5e7975f35c497e2027b7e4d",
+      "size": 12513637472,
+      "lfs": {
+        "sha256": "67b120e0cb155efb7f65bec423067c858fedd3001cd8313456a971fc3f610ed4",
+        "size": 12513637472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00047-of-00048.gguf",
+      "blobId": "ff8e8df9e59aa18c3b85a283b1d988f4789a378e",
+      "size": 13565929728,
+      "lfs": {
+        "sha256": "a65d9e5d5c55224297c0dba58181c57cc4aa36c69fe313150b3de8fcf1d1ab90",
+        "size": 13565929728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q4_K_M.gguf-00048-of-00048.gguf",
+      "blobId": "ed5920823f44ca4a286a59dfb38f5b849f781b18",
+      "size": 5445280128,
+      "lfs": {
+        "sha256": "6724538186c6382e6cb0dad53ec581bf2dee635648795f82457c73344703fbed",
+        "size": 5445280128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00001-of-00060.gguf",
+      "blobId": "47c1f689c55958d11c5efc0ef994615dab5216ef",
+      "size": 12875299712,
+      "lfs": {
+        "sha256": "c05ec7dd409eb5497377402bb6dcaa45b545be229c511aa90d4a7cdd55a7472d",
+        "size": 12875299712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00002-of-00060.gguf",
+      "blobId": "a4d3d978928776cf3ade4be27bbf80ffd58b5bc3",
+      "size": 10822855392,
+      "lfs": {
+        "sha256": "a34983f8473e4a4595dd2f1eb330febbe509e80efc6a19bf90f22b097558b525",
+        "size": 10822855392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00003-of-00060.gguf",
+      "blobId": "3fe6caaae1b3854258ba25ed3f53a67896ff504b",
+      "size": 10822855392,
+      "lfs": {
+        "sha256": "0bc6ad8a88ce5f81f406f081e36016401b7a3ef8ac2873bd749bc1c59ac22ad5",
+        "size": 10822855392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00004-of-00060.gguf",
+      "blobId": "98cba6fedcc3def172cf1cb71073f0b3d6913928",
+      "size": 10822855392,
+      "lfs": {
+        "sha256": "d97e066273e7607380f71a4a2fe9fd3d4eb1b1716d924567e8b37d7d1fa41797",
+        "size": 10822855392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00005-of-00060.gguf",
+      "blobId": "cbe047e773559da102d4476db05e8300cda0c7e2",
+      "size": 10822855392,
+      "lfs": {
+        "sha256": "107b4eedc6fd80c539f0b9e6acfbe916fd8a1abbac9b0be33ab4cc73e672b440",
+        "size": 10822855392,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00006-of-00060.gguf",
+      "blobId": "050da9d2b73214266c27195f908bbb2244fe5056",
+      "size": 10822854848,
+      "lfs": {
+        "sha256": "6bc317bba6b61cac2598743c54d89dae3386eea7bd4657924ddfbdfaeb264e8f",
+        "size": 10822854848,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00007-of-00060.gguf",
+      "blobId": "ed31c965bfb79fdeac6ec566350017531236794c",
+      "size": 10800712416,
+      "lfs": {
+        "sha256": "553712848d78624ffaf1635f81d82c1c8d1f696dafbbfe9fb6704c34ee60a8ad",
+        "size": 10800712416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00008-of-00060.gguf",
+      "blobId": "2df3b6c7845916cdba42c9633dfcde48c7f9078d",
+      "size": 13480872768,
+      "lfs": {
+        "sha256": "957139f6135e114a1f23a8cb37ff88648874e5fea513f27cc32109c2b8f9bdcb",
+        "size": 13480872768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00009-of-00060.gguf",
+      "blobId": "892ec37116b584377216e60effdb182ce6f64871",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "56d217983010b99019ed670442bc67344d291ade0dd3abb9bef4af4aa1bdf634",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00010-of-00060.gguf",
+      "blobId": "0ff57725942b7e5816b6a03b2bbe08c2e800a90d",
+      "size": 13490334656,
+      "lfs": {
+        "sha256": "e8fe0a3c112761ea11745e65eb1d0664944118fea4e4e768237c0bb8d3b64550",
+        "size": 13490334656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00011-of-00060.gguf",
+      "blobId": "29e7e4f7c8c954b8fc16040d40c817f0ac7bb7b9",
+      "size": 13686871136,
+      "lfs": {
+        "sha256": "7bf7e7b372e3f6be0d2aa600feb505424bfb2a215532b9f4b7b2468e86d234b9",
+        "size": 13686871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00012-of-00060.gguf",
+      "blobId": "2ac7c0ae14ab9d3928b1bf1c3f8bd204c97ff52d",
+      "size": 10800712448,
+      "lfs": {
+        "sha256": "84285d322be9f7d37d436b21bc6101a54f122ddcf35972d9de116ad6e58f1f9c",
+        "size": 10800712448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00013-of-00060.gguf",
+      "blobId": "733ec74b7c97945f7aed089b827f580ef3e8ca87",
+      "size": 13480872192,
+      "lfs": {
+        "sha256": "2213e3bfe7cdbb8d64a919a847e7a3c00b7089d3c07e233fe5917904d3297548",
+        "size": 13480872192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00014-of-00060.gguf",
+      "blobId": "1e190cfe6dc41529d2ce2a1bd944284427d6d07a",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "84c1b87b63c1bd3e13eb69c5bdd8622d7f87ebab5327c90da80cbca7fbb1ec01",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00015-of-00060.gguf",
+      "blobId": "45cf846d52fc3ced16d49423a0bd2a29c5eb3380",
+      "size": 13490334656,
+      "lfs": {
+        "sha256": "0a373a81745dd1c2301187cd0a901c52e1bed901503722af814f806f841acd81",
+        "size": 13490334656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00016-of-00060.gguf",
+      "blobId": "44b372c367fa906425667d24a7f47ae58e982751",
+      "size": 13686871136,
+      "lfs": {
+        "sha256": "15a1c1df106638cbca31ab6e832be9d54259722f15612984c34465f93e488b67",
+        "size": 13686871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00017-of-00060.gguf",
+      "blobId": "f5777882adda9d839a07c27b911832c1ec7453ee",
+      "size": 10800712448,
+      "lfs": {
+        "sha256": "c8a0c0e0919cb7af21674d6669c3ba357f081fbe35d76f2f4b3cf1364cd50d96",
+        "size": 10800712448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00018-of-00060.gguf",
+      "blobId": "c731d6830237d789885c850e1a5ebe127f080e85",
+      "size": 13480872768,
+      "lfs": {
+        "sha256": "a04b6a63ff41e7f2d336e8efc801c4e76e84418f15365c359a4592b7231a053e",
+        "size": 13480872768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00019-of-00060.gguf",
+      "blobId": "e3769952b5603d2ad800d3a129dbadb38ab22b67",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "6de788fdb7efa1b0a353c4696e24a8feff1a57c228a1fd48805d5bf98b95dde0",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00020-of-00060.gguf",
+      "blobId": "527c2b37f2047471a47ee52944fec36eabe522dc",
+      "size": 13490334080,
+      "lfs": {
+        "sha256": "48c1bf69842913879e73ec5c374fd28c739da4f505ca1ff33b77deab9388fd79",
+        "size": 13490334080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00021-of-00060.gguf",
+      "blobId": "e8bb74b5db74306a4308e385c490054a7008fbf5",
+      "size": 13686871136,
+      "lfs": {
+        "sha256": "0a703330211cbab1f6e4562446e1c9425342ec804b3dc960ad925089883c7ba2",
+        "size": 13686871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00022-of-00060.gguf",
+      "blobId": "adda2f24c1d7c37f88b755421b3a4cbcc958d2e2",
+      "size": 10800712448,
+      "lfs": {
+        "sha256": "6f80fb2d2e8efad1dc2babc5a9bde48651889856b9382f3d4b30aee0751e8201",
+        "size": 10800712448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00023-of-00060.gguf",
+      "blobId": "ea4441d6942f0f02f0d36188d012dde2bec05380",
+      "size": 13480872768,
+      "lfs": {
+        "sha256": "90c5a1d29f7ae819abce537ceac0434b7c86be452ff8439f8ba9067a6e40c718",
+        "size": 13480872768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00024-of-00060.gguf",
+      "blobId": "4e1181bf288c21a45287931dc4db89b10ffbc1ca",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "f963192d852d44b0207347e7da1534244e6a8c421d4a5ed405c134a172ff1eba",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00025-of-00060.gguf",
+      "blobId": "44c902946d1c759b027a71f6d573b20cef099803",
+      "size": 13490334656,
+      "lfs": {
+        "sha256": "b979725c255587d43b5e33aa22ed2949ae22817aafa47e3f4cc4da926259ca7a",
+        "size": 13490334656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00026-of-00060.gguf",
+      "blobId": "73ed16857aab2cc9354c689004a020dce6d15733",
+      "size": 13686870560,
+      "lfs": {
+        "sha256": "16d1746d8f239e150554f114b0a5feb7e5d5d43e175f930aac700fe1faeefebd",
+        "size": 13686870560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00027-of-00060.gguf",
+      "blobId": "54ff13da1d9e21ddc23a9066657ae8501bea271b",
+      "size": 10800712448,
+      "lfs": {
+        "sha256": "7286c4c3a79566c90344ad749a8aa57ff858401f1607b5c7487245509a293f9e",
+        "size": 10800712448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00028-of-00060.gguf",
+      "blobId": "faca158dec4d281d8589d7dc2e84f6f989826c3b",
+      "size": 13480872768,
+      "lfs": {
+        "sha256": "77e7ef89ae229d7958780b5f66a738538e85f86363adc83784fcbbfceef8a062",
+        "size": 13480872768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00029-of-00060.gguf",
+      "blobId": "4de7ccb16afbe98c70d880962b1e9efc21c1ae19",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "9737200cc33f2d4cf52dfa488432ce7970dfad088061ae1fe0d053f8b6814497",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00030-of-00060.gguf",
+      "blobId": "0e8cbabc484ad7d17ee5204a3d9cfe37b0e1d292",
+      "size": 13490334656,
+      "lfs": {
+        "sha256": "d474cae6012949c216f715c6fcfd6e1edc35f0acf65453539d5dddfe151a8e89",
+        "size": 13490334656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00031-of-00060.gguf",
+      "blobId": "fd31091b18ee849e655abae11bf552aa3b3dc670",
+      "size": 13686871136,
+      "lfs": {
+        "sha256": "30231298cd0b920cac6e5f419aac950be74c8ddcf9a8428edea8f336c05cfd0b",
+        "size": 13686871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00032-of-00060.gguf",
+      "blobId": "0804592305f0a79c2fc170b781646fef920c606a",
+      "size": 10800712448,
+      "lfs": {
+        "sha256": "eed29bb10da61f13d8f6f8781726756c7e55fa14598a3de3af606e262295c384",
+        "size": 10800712448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00033-of-00060.gguf",
+      "blobId": "f5fd094e937f2fa733c1adb9e9b6ffeb6dce34cf",
+      "size": 13480872192,
+      "lfs": {
+        "sha256": "c78573adf596b328fa7ce45620ef2a5cf0d166e96de4b574bfffd0278ae6b9fe",
+        "size": 13480872192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00034-of-00060.gguf",
+      "blobId": "fb0cdc4af3964983ccbf9ba5e123de2491e3c9d2",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "393c7f744f18d564910a1eed1f14adae77825d4d5bd6dff538dcbcea3a2899a4",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00035-of-00060.gguf",
+      "blobId": "62a1620248204e484ad5d139850f01361d92a547",
+      "size": 13490334656,
+      "lfs": {
+        "sha256": "0b92f893b0ed0988ed4e2ddd67f27ef509d701ff000d75ce99ae858d98d32ab1",
+        "size": 13490334656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00036-of-00060.gguf",
+      "blobId": "dfc9491998476b77df51e24d2f431a52054012ef",
+      "size": 13686871136,
+      "lfs": {
+        "sha256": "8c107bd64d6c4ec79da80893e95b5990b000acd2483ad29a8429ced64a8768f1",
+        "size": 13686871136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00037-of-00060.gguf",
+      "blobId": "8ebbccacea6605fecba89a79805e579db44878d2",
+      "size": 10800712448,
+      "lfs": {
+        "sha256": "60fd3c946623638a29e665bccfb6857c720c7db3160f092fc55ad25968dbae22",
+        "size": 10800712448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00038-of-00060.gguf",
+      "blobId": "9c7478ff69525ef85f324c36c43a32e4689c1b76",
+      "size": 13480872768,
+      "lfs": {
+        "sha256": "d54a5ff399897c0ef7ddab45e31c2061a4797303989b941796deec141cfcd3dd",
+        "size": 13480872768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00039-of-00060.gguf",
+      "blobId": "cee21aeef90ff4f0019bc90c02a52411570fe794",
+      "size": 10822855424,
+      "lfs": {
+        "sha256": "60d8a052faff119acb915e34b8be398f127aa908ba2e6beca2e3e22634412050",
+        "size": 10822855424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf.Q5_K_M.gguf-00040-of-00060.gguf",
+      "blobId": "f3896577e5791dfa46232e016eb215e0e20e4a4a",
+      "size": 13490334080,
+      "lfs": {
+        "sha256": "d20da90b180c8aaa1df0c67e3e30a0c4871f019cd8caca1a312ebd0963ee510b",
+        "size": 13490334080,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "f4c51e4cdf3d4e19cd977315db0e860988f35083",
+      "size": 578
+    },
+    {
+      "rfilename": "mmproj-XiaomiMiMo.MiMo-V2.6-Pro-RL.f16.gguf",
+      "blobId": "ba136005258dddeb5439c1b84eb431ff613d519e",
+      "size": 2832658048,
+      "lfs": {
+        "sha256": "574df02384dc2e5274450f61bad158da46f0c7462ef49fd61c48bbfbbdb71b2a",
+        "size": 2832658048,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-27T18:47:10.000Z",
+  "usedStorage": 2037664141984
+}

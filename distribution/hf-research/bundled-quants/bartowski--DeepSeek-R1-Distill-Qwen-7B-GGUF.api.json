@@ -1,0 +1,340 @@
+{
+  "_id": "678e635064630f7fa5283e27",
+  "id": "bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "base_model:quantized:deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 123011,
+  "likes": 149,
+  "modelId": "bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF",
+  "author": "bartowski",
+  "sha": "361004151d4f4f6b446dc5e6d46fbf4422a80d5f",
+  "lastModified": "2025-03-07T19:13:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "text-generation",
+    "base_model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2",
+    "context_length": 131072,
+    "quantize_imatrix_file": "/models_out/DeepSeek-R1-Distill-Qwen-7B-GGUF/DeepSeek-R1-Distill-Qwen-7B.imatrix",
+    "chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{% set ns = namespace(is_first=false, is_tool=false, is_output_first=true, system_prompt='') %}{%- for message in messages %}{%- if message['role'] == 'system' %}{% set ns.system_prompt = message['content'] %}{%- endif %}{%- endfor %}{{bos_token}}{{ns.system_prompt}}{%- for message in messages %}{%- if message['role'] == 'user' %}{%- set ns.is_tool = false -%}{{'<\uff5cUser\uff5c>' + message['content']}}{%- endif %}{%- if message['role'] == 'assistant' and message['content'] is none %}{%- set ns.is_tool = false -%}{%- for tool in message['tool_calls']%}{%- if not ns.is_first %}{{'<\uff5cAssistant\uff5c><\uff5ctool\u2581calls\u2581begin\uff5c><\uff5ctool\u2581call\u2581begin\uff5c>' + tool['type'] + '<\uff5ctool\u2581sep\uff5c>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<\uff5ctool\u2581call\u2581end\uff5c>'}}{%- set ns.is_first = true -%}{%- else %}{{'\\n' + '<\uff5ctool\u2581call\u2581begin\uff5c>' + tool['type'] + '<\uff5ctool\u2581sep\uff5c>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<\uff5ctool\u2581call\u2581end\uff5c>'}}{{'<\uff5ctool\u2581calls\u2581end\uff5c><\uff5cend\u2581of\u2581sentence\uff5c>'}}{%- endif %}{%- endfor %}{%- endif %}{%- if message['role'] == 'assistant' and message['content'] is not none %}{%- if ns.is_tool %}{{'<\uff5ctool\u2581outputs\u2581end\uff5c>' + message['content'] + '<\uff5cend\u2581of\u2581sentence\uff5c>'}}{%- set ns.is_tool = false -%}{%- else %}{% set content = message['content'] %}{% if '</think>' in content %}{% set content = content.split('</think>')[-1] %}{% endif %}{{'<\uff5cAssistant\uff5c>' + content + '<\uff5cend\u2581of\u2581sentence\uff5c>'}}{%- endif %}{%- endif %}{%- if message['role'] == 'tool' %}{%- set ns.is_tool = true -%}{%- if ns.is_output_first %}{{'<\uff5ctool\u2581outputs\u2581begin\uff5c><\uff5ctool\u2581output\u2581begin\uff5c>' + message['content'] + '<\uff5ctool\u2581output\u2581end\uff5c>'}}{%- set ns.is_output_first = false %}{%- else %}{{'\\n<\uff5ctool\u2581output\u2581begin\uff5c>' + message['content'] + '<\uff5ctool\u2581output\u2581end\uff5c>'}}{%- endif %}{%- endif %}{%- endfor -%}{% if ns.is_tool %}{{'<\uff5ctool\u2581outputs\u2581end\uff5c>'}}{% endif %}{% if add_generation_prompt and not ns.is_tool %}{{'<\uff5cAssistant\uff5c>'}}{% endif %}",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 15237853152
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2260c128095c91bdaa1874bf853ef2ff234f7726",
+      "size": 3398
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-IQ2_M.gguf",
+      "blobId": "16275a050bd7747464e7f683a4a5293462def224",
+      "size": 2780342240,
+      "lfs": {
+        "sha256": "f1f4aeac22ffb5a076e1a7e7b2c472445e213ec559a8b8fe91284881ed5aafec",
+        "size": 2780342240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-IQ3_M.gguf",
+      "blobId": "6747665a3ded3aeeba3ccd7e3fafea99fca6a233",
+      "size": 3574011872,
+      "lfs": {
+        "sha256": "75cec730a54922436496349ba19bcf86170d378180c27e019640aae722754598",
+        "size": 3574011872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-IQ3_XS.gguf",
+      "blobId": "480e1f9bfc834056aef864c9e48cc8c7106203cc",
+      "size": 3346255840,
+      "lfs": {
+        "sha256": "0b7758a3bab29000411c0775c51e791075468978252a2564f91422d38f39c76d",
+        "size": 3346255840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-IQ4_NL.gguf",
+      "blobId": "2c7ad5e3dea5ec1441c300cd7175d4fa14127f86",
+      "size": 4437813216,
+      "lfs": {
+        "sha256": "7e115905a753c8191f8a76c91f83a1f9742387bd5187eef65f5c7ca6b556cc10",
+        "size": 4437813216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-IQ4_XS.gguf",
+      "blobId": "73edeb23b70ec3ee5f3d43e8b5d6e2ac630bada2",
+      "size": 4218472416,
+      "lfs": {
+        "sha256": "23bc628ca6c45627e166c483587ce8bf73d050d4e3932a3f6908b5fbdcc5c7af",
+        "size": 4218472416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q2_K.gguf",
+      "blobId": "192c0167add46da97dc77daee94e5c57a63aa09b",
+      "size": 3015940064,
+      "lfs": {
+        "sha256": "fb0667a00ac788f4450c42457cc3f03be548d567454775b848dc85d8bc8a7837",
+        "size": 3015940064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q2_K_L.gguf",
+      "blobId": "dfd49beaa49ba0953baf9276260634396bd6f6ea",
+      "size": 3548164064,
+      "lfs": {
+        "sha256": "6fed62cc49e72adbc93d85f91aecaa50a7c4775fdf3846b8bbc38d600da0f5ec",
+        "size": 3548164064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q3_K_L.gguf",
+      "blobId": "eaae8098f7edf04038726120ffbaf47e989b6937",
+      "size": 4088459232,
+      "lfs": {
+        "sha256": "b80e42a5bc777dd781f8c9de9284d077d1cbf49157b811c854b6bfbedfed9853",
+        "size": 4088459232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf",
+      "blobId": "a2a6206ead059d9eef01b87ac5bff9069ccfe3e5",
+      "size": 3808391136,
+      "lfs": {
+        "sha256": "5c4f966a3b2907e08734dff2bea87acb01ec868a07ca1d8f7e30a3c6c62a98f3",
+        "size": 3808391136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q3_K_S.gguf",
+      "blobId": "05a71588c5f06e8a296ae66758f09d1779296b1a",
+      "size": 3492368352,
+      "lfs": {
+        "sha256": "b0dfeda6e681c5257befd7b8a3553b476b347d1d74f42e33392b0abc9f12ddd4",
+        "size": 3492368352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q3_K_XL.gguf",
+      "blobId": "768a6dbe5fc933654b1ce55d11f91644523d9700",
+      "size": 4565331936,
+      "lfs": {
+        "sha256": "3c3628e85101925c6e09f0ac25590ad80b4cf1e9b61068244a1d71731fabf041",
+        "size": 4565331936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q4_0.gguf",
+      "blobId": "f1d86d02a8941359cb620400682d85e9f452e737",
+      "size": 4444121056,
+      "lfs": {
+        "sha256": "5cd4ee65211770f1d99b4f6f4951780b9ef40e29314bd6542bb5bd0ad0bc29d1",
+        "size": 4444121056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q4_1.gguf",
+      "blobId": "5e2545b095b496db99ddb0928d7948a9775878b8",
+      "size": 4873283552,
+      "lfs": {
+        "sha256": "de7784ba576e53c0f0a69ad93fcd47a05d9451743ba32612a2e9d16faff58da9",
+        "size": 4873283552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q4_K_L.gguf",
+      "blobId": "4663fcaf82695d962af664356d317f8cec8b689f",
+      "size": 5087563744,
+      "lfs": {
+        "sha256": "47829fecccf67ec34b5b6d1951dad53174e1da535ff2f7816582db5ac731ed9c",
+        "size": 5087563744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf",
+      "blobId": "13f449601f57b63353c0f711f5fb8316c034e7c0",
+      "size": 4683073504,
+      "lfs": {
+        "sha256": "731ece8d06dc7eda6f6572997feb9ee1258db0784827e642909d9b565641937b",
+        "size": 4683073504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q4_K_S.gguf",
+      "blobId": "9e20a878a17269e0f2f2022fd638bdc2a040b362",
+      "size": 4457768928,
+      "lfs": {
+        "sha256": "cfa2f69fd2983569515ebad512152c352c89043cbf2644b771ca4343b1d7b072",
+        "size": 4457768928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q5_K_L.gguf",
+      "blobId": "48e1424f4e98fb3d81d7fece1b39b6890812d68d",
+      "size": 5781196768,
+      "lfs": {
+        "sha256": "49e2a43a0d66589286e7147cf0b623301e5f765310c5a5b7032ed4c4f04a327e",
+        "size": 5781196768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q5_K_M.gguf",
+      "blobId": "3a369b1d63906d48a5c128f19ffe754c46eb23e4",
+      "size": 5444831200,
+      "lfs": {
+        "sha256": "7b736fc4913dce4c7fbcebe5cb965a2fa7314a14b59e25fb53d415f9d18d7aa1",
+        "size": 5444831200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q5_K_S.gguf",
+      "blobId": "87c83cd7ca02e42114f59a43c93930d783bb9bb4",
+      "size": 5315176416,
+      "lfs": {
+        "sha256": "e8c1fb3b9052e677bcac767cf6745c4441a80b5e0ba3ca0d110083f361760ee1",
+        "size": 5315176416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q6_K.gguf",
+      "blobId": "db7b0bb07f9486b5f04adc1711788eaeaf7f54bd",
+      "size": 6254198752,
+      "lfs": {
+        "sha256": "3ffa00e72db05668453687d5ab8e7c9fb19705cfd57292a956db17a3633c93f3",
+        "size": 6254198752,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q6_K_L.gguf",
+      "blobId": "ee91b0dc77f5b0e4cb3da1ea9f8633fef85b8bb7",
+      "size": 6518181856,
+      "lfs": {
+        "sha256": "40269ad1f7e65b2edb63580a9000e161c867e1d4cfea7a53aa80a83c4bf49ffc",
+        "size": 6518181856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-Q8_0.gguf",
+      "blobId": "422d5089da022f4cf66ac42ee6c95256eba081e7",
+      "size": 8098525152,
+      "lfs": {
+        "sha256": "cae89f90c4c2f1894c95393903d2a9776aea7083023ae6cd285b1cc7adafc323",
+        "size": 8098525152,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-f16.gguf",
+      "blobId": "9352d70435ad685545aad0cbf850c14cbdd251e7",
+      "size": 15237853152,
+      "lfs": {
+        "sha256": "a11a09387d9e7a2c4d39143ca8bf6fe131e9040d2768bd86d4efb1fdecb12474",
+        "size": 15237853152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B-f32.gguf",
+      "blobId": "e767776d7bf978169753db4aa1b7a1013576494e",
+      "size": 30468419264,
+      "lfs": {
+        "sha256": "b027cb5f24756a91c8e349d3fceed20179c69fc17c024395cd4714695c66f3c4",
+        "size": 30468419264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-R1-Distill-Qwen-7B.imatrix",
+      "blobId": "7581f9297f023727c9213aae6b64c08df4828ca6",
+      "size": 4536678,
+      "lfs": {
+        "sha256": "476bee803c07f214c1d75f25979845d33472a964c54ca699bc85232306196f7b",
+        "size": 4536678,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d42fae903e9fa07f3e8edb0db00a8d905ba49560",
+      "size": 1064
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "125248a805ba10bb3866ac00eb9f2f453260cea9",
+      "size": 14110
+    }
+  ],
+  "spaces": [
+    "Steven10429/apply_lora_and_quantize",
+    "educatedlucifer12/whisper-ai",
+    "Jolly4927/Obsidian",
+    "YZ-TAN/flask-llama",
+    "KBaba7/llama.cpp",
+    "iamnamas/nse_stockprice_agent",
+    "Naimahmed/nse_stockprice_agent1_NN",
+    "kines9661/whisper-ai",
+    "Jolly6443/Obsidian",
+    "Mohamed-20/sahel-api",
+    "HedronCreeper/HCU",
+    "kcomklk/fusion-one",
+    "toolss180/gini-smart",
+    "jolly5673/Obsidian"
+  ],
+  "createdAt": "2025-01-20T14:53:04.000Z",
+  "usedStorage": 147544280390
+}

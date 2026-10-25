@@ -1,0 +1,219 @@
+{
+  "_id": "6ac92b58a58766dba41a763a",
+  "id": "mradermacher/LightOnOCR-3-4B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "ocr",
+    "document-understanding",
+    "visual-grounding",
+    "vision-language",
+    "tables",
+    "forms",
+    "en",
+    "base_model:lightonai/LightOnOCR-3-4B",
+    "base_model:quantized:lightonai/LightOnOCR-3-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2479,
+  "likes": 0,
+  "modelId": "mradermacher/LightOnOCR-3-4B-GGUF",
+  "author": "mradermacher",
+  "sha": "d73ad16828c669dce794e96c8368197cd80ef77d",
+  "lastModified": "2026-10-09T20:07:29.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "lightonai/LightOnOCR-3-4B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "ocr",
+      "document-understanding",
+      "visual-grounding",
+      "vision-language",
+      "tables",
+      "forms"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 4205751296,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is not defined or enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 8424394112
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "fe6d8958f6dbece588ff4d65fb4e2e0c95e40239",
+      "size": 2415
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.IQ4_XS.gguf",
+      "blobId": "3ba44da846c96d4412453fdfc6c27a412dfa7d0e",
+      "size": 2529031552,
+      "lfs": {
+        "sha256": "d315ed58651356d8fbcb327ac11754f6dccff748f561b24aeca719da651f243f",
+        "size": 2529031552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q2_K.gguf",
+      "blobId": "e6229ba96b31c7dcf6b3cf24ef88e972ba151f1a",
+      "size": 1915471232,
+      "lfs": {
+        "sha256": "b3bf973554244d749980b35e6a90d220027708a797bdf7120cd4606ca76e235e",
+        "size": 1915471232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q3_K_L.gguf",
+      "blobId": "1569e5f50d237f5b50f36451df76be4a4c010516",
+      "size": 2421316992,
+      "lfs": {
+        "sha256": "40988cba576887afe2d20ce0c277aae43900b8e6edb0880b41c3170e83e600b3",
+        "size": 2421316992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q3_K_M.gguf",
+      "blobId": "91694c5ef5d51c821c7901284acbe0ffa3dcf27c",
+      "size": 2262064512,
+      "lfs": {
+        "sha256": "bc5f3707e2433bdcaa74bae6f8e29d096eee2d973beec3ff9081cb8de412f112",
+        "size": 2262064512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q3_K_S.gguf",
+      "blobId": "8420079397ba4c76a77d0a72ad307b6ddfe2044b",
+      "size": 2069880192,
+      "lfs": {
+        "sha256": "838b6e43e83bf1a4020abd645b0fa3273a23592d0aecb45ae17b67818eda6915",
+        "size": 2069880192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q4_K_M.gguf",
+      "blobId": "5c21c86d4fe085ad41dc783bc62621fdbb0b8e0d",
+      "size": 2708804992,
+      "lfs": {
+        "sha256": "dfe84dfe42b6b23526ae4d73ee7764709ecb5ef3a876afe404ff3a86552ca89f",
+        "size": 2708804992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q4_K_S.gguf",
+      "blobId": "4590b115c043cab45fe223c881c2ae81f8b5009e",
+      "size": 2563888512,
+      "lfs": {
+        "sha256": "1924ccf989df1558f7bc54d3d27b7ad57a8c6184e2d8c8d3b2ecb577921849bf",
+        "size": 2563888512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q5_K_M.gguf",
+      "blobId": "0af2f83f947ee349f8488d34cd1fea6b2e7114e8",
+      "size": 3074987392,
+      "lfs": {
+        "sha256": "d41ce968fcb3a4df0ac7d7f02737e5d753b5780c12743c608e5aef4c240fb431",
+        "size": 3074987392,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q5_K_S.gguf",
+      "blobId": "40f2303f9d95ea566afb3fad6d16c788170e5964",
+      "size": 2990036352,
+      "lfs": {
+        "sha256": "767f7acb8fba7e84aafdfc576ec0272c79dd05f4632be42a18ed4948c89fcbf6",
+        "size": 2990036352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q6_K.gguf",
+      "blobId": "d0608c1f77d24960c4a76ef70488b76048211a70",
+      "size": 3464056192,
+      "lfs": {
+        "sha256": "36ab9667a76d0fffda57d71a1f9b882c55b27f4ae05c3b081280838258e33673",
+        "size": 3464056192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.Q8_0.gguf",
+      "blobId": "3685078e61772498dd2dc722351bc6c0b577411d",
+      "size": 4482403712,
+      "lfs": {
+        "sha256": "103d473ee394028b772371a3b98428c384494703d3589b2e2afb5f8491b2146c",
+        "size": 4482403712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.f16.gguf",
+      "blobId": "c48da2849a2efec5960707fb448190c422178419",
+      "size": 8424394112,
+      "lfs": {
+        "sha256": "fbae74c0e1f71707c997219cfcea19254f72983daed906586c16e35bb2f6bbf3",
+        "size": 8424394112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.mmproj-Q8_0.gguf",
+      "blobId": "1acce99303dcea568b8d11a44d6f0b061767c186",
+      "size": 366894656,
+      "lfs": {
+        "sha256": "fd5acde1a7a7439b3f9a720d3cead67378beeaabbecc57fe4b30a7f9b301b102",
+        "size": 366894656,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "LightOnOCR-3-4B.mmproj-f16.gguf",
+      "blobId": "78a20540e5be166ec800ad52352016b552483abb",
+      "size": 672423488,
+      "lfs": {
+        "sha256": "63353b5ac6bc43cfb1360687689d9a2e4c0a27972262fa17b3af1a727a1c91bc",
+        "size": 672423488,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "893ddc6eb88943d852dc23c92b1d8ed0cd14a8fc",
+      "size": 3902
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-09T17:58:48.000Z",
+  "usedStorage": 39945653888
+}

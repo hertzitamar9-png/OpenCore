@@ -1,0 +1,366 @@
+{
+  "_id": "67d188544cfe34bc90f2426b",
+  "id": "bartowski/google_gemma-3-12b-it-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "image-text-to-text",
+    "base_model:google/gemma-3-12b-it",
+    "base_model:quantized:google/gemma-3-12b-it",
+    "license:gemma",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 14520,
+  "likes": 51,
+  "modelId": "bartowski/google_gemma-3-12b-it-GGUF",
+  "author": "bartowski",
+  "sha": "648e3a36a77c8a9f12d86e741f9dcb9089c769c4",
+  "lastModified": "2025-03-22T19:09:41.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "quantized_by": "bartowski",
+    "pipeline_tag": "image-text-to-text",
+    "extra_gated_prompt": "To access Gemma on Hugging Face, you\u2019re required to review and agree to Google\u2019s usage license. To do this, please ensure you\u2019re logged in to Hugging Face and click below. Requests are processed immediately.",
+    "extra_gated_button_content": "Acknowledge license",
+    "license": "gemma",
+    "extra_gated_heading": "Access Gemma on Hugging Face",
+    "base_model": "google/gemma-3-12b-it"
+  },
+  "gguf": {
+    "total": 11765788416,
+    "architecture": "gemma3",
+    "context_length": 131072,
+    "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 23539658496
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ae0da37dd02d5981217b2d30143ec2787de79681",
+      "size": 3545
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "826150967b7da31a1ded468866fb3c1c9d7a7b31",
+      "size": 14971
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ2_M.gguf",
+      "blobId": "59922a6b4c8e9315a8d6b425bc51c38670561bd5",
+      "size": 4310290464,
+      "lfs": {
+        "sha256": "5c9b54ef313272dea26e3e18ac8c39f51c0f6d996dbf39090ed183cf8c410a98",
+        "size": 4310290464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ2_S.gguf",
+      "blobId": "9b12a9faeaf2468f77cd47272ccb05e2e32823f0",
+      "size": 4020539424,
+      "lfs": {
+        "sha256": "002cd7d53ba1427de601f509860f7d397742b5c729866078b6f40775e8e97b64",
+        "size": 4020539424,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ3_M.gguf",
+      "blobId": "5c65f548cda482b458ba7131666abc61703875e2",
+      "size": 5655519264,
+      "lfs": {
+        "sha256": "c085d85f4b32d0da60df10ffcc53e9b9ba72dec8f0c9ed3760ee37dacf787f5b",
+        "size": 5655519264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ3_XS.gguf",
+      "blobId": "54947f5c3d1a057fe12cd9465c6060b69c2621e1",
+      "size": 5205962784,
+      "lfs": {
+        "sha256": "e82504d804fcbbc0610601f111447622f75cf803c63a39e458f45150d62695b2",
+        "size": 5205962784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ3_XXS.gguf",
+      "blobId": "96818ad12a65a82b587b3fd40b6c0f6fb515fa38",
+      "size": 4784730144,
+      "lfs": {
+        "sha256": "cecaec01172fab48c16c07e37b19c005c28d79e40c3b101934acb830019ef97f",
+        "size": 4784730144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ4_NL.gguf",
+      "blobId": "6d6657b7c1494a616cf4fb61a88e2c931cb01259",
+      "size": 6886961184,
+      "lfs": {
+        "sha256": "70d23287d249c537a998b66dad50d1c7bedc801832dd892912ca2b7ff19ff7aa",
+        "size": 6886961184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-IQ4_XS.gguf",
+      "blobId": "68fedcda0b5a9c3091feaa89d0693866a9e3e26d",
+      "size": 6550761504,
+      "lfs": {
+        "sha256": "aa7b7ae0b17931c379ede82da59b01f246046925aeb752af1ab4285a3b0d69db",
+        "size": 6550761504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q2_K.gguf",
+      "blobId": "4ff352e0bc748411e1b2ebffbcb2b88e349f03d0",
+      "size": 4768018464,
+      "lfs": {
+        "sha256": "471c459a9e34fec09eba84bd6d7f39b9489213d54a58cee599731200f54c3a1c",
+        "size": 4768018464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q2_K_L.gguf",
+      "blobId": "ca8f9930d7a6ad8caf898b9dd97549194bfe9f47",
+      "size": 5011812384,
+      "lfs": {
+        "sha256": "d88d71d0dbf3ad19d9cf7c768f5cf4ee81eeb059508f7c2c7e3d81f7baa020f4",
+        "size": 5011812384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q3_K_L.gguf",
+      "blobId": "eae7ded49587eb48f67fc1f79fcb455e58705103",
+      "size": 6479982624,
+      "lfs": {
+        "sha256": "2663200ffe24265a32c36469ba9e321df5cec88a85494cc667a7847dcc639ecd",
+        "size": 6479982624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q3_K_M.gguf",
+      "blobId": "6358f5965524911e3d2a9ddbe222a98b321a16a7",
+      "size": 6008614944,
+      "lfs": {
+        "sha256": "b566ae4850815706bbaa9105efa0e722421544aa41999424924d61f915ea868e",
+        "size": 6008614944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q3_K_S.gguf",
+      "blobId": "ed0f7aca039eb786d5c33669641847c24bac7477",
+      "size": 5458112544,
+      "lfs": {
+        "sha256": "809b157bdbe1f98e2a94795d2a3aa3a49bb4de6ca3c7f68137b2ac123de75207",
+        "size": 5458112544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q3_K_XL.gguf",
+      "blobId": "f1020285edd3a1cd9d7ab3e16aca20d1662f2432",
+      "size": 6723776544,
+      "lfs": {
+        "sha256": "a18ddbbfd8119edd59c522ed13498d06b1f84d1f823c38181fcf40e9f8ab13d7",
+        "size": 6723776544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q4_0.gguf",
+      "blobId": "465f382f6fd95be9053967342c61851a8b8b6ccb",
+      "size": 6909079584,
+      "lfs": {
+        "sha256": "9a7b70be8727da9fb28523b35946dd42d4fe0f622cce03daa44fccff0775516d",
+        "size": 6909079584,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q4_1.gguf",
+      "blobId": "9151e67d9b42626e4743a44f3aced59a4118e546",
+      "size": 7559360544,
+      "lfs": {
+        "sha256": "a142f5ad92205e17a02acd83ee0a4bb87494bb23cdeb0f212c0bb949b324bca9",
+        "size": 7559360544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q4_K_L.gguf",
+      "blobId": "e2a0cf0ee321c0f40d100b2a441d59a87b9bc5f3",
+      "size": 7544369184,
+      "lfs": {
+        "sha256": "eee20f88461d8dcec94f3050e2717099e5f73528bc400e4d637ec795d5e693af",
+        "size": 7544369184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q4_K_M.gguf",
+      "blobId": "263a4361f82fbca60cae86aa3864f4b6452c490e",
+      "size": 7300575264,
+      "lfs": {
+        "sha256": "fc57f67efa46d711c346e587cbef7d049e95f3df8db2eb2271153343ef0acc7b",
+        "size": 7300575264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q4_K_S.gguf",
+      "blobId": "2cec733f9c84a6a82b81f1a2f5941dd5a3769b99",
+      "size": 6935130144,
+      "lfs": {
+        "sha256": "35dc1b452f32aad0619a2c417d160c21373232bbfc1cae848ad04c68254eea6e",
+        "size": 6935130144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q5_K_L.gguf",
+      "blobId": "a6b19de153a9ed37c41cbbbc43af9e4f07c4f171",
+      "size": 8688627744,
+      "lfs": {
+        "sha256": "f68dfbffbde959723b262bd04b0f7614afd74c47dc5b36aa480c4c51a2bd0f97",
+        "size": 8688627744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q5_K_M.gguf",
+      "blobId": "747f559426ac566a34d974cdb5582c71b790beef",
+      "size": 8444833824,
+      "lfs": {
+        "sha256": "13d44e37860489806f575deb0b219c6058c9421fe1982a9311a0e367c4e8f444",
+        "size": 8444833824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q5_K_S.gguf",
+      "blobId": "9c82d0e4734787301884a0dfe908cdb32a893c2f",
+      "size": 8231759904,
+      "lfs": {
+        "sha256": "05923da9e544c5ac1db48824fb9489b3af85b0c467112eac7b86a20195535b1d",
+        "size": 8231759904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q6_K.gguf",
+      "blobId": "70ebb735bf5c6249ce1325466a8c1b482e4acc25",
+      "size": 9660608544,
+      "lfs": {
+        "sha256": "a1385c0fd73b8fcb560bf55f9e1870346292a096476a2b9372aa04bd0aeae1d0",
+        "size": 9660608544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q6_K_L.gguf",
+      "blobId": "5a2d85b740189d32b1638543b40534d63276f84b",
+      "size": 9904402464,
+      "lfs": {
+        "sha256": "de8bdfae3ecfac845995a9806eb0749a73782a2a7e692fc8ec4be4b66b8a357a",
+        "size": 9904402464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-Q8_0.gguf",
+      "blobId": "ef34d19d56eb89ceb1763a7e5eb7da52e5b9f196",
+      "size": 12509949984,
+      "lfs": {
+        "sha256": "da78c6801f4fae0061780cdd0c12cf7b1deb4459587dca1c2d3c1c11528b60e1",
+        "size": 12509949984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it-bf16.gguf",
+      "blobId": "f67d00b39c15f941f033343e47fd68e359994458",
+      "size": 23539658496,
+      "lfs": {
+        "sha256": "a16f069cd20c06f37f5fa55a2577f257d1311f37b10c6508f19b1ec810d18fb8",
+        "size": 23539658496,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "google_gemma-3-12b-it.imatrix",
+      "blobId": "5a347eda1045dbb5a5a4da4a632e7923b585d845",
+      "size": 7433114,
+      "lfs": {
+        "sha256": "75a7ccd8b1d1ffdddd063414cbbcae6550c731c7048a125e8861a9dc4af33bf0",
+        "size": 7433114,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "mmproj-google_gemma-3-12b-it-bf16.gguf",
+      "blobId": "dfc29e67ce40d2668b3306979715fe960da451b3",
+      "size": 854200224,
+      "lfs": {
+        "sha256": "87e5ba81aeddfc99bac8325a05f173b5f7024d447a1e3a21f40b265bdc0fe26f",
+        "size": 854200224,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-google_gemma-3-12b-it-f16.gguf",
+      "blobId": "7c64fe441b3e80646ff3c5b75d43ef1187e3993e",
+      "size": 854200224,
+      "lfs": {
+        "sha256": "30c02d056410848227001830866e0a269fcc28aaf8ca971bded494003de9f5a5",
+        "size": 854200224,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-google_gemma-3-12b-it-f32.gguf",
+      "blobId": "11e05bba03951b730f8d2bcc35d1d90cdc7ff925",
+      "size": 1685188512,
+      "lfs": {
+        "sha256": "d45f67b21a6718c2f418962ae2c9823ab0b6264ec9d4bad586f173143b8d17b6",
+        "size": 1685188512,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "HulkToigo/THCLLM",
+    "quaedra/best-local-llm-for-your-gpu"
+  ],
+  "createdAt": "2025-03-12T13:12:52.000Z",
+  "usedStorage": 192494460026
+}

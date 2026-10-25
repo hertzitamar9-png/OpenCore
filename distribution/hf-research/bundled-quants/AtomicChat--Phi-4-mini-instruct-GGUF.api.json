@@ -1,0 +1,159 @@
+{
+  "_id": "6a451e74a6b813d09677212e",
+  "id": "AtomicChat/Phi-4-mini-instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "atomic-chat",
+    "phi",
+    "phi4",
+    "microsoft",
+    "llama.cpp",
+    "quantized",
+    "text-generation",
+    "base_model:microsoft/Phi-4-mini-instruct",
+    "base_model:quantized:microsoft/Phi-4-mini-instruct",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 849,
+  "likes": 2,
+  "modelId": "AtomicChat/Phi-4-mini-instruct-GGUF",
+  "author": "AtomicChat",
+  "sha": "316958370dbd285818b308d82dc7153a43aaaba5",
+  "lastModified": "2026-07-22T20:03:58.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "license_link": "https://huggingface.co/microsoft/Phi-4-mini-instruct/resolve/main/LICENSE",
+    "thumbnail": "https://huggingface.co/AtomicChat/Phi-4-mini-instruct-GGUF/resolve/main/hero.png",
+    "base_model": [
+      "microsoft/Phi-4-mini-instruct"
+    ],
+    "base_model_relation": "quantized",
+    "quantized_by": "AtomicChat",
+    "pipeline_tag": "text-generation",
+    "library_name": "gguf",
+    "tags": [
+      "atomic-chat",
+      "phi",
+      "phi4",
+      "microsoft",
+      "gguf",
+      "llama.cpp",
+      "quantized"
+    ]
+  },
+  "gguf": {
+    "total": 3836021856,
+    "architecture": "phi3",
+    "context_length": 131072,
+    "quantize_imatrix_file": "/root/work/models/Phi-4-mini-instruct/atomic.imatrix",
+    "chat_template": "{% for message in messages %}{% if message['role'] == 'system' and 'tools' in message and message['tools'] is not none %}{{ '<|' + message['role'] + '|>' + message['content'] + '<|tool|>' + message['tools'] + '<|/tool|>' + '<|end|>' }}{% else %}{{ '<|' + message['role'] + '|>' + message['content'] + '<|end|>' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|assistant|>' }}{% else %}{{ eos_token }}{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 2493840992
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "014912b5ff14e871139143e7ff9d435a4203366d",
+      "size": 1859
+    },
+    {
+      "rfilename": "Phi-4-mini-instruct-Q4_K_M.gguf",
+      "blobId": "3b9adb59ff6fd626ef7f6dd72c1b3d63f736eb10",
+      "size": 2493840992,
+      "lfs": {
+        "sha256": "9d9170ffd936acd2519b4ec8fc0a85ca0757867e12c594ef80cce4938d692e2d",
+        "size": 2493840992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-4-mini-instruct-Q5_K_M.gguf",
+      "blobId": "d173d67f1435b7bc7bdff8b860d7348c43025b7a",
+      "size": 2814705248,
+      "lfs": {
+        "sha256": "d62e63d5dcc5edf33781548a87588314bb9a5ff18ef1a11e5a3ca384c972ef1c",
+        "size": 2814705248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-4-mini-instruct-Q6_K.gguf",
+      "blobId": "0483248f73a665cbddd92e17fa80f81d81b7fd4b",
+      "size": 3155623520,
+      "lfs": {
+        "sha256": "45b5f1baae35c58c697f5c0c233f299c5c6f8976986bd8d247eab435e20a4068",
+        "size": 3155623520,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-4-mini-instruct-Q8_0.gguf",
+      "blobId": "d38d5eda7003907471b1ee5ba006d4edbff8ff1f",
+      "size": 4084611680,
+      "lfs": {
+        "sha256": "4ad091961ee10a144c232b4c87bc13e7967ac499134bf54aa3ce73f597094d17",
+        "size": 4084611680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-4-mini-instruct-UD-Q4_K_XL.gguf",
+      "blobId": "c4a11d66fbc8a3d80c83aa3d6e03f0944127788a",
+      "size": 2642688608,
+      "lfs": {
+        "sha256": "94b80eb32e280e48bdc0da42940767674c147165b4bab64282a78ee98073e37c",
+        "size": 2642688608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d05a4ff2fc866117efd7d78734f70581cefc7dfa",
+      "size": 5197
+    },
+    {
+      "rfilename": "pill_atomic_v3.png",
+      "blobId": "d8f38e5f9647887e97006b8c353b6f036f9cf2b2",
+      "size": 23368
+    },
+    {
+      "rfilename": "pill_discord_v3.png",
+      "blobId": "43c508304e09cf9eedcbc0025c21cbcdee07b3a9",
+      "size": 24244
+    },
+    {
+      "rfilename": "pill_github_v3.png",
+      "blobId": "c1d320ea78476a33667dca8181f73ad0a4361530",
+      "size": 19512
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-07-01T14:04:36.000Z",
+  "usedStorage": 15191470048
+}

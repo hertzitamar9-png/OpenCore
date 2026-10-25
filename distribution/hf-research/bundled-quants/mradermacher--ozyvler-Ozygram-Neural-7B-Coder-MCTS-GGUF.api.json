@@ -1,0 +1,209 @@
+{
+  "_id": "6ab82ce1909092518d2d5959",
+  "id": "mradermacher/ozyvler-Ozygram-Neural-7B-Coder-MCTS-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "code",
+    "qwen2.5",
+    "neuro-symbolic",
+    "mcts",
+    "dream-rsi",
+    "kev-engine",
+    "self-healing",
+    "ast",
+    "ollama",
+    "es",
+    "en",
+    "base_model:Xangel0s/ozyvler-Ozygram-Neural-7B-Coder-MCTS",
+    "base_model:quantized:Xangel0s/ozyvler-Ozygram-Neural-7B-Coder-MCTS",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1551,
+  "likes": 0,
+  "modelId": "mradermacher/ozyvler-Ozygram-Neural-7B-Coder-MCTS-GGUF",
+  "author": "mradermacher",
+  "sha": "0330455deb0a73e080e37e6ad53d064839a9beaf",
+  "lastModified": "2026-09-28T21:17:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "Xangel0s/ozyvler-Ozygram-Neural-7B-Coder-MCTS",
+    "language": [
+      "es",
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "code",
+      "qwen2.5",
+      "neuro-symbolic",
+      "mcts",
+      "dream-rsi",
+      "kev-engine",
+      "self-healing",
+      "ast",
+      "gguf",
+      "ollama"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2",
+    "context_length": 32768,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 15237854304
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7df4197d6e0e5bfa788d685ad1887d449f8e48b1",
+      "size": 2530
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2ceacdc5a0fb783bdf467aaa3328391cf6b87fa4",
+      "size": 4194
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.IQ4_XS.gguf",
+      "blobId": "3731f1442c4a9ad4662b7c7c2d8fb8e82f6b1412",
+      "size": 4250299488,
+      "lfs": {
+        "sha256": "d2477081e501788f7611b651acab71534935a3d9a49fe5d4d7c6409ee835d726",
+        "size": 4250299488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q2_K.gguf",
+      "blobId": "7ad72a9cc5bddfa863ade8606f9a4b12a95a6fb8",
+      "size": 3015941216,
+      "lfs": {
+        "sha256": "bca53f4b34f0a0ffde55d72ed24d53abc18885f69f80de93e31cf320f7ac6eb9",
+        "size": 3015941216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q3_K_L.gguf",
+      "blobId": "2fb7aafe8f6ba98ec62450b278fd6765ff68957a",
+      "size": 4088460384,
+      "lfs": {
+        "sha256": "ae2f16ff6c39e5e15b3b192b5247d6fb0ddb8b850e9c54d2fa9250ef8777e6eb",
+        "size": 4088460384,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q3_K_M.gguf",
+      "blobId": "2315d83c68a2db07b7c6bfa4c733e240c8d69595",
+      "size": 3808392288,
+      "lfs": {
+        "sha256": "d710cbf58b15efbc57dbe36bcf2313587f7b78acde2f72c2198bfe0b6da699de",
+        "size": 3808392288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q3_K_S.gguf",
+      "blobId": "75bb719c5c2db3f8ec9f2fb6fbc52f199f61008b",
+      "size": 3492369504,
+      "lfs": {
+        "sha256": "f645d5b2d4b5d26814180ddef34e549b106a4527e2adec2e8a07fe74c090f4ef",
+        "size": 3492369504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q4_K_M.gguf",
+      "blobId": "c39d290f895bbc1fd5ac6fe7227a94913895075e",
+      "size": 4683074656,
+      "lfs": {
+        "sha256": "0267b955081d46bcc8022ce88b4c125c96d7bc676c6baf36fe5a5d691decd687",
+        "size": 4683074656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q4_K_S.gguf",
+      "blobId": "4be49aae8b718578b61ded1cbe622b2102580820",
+      "size": 4457770080,
+      "lfs": {
+        "sha256": "8f612f7b9ac90458fe1443bb33b9e6e7fe6adfa18bd070b32e2a499200a88d87",
+        "size": 4457770080,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q5_K_M.gguf",
+      "blobId": "d59826b797c18e20dc7e39f9df572380fdb0f441",
+      "size": 5444832352,
+      "lfs": {
+        "sha256": "7965d6d8eb9beba2b09d7b7e45f6ffb4e28abfa1b97a9054bee2b076a93fe914",
+        "size": 5444832352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q5_K_S.gguf",
+      "blobId": "94b900eaf33820743f30077c99843830dc15f373",
+      "size": 5315177568,
+      "lfs": {
+        "sha256": "8e1c962c57f9a706ead35f16208fcb798b76a2c9c8121f715595833a1b34bce4",
+        "size": 5315177568,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q6_K.gguf",
+      "blobId": "69874d2adaff338b319be4ee9d2f63bba6d65a74",
+      "size": 6254199904,
+      "lfs": {
+        "sha256": "e739ef0c0cf252e712438140b3917d4e9979a8f06547548b37bd29567c9ccc0e",
+        "size": 6254199904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.Q8_0.gguf",
+      "blobId": "a03ec579181bda678f544c87c81f7a1353792b72",
+      "size": 8098526304,
+      "lfs": {
+        "sha256": "022175427ab68c737d9a9e76b2240f7c5e6d8fddc905a7fbbd68a8c541a8aa7c",
+        "size": 8098526304,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ozyvler-Ozygram-Neural-7B-Coder-MCTS.f16.gguf",
+      "blobId": "25257c588426a20db1c4ccb090479d3ce8dc1e0a",
+      "size": 15237854304,
+      "lfs": {
+        "sha256": "7a8bf537fa0a4502a40922f3bad35c1d6b9da1d81a681b85a5057a507dc5976a",
+        "size": 15237854304,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-26T20:36:49.000Z",
+  "usedStorage": 68146898048
+}

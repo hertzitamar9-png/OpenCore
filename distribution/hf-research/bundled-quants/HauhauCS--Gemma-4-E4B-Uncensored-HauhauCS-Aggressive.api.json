@@ -1,0 +1,290 @@
+{
+  "_id": "69ceedbf0689e4caa5ab755f",
+  "id": "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "uncensored",
+    "gemma4",
+    "abliterated",
+    "vision",
+    "multimodal",
+    "audio",
+    "image-text-to-text",
+    "en",
+    "multilingual",
+    "license:gemma",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 898788,
+  "likes": 1467,
+  "modelId": "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+  "author": "HauhauCS",
+  "sha": "45b6a334b4bcd1d7f37179df58b3b1d66a184e5d",
+  "lastModified": "2026-04-06T03:50:35.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "gemma",
+    "tags": [
+      "uncensored",
+      "gemma4",
+      "abliterated",
+      "gguf",
+      "vision",
+      "multimodal",
+      "audio"
+    ],
+    "language": [
+      "en",
+      "multilingual"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "google/gemma-4-e4b-it"
+  },
+  "gguf": {
+    "total": 7518069290,
+    "architecture": "gemma4",
+    "context_length": 131072,
+    "quantize_imatrix_file": "/media/hauhaucs/New Volume/LM Models/HauhauCS/Gemma4/E4B/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive.imatrix",
+    "chat_template": "{%- macro format_parameters(properties, required) -%}\n    {%- set standard_keys = ['description', 'type', 'properties', 'required', 'nullable'] -%}\n    {%- set ns = namespace(found_first=false) -%}\n    {%- for key, value in properties | dictsort -%}\n        {%- set add_comma = false -%}\n        {%- if key not in standard_keys -%}\n            {%- if ns.found_first %},{% endif -%}\n            {%- set ns.found_first = true -%}\n            {{ key }}:{\n            {%- if value['description'] -%}\n                description:<|\"|>{{ value['description'] }}<|\"|>\n                {%- set add_comma = true -%}\n            {%- endif -%}\n            {%- if value['nullable'] %}\n                {%- if add_comma %},{%- else -%} {%- set add_comma = true -%} {% endif -%}\n                nullable:true\n            {%- endif -%}\n            {%- if value['type'] | upper == 'STRING' -%}\n                {%- if value['enum'] -%}\n                    {%- if add_comma %},{%- else -%} {%- set add_comma = true -%} {% endif -%}\n                    enum:{{ format_argument(value['enum']) }}\n                {%- endif -%}\n            {%- elif value['type'] | upper == 'OBJECT' -%}\n                ,properties:{\n                {%- if value['properties'] is defined and value['properties'] is mapping -%}\n                    {{- format_parameters(value['properties'], value['required'] | default([])) -}}\n                {%- elif value is mapping -%}\n                    {{- format_parameters(value, value['required'] | default([])) -}}\n                {%- endif -%}\n                }\n                {%- if value['required'] -%}\n                    ,required:[\n                    {%- for item in value['required'] | default([]) -%}\n                        <|\"|>{{- item -}}<|\"|>\n                        {%- if not loop.last %},{% endif -%}\n                    {%- endfor -%}\n                    ]\n                {%- endif -%}\n            {%- elif value['type'] | upper == 'ARRAY' -%}\n                {%- if value['items'] is mapping and value['items'] -%}\n                    ,items:{\n                    {%- set ns_items = namespace(found_first=false) -%}\n                    {%- for item_key, item_value in value['items'] | dictsort -%}\n                        {%- if item_value is not none -%}\n                            {%- if ns_items.found_first %},{% endif -%}\n                            {%- set ns_items.found_first = true -%}\n                            {%- if item_key == 'properties' -%}\n                                properties:{\n                                {%- if item_value is mapping -%}\n                                    {{- format_parameters(item_value, value['items']['required'] | default([])) -}}\n                                {%- endif -%}\n                                }\n                            {%- elif item_key == 'required' -%}\n                                required:[\n                                {%- for req_item in item_value -%}\n                                    <|\"|>{{- req_item -}}<|\"|>\n                                    {%- if not loop.last %},{% endif -%}\n                                {%- endfor -%}\n                                ]\n                            {%- elif item_key == 'type' -%}\n                                {%- if item_value is string -%}\n                                    type:{{ format_argument(item_value | upper) }}\n                                {%- else -%}\n                                    type:{{ format_argument(item_value | map('upper') | list) }}\n                                {%- endif -%}\n                            {%- else -%}\n                                {{ item_key }}:{{ format_argument(item_value) }}\n                            {%- endif -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                    }\n                {%- endif -%}\n            {%- endif -%}\n            {%- if add_comma %},{%- else -%} {%- set add_comma = true -%} {% endif -%}\n            type:<|\"|>{{ value['type'] | upper }}<|\"|>}\n        {%- endif -%}\n    {%- endfor -%}\n{%- endmacro -%}\n{%- macro format_function_declaration(tool_data) -%}\n    declaration:{{- tool_data['function']['name'] -}}{description:<|\"|>{{- tool_data['function']['description'] -}}<|\"|>\n    {%- set params = tool_data['function']['parameters'] -%}\n    {%- if params -%}\n        ,parameters:{\n        {%- if params['properties'] -%}\n            properties:{ {{- format_parameters(params['properties'], params['required']) -}} },\n        {%- endif -%}\n        {%- if params['required'] -%}\n            required:[\n            {%- for item in params['required'] -%}\n                <|\"|>{{- item -}}<|\"|>\n                {{- ',' if not loop.last -}}\n            {%- endfor -%}\n            ],\n        {%- endif -%}\n        {%- if params['type'] -%}\n            type:<|\"|>{{- params['type'] | upper -}}<|\"|>}\n        {%- endif -%}\n    {%- endif -%}\n    {%- if 'response' in tool_data['function'] -%}\n        {%- set response_declaration = tool_data['function']['response'] -%}\n        ,response:{\n        {%- if response_declaration['description'] -%}\n            description:<|\"|>{{- response_declaration['description'] -}}<|\"|>,\n        {%- endif -%}\n        {%- if response_declaration['type'] | upper == 'OBJECT' -%}\n            type:<|\"|>{{- response_declaration['type'] | upper -}}<|\"|>}\n        {%- endif -%}\n    {%- endif -%}\n    }\n{%- endmacro -%}\n{%- macro format_argument(argument, escape_keys=True) -%}\n    {%- if argument is string -%}\n        {{- '<|\"|>' + argument + '<|\"|>' -}}\n    {%- elif argument is boolean -%}\n        {{- 'true' if argument else 'false' -}}\n    {%- elif argument is mapping -%}\n        {{- '{' -}}\n        {%- set ns = namespace(found_first=false) -%}\n        {%- for key, value in argument | dictsort -%}\n            {%- if ns.found_first %},{% endif -%}\n            {%- set ns.found_first = true -%}\n            {%- if escape_keys -%}\n                {{- '<|\"|>' + key + '<|\"|>' -}}\n            {%- else -%}\n                {{- key -}}\n            {%- endif -%}\n            :{{- format_argument(value, escape_keys=escape_keys) -}}\n        {%- endfor -%}\n        {{- '}' -}}\n    {%- elif argument is sequence -%}\n        {{- '[' -}}\n        {%- for item in argument -%}\n            {{- format_argument(item, escape_keys=escape_keys) -}}\n            {%- if not loop.last %},{% endif -%}\n        {%- endfor -%}\n        {{- ']' -}}\n    {%- else -%}\n        {{- argument -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro strip_thinking(text) -%}\n    {%- set ns = namespace(result='') -%}\n    {%- for part in text.split('<channel|>') -%}\n        {%- if '<|channel>' in part -%}\n            {%- set ns.result = ns.result + part.split('<|channel>')[0] -%}\n        {%- else -%}\n            {%- set ns.result = ns.result + part -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- ns.result | trim -}}\n{%- endmacro -%}\n\n{%- set ns = namespace(prev_message_type=None) -%}\n{%- set loop_messages = messages -%}\n{{ bos_token }}\n{#- Handle System/Tool Definitions Block -#}\n{%- if (enable_thinking is defined and enable_thinking) or tools or messages[0]['role'] in ['system', 'developer'] -%}\n    {{- '<|turn>system\\n' -}}\n\n    {#- Inject Thinking token at the very top of the FIRST system turn -#}\n    {%- if enable_thinking is defined and enable_thinking -%}\n        {{- '<|think|>' -}}\n        {%- set ns.prev_message_type = 'think' -%}\n    {%- endif -%}\n\n    {%- if messages[0]['role'] in ['system', 'developer'] -%}\n        {{- messages[0]['content'] | trim -}}\n        {%- set loop_messages = messages[1:] -%}\n    {%- endif -%}\n\n    {%- if tools -%}\n        {%- for tool in tools %}\n            {{- '<|tool>' -}}\n            {{- format_function_declaration(tool) | trim -}}\n            {{- '<tool|>' -}}\n        {%- endfor %}\n        {%- set ns.prev_message_type = 'tool' -%}\n    {%- endif -%}\n\n    {{- '<turn|>\\n' -}}\n{%- endif %}\n\n{#- Loop through messages -#}\n{%- for message in loop_messages -%}\n    {%- set ns.prev_message_type = None -%}\n    {%- set role = 'model' if message['role'] == 'assistant' else message['role'] -%}\n        {{- '<|turn>' + role + '\\n' }}\n\n            {%- if message['tool_calls'] -%}\n                {%- for tool_call in message['tool_calls'] -%}\n                    {%- set function = tool_call['function'] -%}\n                    {{- '<|tool_call>call:' + function['name'] + '{' -}}\n                    {%- if function['arguments'] is mapping -%}\n                        {%- set ns_args = namespace(found_first=false) -%}\n                        {%- for key, value in function['arguments'] | dictsort -%}\n                            {%- if ns_args.found_first %},{% endif -%}\n                            {%- set ns_args.found_first = true -%}\n                            {{- key -}}:{{- format_argument(value, escape_keys=False) -}}\n                        {%- endfor -%}\n                    {%- elif function['arguments'] is string -%}\n                        {{- function['arguments'] -}}\n                    {%- endif -%}\n                    {{- '}<tool_call|>' -}}\n                {%- endfor -%}\n                {%- set ns.prev_message_type = 'tool_call' -%}\n            {%- endif -%}\n\n            {%- if message['tool_responses'] -%}\n                {#- Tool Response handling -#}\n                {%- for tool_response in message['tool_responses'] -%}\n                    {{- '<|tool_response>' -}}\n                    {%- if tool_response['response'] is mapping -%}\n                        {{- 'response:' + tool_response['name'] | default('unknown') + '{' -}}\n                        {%- for key, value in tool_response['response'] | dictsort -%}\n                            {{- key -}}:{{- format_argument(value, escape_keys=False) -}}\n                            {%- if not loop.last %},{% endif -%}\n                        {%- endfor -%}\n                        {{- '}' -}}\n                    {%- else -%}\n                        {{- 'response:' + tool_response['name'] | default('unknown') + '{value:' + format_argument(tool_response['response'], escape_keys=False) + '}' -}}\n                    {%- endif -%}\n                    {{- '<tool_response|>' -}}\n                {%- endfor -%}\n                {%- set ns.prev_message_type = 'tool_response' -%}\n            {%- endif -%}\n\n            {%- if message['content'] is string -%}\n                {%- if role == 'model' -%}\n                    {{- strip_thinking(message['content']) -}}\n                {%- else -%}\n                    {{- message['content'] | trim -}}\n                {%- endif -%}\n            {%- elif message['content'] is sequence -%}\n                {%- for item in message['content'] -%}\n                    {%- if item['type'] == 'text' -%}\n                        {%- if role == 'model' -%}\n                            {{- strip_thinking(item['text']) -}}\n                        {%- else -%}\n                            {{- item['text'] | trim -}}\n                        {%- endif -%}\n                    {%- elif item['type'] == 'image' -%}\n                        {{- '\\n\\n<|image|>\\n\\n' -}}\n                        {%- set ns.prev_message_type = 'image' -%}\n                    {%- elif item['type'] == 'audio' -%}\n                        {{- '<|audio|>' -}}\n                        {%- set ns.prev_message_type = 'audio' -%}\n                    {%- elif item['type'] == 'video' -%}\n                        {{- '\\n\\n<|video|>\\n\\n' -}}\n                        {%- set ns.prev_message_type = 'video' -%}\n                    {%- endif -%}\n                {%- endfor -%}\n            {%- endif -%}\n\n        {%- if not (message['tool_responses'] and not message['content']) -%}\n            {{- '<turn|>\\n' -}}\n        {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {%- if ns.prev_message_type != 'tool_response' -%}\n        {{- '<|turn>model\\n' -}}\n    {%- endif -%}\n{%- endif -%}",
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 4714690528
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "d0720fb3e8d78b8b44fbc4bd7ae9cabcb70ed42a",
+      "size": 2614
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-IQ3_M.gguf",
+      "blobId": "6ff304b4c6c8acee72f2cad853fac778fbd49eb4",
+      "size": 4714690528,
+      "lfs": {
+        "sha256": "d17a59387ef0ada0823fb4572b609da920d822f31b6ac983e323da55c31aa3a2",
+        "size": 4714690528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-IQ4_XS.gguf",
+      "blobId": "fa3bf46e32e5d1ffa7c4f0953b7e83320fefed61",
+      "size": 5070950368,
+      "lfs": {
+        "sha256": "8e533ca658a3959fd3ee8b5f575c24b87c5a278649d5053480d4cce280bdbd6c",
+        "size": 5070950368,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q2_K_P.gguf",
+      "blobId": "475ee2b12e512fb53b8989ab6f9e32e65de7a44a",
+      "size": 4431882208,
+      "lfs": {
+        "sha256": "1292d4767733de9e182a9bfd274d371103f0695cc0ca1f5f6678e5a855942d42",
+        "size": 4431882208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q3_K_M.gguf",
+      "blobId": "7600fdbd15402bf4e5b4c331e38417c2f411f79c",
+      "size": 4850391008,
+      "lfs": {
+        "sha256": "a60db97bb4f61f0167d64f369c198428b2bb10a636b6f339f2f947ac40202a98",
+        "size": 4850391008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q3_K_P.gguf",
+      "blobId": "171ca0445d7dc026e4051885fadaff0d87969e7a",
+      "size": 4884505568,
+      "lfs": {
+        "sha256": "15636005886b262a5920cbdae8b9881b2a6bb5c1dadc4784ec3c89acf498571c",
+        "size": 4884505568,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+      "blobId": "09fa6f72809d5f304b66e5a4a988560c2975a161",
+      "size": 5335285728,
+      "lfs": {
+        "sha256": "d0027dd3a9128d9323e9f282c8bf010a8526c46477584535991dc1a869b56e96",
+        "size": 5335285728,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_P.gguf",
+      "blobId": "b23479593456e82173f6f4432664788f8d1581cc",
+      "size": 5369246688,
+      "lfs": {
+        "sha256": "05146429870f4ec4c16882f44bec29c51e4797463ad7080044a5c748cabb2486",
+        "size": 5369246688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_M.gguf",
+      "blobId": "2972fbd3ad174ca6832978f62d837f0393032e58",
+      "size": 5762908128,
+      "lfs": {
+        "sha256": "c96f1afc2af92bb27b1d5057fd91c8f6e41e9a72f9f32faa389e1601a6963ee6",
+        "size": 5762908128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P.gguf",
+      "blobId": "c9a7c6fd41fade8524e464ff80677981a48367ae",
+      "size": 5812940768,
+      "lfs": {
+        "sha256": "be18995dc554b6509254f38fd7d6f3193793091750072a57af47bca2525b1521",
+        "size": 5812940768,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q6_K_P.gguf",
+      "blobId": "3e75a474b71881307e6b63d913137efcc48612b6",
+      "size": 6249794528,
+      "lfs": {
+        "sha256": "f28b0ae262158af10d847c3f01bfdb943161dd31320f3aed20775ee2ad6c67a6",
+        "size": 6249794528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q8_K_P.gguf",
+      "blobId": "86559b6fe9a40fe64e51b666c59990b9f2ea582d",
+      "size": 8133226464,
+      "lfs": {
+        "sha256": "a4c4177f9fd7e3f56522675afb742f079a53f9226195b7db5e9888c872f053da",
+        "size": 8133226464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "60469230005245e71e9121693b704e0c13d7aa39",
+      "size": 6106
+    },
+    {
+      "rfilename": "mmproj-Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-f16.gguf",
+      "blobId": "56e26c05233be0e73026fe7d7d2cf2dc122d64df",
+      "size": 990288832,
+      "lfs": {
+        "sha256": "debad39ab9c1152ab67695a674fb35e8375b2320c57bfd5075835d3ccb16c7db",
+        "size": 990288832,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "mikeee/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "Rikunarita-ORG/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-GGUF-Q4_K_P",
+    "mikeee/qwen-7b-chat",
+    "rikunarita/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "AmirKazim/qwen-7b-chat",
+    "zephyr20/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "codermhf/mygemmaunc",
+    "mubasherch5200/Alience-v1.0-Unsensord-Chat",
+    "djikon/qwen-7b-chat",
+    "OwenPowell/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "S-Dreamer/PurpleTeam-CodeWorkbench",
+    "jessewebdev/qwen-7b-chat",
+    "elapuropublicidad/qwen-7b-chat",
+    "srmarquess/qwen-7b-chat",
+    "skykholodovzz/qwen-7b-chat",
+    "flen-crypto/chataboutanything",
+    "pronut/qwen-7b-chat",
+    "yeezyee/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "yangyumiemiemie/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "wxzzzwzm/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "hoata002/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "cuiyy/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "1uf9dqku3iq/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "roseforyou/gemma-4-uncensored-chat",
+    "zephyr20/qwen-7b-chat",
+    "lhsea/Gemma4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "the-funky-submarine-ground-ball-inducing/Kai",
+    "zxchfg/gemma-4-uncensored",
+    "Fortunxx/qwen-7b-chat",
+    "DaddyTillDawn/qwen-7b-chat",
+    "Kalle71/qwen-7b-chat",
+    "aetrnl/qwen-7b-chat",
+    "Fffdfffccvcccfff/qwen-7b-chat",
+    "QWiota/Gemma-4",
+    "Nicolashadinata/qwen-7b-chat",
+    "xxlm47/qwen-7b-chat",
+    "ikik2000/qwen-7b-chat",
+    "Zunko2/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "QoS12/qwen-7b-chat",
+    "nokiatis/my-gemma-chatbot",
+    "looda3131/qwen-7b-chat",
+    "sadfaceoftasia/testasia",
+    "mhmodijla2/qwen-7b-chat",
+    "Ghotenius/qwen-7b-chat",
+    "ansikderallwork768/qwen-7b-chat",
+    "Galaxydude2/cn",
+    "mdnstv09/qwen-7b-chat",
+    "Rituxi/Luro",
+    "sherwin217/MIRA4gemmacopy",
+    "Loveago/qwen-7b-chat",
+    "MrK00l/qwen-7b-chat",
+    "SeoBraini/qwen-7b-chat",
+    "Sujithv/qwen-7b-chat",
+    "Bhuvispandana/qwen-7b-chat",
+    "Voided0ne/qwen-7b-chat",
+    "ElieX/qwen-7b-chat",
+    "hardcoremoore/qwen-7b-chat",
+    "immiked4/qwen-7b-chat",
+    "hardcoremoore699/qwen-7b-chat",
+    "mycology5000/qwen-7b-chat",
+    "SECZ/qwen-7b-chat",
+    "Porno122/qwen-7b-chat",
+    "jblast94/qwen-7b-chat",
+    "nimeshsanji/qwen-7b-chat",
+    "Sirsadist/qwen-7b-chat",
+    "Atmpushout/qwen-7b-chat",
+    "johndeo24042020/qwen-7b-chat",
+    "Mikey248/qwen-7b-chat",
+    "ishish0100/qwen-7b-chat",
+    "Allauiy/qwen-7b-chat",
+    "mikeee/gemma-4-e4b-uncensored",
+    "tsmorro/qwen-7b-chat",
+    "Jkkkkkkkkksks/qwen-7b-chat",
+    "sherwin217/Gemma-4-E4B",
+    "shanghsin/gemma-4-e4b",
+    "titoo3/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q5_K_P",
+    "superstunyo/qwen-7b-chat",
+    "Nassian/bridge-gemma4-zerogpu-benchmark",
+    "Voided0ne/DeCoder"
+  ],
+  "createdAt": "2026-04-02T22:29:19.000Z",
+  "usedStorage": 61606110816
+}

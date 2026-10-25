@@ -1,0 +1,182 @@
+{
+  "_id": "681285d9c0d9e785b5cfd8b0",
+  "id": "allenai/OLMo-2-0425-1B-Instruct-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "base_model:allenai/OLMo-2-0425-1B-Instruct",
+    "base_model:quantized:allenai/OLMo-2-0425-1B-Instruct",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 1660,
+  "likes": 15,
+  "modelId": "allenai/OLMo-2-0425-1B-Instruct-GGUF",
+  "author": "allenai",
+  "sha": "62f8c199538474c3e33ed5d7e0580abd66686a27",
+  "lastModified": "2025-05-01T19:31:21.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "allenai/OLMo-2-0425-1B-Instruct"
+    ]
+  },
+  "gguf": {
+    "total": 1484916736,
+    "architecture": "olmo2",
+    "context_length": 4096,
+    "chat_template": "{{ bos_token }}{% for message in messages %}{% if message['role'] == 'system' %}{{ '<|system|>\n' + message['content'] + '\n' }}{% elif message['role'] == 'user' %}{{ '<|user|>\n' + message['content'] + '\n' }}{% elif message['role'] == 'assistant' %}{% if not loop.last %}{{ '<|assistant|>\n'  + message['content'] + eos_token + '\n' }}{% else %}{{ '<|assistant|>\n'  + message['content'] + eos_token }}{% endif %}{% endif %}{% if loop.last and add_generation_prompt %}{{ '<|assistant|>\n' }}{% endif %}{% endfor %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 2973652128
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "93bcd816bc3fc015b18ec31fe38b94ec8eb82608",
+      "size": 2442
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-F16.gguf",
+      "blobId": "9daf034c7a4d9a2ae6c2ee7580b7030cb4360013",
+      "size": 2973652128,
+      "lfs": {
+        "sha256": "376249dff02917a8cf5ea413d2bfdf2802f10f7d92973d95a6f28b2204ac4eab",
+        "size": 2973652128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q2_K.gguf",
+      "blobId": "ce90c16b6faea8c6167064a4777543336fe52fea",
+      "size": 633328800,
+      "lfs": {
+        "sha256": "7748827e8aa548055c5d68bd8d3183283b7435b1a3b227673e7035524f40616e",
+        "size": 633328800,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q3_K_L.gguf",
+      "blobId": "2ebb407d9a0a47d09156bfd3d4c4bfa09eccc641",
+      "size": 826168480,
+      "lfs": {
+        "sha256": "4fa5e7872a8db74716fbaedc35698e0771f9a0918c7fcf57bb2aa41acf7695d4",
+        "size": 826168480,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q3_K_M.gguf",
+      "blobId": "f02abf76f311a2218712efa546db3ee2601c3260",
+      "size": 778982560,
+      "lfs": {
+        "sha256": "3ef303ab8ccbbfa0f2da060099ab25ee8368e304f9cedb6c1fda52f0929ffd39",
+        "size": 778982560,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q3_K_S.gguf",
+      "blobId": "4ef6ad3fa955ba791bf491f18544a8ed355e5884",
+      "size": 722359456,
+      "lfs": {
+        "sha256": "1bef57ab7e70455358ee14ebd1dfe3f34d7ec988e84dfc0fb2bf25662b671bca",
+        "size": 722359456,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q4_0.gguf",
+      "blobId": "7ac57a0060a3349be60ec11afb547707278c4504",
+      "size": 892261536,
+      "lfs": {
+        "sha256": "c5efa891c82203620b4ad12f2676340b330641bc9790a5eda4f6586e855e222c",
+        "size": 892261536,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q4_K_M.gguf",
+      "blobId": "4b524a2c47b8b4218694e9f668a3582f81bb6ea7",
+      "size": 935515296,
+      "lfs": {
+        "sha256": "abd8187934a438fbf7cfff0a1de5b9d2793ce913f158794df1951dcba6c93cc6",
+        "size": 935515296,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q4_K_S.gguf",
+      "blobId": "fa19dde8aaac4bc0c88486cd52eef9ba27195d35",
+      "size": 898552992,
+      "lfs": {
+        "sha256": "343d0620aacc694fff753ac4298f330deb184b9755976d7b43737c9fd596c573",
+        "size": 898552992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q5_0.gguf",
+      "blobId": "8656a3f1b4376d2afc7447c812a6856974f77f20",
+      "size": 1052169376,
+      "lfs": {
+        "sha256": "e6095ccd009070306cd263299b8b65607fa1727ad1d43c6cedb5047a9899bbaa",
+        "size": 1052169376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q5_K_M.gguf",
+      "blobId": "d88c35e01dc65a08c2edfef206468ea6d977204d",
+      "size": 1074451616,
+      "lfs": {
+        "sha256": "dab1b050f6e3edc6cb21f8e77ab44c299b2bd09b4aa8777a23190a22440b9e96",
+        "size": 1074451616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q5_K_S.gguf",
+      "blobId": "944bdac1be42a78a8a832555fdf208e19edb7b7c",
+      "size": 1052169376,
+      "lfs": {
+        "sha256": "0a559da889c45e84004d9a4ba270d5a8c5a22a34f5c5992f0382361697449d8e",
+        "size": 1052169376,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q6_K.gguf",
+      "blobId": "81f6d8f3a794485e8333868e3d421c3cdb8b7f4a",
+      "size": 1222071456,
+      "lfs": {
+        "sha256": "7041952b229684326c3157f7e510dcb190ae63fb5fefece54fdf59288884c59b",
+        "size": 1222071456,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "OLMo-2-0425-1B-Instruct-Q8_0.gguf",
+      "blobId": "abd6b603ef3796147dc168ea1ac1f68c13cbb0f3",
+      "size": 1581667488,
+      "lfs": {
+        "sha256": "4a180742923d27d2434e53062b21f508257a5ee15abda398a3db13385e33d6e6",
+        "size": 1581667488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c4a18eff46d0a06589b1b0aebacc13bc312c62d6",
+      "size": 125
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-04-30T20:19:37.000Z",
+  "usedStorage": 29286695296
+}

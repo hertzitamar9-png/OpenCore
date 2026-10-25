@@ -1,0 +1,343 @@
+{
+  "_id": "6780f107e11224514e941848",
+  "id": "AcerTest359/Phi-3.5-mini-instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "nlp",
+    "code",
+    "text-generation",
+    "multilingual",
+    "base_model:microsoft/Phi-3.5-mini-instruct",
+    "base_model:quantized:microsoft/Phi-3.5-mini-instruct",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 498,
+  "likes": 0,
+  "modelId": "AcerTest359/Phi-3.5-mini-instruct-GGUF",
+  "author": "AcerTest359",
+  "sha": "10e51f2860e4a953b89df3709a24265a1b35f6f8",
+  "lastModified": "2025-01-10T10:05:59.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Can you provide ways to eat combinations of bananas and dragonfruits?"
+        }
+      ]
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "microsoft/Phi-3.5-mini-instruct",
+    "language": [
+      "multilingual"
+    ],
+    "library_name": "transformers",
+    "license": "mit",
+    "license_link": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct/resolve/main/LICENSE",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "nlp",
+      "code"
+    ],
+    "quantized_by": "bartowski",
+    "widget": [
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Can you provide ways to eat combinations of bananas and dragonfruits?"
+          }
+        ]
+      }
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 3821079648,
+    "architecture": "phi3",
+    "context_length": 131072,
+    "chat_template": "{% for message in messages %}{% if message['role'] == 'system' and message['content'] %}{{'<|system|>\n' + message['content'] + '<|end|>\n'}}{% elif message['role'] == 'user' %}{{'<|user|>\n' + message['content'] + '<|end|>\n'}}{% elif message['role'] == 'assistant' %}{{'<|assistant|>\n' + message['content'] + '<|end|>\n'}}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|assistant|>\n' }}{% else %}{{ eos_token }}{% endif %}",
+    "bos_token": "<s>",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 15285057024
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9bcce5b9d43ac564ecb8a21c468fca9adbccef75",
+      "size": 3259
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-IQ2_M.gguf",
+      "blobId": "6a78ba5d280a0debebba334edebf9c7b84a97eb1",
+      "size": 1316395296,
+      "lfs": {
+        "sha256": "23ea25b8d81a180f3bdbdf68d813015005cdaf84149f2f774dac353127457494",
+        "size": 1316395296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-IQ3_M.gguf",
+      "blobId": "38e2313534dc6594f2bc87229ae44ee3618fbc22",
+      "size": 1855600416,
+      "lfs": {
+        "sha256": "3aa8ae9d864f658a4628393063a5ec10b04d4f38b77f38d0c770048feaff2647",
+        "size": 1855600416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-IQ3_XS.gguf",
+      "blobId": "30fabf75089c435b00df0706b3709203515f8494",
+      "size": 1625175840,
+      "lfs": {
+        "sha256": "c25cbfebd314aab71c5946a6db5a9d1bc2209f04206cf402a7ff38f33e4fade8",
+        "size": 1625175840,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-IQ4_XS.gguf",
+      "blobId": "4493aac0eaf34490da432f7af1f22090b6a1794e",
+      "size": 2059853088,
+      "lfs": {
+        "sha256": "bc4e2d58ea331ffded51fc237874306df2a711209ab0ec91dd57b49dfdb6e36a",
+        "size": 2059853088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q2_K.gguf",
+      "blobId": "bcd93e1a8dda9d64b55fba0634ac0d7496692d2e",
+      "size": 1416204576,
+      "lfs": {
+        "sha256": "7425cb5fec0d2673151c95d1418f5e11bdf102edd0d8b22986d17210adb05bbd",
+        "size": 1416204576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q2_K_L.gguf",
+      "blobId": "6a836ef350d6ee4754bf7f2573e15e8435f8bd94",
+      "size": 1512396576,
+      "lfs": {
+        "sha256": "f52713ed786f122f33ee58abdb309a17156d7f629dfe0f9b7e3929549c0ca8fa",
+        "size": 1512396576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q3_K_L.gguf",
+      "blobId": "6cdeebe6d07386ed71dbc437883eb98dfb350c15",
+      "size": 2087597856,
+      "lfs": {
+        "sha256": "d0ecfe4c3c51c661599907989b4c7435c7fdc870052e4390dbdbde8346662c06",
+        "size": 2087597856,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q3_K_M.gguf",
+      "blobId": "dc6a8880b88b773d78fedb5b79fa338fb3e05a2b",
+      "size": 1955477280,
+      "lfs": {
+        "sha256": "5e005a663fc15ee51c9aea089fbd63a557458b020ee799e369d17da273a8b855",
+        "size": 1955477280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q3_K_S.gguf",
+      "blobId": "fe8624c9c19b5e593aebbed527664ae5195193b9",
+      "size": 1681798944,
+      "lfs": {
+        "sha256": "1ee4bb9d932bd5d369ef332865b99121c77142b192867aa7414919781cb8f329",
+        "size": 1681798944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q3_K_XL.gguf",
+      "blobId": "227e85c7679418f5df39ba55ea844a45575714e5",
+      "size": 2173785888,
+      "lfs": {
+        "sha256": "8118b4cc536580efb08dafe17b154ca3686f5bb991716fcdf8f34468513447d0",
+        "size": 2173785888,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_0.gguf",
+      "blobId": "b6a8bb06c1e2ddceaf775244fafc9d50309009f7",
+      "size": 2182468896,
+      "lfs": {
+        "sha256": "6e0a4c93fe5db9408348cd2cbd15eee6f448efe6f91255a208c2d28701259b1d",
+        "size": 2182468896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_0_4_4.gguf",
+      "blobId": "cda15f994e9ef46bf5920b877ddeec6d8ec1917e",
+      "size": 2176177440,
+      "lfs": {
+        "sha256": "d732ee9149ed3127969a0ebef76c458eca838bc11a40a63aea10a58780470746",
+        "size": 2176177440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_0_4_8.gguf",
+      "blobId": "2f404737ba2d90b4a15b81f36efffea0d1bcdcd5",
+      "size": 2176177440,
+      "lfs": {
+        "sha256": "87dd6ca63d7c117e19fd19e922ffd6e65d20d345eb560561f60d3b6d4faa43fa",
+        "size": 2176177440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_0_8_8.gguf",
+      "blobId": "9c4d1e7a528b3d1a4326117ccbf1136635f6331e",
+      "size": 2176177440,
+      "lfs": {
+        "sha256": "be10da6304176ccffaf610b4b61b624d00ec9fc05fa5b2d626c840ea358b1e51",
+        "size": 2176177440,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_K_L.gguf",
+      "blobId": "516f42c1fec6eb291ee33ba9ed387b6004098e5d",
+      "size": 2466338592,
+      "lfs": {
+        "sha256": "316dcbd8effc308aa239b22966644179b826693b313275a310d015ab98f3acba",
+        "size": 2466338592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_K_M.gguf",
+      "blobId": "a2ff8fdc621326b7bdccc0c8c36e3b178cdca336",
+      "size": 2393232672,
+      "lfs": {
+        "sha256": "e4165e3a71af97f1b4820da61079826d8752a2088e313af0c7d346796c38eff5",
+        "size": 2393232672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q4_K_S.gguf",
+      "blobId": "784c89c2db9aabe1992adb4946484a43cb7392f0",
+      "size": 2188760352,
+      "lfs": {
+        "sha256": "989feec38dd6101911668209050d2b11111288d6bea3b2a695b7e09433c740ed",
+        "size": 2188760352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q5_K_L.gguf",
+      "blobId": "dff2f9282290746bd27f67ea9de9ea6fa52fddc5",
+      "size": 2876069664,
+      "lfs": {
+        "sha256": "df76b3117fac9fbcce3456b386d0250cbfded9f2e6878207250124d1966e9192",
+        "size": 2876069664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q5_K_M.gguf",
+      "blobId": "4b468bb571ac3e1834e3eba08c2ca0c8b3bfb839",
+      "size": 2815276320,
+      "lfs": {
+        "sha256": "3fb19cc624c455ed4b513ce5d698585e4ccdbaeb151138bdac25eec82b2c20dc",
+        "size": 2815276320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q5_K_S.gguf",
+      "blobId": "f52844071334c08eede98238078c22b71aed866e",
+      "size": 2641474848,
+      "lfs": {
+        "sha256": "0433ac4dadbd717c3735d9e19526e517204d76fcc841398ce4127a1d8aad343e",
+        "size": 2641474848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q6_K.gguf",
+      "blobId": "1e83fa2d14749bd6c31aa93754542765c81b0ba3",
+      "size": 3135853344,
+      "lfs": {
+        "sha256": "cc4f0d756eb82447035314dbd247809a564189c20583e1d6fb926f9b6e1eb890",
+        "size": 3135853344,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q6_K_L.gguf",
+      "blobId": "af1123da830e6ec48daea483ac28562cf818a142",
+      "size": 3183564576,
+      "lfs": {
+        "sha256": "508ef355bc0fd945266276bb1b8eb7abbc3928f48d6a96cbc868a81600723604",
+        "size": 3183564576,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-Q8_0.gguf",
+      "blobId": "d71021f748858ab85d1e7b81022922686b5bd2b6",
+      "size": 4061222688,
+      "lfs": {
+        "sha256": "76fbf02f6fe92af57dbd818409bc8a0240026f1f3609bb405c3be94c973fb823",
+        "size": 4061222688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct-f32.gguf",
+      "blobId": "271f874618a81649b6fa8ec7df79019a252fdbd4",
+      "size": 15285057024,
+      "lfs": {
+        "sha256": "cb1b41ad243c37be329d6accb7a9a857e2c7c883d60a78aa80e718695444ce39",
+        "size": 15285057024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Phi-3.5-mini-instruct.imatrix",
+      "blobId": "8de856a8ef873d266698a66038d7246b19d35f76",
+      "size": 2232616,
+      "lfs": {
+        "sha256": "464ed2ed108a8d59225253766d93a6160059fdf45c3b32ce5b1be1c1b9ce99f9",
+        "size": 2232616,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "e399a05f5e4665a548177c85ceb5e8555a4afafa",
+      "size": 10589
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-01-10T10:05:59.000Z",
+  "usedStorage": 67446602288
+}

@@ -1,0 +1,323 @@
+{
+  "_id": "6acb543f81b0c228f4db3e01",
+  "id": "Adolphsson/DeepSeek-V4.1-Flash-UNCENSORED-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "tags": [
+    "gguf",
+    "deepseek",
+    "uncensored",
+    "abliterated",
+    "multimodal",
+    "image-text-to-text",
+    "1m-context",
+    "en",
+    "base_model:dealignai/DeepSeek-V4.1-Flash-UNCENSORED-FP8",
+    "base_model:quantized:dealignai/DeepSeek-V4.1-Flash-UNCENSORED-FP8",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 24227,
+  "likes": 9,
+  "modelId": "Adolphsson/DeepSeek-V4.1-Flash-UNCENSORED-GGUF",
+  "author": "Adolphsson",
+  "sha": "5855a6c8509e8956ed0e7fdfb84e2f50ae13107b",
+  "lastModified": "2026-10-19T08:22:12.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "mit",
+    "language": "en",
+    "base_model": "dealignai/DeepSeek-V4.1-Flash-UNCENSORED-FP8",
+    "tags": [
+      "deepseek",
+      "uncensored",
+      "abliterated",
+      "multimodal",
+      "image-text-to-text",
+      "1m-context"
+    ]
+  },
+  "gguf": {
+    "total": 748494684784,
+    "architecture": "deepseek41",
+    "context_length": 1048576,
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n  {%- set add_generation_prompt = false -%}\n{%- endif -%}\n{%- if not thinking is defined -%}\n  {%- if enable_thinking is defined -%}\n    {%- set thinking = enable_thinking -%}\n  {%- else -%}\n    {%- set thinking = false -%}\n  {%- endif -%}\n{%- endif -%}\n{%- if not drop_thinking is defined -%}\n  {%- set drop_thinking = true -%}\n{%- endif -%}\n{%- set dsml_token = '\uff5cDSML\uff5c' -%}\n{%- set thinking_start_token = '<think>' -%}\n{%- set thinking_end_token = '</think>' -%}\n{%- set reasoning_effort_max = 'Reasoning Effort: Absolute maximum with no shortcuts permitted.\\nYou MUST be very thorough in your thinking and comprehensively decompose the problem to resolve the root cause, rigorously stress-testing your logic against all potential paths, edge cases, and adversarial scenarios.\\nExplicitly write out your entire deliberation process, documenting every intermediate step, considered alternative, and rejected hypothesis to ensure absolutely no assumption is left unchecked.\\n\\n' -%}\n{%- set response_format_template = '## Response Format:\\n\\nYou MUST strictly adhere to the following schema to reply:\\n' -%}\n{%- set has_tools = false -%}\n{%- set tools_header = '## Tools\\n\\nYou have access to a set of tools to help answer the user\\'s question. You can invoke tools by writing a \"<' + dsml_token + 'tool_calls>\" block like the following:\\n\\n<' + dsml_token + 'tool_calls>\\n<' + dsml_token + 'invoke name=\"$TOOL_NAME\">\\n<' + dsml_token + 'parameter name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE</' + dsml_token + 'parameter>\\n...\\n</' + dsml_token + 'invoke>\\n<' + dsml_token + 'invoke name=\"$TOOL_NAME2\">\\n...\\n</' + dsml_token + 'invoke>\\n</' + dsml_token + 'tool_calls>\\n\\nString parameters should be specified as is and set `string=\"true\"`. For all other types (numbers, booleans, arrays, objects), pass the value in JSON format and set `string=\"false\"`.\\n\\nIf thinking_mode is enabled (triggered by ' + thinking_start_token + '), you MUST output your complete reasoning inside ' + thinking_start_token + '...' + thinking_end_token + ' BEFORE any tool calls or final response.\\n\\nOtherwise, output directly after ' + thinking_end_token + ' with tool calls or final response.\\n\\n### Available Tool Schemas\\n\\n' -%}\n{%- set tools_footer = '\\nYou MUST strictly follow the above defined tool name and parameter schemas to invoke tool calls.\\n' -%}\n{%- set ns = namespace(system_prompt='', is_first_sp=true, has_tool_calls=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'system' -%}\n    {%- if ns.is_first_sp -%}\n      {%- set ns.system_prompt = ns.system_prompt + (message['content'] or '') -%}\n      {%- set ns.is_first_sp = false -%}\n    {%- else -%}\n      {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + (message['content'] or '') -%}\n    {%- endif -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- if tools is defined and tools -%}\n  {%- set has_tools = true -%}\n  {%- set ts = namespace(schemas='') -%}\n  {%- for tool in tools -%}\n    {%- if tool['type'] == 'function' -%}\n      {%- set ts.schemas = ts.schemas + (tool['function'] | tojson) + '\\n' -%}\n    {%- endif -%}\n  {%- endfor -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + tools_header + ts.schemas + tools_footer -%}\n  {%- else -%}\n    {%- set ns.system_prompt = tools_header + ts.schemas + tools_footer -%}\n  {%- endif -%}\n{%- endif -%}\n{%- if response_format is defined -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' -%}\n  {%- endif -%}\n  {%- set ns.system_prompt = ns.system_prompt + response_format_template + (response_format | tojson) -%}\n{%- endif -%}\n{{- bos_token -}}\n{%- if messages and thinking and reasoning_effort is defined and reasoning_effort == 'max' -%}\n  {{- reasoning_effort_max -}}\n{%- endif -%}\n{{- ns.system_prompt -}}\n{%- set last_user_idx = namespace(value=-1) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' or message['role'] == 'tool' -%}\n    {%- set last_user_idx.value = loop.index0 -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- set state = namespace(in_user=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'tool' -%}\n    {%- set ns.has_tool_calls = true -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- message['content'] or '' -}}\n  {%- elif message['role'] == 'tool' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- '<tool_result>' + (message['content'] or '') + '</tool_result>' -}}\n  {%- elif message['role'] == 'assistant' -%}\n    {%- set state.in_user = false -%}\n    {{- '<\uff5cAssistant\uff5c>' -}}\n    {%- set is_after_last_user = loop.index0 > last_user_idx.value -%}\n    {%- set keep_reasoning = thinking and ((not drop_thinking) or has_tools or is_after_last_user or ns.has_tool_calls) -%}\n    {%- if keep_reasoning -%}\n      {{- thinking_start_token -}}\n      {%- if message['reasoning_content'] is defined and message['reasoning_content'] -%}\n        {{- message['reasoning_content'] -}}\n      {%- endif -%}\n      {{- thinking_end_token -}}\n    {%- else -%}\n      {{- thinking_end_token -}}\n    {%- endif -%}\n    {%- if message['content'] is defined and message['content'] -%}\n      {{- message['content'] -}}\n    {%- endif -%}\n    {%- if message['tool_calls'] -%}\n      {{- '\\n\\n<' + dsml_token + 'tool_calls>\\n' -}}\n      {%- for tool in message['tool_calls'] -%}\n        {%- set func = tool['function'] -%}\n        {{- '<' + dsml_token + 'invoke name=\"' + func['name'] + '\">\\n' -}}\n        {%- set args = func['arguments'] -%}\n        {%- if args is string -%}\n          {%- set args = args | from_json -%}\n        {%- endif -%}\n        {%- for key, val in args.items() -%}\n          {%- if val is string -%}\n            {{- '<' + dsml_token + 'parameter name=\"' + key + '\" string=\"true\">' + val + '</' + dsml_token + 'parameter>\\n' -}}\n          {%- else -%}\n            {{- '<' + dsml_token + 'parameter name=\"' + key + '\" string=\"false\">' + (val | tojson) + '</' + dsml_token + 'parameter>\\n' -}}\n          {%- endif -%}\n        {%- endfor -%}\n        {%- if not args -%}\n          {{- '\\n' -}}\n        {%- endif -%}\n        {{- '</' + dsml_token + 'invoke>\\n' -}}\n      {%- endfor -%}\n      {{- '</' + dsml_token + 'tool_calls>' -}}\n    {%- endif -%}\n    {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' -}}\n  {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n  {{- '<\uff5cAssistant\uff5c>' -}}\n  {%- if thinking -%}\n    {{- thinking_start_token -}}\n  {%- else -%}\n    {{- thinking_end_token -}}\n  {%- endif -%}\n{%- endif -%}\n",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 270635227712
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "fc260bdee7fd3c525b1f3b67826dfca34acc8fa5",
+      "size": 4207
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2_K-00001-of-00006.gguf",
+      "blobId": "0f9bd8f5a0c71d3600f1026467bf7d06f173b313",
+      "size": 48786396672,
+      "lfs": {
+        "sha256": "96fbcd87bedc077284c8df407cb47314f244bb189b91ae16110e7612d5130009",
+        "size": 48786396672,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2_K-00002-of-00006.gguf",
+      "blobId": "cb9a7b294c73e1a305a57881972755c7b3dabcb5",
+      "size": 49306234560,
+      "lfs": {
+        "sha256": "a85181b6baf8c1bb90554be5cd15fe916227406ec309e8cfff2923d8e639b03c",
+        "size": 49306234560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2_K-00003-of-00006.gguf",
+      "blobId": "f8a373ff4ccfe9967cb68dd2da94553fd0042b2a",
+      "size": 49130633376,
+      "lfs": {
+        "sha256": "959f4cd06a7fdf2e0946b9e00036fb090fe1793c1865212bc65dcf283dbdcc0e",
+        "size": 49130633376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2_K-00004-of-00006.gguf",
+      "blobId": "b909b42a91f52c600aeab6dc824489988ea53f43",
+      "size": 49303379136,
+      "lfs": {
+        "sha256": "58dd8c2d1b56ab7ba45df481d7b3769faa1078e98dbd7c142b141eacae47fe39",
+        "size": 49303379136,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2_K-00005-of-00006.gguf",
+      "blobId": "3e6ef25905c9cbfded9ec2ac842f17bad3d3a783",
+      "size": 48844411424,
+      "lfs": {
+        "sha256": "ac5be1e15d5e9c77853d6f9f8c31ebfe5cc6a04d1851d96aa7e477152f166f42",
+        "size": 48844411424,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q2_K-00006-of-00006.gguf",
+      "blobId": "7d89ebd593e2f959d1861e9fe66a0fccce6a5b77",
+      "size": 25264172544,
+      "lfs": {
+        "sha256": "99383d5bd49a9e2932b07251eaa529eaf825ab4bf8dc378c50d1452480301449",
+        "size": 25264172544,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00001-of-00009.gguf",
+      "blobId": "d422ed55a85f9b4f657daefc4eb01a815fd25d7d",
+      "size": 9392768608,
+      "lfs": {
+        "sha256": "ae5bcba128dcc55212b43a91e4d05d465632348bcced6e934ec46a2dd24435d4",
+        "size": 9392768608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00002-of-00009.gguf",
+      "blobId": "cb838fe089b2ba447c3d6c0b1001a25a06824600",
+      "size": 48980128032,
+      "lfs": {
+        "sha256": "144dc88046e7c5a84ff36af17c727608fc2be17dd5ddb2856d6d13dcb95663ec",
+        "size": 48980128032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00003-of-00009.gguf",
+      "blobId": "4e4aa6c15510543176e86276c9149e493572bfc3",
+      "size": 48806723584,
+      "lfs": {
+        "sha256": "46152f4b51a4ffd0834acf3dd1de1f8716d878788363de7a481171531e4eb64b",
+        "size": 48806723584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00004-of-00009.gguf",
+      "blobId": "b274246df837f46dd3e46aa3deafaf449a212b04",
+      "size": 30473256160,
+      "lfs": {
+        "sha256": "54c2016b8e612d97e3aab679cfa5833fcb2418c4795e0c56dec41c34edcb20df",
+        "size": 30473256160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00005-of-00009.gguf",
+      "blobId": "d55408a6d4ebdfe81b7ecf8e13cbbfd22ccf3fd0",
+      "size": 48981526816,
+      "lfs": {
+        "sha256": "b2664c9cf5f218740653216125d3df81710b55e718e43637fb4fa640391c2e9b",
+        "size": 48981526816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00006-of-00009.gguf",
+      "blobId": "58b623c5086532798f900f6040cf60b15bbdf529",
+      "size": 48798123360,
+      "lfs": {
+        "sha256": "309b54aadf34a0e0aa6399d046df7bab62cec8ea0eb779465810015e9fad3bd9",
+        "size": 48798123360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00007-of-00009.gguf",
+      "blobId": "63e9987a0a53244e11349ba0dc9aa7405e41d965",
+      "size": 48203342688,
+      "lfs": {
+        "sha256": "a07460532b2d83617e5327b97124c7dbec0dee324721a5b5278092933db05029",
+        "size": 48203342688,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00008-of-00009.gguf",
+      "blobId": "2b7d2782d5af2b06c6c8b06dfea9b31441ec84b3",
+      "size": 48334995680,
+      "lfs": {
+        "sha256": "8facd7ef241fb24025aff7f8fa157fe71dc544abef6ea12d7be4657c1a50d2fa",
+        "size": 48334995680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q3_K_M-00009-of-00009.gguf",
+      "blobId": "ba74a00c342d6af0f9015d9020f95fd3bd4f1ead",
+      "size": 19679741248,
+      "lfs": {
+        "sha256": "9413210ec1eb9213accefb62cd10d0f4299f7ecc75b8d029b847adc472e2e838",
+        "size": 19679741248,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q4_K_M-00001-of-00003.gguf",
+      "blobId": "ba05b35fc6340aa79ba6de47988af9b9e1a0acf4",
+      "size": 167620261376,
+      "lfs": {
+        "sha256": "7b74c8c311edca9d029c99daa162eb393546ea18fd24cb7725386bc8b6a54a4f",
+        "size": 167620261376,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q4_K_M-00002-of-00003.gguf",
+      "blobId": "375faf244e3f31bc577031a9860084e63c1550c0",
+      "size": 177763430528,
+      "lfs": {
+        "sha256": "4256d4e6e0cafbc650b27ca7b34bc3413f7fe4d52700fe11d98698e2ba1b402f",
+        "size": 177763430528,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q4_K_M-00003-of-00003.gguf",
+      "blobId": "ed65c92f90f62d8cf383cd4c942906d385fe7dc8",
+      "size": 80697335200,
+      "lfs": {
+        "sha256": "3f73de0c3f994a16fe37af79094f1075535303f71b5605f25bc0c06412ffe417",
+        "size": 80697335200,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q8_0-00001-of-00004.gguf",
+      "blobId": "e4a375b16bc58e5225af2bc24072e4e70dc2e3c8",
+      "size": 178085436416,
+      "lfs": {
+        "sha256": "e2fa62d1029a17416e16055b77d436f52967aa9716c3c52e9c5952fd33d0ab98",
+        "size": 178085436416,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q8_0-00002-of-00004.gguf",
+      "blobId": "146ebc8225faca6cebfbcf82c404c19c05e99b7b",
+      "size": 110698171872,
+      "lfs": {
+        "sha256": "176e03fd2903353300463b61e5ad7f89eaa63e139b8284aff8b5ff6ee7100182",
+        "size": 110698171872,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q8_0-00003-of-00004.gguf",
+      "blobId": "202c0a770186d3123e899c355bbe6e7f7e4327a7",
+      "size": 104449677888,
+      "lfs": {
+        "sha256": "28a7d8188b82022b00e9806b79a3feffcb804948a9903a5c8cb9a80e3f30af46",
+        "size": 104449677888,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-UNCENSORED-Q8_0-00004-of-00004.gguf",
+      "blobId": "9fcd4621176f9b4ce5953cda7c68cc02a660cb9d",
+      "size": 114720940448,
+      "lfs": {
+        "sha256": "c615a79baf4a1ec6d790f84e2f4c517f40ba4013ac0fb64d1c350657ff7280ac",
+        "size": 114720940448,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-mmproj-BF16.gguf",
+      "blobId": "55fd8fef7187a1d8d1cd95e76b0087c80094531f",
+      "size": 972228704,
+      "lfs": {
+        "sha256": "e249fefb797873b2a8a8b68ad6b36506eda44c655aabcd8c55e35d820ab26574",
+        "size": 972228704,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d84f527e101b2cdd171e2b14253f84ea4fedabe9",
+      "size": 1065
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "3e4c845934cdc2b92d0a8e3a84f0e59f2753a7bf",
+      "size": 1473
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "42988fde6a2bc32a8a44b2e6472d70ba10686f67",
+      "size": 18790
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-11T09:17:51.000Z",
+  "usedStorage": 2651133759712
+}

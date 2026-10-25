@@ -1,0 +1,380 @@
+{
+  "_id": "678371daa22796d3c0372a09",
+  "id": "openbmb/MiniCPM-o-2_6",
+  "private": false,
+  "pipeline_tag": "any-to-any",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "minicpmo",
+    "feature-extraction",
+    "minicpm-o",
+    "omni",
+    "vision",
+    "ocr",
+    "multi-image",
+    "video",
+    "custom_code",
+    "audio",
+    "speech",
+    "voice cloning",
+    "live Streaming",
+    "realtime speech conversation",
+    "asr",
+    "tts",
+    "any-to-any",
+    "multilingual",
+    "dataset:openbmb/RLAIF-V-Dataset",
+    "arxiv:2405.17220",
+    "arxiv:2408.01800",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 44800,
+  "likes": 1324,
+  "modelId": "openbmb/MiniCPM-o-2_6",
+  "author": "openbmb",
+  "sha": "06849bfd36da94da1f5a88fa17e8ba63f08a4c4d",
+  "lastModified": "2026-08-18T03:58:46.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "MiniCPMO"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_minicpm.MiniCPMOConfig",
+      "AutoModel": "modeling_minicpmo.MiniCPMO",
+      "AutoModelForCausalLM": "modeling_minicpmo.MiniCPMO"
+    },
+    "model_type": "minicpmo",
+    "tokenizer_config": {
+      "bos_token": "<|im_start|>",
+      "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": "<unk>"
+    }
+  },
+  "cardData": {
+    "pipeline_tag": "any-to-any",
+    "datasets": [
+      "openbmb/RLAIF-V-Dataset"
+    ],
+    "library_name": "transformers",
+    "language": [
+      "multilingual"
+    ],
+    "tags": [
+      "minicpm-o",
+      "omni",
+      "vision",
+      "ocr",
+      "multi-image",
+      "video",
+      "custom_code",
+      "audio",
+      "speech",
+      "voice cloning",
+      "live Streaming",
+      "realtime speech conversation",
+      "asr",
+      "tts"
+    ],
+    "license": "apache-2.0"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "custom_class": "modeling_minicpmo.MiniCPMO",
+    "pipeline_tag": "feature-extraction"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f99e8c6194deb43f6f25fb6bde0d96f7b9ded1a2",
+      "size": 1738
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "12e11c67ebf363a1d3c1ba6bd3adf38b94fab841",
+      "size": 50293
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "8a05284bf942594e1fb813d2d4de1ee71649d338",
+      "size": 1405
+    },
+    {
+      "rfilename": "assets/Skiing.mp4",
+      "blobId": "1ad55680a11a45315077625866f8b2b2a5ff0799",
+      "size": 8534409,
+      "lfs": {
+        "sha256": "479ace116d6ac92487ad90f415b3ef817cd019bba4521043ef0d5faaa1a8415d",
+        "size": 8534409,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/Vocos.pt",
+      "blobId": "e7f521d0407e975101a66dd94bcadbb122a46893",
+      "size": 54363119,
+      "lfs": {
+        "sha256": "09a670eda1c08b740013679c7a90ebb7f1a97646ea7673069a6838e6b51d6c58",
+        "size": 54363119,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "assets/chattts_tokenizer/special_tokens_map.json",
+      "blobId": "42cfc10c507baddea0a6ee0db879a93a6e7621c4",
+      "size": 7847
+    },
+    {
+      "rfilename": "assets/chattts_tokenizer/tokenizer.json",
+      "blobId": "d6e380b8cb88c10c9c68f6180c5ddd2ab3053f65",
+      "size": 448604
+    },
+    {
+      "rfilename": "assets/chattts_tokenizer/tokenizer_config.json",
+      "blobId": "b62fb7fbd3c9b91498b869b32343642d03a25fc0",
+      "size": 11028
+    },
+    {
+      "rfilename": "assets/demo.wav",
+      "blobId": "2d2d1cff374a68c1de67adf70ec7bc314d0d8dde",
+      "size": 1454196,
+      "lfs": {
+        "sha256": "d0b347d8ed0b2314c0d175fbdac79f6f3f91a6402bd7492ac5c860646a2ba309",
+        "size": 1454196,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/input_examples/Trump_WEF_2018_10s.mp3",
+      "blobId": "08e9a1f6ca34ee905535d6f2187ea1feabbdb183",
+      "size": 161053
+    },
+    {
+      "rfilename": "assets/input_examples/assistant_default_female_voice.wav",
+      "blobId": "689b36857ae5fe923dd4734e9d9fe2a2296c55ce",
+      "size": 224044,
+      "lfs": {
+        "sha256": "2ee6f84892e693bd2bb478608db0c9a2459b936af3283697b006cfd969c75484",
+        "size": 224044,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/input_examples/assistant_female_voice.wav",
+      "blobId": "96bcc89952f5180f236e10534416589435459ba8",
+      "size": 235244,
+      "lfs": {
+        "sha256": "1d712ba6de1d15d52eda96bdc043ce43eb5af4b4ac441b78b6fb0fdaf6683c7a",
+        "size": 235244,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/input_examples/assistant_male_voice.wav",
+      "blobId": "2456c02140639ac7382aa27ed13ed63d2b111016",
+      "size": 144044,
+      "lfs": {
+        "sha256": "e6b5eff26be104bbfc039f31f8cebcd6f329c275ccafa01234856ec1a964e999",
+        "size": 144044,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/input_examples/audio_understanding.mp3",
+      "blobId": "7a98f4c0565bea0cc221d664e062f618c79ddb65",
+      "size": 321036
+    },
+    {
+      "rfilename": "assets/input_examples/chi-english-1.wav",
+      "blobId": "466afcb2b341b89899adc367a815daf1ad46372c",
+      "size": 492198
+    },
+    {
+      "rfilename": "assets/input_examples/cxk_original.wav",
+      "blobId": "efe7a5f1d8dc390aaab204cd43981a7528a16e4d",
+      "size": 384046
+    },
+    {
+      "rfilename": "assets/input_examples/exciting-emotion.wav",
+      "blobId": "007e24062cebc456add55392eb27510a34a8ccaa",
+      "size": 696044
+    },
+    {
+      "rfilename": "assets/input_examples/fast-pace.wav",
+      "blobId": "30e22cd31a346d319da2142e8a8aa08f0bdca965",
+      "size": 986444
+    },
+    {
+      "rfilename": "assets/input_examples/icl_20.wav",
+      "blobId": "67c3fe1cd5d24002567f3e6bacd8d7862f629249",
+      "size": 618528,
+      "lfs": {
+        "sha256": "53892ece071342958403bc5643f84169a30b89cc0fc79eb69508bfa11dd85e68",
+        "size": 618528,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/input_examples/indian-accent.wav",
+      "blobId": "590c846d656eb2c9a2726741da98557c2d01e0ae",
+      "size": 1408844,
+      "lfs": {
+        "sha256": "716533af9ec8ca4586035af7dce4a65ce93e851d3f2474242d401b50bf3c0cdc",
+        "size": 1408844,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "546de104fe1529e192a8c4acb8c648ae1a485f1a",
+      "size": 3442
+    },
+    {
+      "rfilename": "configuration_minicpm.py",
+      "blobId": "0497a538a1dce082f666d45151156f242f350917",
+      "size": 7552
+    },
+    {
+      "rfilename": "image_processing_minicpmv.py",
+      "blobId": "9782fc06d41514305580ec028be2e74098ad333e",
+      "size": 16731
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "d22b0dfaa4be849f2ec0af7d7f00084979c42f56",
+      "size": 4875052040,
+      "lfs": {
+        "sha256": "de39e68ffea57e92c6dc2b1dc4e737817529c743dc9e795c383e7aa76f5f4e09",
+        "size": 4875052040,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "ef9dd07b1bf0f8d6ba9ff9661ef0579b7b15bb9e",
+      "size": 4932751496,
+      "lfs": {
+        "sha256": "095633536dea52b82dd6c5535376bc2b9e11fb376fb1d4c6cd256f04089d4261",
+        "size": 4932751496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "9865905349132864f18c89aa0c2b064e82b64a7b",
+      "size": 4330865648,
+      "lfs": {
+        "sha256": "4ea83267712fa53800feaae9101bec976f81fcf8133c7086c7cc8d77f0eb35f0",
+        "size": 4330865648,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "54b1dcea83387429dec9acb31c9a62be04de5de1",
+      "size": 3211508416,
+      "lfs": {
+        "sha256": "f988c173052592bd46e7aa74b36dfd02739e8b40eafbf5c93bc5d95d04f3397b",
+        "size": 3211508416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "36911624ed20ec220175df374c435717d32dd197",
+      "size": 133275
+    },
+    {
+      "rfilename": "modeling_minicpmo.py",
+      "blobId": "ab9b32b8e8b056dea0a5d1c750c713f799642c8a",
+      "size": 140581
+    },
+    {
+      "rfilename": "modeling_navit_siglip.py",
+      "blobId": "f568257b6740212943dfb690e24275dd6f578048",
+      "size": 42099
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "73b2446c1bc0b97e5d64cc8db5abf81e8015d1b6",
+      "size": 714
+    },
+    {
+      "rfilename": "processing_minicpmo.py",
+      "blobId": "5a62b0422421ca302cae1ad55bdc06ec8713f134",
+      "size": 19957
+    },
+    {
+      "rfilename": "resampler.py",
+      "blobId": "3b06e0841392d09621ee23b13921b105731299fc",
+      "size": 35635
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "3e9218afec9e2b1677c43a53a5347a1176103d47",
+      "size": 5353
+    },
+    {
+      "rfilename": "tokenization_minicpmo_fast.py",
+      "blobId": "bc1ac19219ff2fb1520199cd16a44aa6823d15aa",
+      "size": 3037
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "3ea2e50993b48f7663d0cea38902a2c28d368007",
+      "size": 7038332
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "69771d7cf1c4855d9e0ab8e138823704447f3fc6",
+      "size": 14077
+    },
+    {
+      "rfilename": "utils.py",
+      "blobId": "5137dbbdc816cb91019e64acf990f698fec0c9d3",
+      "size": 7241
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "Staticaliza/Sense",
+    "marstin/VLM-Lens",
+    "mohan007/autism_exp_with_minicpm_o_2_6",
+    "SynaptechX/ImgTextParser",
+    "vector-institute/sonic-o1-leaderboard",
+    "build-small-hackathon/Reading-Buddy-Frontend",
+    "baryonlabs/open-ko-s2s-leaderboard",
+    "srinivasmmw2024/minicpm_2",
+    "nooneshouldtouch/PicQ",
+    "chakkale/minicpm-video-analyzer",
+    "jrpaul08/Reading-Buddy",
+    "Asad235/mini",
+    "baryonlabs/open-ko-s2s-insights",
+    "Pq234/open-ko-s2s-leaderboard",
+    "vivekbarsagadey/ML"
+  ],
+  "createdAt": "2025-01-12T07:40:10.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8674997028
+    },
+    "total": 8674997028
+  },
+  "usedStorage": 17428736163
+}

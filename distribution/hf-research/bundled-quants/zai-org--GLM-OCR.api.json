@@ -1,0 +1,250 @@
+{
+  "_id": "697c3275cfe73b577d4da916",
+  "id": "zai-org/GLM-OCR",
+  "private": false,
+  "pipeline_tag": "image-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "glm_ocr",
+    "image-text-to-text",
+    "conversational",
+    "image-to-text",
+    "zh",
+    "en",
+    "fr",
+    "es",
+    "ru",
+    "de",
+    "ja",
+    "ko",
+    "arxiv:2603.10910",
+    "license:mit",
+    "eval-results",
+    "endpoints_compatible",
+    "deploy:azure",
+    "deploy:sagemaker",
+    "region:us"
+  ],
+  "downloads": 1683243,
+  "likes": 2180,
+  "modelId": "zai-org/GLM-OCR",
+  "author": "zai-org",
+  "sha": "2e85a62840ccac27daa451df36c736c4636b8628",
+  "lastModified": "2026-09-11T11:59:14.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "GlmOcrForConditionalGeneration"
+    ],
+    "model_type": "glm_ocr",
+    "tokenizer_config": {
+      "eos_token": "<|endoftext|>",
+      "pad_token": "<|endoftext|>"
+    },
+    "chat_template_jinja": "[gMASK]<sop>\n{%- if tools -%}\n<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{{ tool | tojson(ensure_ascii=False) }}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}\n<arg_key>{arg-key-1}</arg_key>\n<arg_value>{arg-value-1}</arg_value>\n<arg_key>{arg-key-2}</arg_key>\n<arg_value>{arg-value-2}</arg_value>\n...\n</tool_call>{%- endif -%}\n{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text }}\n            {%- elif item is mapping and (item.type == 'image' or 'image' in item) -%}\n                <|begin_of_image|><|image|><|end_of_image|>\n            {%- elif item is mapping and (item.type == 'video' or 'video' in item) -%}\n                <|begin_of_video|><|video|><|end_of_video|>\n            {%- elif item is string -%}\n                {{- item }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n{%- set ns = namespace(last_user_index=-1) %}\n{%- for m in messages %}\n    {%- if m.role == 'user' %}\n        {% set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{% for m in messages %}\n{%- if m.role == 'user' -%}<|user|>\n{% if m.content is string %}\n{{ m.content }}\n{%- else %}\n{%- for item in m.content %}\n{% if item.type == 'video' or 'video' in item %}\n<|begin_of_video|><|video|><|end_of_video|>{% elif item.type == 'image' or 'image' in item %}\n<|begin_of_image|><|image|><|end_of_image|>{% elif item.type == 'text' %}\n{{ item.text }}\n{%- endif %}\n{%- endfor %}\n{%- endif %}\n{{- '/nothink' if (enable_thinking is defined and not enable_thinking and not visible_text(m.content).endswith(\"/nothink\")) else '' -}}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- set reasoning_content = '' %}\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n    {%- set reasoning_content = m.reasoning_content %}\n{%- else %}\n    {%- if '</think>' in content %}\n        {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n        {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n    {%- endif %}\n{%- endif %}\n{%- if loop.index0 > ns.last_user_index and reasoning_content -%}\n{{ '\\n<think>' + reasoning_content.strip() +  '</think>'}}\n{%- else -%}\n{{ '\\n<think></think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ '\\n' + content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{% for tc in m.tool_calls %}\n{%- if tc.function %}\n    {%- set tc = tc.function %}\n{%- endif %}\n{{ '\\n<tool_call>' + tc.name }}\n{% set _args = tc.arguments %}\n{% for k, v in _args.items() %}\n<arg_key>{{ k }}</arg_key>\n<arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>\n{% endfor %}\n</tool_call>{% endfor %}\n{% endif %}\n{%- elif m.role == 'tool' -%}\n{%- if m.content is string -%}\n{%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n    {{- '<|observation|>' }}\n{%- endif %}\n{{- '\\n<tool_response>\\n' }}\n{{- m.content }}\n{{- '\\n</tool_response>' }}\n{% elif m.content is iterable and m.content is not mapping %}\n{%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n{{- '<|observation|>' }}\n{%- endif %}\n{{- '\\n<tool_response>\\n' }}\n{%- for tr in m.content -%}\n  {%- if tr is mapping and tr.type is defined -%}\n    {%- set t = tr.type | lower -%}\n    {%- if t == 'text' and tr.text is defined -%}\n{{ tr.text }}\n    {%- elif t in ['image', 'image_url'] -%}\n<|begin_of_image|><|image|><|end_of_image|>\n    {%- elif t in ['video', 'video_url'] -%}\n<|begin_of_video|><|video|><|end_of_video|>\n    {%- else -%}\n{{ tr | tojson(ensure_ascii=False) }}\n    {%- endif -%}\n  {%- else -%}\n{{ tr.output if tr.output is defined else tr }}\n  {%- endif -%}\n{%- endfor -%}\n{{- '\\n</tool_response>' }}\n{%- else -%}\n<|observation|>{% for tr in m.content %}\n\n<tool_response>\n{{ tr.output if tr.output is defined else tr }}\n</tool_response>{% endfor -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<|system|>\n{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n<|assistant|>\n{{'<think></think>\\n' if (enable_thinking is defined and not enable_thinking) else ''}}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "mit",
+    "language": [
+      "zh",
+      "en",
+      "fr",
+      "es",
+      "ru",
+      "de",
+      "ja",
+      "ko"
+    ],
+    "pipeline_tag": "image-to-text",
+    "library_name": "transformers",
+    "tags": [
+      "conversational"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".eval_results/mdpbench.yaml",
+      "blobId": "ff3401de97f415491b0fd674059823e3f8510a5e",
+      "size": 4784
+    },
+    {
+      "rfilename": ".eval_results/olmocrbench.yaml",
+      "blobId": "7186fb2de9bf6b20f8fcb23bfcb31e1f7826c692",
+      "size": 1765
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "07c0fadf3f4469cb2505786481ff13fd53899fff",
+      "size": 6795
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "8f3b7224cc22edcb813a59ca438efc92f15749a9",
+      "size": 4606
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "bdc21c05f82f7a5f3a4bd4caa74f4bf81365fdd7",
+      "size": 1737
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "0de866e8cc29b4479b56bf68300da9353bc63a71",
+      "size": 165
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "409cd679485ac9f54da5d9fb8df8ad41d9f5db30",
+      "size": 2650579464,
+      "lfs": {
+        "sha256": "a16eb0de98d199293371c560f95f83130d2a2c9612449df16839f08ff9498815",
+        "size": 2650579464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "308553695af766b3e3d05e68279d2c690e73273e",
+      "size": 367
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "58b03daf067d4e47aa5cd433029c303e032a92c2",
+      "size": 1334
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "9f4a549a14a96217569648aa7627c6674ad94fe9",
+      "size": 6838609
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "04b9992511183247d5115f176a5b9f0360a36a1c",
+      "size": 1138
+    }
+  ],
+  "spaces": [
+    "finebooks/bhl-ocr-leaderboard",
+    "prithivMLmods/GLM-OCR-Demo",
+    "valira-ai/slo-ocr-benchmark",
+    "Donyking1818/demo-glm-ocr",
+    "Chunte/Top-Downloaded-Trending-Models",
+    "mcikalmerdeka/vlms-ocr-playground",
+    "runemic-ai/ocr-arena",
+    "helloya20/demo-glm-ocr",
+    "lipeiying/GLM-OCR",
+    "Sam20202/GLMOCR_Text_extraction",
+    "PeterIP2023/Demo",
+    "thesatyamxyz/OCR-DEMO",
+    "Tonic/ocr-ebola",
+    "AdithyaSK/NayanaOCRBench",
+    "sanidhya1910/doc-agent",
+    "twoimo/glm-ocr-demo",
+    "notiv/demo-glm-ocr",
+    "Bruhn/GLM-OCR-Demo",
+    "praveenchola/OCR",
+    "praveenchola/GLM-OCR",
+    "codexxx/GLM-OCR-Demo",
+    "kolar0/GLM-OCR-Demo",
+    "priyal261202gm/GLM-OCR-Demo",
+    "zz2232/UniversalOcrApp",
+    "shunda012/sejarah-rag-fastapi",
+    "WebashalarForML/demo-glm-ocr",
+    "tanakorn123456/Image-to-text-2",
+    "tanakorn123456/test-andre",
+    "ranbac/TTQ",
+    "cafierom/OCR",
+    "Pitchaphat/assignment_6",
+    "ruangkhowza/assignment6",
+    "rehan953/glm-ocr-fixed",
+    "SimpleCodeAI/glm-ocr-fixed",
+    "Sujana123/testing-image",
+    "nicolet8/GLM-OCR-Demo",
+    "singhankit16/GLM-OCR-Studio",
+    "iqAli/zai-org-GLM-OCR",
+    "Shubhvedi/zai-org-GLM-OCR",
+    "VashuTheGreat2/Multi-Rag",
+    "novammerce/glm-ocr",
+    "WebashalarForML/glm-ocr-v1",
+    "WebAshlarWA/glm-ocr-v1",
+    "taoboy03/zai-org-GLM-OCR",
+    "tonyliu404/Manglify_Backend",
+    "adityamaurya09/project02",
+    "nina1231/OCR-Image-extraction",
+    "Enzzozink/zai-org-GLM-OCR",
+    "awww29/zai-org-GLM-OCR",
+    "khac-tuong-222/bom",
+    "sachinjat2802/zai-org-GLM-OCR",
+    "khac-tuong-222/ocr",
+    "Jacob0037/zai-org-GLM-OCR",
+    "mafiagaming8/table-top-glm",
+    "abhidev77/GLM-OCR-Demo",
+    "pawanmau01/GLM-OCR-Demo",
+    "E-will-era/easy-welfare-guide",
+    "adityamaurya09/zai-org-GLM-OCR",
+    "pk2302/zai-org-GLM-OCR",
+    "shambhuDATA/glmocr",
+    "SilanLee/imagetotext",
+    "anibalin/glm-ocr-extraction",
+    "Pxeim/GLM-OCR-361",
+    "shubhjn/whisper-ai",
+    "yuukicammy/kuzushiji-ocr",
+    "nomco/GLM-OCR-Demo",
+    "shubhjn/cosmo-ai",
+    "tabishm/zai-org-GLM-OCR",
+    "Nick-2x/Lab_report_analysis",
+    "Kaushik0909/zai-org-GLM-OCR",
+    "anandpasupuleti/evaluate-pipeline",
+    "hsshenxi/zai-org-GLM-OCR",
+    "hsshenxi/GLM-OCR-Demo",
+    "eoeooe/GLM-OCR-Demo2",
+    "DayaneTimoteo/AssembleianaImprensaInteligente",
+    "Yous135774/Ocr",
+    "paridashub/OCR_Runner",
+    "saisatyapavanpanduvanka/UTC-org-GLM-OCR",
+    "arthur0leywin/OCR",
+    "pranavnairop/ocr-pipeline",
+    "pranaysuyash/shopstack",
+    "Smartloft/smartloft",
+    "Ankitkumar8987/GLM-OCR-Pipeline",
+    "ayush1369/zai-org-GLM-OCR",
+    "LuxeFats/pdf-to-markdown",
+    "Dlcastro/glm-ocr-demo",
+    "ARAX2/zai-org-GLM-OCR",
+    "muzz16/zai-org-GLM-OCR",
+    "Aamir1412/zai-org-GLM-OCR",
+    "NuttyFlash/flash-ocr-demoo",
+    "Hasmukh/dox-engine-glm-ocr",
+    "Arun0914/arabic-ocr-glm",
+    "pavel00002013/GLM_ORG",
+    "elsory/baseer-engines",
+    "velakart/soa",
+    "Jainil19/lectura",
+    "nics333/glm-ocr-demo",
+    "Cognitive-Lab/NayanaOCRBench",
+    "tss787/GLM-OCR-Demo",
+    "toshlol/glm-ocr-captcha"
+  ],
+  "createdAt": "2026-01-30T04:24:21.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 1325258240
+    },
+    "total": 1325258240
+  },
+  "usedStorage": 2650754336
+}

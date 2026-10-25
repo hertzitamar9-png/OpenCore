@@ -1,0 +1,232 @@
+{
+  "_id": "68e431cb85dce231911b62fe",
+  "id": "allenai/olmOCR-2-7B-1025",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_5_vl",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "base_model:Qwen/Qwen2.5-VL-7B-Instruct",
+    "base_model:finetune:Qwen/Qwen2.5-VL-7B-Instruct",
+    "license:apache-2.0",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "deploy:azure",
+    "deploy:sagemaker",
+    "region:us"
+  ],
+  "downloads": 76658,
+  "likes": 159,
+  "modelId": "allenai/olmOCR-2-7B-1025",
+  "author": "allenai",
+  "sha": "e52d6f090b7a9007afffbbd6ce510876222fea93",
+  "lastModified": "2025-10-22T15:31:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5_VLForConditionalGeneration"
+    ],
+    "model_type": "qwen2_5_vl",
+    "processor_config": {
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "base_model": [
+      "Qwen/Qwen2.5-VL-7B-Instruct"
+    ],
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ca1225425b13020df1690fcbcbf0e3e3a89cec85",
+      "size": 6139
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "482ced4679301bf287ebb310bdd1790eb4514232",
+      "size": 605
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "6c226632394ae7474b0d4b13e15793eac2e21ee9",
+      "size": 1017
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "732bd68bc5427d1fb6c06a59b3bf2456b2155d24",
+      "size": 1050
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "9ae95d4b91f5d98fffdf33937ba97d7673eef491",
+      "size": 3219
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "8afc96fef3699eeba94060464f50bd489e748935",
+      "size": 260
+    },
+    {
+      "rfilename": "latest",
+      "blobId": "bcf403eb0e834077354f7671dc603f7a64adfe1a",
+      "size": 14
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "31f1efdfc39a266a741b006d5bd958d5782f5962",
+      "size": 4968243272,
+      "lfs": {
+        "sha256": "f752fd105e3d9ecd4efc16cb5c40e9f97f46c0d0614e328b5723a74df4634561",
+        "size": 4968243272,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "2155d7ccb9764fbe0b541a63e12f5245f92001a2",
+      "size": 4991495784,
+      "lfs": {
+        "sha256": "0bbaa22a46fdad5a68c733f59712e87e83dacfccfd0f14c300074992642bcd90",
+        "size": 4991495784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "c066edc93bc59ae48640e4044756f60c398f489d",
+      "size": 4932751008,
+      "lfs": {
+        "sha256": "41ecc0cc06829b18c2fdcd704c2c3032bafc3b51e79d73c5b536f9c142a07e2e",
+        "size": 4932751008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "71598a565a5c71ceed216bd12e610b249b0e1725",
+      "size": 1691924352,
+      "lfs": {
+        "sha256": "ffca66cb61f6ad70364a095fee84ccf40597476f82649983003e41e305dfc5f8",
+        "size": 1691924352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "92b467639266f4aa72a9b5ab73dbdf5a1f936ee4",
+      "size": 57655
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "7f3b746825e5eef53ed8ed57a91df9e86ee62c0a",
+      "size": 350
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ac23c0aaa2434523c494330aeb79c58395378103",
+      "size": 613
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "443909a61d429dff23010e5bddd28ff530edda00",
+      "size": 7031645
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "91684ea3dc135a7d815e2c932054ce88c1aab41f",
+      "size": 5702
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "6662e15042913e44162efcece6ee3bd643ffbcf1",
+      "size": 907
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    },
+    {
+      "rfilename": "zero_to_fp32.py",
+      "blobId": "5995d6e6f04e43b989587aa9022a3aef0c66d694",
+      "size": 33270
+    }
+  ],
+  "spaces": [
+    "aquanode/gpu-vram-calculator",
+    "prithivMLmods/Multimodal-OCR3",
+    "hfmlsoc/different-flops",
+    "valira-ai/slo-ocr-benchmark",
+    "IFMedTechdemo/Multi-Model-OCR",
+    "mmrech/clinical-study-extraction",
+    "kusatmer/image-text-extractor",
+    "Tharjama/olmocr-demo",
+    "jeyanthangj2004/eng_draw_vlm",
+    "ZuiFengTing/Multimodal-OCR3",
+    "giarom/Multimodal-OCR3",
+    "Maksim-Oncoshot/Qwen3.5-VL-Space-Sample",
+    "ThomasJayoo/MolmopointOCR",
+    "HiteshKamwal/Multimodal-OCR3",
+    "muhammadghiffari/TradeFlowAI",
+    "reversely/provinans",
+    "elsory/baseer-engines"
+  ],
+  "createdAt": "2025-10-06T21:16:59.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8292166656
+    },
+    "total": 8292166656
+  },
+  "usedStorage": 16584414416
+}

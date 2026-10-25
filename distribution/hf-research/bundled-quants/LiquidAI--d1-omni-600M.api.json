@@ -1,0 +1,212 @@
+{
+  "_id": "6ac3dbf8e031eeac00cbb0aa",
+  "id": "LiquidAI/d1-omni-600M",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "d1_omni",
+    "feature-extraction",
+    "liquid",
+    "lfm2.5",
+    "edge",
+    "decision",
+    "classification",
+    "calibration",
+    "system-one",
+    "multimodal",
+    "vision",
+    "audio",
+    "decision-model",
+    "image-text-to-text",
+    "custom_code",
+    "en",
+    "de",
+    "es",
+    "fr",
+    "it",
+    "nl",
+    "pl",
+    "pt",
+    "ar",
+    "hi",
+    "ja",
+    "ru",
+    "tr",
+    "vi",
+    "zh",
+    "arxiv:2511.23404",
+    "base_model:LiquidAI/LFM2.5-Encoder-350M",
+    "base_model:finetune:LiquidAI/LFM2.5-Encoder-350M",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 17725,
+  "likes": 145,
+  "modelId": "LiquidAI/d1-omni-600M",
+  "author": "LiquidAI",
+  "sha": "02b55d7076f15129e59ab3f94783f32c4b088674",
+  "lastModified": "2026-10-07T20:22:38.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<|mask|>",
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "D1OmniModel"
+    ],
+    "auto_map": {
+      "AutoConfig": "modeling_d1.D1OmniConfig",
+      "AutoModel": "modeling_d1.D1OmniModel"
+    },
+    "model_type": "d1_omni",
+    "tokenizer_config": {
+      "bos_token": "<|startoftext|>",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|pad|>",
+      "mask_token": "<|mask|>"
+    }
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "LICENSE",
+    "language": [
+      "en",
+      "de",
+      "es",
+      "fr",
+      "it",
+      "nl",
+      "pl",
+      "pt",
+      "ar",
+      "hi",
+      "ja",
+      "ru",
+      "tr",
+      "vi",
+      "zh"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "base_model": "LiquidAI/LFM2.5-Encoder-350M",
+    "tags": [
+      "liquid",
+      "lfm2.5",
+      "edge",
+      "decision",
+      "classification",
+      "calibration",
+      "system-one",
+      "multimodal",
+      "vision",
+      "audio",
+      "decision-model"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "custom_class": "modeling_d1.D1OmniModel",
+    "pipeline_tag": "feature-extraction"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "272d23491019471e6776d23ae995f41b164ea34c",
+      "size": 10572
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4acf6c774720827a80e1faeed2bfd708d588c065",
+      "size": 10384
+    },
+    {
+      "rfilename": "audio.py",
+      "blobId": "c85d77b72701c4e5e2e4d43cc6c6332ac1c2f1a6",
+      "size": 11829
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "94ebfad78a9e7fdbbd80549b99a0480bef2e2e02",
+      "size": 1993
+    },
+    {
+      "rfilename": "encoder.py",
+      "blobId": "49711c6e2436dcbb09aea2d6206050eac38b3f74",
+      "size": 7732
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "94b34d334c2b89f0376c3659a223f31497f5aa57",
+      "size": 2348774500,
+      "lfs": {
+        "sha256": "0713bb05270c2685ad106522f4092bceeeb3a93cf79b401f399a712296c911e1",
+        "size": 2348774500,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_d1.py",
+      "blobId": "3c51b6d4d75480be1de79aaf8d306031ab5fda41",
+      "size": 8655
+    },
+    {
+      "rfilename": "prompt.py",
+      "blobId": "e81db3661bf454a0579147070f0d7075538b6a38",
+      "size": 6309
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "53d5df363b01234edae97ee6e05139d2c067b31a",
+      "size": 4733371
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "35217dbb96b3356b37ab820ec7feef483c8c12dc",
+      "size": 259
+    },
+    {
+      "rfilename": "vision.py",
+      "blobId": "bc9c35ba8450c02b364e9c26b909b4541c8f139a",
+      "size": 5233
+    }
+  ],
+  "spaces": [
+    "multimodalart/jev-decision-index",
+    "muratcanlaloglu/TurkishDecisionBenchmark",
+    "shreyask/voice-inbox",
+    "shreyask/d1-omni-voice",
+    "mrfakename/open-d1",
+    "mrfakename/open-d1-webgpu"
+  ],
+  "createdAt": "2026-10-05T17:18:48.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 587161089
+    },
+    "total": 587161089
+  },
+  "usedStorage": 4718932608
+}

@@ -1,0 +1,133 @@
+{
+  "_id": "69b1b3d348c940a0df635003",
+  "id": "JusteLeo/Anima2-GGUF",
+  "private": false,
+  "tags": [
+    "gguf",
+    "stable-diffusion.cpp",
+    "anima",
+    "image-generation",
+    "quantized",
+    "comfyui",
+    "base_model:circlestone-labs/Anima",
+    "base_model:quantized:circlestone-labs/Anima",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 1016,
+  "likes": 4,
+  "modelId": "JusteLeo/Anima2-GGUF",
+  "author": "JusteLeo",
+  "sha": "e1b446c3dd4e233703df1b5a78b57bdf4e41dd85",
+  "lastModified": "2026-03-11T20:07:17.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "circlestone-labs-non-commercial-license",
+    "license_link": "https://huggingface.co/circlestone-labs/Anima/blob/main/LICENSE.txt",
+    "tags": [
+      "stable-diffusion.cpp",
+      "gguf",
+      "anima",
+      "image-generation",
+      "quantized",
+      "comfyui"
+    ],
+    "base_model": [
+      "circlestone-labs/Anima"
+    ],
+    "base_model_relation": "quantized"
+  },
+  "gguf": {
+    "total": 2091068928,
+    "totalFileSize": 927878144
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "3a7bbdeef690f1e4df26c3da3a4448f4b47f92d7",
+      "size": 2072
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "1e4cfb99c4f4202596e928c34297350f5f32860e",
+      "size": 1330
+    },
+    {
+      "rfilename": "anima-preview2_q3_K_M.gguf",
+      "blobId": "023825d1388a389ac9596a143a45874bc3cf9f90",
+      "size": 927878144,
+      "lfs": {
+        "sha256": "65f39b671fcff2c18cc472f2ac2c2ac7ea961676ad68c6b3e3e12bfd7d602882",
+        "size": 927878144,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "anima-preview2_q4_0.gguf",
+      "blobId": "a51e4c629d54a371943a5afa5bf31e53c4f8267b",
+      "size": 1203099008,
+      "lfs": {
+        "sha256": "01fa891ab736802f1169425871d3a1f853eb394e6b5cf1d9d3719cefc0b77cb0",
+        "size": 1203099008,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2_q4_K_M.gguf",
+      "blobId": "9c7035c34571a6bf38b045e28c6b97b321f75d98",
+      "size": 1203118464,
+      "lfs": {
+        "sha256": "6874d807f47cdedef7f7040f869d02e869294cfcf50f90aec39db8e0395ea6ef",
+        "size": 1203118464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2_q5_0.gguf",
+      "blobId": "ffcf09fc4b606ffde4563c9b2879a9c4af2df82a",
+      "size": 1462148864,
+      "lfs": {
+        "sha256": "d902cebd0fc719fba604e71cfe7b613da16141e23797bd4cde91badb1dc24e87",
+        "size": 1462148864,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2_q5_K.gguf",
+      "blobId": "91624245346ce352deae0b8673845b303c92011e",
+      "size": 1462168320,
+      "lfs": {
+        "sha256": "0ddffcc9d1b6f6860497fbaf20900c7018588aad1155eea3fc2346709396e42c",
+        "size": 1462168320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2_q6_K.gguf",
+      "blobId": "0ef523aca1a9140f2965a9f8ea4d7c49a653e3e1",
+      "size": 1737409248,
+      "lfs": {
+        "sha256": "20f33a8fd396e89efc8bffac19b49ca21b81b68d22b170387c8b01c3a2f7076b",
+        "size": 1737409248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "anima-preview2_q8_0.gguf",
+      "blobId": "1fd7aeca12f7156c2898e8d656a3cf2ad340b147",
+      "size": 2239306368,
+      "lfs": {
+        "sha256": "2d22b01153d66651eff1e24ebf14640d0efbd9b73f97cbd35a8fc1d46c2ade56",
+        "size": 2239306368,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-03-11T18:26:27.000Z",
+  "usedStorage": 10235128416
+}

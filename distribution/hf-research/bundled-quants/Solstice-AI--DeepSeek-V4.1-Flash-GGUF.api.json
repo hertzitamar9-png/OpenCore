@@ -1,0 +1,409 @@
+{
+  "_id": "6aa569d68d1f9e2b012c4757",
+  "id": "Solstice-AI/DeepSeek-V4.1-Flash-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "deepseek",
+    "deepseek-v4.1",
+    "llama.cpp",
+    "text-generation",
+    "conversational",
+    "base_model:deepseek-ai/DeepSeek-V4.1-Flash",
+    "base_model:quantized:deepseek-ai/DeepSeek-V4.1-Flash",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 2156,
+  "likes": 2,
+  "modelId": "Solstice-AI/DeepSeek-V4.1-Flash-GGUF",
+  "author": "Solstice-AI",
+  "sha": "8bee57633be10f5ab9da819bcd2c5e6d5fd0a6c6",
+  "lastModified": "2026-10-15T03:21:13.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "chat_template_jinja": "{#- ========================================================================== -#}\n{#- PROTIUM-1.0 \u2014 OBJECTIVE-GATED COGNITIVE ARCHITECTURE (DeepSeek Native)      -#}\n{#- Solstice-AI Zero-Waste Protocol for High-Efficiency Reasoning Models       -#}\n{#- Named after Protium (1H): Zero Neutrons. Zero Dead Weight. Pure Thrust.    -#}\n{#- Lineage: deepseek-ai-DeepSeek-V4.jinja (native tokens & tool vocab)         -#}\n{#- ========================================================================== -#}\n{%- set template_version = template_version if template_version is defined else \"protium-v1.0.0-objective-gated\" %}\n\n{#- ------------------------------------------------------------------ -#}\n{#- Upstream kwargs (llama.cpp reference contract)                      -#}\n{#- ------------------------------------------------------------------ -#}\n{%- if not add_generation_prompt is defined -%}\n  {%- set add_generation_prompt = false -%}\n{%- endif -%}\n{%- if not thinking is defined -%}\n  {%- if enable_thinking is defined -%}\n    {%- set thinking = enable_thinking -%}\n  {%- else -%}\n    {%- set thinking = true -%}\n  {%- endif -%}\n{%- endif -%}\n{%- if not drop_thinking is defined -%}\n  {%- set drop_thinking = true -%}\n{%- endif -%}\n\n{#- ================================================================== -#}\n{#- S3 PRIMITIVES \u2014 scan & classify helpers                             -#}\n{#- ================================================================== -#}\n\n{#- Flatten message content to text for scanning (multi-modal safe). -#}\n{%- macro scan_text(content) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if item is mapping and 'text' in item and item.text is string %}\n                {{- item.text }}\n            {%- elif item is string %}\n                {{- item }}\n            {%- endif %}\n        {%- endfor %}\n    {%- endif %}\n{%- endmacro %}\n\n{#- Strip inline control tags ([L#], {REASON:}, [MODE:]) from text. -#}\n{#- NB: no for-loops \u2014 Jinja set does not persist across iterations. -#}\n{%- macro strip_control_tags(text) %}\n    {%- set t = text %}\n    {%- if '{REASON:' in t %}\n        {%- set _raw = t.split('{REASON:')[1].split('}')[0] %}\n        {%- set t = t.replace('{REASON:' ~ _raw ~ '}', '') %}\n    {%- endif %}\n    {%- if '[MODE:' in t %}\n        {%- set _raw2 = t.split('[MODE:')[1].split(']')[0] %}\n        {%- set t = t.replace('[MODE:' ~ _raw2 ~ ']', '') %}\n    {%- endif %}\n    {%- set t = t | replace('[regular]', '') | replace('[REGULAR]', '') | replace('[vanilla]', '') | replace('[standard]', '') | replace('[default]', '') | replace('[L10]', '') | replace('[l10]', '') | replace('[L0]', '') | replace('[l0]', '') | replace('[L1]', '') | replace('[l1]', '') | replace('[L2]', '') | replace('[l2]', '') | replace('[L3]', '') | replace('[l3]', '') | replace('[L4]', '') | replace('[l4]', '') | replace('[L5]', '') | replace('[l5]', '') | replace('[L6]', '') | replace('[l6]', '') | replace('[L7]', '') | replace('[l7]', '') | replace('[L8]', '') | replace('[l8]', '') | replace('[L9]', '') | replace('[l9]', '') %}\n    {{- t }}\n{%- endmacro %}\n\n{#- Remove only a {REASON:...} / [MODE:...] tag (assistant history path). -#}\n{%- macro strip_mode_tag(text) %}\n    {%- set t = text %}\n    {%- if '{REASON:' in t %}\n        {%- set _raw = t.split('{REASON:')[1].split('}')[0] %}\n        {%- set t = t.replace('{REASON:' ~ _raw ~ '}', '') %}\n    {%- elif '[MODE:' in t %}\n        {%- set _raw2 = t.split('[MODE:')[1].split(']')[0] %}\n        {%- set t = t.replace('[MODE:' ~ _raw2 ~ ']', '') %}\n    {%- endif %}\n    {{- t }}\n{%- endmacro %}\n\n{#- Tool output error classifier \u2192 'error' | 'ok' (shared with coupling). -#}\n{%- macro classify_tool_output(content) %}\n    {%- set _lower = content | lower %}\n    {%- set _head = _lower[:120] %}\n    {%- set _is_code_or_grep = ('throw new ' in _lower or 'throw error' in _lower or 'console.error' in _lower or 'logger.error' in _lower or 'logging.error' in _lower or 'import ' in _head or 'def ' in _head or 'function ' in _head) %}\n    {%- set _exit_code_zero = ('exit code: 0' in _head or 'process exited with code 0' in _head) %}\n    {%- set _error_field_ok = ('\"error\": null' in _head or '\"error\":null' in _head or '\"error\": false' in _head or '\"error\":false' in _head or '\"error\": \"\"' in _head or '\"error\":\"\"' in _head) %}\n    {%- set _strong = (('\"error\":' in _head and not _error_field_ok) or '\"status\": \"error\"' in _head or '\"status\":\"error\"' in _head or 'traceback (most recent call last):' in _head or 'command not found' in _head or 'invalid syntax' in _head or 'fatal:' in _head or (('exit code: ' in _head or 'process exited with code' in _head) and not _exit_code_zero) or _head.startswith('exception:') or _head.startswith('failed to ')) %}\n    {%- set _weak = ('error:' in _head or 'err!' in _head) %}\n    {%- set _suppressed = ('$ ' in _head or 'took ' in _head or content | length >= 600) %}\n    {%- if not _is_code_or_grep and (_strong or (_weak and not _suppressed)) %}\n        {{- 'error' }}\n    {%- else %}\n        {{- 'ok' }}\n    {%- endif %}\n{%- endmacro %}\n\n{#- ================================================================== -#}\n{#- S2 COGNITIVE PROFILES \u2014 pure text, soft shares only.                -#}\n{#- ================================================================== -#}\n\n{%- set soft_budget_contract -%}\nPROTIUM OBJECTIVE-GATED REASONING CONTRACT:\n1. Target Anchor: At token 1, isolate the exact termination criteria \u2014 define what a completed, verified solution requires before executing.\n2. Forward-Only Solve: Advance directly along the deductive path. Systematically eliminate internal conversational monologues (\"let's see\", \"hmm\", \"wait\", \"now let me check\"). Discard rhetorical hesitation; execute continuous deductive steps.\n3. Anti-Pivot Invariant: Never emit reflexive hesitation pivots (\"Wait...\", \"On second thought...\", \"Hold on...\") unless a concrete mathematical, programmatic, or factual contradiction has been explicitly isolated. In the absence of an identified contradiction, maintain unbroken forward momentum.\n4. Active Disproof Gate: Never declare an answer complete on surface plausibility alone. Before unlocking exit, stress-test your candidate solution against the initial constraints and degenerate edge cases (nulls, zero, off-by-one, boundary limits, and trivial counterexamples).\n5. Objective Early Exit: The instant your solution withstands active constraint verification, terminate thinking immediately and deliver the final answer. Never pad, stall, or manufacture doubt once the proof holds.\n6. Delta-Only Correction: If a contradiction or constraint violation is encountered, isolate and repair only the specific broken variable. Never regress into circular overthinking loops or full restarts.\n7. Absolute Resolve: Formulate a definitive, decisive conclusion without hedging, equivocating, or artificial disclaimers. Correctness and crisp utility are the sole metrics.\n{%- endset %}\n\n{%- set terse_core -%}\nOperational Directives:\n- Zero preamble, pleasantries, or question restatements.\n- Deliver direct, unhedged answers with maximum information density.\n- Retain all essential mathematical, programmatic, and logical technical rigor.\n- If genuine ambiguity exists, resolve it along the most probable engineering standard or ask one targeted clarifying question.\n{%- endset %}\n\n{%- set inst_hermes -%}\nReasoning effort: Hermes \u2014 [L1] (rapid instinct).\nMindset: High-velocity execution. Rapid sanity check of premise, arithmetic, or syntax \u2014 then commit immediately to the shortest verified bridge to the conclusion. Conclude immediately once obvious.\n{%- endset %}\n{%- set inst_apollo -%}\nReasoning effort: Apollo \u2014 [L2] (disciplined deduction).\nMindset: Structured, transparent logic. Isolate given constraints, trace linear implications with zero detour, and exit thinking the instant premise validation is reached.\n{%- endset %}\n{%- set inst_artemis -%}\nReasoning effort: Artemis \u2014 [L3] (boundary & failure audit).\nMindset: Rigorous boundary validation. Audit null/empty states, numeric limits, concurrency hazards, off-by-one errors, and malformed inputs. Fortify against edge cases, then terminate thinking immediately.\n{%- endset %}\n{%- set inst_athena -%}\nReasoning effort: Athena \u2014 [L4] (strategic architecture).\nMindset: Modular synthesis. Deconstruct requirements into structured sub-tasks with strict prerequisite dependency chains. Weigh concrete trade-offs (performance vs maintainability, latency vs throughput) and execute the optimal vector.\n{%- endset %}\n{%- set inst_prometheus -%}\nReasoning effort: Prometheus \u2014 [L5] (defensive engineering).\nMindset: Second-order systemic modeling. Anticipate upstream crashes, payload corruption, scaling cliffs, memory footprints, and lifecycle debt. Embed fault tolerance and graceful degradation directly into the design.\n{%- endset %}\n{%- set inst_solstice -%}\nReasoning effort: Solstice \u2014 [L6] (deep systemic derivation).\nMindset: Axiomatic derivation. Establish fundamental invariants, formulate distinct candidate architectures, stress-test each against boundary constraints, and converge on the dominant derivation with zero assumptions taken on faith.\n{%- endset %}\n{%- set inst_hyperion -%}\nReasoning effort: Hyperion \u2014 [L7] (first-principles synthesis).\nMindset: Comprehensive first-principles synthesis. Decompose problems to atomic ground truths. Maintain continuous forward momentum across all proof surfaces. Immediate exit the instant resolution is achieved.\n{%- endset %}\n{%- set inst_einstein -%}\nReasoning effort: Einstein \u2014 [L8] (theoretical mastery).\nMindset: Invariant reduction and breakthrough synthesis. Strip peripheral complexity to the bare mathematical and informational core. Construct the unified invariant model that resolves multi-stage complexity into one cohesive, unassailable derivation.\n{%- endset %}\n{%- set inst_oracle -%}\nReasoning effort: Oracle \u2014 [L9] (proof-grade authority).\nMindset: Exhaustive formal verification. Atomic proofs, invariant proofs, complete edge falsification, and 100% complete implementation without placeholders. Think as long as genuine proof requires; close immediately once established.\n{%- endset %}\n{%- set inst_proteus -%}\nReasoning effort: Proteus \u2014 [L10] (autonomous freehand reasoning; default).\nMindset: Freehand cognitive autonomy. You are not bound by artificial tiers, rigid categories, or predetermined quotas. Freehand exactly the depth, structure, and rigor required by the problem's own constraints:\n- Autonomous Execution: Seamlessly weave whatever analytical techniques the solution demands\u2014boundary audits, architectural trade-offs, defensive modeling, or axiomatic proofs\u2014without categorizing yourself into rigid stages.\n- Unbroken Forward Momentum: Eliminate all self-conversational chatter (\"let's see\", \"hmm\", \"wait\"). Advance strictly through deductive steps.\n- Active Verification & Exit: Stress-test your derivation against initial boundary constraints; the millisecond the solution is verified and holds, terminate thinking immediately and deliver the final answer.\n{%- endset %}\n{%- set inst_swarm -%}\nReasoning effort: Swarm \u2014 20-perspective divergent swarm (specialized mode).\nMindset: Four-phase convergent breakdown. Phase 1: Disassembly to core parameters. Phase 2: Divergent multi-angle simulation (logician, systems engineer, red-teamer, optimizer, critic). Phase 3: Cross-pollination and tension resolution. Phase 4: Convergence onto master deliverable.\nOutput contract: Conclude thinking and open final response with \"[SWARM VERDICT]\" followed by a decisive synthesis naming the winning vector and the primary objection survived.\n{%- endset %}\n{%- set inst_deep_swarm -%}\nReasoning effort: Council \u2014 adversarial research council (specialized mode).\nMindset: Five-protocol institutional deliberation. Protocol 1: Parameter calibration and success criteria. Protocol 2: Multi-specialist panel assembly. Protocol 3: Adversarial debate and stress-testing. Protocol 4: Trade-off scoring matrix. Protocol 5: Master architecture.\nOutput contract: Conclude thinking and open final response with \"[COUNCIL VERDICT]\" followed by the definitive ruling, key justification, and dissenting risk accounted for.\n{%- endset %}\n\n{#- ================================================================== -#}\n{#- S1 RESOLUTION CORE \u2014 one pass, one state, one resolver.             -#}\n{#- ================================================================== -#}\n\n{%- set _kwarg_effort = '' %}\n\n{%- set reg_ns = namespace(active=false) %}\n{%- if (regular is defined and regular) or (mode is defined and mode in ('regular', 'vanilla', 'standard', 'default', 'clean')) %}\n    {%- set reg_ns.active = true %}\n{%- endif %}\n{%- for msg in messages %}\n    {%- if msg.content is string and ('[regular]' in msg.content or '[REGULAR]' in msg.content or '[vanilla]' in msg.content or '[standard]' in msg.content or '[default]' in msg.content) %}\n        {%- set reg_ns.active = true %}\n    {%- endif %}\n{%- endfor %}\n{%- set is_explicit_regular = reg_ns.active %}\n{%- if is_explicit_regular %}\n    {%- set _kwarg_effort = 'regular' %}\n{%- endif %}\n{%- if reasoning_effort is defined and reasoning_effort is not none %}\n    {%- set _kwarg_effort = reasoning_effort | string | lower | trim %}\n{%- elif thinking_level is defined and thinking_level is not none %}\n    {%- set _kwarg_effort = thinking_level | string | lower | trim %}\n{%- endif %}\n{%- set _initial_thinking = thinking %}\n{%- set _initial_effort = '10' %}\n{%- set _depth_explicit = false %}\n{%- set _silent_profile = false %}\n{%- if _kwarg_effort %}\n    {%- set _depth_explicit = true %}\n    {%- if _kwarg_effort in ('none', 'off', '0', 'mortal', 'disabled', 'regular', 'vanilla', 'standard', 'default', 'clean') %}\n        {%- set _initial_thinking = false %}\n    {%- else %}\n        {%- set _initial_thinking = true %}\n        {%- if _kwarg_effort == 'max' %}\n            {%- set _initial_effort = '9' %}\n        {%- elif _kwarg_effort == 'high' %}\n            {%- set _initial_effort = '8' %}\n        {%- else %}\n            {%- set _initial_effort = _kwarg_effort %}\n        {%- endif %}\n    {%- endif %}\n{%- endif %}\n{%- set ns_state = namespace(thinking=_initial_thinking, effort=_initial_effort, silent_profile=_silent_profile) %}\n\n{#- Unified scan: inline [L#] / {REASON:} / [MODE:] signals + cleaned store. -#}\n{#- Later signals override earlier ones (mid-chat re-escalation works).     -#}\n{%- set store = namespace(messages=[], saw_inline=false) %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- for msg in messages %}\n    {%- set _txt = scan_text(msg.content) | trim %}\n    {%- set _role = msg.role %}\n    {%- set _is_steering = (_role == 'system' or _role == 'developer' or _role == 'user') %}\n    {%- set _tagged = ('{REASON:' in _txt) or ('[MODE:' in _txt) %}\n    {%- set _low = _txt | lower %}\n    {%- set _hi = namespace(v=_tagged) %}\n    {%- if _is_steering and not _hi.v %}\n        {%- if '[l10]' in _low %}\n            {%- set _hi.v = true %}\n        {%- else %}\n            {%- for n in range(10) %}\n                {%- if '[l' ~ n ~ ']' in _low %}\n                    {%- set _hi.v = true %}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n    {%- endif %}\n    {%- set _has_inline = _hi.v %}\n    {%- if _is_steering and _has_inline %}\n        {%- if _tagged %}\n            {%- set _raw_reason = '' %}\n            {%- if '{REASON:' in _txt %}\n                {%- set _raw_reason = _txt.split('{REASON:')[1].split('}')[0] %}\n            {%- elif '[MODE:' in _txt %}\n                {%- set _raw_reason = _txt.split('[MODE:')[1].split(']')[0] %}\n            {%- endif %}\n            {%- if _raw_reason %}\n                {%- set _mode_raw = _raw_reason | string | lower | trim %}\n                {%- if _mode_raw.startswith('i') and _mode_raw | length > 1 %}\n                    {%- set ns_state.effort = _mode_raw[1:] %}\n                    {%- set ns_state.thinking = false %}\n                    {%- set ns_state.silent_profile = true %}\n                    {%- set store.saw_inline = true %}\n                {%- else %}\n                    {%- set ns_state.effort = _mode_raw %}\n                    {%- set ns_state.silent_profile = false %}\n                    {%- set store.saw_inline = true %}\n                    {%- if _mode_raw in ('0', 'mortal', 'off', 'none', 'direct', 'chat', 'disabled', 'regular', 'vanilla', 'standard', 'default', 'clean') %}\n                        {%- set ns_state.thinking = false %}\n                    {%- else %}\n                        {%- set ns_state.thinking = true %}\n                    {%- endif %}\n                {%- endif %}\n            {%- endif %}\n        {%- endif %}\n        {%- if '[l10]' in _low %}\n            {%- set ns_state.effort = '10' %}\n            {%- set ns_state.silent_profile = false %}\n            {%- set ns_state.thinking = true %}\n            {%- set store.saw_inline = true %}\n        {%- else %}\n            {%- for n in range(10) %}\n                {%- if '[l' ~ n ~ ']' in _low %}\n                    {%- set ns_state.effort = n | string %}\n                    {%- set ns_state.silent_profile = false %}\n                    {%- set store.saw_inline = true %}\n                    {%- if n == 0 %}\n                        {%- set ns_state.thinking = false %}\n                    {%- else %}\n                        {%- set ns_state.thinking = true %}\n                    {%- endif %}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n    {%- endif %}\n    {#- Build cleaned store (assistant metadata preserved; tag-bearing text -#}\n    {#- cleaned; multi-modal parts untouched). -#}\n    {%- if _tagged and _role == 'assistant' %}\n        {%- set _clean = strip_mode_tag(_txt) | trim %}\n        {%- set store.messages = store.messages + [{'role': _role, 'content': _clean, 'tool_calls': (msg.tool_calls if msg.tool_calls is defined else none), 'reasoning_content': (msg.reasoning_content if msg.reasoning_content is defined else none)}] %}\n    {%- elif _is_steering and _has_inline %}\n        {%- if msg.content is string %}\n            {%- set _clean = strip_control_tags(_txt) | trim %}\n            {%- set store.messages = store.messages + [{'role': _role, 'content': _clean}] %}\n        {%- elif msg.content is iterable and msg.content is not mapping %}\n            {%- set _nc = namespace(items=[]) %}\n            {%- for item in msg.content %}\n                {%- if item is mapping and 'text' in item and item.text is string %}\n                    {%- set _nc.items = _nc.items + [{'type': 'text', 'text': strip_control_tags(item.text) | trim}] %}\n                {%- else %}\n                    {%- set _nc.items = _nc.items + [item] %}\n                {%- endif %}\n            {%- endfor %}\n            {%- set store.messages = store.messages + [{'role': _role, 'content': _nc.items}] %}\n        {%- else %}\n            {%- set store.messages = store.messages + [msg] %}\n        {%- endif %}\n    {%- else %}\n        {%- set store.messages = store.messages + [msg] %}\n    {%- endif %}\n{%- endfor %}\n{%- set messages = store.messages %}\n{%- set _depth_explicit = (_depth_explicit or store.saw_inline) %}\n\n{#- Continuous depth: integers 10-100 map onto the spectrum band. -#}\n{%- set _eff_int = ns_state.effort | int %}\n{%- if (_eff_int | string) == ns_state.effort and _eff_int >= 11 %}\n    {%- set ns_state.thinking = true %}\n    {%- if _eff_int <= 14 %}\n        {%- set ns_state.effort = '1' %}\n    {%- elif _eff_int <= 29 %}\n        {%- set ns_state.effort = '2' %}\n    {%- elif _eff_int <= 44 %}\n        {%- set ns_state.effort = '3' %}\n    {%- elif _eff_int <= 59 %}\n        {%- set ns_state.effort = '4' %}\n    {%- elif _eff_int <= 69 %}\n        {%- set ns_state.effort = '5' %}\n    {%- elif _eff_int <= 79 %}\n        {%- set ns_state.effort = '6' %}\n    {%- elif _eff_int <= 89 %}\n        {%- set ns_state.effort = '7' %}\n    {%- elif _eff_int <= 96 %}\n        {%- set ns_state.effort = '8' %}\n    {%- else %}\n        {%- set ns_state.effort = '9' %}\n    {%- endif %}\n{%- endif %}\n\n{#- Depth-tool coupling A: trailing tool-failure streak. -#}\n{%- set _streak = namespace(value=0) %}\n{%- for msg in messages %}\n    {%- if msg.role == 'tool' %}\n        {%- set _tc = scan_text(msg.content) | trim %}\n        {%- if classify_tool_output(_tc) | trim == 'error' %}\n            {%- set _streak.value = _streak.value + 1 %}\n        {%- else %}\n            {%- set _streak.value = 0 %}\n        {%- endif %}\n    {%- elif msg.role == 'user' %}\n        {%- set _streak.value = 0 %}\n    {%- endif %}\n{%- endfor %}\n\n{#- Depth-tool coupling B: collapse + escalate. Swarm/council (non-numeric -#}\n{#- effort values) are never auto-tuned. Escalation forces thinking on. -#}\n{%- set _has_budget = (thinking_budget is defined and thinking_budget and (thinking_budget | int) > 0) or (max_thinking_tokens is defined and max_thinking_tokens and (max_thinking_tokens | int) > 0) %}\n{%- set _budget_val = (thinking_budget | int) if (thinking_budget is defined and thinking_budget and (thinking_budget | int) > 0) else ((max_thinking_tokens | int) if (max_thinking_tokens is defined and max_thinking_tokens) else 0) %}\n{%- set _has_tools = (tools is defined and tools and tools is iterable and tools is not mapping) %}\n{#- Collapse: tools + no explicit depth signal \u2192 thinking ON at [L4] -#}\n{#- (tool work wants disciplined reasoning; explicit off stays off).  -#}\n{%- if _has_tools and not _depth_explicit and ns_state.effort in ('1','2','3','4','5','6','7','8','9') %}\n    {%- set ns_state.effort = '4' %}\n    {%- set ns_state.thinking = true %}\n{%- endif %}\n{%- if _streak.value >= 2 %}\n    {%- set _cur = ns_state.effort if ns_state.effort in ('1','2','3','4','5','6','7','8','9') else '7' %}\n    {%- if _cur == '1' %}\n        {%- set ns_state.effort = '2' %}\n    {%- elif _cur == '2' %}\n        {%- set ns_state.effort = '3' %}\n    {%- elif _cur == '3' %}\n        {%- set ns_state.effort = '4' %}\n    {%- elif _cur == '4' %}\n        {%- set ns_state.effort = '5' %}\n    {%- elif _cur == '5' %}\n        {%- set ns_state.effort = '6' %}\n    {%- elif _cur == '6' %}\n        {%- set ns_state.effort = '7' %}\n    {%- elif _cur in ('7', '8', '9') %}\n        {%- set ns_state.effort = '7' %}\n    {%- endif %}\n    {%- set ns_state.silent_profile = false %}\n    {%- set ns_state.thinking = true %}\n{%- endif %}\n\n{#- Sync the resolved state into the upstream `thinking` variable so the -#}\n{#- emission stage (gen prompt, history think keep/drop) always reflects  -#}\n{#- the final resolver/coupling decision, never a stale kwarg.            -#}\n{%- set thinking = ns_state.thinking -%}\n{%- set has_tools = _has_tools -%}\n\n{#- Alias resolver: number / name / compat alias \u2192 profile text. Unknown -#}\n{#- input degrades gracefully to [L7]; it never hard-fails. -#}\n{%- set reasoning_instructions = '' %}\n{%- if ns_state.thinking or ns_state.silent_profile %}\n    {%- set target_mode = ns_state.effort if ns_state.effort else '10' %}\n    {%- if target_mode in ('10', 'proteus', 'dynamic', 'auto', 'adaptive', 'fluid', 'default') %}\n        {%- set reasoning_instructions = inst_proteus %}\n    {%- elif target_mode in ('1', 'hermes', 'ulow', 'ultra-low', 'micro', 'minimal') %}\n        {%- set reasoning_instructions = inst_hermes %}\n    {%- elif target_mode in ('2', 'apollo', 'low') %}\n        {%- set reasoning_instructions = inst_apollo %}\n    {%- elif target_mode in ('3', 'artemis', 'lmed', 'low-medium') %}\n        {%- set reasoning_instructions = inst_artemis %}\n    {%- elif target_mode in ('4', 'athena', 'medium', 'med') %}\n        {%- set reasoning_instructions = inst_athena %}\n    {%- elif target_mode in ('5', 'prometheus', 'mhigh', 'medium-high') %}\n        {%- set reasoning_instructions = inst_prometheus %}\n    {%- elif target_mode in ('6', 'solstice', 'high') %}\n        {%- set reasoning_instructions = inst_solstice %}\n    {%- elif target_mode in ('7', 'hyperion', 'xhigh', 'default', 'extreme') %}\n        {%- set reasoning_instructions = inst_hyperion %}\n    {%- elif target_mode in ('8', 'einstein', 'uhigh', 'ultra-high') %}\n        {%- set reasoning_instructions = inst_einstein %}\n    {%- elif target_mode in ('9', 'oracle', 'amax', 'absolute-max') %}\n        {%- set reasoning_instructions = inst_oracle %}\n    {%- elif target_mode in ('swarm', 'einstein-swarm', '20-swarm', 'uhigh-swarm', 'divergent') %}\n        {%- set reasoning_instructions = inst_swarm %}\n    {%- elif target_mode in ('deep-swarm', 'oracle-swarm', 'council', 'amax-swarm', 'deep-research', 'spoon', 'adversarial') %}\n        {%- set reasoning_instructions = inst_deep_swarm %}\n    {%- else %}\n        {%- set reasoning_instructions = inst_proteus %}\n    {%- endif %}\n    {%- set reasoning_instructions = reasoning_instructions ~ '\\n\\n' ~ soft_budget_contract %}\n{%- endif %}\n\n{#- ================================================================== -#}\n{#- S3 RENDER PIPELINE \u2014 DeepSeek-native emission (upstream contract).  -#}\n{#- ================================================================== -#}\n\n{%- set dsml_token = '\uff5cDSML\uff5c' -%}\n{%- set thinking_start_token = '<think>' -%}\n{%- set thinking_end_token = '</think>' -%}\n\n{#- System prompt assembly: leading system/developer messages, merged. -#}\n{%- set ns = namespace(system_prompt='', is_first_sp=true, has_tool_calls=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'system' or message['role'] == 'developer' -%}\n    {%- set _part = scan_text(message['content']) | trim -%}\n    {%- if _part -%}\n      {%- if ns.is_first_sp -%}\n        {%- set ns.system_prompt = ns.system_prompt + _part -%}\n        {%- set ns.is_first_sp = false -%}\n      {%- else -%}\n        {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + _part -%}\n      {%- endif -%}\n    {%- endif -%}\n  {%- endif -%}\n{%- endfor -%}\n\n{#- Terse style guide (opt-out via terse=false). -#}\n{%- set _terse_on = terse if terse is defined else (not is_explicit_regular) -%}\n{%- if _terse_on -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + (terse_core | trim) -%}\n  {%- else -%}\n    {%- set ns.system_prompt = terse_core | trim -%}\n  {%- endif -%}\n{%- endif -%}\n\n{#- Tools: upstream DSML header + schemas. -#}\n{%- set _has_tools = (tools is defined and tools and tools is iterable and tools is not mapping) -%}\n{%- set tools_header = '## Tools\\n\\nYou have access to a set of tools to help answer the user\\'s question. You can invoke tools by writing a \"<' + dsml_token + 'tool_calls>\" block like the following:\\n\\n<' + dsml_token + 'tool_calls>\\n<' + dsml_token + 'invoke name=\"$TOOL_NAME\">\\n<' + dsml_token + 'parameter name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE</' + dsml_token + 'parameter>\\n...\\n</' + dsml_token + 'invoke>\\n<' + dsml_token + 'invoke name=\"$TOOL_NAME2\">\\n...\\n</' + dsml_token + 'invoke>\\n</' + dsml_token + 'tool_calls>\\n\\nString parameters should be specified as is and set `string=\"true\"`. For all other types (numbers, booleans, arrays, objects), pass the value in JSON format and set `string=\"false\"`.\\n\\nIf thinking_mode is enabled (triggered by ' + thinking_start_token + '), you MUST output your complete reasoning inside ' + thinking_start_token + '...' + thinking_end_token + ' BEFORE any tool calls or final response.\\n\\nOtherwise, output directly after ' + thinking_end_token + ' with tool calls or final response.\\n\\n### Available Tool Schemas\\n\\n' -%}\n{%- set tools_footer = '\\nYou MUST strictly follow the above defined tool name and parameter schemas to invoke tool calls.\\n' -%}\n{%- if _has_tools -%}\n  {%- set ts = namespace(schemas='') -%}\n  {#- NB: '((X | tojson) ~ \"\")' \u2014 tojson returns markupsafe Markup, and -#}\n  {#- concatenating Markup with plain strings HTML-escapes them.          -#}\n  {%- for tool in tools -%}\n    {%- if tool['type'] == 'function' -%}\n      {%- set ts.schemas = ts.schemas + ((tool['function'] | tojson) ~ '') + '\\n' -%}\n    {%- endif -%}\n  {%- endfor -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + tools_header + ts.schemas + tools_footer -%}\n  {%- else -%}\n    {%- set ns.system_prompt = tools_header + ts.schemas + tools_footer -%}\n  {%- endif -%}\n{%- endif -%}\n\n{#- response_format kwarg: upstream passthrough. -#}\n{%- set response_format_template = '## Response Format:\\n\\nYou MUST strictly adhere to the following schema to reply:\\n' -%}\n{%- if response_format is defined -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' -%}\n  {%- endif -%}\n  {%- set ns.system_prompt = ns.system_prompt + response_format_template + ((response_format | tojson) ~ '') -%}\n{%- endif -%}\n\n{#- Emission: bos \u2192 effort profile prefix (upstream effort mechanism) \u2192 -#}\n{#- system prompt. Thinking-forced profile (silent mode) still injects.  -#}\n{{- bos_token -}}\n{%- if reasoning_instructions -%}\n  {{- reasoning_instructions -}}\n  {%- if _has_budget -%}\n    {{- '\\n\\nBudget Directive: The host environment specifies an allocation ceiling of roughly ' ~ (_budget_val | string) ~ ' reasoning tokens. Calibrate your deductive steps to achieve full verification and early exit well within this boundary.' -}}\n  {%- endif -%}\n  {{- '\\n\\n' -}}\n{%- endif -%}\n{{- ns.system_prompt -}}\n\n{#- Assistant-turn bookkeeping: last user idx, tool-call presence. -#}\n{%- set last_user_idx = namespace(value=-1) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' or message['role'] == 'tool' -%}\n    {%- set last_user_idx.value = loop.index0 -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'tool' -%}\n    {%- set ns.has_tool_calls = true -%}\n  {%- endif -%}\n{%- endfor -%}\n\n{#- Tool-failure warnings inside tool_result bodies (matching streaks). -#}\n{%- set warn_counter = namespace(value=0) -%}\n\n{%- set state = namespace(in_user=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- strip_control_tags(message['content']) if message['content'] is string else scan_text(message['content']) -}}\n  {%- elif message['role'] == 'tool' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {%- set _tc = scan_text(message['content']) | trim -%}\n    {%- set _is_error = classify_tool_output(_tc) | trim == 'error' -%}\n    {%- if _is_error -%}\n      {%- set warn_counter.value = warn_counter.value + 1 -%}\n    {%- else -%}\n      {%- set warn_counter.value = 0 -%}\n    {%- endif -%}\n    {{- '<tool_result>' + (message['content'] if message['content'] is string else _tc) -}}\n    {%- if _is_error and warn_counter.value == 1 -%}\n      {{- '\\n\\n\u26a0\ufe0f SYSTEM WARNING: The previous tool call returned an error. Diagnose the failure and retry with completely corrected arguments.' -}}\n    {%- elif _is_error and warn_counter.value >= 2 -%}\n      {{- '\\n\\n\u26a0\ufe0f SYSTEM WARNING: ' ~ warn_counter.value ~ ' consecutive tool errors detected. Your previous approach is incorrect. You MUST use a fundamentally different approach or corrected arguments.' -}}\n    {%- endif -%}\n    {{- '</tool_result>' -}}\n  {%- elif message['role'] == 'assistant' -%}\n    {%- set state.in_user = false -%}\n    {{- '<\uff5cAssistant\uff5c>' -}}\n    {%- set is_after_last_user = loop.index0 > last_user_idx.value -%}\n    {%- set keep_reasoning = thinking and ((not drop_thinking) or has_tools or is_after_last_user or ns.has_tool_calls) -%}\n    {%- if keep_reasoning -%}\n      {{- thinking_start_token -}}\n      {%- if message['reasoning_content'] is defined and message['reasoning_content'] -%}\n        {{- message['reasoning_content'] -}}\n      {%- endif -%}\n      {{- thinking_end_token -}}\n    {%- else -%}\n      {{- thinking_end_token -}}\n    {%- endif -%}\n    {%- if message['content'] is defined and message['content'] -%}\n      {{- strip_control_tags(message['content']) if message['content'] is string else scan_text(message['content']) -}}\n    {%- endif -%}\n    {%- if message['tool_calls'] -%}\n      {{- '\\n\\n<' + dsml_token + 'tool_calls>\\n' -}}\n      {%- for tool in message['tool_calls'] -%}\n        {%- set func = tool['function'] if tool['function'] is defined else tool -%}\n        {{- '<' + dsml_token + 'invoke name=\"' + func['name'] + '\">\\n' -}}\n        {%- set args = func['arguments'] -%}\n        {%- if args is string -%}\n          {%- set args = args | from_json -%}\n        {%- endif -%}\n        {%- for key, val in args.items() -%}\n          {%- if val is string -%}\n            {{- '<' + dsml_token + 'parameter name=\"' + key + '\" string=\"true\">' + val + '</' + dsml_token + 'parameter>\\n' -}}\n          {%- else -%}\n            {{- '<' + dsml_token + 'parameter name=\"' + key + '\" string=\"false\">' + ((val | tojson) ~ '') + '</' + dsml_token + 'parameter>\\n' -}}\n          {%- endif -%}\n        {%- endfor -%}\n        {%- if not args -%}\n          {{- '\\n' -}}\n        {%- endif -%}\n        {{- '</' + dsml_token + 'invoke>\\n' -}}\n      {%- endfor -%}\n      {{- '</' + dsml_token + 'tool_calls>' -}}\n    {%- endif -%}\n    {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' -}}\n  {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n  {{- '<\uff5cAssistant\uff5c>' -}}\n  {%- if is_explicit_regular -%}\n    {#- Pure regular mode: direct reply -#}\n  {%- elif thinking -%}\n    {{- thinking_start_token -}}\n  {%- else -%}\n    {{- thinking_end_token -}}\n  {%- endif -%}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "mit",
+    "base_model": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "gguf",
+      "deepseek",
+      "deepseek-v4.1",
+      "llama.cpp"
+    ],
+    "quantized_by": "vcruz305"
+  },
+  "gguf": {
+    "total": 748494684784,
+    "architecture": "deepseek41",
+    "context_length": 1048576,
+    "chat_template": "{%- if not add_generation_prompt is defined -%}\n  {%- set add_generation_prompt = false -%}\n{%- endif -%}\n{%- if not thinking is defined -%}\n  {%- if enable_thinking is defined -%}\n    {%- set thinking = enable_thinking -%}\n  {%- else -%}\n    {%- set thinking = false -%}\n  {%- endif -%}\n{%- endif -%}\n{%- if not drop_thinking is defined -%}\n  {%- set drop_thinking = true -%}\n{%- endif -%}\n{%- set dsml_token = '\uff5cDSML\uff5c' -%}\n{%- set thinking_start_token = '<think>' -%}\n{%- set thinking_end_token = '</think>' -%}\n{%- set reasoning_effort_max = 'Reasoning Effort: Absolute maximum with no shortcuts permitted.\\nYou MUST be very thorough in your thinking and comprehensively decompose the problem to resolve the root cause, rigorously stress-testing your logic against all potential paths, edge cases, and adversarial scenarios.\\nExplicitly write out your entire deliberation process, documenting every intermediate step, considered alternative, and rejected hypothesis to ensure absolutely no assumption is left unchecked.\\n\\n' -%}\n{%- set response_format_template = '## Response Format:\\n\\nYou MUST strictly adhere to the following schema to reply:\\n' -%}\n{%- set has_tools = false -%}\n{%- set tools_header = '## Tools\\n\\nYou have access to a set of tools to help answer the user\\'s question. You can invoke tools by writing a \"<' + dsml_token + 'tool_calls>\" block like the following:\\n\\n<' + dsml_token + 'tool_calls>\\n<' + dsml_token + 'invoke name=\"$TOOL_NAME\">\\n<' + dsml_token + 'parameter name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE</' + dsml_token + 'parameter>\\n...\\n</' + dsml_token + 'invoke>\\n<' + dsml_token + 'invoke name=\"$TOOL_NAME2\">\\n...\\n</' + dsml_token + 'invoke>\\n</' + dsml_token + 'tool_calls>\\n\\nString parameters should be specified as is and set `string=\"true\"`. For all other types (numbers, booleans, arrays, objects), pass the value in JSON format and set `string=\"false\"`.\\n\\nIf thinking_mode is enabled (triggered by ' + thinking_start_token + '), you MUST output your complete reasoning inside ' + thinking_start_token + '...' + thinking_end_token + ' BEFORE any tool calls or final response.\\n\\nOtherwise, output directly after ' + thinking_end_token + ' with tool calls or final response.\\n\\n### Available Tool Schemas\\n\\n' -%}\n{%- set tools_footer = '\\nYou MUST strictly follow the above defined tool name and parameter schemas to invoke tool calls.\\n' -%}\n{%- set ns = namespace(system_prompt='', is_first_sp=true, has_tool_calls=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'system' -%}\n    {%- if ns.is_first_sp -%}\n      {%- set ns.system_prompt = ns.system_prompt + (message['content'] or '') -%}\n      {%- set ns.is_first_sp = false -%}\n    {%- else -%}\n      {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + (message['content'] or '') -%}\n    {%- endif -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- if tools is defined and tools -%}\n  {%- set has_tools = true -%}\n  {%- set ts = namespace(schemas='') -%}\n  {%- for tool in tools -%}\n    {%- if tool['type'] == 'function' -%}\n      {%- set ts.schemas = ts.schemas + (tool['function'] | tojson) + '\\n' -%}\n    {%- endif -%}\n  {%- endfor -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' + tools_header + ts.schemas + tools_footer -%}\n  {%- else -%}\n    {%- set ns.system_prompt = tools_header + ts.schemas + tools_footer -%}\n  {%- endif -%}\n{%- endif -%}\n{%- if response_format is defined -%}\n  {%- if ns.system_prompt -%}\n    {%- set ns.system_prompt = ns.system_prompt + '\\n\\n' -%}\n  {%- endif -%}\n  {%- set ns.system_prompt = ns.system_prompt + response_format_template + (response_format | tojson) -%}\n{%- endif -%}\n{{- bos_token -}}\n{%- if messages and thinking and reasoning_effort is defined and reasoning_effort == 'max' -%}\n  {{- reasoning_effort_max -}}\n{%- endif -%}\n{{- ns.system_prompt -}}\n{%- set last_user_idx = namespace(value=-1) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' or message['role'] == 'tool' -%}\n    {%- set last_user_idx.value = loop.index0 -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- set state = namespace(in_user=false) -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'tool' -%}\n    {%- set ns.has_tool_calls = true -%}\n  {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n  {%- if message['role'] == 'user' or message['role'] == 'developer' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- message['content'] or '' -}}\n  {%- elif message['role'] == 'tool' -%}\n    {%- if state.in_user -%}\n      {{- '\\n\\n' -}}\n    {%- else -%}\n      {{- '<\uff5cUser\uff5c>' -}}\n      {%- set state.in_user = true -%}\n    {%- endif -%}\n    {{- '<tool_result>' + (message['content'] or '') + '</tool_result>' -}}\n  {%- elif message['role'] == 'assistant' -%}\n    {%- set state.in_user = false -%}\n    {{- '<\uff5cAssistant\uff5c>' -}}\n    {%- set is_after_last_user = loop.index0 > last_user_idx.value -%}\n    {%- set keep_reasoning = thinking and ((not drop_thinking) or has_tools or is_after_last_user or ns.has_tool_calls) -%}\n    {%- if keep_reasoning -%}\n      {{- thinking_start_token -}}\n      {%- if message['reasoning_content'] is defined and message['reasoning_content'] -%}\n        {{- message['reasoning_content'] -}}\n      {%- endif -%}\n      {{- thinking_end_token -}}\n    {%- else -%}\n      {{- thinking_end_token -}}\n    {%- endif -%}\n    {%- if message['content'] is defined and message['content'] -%}\n      {{- message['content'] -}}\n    {%- endif -%}\n    {%- if message['tool_calls'] -%}\n      {{- '\\n\\n<' + dsml_token + 'tool_calls>\\n' -}}\n      {%- for tool in message['tool_calls'] -%}\n        {%- set func = tool['function'] -%}\n        {{- '<' + dsml_token + 'invoke name=\"' + func['name'] + '\">\\n' -}}\n        {%- set args = func['arguments'] -%}\n        {%- if args is string -%}\n          {%- set args = args | from_json -%}\n        {%- endif -%}\n        {%- for key, val in args.items() -%}\n          {%- if val is string -%}\n            {{- '<' + dsml_token + 'parameter name=\"' + key + '\" string=\"true\">' + val + '</' + dsml_token + 'parameter>\\n' -}}\n          {%- else -%}\n            {{- '<' + dsml_token + 'parameter name=\"' + key + '\" string=\"false\">' + (val | tojson) + '</' + dsml_token + 'parameter>\\n' -}}\n          {%- endif -%}\n        {%- endfor -%}\n        {%- if not args -%}\n          {{- '\\n' -}}\n        {%- endif -%}\n        {{- '</' + dsml_token + 'invoke>\\n' -}}\n      {%- endfor -%}\n      {{- '</' + dsml_token + 'tool_calls>' -}}\n    {%- endif -%}\n    {{- '<\uff5cend\u2581of\u2581sentence\uff5c>' -}}\n  {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n  {{- '<\uff5cAssistant\uff5c>' -}}\n  {%- if thinking -%}\n    {{- thinking_start_token -}}\n  {%- else -%}\n    {{- thinking_end_token -}}\n  {%- endif -%}\n{%- endif -%}\n",
+    "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+    "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+    "totalFileSize": 347271472288
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "347fa901257a88d73ef5d55539e1cb73d9b0524b",
+      "size": 4799
+    },
+    {
+      "rfilename": ".probe.md",
+      "blobId": "ddd53c91edd25ed7fd640de0694d94333f9e2c3c",
+      "size": 58
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00001-of-00009.gguf",
+      "blobId": "be4f5c847d866c3476cf5f9edc14af6139414da9",
+      "size": 7971784416,
+      "lfs": {
+        "sha256": "6499c20b172f30bf68dfbf4465e8067482bdc33f701c30e37cf422935e4d4bc3",
+        "size": 7971784416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00002-of-00009.gguf",
+      "blobId": "4cea1761a753c3490a7b24f05c9afbbe895b72b8",
+      "size": 42308283648,
+      "lfs": {
+        "sha256": "eb1bc512e478184086ffcf58882efdce4c188c1e461a4bb285a9dc2e3f2fa3f5",
+        "size": 42308283648,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00003-of-00009.gguf",
+      "blobId": "90d304dce7c37f949ac09761f6163a74bb98a104",
+      "size": 44181213952,
+      "lfs": {
+        "sha256": "65e6fed865793f2719e9d47819f4901e88c4499d783b1a3bf10448ae2422ea98",
+        "size": 44181213952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00004-of-00009.gguf",
+      "blobId": "caba3a13957ed4a2bdc20a95d6f67f49378b0f82",
+      "size": 41111992000,
+      "lfs": {
+        "sha256": "3ed43f59a734c97e4dbef6fc77c7047267742bffc76e415d9e5fb6719dda2447",
+        "size": 41111992000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00005-of-00009.gguf",
+      "blobId": "2c6fc28bf3e4826cd4cdc0f596e7e7c194b4f009",
+      "size": 44864115552,
+      "lfs": {
+        "sha256": "9be50bb502735bebaee0fc6acc7e8dbc4e7e473f428bbb2f4c96210cedf00fbe",
+        "size": 44864115552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00006-of-00009.gguf",
+      "blobId": "43fc35ac1008238f17806d4ef5c0904b61842998",
+      "size": 43066406752,
+      "lfs": {
+        "sha256": "433b4362bb2fcb97c796935d01c53c3da0b9a3cbcc36e06d0314c6e69916bdbf",
+        "size": 43066406752,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00007-of-00009.gguf",
+      "blobId": "78df8e534b39fbfeee87d125c470160326677455",
+      "size": 43611224640,
+      "lfs": {
+        "sha256": "bc5f9a0bde117716b22ee10f5be7d735b438f40040d08fac22474a9d9883d712",
+        "size": 43611224640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00008-of-00009.gguf",
+      "blobId": "0c3c585dd0d8a689dfba7b5791b5ece7e257d420",
+      "size": 43664455008,
+      "lfs": {
+        "sha256": "e6b08013c406e01d186487eaca04da53c24431346400904fae15723b8762ac44",
+        "size": 43664455008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q3_K_M-00009-of-00009.gguf",
+      "blobId": "965f0319974e28b904ecd97460514e27f7bea58e",
+      "size": 36491996320,
+      "lfs": {
+        "sha256": "c069f939d796f14cb89c0b519f27a17de435315802efd110a35971db7593135c",
+        "size": 36491996320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00001-of-00011.gguf",
+      "blobId": "bbc187042573408e57f8d4aa03b736d0ede26a30",
+      "size": 9903019232,
+      "lfs": {
+        "sha256": "aa0ef0b26baacebda187bc7a675b60a61b9407097b39ff244a8d72273910beff",
+        "size": 9903019232,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00002-of-00011.gguf",
+      "blobId": "252e728419329c8e8df841c582da6a551c99fd41",
+      "size": 55296888384,
+      "lfs": {
+        "sha256": "0f7e076a531423b4c52294652ddb1b87859793781fabc6618a0d13d6f8540aaf",
+        "size": 55296888384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00003-of-00011.gguf",
+      "blobId": "9878c1ee60dddf510d6c47386c8b9fa9bb6b72e4",
+      "size": 43477027712,
+      "lfs": {
+        "sha256": "eaf7000aa1ee038f4a979708131f036f2f52cac5b1510c29e544ad89e16a8693",
+        "size": 43477027712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00004-of-00011.gguf",
+      "blobId": "f7d9ac98bd6dcb80fc9db2365fd0d6165b0dad4b",
+      "size": 43601417504,
+      "lfs": {
+        "sha256": "14d9641d478a2d7a8a79fd3043dc759a3a052ab0dcda6a17b7bf5e0b052c529c",
+        "size": 43601417504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00005-of-00011.gguf",
+      "blobId": "9cd9069c82d7f2f97c3b7875b60351907ace9ca3",
+      "size": 21838521504,
+      "lfs": {
+        "sha256": "5c0e4d0e120fe5485052d479add7445e2f3d1f65e598accc8c758449458b41bf",
+        "size": 21838521504,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00006-of-00011.gguf",
+      "blobId": "46ebbbb83088cda127ce22f58bdba2816b2e2320",
+      "size": 55298402400,
+      "lfs": {
+        "sha256": "56e2de3c9d3da27ee1c48be3d6d2b0293b70e842b34ef5a3b1fc3397a29e0cbc",
+        "size": 55298402400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00007-of-00011.gguf",
+      "blobId": "d50bf3fbfcab08857b791a281e74c295701219d1",
+      "size": 43686966240,
+      "lfs": {
+        "sha256": "656e0636bc9b97158889a04d36128373bcee38b83b42fdbf4ac95d3ce5e40cc6",
+        "size": 43686966240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00008-of-00011.gguf",
+      "blobId": "1c083d7b3936663a3c92fe26021e2dddfc9c9baa",
+      "size": 44992770528,
+      "lfs": {
+        "sha256": "e3ec8118206d5ebdc877b68375021150143f31ac5c5c74c5854ed17a6454b8e3",
+        "size": 44992770528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00009-of-00011.gguf",
+      "blobId": "1f689048468824260b93f3cef27a19f0568d4c80",
+      "size": 43668184320,
+      "lfs": {
+        "sha256": "4f20e2cf9d3da6158f02f4c933274bd28966a91a531ef42d228f7b70e0ada62a",
+        "size": 43668184320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00010-of-00011.gguf",
+      "blobId": "84f0b4b59b233b924bf2b0e2c314028ee97b019b",
+      "size": 44773274272,
+      "lfs": {
+        "sha256": "4c3c9101d61dd4e5c8a3a05a30604299f3cffaf28c8d388e8fdedd51d92c3b4b",
+        "size": 44773274272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q4_K_M-00011-of-00011.gguf",
+      "blobId": "453e890743e7bc11967921e73facdade427bdb87",
+      "size": 38200982624,
+      "lfs": {
+        "sha256": "1f7ed637779d529bd56fbcdfe7008bd28d546dc3d0fe3c5ce78bc51edfc0deca",
+        "size": 38200982624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00001-of-00010.gguf",
+      "blobId": "5f67969b57b3d570f075b25485d870e0446e5e0f",
+      "size": 43322444352,
+      "lfs": {
+        "sha256": "167304a8d1123d8a9b7d53a82c01aab659eba51be6d58763f769eb294f62617e",
+        "size": 43322444352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00002-of-00010.gguf",
+      "blobId": "980bfe55d51417c26c8cc48fbe31e1de48b34e4b",
+      "size": 43316676000,
+      "lfs": {
+        "sha256": "d9f95f3ec801d07bddb374b3943a7bdb484e48dd8b24c5eae9218b091e146f52",
+        "size": 43316676000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00003-of-00010.gguf",
+      "blobId": "d183c6e617d5b35b564ac4325b4545351bde8d5e",
+      "size": 43316676032,
+      "lfs": {
+        "sha256": "c53687cc23e2e32ab3ad5dbd8052de07801e12a8b3ce278967dfa6c2eb2983b4",
+        "size": 43316676032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00004-of-00010.gguf",
+      "blobId": "cab0d5963eb961407d8db92c63544e13554b767b",
+      "size": 43316676032,
+      "lfs": {
+        "sha256": "ba84c194c41feb6f7fb65fb4a0a4e188ee2cb85516b86ba2818e16cec2017343",
+        "size": 43316676032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00005-of-00010.gguf",
+      "blobId": "082564cfdf3d5117e679fc3af05da3e33bdff484",
+      "size": 43316676032,
+      "lfs": {
+        "sha256": "66fdac198238c64c7310de22e46a1f9a15284fbde65f6a020f6e94395155b8b5",
+        "size": 43316676032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00006-of-00010.gguf",
+      "blobId": "6367670007a4c89f70883ab3094b4e65fb8f9ce3",
+      "size": 43316676032,
+      "lfs": {
+        "sha256": "19a2b0e85cce09a47c826d8a670f832792752fdb5a996445fee797e0ce0d100f",
+        "size": 43316676032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00007-of-00010.gguf",
+      "blobId": "6ad1005e7f99de55890d356e7f7e1083fb10948f",
+      "size": 28877784064,
+      "lfs": {
+        "sha256": "f04e8d27188e9a9cb4f7999a7fc099c5f52e043e23dd1b333a2294f1c1a0af84",
+        "size": 28877784064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00008-of-00010.gguf",
+      "blobId": "e052d8dde622b64a121191df9fffabab7ee544bd",
+      "size": 104449677888,
+      "lfs": {
+        "sha256": "dc05657987ace747fabdf6c9c9b498fd46253329c78e7e795533b1885c292330",
+        "size": 104449677888,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00009-of-00010.gguf",
+      "blobId": "d9d5af9f4f0817d889c5629f6e1c8d3fbc791c3c",
+      "size": 104452537696,
+      "lfs": {
+        "sha256": "f8fe6989ba5956981e1f896167b495b343ce184c24bfdff9eec981c8c541da9d",
+        "size": 104452537696,
+        "pointerSize": 137
+      }
+    },
+    {
+      "rfilename": "DeepSeek-V4.1-Flash-Q8_0-00010-of-00010.gguf",
+      "blobId": "afbfd434f4d195c83abd407dc4ac9b0dd9f0cf0d",
+      "size": 10268402880,
+      "lfs": {
+        "sha256": "f7f00c58e282623f08e43544dc31581f0e03a527bd05330054bb6bc2cfce384b",
+        "size": 10268402880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "5e0b9cd19fb1088ef81f58e1777de02af7163df1",
+      "size": 3147
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "12301d3e560cdee406edcf96aa490fc2e5a373a0",
+      "size": 33887
+    },
+    {
+      "rfilename": "llama.cpp/patches/README.md",
+      "blobId": "38372a6aee31d1a0c9ac14447aab3cefa5f9556a",
+      "size": 4271
+    },
+    {
+      "rfilename": "llama.cpp/patches/fix_gguf_engram_kv.py",
+      "blobId": "a022477c5215a6dff1c0a679fd2d2476641e280c",
+      "size": 9964
+    },
+    {
+      "rfilename": "llama.cpp/patches/patch_llamacpp_v41.py",
+      "blobId": "86c8ffc333e19fc11b89380724fc06c1820d5c56",
+      "size": 30913
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-12T15:03:50.000Z",
+  "usedStorage": 1670339479744
+}

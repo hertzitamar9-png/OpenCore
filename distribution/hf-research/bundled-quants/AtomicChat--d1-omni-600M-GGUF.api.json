@@ -1,0 +1,180 @@
+{
+  "_id": "6ac69bf7b065ad1c6c3a0341",
+  "id": "AtomicChat/d1-omni-600M-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "liquid",
+    "lfm2.5",
+    "decision",
+    "classification",
+    "system-one",
+    "multimodal",
+    "vision",
+    "audio",
+    "imatrix",
+    "quantized",
+    "atomic-chat",
+    "image-text-to-text",
+    "base_model:LiquidAI/d1-omni-600M",
+    "base_model:quantized:LiquidAI/d1-omni-600M",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "decision-model",
+    "feature-extraction"
+  ],
+  "downloads": 555,
+  "likes": 0,
+  "modelId": "AtomicChat/d1-omni-600M-GGUF",
+  "author": "AtomicChat",
+  "sha": "227fd43a63dac7a43a5f8cae7bef46be01affffa",
+  "lastModified": "2026-10-08T12:56:15.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "lfm1.0",
+    "license_link": "LICENSE",
+    "base_model": "LiquidAI/d1-omni-600M",
+    "base_model_relation": "quantized",
+    "quantized_by": "AtomicChat",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "liquid",
+      "lfm2.5",
+      "decision",
+      "classification",
+      "system-one",
+      "multimodal",
+      "vision",
+      "audio",
+      "imatrix",
+      "quantized",
+      "atomic-chat"
+    ]
+  },
+  "gguf": {
+    "total": 380732161,
+    "architecture": "lfm2",
+    "context_length": 128000,
+    "causal": false,
+    "quantize_imatrix_file": "/data/imatrix.gguf",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "decision_type": "lfm2-d1-omni",
+    "totalFileSize": 255571840
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "c33b4331ba809db1ab602ee6e5b28528c21d2c0d",
+      "size": 1959
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "272d23491019471e6776d23ae995f41b164ea34c",
+      "size": 10572
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b61c7416e0bf78922305c96648c800353dd48dd0",
+      "size": 9869
+    },
+    {
+      "rfilename": "d1-omni-600M-AD-Q4_K_M.gguf",
+      "blobId": "87d60290a0de69beb15f372c5f8e65b7c7591661",
+      "size": 255571840,
+      "lfs": {
+        "sha256": "3119cf3be37f0f0fbc15a6d4079ad12b96e1cb5ad2f50b5752ed5cb74e664d23",
+        "size": 255571840,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M-AD-Q5_K_M.gguf",
+      "blobId": "2b498dbfcf7d8f50b487dc7178a3fe72480084f6",
+      "size": 292796288,
+      "lfs": {
+        "sha256": "76b70846ffc91cc7126c739604629e6a4693773a7a715bffde525f67f78b0480",
+        "size": 292796288,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M-AD-Q6_K.gguf",
+      "blobId": "58cebc4f87bc7ba2153e2e235f7f19ff4aa86b21",
+      "size": 346765184,
+      "lfs": {
+        "sha256": "227ccbc75e3660cf2f89cc8d69af6f2a936b0de62f4906a129c8a9c62edf4675",
+        "size": 346765184,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M-BF16.gguf",
+      "blobId": "48b4de0f237faf07d3a5ac65f80a3c1a7a317138",
+      "size": 764049024,
+      "lfs": {
+        "sha256": "91cec23f2f09367a750db7d476488c9504864fa831d0f9cacda92f69ef063ada",
+        "size": 764049024,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "d1-omni-600M-Q8_0.gguf",
+      "blobId": "07a055994b29480706a8354df0530438dd87f678",
+      "size": 407205760,
+      "lfs": {
+        "sha256": "309d97a4683ffbdfbc878ac9ed200444a99ffc2a1367222357f4cc6d6f3a3eb1",
+        "size": 407205760,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-d1-omni-600M-BF16.gguf",
+      "blobId": "79ce5050a1152411e01638c0da4d8df49a456c2e",
+      "size": 442441760,
+      "lfs": {
+        "sha256": "e3654a2755347ca9aa4c0f5b316578322827f58e6659a871a5e868c8e12954ac",
+        "size": 442441760,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "mmproj-d1-omni-600M-Q8_0.gguf",
+      "blobId": "48da6e478796140a5d1afa01b3afb78ec12af115",
+      "size": 262791200,
+      "lfs": {
+        "sha256": "d6637f3599e76a5b5a87d75e947d3253b621b2fd231fc92303ad63ab0e44389e",
+        "size": 262791200,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-07T19:22:31.000Z",
+  "usedStorage": 4838009024
+}

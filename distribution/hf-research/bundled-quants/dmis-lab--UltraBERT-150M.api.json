@@ -1,0 +1,199 @@
+{
+  "_id": "6aca190b285b7e7c4d5ce0cd",
+  "id": "dmis-lab/UltraBERT-150M",
+  "private": false,
+  "pipeline_tag": "fill-mask",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "ultrabert",
+    "fill-mask",
+    "encoder",
+    "masked-language-modeling",
+    "long-context",
+    "custom_code",
+    "en",
+    "dataset:mlfoundations/dclm-baseline-1.0",
+    "dataset:HuggingFaceFW/fineweb-edu",
+    "dataset:HuggingFaceTB/stack-edu",
+    "dataset:allenai/peS2o",
+    "dataset:LLM360/MegaMath",
+    "dataset:HuggingFaceTB/finemath",
+    "dataset:HuggingFaceTB/smollm-corpus",
+    "dataset:allenai/dolma",
+    "dataset:Open-Orca/FLAN",
+    "dataset:facebook/natural_reasoning",
+    "arxiv:2610.15028",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 8274,
+  "likes": 59,
+  "modelId": "dmis-lab/UltraBERT-150M",
+  "author": "dmis-lab",
+  "sha": "545ac9d9c7aece444f014ada5a1e9818132b4d35",
+  "lastModified": "2026-10-16T18:11:30.000Z",
+  "gated": false,
+  "disabled": false,
+  "mask_token": "<|mask|>",
+  "widgetData": [
+    {
+      "text": "Paris is the <|mask|> of France."
+    },
+    {
+      "text": "The goal of life is <|mask|>."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "UltrabertForMaskedLM"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_ultrabert.UltrabertConfig",
+      "AutoModel": "modeling_ultrabert.UltrabertModel",
+      "AutoModelForMaskedLM": "modeling_ultrabert.UltrabertForMaskedLM",
+      "AutoModelForSequenceClassification": "modeling_ultrabert.UltrabertForSequenceClassification",
+      "AutoModelForTokenClassification": "modeling_ultrabert.UltrabertForTokenClassification",
+      "AutoModelForQuestionAnswering": "modeling_ultrabert.UltrabertForQuestionAnswering"
+    },
+    "model_type": "ultrabert",
+    "tokenizer_config": {
+      "bos_token": "<|endoftext|>",
+      "eos_token": "<|endoftext|>",
+      "mask_token": "<|mask|>",
+      "pad_token": "<|endoftext|>",
+      "sep_token": "<|sep|>",
+      "unk_token": "<|endoftext|>"
+    }
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "pipeline_tag": "fill-mask",
+    "tags": [
+      "ultrabert",
+      "encoder",
+      "masked-language-modeling",
+      "long-context"
+    ],
+    "datasets": [
+      "mlfoundations/dclm-baseline-1.0",
+      "HuggingFaceFW/fineweb-edu",
+      "HuggingFaceTB/stack-edu",
+      "allenai/peS2o",
+      "LLM360/MegaMath",
+      "HuggingFaceTB/finemath",
+      "HuggingFaceTB/smollm-corpus",
+      "allenai/dolma",
+      "Open-Orca/FLAN",
+      "facebook/natural_reasoning"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMaskedLM",
+    "pipeline_tag": "fill-mask",
+    "processor": "AutoTokenizer"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "05b1fc376fd14947effbb68be675051783c98621",
+      "size": 1824
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "06a36880959375657526d0d3a988d0b2ab12590a",
+      "size": 12149
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "98e59a465e42697874a1f74bc1b89931730ef543",
+      "size": 1717
+    },
+    {
+      "rfilename": "configuration_ultrabert.py",
+      "blobId": "375deed383aa9c3fae21685aae234f248547ac8b",
+      "size": 2209
+    },
+    {
+      "rfilename": "head_50%.pth",
+      "blobId": "46b0829f77e89814d32e36f52d8b70f1a75f9735",
+      "size": 155716205,
+      "lfs": {
+        "sha256": "b398813e4298bb1efdc9cb81b927e260afc020645ca9679c891b2c04fd08e41a",
+        "size": 155716205,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "img/ultrabert_banner.jpg",
+      "blobId": "8f0aa7ca5c65e4bcf7f350e16d0c1ebd8a4bf245",
+      "size": 402409,
+      "lfs": {
+        "sha256": "733e477b1ae0199be099831e3f7af0972c15f1c6b288853e2472d77201af23f0",
+        "size": 402409,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "img/ultrabert_evaluation.png",
+      "blobId": "73f41857d37465a7a2b57e032226f188a97bfe05",
+      "size": 636439,
+      "lfs": {
+        "sha256": "1cc45266b7b37f0c619de132ee6c86eee1a1f569458b4747e8f0133542aafe24",
+        "size": 636439,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "img/ultrabert_passkey.png",
+      "blobId": "2cb41a16de01de2e29434f0c8173e5e4d45dc1b2",
+      "size": 694736,
+      "lfs": {
+        "sha256": "c2f3322de45d2d90daaa29d6af8379eae62c5e81aab17113d6d1b0fd5d8d683e",
+        "size": 694736,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "a903a69f662ce4eca420c0783f8c0e6d3218ad37",
+      "size": 759869312,
+      "lfs": {
+        "sha256": "cade6bc9f5a0e7430a323fa2a0065a7d851b1751fa55b3df5a56212b6e084f44",
+        "size": 759869312,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "modeling_ultrabert.py",
+      "blobId": "167de2b852439323f415799e72fe6dd8d48216c6",
+      "size": 30581
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "b34f797eb5d1167b342cbd6772f18014b7f10d88",
+      "size": 3523470
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "0e4e152d9f0014dbc8d7e04a98ae3c89142f722c",
+      "size": 765
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-10T10:52:59.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 189960960
+    },
+    "total": 189960960
+  },
+  "usedStorage": 922495901
+}

@@ -1,0 +1,1871 @@
+{
+  "_id": "6a923e6c6e74783637822632",
+  "id": "DevQuasar/zai-org.GLM-5.3-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:zai-org/GLM-5.3",
+    "base_model:quantized:zai-org/GLM-5.3",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 475,
+  "likes": 2,
+  "modelId": "DevQuasar/zai-org.GLM-5.3-GGUF",
+  "author": "DevQuasar",
+  "sha": "549ad5afd127c27084450d49545541803d73c8e6",
+  "lastModified": "2026-09-01T03:26:55.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "zai-org/GLM-5.3"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 753329940480,
+    "architecture": "glm-dsa",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "GLM-5-3_imatrix.gguf",
+    "chat_template": "[gMASK]<sop>\n{%- set effective_reasoning_effort = reasoning_effort if reasoning_effort is defined and reasoning_effort in ['low', 'high'] else 'max' -%}\n{%- if effective_reasoning_effort is not none -%}<|system|>Reasoning Effort: {{ effective_reasoning_effort | capitalize }}{%- endif -%}\n{%- set clear_thinking = clear_thinking if clear_thinking is defined else false -%}\n{%- if tools -%}\n{%- macro tool_to_json(tool) -%}\n    {%- set ns_tool = namespace(first=true) -%}\n    {{ '{' -}}\n    {%- for k, v in tool.items() -%}\n        {%- if k != 'defer_loading' and k != 'strict' -%}\n            {%- if not ns_tool.first -%}{{- ', ' -}}{%- endif -%}\n            {%- set ns_tool.first = false -%}\n            \"{{ k }}\": {{ v | tojson(ensure_ascii=False) }}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- '}' -}}\n{%- endmacro -%}\n{%- macro tool_references_to_response(refs) -%}\n    {{- '<tool_response><tools>\\n' -}}\n    {%- for tr in refs -%}\n        {%- for tool in tools -%}\n            {%- if 'function' in tool -%}\n                {%- set tool = tool['function'] -%}\n            {%- endif -%}\n            {%- if tool.name == tr.name -%}\n                {{- tool_to_json(tool) + '\\n' -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endfor -%}\n    {{- '</tools></tool_response>' -}}\n{%- endmacro -%}\n<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{% for tool in tools %}\n{%- if 'function' in tool -%}\n    {%- set tool = tool['function'] -%}\n{%- endif -%}\n{% if tool.defer_loading is not defined or not tool.defer_loading %}\n{{ tool_to_json(tool) }}\n{% endif %}\n{% endfor %}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call>{%- endif -%}\n{%- macro visible_text(content) -%}\n    {%- if content is string -%}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- for item in content -%}\n            {%- if item is mapping and item.type == 'text' -%}\n                {{- item.text }}\n            {%- elif item is string -%}\n                {{- item }}\n            {%- elif item is mapping and item.type in ['image', 'image_url', 'video', 'video_url', 'audio', 'audio_url', 'input_audio'] -%}\n                {%- set media_type = item.type | replace('_url', '') | replace('input_', '') -%}\n                {{- \"<reminder>You are unable to process this \" ~ media_type ~ \" because you don't have multi-modal input ability. Try different methods.</reminder>\" }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{- content }}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro tool_response(text) -%}\n{{- '<tool_response>' + text + '</tool_response>' -}}\n{%- endmacro -%}\n{%- macro render_tool_response(m) -%}\n{%- if m.content is string -%}\n    {{- tool_response(m.content) -}}\n{%- elif m.content and m.content is not mapping and m.content.0.type == \"tool_reference\" -%}\n    {{- tool_references_to_response(m.content) -}}\n{%- elif is_list_of_outputs(m) -%}\n    {%- for tr in m.content -%}\n        {%- if tr.output is iterable and tr.output is not string and tr.output is not mapping and tr.output and tr.output.0.type == \"tool_reference\" -%}\n            {{- tool_references_to_response(tr.output) -}}\n        {%- else -%}\n            {{- tool_response(visible_text(tr.output)) -}}\n        {%- endif -%}\n    {%- endfor -%}\n{%- else -%}\n    {{- tool_response(visible_text(m.content)) -}}\n{%- endif -%}\n{%- endmacro -%}\n{%- macro id_of(obj) -%}\n    {%- if obj.tool_call_id -%}\n        {{- obj.tool_call_id -}}\n    {%- elif obj.id -%}\n        {{- obj.id -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro is_list_of_outputs(m) -%}\n    {%- if m.content and m.content.0.output is defined -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro has_dup_tool_result_id(lo, hi, target) -%}\n    {%- set ns_cnt = namespace(n=0) -%}\n    {%- for k in range(lo, hi + 1) -%}\n        {%- set m = messages[k] -%}\n        {%- if is_list_of_outputs(m) -%}\n            {%- for entry in m.content -%}\n                {%- if id_of(entry) == target -%}\n                    {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- elif id_of(m) == target -%}\n            {%- set ns_cnt.n = ns_cnt.n + 1 -%}\n        {%- endif -%}\n        {%- if ns_cnt.n > 1 -%}{%- break -%}{%- endif -%}\n    {%- endfor -%}\n    {%- if ns_cnt.n > 1 -%}1{%- endif -%}\n{%- endmacro -%}\n{%- macro tc_id_exists(tcs, target) -%}\n    {%- set ns_f = namespace(found=false) -%}\n    {%- for tc in tcs -%}\n        {%- if id_of(tc) == target -%}\n            {%- set ns_f.found = true -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if ns_f.found -%}1{%- endif -%}\n{%- endmacro -%}\n{%- set ns = namespace(last_user_index=-1) -%}\n{%- for m in messages %}\n    {%- if m.role == 'user' %}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif %}\n{%- endfor %}\n{%- for m in messages -%}\n{%- if m.role == 'user' -%}<|user|>{{ visible_text(m.content) }}\n{%- elif m.role == 'assistant' -%}\n<|assistant|>\n{%- set content = visible_text(m.content) %}\n{%- if m.reasoning_content is string %}\n    {%- set reasoning_content = m.reasoning_content %}\n{%- elif '</think>' in content %}\n    {%- set reasoning_content = content.split('</think>')[0].split('<think>')[-1] %}\n    {%- set content = content.split('</think>')[-1] %}\n{%- endif %}\n{%- if (not clear_thinking or loop.index0 > ns.last_user_index) and reasoning_content is defined -%}\n{{ '<think>' + reasoning_content +  '</think>'}}\n{%- else -%}\n{{ '<think></think>' }}\n{%- endif -%}\n{%- if content.strip() -%}\n{{ content.strip() }}\n{%- endif -%}\n{% if m.tool_calls %}\n{% for tc in m.tool_calls %}\n{%- if tc.function %}\n    {%- set tc = tc.function %}\n{%- endif %}\n{{- '<tool_call>' + tc.name -}}\n{% set _args = tc.arguments %}{% for k, v in _args.items() %}<arg_key>{{ k }}</arg_key><arg_value>{{ v | tojson(ensure_ascii=False) if v is not string else v }}</arg_value>{% endfor %}</tool_call>{% endfor %}\n{% endif %}\n{%- elif m.role == 'tool' -%}\n{%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n    {{- '<|observation|>' -}}\n    {%- set block_start = loop.index0 -%}\n    {%- set ns_blk = namespace(end=block_start) -%}\n    {%- for j in range(block_start, messages|length) -%}\n        {%- if messages[j].role == 'tool' -%}\n            {%- set ns_blk.end = j -%}\n        {%- else -%}\n            {%- break -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns_a = namespace(tool_calls=none) -%}\n    {%- if block_start > 0 and messages[block_start - 1].role == 'assistant' and messages[block_start - 1].tool_calls -%}\n        {%- set ns_a.tool_calls = messages[block_start - 1].tool_calls -%}\n    {%- endif -%}\n    {%- set ns_chk = namespace(can_sort=true) -%}\n    {%- if not ns_a.tool_calls -%}\n        {%- set ns_chk.can_sort = false -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {%- set m = messages[k] -%}\n            {%- if is_list_of_outputs(m) -%}\n                {%- for entry in m.content -%}\n                    {%- set eid = id_of(entry) -%}\n                    {%- if not eid -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif has_dup_tool_result_id(block_start, ns_blk.end, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- elif not tc_id_exists(ns_a.tool_calls, eid) -%}\n                        {%- set ns_chk.can_sort = false -%}\n                    {%- endif -%}\n                {%- endfor -%}\n            {%- else -%}\n                {%- set tk_id = id_of(m) -%}\n                {%- if not tk_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif has_dup_tool_result_id(block_start, ns_blk.end, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- elif not tc_id_exists(ns_a.tool_calls, tk_id) -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for i in range(ns_a.tool_calls | length) -%}\n            {%- set tc_id = id_of(ns_a.tool_calls[i]) -%}\n            {%- if not tc_id -%}\n                {%- set ns_chk.can_sort = false -%}\n            {%- endif -%}\n            {%- for j in range(i + 1, ns_a.tool_calls | length) -%}\n                {%- if id_of(ns_a.tool_calls[j]) == tc_id -%}\n                    {%- set ns_chk.can_sort = false -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endfor -%}\n    {%- endif -%}\n    {%- if ns_chk.can_sort -%}\n        {%- for tc in ns_a.tool_calls -%}\n            {%- set tc_id = id_of(tc) -%}\n            {%- for k in range(block_start, ns_blk.end + 1) -%}\n                {%- set m = messages[k] -%}\n                {%- if is_list_of_outputs(m) -%}\n                    {%- for entry in m.content -%}\n                        {%- set eid = id_of(entry) -%}\n                        {%- if eid == tc_id -%}\n                            {%- if entry.output is iterable and entry.output is not string and entry.output is not mapping and entry.output and entry.output.0.type == \"tool_reference\" -%}\n                                {{- tool_references_to_response(entry.output) -}}\n                            {%- else -%}\n                                {{- tool_response(visible_text(entry.output)) -}}\n                            {%- endif -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- else -%}\n                    {%- set tk_id = id_of(m) -%}\n                    {%- if tk_id == tc_id -%}\n                        {{- render_tool_response(m) -}}\n                    {%- endif -%}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- endfor -%}\n    {%- else -%}\n        {%- for k in range(block_start, ns_blk.end + 1) -%}\n            {{- render_tool_response(messages[k]) -}}\n        {%- endfor -%}\n    {%- endif -%}\n{% endif -%}\n{%- elif m.role == 'system' -%}\n<|system|>{{ visible_text(m.content) }}\n{%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    <|assistant|>{{- '<think>' -}}\n{%- endif -%}\n",
+    "bos_token": "[gMASK]",
+    "eos_token": "<|endoftext|>",
+    "totalFileSize": 163820586336
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9eec28b7454aea2c86452a20c7d793a008f3ab78",
+      "size": 17967
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00001-of-00011.gguf",
+      "blobId": "9c64f95442e0e3967997a0f8cc79982aa94cdc68",
+      "size": 15686023296,
+      "lfs": {
+        "sha256": "6bf6359a5ed4575573556ee582934531b90b6f7f1a7ddf2d9bfe0effa631184b",
+        "size": 15686023296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00002-of-00011.gguf",
+      "blobId": "36039affeb46a32f3a299084348a7a3a036e77ec",
+      "size": 15662067328,
+      "lfs": {
+        "sha256": "9c415e15f71c75c0092d2397f6899626b79f31955e8b5333dbd63d4059779926",
+        "size": 15662067328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00003-of-00011.gguf",
+      "blobId": "fd9d8cf39b63516fa47521a9f3270709eaed1991",
+      "size": 15668383488,
+      "lfs": {
+        "sha256": "b0c2d250ef93d93e2bf62ef0f01da8aa940aadea517465b609571e3ddc2b6960",
+        "size": 15668383488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00004-of-00011.gguf",
+      "blobId": "6c630afaa79ca132de4b846f305047b5ac210e2f",
+      "size": 15554502816,
+      "lfs": {
+        "sha256": "973b7da88875e8401a71c05a3688d858fd3b03333d572016468cdf1c0fa42264",
+        "size": 15554502816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00005-of-00011.gguf",
+      "blobId": "ffc98c3ce545d0c0c976b8d041b93ff326e14a15",
+      "size": 15662067328,
+      "lfs": {
+        "sha256": "65d4d35578c4c2176dcdf789019bb919993873b53e868588fcedb56165f39c6a",
+        "size": 15662067328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00006-of-00011.gguf",
+      "blobId": "0cd98acc172e9edee2d85f07120a9c2e2f5408ff",
+      "size": 15668383488,
+      "lfs": {
+        "sha256": "43d1c3bcd2e3ade0d189482c70bb3e463f5311a6d91274232fb383e51ec7afaf",
+        "size": 15668383488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00007-of-00011.gguf",
+      "blobId": "82ba27332371d7de4b055edd7ef0d286b3ef77cc",
+      "size": 15535758144,
+      "lfs": {
+        "sha256": "15ae54f9d73eb9e6fe2f58fbad029c8c4f2757fc1cd7fb166c2a40f1363f87af",
+        "size": 15535758144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00008-of-00011.gguf",
+      "blobId": "052636f9bbde67a116b3218d84f06180846f8b55",
+      "size": 15662067328,
+      "lfs": {
+        "sha256": "ca8fde580700cfe84eac98d6e172c58c72d8ee7c99c0906b61d7eafe1f00a298",
+        "size": 15662067328,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00009-of-00011.gguf",
+      "blobId": "d6a59a5561da7d95216e5a3943d2839bb03eef14",
+      "size": 15668383488,
+      "lfs": {
+        "sha256": "1a8f152b08fe5797ecb3b0779022d651872baa696cd363fd504b3b6fce2549b5",
+        "size": 15668383488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00010-of-00011.gguf",
+      "blobId": "4be8001b371d2ded5cf4c68dce9163b5b7391931",
+      "size": 15554502816,
+      "lfs": {
+        "sha256": "46975806ff47d4cd7e782b047a157cef9212d109f2f92685f520406b1cb496d4",
+        "size": 15554502816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ1_S/zai-org.GLM-5.3.IQ1_S-00011-of-00011.gguf",
+      "blobId": "be37d9137e5522f3be56a29415878c60c9a6cf25",
+      "size": 7498446816,
+      "lfs": {
+        "sha256": "e30f71338599c710fe3854a33b8008d95f4770d1d3f385e6499dbe0e7095294c",
+        "size": 7498446816,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00001-of-00014.gguf",
+      "blobId": "81058d9055c4565722f253d21624b55126eb54e7",
+      "size": 15989035552,
+      "lfs": {
+        "sha256": "8332cfaf34b91e38e71d06da70245c44b2fe82fde7b57a1372c0ace74707183b",
+        "size": 15989035552,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00002-of-00014.gguf",
+      "blobId": "c4b06505a8a563918ad82f68528883473468a25e",
+      "size": 15992768608,
+      "lfs": {
+        "sha256": "6e043291752168192e1d5564c2b5c20aeb871ee50924c2a6a08f2778f7b0c11d",
+        "size": 15992768608,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00003-of-00014.gguf",
+      "blobId": "8a614a3137803190bace06d39dca2ef3590796a5",
+      "size": 15969588192,
+      "lfs": {
+        "sha256": "12f666a009b2b7069d84b7d921785275c94cde2ae5821b295d68ac5b694ea041",
+        "size": 15969588192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00004-of-00014.gguf",
+      "blobId": "686d23cd004d7556267472073954456634f96304",
+      "size": 15844141344,
+      "lfs": {
+        "sha256": "de21b0e607553795573d613cfc0191e7488ba94e0376ecdc20a1b1a7ec6000a7",
+        "size": 15844141344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00005-of-00014.gguf",
+      "blobId": "64e6447696d82011d53fc1d6ed1eb9d1d9d181d0",
+      "size": 15862885984,
+      "lfs": {
+        "sha256": "a4697d19f8f5a520e56c858b164a3c0f2e1ea4e1d9a947cbf87fd2ee4fb80eb5",
+        "size": 15862885984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00006-of-00014.gguf",
+      "blobId": "0f4682839e6bb12388c61abf05a7c37ed75c090d",
+      "size": 15844141344,
+      "lfs": {
+        "sha256": "e4168655316953804b2cc96cf4a3faf44251f02c8067911c3b5287d932d41733",
+        "size": 15844141344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00007-of-00014.gguf",
+      "blobId": "ce3cfabc55c586190a1543a83ccf786afb2b3040",
+      "size": 15862885984,
+      "lfs": {
+        "sha256": "0b4d5befbb75ae0fa2e0d43132b82de283e019e01a131338801068a99c47e222",
+        "size": 15862885984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00008-of-00014.gguf",
+      "blobId": "f371914110102c7b49cb37dddcb0d2faa6767b81",
+      "size": 15844141344,
+      "lfs": {
+        "sha256": "5ae5a71f66eda0b04c9eca4b46f931e9eb61d57a36bf7250167e19f61bb49d0e",
+        "size": 15844141344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00009-of-00014.gguf",
+      "blobId": "663455818fdf8a5c53ea1345831e7411b6eff93e",
+      "size": 15862885984,
+      "lfs": {
+        "sha256": "d343397cd7a51eb3099718497dc9bd77721a543bc24eaadd9c1f4e3c2e789824",
+        "size": 15862885984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00010-of-00014.gguf",
+      "blobId": "5fe49d8db8b0acfd38726ed4194e845fb154dbf3",
+      "size": 15844141344,
+      "lfs": {
+        "sha256": "ea710909286f8b1407208057b725e8a8b576cfa16a29c7f30736f02231ffc1d3",
+        "size": 15844141344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00011-of-00014.gguf",
+      "blobId": "315d1183841a7269f405cde39331c52af49ccf95",
+      "size": 15862885984,
+      "lfs": {
+        "sha256": "5b88c46347c763b9e72cb83114b30968387c9dbe3f591825b05433f2d208ce12",
+        "size": 15862885984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00012-of-00014.gguf",
+      "blobId": "6593822ac895784b2e4b840641059bd78a525703",
+      "size": 15844141344,
+      "lfs": {
+        "sha256": "8ccddc12d79734aa7a18d02296cd82dbb459be3c7e627efbb2d35ee7ff1bec2f",
+        "size": 15844141344,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00013-of-00014.gguf",
+      "blobId": "301e88d43f6ed4401b6e0fa717efb4ffa7e97e10",
+      "size": 15021812128,
+      "lfs": {
+        "sha256": "25971debcfbcd116ef75a251a1ab9c448afeaf6f124daea5841d1912bb65bb44",
+        "size": 15021812128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "IQ2_XXS/zai-org.GLM-5.3.IQ2_XXS-00014-of-00014.gguf",
+      "blobId": "6268312a5df8a62ffca343f318384f4cc5aa4504",
+      "size": 2293966656,
+      "lfs": {
+        "sha256": "57a578c217d95f5feab0215b45024d1cd1892160ae98391f2041d1687188814d",
+        "size": 2293966656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00001-of-00018.gguf",
+      "blobId": "89d4d566320a158a5268e7d37aa9a5b3d836d706",
+      "size": 15959795040,
+      "lfs": {
+        "sha256": "2b01e4b47ade4ecf0b3052a1bcb87e15310d1f8a46cbb61fd82767176b3e7194",
+        "size": 15959795040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00002-of-00018.gguf",
+      "blobId": "c882eb605ee52e2c4f09576638b9a4268ba31186",
+      "size": 15728252000,
+      "lfs": {
+        "sha256": "f97792b2bcf627e02d01bc8095cc11ea01070b41e4d3b1bbd796e9e1160b5da1",
+        "size": 15728252000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00003-of-00018.gguf",
+      "blobId": "afe1bd7479e02826c6563b76518d4f6befbf5ad4",
+      "size": 15406134528,
+      "lfs": {
+        "sha256": "d905a898248be97388cd84532ef8d9157e2ee024e0ef4df51c0d426718c453bf",
+        "size": 15406134528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00004-of-00018.gguf",
+      "blobId": "8a5522fc158caa40745aafd4c3e67fa5d85e20b0",
+      "size": 15465700096,
+      "lfs": {
+        "sha256": "45b4439b45b9075bdea967ff52bac4fccf2f077d9fd2f19643acf85753ecd0de",
+        "size": 15465700096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00005-of-00018.gguf",
+      "blobId": "2bdfb3a96a93d7a195fb802242da443567796d91",
+      "size": 15728252064,
+      "lfs": {
+        "sha256": "0744a41cdae28c66f5a53dab9aa7e6f5436375304f6fca5f788c7050622a1edf",
+        "size": 15728252064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00006-of-00018.gguf",
+      "blobId": "afbd4266c7d8aa724dbf7d72dbbc580781e30d41",
+      "size": 15406134528,
+      "lfs": {
+        "sha256": "4820958c9ee74b8ac6de681c3f179714b626b0eb93335a9265173715f9450693",
+        "size": 15406134528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00007-of-00018.gguf",
+      "blobId": "362cbf207944d357121ce7810a50ca12284c8158",
+      "size": 15465700096,
+      "lfs": {
+        "sha256": "0214678eda00685dfa1b6b263c7997c7dfa1651ed5d61dea745698eb67683b01",
+        "size": 15465700096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00008-of-00018.gguf",
+      "blobId": "f1ce1c29089e0ab7c94562842a9fdcea68f6c197",
+      "size": 15728252064,
+      "lfs": {
+        "sha256": "8d31b71fb059b9452d38e700d81a201437068fad3d6e9e1415158de8072f3cdf",
+        "size": 15728252064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00009-of-00018.gguf",
+      "blobId": "78e5ed362bd0d07d786586265a7c7d996084b121",
+      "size": 15406134528,
+      "lfs": {
+        "sha256": "f3f62ecb45e8f9700fcdb281bffd73f6539f9be23b6cd8b9155bd6537c470912",
+        "size": 15406134528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00010-of-00018.gguf",
+      "blobId": "33ef1dc09acfd99f604ebcc308c62078a3190ba3",
+      "size": 15465700096,
+      "lfs": {
+        "sha256": "77676242dcf04ff8db36a932502b7a1205cdd6cc5f298781d3c6f092e9f528bb",
+        "size": 15465700096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00011-of-00018.gguf",
+      "blobId": "811ab501ad9c4d29094879da9980246066c85687",
+      "size": 15728252064,
+      "lfs": {
+        "sha256": "90a71081c1101f481e491c3bbd37be2c7b197c0f789907156085aa8ac55d7b1c",
+        "size": 15728252064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00012-of-00018.gguf",
+      "blobId": "9772a29b8fe486233c6729b1f3db49228a20cdfb",
+      "size": 15406134528,
+      "lfs": {
+        "sha256": "35a9208e7018ddfc005ea69f38b98be490844fe09052621a8a465e3210a65e86",
+        "size": 15406134528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00013-of-00018.gguf",
+      "blobId": "4d4fd87fdf5c8fef08e7d73feca640a90421429a",
+      "size": 15468776512,
+      "lfs": {
+        "sha256": "588c4c3c2dbacd3036f185bb1e14d2c30505f34ec919c2a4c7b60727cdc06b8a",
+        "size": 15468776512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00014-of-00018.gguf",
+      "blobId": "43acfd9c9281dd8e17ac26d9837f6c493142222e",
+      "size": 15728252064,
+      "lfs": {
+        "sha256": "296d093757c29917fdde12e345d2d2b276df4fa9255a296d1d887b0620c83e82",
+        "size": 15728252064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00015-of-00018.gguf",
+      "blobId": "07b4dbdd3072dc8873f54fe2f21654e91a48964c",
+      "size": 15406134528,
+      "lfs": {
+        "sha256": "f2c2204729ac92fbe03282645cdaca060a4e770ef3faa056e024248eb6c27844",
+        "size": 15406134528,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00016-of-00018.gguf",
+      "blobId": "491bdd0e5d5de09a691f8984bf230099353a0e29",
+      "size": 15465700096,
+      "lfs": {
+        "sha256": "14ef5468017c40560d24be81604d81d27c4977d5a16587519e838f90c2554244",
+        "size": 15465700096,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00017-of-00018.gguf",
+      "blobId": "f8b0c4376c7242a2a8ba740da2c2ff6a9a14fe71",
+      "size": 15728252064,
+      "lfs": {
+        "sha256": "060a423af8238b1b186ba8d65733abf1c3fe8bdd8ae4b8d4a00c5f796f6ef92b",
+        "size": 15728252064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/zai-org.GLM-5.3.Q2_K-00018-of-00018.gguf",
+      "blobId": "28b35707746c24e6f1cf94ecc370e7f0a7bf6568",
+      "size": 9324250464,
+      "lfs": {
+        "sha256": "a51d7f61824dba9049438cf6bbe0ce2adc039b353d2ceadae3696a7de88721c6",
+        "size": 9324250464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00001-of-00023.gguf",
+      "blobId": "ae008781ec72c949105ddb699594f49ebbc2c5d8",
+      "size": 14900194976,
+      "lfs": {
+        "sha256": "373bf55f52df9ccbb7871e1d7fa7d151ed7eee9ff57ea2cd2f4acae9a5d8a864",
+        "size": 14900194976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00002-of-00023.gguf",
+      "blobId": "9b7026363ace770a50a6a3312a88b09bd5aca9d3",
+      "size": 15547312160,
+      "lfs": {
+        "sha256": "e54473757e74e427179d128d6191d79157f46fb24965a62797acf52ffc138583",
+        "size": 15547312160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00003-of-00023.gguf",
+      "blobId": "12ff440ee0d9264ed012ea781a550c97d5f5130f",
+      "size": 15891654144,
+      "lfs": {
+        "sha256": "7efd682fa06995ad5425ea629c408b94a92910415545d42f190e98ec8400c45e",
+        "size": 15891654144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00004-of-00023.gguf",
+      "blobId": "2c8d55119a05a3c7c1d180b4c01acb490c1f9655",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "681cbc23b900c0e18ecfaf34efaf6328e712eeee308ebe7f1420e4d061851da8",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00005-of-00023.gguf",
+      "blobId": "871ac2d95b261cb2eaf983f0f935b55e4246baf9",
+      "size": 15547312224,
+      "lfs": {
+        "sha256": "a65827b6782746d3353730c62f6fb6992c3c7ecab494cc553bb124103dac598e",
+        "size": 15547312224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00006-of-00023.gguf",
+      "blobId": "de951ddc5348c04b260aaaf41427b4bd8f8ae7b9",
+      "size": 15887625920,
+      "lfs": {
+        "sha256": "73cde69c26a9c2804080c667382b27d4c5361464b6e2f15fe58d19d25240e9df",
+        "size": 15887625920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00007-of-00023.gguf",
+      "blobId": "b397e62c6e901a34b38e106e42c51a3efddbf4fb",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "8ad373eb2b54285ca74b151ead16e50fe4757089580e210188eaf4da2b18017a",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00008-of-00023.gguf",
+      "blobId": "2e3f30f10e73fd85a110d3da81ff40a609375d2a",
+      "size": 15547312224,
+      "lfs": {
+        "sha256": "88ba3d2aa4b3e6619936f2ba59c3a965fa79eb299d8bf66907ec47c8188bc14c",
+        "size": 15547312224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00009-of-00023.gguf",
+      "blobId": "6b728eb513f5feda477000bc53a5a608a0560500",
+      "size": 15891654144,
+      "lfs": {
+        "sha256": "4c2e8d6adabe6ad0d0b86ae16f2a5c81ee71c92a86e705a6ff753434b0da1643",
+        "size": 15891654144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00010-of-00023.gguf",
+      "blobId": "140cdb89a0e974729f8efa908748dfd93dee6075",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "e3d0dfcd3c808978947959b938f1339b6e5a161dbb23154ff2c3b9dae15e5c95",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00011-of-00023.gguf",
+      "blobId": "d272cdb1b002be778973165b474feed164584948",
+      "size": 15547312224,
+      "lfs": {
+        "sha256": "9e65d8a6d17caac04730bcbcdbd03830fa382c0665e2518acb86d035215c6b02",
+        "size": 15547312224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00012-of-00023.gguf",
+      "blobId": "db0aa2151b12af1fdb50d7a02a62f70a0cf71cfc",
+      "size": 15887625920,
+      "lfs": {
+        "sha256": "eb480227e39b24e227a73b70359eebcc437c937f85b187ed19223b7bafd22309",
+        "size": 15887625920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00013-of-00023.gguf",
+      "blobId": "192bd265ab86a4bf12ab1b5776a2f15a7cf5d495",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "83461ce9dd70587a3ced04b85c3f2b98b328a51f0d77a20e02df170cf65da56b",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00014-of-00023.gguf",
+      "blobId": "5fb72d977d178f7083d1c2a40a88dcf9d963cdce",
+      "size": 15547312224,
+      "lfs": {
+        "sha256": "6b0c4ad20e0047e3a38f735a6173550f391c723f4913ed910f786167319c0351",
+        "size": 15547312224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00015-of-00023.gguf",
+      "blobId": "8b763ff6da2fcfb7e9fae4268a7c9f39cc73fbf1",
+      "size": 15891654144,
+      "lfs": {
+        "sha256": "8a080ce82a58ec55f33cde23a120468cabe0339fbf8a571d481939bf4d5cadf3",
+        "size": 15891654144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00016-of-00023.gguf",
+      "blobId": "afff8d3d6d8d33302ea72efbef410b7bea101051",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "747f9d8871b083082a981a38267984e71bd05f0a391a39087276935d618fd70b",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00017-of-00023.gguf",
+      "blobId": "c835806f4b3313c3c2289634a04dc6400dff84d9",
+      "size": 15547312224,
+      "lfs": {
+        "sha256": "22362892cc4737dca90f25ec4a33292e61b402e3389fab9e24a8b4dbfda94a85",
+        "size": 15547312224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00018-of-00023.gguf",
+      "blobId": "e240d79df420bbde5a65b6b8bd4864bd1345230e",
+      "size": 15887625920,
+      "lfs": {
+        "sha256": "7eec2e774e1a25274d9e8ebf43a6c76b93a265e323c0c45bf22387c5f87aa3ca",
+        "size": 15887625920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00019-of-00023.gguf",
+      "blobId": "c530ae25a9a782cd11c311332344640aea29bd70",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "7bcc04b6fe7e4a4b9953cf68d60fcaf21a8994d2fb1ccfe53fb483a7da8d3e85",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00020-of-00023.gguf",
+      "blobId": "cebb2efaa12bf1d79f6d83f1e91409f9a9d257fa",
+      "size": 15547312224,
+      "lfs": {
+        "sha256": "19c6071a817f9afeb853db6ab0c83fadb34b3d73d514c1f80d9e8a7c39ef8521",
+        "size": 15547312224,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00021-of-00023.gguf",
+      "blobId": "8114111eed79d2dd6a052a602ce07b51d7da704c",
+      "size": 15891654144,
+      "lfs": {
+        "sha256": "90a076d0d334cd34c9cd241e3f1c33e0912fda3b10c767eb747d8b1ceeeabdce",
+        "size": 15891654144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00022-of-00023.gguf",
+      "blobId": "086b3c7ff35ab33cc7ad20d5466b93ea22825869",
+      "size": 15468480128,
+      "lfs": {
+        "sha256": "15de166c6396ea967def49078ef36f739cef664b90c7691c0ac80bc2d0225045",
+        "size": 15468480128,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/zai-org.GLM-5.3.Q3_K_M-00023-of-00023.gguf",
+      "blobId": "9f6aef0be6d3aa449c8f519b0ee4c88dd3b9d6df",
+      "size": 15494678272,
+      "lfs": {
+        "sha256": "5d006a53d87ef0374b390e4ada9332c69edf804ea33624f974e1b5e79ecd2e35",
+        "size": 15494678272,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00001-of-00030.gguf",
+      "blobId": "a8c90e73d8c3191c83d14740fd4beb754e9f6cca",
+      "size": 14937849632,
+      "lfs": {
+        "sha256": "724fb72381b8a2adce0a1bfdd1bec10658414c3f6e0655b3b502be7ba7350718",
+        "size": 14937849632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00002-of-00030.gguf",
+      "blobId": "f3602b0931d6c79b2c3d4cb0d35e172cd978346d",
+      "size": 15439468352,
+      "lfs": {
+        "sha256": "6d2129dc89b6f863aa75c4e34f954c4b8d96b3c3378a15fb00d48a91f186720f",
+        "size": 15439468352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00003-of-00030.gguf",
+      "blobId": "ec755b1409d6ae3c30fda524910e65725ccb483f",
+      "size": 15685742976,
+      "lfs": {
+        "sha256": "3e5d01eb72bd3d1a9b89f1d9c06adade505a523aa8e5f3426d99f3a3b9dd8953",
+        "size": 15685742976,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00004-of-00030.gguf",
+      "blobId": "02c651b12252cc84ae0e0f18c57a10e3ed60a746",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "790ca2a8603809b8cbe960307f23144e1d4eafedc1131b32b4d30ea36212aaf2",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00005-of-00030.gguf",
+      "blobId": "49a5a1361cf071ce6743721ffeb370fb8a5403c3",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "149dae71b2d275972e3af0cbed7450b5efc41030f5f2186c45f6673ed2ff60de",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00006-of-00030.gguf",
+      "blobId": "bd973df9b7d6b014df306ef098d5b77f80eea8d4",
+      "size": 15685743008,
+      "lfs": {
+        "sha256": "1b792158618f6695e3c629e730ee93a3484e1cd876980f1c57b47b0d2f588b72",
+        "size": 15685743008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00007-of-00030.gguf",
+      "blobId": "b7a0525d1ed806ad7be2f9cc547378e5fbbc7855",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "e404910241d35720d753c1c916b98dc8ae508a409f64624dac425f28d88b67cd",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00008-of-00030.gguf",
+      "blobId": "19e663fc20df7c30188a971c5f206b44c4f6d54b",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "7282bd7ff4be3985f0a4b54b47132db229e0e7cb9b1484559306e56f90257f48",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00009-of-00030.gguf",
+      "blobId": "d46e0987efe628c4814dc2fb490967f802e28f68",
+      "size": 14852026784,
+      "lfs": {
+        "sha256": "58d026558469be168750a392393b7973bf4f23cb208756ff58aeeb43ad5ade79",
+        "size": 14852026784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00010-of-00030.gguf",
+      "blobId": "0edd81bf8c7e2d675267e936fa158afb53971ddd",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "cd1723d9384ab299c4947c87f3e8fa0f7407e320769adf8bf8bbebc7408fd4ca",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00011-of-00030.gguf",
+      "blobId": "a25dc104c619d1cd1408fa0bdfd8a52ca17ed700",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "c6b4090988bdabb468a144d72b859f2be517b8a204b0f3c621e3e8ea6d155a67",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00012-of-00030.gguf",
+      "blobId": "fdfbfae56fbfa220e353ee3028be94fdf9de117d",
+      "size": 15685743008,
+      "lfs": {
+        "sha256": "9efad912b85ee55f11ad974bf6d0c19937f1fc4e6b4aaf1415c35abdd50269d5",
+        "size": 15685743008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00013-of-00030.gguf",
+      "blobId": "f690864cfe0fb637d66a5ff28595f804e900e4ce",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "4f637ef1311f37533321affa0eae7d986a0867572496a003f77265ec186415f4",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00014-of-00030.gguf",
+      "blobId": "6635062d8d9e166031853cef78ef167410f45edf",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "6f8651ac6f628f573923223fadb5c46cdcdb92cd20a2315bce9e8690722cceb5",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00015-of-00030.gguf",
+      "blobId": "664ca4debaf0b7a075de244ec189d4657a312cee",
+      "size": 15685743008,
+      "lfs": {
+        "sha256": "4821d1720d3cdc703a292021aa641a17fabd25e9ecd5b321a62f4077c51bbf01",
+        "size": 15685743008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00016-of-00030.gguf",
+      "blobId": "c3e727443795b8928dc61dcf05af5a3c64b547f1",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "f15b90bcafb094c311c879a679541f3b409631f97c32f633f76f3e8701dec4c1",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00017-of-00030.gguf",
+      "blobId": "3ded0a98596de3acbdbccda254f8f5b4620c4b1e",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "87a030d514b02203d4c59153b9c39d7e8088128cc8f752556dc4a1c90e280f36",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00018-of-00030.gguf",
+      "blobId": "a300d00b20355e6e75ce3bddb0b1edc45e23158a",
+      "size": 14852026784,
+      "lfs": {
+        "sha256": "5ca6d80eaa3f9c0ca24c7a26a26517daec61e61173a1524d71d75a8b60ba1219",
+        "size": 14852026784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00019-of-00030.gguf",
+      "blobId": "ffcf3a6fb16db387ae2a55355ce9695d4ca951c5",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "4599b18616841a8829630231ef8fd1788566ab5df5b8933122b68ac33a38001e",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00020-of-00030.gguf",
+      "blobId": "0e1d73392de3100fe34dba356dc4a88298471ae8",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "0248cea9f34d1e789b2c76faa959743f5ad0b150ddf09409ac4e9c18675e91f8",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00021-of-00030.gguf",
+      "blobId": "d90d73202335cdac17a6fbfee04abbb829b86915",
+      "size": 15685743008,
+      "lfs": {
+        "sha256": "9754a8667a6444031e8c7259a258c4b9529c7b134456e631da0888284d3f0f8f",
+        "size": 15685743008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00022-of-00030.gguf",
+      "blobId": "557611731adfabb38e596747708caf620e0fe59b",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "350f2014085e4771de44418ce2196c6c7c7b831fec5fc9ac1f1dd12726a1d18f",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00023-of-00030.gguf",
+      "blobId": "46818b1b74330349dd305b6de2f0b22cc9c013ce",
+      "size": 15684699744,
+      "lfs": {
+        "sha256": "010763ce5915a12ff51a2aad3266626a898f0307c43dafa2a99902686c28b2d8",
+        "size": 15684699744,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00024-of-00030.gguf",
+      "blobId": "1b11e9ba6873f6e3eaec735137b3cb6fae9c8e25",
+      "size": 15685743008,
+      "lfs": {
+        "sha256": "faf4561920cfe14032076efce22dcc526856e11e5a8b7c3ac7a251f486769519",
+        "size": 15685743008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00025-of-00030.gguf",
+      "blobId": "acf12de15534681c5805ced2cfa43c207c3e7449",
+      "size": 15597369472,
+      "lfs": {
+        "sha256": "cfcae2d056a2b228165263bd422a57a23f42de8bb9de429bd2f6600b54cfd030",
+        "size": 15597369472,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00026-of-00030.gguf",
+      "blobId": "9e58a379119e85e13d5c8a4c3ee3880345d536e1",
+      "size": 14699398624,
+      "lfs": {
+        "sha256": "6f89e97988e65eb45c5805863a829df9d673ac626918c74663234d492cbbf556",
+        "size": 14699398624,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00027-of-00030.gguf",
+      "blobId": "54aeda86d17d51950e452c2c1ae8e073e0ad732a",
+      "size": 15434195488,
+      "lfs": {
+        "sha256": "356c63b6759a2458290b5eb08f541c4e465e725d50b23da0be64a34afb02be29",
+        "size": 15434195488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00028-of-00030.gguf",
+      "blobId": "983cb4eff16ecf12759029d70139650e605e5b25",
+      "size": 14612068320,
+      "lfs": {
+        "sha256": "bd50c1e0fe7697c8588f044b021dd497312d5a70439ef52d07ba818ecceba60e",
+        "size": 14612068320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00029-of-00030.gguf",
+      "blobId": "568c47b54d89c14516228eeae2ae04ea72f68cdb",
+      "size": 14694125728,
+      "lfs": {
+        "sha256": "ed1d8acba645fe8ecdbda3095163d7bf86c039cd9789526931fffc09e508ae1b",
+        "size": 14694125728,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q4_K_M/zai-org.GLM-5.3.Q4_K_M-00030-of-00030.gguf",
+      "blobId": "14b28ae6d0d456b4f87c89c3779b4a817bb46f68",
+      "size": 6344898784,
+      "lfs": {
+        "sha256": "833179fe99e137e1ec8571d009bfa94e8dd796dd2a7e981a955ef3992938eeeb",
+        "size": 6344898784,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00001-of-00038.gguf",
+      "blobId": "9dc607c83d97be703723a425bb9669f69729561a",
+      "size": 14518120480,
+      "lfs": {
+        "sha256": "749cd1cb6cc192b5bbd81a187fe9c70382f18220987947c7f122c45832a093b9",
+        "size": 14518120480,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00002-of-00038.gguf",
+      "blobId": "ba221e188a6c38f56865275e6f2e965c24bb57a7",
+      "size": 14438834560,
+      "lfs": {
+        "sha256": "fe96ec8b537ce5785eaa923d7b690192270d5f88649ed0be3435be71f92b181c",
+        "size": 14438834560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00003-of-00038.gguf",
+      "blobId": "5c706ee6952202c47b20d9a8ba08c4d115f51fb8",
+      "size": 14445278912,
+      "lfs": {
+        "sha256": "6b64a7cde90a21afa9ed83e2b55e3d9e4d754eaace50848daf00211d2bbc82d7",
+        "size": 14445278912,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00004-of-00038.gguf",
+      "blobId": "b370964756a471f8bf584629c337701614c65b4c",
+      "size": 15923422656,
+      "lfs": {
+        "sha256": "3878169b8539386b59832a4d9f5b3072bd4a377d4946b85da51446ed14ee63f6",
+        "size": 15923422656,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00005-of-00038.gguf",
+      "blobId": "6d493e5be3df0a3f68e140f9b9091a32da2e035e",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "26a27b0d5d0d87fce8f87611509b1c19ca5b230cd3bd261021d441ecd0ae94ce",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00006-of-00038.gguf",
+      "blobId": "7050c27656a61252cb66a9161d0c07bf8a217a14",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "7689f99e1779ededc331c73149307fc750bc44f8a838eb6774a45e19d2d4036f",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00007-of-00038.gguf",
+      "blobId": "3b9e715a7fd05660ce3215fcbddbc7d16289fcf7",
+      "size": 13579854240,
+      "lfs": {
+        "sha256": "1f38c54d2129c0729c9fc56c7e665ecab9cd7e75daf047cb30ac64bf2be9bfe3",
+        "size": 13579854240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00008-of-00038.gguf",
+      "blobId": "4d5d436613a9cf1c5a85d5645af97d7278d18dea",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "10d415ec57ce6cc6b92cbc68a5050949fd7bd62e55bd49293ecda2ccc29a96e7",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00009-of-00038.gguf",
+      "blobId": "8f9345c2158a9987b341d3cb99581a36cafd03df",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "7bf8d1487538987f4a5607f58bd44e63183d56466a28326bef9ee34a75350ef7",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00010-of-00038.gguf",
+      "blobId": "29225d5cd649ec150bbe55b82e76a6c8f17675e5",
+      "size": 13586298592,
+      "lfs": {
+        "sha256": "1f2cf2da8d1018ca53703c02837fef36b137cfbc9e81cd59306485bb2b68f588",
+        "size": 13586298592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00011-of-00038.gguf",
+      "blobId": "3522d1de34be1465dcee3cefdc5ad211ec85301d",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "8f6eeebd757648ad5bad184ea08a1eaf3a1bc2d213dea40334598babe82a084d",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00012-of-00038.gguf",
+      "blobId": "6acde367f646d7dec8757717d361125d12cc3fad",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "d0167105c5d622adbce4ef4d8e1e3bb1ef5e5cd31f37d3eecb5a0d701084d3de",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00013-of-00038.gguf",
+      "blobId": "5c6e39b697a10badeac24fceaa10dc5899bc31b3",
+      "size": 13579854240,
+      "lfs": {
+        "sha256": "cffc73e87392a8e707483345e3afd2e94efdfd2a356ccb74ef089dd4d29132c2",
+        "size": 13579854240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00014-of-00038.gguf",
+      "blobId": "9ff6b29bda0ed0ef98a2d6439a921ae9563b1a88",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "1dbf00f643340530ee10acf587a119244bcdd074c5622fe3d7594b9f0e45c2a1",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00015-of-00038.gguf",
+      "blobId": "9609dbdf3d31c6d49f9edb76afe5c02a2fb0ab6d",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "8362a8b300f584589c3d77d5a648d5050f046e8bac9caa92d72fd432be22d19d",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00016-of-00038.gguf",
+      "blobId": "5b0f15e0954917d854949f91149e07b969873e2b",
+      "size": 13586298592,
+      "lfs": {
+        "sha256": "c5497aeb285bd539e162f7db542ea955e3a35980323cd9b49ea0c0562ad27bcd",
+        "size": 13586298592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00017-of-00038.gguf",
+      "blobId": "79250853eff9e0c7afb63dfa24bac40c91599eea",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "a906b93236f3b4941390e4fe4fe014b96dd5809a50c9d5a8ddb750f112325549",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00018-of-00038.gguf",
+      "blobId": "657ae993e3c479efc0c68b8db3761d0e3e96dfac",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "d164190329398dd48f49b2440503abd28379214750c1e6caefc5953405bf057e",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00019-of-00038.gguf",
+      "blobId": "cbc73f76dfd534a902a4dbafa7ea2faebeb1742e",
+      "size": 13579854240,
+      "lfs": {
+        "sha256": "ab5e6ebe0f0e3b834a14783eb2ed2338125e9c8cc581ef819c4a9437d7d9dd3f",
+        "size": 13579854240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00020-of-00038.gguf",
+      "blobId": "329783afea25ca8b195bcb1cb8a851fbc9b0c3b2",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "ef7ddbc8e1a87864dad39e5c454c8764feb66c5f92091cb7dbcfff108da2e208",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00021-of-00038.gguf",
+      "blobId": "f4e149200c6327b91c16ad71168ed4711d5a292d",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "225b74fe33fb3e3cfae70c1ccea3d3dc50567687d209a1f6e43c4767ec604fcc",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00022-of-00038.gguf",
+      "blobId": "32d47fe5e0c77380a344c5b500b3b758c3124310",
+      "size": 13586298592,
+      "lfs": {
+        "sha256": "e452c28d6a8140cf8cd2f3d1ceef0301868bdb4331a0a710c5bac291ede4e64e",
+        "size": 13586298592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00023-of-00038.gguf",
+      "blobId": "aa25a3920d3d1e6557d076693600dfd121d3bb77",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "2b7b4b453e1cc6d25faf81d37fede9c3cd349975b0e3b8ceb6822d2a9c5cee65",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00024-of-00038.gguf",
+      "blobId": "733f474113a046e8559b228ade0e9cdbbb92faaf",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "0c853cdf738aef2dc7f77177246eaa76fd540a43e602d380a37bea93218e0c60",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00025-of-00038.gguf",
+      "blobId": "d054471fab24023b1e51cfc62ffae756b6b1e14b",
+      "size": 13579854240,
+      "lfs": {
+        "sha256": "97ebf60bf980ac5e5e048aa9f4e051fc408235a0dba14e530c5066b8861a4287",
+        "size": 13579854240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00026-of-00038.gguf",
+      "blobId": "62d30c1c0f882e77751e5bf0fb157eb624f54ddc",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "bb4c600d1099f0bae924ab5cface4d4ba16f97bf586b18b3e3cbd9574b4d8345",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00027-of-00038.gguf",
+      "blobId": "1ec4abf7909a7a30f37e75717d26b3a2c82d9097",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "a3fd68e8c797e8cef92207a12dd6dece2518a2ffe13bd1b9e09194c8db66b4b5",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00028-of-00038.gguf",
+      "blobId": "a1698ce4208964600715c444dd00663bd2788d59",
+      "size": 13586298592,
+      "lfs": {
+        "sha256": "8a12ed28899856d7e4d1d3af0504fcfcb8a2681c9363f90848964c4fddfc0f48",
+        "size": 13586298592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00029-of-00038.gguf",
+      "blobId": "6f822f3acd98133c2c5fe5c5779d3ebea0b51610",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "fa7900b6d9bd16b34ab35a6230a076c1895f9954a4b2115404b6841bba3632cc",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00030-of-00038.gguf",
+      "blobId": "506040caeeec2a0952d21427fe62e2da856a2084",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "f7740dc5af1b2ad9f53f28524ea9d653fcb61fe98130efd74924874c00466b13",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00031-of-00038.gguf",
+      "blobId": "2e807de959b8616ab5a7a31690026ec9ab1c3457",
+      "size": 13579854240,
+      "lfs": {
+        "sha256": "bab1a6cf51df8e223dcd244abb45b24656c5498b6db95d45798cc75882296ada",
+        "size": 13579854240,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00032-of-00038.gguf",
+      "blobId": "0734f4a745b1bbb2c0b6e7cee16fba7ac48d148e",
+      "size": 14015788768,
+      "lfs": {
+        "sha256": "252c0bfdc02151d2d1177870c169dc0385e2b8d560f63cb94c891019d5283c46",
+        "size": 14015788768,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00033-of-00038.gguf",
+      "blobId": "7f625ed1c09ad74fa59eca0b912e04e79ac56b89",
+      "size": 14009344416,
+      "lfs": {
+        "sha256": "0ad2b51d3bda51850d42cd58d7249f4ccfde0d9cfb5c38ac8facaedfe68d0a98",
+        "size": 14009344416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00034-of-00038.gguf",
+      "blobId": "2ec26e1a1cd2a35a94c0c5936d93054f29478f05",
+      "size": 14445278944,
+      "lfs": {
+        "sha256": "7ee4ba9734f127c48096fc2e8de67a9fcce3d43000f94a335dca5197e290c358",
+        "size": 14445278944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00035-of-00038.gguf",
+      "blobId": "cc7c083e5670ab62f255ae4d2bb972c19ce91b58",
+      "size": 14438834592,
+      "lfs": {
+        "sha256": "d08d6a01d0133b95ab174912433f732bf6acd2324cc9dc77fcec377f788107f3",
+        "size": 14438834592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00036-of-00038.gguf",
+      "blobId": "5ca011d374b8e8992415ca06c921d5a57661e69b",
+      "size": 14445278944,
+      "lfs": {
+        "sha256": "9d593292c76cb1800bf9fac069f6dabb7a71a4048cd44e8ebd471fa1ce63ffc7",
+        "size": 14445278944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00037-of-00038.gguf",
+      "blobId": "aa582b4c1a174c5bac0637fa50dfed659bb388df",
+      "size": 14438834592,
+      "lfs": {
+        "sha256": "4424c8cf4c1269a6ad3178fb753d6f4cf3ceedb222c5b4e4e141aa63fee08e73",
+        "size": 14438834592,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q5_K_M/zai-org.GLM-5.3.Q5_K_M-00038-of-00038.gguf",
+      "blobId": "8c4320718fa1f1001cdc0e163478be5f4b38193a",
+      "size": 14383376736,
+      "lfs": {
+        "sha256": "3a229e3556cb8ea4e7364205edd8ee9c3f7c619b08c4b12765efb9e710b18d77",
+        "size": 14383376736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00001-of-00046.gguf",
+      "blobId": "acefc9a77c7dbf4e3115962de8d7974380b8ae0e",
+      "size": 13453055264,
+      "lfs": {
+        "sha256": "09c1d62204fb4b075e2c59d2b942380901b8150a49a42d9d93a8104621efa5c9",
+        "size": 13453055264,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00002-of-00046.gguf",
+      "blobId": "d7b6cff16575c2122835949a2215399f4ac6cf91",
+      "size": 13550156000,
+      "lfs": {
+        "sha256": "fd88778d69e75a0282ca31dc61685412495fcd278fe47c0e45eadf6b7e879464",
+        "size": 13550156000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00003-of-00046.gguf",
+      "blobId": "1426418ffdab7463a9cf53b94b4e12843d0055c8",
+      "size": 13420917184,
+      "lfs": {
+        "sha256": "48c379f647d4ca59e87c7887739ab7706867a86c345677dd41e3725c20ff3488",
+        "size": 13420917184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00004-of-00046.gguf",
+      "blobId": "d99b314427205d641779839b59789f89f42c8578",
+      "size": 13543839872,
+      "lfs": {
+        "sha256": "3a30c3aa24488a09ead91ddc14ff464373206369bb0079849f4772e64852e01e",
+        "size": 13543839872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00005-of-00046.gguf",
+      "blobId": "250d010beab79e69a842b0d3b6b84ec7e5699710",
+      "size": 13557845056,
+      "lfs": {
+        "sha256": "905384d78960b08cf02cfc7f05821d240b7faf5a8323bc6d8f8b7bcbb6bc6b79",
+        "size": 13557845056,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00006-of-00046.gguf",
+      "blobId": "388b61c17c253b31542fc2e9a17ffa105f38d08d",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "ec752278f5a97ed3d6860e818281fbfea243f9375bd570237bc621ce15af59a9",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00007-of-00046.gguf",
+      "blobId": "567558b9aafa7a99b0a70e7fb178a8934166f534",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "6984e41d76a138246296e0e7f788045b51c8e5d20e6002bf24efe954325c9152",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00008-of-00046.gguf",
+      "blobId": "6124398af212b6b1ac0c117de68519f5d14dbf2f",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "cdcb4f97c845d3ef605098988087de86cb917580f9bf0955107481a1fda90411",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00009-of-00046.gguf",
+      "blobId": "8cabe9cb3fe8c857210929a76b1731b00ffcc036",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "574aea4f1242f1f3041d7a14576ae7242e4055f68c3914c632f9f9e24c724640",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00010-of-00046.gguf",
+      "blobId": "7c30e4ace9c6b2cf2f565557944ac800df44d395",
+      "size": 13551528928,
+      "lfs": {
+        "sha256": "46162ac175495637efa40c015a6908848da220c6e27ae112a85f5e59af8e9bd5",
+        "size": 13551528928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00011-of-00046.gguf",
+      "blobId": "6cba1fd7d025b96cd94f78aa57fe55cde8703229",
+      "size": 13550156032,
+      "lfs": {
+        "sha256": "a042169088f43767242ce3b7cf1b9f39655cf55b6dd5919173ad816981eea5f7",
+        "size": 13550156032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00012-of-00046.gguf",
+      "blobId": "1f020151ceb68a58e3f738fe98a33d222674ab89",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "9844e964fd8570403d1aa5a9688928bb13136ca5f6087c340f771d3a7a5e16a0",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00013-of-00046.gguf",
+      "blobId": "4fa4b709ff0c83773ecb5dd8a06a701583efdcd6",
+      "size": 13551528928,
+      "lfs": {
+        "sha256": "ded02d129edfe50a4d281676de404a088ded925d4e830bda8ac2917cd5dc31a4",
+        "size": 13551528928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00014-of-00046.gguf",
+      "blobId": "132dee47fd72d81cdb6b2ce86c224c5a8b495f50",
+      "size": 13550156032,
+      "lfs": {
+        "sha256": "5bde2306c3183da97c3a54619bac5bb9d9378fe838674768e7ce3ee79c92c21f",
+        "size": 13550156032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00015-of-00046.gguf",
+      "blobId": "464321c3feb0077fb1d10081f02af0b1e6df90ef",
+      "size": 13420917216,
+      "lfs": {
+        "sha256": "8b57d4e1a08baaae1a364e9394292ed8aa36c5d5ba16a071aa15f9880351c83a",
+        "size": 13420917216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00016-of-00046.gguf",
+      "blobId": "04c371f8abea3e9c2b27fc6aa4c6fbca3bb43c94",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "a0f5c37fc3125aa720529bb7ad7dadb57eb1f7708b06c15950a7ebcf582156fe",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00017-of-00046.gguf",
+      "blobId": "915d1af2ac49840eb5245f36ba12d392e4adc390",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "75edfe95d7702ab5b62edbd32d26ffbe31c272aa984796642b1b490e4417aff9",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00018-of-00046.gguf",
+      "blobId": "055541be72087edd70c5050e08c2e8d375dffd46",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "78005b791d3c2dbba3445c523b1b2a503ccaee0bc3a7532a126e7b5c4095379e",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00019-of-00046.gguf",
+      "blobId": "82672e0a58afac04f5b251fc18bbc051b95722c2",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "588bd2e3b5659e7f6a790ee5ad3adbfafb16b16b677f02c8339d226043b004de",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00020-of-00046.gguf",
+      "blobId": "c56fc4d0f5bf72b6fcd8d22cab8fb82d78a475f9",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "e3e4487e04d89aa7e95a51f56b221552b1c07c24dd8312fc9a3570b8738685d9",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00021-of-00046.gguf",
+      "blobId": "23a727ef30b119ff30391a143919b5578fc9f5dc",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "b7151d2a5e38cee4067e871d0e3f0a3762c94a66939b49febc7584a48a81718a",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00022-of-00046.gguf",
+      "blobId": "8a64e6d9725f61e1f8660b2f134268bd419c96c4",
+      "size": 13551528928,
+      "lfs": {
+        "sha256": "3be2c25051578d5c31a7b27fc6ca030768ef019dce5a32104c43e2ecc7f6eb19",
+        "size": 13551528928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00023-of-00046.gguf",
+      "blobId": "5cd33e8d007d9a19025d23fe147c72b4ea83ca7e",
+      "size": 13550156032,
+      "lfs": {
+        "sha256": "d35fe7314e4b1604486f2d5d8b1aa2e2a3b16ff08cf87a59f3518c3efb2cc63a",
+        "size": 13550156032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00024-of-00046.gguf",
+      "blobId": "952d75fbd6b5d4c0488ed8308292b1728845a260",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "84df40a2fec5fd55151c1895da4e852732d51ec19b7787263a3a4738969bccff",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00025-of-00046.gguf",
+      "blobId": "79eccdc165898bcacbd9360246129b47405ddddc",
+      "size": 13551528928,
+      "lfs": {
+        "sha256": "61f4c85b093f8029cba4c95464f962acd313d7afde3a8c2b920e77430f8b8bc0",
+        "size": 13551528928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00026-of-00046.gguf",
+      "blobId": "6659ac76398a57c6fa9cbe321a5b6ed1d160f2c7",
+      "size": 13550156032,
+      "lfs": {
+        "sha256": "ea42e8d9a36f4b9d01e14b33a15d43aad2eab626256a8ebf391620198b31d172",
+        "size": 13550156032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00027-of-00046.gguf",
+      "blobId": "be3803f2759b498cd2ba106fac84497252373480",
+      "size": 13420917216,
+      "lfs": {
+        "sha256": "701f29718a964c57ef9d4435a55cc8e1b52f5c43c38a42f85f203b431b49a5d1",
+        "size": 13420917216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00028-of-00046.gguf",
+      "blobId": "7749dac272218f2e94661d19658659c63e35f688",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "4c573478dce75a9c549c72bbdeb63160c9fe721e2c683e813dc22dc404ba1d63",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00029-of-00046.gguf",
+      "blobId": "6a89e11e4b7e089c6ea341efc36b08038861bc3c",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "bc9f50398134e333338c2ae4f2238ab3cfc276c02d07f76164273a2c8123514d",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00030-of-00046.gguf",
+      "blobId": "941a91131be1523b406e44e99dfe0aec3cbe0ddd",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "03a96844c1d8bc66917fab0c02e8307b16fa004146db326e2cf1efdc82afb9b9",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00031-of-00046.gguf",
+      "blobId": "0cdd41cc8158d0632f0bd7b006f4ca5be681bc81",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "4753b61a125ca7717e2b1accd99a127052a89d7a5c917b96e5b08e352ef6daa9",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00032-of-00046.gguf",
+      "blobId": "73873d4cbeade6f901eeaa57860a25b4df307d1b",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "2319c3f35948213fa6f224fd7d149b9df4e54c23ae1df0e47f1564c91eedbdd6",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00033-of-00046.gguf",
+      "blobId": "8da634aaf7ab151f55d1c55f331609a535b1e217",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "e281ff64007426a6081fe66ad52c4cf447eb08412a3b30e34a6b4ee6567952fa",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00034-of-00046.gguf",
+      "blobId": "4df1cbb64ab2c982c66f91bb79bb1ea4fead3f82",
+      "size": 13551528928,
+      "lfs": {
+        "sha256": "d0d631f59052b0ba1ac7e1d6aad1d1795e3554d01f8f5d1f1527ff39e640a359",
+        "size": 13551528928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00035-of-00046.gguf",
+      "blobId": "ff57ed50b0e45f08f0f5b3e591f31d26ba44e625",
+      "size": 13550156032,
+      "lfs": {
+        "sha256": "f6759d0f40ccaa81a771c125d8c88862208baf5a26725b5020cceb874c60982d",
+        "size": 13550156032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00036-of-00046.gguf",
+      "blobId": "5349cc708c7f349f07de18f8c1575195eb2d04cd",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "896d7ebd3bbf15e32ed84654d2d4ac3cf80939dbe7a014bd13e6a240adc9a55f",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00037-of-00046.gguf",
+      "blobId": "ebc39fdc29b6fc35d9ebe9cfdc9fe99d5c6c2944",
+      "size": 13551528928,
+      "lfs": {
+        "sha256": "8afe614f2ccb304d30ba79053d1dbb220fe5ee9dd1c4bb812c1ad421c202bb21",
+        "size": 13551528928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00038-of-00046.gguf",
+      "blobId": "629adb545cd8da6bc12c5cf90e11d32d5650bbf2",
+      "size": 13550156032,
+      "lfs": {
+        "sha256": "a7cd0ce1655d861639cb914e1146f1326ba0ead0133c1ce573d59bed9ca2e004",
+        "size": 13550156032,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00039-of-00046.gguf",
+      "blobId": "951bababd6158b267ec2b6c5c7394a7d8c6f522f",
+      "size": 13420917216,
+      "lfs": {
+        "sha256": "bc94acea1f9f5916685d80ffe7d66e0c5312cab55a5c3d17546e932599db9e09",
+        "size": 13420917216,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00040-of-00046.gguf",
+      "blobId": "9af6d37aeae9381e9fdfbc1546f9fe59fc05fbf8",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "1ca9bd278a65ad5e9f928dadc5009142a03a0ad38914c79c34c88115b9b9931a",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00041-of-00046.gguf",
+      "blobId": "2d18b533cfdad48611863368ebe057a562abb87d",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "2a17a300207d8dcbee54aafb76af6ae755671147e5fcb4e412c79bc6115ba1bc",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00042-of-00046.gguf",
+      "blobId": "32b3113dbe2c9f94c1cf60b965e7e54f5202ce43",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "2e103f55da0ca549307f904871f03495d6b9bcb7570b1e11a250489cb07b2df8",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00043-of-00046.gguf",
+      "blobId": "921db69db5229f948de76bc437dffb31773f36ec",
+      "size": 13543839904,
+      "lfs": {
+        "sha256": "42ca03874a0aba6e8413d4cb75bbdeca62d8f44c8a411440691010932635ef17",
+        "size": 13543839904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00044-of-00046.gguf",
+      "blobId": "6b598ad6c74b3447b386267c71480a09f278e3e0",
+      "size": 13557845088,
+      "lfs": {
+        "sha256": "9884b3c14f7f060337768eeee1368f54a5d79897934ff5e2d2110ed156737ea0",
+        "size": 13557845088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00045-of-00046.gguf",
+      "blobId": "a6327f609348690c73aaa0d75086fcac48583eba",
+      "size": 13413228192,
+      "lfs": {
+        "sha256": "8c62e58342e1b72579fc1464305852a302a5dac46a25fd1e2f0082fe1689ae7d",
+        "size": 13413228192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q6_K/zai-org.GLM-5.3.Q6_K-00046-of-00046.gguf",
+      "blobId": "e4d213a9b3d8757d66fbad1bae902aa438831867",
+      "size": 10823872992,
+      "lfs": {
+        "sha256": "2fd93d67d353161d3fac0f87e8a64a31d12732d2cb3fa38b454ce4fe617f4791",
+        "size": 10823872992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "7624ba228cf1d596c231550a4f15b46029118dbf",
+      "size": 826
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-29T02:05:32.000Z",
+  "usedStorage": 2611516010624
+}

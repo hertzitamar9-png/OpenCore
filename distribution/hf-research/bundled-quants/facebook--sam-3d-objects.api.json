@@ -1,0 +1,306 @@
+{
+  "_id": "68e41f082bb4822058eefc06",
+  "id": "facebook/sam-3d-objects",
+  "private": false,
+  "library_name": "sam-3d-objects",
+  "tags": [
+    "sam-3d-objects",
+    "3d-generation",
+    "en",
+    "arxiv:2511.16624",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 7003,
+  "likes": 598,
+  "modelId": "facebook/sam-3d-objects",
+  "author": "facebook",
+  "sha": "2e73555018d2741ccd486e56c24fac41155a1dc6",
+  "lastModified": "2026-06-12T07:06:03.000Z",
+  "gated": "manual",
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "extra_gated_fields": {
+      "First Name": "text",
+      "Last Name": "text",
+      "Date of birth": "date_picker",
+      "Country": "country",
+      "Affiliation": "text",
+      "Job title": {
+        "type": "select",
+        "options": [
+          "Student",
+          "Research Graduate",
+          "AI researcher",
+          "AI developer/engineer",
+          "Reporter",
+          "Other"
+        ]
+      },
+      "geo": "ip_location",
+      "By clicking Submit below I accept the terms of the license and acknowledge that the information I provide will be collected stored processed and shared in accordance with the Meta Privacy Policy": "checkbox"
+    },
+    "extra_gated_description": "The information you provide will be collected, stored, processed and shared in accordance with the [Meta Privacy Policy](https://www.facebook.com/privacy/policy/).",
+    "extra_gated_button_content": "Submit",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "3d-generation"
+    ],
+    "library_name": "sam-3d-objects"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "afd53ab6f7ddc3c0d4232c8113f7e7b176fb8a96",
+      "size": 1839
+    },
+    {
+      "rfilename": "CODE_OF_CONDUCT.md",
+      "blobId": "cf9dc244896688c330dba81d06f2cfc5568d7aea",
+      "size": 3536
+    },
+    {
+      "rfilename": "CONTRIBUTING.md",
+      "blobId": "f853448d128c8e64ab1446451f92c014e5a4ba3d",
+      "size": 1447
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "e58d758cc3d92e6d1a57b52f7e4d203d02a67e98",
+      "size": 8204
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b3278b36146d96331f98cb8b2a1ed30e89f76aab",
+      "size": 7708
+    },
+    {
+      "rfilename": "checkpoints/pipeline.yaml",
+      "blobId": "0703a2eb4045418f1d6e38053712105d03f90d88",
+      "size": 3548
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_gs.ckpt",
+      "blobId": "5a36371eaa8b504f6d3210fdf00ac8e8d72683bc",
+      "size": 171476155,
+      "lfs": {
+        "sha256": "f8077c36a06eaf890dd93cda1937411f793dea1eb80b3dd9329f2038ba84a111",
+        "size": 171476155,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_gs.yaml",
+      "blobId": "10683b1bd592e1db70eb7070a3365b536ad0ba9e",
+      "size": 576
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_gs_4.ckpt",
+      "blobId": "f59fba1a23cf9a1ad7835b0f622e71fe01e4a2f6",
+      "size": 170269801,
+      "lfs": {
+        "sha256": "731a0eceaa47945b52aa27f650d695b2aea9cc70945751e5609e5cb5b49f0186",
+        "size": 170269801,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_gs_4.yaml",
+      "blobId": "ef89609e6f0cf5a12398a5d5f000687bf6693916",
+      "size": 575
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_mesh.ckpt",
+      "blobId": "49b72a3de8080e4980438f492dd941eca96ccf67",
+      "size": 363726862,
+      "lfs": {
+        "sha256": "85907b37b67d8ce5b099a96629bdcfbd873eb407dee6b3aa9a75deb15038db33",
+        "size": 363726862,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_mesh.pt",
+      "blobId": "4767af85b40f027dcd1f6059522f1be1e4cbe3fa",
+      "size": 363728714,
+      "lfs": {
+        "sha256": "93333fcd57a3e36ded0b3bca6969e05ce2b35142029dadab514f41df46d2f985",
+        "size": 363728714,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/slat_decoder_mesh.yaml",
+      "blobId": "74735a4b9ba1fbd76b8d1a56f27b6ebe63aeafc9",
+      "size": 300
+    },
+    {
+      "rfilename": "checkpoints/slat_encoder.ckpt",
+      "blobId": "461b1c82487670b9e16080774460f55db27dd592",
+      "size": 173263986,
+      "lfs": {
+        "sha256": "6485623145535f42c8afa4cbb68ab9953e54e2f0c1cb1eaf95dcb41051e10181",
+        "size": 173263986,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/slat_encoder.yaml",
+      "blobId": "595fe5c60af4398e7b5ebbcec7b954364b51ae56",
+      "size": 268
+    },
+    {
+      "rfilename": "checkpoints/slat_generator.ckpt",
+      "blobId": "105cb187b9ec704ac254e17a5190c16e2be84317",
+      "size": 4906537684,
+      "lfs": {
+        "sha256": "91529bde8e7daa12d09618a66c319e3a5a6398db6b23b958cedcb1c3f28faabb",
+        "size": 4906537684,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "checkpoints/slat_generator.yaml",
+      "blobId": "859964b5e87666122a7137f6dc9934444d6182ca",
+      "size": 1986
+    },
+    {
+      "rfilename": "checkpoints/ss_decoder.ckpt",
+      "blobId": "e9a1a9fc9e881163b78b4033dc4d7ca3d7b4014d",
+      "size": 147609242,
+      "lfs": {
+        "sha256": "6dac1cd7b7fda5a38e0614fadae441f1794f80e39ea2981f1ac8aff0a7e99340",
+        "size": 147609242,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/ss_decoder.yaml",
+      "blobId": "7982f7ff6cdb4bebcad49404ba03476fa69f4c6b",
+      "size": 244
+    },
+    {
+      "rfilename": "checkpoints/ss_encoder.ckpt",
+      "blobId": "67a98d185878ea83fa256401d407d7a4d66dcb42",
+      "size": 119085402,
+      "lfs": {
+        "sha256": "dcc47810ac568b11fe6e4821ea1c8d6b960dfbda3e5f68e94c19f44b3bf9e83b",
+        "size": 119085402,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "checkpoints/ss_encoder.safetensors",
+      "blobId": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0
+    },
+    {
+      "rfilename": "checkpoints/ss_encoder.yaml",
+      "blobId": "2a882b6ecbc1ba38853303eef3b79f8151303361",
+      "size": 231
+    },
+    {
+      "rfilename": "checkpoints/ss_generator.ckpt",
+      "blobId": "22fb7b40c378df44e3736a763c9a764fde8fe1ed",
+      "size": 6690136964,
+      "lfs": {
+        "sha256": "225f40479e4cff4f39d6fa14c55be3abad1475bf55b61af3bec1e19ed2f6c146",
+        "size": 6690136964,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "checkpoints/ss_generator.yaml",
+      "blobId": "35df0ea780c4c6f6eaf490c1a828ad054d4f9f0b",
+      "size": 5076
+    },
+    {
+      "rfilename": "doc/arch.png",
+      "blobId": "33fe32eab3fbc3c2888e84b3c1e83cc3a005a6fa",
+      "size": 276423,
+      "lfs": {
+        "sha256": "59468933f3e24dfe37d286db290d8af1c5d027cd3f105f9f05049ec83a42152f",
+        "size": 276423,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "doc/arrow.png",
+      "blobId": "a13f5a041a64268e1aed6d13f6670b8a3d3d428a",
+      "size": 10468
+    },
+    {
+      "rfilename": "doc/intro.png",
+      "blobId": "2ec8da8d17cf5b656266031c0ed4619da02ee3c2",
+      "size": 782621,
+      "lfs": {
+        "sha256": "f0dc7f15c24357a15a988623ed22b366393af7205b1ca6b5d3e15a84f7bfbfa3",
+        "size": 782621,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "doc/kidsroom.png",
+      "blobId": "104bfa0da684a877883d0d61da1f555d48e23d7f",
+      "size": 24154851,
+      "lfs": {
+        "sha256": "72785412200dcb9f5c6bc4eaa3018172293f67836627708e6bce78150109af15",
+        "size": 24154851,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "doc/kidsroom_transparent.gif",
+      "blobId": "31dcce66e5400929a450aadcf6d7ea4d665f8f65",
+      "size": 7769835,
+      "lfs": {
+        "sha256": "9b40aa1bf732c91c87dc68ebbe29be67117822dba29f74896bacfbf5e453a678",
+        "size": 7769835,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "doc/teddy-3d.gif",
+      "blobId": "539481ead8dbc8870a9dcc34a8773059c404f461",
+      "size": 28323562,
+      "lfs": {
+        "sha256": "09ef5d3f5c4eff3954653a9d36cbbd1f3ffb46e22b3f87f32251649903d95f83",
+        "size": 28323562,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "doc/teddy.png",
+      "blobId": "80ddef6769aa1f9cb21f0f4b36644ea6089cbb25",
+      "size": 243400,
+      "lfs": {
+        "sha256": "8ef6ae920908be815f168ec9fd68bdc501f3c00d62d1744075386b4a2a86df00",
+        "size": 243400,
+        "pointerSize": 131
+      }
+    }
+  ],
+  "spaces": [
+    "HorizonRobotics/EmbodiedGen-Texture-Gen",
+    "dev-bjoern/sam3d-objects-mcp",
+    "Rcarvalo/room-reconstruction-sam3d",
+    "hiendang7613vulcanlabs/sam-3d-objecting",
+    "mikekuniavsky/sam3d-objects-mcp",
+    "jboth/sam3d-objects-fixed",
+    "ggrguru/sam3d-objects-mcp",
+    "fayyazio/sam3d-objects-gradio",
+    "TReqs/hf-aibom-scorer",
+    "hugging-apps/lift4d",
+    "DrMohit/EmbodiedGen-Texture-Gen",
+    "jhkwak-bp/sam3d-objects-mcp",
+    "HaiderCG/sam3d-lab",
+    "abysswatcher21/RPG-Asset-Studio"
+  ],
+  "createdAt": "2025-10-06T19:56:56.000Z",
+  "usedStorage": 13338859690
+}

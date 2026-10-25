@@ -1,0 +1,485 @@
+{
+  "_id": "69ea3a8ed443d697061bef05",
+  "id": "froggeric/Qwen-Fixed-Chat-Templates",
+  "private": false,
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "jinja",
+    "chat-template",
+    "qwen",
+    "qwen3.5",
+    "qwen3.6",
+    "qwen3.8",
+    "lm-studio",
+    "llama.cpp",
+    "vllm",
+    "tool-calling",
+    "thinking",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 1873,
+  "modelId": "froggeric/Qwen-Fixed-Chat-Templates",
+  "author": "froggeric",
+  "sha": "855bffc49448e299789730ff92c9b8d834d6cc14",
+  "lastModified": "2026-09-04T12:38:24.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "chat_template_jinja": "{%- set template_version = \"qwen3.8-froggeric-v22.5\" %}\n{%- set _tool_format = tool_call_format if tool_call_format is defined else 'xml' %}\n{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- set add_vision_id = add_vision_id if add_vision_id is defined else false %}\n{%- set enable_thinking = enable_thinking if enable_thinking is defined else true %}\n{%- set auto_disable_thinking_with_tools = auto_disable_thinking_with_tools if auto_disable_thinking_with_tools is defined else false %}\n{%- if preserve_reasoning is defined and preserve_reasoning is not none %}\n    {%- set _preserve_thinking = preserve_reasoning %}\n{%- elif preserve_thinking is defined and preserve_thinking is not none %}\n    {%- set _preserve_thinking = preserve_thinking %}\n{%- else %}\n    {%- set _preserve_thinking = true %}\n{%- endif %}\n{%- set max_tool_arg_chars = max_tool_arg_chars if max_tool_arg_chars is defined else 0 %}\n{%- set max_tool_response_chars = max_tool_response_chars if max_tool_response_chars is defined else 0 %}\n{%- set _default_reasoning_effort = 'medium' %}\n{%- set _has_tools = (tools is defined and tools and tools is iterable and tools is not mapping) %}\n{%- set _effort_raw = (reasoning_effort | string | lower) if reasoning_effort is defined and reasoning_effort is not none else _default_reasoning_effort %}\n{%- set _initial_thinking = enable_thinking %}\n{%- if _effort_raw in ('none', 'off') %}\n    {%- set _initial_thinking = false %}\n    {%- set _initial_effort = 'medium' %}\n{%- elif _effort_raw in ('minimal', 'low') %}\n    {%- set _initial_effort = 'low' %}\n{%- elif _effort_raw in ('high', 'xhigh', 'max', 'ultracode', 'extreme') %}\n    {%- set _initial_effort = 'xhigh' %}\n{%- else %}\n    {%- set _initial_effort = 'medium' %}\n{%- endif %}\n{%- set ns_state = namespace(thinking=_initial_thinking, effort=_initial_effort) %}\n{%- if auto_disable_thinking_with_tools and _has_tools %}\n    {%- set ns_state.thinking = false %}\n{%- endif %}\n{%- for msg in messages %}\n    {%- if msg.role == 'system' or msg.role == 'developer' or msg.role == 'user' %}\n        {%- if msg.content is string %}\n            {%- if '<|think_off|>' in msg.content %}\n                {%- set ns_state.thinking = false %}\n            {%- elif '<|think_on|>' in msg.content %}\n                {%- set ns_state.thinking = true %}\n            {%- elif '<|think_xhigh|>' in msg.content or '<|think_high|>' in msg.content or '<|think_ultracode|>' in msg.content or '<|think_extreme|>' in msg.content or '<|think_max|>' in msg.content %}\n                {%- set ns_state.thinking = true %}\n                {%- set ns_state.effort = 'xhigh' %}\n            {%- elif '<|think_low|>' in msg.content or '<|think_minimal|>' in msg.content %}\n                {%- set ns_state.thinking = true %}\n                {%- set ns_state.effort = 'low' %}\n            {%- elif '<|think_medium|>' in msg.content %}\n                {%- set ns_state.thinking = true %}\n                {%- set ns_state.effort = 'medium' %}\n            {%- endif %}\n        {%- elif msg.content is iterable and msg.content is not mapping %}\n            {%- for item in msg.content %}\n                {%- if item is string %}\n                    {%- set _item_text = item %}\n                {%- elif item is mapping and 'text' in item and item.text is string %}\n                    {%- set _item_text = item.text %}\n                {%- else %}\n                    {%- set _item_text = '' %}\n                {%- endif %}\n                {%- if _item_text %}\n                    {%- if '<|think_off|>' in _item_text %}\n                        {%- set ns_state.thinking = false %}\n                    {%- elif '<|think_on|>' in _item_text %}\n                        {%- set ns_state.thinking = true %}\n                    {%- elif '<|think_xhigh|>' in _item_text or '<|think_high|>' in _item_text or '<|think_ultracode|>' in _item_text or '<|think_extreme|>' in _item_text or '<|think_max|>' in _item_text %}\n                        {%- set ns_state.thinking = true %}\n                        {%- set ns_state.effort = 'xhigh' %}\n                    {%- elif '<|think_low|>' in _item_text or '<|think_minimal|>' in _item_text %}\n                        {%- set ns_state.thinking = true %}\n                        {%- set ns_state.effort = 'low' %}\n                    {%- elif '<|think_medium|>' in _item_text %}\n                        {%- set ns_state.thinking = true %}\n                        {%- set ns_state.effort = 'medium' %}\n                    {%- endif %}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- set reasoning_instructions = '' %}\n{%- if ns_state.thinking %}\n    {%- if ns_state.effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif ns_state.effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if item is mapping %}\n                {%- if item.type == 'image' or 'image' in item or 'image_url' in item %}\n                    {%- if is_system_content %}\n                        {{- raise_exception('System message cannot contain images.') }}\n                    {%- endif %}\n                    {%- if do_vision_count %}\n                        {%- set image_count.value = image_count.value + 1 %}\n                    {%- endif %}\n                    {%- if add_vision_id %}\n                        {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                    {%- endif %}\n                    {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n                {%- elif item.type == 'video' or 'video' in item or 'video_url' in item %}\n                    {%- if is_system_content %}\n                        {{- raise_exception('System message cannot contain videos.') }}\n                    {%- endif %}\n                    {%- if do_vision_count %}\n                        {%- set video_count.value = video_count.value + 1 %}\n                    {%- endif %}\n                    {%- if add_vision_id %}\n                        {{- 'Video ' ~ video_count.value ~ ': ' }}\n                    {%- endif %}\n                    {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n                {%- elif 'text' in item %}\n                    {{- item.text }}\n                {%- else %}\n                    {{- raise_exception('Unexpected item type in content.') }}\n                {%- endif %}\n            {%- else %}\n                {{- item | string }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set head = namespace(count=0, seen_non_system=false) %}\n{%- for message in messages %}\n    {%- set _is_sys = (message.role == 'system' or message.role == 'developer') %}\n    {%- if _is_sys and not head.seen_non_system %}\n        {%- set head.count = head.count + 1 %}\n    {%- else %}\n        {%- set head.seen_non_system = true %}\n    {%- endif %}\n{%- endfor %}\n{%- set sys_state = namespace(content='') %}\n{%- for message in messages[:head.count] %}\n    {%- set _part = render_content(message.content, false, true) | trim %}\n    {%- if '<|think_off|>' in _part %}{%- set _part = _part.split('<|think_off|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_on|>' in _part %}{%- set _part = _part.split('<|think_on|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_xhigh|>' in _part %}{%- set _part = _part.split('<|think_xhigh|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_high|>' in _part %}{%- set _part = _part.split('<|think_high|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_ultracode|>' in _part %}{%- set _part = _part.split('<|think_ultracode|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_extreme|>' in _part %}{%- set _part = _part.split('<|think_extreme|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_max|>' in _part %}{%- set _part = _part.split('<|think_max|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_medium|>' in _part %}{%- set _part = _part.split('<|think_medium|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_low|>' in _part %}{%- set _part = _part.split('<|think_low|>') | join('') | trim %}{%- endif %}\n    {%- if '<|think_minimal|>' in _part %}{%- set _part = _part.split('<|think_minimal|>') | join('') | trim %}{%- endif %}\n    {%- if _part %}\n        {%- if sys_state.content %}\n            {%- set sys_state.content = sys_state.content ~ '\\n\\n' ~ _part %}\n        {%- else %}\n            {%- set sys_state.content = _part %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- set _sc = sys_state.content %}\n{%- set _msgs = messages[head.count:] %}\n{%- if _has_tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- '# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>' }}\n    {%- for tool in tools %}\n        {{- '\\n' }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- '\\n</tools>' }}\n    {%- if _tool_format == 'json' %}\n        {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n' }}\n        {%- if ns_state.thinking %}\n            {{- '<think>\\nBrief explanation of tool call\\n</think>\\n' }}\n        {%- endif %}\n        {{- '<tool_call>\\n{\"name\": \"example_function_name\", \"arguments\": {\"example_parameter_1\": \"value_1\", \"example_parameter_2\": \"This is the value for the second parameter\"}}\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n' }}\n        {%- if ns_state.thinking %}\n            {{- '- You can use the <think></think> block to plan your next tool call OR to synthesize data and formulate your final response to the user.\\n- ALL explanation and reasoning MUST be placed strictly inside the <think></think> block.\\n' }}\n        {%- endif %}\n        {{- '- Function calls MUST follow the specified format: a single JSON object with \"name\" and \"arguments\" keys inside <tool_call></tool_call> XML tags.\\n' }}\n        {%- if ns_state.thinking %}\n            {{- '- If you choose to call a tool, you MUST output the <tool_call> block IMMEDIATELY after thinking, with NO conversational text before it.\\n' }}\n        {%- else %}\n            {{- '- If you choose to call a tool, you MUST output the <tool_call> block IMMEDIATELY, with NO conversational text before it.\\n' }}\n        {%- endif %}\n        {{- '- The <tool_call> tag MUST be at the very beginning of a new line, with NO spaces or indentation before it.\\n- To call multiple functions, output a separate, completely closed <tool_call></tool_call> block for EACH function. Do NOT nest <tool_call> blocks.\\n- If you have all necessary data, provide your final answer directly to the user without any tool call.\\n</IMPORTANT>' }}\n    {%- else %}\n        {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n' }}\n        {%- if ns_state.thinking %}\n            {{- '<think>\\nBrief explanation of tool call\\n</think>\\n' }}\n        {%- endif %}\n        {{- '<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n' }}\n        {%- if ns_state.thinking %}\n            {{- '- You can use the <think></think> block to plan your next tool call OR to synthesize data and formulate your final response to the user.\\n- ALL explanation and reasoning MUST be placed strictly inside the <think></think> block.\\n' }}\n        {%- endif %}\n        {{- '- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags.\\n' }}\n        {%- if ns_state.thinking %}\n            {{- '- If you choose to call a tool, you MUST output the <tool_call> block IMMEDIATELY after thinking, with NO conversational text before it.\\n' }}\n        {%- else %}\n            {{- '- If you choose to call a tool, you MUST output the <tool_call> block IMMEDIATELY, with NO conversational text before it.\\n' }}\n        {%- endif %}\n        {{- '- The <tool_call> and <function> tags MUST be at the very beginning of a new line, with NO spaces or indentation before them.\\n- To call multiple functions, output a separate, completely closed <tool_call></tool_call> block for EACH function. Do NOT nest <tool_call> blocks.\\n- If you have all necessary data, provide your final answer directly to the user without any tool call.\\n</IMPORTANT>' }}\n    {%- endif %}\n    {%- if _sc %}\n        {{- '\\n\\n' + _sc }}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if _sc %}\n        {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '') + _sc + '<|im_end|>\\n' }}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set _last_idx = _msgs | length - 1 %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=_last_idx) %}\n{%- for message in _msgs[::-1] %}\n    {%- set index = (_msgs | length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == 'user' %}\n        {%- set _rc = render_content(message.content, false) | trim %}\n        {%- if not (_rc.startswith('<tool_response>') and _rc.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {%- if _last_idx > 50 %}\n        {%- set ns.last_query_index = _last_idx %}\n    {%- else %}\n        {%- set ns.last_query_index = 0 %}\n    {%- endif %}\n{%- endif %}\n{%- set ns2 = namespace(prev_role='', consecutive_failures=0) %}\n{%- for message in _msgs %}\n    {%- set is_system = (message.role == \"system\" or message.role == \"developer\") %}\n    {%- set content = render_content(message.content, true, is_system) | trim %}\n    {%- if is_system or message.role == 'user' %}\n        {%- if '<|think_off|>' in content %}{%- set content = content.split('<|think_off|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_on|>' in content %}{%- set content = content.split('<|think_on|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_xhigh|>' in content %}{%- set content = content.split('<|think_xhigh|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_high|>' in content %}{%- set content = content.split('<|think_high|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_ultracode|>' in content %}{%- set content = content.split('<|think_ultracode|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_extreme|>' in content %}{%- set content = content.split('<|think_extreme|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_max|>' in content %}{%- set content = content.split('<|think_max|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_medium|>' in content %}{%- set content = content.split('<|think_medium|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_low|>' in content %}{%- set content = content.split('<|think_low|>') | join('') | trim %}{%- endif %}\n        {%- if '<|think_minimal|>' in content %}{%- set content = content.split('<|think_minimal|>') | join('') | trim %}{%- endif %}\n    {%- endif %}\n    {%- if is_system %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- elif message.role == 'user' %}\n        {%- set ns2.consecutive_failures = 0 %}\n        {{- '<|im_start|>user\\n' + content + '<|im_end|>\\n' }}\n    {%- elif message.role == 'assistant' %}\n        {%- set reasoning_content = '' %}\n        {%- set _explicit_reasoning = '' %}\n        {%- if message.reasoning_content is defined and message.reasoning_content is not none %}\n            {%- if message.reasoning_content is string %}\n                {%- set _explicit_reasoning = message.reasoning_content %}\n            {%- else %}\n                {%- set _explicit_reasoning = message.reasoning_content | string %}\n            {%- endif %}\n        {%- elif message.thinking is defined and message.thinking is not none %}\n            {%- if message.thinking is string %}\n                {%- set _explicit_reasoning = message.thinking %}\n            {%- else %}\n                {%- set _explicit_reasoning = message.thinking | string %}\n            {%- endif %}\n        {%- elif message.reasoning is defined and message.reasoning is not none %}\n            {%- if message.reasoning is string %}\n                {%- set _explicit_reasoning = message.reasoning %}\n            {%- else %}\n                {%- set _explicit_reasoning = message.reasoning | string %}\n            {%- endif %}\n        {%- endif %}\n        {%- if _explicit_reasoning %}\n            {%- set _lead_end = '' %}\n            {%- if content.startswith('<think>') and '</think>' in content %}\n                {%- set _lead_end = '</think>' %}\n            {%- elif content.startswith('<thinking>') and '</thinking>' in content %}\n                {%- set _lead_end = '</thinking>' %}\n            {%- elif content.startswith('</think>') %}\n                {%- set _lead_end = '</think>' %}\n            {%- elif content.startswith('</thinking>') %}\n                {%- set _lead_end = '</thinking>' %}\n            {%- endif %}\n            {%- if _lead_end %}\n                {%- set content = content.split(_lead_end)[-1].lstrip('\\n') %}\n            {%- endif %}\n            {%- set reasoning_content = _explicit_reasoning %}\n        {%- else %}\n            {%- set _think_end = '' %}\n            {%- if content.startswith('</think>') %}\n                {%- set _think_end = '</think>' %}\n            {%- elif content.startswith('</thinking>') %}\n                {%- set _think_end = '</thinking>' %}\n            {%- elif '\\n</think>' in content %}\n                {%- set _think_end = '\\n</think>' %}\n            {%- elif '\\n</thinking>' in content %}\n                {%- set _think_end = '\\n</thinking>' %}\n            {%- elif '\\n</ think>' in content %}\n                {%- set _think_end = '\\n</ think>' %}\n            {%- elif '\\n</think >' in content %}\n                {%- set _think_end = '\\n</think >' %}\n            {%- elif content.startswith('<think>') and '</think>' in content %}\n                {%- set _think_end = '</think>' %}\n            {%- elif content.startswith('<thinking>') and '</thinking>' in content %}\n                {%- set _think_end = '</thinking>' %}\n            {%- endif %}\n            {%- if _think_end %}\n                {%- if 'thinking' in _think_end %}\n                    {%- set _think_start = '<thinking>' %}\n                {%- else %}\n                    {%- set _think_start = '<think>' %}\n                {%- endif %}\n                {%- set reasoning_content = content.split(_think_end)[0].rstrip('\\n') %}\n                {%- if _think_start in reasoning_content %}\n                    {%- set reasoning_content = reasoning_content.split(_think_start)[-1].lstrip('\\n') %}\n                {%- endif %}\n                {%- set content = content.split(_think_end)[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content | trim %}\n        {%- if (_preserve_thinking or loop.index0 > ns.last_query_index) %}\n            {{- '<|im_start|>assistant\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>assistant\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls is defined and message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined and tool_call.function is not none %}\n                    {%- set tc = tool_call.function %}\n                {%- else %}\n                    {%- set tc = tool_call %}\n                {%- endif %}\n                {%- set tc_name = tc.name if (tc.name is defined and tc.name is not none) else '' %}\n                {%- if _tool_format == 'json' %}\n                    {%- if loop.first %}\n                        {%- if content | trim %}\n                            {{- '\\n\\n' }}\n                        {%- endif %}\n                    {%- else %}\n                        {{- '\\n' }}\n                    {%- endif %}\n                    {%- set _args = '{}' %}\n                    {%- if tc.arguments is defined and tc.arguments is not none %}\n                        {%- if tc.arguments is mapping %}\n                            {%- set _args = tc.arguments | tojson %}\n                        {%- elif tc.arguments is string %}\n                            {%- if tc.arguments %}\n                                {%- set _args = tc.arguments %}\n                            {%- endif %}\n                        {%- else %}\n                            {%- set _args = tc.arguments | tojson %}\n                        {%- endif %}\n                    {%- endif %}\n                    {{- '<tool_call>\\n{\"name\": ' }}{{- tc_name | tojson }}{{- ', \"arguments\": ' }}{{- _args }}{{- '}\\n</tool_call>' }}\n                {%- else %}\n                    {%- if loop.first %}\n                        {%- if content | trim %}\n                            {{- '\\n\\n<tool_call>\\n<function=' + tc_name + '>\\n' }}\n                        {%- else %}\n                            {{- '<tool_call>\\n<function=' + tc_name + '>\\n' }}\n                        {%- endif %}\n                    {%- else %}\n                        {{- '\\n<tool_call>\\n<function=' + tc_name + '>\\n' }}\n                    {%- endif %}\n                    {%- if tc.arguments is defined and tc.arguments is not none %}\n                        {%- if tc.arguments is mapping %}\n                            {%- for args_name, args_value in tc.arguments.items() %}\n                                {{- '<parameter=' + args_name + '>\\n' }}\n                                {%- if args_value is string %}\n                                    {%- set _av = args_value %}\n                                {%- else %}\n                                    {%- set _av = args_value | tojson %}\n                                {%- endif %}\n                                {%- if max_tool_arg_chars > 0 and _av | length > max_tool_arg_chars %}\n                                    {{- _av[:max_tool_arg_chars] + '\\n[TRUNCATED - original length ' ~ (_av | length | string) ~ ' chars]' }}\n                                {%- else %}\n                                    {{- _av }}\n                                {%- endif %}\n                                {{- '\\n</parameter>\\n' }}\n                            {%- endfor %}\n                        {%- else %}\n                            {%- if tc.arguments is string %}\n                                {%- set _raw_args = tc.arguments %}\n                            {%- else %}\n                                {%- set _raw_args = tc.arguments | tojson %}\n                            {%- endif %}\n                            {%- if _raw_args %}\n                                {%- if max_tool_arg_chars > 0 and _raw_args | length > max_tool_arg_chars %}\n                                    {{- _raw_args[:max_tool_arg_chars] + '\\n[TRUNCATED - original length ' ~ (_raw_args | length | string) ~ ' chars]' }}\n                                {%- else %}\n                                    {{- _raw_args }}\n                                {%- endif %}\n                            {%- endif %}\n                        {%- endif %}\n                    {%- endif %}\n                    {{- '</function>\\n</tool_call>' }}\n                {%- endif %}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == 'tool' %}\n        {%- set _content_lower = content | lower %}\n        {%- set _content_head = _content_lower[:120] %}\n        {%- set _is_code_or_grep = ('throw new ' in _content_lower or 'throw error' in _content_lower or 'console.error' in _content_lower or 'logger.error' in _content_lower or 'logging.error' in _content_lower or 'import ' in _content_head or 'def ' in _content_head or 'function ' in _content_head) %}\n        {%- set _exit_code_zero = ('exit code: 0' in _content_head or 'process exited with code 0' in _content_head) %}\n        {%- set _error_field_ok = ('\"error\": null' in _content_head or '\"error\":null' in _content_head or '\"error\": false' in _content_head or '\"error\":false' in _content_head or '\"error\": \"\"' in _content_head or '\"error\":\"\"' in _content_head) %}\n        {%- set _strong_error = (('\"error\":' in _content_head and not _error_field_ok) or '\"status\": \"error\"' in _content_head or '\"status\":\"error\"' in _content_head or 'traceback (most recent call last):' in _content_head or 'command not found' in _content_head or 'invalid syntax' in _content_head or 'fatal:' in _content_head or (('exit code: ' in _content_head or 'process exited with code' in _content_head) and not _exit_code_zero) or _content_head.startswith('exception:') or _content_head.startswith('failed to ')) %}\n        {%- set _weak_error = ('error:' in _content_head or 'err!' in _content_head) %}\n        {%- set _weak_suppressed = ('$ ' in _content_head or 'took ' in _content_head or content | length >= 600) %}\n        {%- if not _is_code_or_grep and (_strong_error or (_weak_error and not _weak_suppressed)) %}\n            {%- set ns2.consecutive_failures = ns2.consecutive_failures + 1 %}\n        {%- else %}\n            {%- set ns2.consecutive_failures = 0 %}\n        {%- endif %}\n        {%- if ns2.prev_role != 'tool' %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {%- set _is_json_payload = (_tool_format == 'json' and content | trim | length > 0 and (content | trim)[:1] in ('{', '[')) %}\n        {%- if not _is_json_payload and max_tool_response_chars > 0 and content | length > max_tool_response_chars %}\n            {%- set content = content[:max_tool_response_chars] + '\\n[TRUNCATED - original length ' ~ (content | length | string) ~ ' chars]' %}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' + content }}\n        {%- if ns2.consecutive_failures >= 2 %}\n            {{- '\\n\\n\u26a0\ufe0f SYSTEM WARNING: ' ~ ns2.consecutive_failures ~ ' consecutive tool errors detected. Your previous approach is incorrect. You MUST use a fundamentally different approach or corrected arguments.' }}\n        {%- elif ns2.consecutive_failures == 1 %}\n            {{- '\\n\\n\u26a0\ufe0f SYSTEM WARNING: The previous tool call returned an error. Diagnose the failure and retry with completely corrected arguments.' }}\n        {%- endif %}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- else %}\n            {%- set _next_role = _msgs[loop.index0 + 1].role %}\n            {%- if _next_role != 'tool' %}\n                {{- '<|im_end|>\\n' }}\n            {%- endif %}\n        {%- endif %}\n    {%- else %}\n        {{- '<|im_start|>user\\n[' + message.role + ']: ' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n    {%- set ns2.prev_role = message.role %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if not ns_state.thinking %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "tags": [
+      "jinja",
+      "chat-template",
+      "qwen",
+      "qwen3.5",
+      "qwen3.6",
+      "qwen3.8",
+      "lm-studio",
+      "mlx",
+      "llama.cpp",
+      "vllm",
+      "tool-calling",
+      "thinking"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": "README.md",
+      "blobId": "3e491d7dc1e3d07e38b339dcfa709b0212add013",
+      "size": 34584
+    },
+    {
+      "rfilename": "archive/README-v10.md",
+      "blobId": "2827f525f467e27228aca65442b642919f29b42f",
+      "size": 13660
+    },
+    {
+      "rfilename": "archive/README-v11.md",
+      "blobId": "4e62dd61e448e86a92ab7323b660d1be65f06b96",
+      "size": 14564
+    },
+    {
+      "rfilename": "archive/README-v12.md",
+      "blobId": "b3cf8a545b06fbd286749c7374f4f2c2b70824ef",
+      "size": 15156
+    },
+    {
+      "rfilename": "archive/README-v13.md",
+      "blobId": "ba20dcbad19d443cdc17e1b94d44f4388e5b7838",
+      "size": 15059
+    },
+    {
+      "rfilename": "archive/README-v14.md",
+      "blobId": "704a9129d4ac8267a29d20c469374ae206791f61",
+      "size": 14437
+    },
+    {
+      "rfilename": "archive/README-v15.md",
+      "blobId": "9ad0b62c10afcad39e506d82c8829e8fcb455b1a",
+      "size": 17808
+    },
+    {
+      "rfilename": "archive/README-v16.md",
+      "blobId": "035e97c84022f13213a0052b1251ca72b969a542",
+      "size": 19455
+    },
+    {
+      "rfilename": "archive/README-v17.md",
+      "blobId": "01a31713078f81fd92a484386ac6176846a7a51f",
+      "size": 18443
+    },
+    {
+      "rfilename": "archive/README-v18.md",
+      "blobId": "030a2abf827ca2efe50292de4419c5ef54391a31",
+      "size": 19744
+    },
+    {
+      "rfilename": "archive/README-v19.md",
+      "blobId": "04b5768baaff8f8c26a04abb297608beb2bd0b22",
+      "size": 18262
+    },
+    {
+      "rfilename": "archive/README-v20.md",
+      "blobId": "63916a73d77889b04603ca549470c6bc2b2d326a",
+      "size": 19761
+    },
+    {
+      "rfilename": "archive/README-v21.md",
+      "blobId": "13ef7085625ac29df57ca1008babfe018881f9f5",
+      "size": 20199
+    },
+    {
+      "rfilename": "archive/README-v22.1.md",
+      "blobId": "8e8e96bf552e3ff2d6440e01bf694fe3d8f218e0",
+      "size": 19721
+    },
+    {
+      "rfilename": "archive/README-v22.2.md",
+      "blobId": "7d3256835f3dc2f636d7cf69dcd4451836d13527",
+      "size": 21136
+    },
+    {
+      "rfilename": "archive/README-v22.3.md",
+      "blobId": "b35fc312afb433eda2c76be77a0071a5ee64c14c",
+      "size": 26193
+    },
+    {
+      "rfilename": "archive/README-v22.4.md",
+      "blobId": "0abee1f66044337bbffef50b909dd6b8644dbcb0",
+      "size": 29807
+    },
+    {
+      "rfilename": "archive/README-v22.md",
+      "blobId": "1dddda65d85bac937fcedf20b252a590b9dc5a77",
+      "size": 17752
+    },
+    {
+      "rfilename": "archive/README-v8.md",
+      "blobId": "e745f0520dc4bcc1b16ee87843125ef160af69ef",
+      "size": 10701
+    },
+    {
+      "rfilename": "archive/README-v9.md",
+      "blobId": "fc7bb7ae95eff72d0d62b5ce8d4154da84ca5711",
+      "size": 11935
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v10.jinja",
+      "blobId": "ae1c75ef85d5b8836333faa25e7006615c497789",
+      "size": 11425
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v10_oneline.txt",
+      "blobId": "f8a819d19283ab5b0f4ad689ed40d8bd058efa15",
+      "size": 11098
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v11.jinja",
+      "blobId": "b942068fc6f2596f3d1dba604c7bbea536ef429b",
+      "size": 11327
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v11_oneline.txt",
+      "blobId": "f8a819d19283ab5b0f4ad689ed40d8bd058efa15",
+      "size": 11098
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v12.jinja",
+      "blobId": "5118492536dd2a30562ecc68ec4cd5eb21de1308",
+      "size": 13459
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v12_oneline.txt",
+      "blobId": "5bd1d83a98eedccb3e8f5b323075c6b014e796c6",
+      "size": 12251
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v13.jinja",
+      "blobId": "9c120bccc95385dd79076ce5fe867762631ba9aa",
+      "size": 9414
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v13_oneline.txt",
+      "blobId": "d5326d01c5c7be0b9c82b56cdd46e96052f0b1ee",
+      "size": 9210
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v14.jinja",
+      "blobId": "c63482b352b22bbf647c62b061c21174b5e4a64c",
+      "size": 10104
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v14_oneline.txt",
+      "blobId": "11710f8f21b37d780016cef5dfd3c5056520b2dd",
+      "size": 9890
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v15.jinja",
+      "blobId": "19514bc989ad8771b2bc3e300202be0c0d8e4237",
+      "size": 10734
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v15_oneline.txt",
+      "blobId": "c5932291d767a510ad55b2fbc4825af1ce7599fa",
+      "size": 10514
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v16.jinja",
+      "blobId": "2908bef121bbac8f332d616e30cd56d9788f985d",
+      "size": 12282
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v16_oneline.txt",
+      "blobId": "e47d76e6941c35c0eb195a38803bd3b480935bca",
+      "size": 10890
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v8.jinja",
+      "blobId": "b1c031a4364884bbd5ec60fc5e1945df98db88b5",
+      "size": 11016
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v8_oneline.txt",
+      "blobId": "0e71d5e31a3f328c1321f156082fe7f2b2c8f2ba",
+      "size": 11325
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v9.jinja",
+      "blobId": "a9e203b921ec0f53991f1ec07e7c77e9a451363e",
+      "size": 11922
+    },
+    {
+      "rfilename": "archive/qwen3.5/chat_template-v9_oneline.txt",
+      "blobId": "2a51693bd68944b3718cc48697dbd6add69d0a87",
+      "size": 12264
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v10.jinja",
+      "blobId": "b647dd459c4f0e72f4910adc9f1604ac95d7873f",
+      "size": 11426
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v10_oneline.txt",
+      "blobId": "f8a819d19283ab5b0f4ad689ed40d8bd058efa15",
+      "size": 11098
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v11.jinja",
+      "blobId": "ae8d50abcfe0c8fd69414ccd5f058b447ecbbbc5",
+      "size": 11328
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v11_oneline.txt",
+      "blobId": "f8a819d19283ab5b0f4ad689ed40d8bd058efa15",
+      "size": 11098
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v12.jinja",
+      "blobId": "32926cf50a4bfe0e48b148c28d39fb864353ee76",
+      "size": 13460
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v12_oneline.txt",
+      "blobId": "5bd1d83a98eedccb3e8f5b323075c6b014e796c6",
+      "size": 12251
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v13.jinja",
+      "blobId": "9c120bccc95385dd79076ce5fe867762631ba9aa",
+      "size": 9414
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v13_oneline.txt",
+      "blobId": "d5326d01c5c7be0b9c82b56cdd46e96052f0b1ee",
+      "size": 9210
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v14.jinja",
+      "blobId": "c63482b352b22bbf647c62b061c21174b5e4a64c",
+      "size": 10104
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v14_oneline.txt",
+      "blobId": "11710f8f21b37d780016cef5dfd3c5056520b2dd",
+      "size": 9890
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v15.jinja",
+      "blobId": "19514bc989ad8771b2bc3e300202be0c0d8e4237",
+      "size": 10734
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v15_oneline.txt",
+      "blobId": "c5932291d767a510ad55b2fbc4825af1ce7599fa",
+      "size": 10514
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v16.jinja",
+      "blobId": "2908bef121bbac8f332d616e30cd56d9788f985d",
+      "size": 12282
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v16_oneline.txt",
+      "blobId": "e47d76e6941c35c0eb195a38803bd3b480935bca",
+      "size": 10890
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v17.jinja",
+      "blobId": "9666e10a3e7394ea83ee53f8aaeaa0c1e6c55b8a",
+      "size": 13495
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v17_oneline.txt",
+      "blobId": "80f076d6b0580bc142d6db48543a09f0adbab47f",
+      "size": 13218
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v18.jinja",
+      "blobId": "04eb7d13baffa2fa6f506787e516305826f98f53",
+      "size": 13439
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v18_oneline.txt",
+      "blobId": "fea9dd0784b72392d05d53c7d72e254d60894e6c",
+      "size": 10565
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v19.jinja",
+      "blobId": "cdebb61b8fabe6da8beed87838a7cd5d382429f8",
+      "size": 13203
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v19_oneline.txt",
+      "blobId": "e1c2ae46407ba2bdce98866b6f0f3042393e9ab4",
+      "size": 10501
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v8.jinja",
+      "blobId": "4d132b5b36d4b23fbc1c7147552172e0dae3d098",
+      "size": 11693
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v8_oneline.txt",
+      "blobId": "deb859d050f0f240ba6ba297cd3e1d3092035cf1",
+      "size": 12021
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v9.jinja",
+      "blobId": "0f1ea786b78926a1eb83eadfe12d4dbab659894f",
+      "size": 12501
+    },
+    {
+      "rfilename": "archive/qwen3.6/chat_template-v9_oneline.txt",
+      "blobId": "b6efaab40bfe9514c10c32d487e3327b79dea219",
+      "size": 12858
+    },
+    {
+      "rfilename": "archive/v19_chat_template.jinja",
+      "blobId": "cdebb61b8fabe6da8beed87838a7cd5d382429f8",
+      "size": 13203
+    },
+    {
+      "rfilename": "archive/v19_chat_template_oneline.txt",
+      "blobId": "e1c2ae46407ba2bdce98866b6f0f3042393e9ab4",
+      "size": 10501
+    },
+    {
+      "rfilename": "archive/v20_chat_template.jinja",
+      "blobId": "5798dbcb86b34e89c21fcd6fdfaed3de36519263",
+      "size": 14106
+    },
+    {
+      "rfilename": "archive/v20_chat_template_oneline.txt",
+      "blobId": "0764cebf5ebac247e702f942c663b407ce6addcf",
+      "size": 11123
+    },
+    {
+      "rfilename": "archive/v21_chat_template.jinja",
+      "blobId": "81df6b833cf8dbce37eb97e797dd078fa604cf51",
+      "size": 16289
+    },
+    {
+      "rfilename": "archive/v21_chat_template_oneline.txt",
+      "blobId": "a581ac46a8a8d41294c0e7d2599912e46eb46f8c",
+      "size": 15961
+    },
+    {
+      "rfilename": "archive/v22.1_chat_template.jinja",
+      "blobId": "d996db5989a7d71ff0aac1937e3b697ff418cd23",
+      "size": 22156
+    },
+    {
+      "rfilename": "archive/v22.1_chat_template_oneline.txt",
+      "blobId": "0fea09bda36665e5ff6e1e3efa8e6552c01309d1",
+      "size": 17726
+    },
+    {
+      "rfilename": "archive/v22.2_chat_template.jinja",
+      "blobId": "04c6b4c0e4c5b97436b08284cb62c6e02bf0cb80",
+      "size": 24094
+    },
+    {
+      "rfilename": "archive/v22.2_chat_template_oneline.txt",
+      "blobId": "82422105d8c15f9d55203faefdb32993751de1c6",
+      "size": 19531
+    },
+    {
+      "rfilename": "archive/v22.3_chat_template.jinja",
+      "blobId": "9c7d3f4d3c01e5faacc37c225b9f6075678fdab1",
+      "size": 26681
+    },
+    {
+      "rfilename": "archive/v22.3_chat_template_oneline.txt",
+      "blobId": "2ea3a4a660811f3fafe2913c7c0c48da68a0810c",
+      "size": 21313
+    },
+    {
+      "rfilename": "archive/v22.4_chat_template.jinja",
+      "blobId": "a7d899308adc631cf150bd22e5aeb5da99ceb2e8",
+      "size": 27167
+    },
+    {
+      "rfilename": "archive/v22.4_chat_template_oneline.txt",
+      "blobId": "1187059d4b569202440cc55edd49efe98073fd4b",
+      "size": 21617
+    },
+    {
+      "rfilename": "archive/v22_chat_template.jinja",
+      "blobId": "a921aafda3ed6f7cb4f7a635745c922f03b36f68",
+      "size": 19262
+    },
+    {
+      "rfilename": "archive/v22_chat_template_oneline.txt",
+      "blobId": "b7f8545c79691ae7a26cc87cf8601aaf8651f6c8",
+      "size": 15336
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "570ed0798e6b72095d205be50fd4bce563e3d50b",
+      "size": 28234
+    },
+    {
+      "rfilename": "chat_template_oneline.txt",
+      "blobId": "e79be7400982760bed78f1114f124ec6638a8075",
+      "size": 22391
+    },
+    {
+      "rfilename": "scripts/check_applied.py",
+      "blobId": "6e410b17a58e6cbc0ca93d039f184e61b95efc59",
+      "size": 5063
+    },
+    {
+      "rfilename": "scripts/fuzz_template.py",
+      "blobId": "5a9ce9f555367bfb0c925b695d348c59e051f13e",
+      "size": 12065
+    },
+    {
+      "rfilename": "scripts/minify_jinja.py",
+      "blobId": "6a11b5ae07307efc0778ebadda182f26852ac2d5",
+      "size": 2861
+    },
+    {
+      "rfilename": "scripts/test_v21.py",
+      "blobId": "a82e4eeb32616afcb68b247253a63e8be3a9327b",
+      "size": 6331
+    },
+    {
+      "rfilename": "scripts/test_v22.py",
+      "blobId": "5776005b13f8d3ce59e23a26fb17b75785983fe3",
+      "size": 64909
+    }
+  ],
+  "spaces": [
+    "shanezlj/qwen-fixed-chat-template-lab",
+    "facedun/qwen3-8-fixed-template-lab",
+    "kim0211/qwen-fixed-chat-templates-demo"
+  ],
+  "createdAt": "2026-04-23T15:28:14.000Z",
+  "usedStorage": 0
+}

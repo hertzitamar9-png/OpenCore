@@ -1,0 +1,628 @@
+{
+  "_id": "6a81b8bfa514d4eed962e012",
+  "id": "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "abliterated",
+    "uncensored",
+    "huihui",
+    "qwen3",
+    "unsloth",
+    "ternary",
+    "2-bit",
+    "llama-cpp",
+    "cuda",
+    "metal",
+    "on-device",
+    "hybrid-attention",
+    "prismml",
+    "bonsai",
+    "image-text-to-text",
+    "base_model:Qwen/Qwen3.8-27B",
+    "base_model:quantized:Qwen/Qwen3.8-27B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 2555277,
+  "likes": 1499,
+  "modelId": "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF",
+  "author": "huihui-ai",
+  "sha": "1c69098e9c32db6dc06fc48f1d6cc75ad07da89e",
+  "lastModified": "2026-10-10T04:51:31.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "pipeline_tag": "image-text-to-text",
+    "base_model": [
+      "Qwen/Qwen3.8-27B"
+    ],
+    "tags": [
+      "abliterated",
+      "uncensored",
+      "huihui",
+      "qwen3",
+      "unsloth",
+      "ternary",
+      "2-bit",
+      "llama-cpp",
+      "cuda",
+      "metal",
+      "on-device",
+      "hybrid-attention",
+      "prismml",
+      "bonsai"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 27320697856,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 54657733920
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "baf92105b4133d5b5c208c57195f1c9942e5c86b",
+      "size": 6309
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-GSQ-RCO-IQ3_S-mtp.gguf",
+      "blobId": "99d2e6f5bd0c2aacc9986a64a7cff0eb780f5b2a",
+      "size": 12120016416,
+      "lfs": {
+        "sha256": "eea0638e283433e27b0edbd409b552be467a75ecc777d91c51db554c0a644c19",
+        "size": 12120016416,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-GSQ-RCO-IQ3_S.gguf",
+      "blobId": "a17b453d0da8e4badf6d07d6874bff866a965cd2",
+      "size": 11771546208,
+      "lfs": {
+        "sha256": "329e01fc79dc8a49465e40adef8ed925935093b3dc8f7ee6da0c88ac7b5d3692",
+        "size": 11771546208,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "blobId": "e5ec8b48c914018c7d55a047bf3841317fba588f",
+      "size": 10442827296,
+      "lfs": {
+        "sha256": "53fbcda56fae73e1bc2f3222f6939b4cf051fc52c26acc387b4c90f6da7d5c7d",
+        "size": 10442827296,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-GSQ-RCO-IQ3_XXS.gguf",
+      "blobId": "b80a6b5d6272e3eced99bfa0c04f73712c7ced65",
+      "size": 10094357088,
+      "lfs": {
+        "sha256": "54171530e667b691ffc4b31ed42b9f6b416be57fdd231e227fa09c103dca2ebf",
+        "size": 10094357088,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q2_K.gguf",
+      "blobId": "55707af5685b75d99418a4ed03dada1b2909f9ae",
+      "size": 10864592160,
+      "lfs": {
+        "sha256": "c4a5e431ede372af5bf8f57129194bb440d3cf7914d81c63323748ff4fee2ad9",
+        "size": 10864592160,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q2_K_L.gguf",
+      "blobId": "3a70effb267501264755874e3264f64577a8515e",
+      "size": 17219597600,
+      "lfs": {
+        "sha256": "368f0f545100dcec8e1dd7289a2fb25f81a7be4e2d14be381865b2163a11da31",
+        "size": 17219597600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q3_K.gguf",
+      "blobId": "c5512c700d457ab0d1a3f8fbce32a70a9ae26339",
+      "size": 13500736800,
+      "lfs": {
+        "sha256": "a82fe31ff8716377d1dd2f47e1dc1847b96566ddcfa9a3c394a1b6ecf7adc75c",
+        "size": 13500736800,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q3_K_L.gguf",
+      "blobId": "e641e97badaf73162acfd0d1ce3c253ca364b758",
+      "size": 18688238880,
+      "lfs": {
+        "sha256": "127edb0588c80505869efd00eb42e353fcfc3065b07248757b5265eeeb963924",
+        "size": 18688238880,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q4_K.gguf",
+      "blobId": "db2467d48b7c9ab7db34b05fde10f3235e31cfd6",
+      "size": 16810714400,
+      "lfs": {
+        "sha256": "6c2c13cef89238c3604d756b07b3ef5fafebbd61095feb8553ff449c95e4c1c6",
+        "size": 16810714400,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q4_K_L.gguf",
+      "blobId": "ff729736105492bb733495dd98a9f0dea637aa95",
+      "size": 20915090720,
+      "lfs": {
+        "sha256": "6d9ee93a089dff34a901a8f18613bb4f3b124856410057460f401863dd6ed2f0",
+        "size": 20915090720,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q5_K.gguf",
+      "blobId": "2f0e882b3acf16831fb912cb9f15a3ae15a314f9",
+      "size": 19535701280,
+      "lfs": {
+        "sha256": "917453854fc640903f89bda0b29eb7ea661cb13b9c5c9efd20a68f3ff2e9277f",
+        "size": 19535701280,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q5_K_L.gguf",
+      "blobId": "9d3f55310abbaec719d2de4acaea9b540fbee3b3",
+      "size": 22869046560,
+      "lfs": {
+        "sha256": "03b97b83c18c4a34f3760d7e078123175915d5760ddc1d84f21e11dff37224ac",
+        "size": 22869046560,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q6_K.gguf",
+      "blobId": "65d61641b8eb6d096ee6190b7765a1b4d2233e5b",
+      "size": 22430999840,
+      "lfs": {
+        "sha256": "a5c159519d7bdba523578977d649dbfc48f2e47277ec77edd77670003b5b2492",
+        "size": 22430999840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q6_K_L.gguf",
+      "blobId": "f26a734a3c0c131f905022df7fc25dfd098d8bd0",
+      "size": 24945124640,
+      "lfs": {
+        "sha256": "20b1214a23f0f5f401b6117cbd63336cfff6c07be4df93bd6e374d8fd8d12938",
+        "size": 24945124640,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q8_0.gguf",
+      "blobId": "fda3d8f8c8cabf0b72d20aaba05c7c9fa3b48407",
+      "size": 29047084320,
+      "lfs": {
+        "sha256": "427b9416c2aba9d21da4e90ddac50a2bc8b6d0bfef675af3580a43aa38e000c3",
+        "size": 29047084320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Q8_0_L.gguf",
+      "blobId": "904da737781a35e2bb005e33807dcc1d6ed2bfc0",
+      "size": 38779180320,
+      "lfs": {
+        "sha256": "ac47d8c619aed9b08905eeb1502b1a0636208db192cdddc41eb712652395cbcf",
+        "size": 38779180320,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ2_S-mtp.gguf",
+      "blobId": "bad9e4c7b05a15448482de3a15e7c12e2c37d876",
+      "size": 9607981184,
+      "lfs": {
+        "sha256": "e052ad58743251aa114f397b7c41cf1e4177beeb1042b824f367f24242f05c40",
+        "size": 9607981184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ2_S.gguf",
+      "blobId": "5d0f117e93bb84f91b276935a31e99bf6d6b50a3",
+      "size": 9259511200,
+      "lfs": {
+        "sha256": "6dda89090dcf713c183a4ff6ca59f832cfe015807fb77de4425c9fd785d52f4b",
+        "size": 9259511200,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ2_XS-mtp.gguf",
+      "blobId": "bc639ff8697b22f42e979f62c7bf347c37e9c40f",
+      "size": 8762218624,
+      "lfs": {
+        "sha256": "c303c4a4154977eb56c2864834015ec7584c34e5aad4c404de1efaaeb3c4b557",
+        "size": 8762218624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ2_XS.gguf",
+      "blobId": "43c673404951a1c5a0a128a5ee957050d29085e9",
+      "size": 8422841760,
+      "lfs": {
+        "sha256": "1401ac507622a2b685efcbb0e44a44cb725dee326094df805b0b2de00cceeb14",
+        "size": 8422841760,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ3_S-mtp.gguf",
+      "blobId": "eb708a13e84055da22ac620db4e6ddd3e7e0c609",
+      "size": 12120017024,
+      "lfs": {
+        "sha256": "29c1ae202c8f2c7d797335dcde6b51ae09a90a477552f853b2336ae2fac66582",
+        "size": 12120017024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ3_S.gguf",
+      "blobId": "a7c35306fb7bd22adc240b400ab837a3d9c805f8",
+      "size": 11771547040,
+      "lfs": {
+        "sha256": "1161c09c5844fdba4ca7bbda584e3d4a304e416be4e0f0589ca4b94682cda90c",
+        "size": 11771547040,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ3_XXS-mtp.gguf",
+      "blobId": "f219f81e38526f1879c5a9362c1f75604d933f1e",
+      "size": 10442827904,
+      "lfs": {
+        "sha256": "a7e8962f16a84945b2277663da41824b936d40ae90d55852718ac389431c9166",
+        "size": 10442827904,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Swift-1.5-GSQ-RCO-IQ3_XXS.gguf",
+      "blobId": "21c868a41d6064d0dd9d00d92f3161d2ff101d9d",
+      "size": 10094357920,
+      "lfs": {
+        "sha256": "6bd9c3c073f82d59a1887430632188691682cad34a1a922adf8f31713a2c52c0",
+        "size": 10094357920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Ternary-Bonsai-PQ2_0.gguf",
+      "blobId": "21b8a9097927161e707750c7586800926fbe70f7",
+      "size": 7704693216,
+      "lfs": {
+        "sha256": "0de67be7b5256c20971f44e514d87ec7fa81ad4f8d8fcf151644009f74f3a5cf",
+        "size": 7704693216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Ternary-Bonsai-PTQ1_0.gguf",
+      "blobId": "8ece5d2286b67f92e2b3d22467453003ce725e9d",
+      "size": 6608603616,
+      "lfs": {
+        "sha256": "b27e1d4be4d93e86308a0138f6157fee89dd5a67304632ddb6032bf2719e5f6e",
+        "size": 6608603616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Ternary-Bonsai-f16.gguf",
+      "blobId": "b4242b4e19614a354d0803e028d0ff2efec68ba7",
+      "size": 53808408928,
+      "lfs": {
+        "sha256": "0591601db5fc20c2d398920c4b8092fc406e38eb061c7ac53bc32005fc7da395",
+        "size": 53808408928,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-IQ3_S.gguf",
+      "blobId": "6924ecf9ccd2856b8696c27e2580a489d72b1fb6",
+      "size": 12334566304,
+      "lfs": {
+        "sha256": "d0eaa1e90e7630de8cefaf52510eb8913c76f85da0186d8f85a462aa6a40192c",
+        "size": 12334566304,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-IQ3_XXS.gguf",
+      "blobId": "798ef6f1ce7444ba509cb57db0f9663132e3f0d2",
+      "size": 11367766944,
+      "lfs": {
+        "sha256": "bfc6892863eceb16f69697e59b038acdc1c709b790c1542e4612dbb0924d3568",
+        "size": 11367766944,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-Q4_K_M.gguf",
+      "blobId": "4dbcc22102b31052e5ef0c6acd74491176b7b15b",
+      "size": 16551316384,
+      "lfs": {
+        "sha256": "0c7cfe3060493485bb9a6a51195897b0c1d347a49929206adb9a52170183ea03",
+        "size": 16551316384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-Q4_K_S.gguf",
+      "blobId": "eb0188ebe9f30a2a67e1dbf708876ac884b8a2bd",
+      "size": 15624084384,
+      "lfs": {
+        "sha256": "f10c26c7d07b056bccc60e09ec427a0861a7df554519e97ffd115f5f45900176",
+        "size": 15624084384,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-Q6_K_L.gguf",
+      "blobId": "a53837e63fcf7ccee9ded27dfba35fa322aec606",
+      "size": 23945415584,
+      "lfs": {
+        "sha256": "72b74fbe001afb656131779d4e98ded902eacb241458917123e10a52ce432a2a",
+        "size": 23945415584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-Q8_K_L.gguf",
+      "blobId": "e8b181bd91d0aa9bb3b703dd3777b59466c43665",
+      "size": 27250826144,
+      "lfs": {
+        "sha256": "fb8413d0b5cec5ad7055e49630a986518ba90fdacc95a337aa535e8ff5bf0d16",
+        "size": 27250826144,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-DW-bf16.gguf",
+      "blobId": "7d17fb91dd8a18c49c8c4f9378f37f9e944a6f1f",
+      "size": 54657733920,
+      "lfs": {
+        "sha256": "b880f2042df16a9a493800c83f1ee16b7cd46e8ca695f193655940a1949e9097",
+        "size": 54657733920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-IQ2_S-MTP.gguf",
+      "blobId": "8453dd70e475d5e4976c14aa47ee5653f4067ddf",
+      "size": 8775408544,
+      "lfs": {
+        "sha256": "139e6356e22ad9a2b12dbadf29f72079ce1047f1dba84e02498f21344b6e6763",
+        "size": 8775408544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-IQ2_S.gguf",
+      "blobId": "e103cb7baf083b48d5bf0f2c46f16cd69b664405",
+      "size": 8424398848,
+      "lfs": {
+        "sha256": "b4b7bdec2e49a66542f5816295a7503f2fc52dd7bd04ca45bc370820cfe81d03",
+        "size": 8424398848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-IQ3_S.gguf",
+      "blobId": "cbd92641864b07e4169d1518c2d874c7cbdfd210",
+      "size": 11952901024,
+      "lfs": {
+        "sha256": "f785ad524b138cd53575410e07e93dfa6eff1cc92ca698264cb9c96973db6886",
+        "size": 11952901024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-IQ3_XXS.gguf",
+      "blobId": "8d592bb51aae4e0e0bf23f94d8bc493e9223250f",
+      "size": 11021122464,
+      "lfs": {
+        "sha256": "e86259c841888b06fd84750963a0263947c9aae3c3029b52cbb3faa34a554827",
+        "size": 11021122464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-IQ4_XS.gguf",
+      "blobId": "694cfa1efaf4cad42843ed6b0261ff988c9afb77",
+      "size": 14403496864,
+      "lfs": {
+        "sha256": "d83adbbbaace8acdfcfe28004f779326176b9df00b4ec99dc6c24d749723d3b9",
+        "size": 14403496864,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-Q2_K_XL.gguf",
+      "blobId": "2cbee5c30a8fdaeebd9f470974759b68f4c7cd7f",
+      "size": 10011909024,
+      "lfs": {
+        "sha256": "3715d3c31491d706c164445246d31f7ac59822a735d3ae53560b826e248b0e73",
+        "size": 10011909024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-Q3_K_XL.gguf",
+      "blobId": "8524aacfff144bf3e0aa31793f905ca8895e69ba",
+      "size": 13326125984,
+      "lfs": {
+        "sha256": "c6e144d78595c4656946187c2cee42f9062b3b4fa9874bc1be3e9263396253da",
+        "size": 13326125984,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-Q4_K_XL.gguf",
+      "blobId": "a3ceef5f85725616832f4883600f9804964d2c18",
+      "size": 17378626464,
+      "lfs": {
+        "sha256": "ebbc66b45cf36bf47dc052d560337ff047a8b4eef851c8919d83d623703b6aa4",
+        "size": 17378626464,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-Q5_K_XL.gguf",
+      "blobId": "8b20b6d53e768d5a3e4622267274ab2032708553",
+      "size": 20673612704,
+      "lfs": {
+        "sha256": "a6ff520853eba5cad302a2a16144b7fe683792cca7fb2830a08479e78ebe12b6",
+        "size": 20673612704,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-Q6_K_XL.gguf",
+      "blobId": "94fb87a7f87ef577a91d149c3c784043695e7247",
+      "size": 24826588064,
+      "lfs": {
+        "sha256": "236d807b7577b66299120b60f3c8f7bdfb8a8ba72c08a9e57ddedbf009ce3da4",
+        "size": 24826588064,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-UD-Q8_K_XL.gguf",
+      "blobId": "72df5522c6003d50850d34b87c5f99fbf38c9fa7",
+      "size": 31457991680,
+      "lfs": {
+        "sha256": "b4a19bbd0bb094d6a70f00b807955fd61606dd054f167a04a6599332c7827048",
+        "size": 31457991680,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Underdog-Saluki-Swift-1.5-IQ2-mtp.gguf",
+      "blobId": "2e22ac70e98adc375341e13e5fbdc1302cee1326",
+      "size": 8246839488,
+      "lfs": {
+        "sha256": "6664b597a8927a574c14928bb02f0be10156807aaa41294ca8952220c5e8e49d",
+        "size": 8246839488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-Underdog-Saluki-Swift-1.5-IQ2.gguf",
+      "blobId": "c214d9612cfcbbe79eefe212a5019b580ded0b29",
+      "size": 7898369280,
+      "lfs": {
+        "sha256": "b1a6c9e8f2f941bd71eff32681fa751caa66ff3e71c55cbb646f7e88eb3d3999",
+        "size": 7898369280,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Huihui-Qwen3.8-27B-abliterated-bf16.gguf",
+      "blobId": "7d17fb91dd8a18c49c8c4f9378f37f9e944a6f1f",
+      "size": 54657733920,
+      "lfs": {
+        "sha256": "b880f2042df16a9a493800c83f1ee16b7cd46e8ca695f193655940a1949e9097",
+        "size": 54657733920,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Qwen3.8-27B-tensor_types-Q6_K_L.txt",
+      "blobId": "34440335f3543227fa73cb10bb8dcd0da8e4c2f7",
+      "size": 123
+    },
+    {
+      "rfilename": "Qwen3.8-27B-tensor_types-Q8_0_L.txt",
+      "blobId": "b06f01539d9928beafc3975fc87c26cb77656a82",
+      "size": 123
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4f9976bc9323726ea55d260308aa0ffdc52028b4",
+      "size": 7529
+    },
+    {
+      "rfilename": "mmproj-model-bf16.gguf",
+      "blobId": "cf8d102e41795864318af32fa8f97576e7976a44",
+      "size": 931145888,
+      "lfs": {
+        "sha256": "c9a09064683620bea3d3bfed5d4462e1a97a7d2fff7e5045d6862a0a85eeb5b5",
+        "size": 931145888,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [
+    "BIGJUTT/model-pulse",
+    "emanforhelp/model-pulse",
+    "mixolove/qwen3",
+    "bane117/Huihui-Qwen3.8-27B-abliterated-GGUF-demo",
+    "aryan79/Uncensored",
+    "aryan79/UncensoredDark",
+    "huguforever/zg-reasoner-qwen38-27b",
+    "huguforever/zerogpu-reason-dense",
+    "LewPie/huihui-qwen3-8-27b-abliterated-demo",
+    "fegerg4rge/huihui-qwen3-8-27b-abliterated",
+    "c2108888811/qwen38-abliterated-zerogpu",
+    "gunnersakku/idgaf-ai",
+    "gunnersakku/idgaf-ai-fallback",
+    "gunnersakku/idgaf-ai-backup",
+    "Qeqer/huihui-qwen3.8-27b-abliterated",
+    "jblast94/Huihui-Qwen3.8-27B-abliterated-demo",
+    "dzxxe/Huihui-Qwen3.8-27B-abliterated-chat",
+    "Laerins/huihui-qwen3.8-27b-abliterated",
+    "Odisha223/huihui-27b",
+    "IbarakiDouji/huihui-qwen3.8-27b-abliterated"
+  ],
+  "createdAt": "2026-08-16T13:18:55.000Z",
+  "usedStorage": 799698503328
+}

@@ -1,0 +1,101 @@
+{
+  "_id": "68ecbee7b2e32859071b3143",
+  "id": "erectbranch/SmolVLM-256M-Instruct-Q8_0-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "llama-cpp",
+    "gguf-my-repo",
+    "image-text-to-text",
+    "en",
+    "dataset:HuggingFaceM4/the_cauldron",
+    "dataset:HuggingFaceM4/Docmatix",
+    "base_model:HuggingFaceTB/SmolVLM-256M-Instruct",
+    "base_model:quantized:HuggingFaceTB/SmolVLM-256M-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 22,
+  "likes": 0,
+  "modelId": "erectbranch/SmolVLM-256M-Instruct-Q8_0-GGUF",
+  "author": "erectbranch",
+  "sha": "eb05fdac21a47b9c30c693719bc54859365dc446",
+  "lastModified": "2025-10-13T08:57:16.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "datasets": [
+      "HuggingFaceM4/the_cauldron",
+      "HuggingFaceM4/Docmatix"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "language": [
+      "en"
+    ],
+    "base_model": "HuggingFaceTB/SmolVLM-256M-Instruct",
+    "tags": [
+      "llama-cpp",
+      "gguf-my-repo"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 162974016,
+    "architecture": "llama",
+    "context_length": 8192,
+    "chat_template": "<|im_start|>{% for message in messages %}{{message['role'] | capitalize}}{% if message['content'][0]['type'] == 'image' %}{{':'}}{% else %}{{': '}}{% endif %}{% for line in message['content'] %}{% if line['type'] == 'text' %}{{line['text']}}{% elif line['type'] == 'image' %}{{ '<image>' }}{% endif %}{% endfor %}<end_of_utterance>\n{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<end_of_utterance>",
+    "totalFileSize": 175054528
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7e84192108956586efd07882a1411eaff4114cbb",
+      "size": 1587
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "160d1f57f377d63c7a0a685a1f9de74625857622",
+      "size": 1969
+    },
+    {
+      "rfilename": "smolvlm-256m-instruct-q8_0.gguf",
+      "blobId": "20da2c71b3530f722f1fc3397d4721a6b57d094e",
+      "size": 175054528,
+      "lfs": {
+        "sha256": "2a31195d3769c0b0fd0a4906201666108834848db768af11de1d2cef7cd35e65",
+        "size": 175054528,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-10-13T08:57:11.000Z",
+  "usedStorage": 175054528
+}

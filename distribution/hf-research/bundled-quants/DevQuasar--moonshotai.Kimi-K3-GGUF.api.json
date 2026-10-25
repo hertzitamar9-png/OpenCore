@@ -1,0 +1,2707 @@
+{
+  "_id": "6a682fe06e7600f0296d0115",
+  "id": "DevQuasar/moonshotai.Kimi-K3-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "text-generation",
+    "base_model:moonshotai/Kimi-K3",
+    "base_model:quantized:moonshotai/Kimi-K3",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 208,
+  "likes": 6,
+  "modelId": "DevQuasar/moonshotai.Kimi-K3-GGUF",
+  "author": "DevQuasar",
+  "sha": "3b5167782bbad27399cd0ccd16da21d1e88eb927",
+  "lastModified": "2026-08-03T16:51:50.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": [
+      "moonshotai/Kimi-K3"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 2779483135584,
+    "architecture": "kimi-k3",
+    "context_length": 1048576,
+    "bos_token": "[BOS]",
+    "eos_token": "<|end_of_msg|>",
+    "totalFileSize": 1561157867616
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "9ab2b48ae2a90b863852a0abb7a2e91002c07e2f",
+      "size": 24146
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00001-of-00100.gguf",
+      "blobId": "4381524003c9e034b6179552b85c2d75c726d990",
+      "size": 15729257440,
+      "lfs": {
+        "sha256": "da85dc82a80f0d5f8adf257fa25a6992a9d5181e9cc965f00292544f99de08d9",
+        "size": 15729257440,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00002-of-00100.gguf",
+      "blobId": "02e80ee38d30d9a87af1de17983ea206367fea55",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "cf1bb37b6a2ac7b6f6ffe8b662cc8a6cd0ef0eaf3731c5d395b53f2178f20d5b",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00003-of-00100.gguf",
+      "blobId": "45dd83579e7a61eb587a6a6a4a9f9335706630d1",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "2b17d031255d791fb6591539ebea3af57a01fe81cf9cec6c44cc0899519d0154",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00004-of-00100.gguf",
+      "blobId": "864a84750e3a6c78eb47375a2349ed810e0636f8",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "4deb7c416f7f32299c71593af6b30130c8068901ac6c1a3a04caaddcf9300cfc",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00005-of-00100.gguf",
+      "blobId": "6d21c5521259bdd10d633fa9202b625e67a8b470",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "381fa017eb755a442d0409a079e2d8268e13f6e10fc6745464b252554ce4b68c",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00006-of-00100.gguf",
+      "blobId": "29896e2ac7f2a5ee03e169a61cdd3610731618ac",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "c93f73a44d7d6ff1e9443c7774325fa60c42bcc584a9d3af8582d951e28f80a0",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00007-of-00100.gguf",
+      "blobId": "ac36d7082d24f7ef11c6f9332a77e5bd2e2c2e68",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "3e3397447bade06ada1872ab54f215a9f9a78a7f8970c9f02013b02f02a57b53",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00008-of-00100.gguf",
+      "blobId": "1edbae827f5b7dd1bc0c446ea3164ad2a84e9da6",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "4a532e1ffbfc19d922403b30c6277b837ba38b80dd7fd7c3b1fb5c0d829496be",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00009-of-00100.gguf",
+      "blobId": "fa9b9cfd9b892a693da270e46f8751c2a0136d93",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "f4327dc48728b12a0bf5c3653859aa4d6665a5b40687396e8ac1905e1b850fc9",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00010-of-00100.gguf",
+      "blobId": "790275ae7a19428d3605d999cd183bb43c4e4a71",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b3c0dca937dfaf44f13b53bf327b56f6a5f3b898ac0ef3aa0b99eeec63f3f4ea",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00011-of-00100.gguf",
+      "blobId": "53f41001d5f96012267ec6529ffb0a3c3ef11773",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "2e6bb31264a44c858e3e8fb78d27ad9a36e4c8a9d7b97752e1cd747ffaf9fe2d",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00012-of-00100.gguf",
+      "blobId": "7f0589839da03c75738d8de190289a6d38973f44",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b6d633914d02bf65a430fde064d3562598493ea64101a13b578a53790eafdfeb",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00013-of-00100.gguf",
+      "blobId": "d16cf59bd5cad01eb40baceddfea62103b579c6f",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "011a0ac7016f77e16bf4069098f4d659d3913d5891e4fc519a29275bb12fd27b",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00014-of-00100.gguf",
+      "blobId": "e82fe379fc587c972347688d55b737f56c0247d1",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "cb42da3727f047b1366df1ae8bc774ea8994302ce73c0d899fd99e6040f97ef6",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00015-of-00100.gguf",
+      "blobId": "f0bfc927e50f7bfc7ad180c36ace4b743c6565bd",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "946487af91437b95633da1f3e6f52d94e4ab0788d94e9cef9d42700762cbf67c",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00016-of-00100.gguf",
+      "blobId": "b32ccd52a76ec8d021e596d62e6f62c3fdb66628",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "423aebd525ed2e5a48d3299b007510e205d6f8519e430ade7a690f4b12160960",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00017-of-00100.gguf",
+      "blobId": "9da79abfb921d029cadaf14c93559e33a43a0733",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b8905baeba43978a0f9c8d8fd7437d12f30168103b3eecdd10e75cae8674fc5a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00018-of-00100.gguf",
+      "blobId": "f3a5223d622e3174e7f7261a614a2922fb1f9fd4",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "2c7c2bc979e15ed11e9a42baf0a9c35bf4254915c74ed0b5efd38a5d6aa6572a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00019-of-00100.gguf",
+      "blobId": "30c8a3c7ab2aa816038c4f671af40197e15259e8",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "013bbb8400e59770dea307c365bea88df1e62597c4ae4d4c936f13c281b76e3c",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00020-of-00100.gguf",
+      "blobId": "5694caba2fee9293ec4ef321fe96b645345f111d",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "fb6aee5eafe186dfac0d36eefe7686f5a82cfb720749b42a5f8f664bd3838c79",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00021-of-00100.gguf",
+      "blobId": "2347a9d77b7a7aed435bad9fa121cd4781c109eb",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "27f78db2844f255c933f9e2e8b2c763f3bdf2b8e28b708b063c14f9b95d9c58b",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00022-of-00100.gguf",
+      "blobId": "4813b386b9fdfb22d36c6865140a2beb362e3421",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "f115717fdc936f9f3a3b033f5673cc8f67b58e153727dfefd55a2405f3abfc26",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00023-of-00100.gguf",
+      "blobId": "0dc2bce3e2719ef44b14e60d9ba70f1d8f9c9bbe",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "9d3599f9eec15e038e59497651820bf3f718fac73e96913073d7e5a33dde58a2",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00024-of-00100.gguf",
+      "blobId": "00999e1d7dc19e30ecfa8f62ab570e77ef581641",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "06f1ec9ff26ea76ec58c40dd94295f11aa52c58f090fe4cf60d1d02377ba1be2",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00025-of-00100.gguf",
+      "blobId": "97ee8ec039268bd7274fdafe35a02adfe8f70bca",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "257e801ac3c64966b172b8bc7a73fa200b250aacabf0aa90db548fd8bb60dc83",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00026-of-00100.gguf",
+      "blobId": "ac4d05fe5ea921780a5fad0195df1df758e98a78",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "14c8b90db73b2869a49f3be4c057e8ae0c075521ca1aa11426bb663e01d1691f",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00027-of-00100.gguf",
+      "blobId": "41e7dd1e7242b3905d94e11a5470e1243f01d942",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "8b8512d058d0778c33c7f3f94c67bde0b80f47c9b62a189ae4c9ac4f51d5035b",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00028-of-00100.gguf",
+      "blobId": "12c9a27bcdd758a4dbda62e1f81f2d502da6e684",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "0ebfe7f8975cc492e91003d1595ee7868a638c141bdf06fd6e8beef5aa5b95cf",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00029-of-00100.gguf",
+      "blobId": "ac72b2903cf47b8f27b59fdef5ac95ffd86e7313",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "4bacd9548260a54acbe079bb20ea539449e4d172a6d945d7fe71b1515788c058",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00030-of-00100.gguf",
+      "blobId": "3ab84adaf257fbc32bfe0181137ac0d67711479c",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "f6871704df3bf96ecb3e610f65b78a4e070b55b62ce4f2ceab089e1a12dba041",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00031-of-00100.gguf",
+      "blobId": "e352462064c356f4f784afae97110f4e8f272b59",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "9927467e7fbbeceada5fce942e74b45a8020dd28f22271c73752e65be7e2108e",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00032-of-00100.gguf",
+      "blobId": "9380c4e846add639754266fa30035a815172200d",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "fb9bbb317698a8a29f7578f5e98f4a221ed2180858f7f02be952aa6398a5b1a7",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00033-of-00100.gguf",
+      "blobId": "c891b0cdac993643cd871c6fc2c28e264d60d5cb",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "1589e1883ad668e0cf07878e29f83bca45bda3742b3e136d25ac06fa34135ed3",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00034-of-00100.gguf",
+      "blobId": "2a8a143c0da797d977cb539f68f1def278022b99",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "0ee442703de4d117febde44c95652ae8586d833661215c561e39aab36d994546",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00035-of-00100.gguf",
+      "blobId": "0785934e937c723d7239bffede8179b3da4aa465",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "122001063b837cd5ad3dfea1107b12c3ef5a2350bbf83b93de4e988cf32c4991",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00036-of-00100.gguf",
+      "blobId": "cc73f55662e6b2b77c2e58b837041dedd8db207c",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "92ee664477c51f49b46916d428795ad4c93ebfc641b7c262374efdd4735ffd77",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00037-of-00100.gguf",
+      "blobId": "446715d89c4af1c31a71539aca933f739e1a1472",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b3cbb4a0f2235b62d92b75b71d93f723e9e22e63df671eb2d8992221b3be7073",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00038-of-00100.gguf",
+      "blobId": "162c27c2c98ceb3b855f1a951d698ba8d018c433",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "3afe087bb8f3224b7806e46c85286065664117f118b16b664e25a7b00598f454",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00039-of-00100.gguf",
+      "blobId": "363ab91d211df4a97ee30453b2b7251796ccdbfa",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "0d07bbbba95978a39d6628492ebd55d9617c8ba977dc529a6d370d556f660111",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00040-of-00100.gguf",
+      "blobId": "495edcbe8a63e742fedeb1b8c8710aac51bc36f0",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "d16d76be5b63d96066607a08126d344b2909dbb9a26c915c04bfd5ba3c86c413",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00041-of-00100.gguf",
+      "blobId": "52dbc799cd3f01adfa8c64d81bc48a8f16c3108b",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "69adc733d528f692b4fe4db5fa500cb4e5b685333f450824f9beae5506953c88",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00042-of-00100.gguf",
+      "blobId": "5c803a587a3447c0ae85bff44410bed7eb8293b6",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "27df5a7192f07b72e86987b6bd3f4b6edbb775204dd7da2063c351d2d4d20be3",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00043-of-00100.gguf",
+      "blobId": "44b119e60920874779b315ce4e6efb43c4352d10",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "80264443d9612846d8cdbd20415b207a7d7eea4299f3042a3c48266af908b18a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00044-of-00100.gguf",
+      "blobId": "ab504e8de80ed3a8ff0c34b2e6b024f0fab1bd29",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "0bfda958e7295913c530ecb049eddbe1e442673e886434014c30e00a0257971e",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00045-of-00100.gguf",
+      "blobId": "b45cd065b6cd0fd85a92099f184adeda246c0245",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "c9e1775e2ddf7e064819b8d2710012b2cefda247c8c1686e7a019342d7520bc4",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00046-of-00100.gguf",
+      "blobId": "84b2a89413b07f828d18fcca7595b68225fe360f",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "6b64ddb66ee48480842a364e947fc38f48c7439a819b0e2de69608356b8901f9",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00047-of-00100.gguf",
+      "blobId": "b59a82603105486d761da824bb6c41416efa449d",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "16baa2219c55626cb18f037149c3a924bfa27a848425060a234dc8257a64b0b6",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00048-of-00100.gguf",
+      "blobId": "285534ce13656d27a5f87117881e260ceaa5eed3",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "4e60f285377728798f7896c7e3345a9d7418dd576b2bd0d7a95ee9583a04c6af",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00049-of-00100.gguf",
+      "blobId": "af428e277ab1cf455013d27093126e47f7d71fa6",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "d15056d1062e89883e418bdad0242615aa40e82ee7a55d61566e1fe71132b20d",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00050-of-00100.gguf",
+      "blobId": "f4cdf1379db27e6bfeeed859092b3ef13c09fd41",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "01d08468502b3d78d7667bf28d579938f7f33730c5a1ff7250e02ccaca939f43",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00051-of-00100.gguf",
+      "blobId": "4f90552fec0dbc94b953318e3c82c355016a23aa",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b01decc39f50387b94dbdd8ca8d899c529c64fa1f76d203755b7227cd370af96",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00052-of-00100.gguf",
+      "blobId": "d425c51d926590f857d88d06cffcd93842e38c25",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b824ba73466c28cc5c72aff267d1ddd107116fd0fa5772888f60b73945b5c68a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00053-of-00100.gguf",
+      "blobId": "288d2e38523865812382fdd2cd6614c9bbd214cb",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "172c62033b5380e77c08640497b8bab32c3a49842e998bb869c4d2d78274f4d7",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00054-of-00100.gguf",
+      "blobId": "f4fc9b87eb63a44c1b1f47119980016b3a04aea8",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "1c62f94312d5962f321cef3ad48491d18e5600fd0fe744c468de6fa6a5c6098c",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00055-of-00100.gguf",
+      "blobId": "ea97218fe2f30589ad5dde37772df7cafd40b70c",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "7eaf1dd11e99541bb3d04e18d33bf2b863db4d5abfbf9602e8a88da6094546de",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00056-of-00100.gguf",
+      "blobId": "8e674cabe5d09d1ad22232345fcadd8f61540331",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "1a698e9bc685999d5fd11ece43b3a64f4f855429679c983e692a78d92e12f06b",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00057-of-00100.gguf",
+      "blobId": "03273edacdb7c3ea038130ebd1c38167e297fc75",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "6eb796c2f9abf219510f1930a788a2e3a1da3666429bd7b883ac9b59e7291043",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00058-of-00100.gguf",
+      "blobId": "259f97e38d5f971c7b5c7ac463b50bb05ef18ff5",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "17251e0631e9022a97582e0af772119481df472ef0fd5232c4466c04dbb9b8ee",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00059-of-00100.gguf",
+      "blobId": "ed713085dfe367cb7ab29035f4eaa2715d51929d",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "82d6f0eb611628f1414f4ef9afcf92e8d3b3b7d1ca3340f70c31cbfbcdecf232",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00060-of-00100.gguf",
+      "blobId": "6136ec164d9dd72746f5fbad449c06ad7efeb8f1",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "0879e09c3cd5ce79a1252934198a6995e85dace30a7dc85fc06cc89193a87d7a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00061-of-00100.gguf",
+      "blobId": "42817263625fe6c196776db977585690a7492ad2",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "cb9a0acf113befc1bea3de6cb63e71de5763d1d022c66ab01050128ff8cfbd7c",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00062-of-00100.gguf",
+      "blobId": "ede292edf411c45e63316cdc6e7a55a07a15b68e",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "f5918cf3692ed946e728e9334991300b3dea677b9a6047f20e83c02d41280643",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00063-of-00100.gguf",
+      "blobId": "1052fcc7c6614e8517dc78752c9713f23eb052b1",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "1c9c4ad015c7982da9b43dc7ed4e4f96687d1f5dd98433fe2d3a3bad41a231f9",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00064-of-00100.gguf",
+      "blobId": "05aea57d57d4123a7bc5f69c4b2d4601c52089c7",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "434b8d1cc638a39ff08b91a1522c87213d7009773bd950cfd790b7ef953ac04a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00065-of-00100.gguf",
+      "blobId": "0f78713dd0e70e7cb81f6dafe2c7d2a4dc66a872",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "448a63c774fa5b72f5aff6df44929288052e6b398ec95050c3e4d8423fd66052",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00066-of-00100.gguf",
+      "blobId": "2c4c04048c312eff6a5ada8b124c39eef0a9a69b",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "11cacbe0c6571761b9c80ccc134ad10ab0e22cd4106323abee76c9918dc87ffa",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00067-of-00100.gguf",
+      "blobId": "0f9a089f3b3582e937e681e1bb0fe2cd54e86421",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "bfcd3ef0301cf459345105c2673461840954c1188b4e148796f3bc956bcf390f",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00068-of-00100.gguf",
+      "blobId": "2b8db9ae79300763561a50a5f0fd2132649f64b7",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "a0a75d1660f0ab3ad967af9d9e596944cc80d68c8bc2afaf9b0311a77c02fdf6",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00069-of-00100.gguf",
+      "blobId": "b5e09ae8b6c8132ebef866b0a1b6aea2e435ddec",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "c0e7fc934d92be8a5dc746650437b3701baff18ad47ed0e516bbfd6aaefd5ed7",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00070-of-00100.gguf",
+      "blobId": "cb567fe1a575d5f39cc3b92e80eeff79c51174bf",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "7a33cefa3e2a6e4037790fb7f5dec0523ffe6ba1b9aac6b4e31232e0cc0895a7",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00071-of-00100.gguf",
+      "blobId": "3a8c548eff92ebf5efc844589efc7a08b3f4b585",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "a3b0612b300465801a33538fc6511829798153277d39c931648aec1a5c66a2f9",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00072-of-00100.gguf",
+      "blobId": "f3403e76e318836bb3752761b4c26092008a384a",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "777b935f5feafff4d34a9a858db7bf1c2def3672292c2cc56ae5fdd23f4835d7",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00073-of-00100.gguf",
+      "blobId": "69d5ddbfa96e486d043268c6c18aa4129132a9dc",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "fd5215fb4cf7e67a9c2661cfcb44bffd0ebe9b28d8fb54b07b2439e856f65f42",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00074-of-00100.gguf",
+      "blobId": "424d6a3565e6fdc1e1856de1f78b6b6450dda09c",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "0b7ca06bc48707b81c28d10aa9e86e5d15d685fb3fd481a387f8af7371e23c0a",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00075-of-00100.gguf",
+      "blobId": "6384284f0778fcc0b7d4c3be388336ab9351f5c4",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "189c4f188833792003aeab2d1d735a85a76dbc8e6d97e673a9b09f85d3c2764c",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00076-of-00100.gguf",
+      "blobId": "408fcbd81a9ba41c19926bb912cb8dccec87438a",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "bc5ef308a57f05ce12288418703c049a8ab3113390ac8f13322e9087e1eb55c0",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00077-of-00100.gguf",
+      "blobId": "33c030e44711ff26424bc8a6325ee1ac0647d856",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "15bc329ffc0a74b67feae83e7dd9ab7e32229b0cf40a9838c09e0e7a37fa4f24",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00078-of-00100.gguf",
+      "blobId": "3be0806cd6091f3db9fb7b4df4ba611cb37cd754",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "c5d1fb6f83cc2980977ae9715e27fae438e13465146b267722095c278c2a852f",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00079-of-00100.gguf",
+      "blobId": "c026a10dde79441bf0aede5e820f03cf598806ed",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "b2b55d26995074be123a90eddcbaf6fbcec558d6144591a9389d53f9c21793e9",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00080-of-00100.gguf",
+      "blobId": "64e8146ac93c809af5242ebe09e1b1430ea69047",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "000934021af5fd625a6ae2f24c3f628a3c0f1d9a38a690e3f4f519f8989ba727",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00081-of-00100.gguf",
+      "blobId": "29e06ad043d3b756c5e31fa6f2bb26ad96a21178",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "a36d360301c23e4801590f1e67065339a2cd69b87f6ea0852f7a9bbd9d54ef74",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00082-of-00100.gguf",
+      "blobId": "2e62b1538a0391f08fe26a0226d5578434706379",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "ca70416fe4aa0fdafe678b90327fcadf2addc9820bf474c6b91fa2bd58d87ff2",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00083-of-00100.gguf",
+      "blobId": "8943dde631964684ec97433ae960eb3114ac228c",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "8ee5b7250a3f81275365d6f80cf30a2fa36000a5bdda3feef0687c2309b1afd5",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00084-of-00100.gguf",
+      "blobId": "5dd78c7ca23de29b4e7909f669f605dec8d69d5d",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "3c5afb34011cc7d1e08979a3fdd065609cd929d62626500590437a44bd7b0914",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00085-of-00100.gguf",
+      "blobId": "7c7de185fd36873de525235231d9499383dddced",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "8d997810cbf9b7b5014a7663538b4253731dd6778ab4558033c8973b703dce82",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00086-of-00100.gguf",
+      "blobId": "ffac4e25cd76ae9bdcdfdb3c329fa8be89c2b189",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "630a6c11f422b6610e1242aa7e5f13868b509924e104aa9f8df6d59acf6e98e0",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00087-of-00100.gguf",
+      "blobId": "a0b37b2f125c2c59b6f54ce5cdad5e4576c53525",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "902ea6d6893f7af277a9da013959c0ef2577a6e3305e3a720e37b78417724ac4",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00088-of-00100.gguf",
+      "blobId": "2fcbb8eff0ef89612f7525559b5612cf9802bc36",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "5f2e4fcf39c5eca5cadb57e1e27d6cbbc6fe8f99f1b60f863fc5657c9a21de66",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00089-of-00100.gguf",
+      "blobId": "02e1c1efef69c2fabc142686e0e87289cd0a1987",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "edb16e8effd435b8edcde0a8a338a6fc837b2429a4230aeb98fb9fb29d5a9597",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00090-of-00100.gguf",
+      "blobId": "1c268d15431edb08b11e413c6c21bb132a822c77",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "52dcdb4c5b4d6b084360ae2790c211e0fc5b284cd08c8898d6624b241c007926",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00091-of-00100.gguf",
+      "blobId": "d862dedb2e4349ba9cb21cc41dac60fa5e84fba3",
+      "size": 15722348896,
+      "lfs": {
+        "sha256": "dd23bba0fb9c1ca75d478158458bf56ac57ec5a250da018297499c02ddce6b10",
+        "size": 15722348896,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00092-of-00100.gguf",
+      "blobId": "0df580ca5a1c56f2518507ebf834bbbb816ebb53",
+      "size": 15722377600,
+      "lfs": {
+        "sha256": "2f3e20388adab731cd867f069d6deedacaf124e3a0c5b733ced92196581a3b87",
+        "size": 15722377600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00093-of-00100.gguf",
+      "blobId": "ef61a2953a674a2011cf7fd20a7b451d0554ac50",
+      "size": 15909644000,
+      "lfs": {
+        "sha256": "bd273414d5906c0af06d229cb9233bd3107e167bfd66783959b2e907f492e481",
+        "size": 15909644000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00094-of-00100.gguf",
+      "blobId": "93dcf2d7808c283cafb6620515ba66a89722f81a",
+      "size": 15983896832,
+      "lfs": {
+        "sha256": "540dd14984356d4c2f79ffab9487404b96d9c9d5a03603d5bfeef87bdcc1245a",
+        "size": 15983896832,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00095-of-00100.gguf",
+      "blobId": "11396a41ac7177924a6fb6c1bd503ff49811d97f",
+      "size": 15903255520,
+      "lfs": {
+        "sha256": "0cd0bbc4c8f61d670ccdc370569e7b94e40d66a163fc4f4df870d657267889c0",
+        "size": 15903255520,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00096-of-00100.gguf",
+      "blobId": "51d141b64d4183fc5e89a639dae80370eb05d2a9",
+      "size": 15937372512,
+      "lfs": {
+        "sha256": "61c13345eea073f9661d4b58d89ae1c72e465a628bbad58c5981d1413f0568b0",
+        "size": 15937372512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00097-of-00100.gguf",
+      "blobId": "1824a481427d3a2f4ba34640c238bb76b30094de",
+      "size": 15825053536,
+      "lfs": {
+        "sha256": "a953e8b20c753c36f05bcbf5cbce098876c90e33ee90a6f107a7c44799413b18",
+        "size": 15825053536,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00098-of-00100.gguf",
+      "blobId": "c62daf0134fb31e117b50e7615cc47cfb32e98c3",
+      "size": 15882635488,
+      "lfs": {
+        "sha256": "c53e7f5f028c2bd88c8a2d4e3bbf950ebb2fa33df4f121d15fe7b68b737281f6",
+        "size": 15882635488,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00099-of-00100.gguf",
+      "blobId": "4d5f31e61c511d85706e3ad5bab05ffd7a563d3d",
+      "size": 14555295872,
+      "lfs": {
+        "sha256": "7adf7ee5d13985744da3e60d78dbd30f29b1a36179ac6ffbdd35acc853c25b3f",
+        "size": 14555295872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "F16/moonshotai.Kimi-K3.bf16-00100-of-00100.gguf",
+      "blobId": "d5b581bf1a85c20d1723fc1955c2fcd7cbb60614",
+      "size": 4697678176,
+      "lfs": {
+        "sha256": "b31198fd12d033de7e837e7f739b4831bec626ea7760845322934f6d26e7a1bc",
+        "size": 4697678176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00001-of-00070.gguf",
+      "blobId": "2546253fe7df27249714a0a841b03f5ebe372d59",
+      "size": 12884592736,
+      "lfs": {
+        "sha256": "d133cf598074e005c5e5d7e1cc64d96250c091223ccc95e07fd3aec761140c4d",
+        "size": 12884592736,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00002-of-00070.gguf",
+      "blobId": "875dcd6fef46059bd3047ffd7aa7610a939d4d06",
+      "size": 15178647776,
+      "lfs": {
+        "sha256": "1d15b28a35de3d3c008d3b182f03ebd03bfe45eeda50a6ab8cf05f99c9f8e766",
+        "size": 15178647776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00003-of-00070.gguf",
+      "blobId": "f28849e882ee2601e5a55451d104cf32ff8cc816",
+      "size": 14230807840,
+      "lfs": {
+        "sha256": "9b5db0a414ba948648eab0999db23c7dfed86edfd2f153ac909909c7394d5fdc",
+        "size": 14230807840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00004-of-00070.gguf",
+      "blobId": "1465493570f0c18be1a915778237880ca81e16cf",
+      "size": 14383651584,
+      "lfs": {
+        "sha256": "aef3d8b5d31e75541efe8352887adf106740f375017f0f09a5b15c345912274b",
+        "size": 14383651584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00005-of-00070.gguf",
+      "blobId": "4f11fef028573641a2242d6c9446235163c2ebd1",
+      "size": 15178647776,
+      "lfs": {
+        "sha256": "31ab90aefeed29b1266d3317cb9a866f7ce02ab6d0c815661ee5db4d753d966a",
+        "size": 15178647776,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00006-of-00070.gguf",
+      "blobId": "ebc9326135b9b263aac4a525ccaca1f59b452b0e",
+      "size": 14230807840,
+      "lfs": {
+        "sha256": "a913de180835211c600a948ab33d97e71033abf9171a7753f72089d1175d1b00",
+        "size": 14230807840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00007-of-00070.gguf",
+      "blobId": "8ee82923240f8c06d42fa4f72731a91fb801a82e",
+      "size": 14383651584,
+      "lfs": {
+        "sha256": "cbc59199b2bc5d6a98e47d8461fdcd5f814a7112dd87ccf17c6b19541bef2d57",
+        "size": 14383651584,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00008-of-00070.gguf",
+      "blobId": "a2f3042d9097a13f4180ab89d27218bea750a146",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "1a61182ccb80067459bcabd20b9bb79cb12306798a065da83e8a1be74aaddb65",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00009-of-00070.gguf",
+      "blobId": "0004cb62f37c1ceb85e366f9bd37d0da781633e6",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "bb13eae86dbb5f468be350a9527ef692ee0167ebe654bb4e99b3c09a550660ed",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00010-of-00070.gguf",
+      "blobId": "deea18a459b5ad941b33fb3babeba11494ce5ab5",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "c342f7a3525fb77f97ff28f478660d642d6b33d54bb245d8f9f0918f8e9dd441",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00011-of-00070.gguf",
+      "blobId": "48d24a481440f6ef8b460d536e93ae73f70f5fb8",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "3db3a281c7750d6fff90fd3322e8edbfe97c700072bcc0d17eda09b3270cb91e",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00012-of-00070.gguf",
+      "blobId": "e7734e943b486835c75433830321de36a3d164b2",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "279772b0c022a09ca633e8679b63dce031457ecd8821b16fd24b8cfd0631067d",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00013-of-00070.gguf",
+      "blobId": "80040aa78475dc4649dcaa82158eb68f30f59a6c",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "8f8c7227eced47c2224240b9fafcd1fa5a26e8aa1e982466ffc113c7c132aa7d",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00014-of-00070.gguf",
+      "blobId": "f17681b84121da64b1f2be1b8472d4eff125400d",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "415fe52dca03f24fcc6a493e2182701000fbe4b0c25b7626107bb34788a78fcb",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00015-of-00070.gguf",
+      "blobId": "b7a5f6d8410d7e6239d261caaa0ee91d0e06cd5e",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "9475a07a1cdb14a878102b8a55010b6cfd20ac928d934e2820b843f1cfdb7634",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00016-of-00070.gguf",
+      "blobId": "ed8acd5a7418caf4f76a8951c6d7217bc2ba627d",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "19774cb0dc6cc380fe31b173870ff0e67080a4bcc4c9e832f70e1de8c76e2894",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00017-of-00070.gguf",
+      "blobId": "3c4d7a5e41ea3047e32746601fd3f12bc9c56211",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "efc999f2765841275081430cbae6a24ddbde966c6cbe7b4a6a3808303477827e",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00018-of-00070.gguf",
+      "blobId": "4dc4654d846cb6c01eab13cee91e5a4fc1fe0ec9",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "b9ed95fdb9efa194fd4202aa44bde653f24c6aa67f2aa5e44a89a9e1c1578386",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00019-of-00070.gguf",
+      "blobId": "0985436a37bcd0adbd096c5dc497259f2222bdf9",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "fe35706c813fa89ec50da3f36066ae985f8cf87eb92e0216a8b23fd9a63ad656",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00020-of-00070.gguf",
+      "blobId": "dcf6727d303956ab86fb02c5aa36ddcaebddf826",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "551e3bcedea6eb76150ac22b5305d3baad1425d2de422749212ab41dcf378dfa",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00021-of-00070.gguf",
+      "blobId": "5be15dc5b2d4b022ce7787a097317b8b004e9b14",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "09980aee97c169be422f15c59859d46a9ef024ecf7e5e8582101bdb944cf86c6",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00022-of-00070.gguf",
+      "blobId": "a7521373b178204c9637ac2ad1d8bc64f022638c",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "18015e2cc2e526908a71118a5249526c58f7e8d67318679cd8b31ffe274a7228",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00023-of-00070.gguf",
+      "blobId": "682fac83997cab374ae9fe51f2e834f9e01d4e01",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "968e3e1b45fa2f648768b7f2c24526a30d4fa0a4cb8d44e3f500562f868b7f92",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00024-of-00070.gguf",
+      "blobId": "6f1ac82bc92610d02550681ab7f668d8896e909d",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "a70ac794f859b20cb6fc9563af43d769a43b9d8760c40ed5b4487ed83e1281c0",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00025-of-00070.gguf",
+      "blobId": "f250dd4b4b8742a74f67441e53c5fa1c11dc4277",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "344d2f72950013c5c58e65bcf4d698a911882d676123efeb8de23f9532503e2b",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00026-of-00070.gguf",
+      "blobId": "28f2fa57da76cf2d3f15b7c193aa938f3eb38acc",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "207becedd163ec892579822570619c78381ddec9d62274f30de0b1e1723fe7b6",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00027-of-00070.gguf",
+      "blobId": "3f2e3c57adaf6b560c7c110ba0720f34f62babee",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "5ba661fda62228ca3f184132467e8b683d78e580bdff940c4524c22fa2065dbd",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00028-of-00070.gguf",
+      "blobId": "eeb3711d5437f4cd3877a098fa2962852cef8cf2",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "343b3e361a3168b13ce074d008b06fe084fac9bf0228e3a90f6f145f28368b2e",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00029-of-00070.gguf",
+      "blobId": "27092709aee88d0cfc1a8c61fe7bb35e57098fdc",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "ff6d5a11dde0cee45d27a28cf5ab7f38b2d0112bb8225bf4c3fc27b85491447b",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00030-of-00070.gguf",
+      "blobId": "b1bfac037c7cc0ee41825be855f22cf8774a6040",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "b41faa9e4c7c64be1e7da55668c3f290e6db1c062732365f302f7c1aeeb22c64",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00031-of-00070.gguf",
+      "blobId": "6d74d9b0b0534752ed1f343f0a4a5964896c0965",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "f7aadbd21896cb9badc88939d3c20aab47c27ecc9824c4c1b9f40115ec1068dd",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00032-of-00070.gguf",
+      "blobId": "fc1093281ef994b05aca799416c8f02d18e603b7",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "d51a0849e427d7f16da4a3ab932718371e7cd2eec428ee7cfb00c0c567d68dd3",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00033-of-00070.gguf",
+      "blobId": "09d9b322fc9f24c70d66861252587bb39dfb3c0d",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "8cf5117ce5b7b4621e4b0029a4a54b7053e18ff73789e66253ebeb532256d4ab",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00034-of-00070.gguf",
+      "blobId": "86df39eebedaf5325ed11843a68fa2a4000ada1b",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "c172acd3be5ae532e3fd20cc462ad131c0b3ae83983ad4bb58886fc1bc00eb20",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00035-of-00070.gguf",
+      "blobId": "8670b3d926c47e2ecd3736d9117aba7a7a9d822c",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "499616ef0c774e2051c75f44995714ad22d48402f9b07cb81579912ad125d868",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00036-of-00070.gguf",
+      "blobId": "33bd874b649c445e6bbe70f0e5c5b54db7eb97ea",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "01400de852ba85a07802e13bc899ded3db5db3f42984d41dc0e1cb0e43338b93",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00037-of-00070.gguf",
+      "blobId": "de6befeb1dfc020c06673640a47179b1e83f5f27",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "7837d65d6fe85ab4a3a06af8c5e5e0d5d24c9f83f20f3436860d02fbfeb0f81e",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00038-of-00070.gguf",
+      "blobId": "1f629b24c1846d4cb96ca8b676722425d4a96dc4",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "c78c731375700351f0aababbee49f737517291bdd87fc285b022f3cbfce8f933",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00039-of-00070.gguf",
+      "blobId": "254991c0b128f7cc2ddb12a27b592d714c9ddd2e",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "1b162eca2300c2eb9a787f475c3d6353827763e9ef2b84adf3520b38bff09ca3",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00040-of-00070.gguf",
+      "blobId": "0c61d2739b2b118d0ede4031ca00bc12d9796620",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "1e0142a22e38171ef7d7dfea29f98180891dd1ae3c08c3d59c34b1fcdfd2f97b",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00041-of-00070.gguf",
+      "blobId": "17e69ae7872f14173a5c8b45f016d26b45be7490",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "334d3fd1ebc2b8686985758ef7f017498f60649259ed0b1187031502d437d6ca",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00042-of-00070.gguf",
+      "blobId": "3f085fe8b2aed70ef2ee1f5a8216e861b6cd2919",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "b5c30687d26fb9d78f5f2ee139366e9410e7653c8fa265f59d85f1010f854d61",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00043-of-00070.gguf",
+      "blobId": "77d8d7ba947673a2eb9485408e9f51dd15a5fe12",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "420f498a3570425b88823f3d74c17fe202ebf9cd81031ca99deee396a21ac503",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00044-of-00070.gguf",
+      "blobId": "6553208debdd77dd7819031edb3c1659102eb27d",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "5ebccab20f5720ffbd110b2ffdc8881e5a0eac865f2ee1d88b417de8cc5f8619",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00045-of-00070.gguf",
+      "blobId": "daab47f2ece99ca4245a4b3e5aedfc2ed165be6a",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "e5f187d93312cec2ba15d9d80cb5078ea2db84f72fdfd4cb3e91c95ee362f1e7",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00046-of-00070.gguf",
+      "blobId": "9d3e6d4676bf44ff1107cff7139d9ce58cd7ad3e",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "10ba07acec3d7cd80ad90800eec75e1ed1d6981eb816f5ccce1f98c4340c8bde",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00047-of-00070.gguf",
+      "blobId": "9845bb4f082097116c1d0600bb7b3d40eb254645",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "4f3f48e26dd335f5594e8808906e25fb25fddd2bca6db8d4d135d9e337855bfb",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00048-of-00070.gguf",
+      "blobId": "b8a5b36e0295e0fc04e3c3e6b3682d82c7eebf2b",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "afb0d365b01bac997137191db919a1bc16a8e6d7fddf6e2fedc6afd982e09470",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00049-of-00070.gguf",
+      "blobId": "7fb440a7626d96141998b69618ac606a45e56f48",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "98a42d90d890adc83bf39b5d85ffc9d560ebc3d6b23608d6df0068f3dc2b8920",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00050-of-00070.gguf",
+      "blobId": "2aa842e2f2a02a5b6de6c6fdf73616d1a7fa7ab4",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "0e817563fb27bd146ac58269813ef100aa7eccd3f17e1ca4cc71f5a93c381a09",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00051-of-00070.gguf",
+      "blobId": "ae1bac61b61607cbfacc9a4786149dda5a39ec9c",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "dc0105d3a4c917f9a20fa0538df0055163dc8dfa0e85cb38ef9c30ce9172b8ad",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00052-of-00070.gguf",
+      "blobId": "30fa799f49a8f860bf3054283b0f521444abd0da",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "28dc2032eb785fcfa426fd8b62a11e080c9a719b81d894edbc6be07acd143e1b",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00053-of-00070.gguf",
+      "blobId": "2c804766722da6a655ebffaa15564216212aa41b",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "9b173f1d2af43494774b354ff895364fc7de8fb91247a18abd09ba8970e278f2",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00054-of-00070.gguf",
+      "blobId": "db6b7ef857a0816093aca4da1c708624ab720232",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "acfb2daef32d047584d81be681aad3ba861d4328475806efd218c9866f02a828",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00055-of-00070.gguf",
+      "blobId": "3572e64cd0e380b97f5a016207e9ec5e1b0c17c9",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "b5724f5467da03a6b6be2d7cac6a3010f3e7a6d4a16b0cb181bd7f2820843d48",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00056-of-00070.gguf",
+      "blobId": "a5eaa6b4c5f7f8a101c459c2989ff985a8560d11",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "5653c1e51822f975b7d6e94a0b3df901ef177d28dbf624766ba9232b16dc9a58",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00057-of-00070.gguf",
+      "blobId": "2bf572c48d7af709d22f81df93d4034ff1eb75bd",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "949c2ebc233ed361a3c8d5400b22bb76a15ed17bebb3d387d02650a31da59a14",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00058-of-00070.gguf",
+      "blobId": "2d33f323123e16336854127435e25c157e15fb30",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "be60a41fd1101af8a59fe3f8397696380c009eaaba49fb0d4ae634b391c89f1e",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00059-of-00070.gguf",
+      "blobId": "6881387e922118143b4d86c61578943e3c6419f5",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "e932d5762d62da9a5416a06aad0eb02c028fdca091896c12600bbce8ba8afea9",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00060-of-00070.gguf",
+      "blobId": "5cfd17cdff9cd9ce5a208a6d82bcb65ce758aebd",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "0f68e494832c9982335abb8d96dbe017600d2fd246d492dbfb807b34e4f1b462",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00061-of-00070.gguf",
+      "blobId": "bfebfb9f5f9d427964a8e87da4bb4f61a89f8698",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "51e89eff3a82f862089ff56bb7e358d0b3d8874dfa887200814a9459a15b3e81",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00062-of-00070.gguf",
+      "blobId": "8a6e3c9d012e2d24ccd14f5dd74355b71d61f3f6",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "93a951198791c470e6ed52ddfce158306602896c3569802a20943c505eb331a0",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00063-of-00070.gguf",
+      "blobId": "d5bf55d6c4805716947942c56cea677ac5f2ca4d",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "28450b6fc7cde615b3186c3891079c27b93cd31337d9abc5ea065daddcda12ad",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00064-of-00070.gguf",
+      "blobId": "722f5bcbfd285306e1982284e50a26a814f0b8fe",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "62cb72ca0950645731064757f3f1bd430ce65c7ea752dfab754524cd9a08210b",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00065-of-00070.gguf",
+      "blobId": "b617869ef0975f8d6c9daf07e6060fca3b59d969",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "d4b4cb6721fb87998731848f362802292e64d74ce780b7412c4986f09602b8bf",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00066-of-00070.gguf",
+      "blobId": "46504651faaa2c211adbd911af7f8bcc1168b2b9",
+      "size": 14230807872,
+      "lfs": {
+        "sha256": "5788034a4283b6ee1fd55d1a81b70045cd784385d4cc206a0bbb9cb0660e7e46",
+        "size": 14230807872,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00067-of-00070.gguf",
+      "blobId": "a83fdafc87f64ed4dcfc2e4cf220fa0c271f759f",
+      "size": 14383651616,
+      "lfs": {
+        "sha256": "dcf412a1db0c71335eb8f834fcee5c787e23f51d399b4a38e08f324cd0f555b1",
+        "size": 14383651616,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00068-of-00070.gguf",
+      "blobId": "31ef6d7cf010b594e8a3dd6ea7e560a69135c3c9",
+      "size": 15178647808,
+      "lfs": {
+        "sha256": "cb28d157827962d496b13fbc8cc0cc938b93d1ba94b96765ae545c31cce299f0",
+        "size": 15178647808,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00069-of-00070.gguf",
+      "blobId": "cf14e4fd4ddbe2ec634709a6a1ebe51887258fee",
+      "size": 14183928448,
+      "lfs": {
+        "sha256": "0bea97c62618c8725ac650bd676066ee0b10422cea72c9d8cce54717cf20a9de",
+        "size": 14183928448,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q2_K/moonshotai.Kimi-K3.Q2_K-00070-of-00070.gguf",
+      "blobId": "f1398ce857c0d29a191914c6e4c34fb6782f4a64",
+      "size": 3251405056,
+      "lfs": {
+        "sha256": "a854da77dec0153aca3bd888a5cb3ea3b5edcb478fd7d7c1ffa24b46b36de179",
+        "size": 3251405056,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00001-of-00093.gguf",
+      "blobId": "f00a2eda1be23c02267c8c2c90f7dd1a98b21b05",
+      "size": 13379585376,
+      "lfs": {
+        "sha256": "adefb23aee3388006ead90f733b81df35648386acb3c98bd450bb9af0a7066f3",
+        "size": 13379585376,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00002-of-00093.gguf",
+      "blobId": "1d1cb2ba2eb695d4996a793f68964dda43c8c82c",
+      "size": 15590799360,
+      "lfs": {
+        "sha256": "e040d670aaaed8b5dde0b64b4ebadaefb19789b1bc6428a6ad2462e14a58b273",
+        "size": 15590799360,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00003-of-00093.gguf",
+      "blobId": "050808191a4499de4f6bb548553f65f90aadc872",
+      "size": 15528328000,
+      "lfs": {
+        "sha256": "9ab147d66251e1e06d8706c2651af7ab389d96115a393f016555b9480d9940cc",
+        "size": 15528328000,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00004-of-00093.gguf",
+      "blobId": "aacde2452dbbdca203b53b2a88e79b56aa097a67",
+      "size": 15550737184,
+      "lfs": {
+        "sha256": "b710467bf881be8190c7a6714b2b156d08ffca592b901f61e43c7ab2910007f7",
+        "size": 15550737184,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00005-of-00093.gguf",
+      "blobId": "386d91047f4fba2f40ea0e594354901d3621bc0c",
+      "size": 14352168960,
+      "lfs": {
+        "sha256": "094b2f6c05bdebe3961c71dfe73c811a3d130a523b60816101b43524376e90c3",
+        "size": 14352168960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00006-of-00093.gguf",
+      "blobId": "be2c54fcc4696378ffee388be457c39e24813174",
+      "size": 14352168960,
+      "lfs": {
+        "sha256": "f91a8f9cceff3c39d351a9cfa7290a2221bdd07e5144a02ebf57df8068697e83",
+        "size": 14352168960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00007-of-00093.gguf",
+      "blobId": "db0ad9300dfb4e61b891c74a8f5324f9b6ebb82b",
+      "size": 14289697600,
+      "lfs": {
+        "sha256": "5d5e2df03071254e396f86d19523d6e4945e4c9b7d1d55af83589b49a5549c36",
+        "size": 14289697600,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00008-of-00093.gguf",
+      "blobId": "0937de84e73d6e25aa7d5a4457471d43b07b5a28",
+      "size": 14312106784,
+      "lfs": {
+        "sha256": "992ff0254225d37cb6d270eaa8aff617beaa4ff0c526a4127fb86ae8e8a92860",
+        "size": 14312106784,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00009-of-00093.gguf",
+      "blobId": "3ba4840f01f69a58bc9a2326d5e1c244954eac8b",
+      "size": 14352168960,
+      "lfs": {
+        "sha256": "852bc291b89ea94ffa740f586808966a21003f01854ac18b1647656fbb6a853e",
+        "size": 14352168960,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00010-of-00093.gguf",
+      "blobId": "d0398edab5c4ab095e866be95c10844801e957b1",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "890344c7587584046306606281f1cccf533ecba65d564342fa2e5f2cb481f7c8",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00011-of-00093.gguf",
+      "blobId": "a6ad8906dbf121fa7a0b5d1b6a23c24dd066d769",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "dabe9ddc2c9ec2732f19ee636457d3cfb831ed050db62f29095fdbc97ac5c8dc",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00012-of-00093.gguf",
+      "blobId": "94fc4196487249c345e9b54ac4204097452123df",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "619bfde1ce2b230dde926b834b91000f68026bc4398dd4c4b0a9eddf11f7a229",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00013-of-00093.gguf",
+      "blobId": "0b000656c4dad3b3157a875fa73fb49a62387753",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "349fc168e9ef79a7b71e992f76154775f50abadae145a3d2903a7233cde82efc",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00014-of-00093.gguf",
+      "blobId": "dc7bf4789b364a8ee832933057a8daed003196f6",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "cadd55e76b4405a6212be10aa8352fb4456f2098951010771963b80c04d8e324",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00015-of-00093.gguf",
+      "blobId": "0a22750af4c466185f71c058ae768440cfc66272",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "8a1a7c8e76fb77ece5890aa864cc2eaeed960066965846f7356269181bb9ce78",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00016-of-00093.gguf",
+      "blobId": "d681076d01b6da42d47120079bba8e32c2fdf822",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "4d4be94ab1c806404aeb53f3553f13d16ac70a7d2ffa9b347afbdf59f795f674",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00017-of-00093.gguf",
+      "blobId": "7e21b7d90fc72f7489ebb2e75d3d20572560d43d",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "ababe2dee2ea1b8b76b8e2f338cc2e0bae48c2aeaaaf5248b31c55911e1b7798",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00018-of-00093.gguf",
+      "blobId": "94ddf295fc40893b7ed3432bf292b44b141e7d88",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "efdfa844475fc3a49949553a74b25968e304f25f2b3c969b9b36491f6e13356a",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00019-of-00093.gguf",
+      "blobId": "2c9c68b70e6a94b92743d206a176ebfc925008f3",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "25095b0a628090cd4f5c9198eb18f734652361c64df714e73497ac4ecd1dbdd0",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00020-of-00093.gguf",
+      "blobId": "a0fddce63d9375f0739b5757e3d138fb6a2cdc05",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "b9b11f75a375fd413545a03bfb55a104e69106a3b342e51e64fb0faa9b810876",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00021-of-00093.gguf",
+      "blobId": "e1fc8c7ba8458e789ebc089eb4acef150d246a15",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "a107c9d67b9f80d4bdf525af3689460b91682a5fb7fbc3e28fd640e38be8bc34",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00022-of-00093.gguf",
+      "blobId": "373ef151095ecae39e266b5207af6de446a6a8cc",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "884b20729661cb8e3b22d0bd92dc9e6936f2e4c710ff1e43d6a2e4f22e4bb0a7",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00023-of-00093.gguf",
+      "blobId": "04cbce262f2556691afa5f5fb0108b4c09845e7b",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "ac43072b8bcf22b8fbe258bd9146dfe2a26c0757a0a36a78577f217760fe5775",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00024-of-00093.gguf",
+      "blobId": "93916dc5d49e6650bce2b1f829c5d3bf9366e628",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "6ceb590faa042d7830fcc24672223aaa91a0bef07f54fe50c8c7345dc86bade6",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00025-of-00093.gguf",
+      "blobId": "412d116997bc5b81b71748cfd414a008af235995",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "26d37359cdeacef2707391079b55d40b7d3800daebcd39ea5335444470d7ba2c",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00026-of-00093.gguf",
+      "blobId": "fcaa5a9eb8cd87c59d5e13d23cd0375ef2ceec2a",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "30d7c219d7814c18eed7fed209158cb597a6822166f458818bfd6fd3f538fb79",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00027-of-00093.gguf",
+      "blobId": "626def9c0018307bd202e997dd030dcec061a16c",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "4ffc2cc30bc20dccaa1d61f0592134046eaf1ef490f4b17880e51aca028f0c5c",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00028-of-00093.gguf",
+      "blobId": "92dba3516f576f7aa1bb014eb926a5154bf2b245",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "06da5b44fa8e62ee6a54ed2dc4a1f24b0f649e0337174bd6411553035fef81c0",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00029-of-00093.gguf",
+      "blobId": "84df49a592584ea0ac8b6aaed5b5dbc351e530df",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "880bf8fb50cd7141c42c808b5f3ce5db0c957aa22aef60730cd4ab5753c8b9db",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00030-of-00093.gguf",
+      "blobId": "8bd12b3e0b9032e9ede9a08f63d6820dfe371693",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "7d695c7796eec5e5e2daafe9adb0e874a48ed06c7b9028f0b73f951d47d28ad7",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00031-of-00093.gguf",
+      "blobId": "5a6b638dd6773d96d7cc46f9d957789a65a6761a",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "1e08695219a12233c07c43802cb13cad77598db4ac3f9bab753cef5c19f24cda",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00032-of-00093.gguf",
+      "blobId": "3316ca6bd73f8a4e302d8481dcbdf79985baf24f",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "99cf2b2ec29b7e88c244d2a986f8b0e61f105d76d1941ec6e0f5be15e2a47767",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00033-of-00093.gguf",
+      "blobId": "1793a7dcaa3168d8407c54cabb0976ba0bd536cc",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "8c023a50000fba36cd0a657a2f0b182603820150a214b16fc04696ddff8551a7",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00034-of-00093.gguf",
+      "blobId": "445b3b8eaa7b3bab2c106db478c882e009dd22c1",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "40f735c10f4e5d607a9b5eae3d81eb44090af0b28d3ebd2ee23bd3839070eaf5",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00035-of-00093.gguf",
+      "blobId": "48972e759b03b6a7f310dbb046c2f1a5256129b2",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "850adce38a366ea0bf063b59421dc74e0e0b9cd570e33a54864cea4bd9e078bf",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00036-of-00093.gguf",
+      "blobId": "a71bb9c47969bda02cb96b95b3019b03224a6688",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "e2bc3927f5c955bcaaef66b77079ef85934d80f310a2d42cafb14bdd389da7f5",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00037-of-00093.gguf",
+      "blobId": "b2562b6fcdec6b52ed56f6f9975815f82d9f7e48",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "7d5c75170cddbfed7bf6a94bda0d0e4b13eb3c45f114f4f024af24bedf0f18e3",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00038-of-00093.gguf",
+      "blobId": "63d24fda6411d94a6d6adb712d9a82f494462877",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "666255056b85be43d8719d6f572a2d669527cf6b190719e707677972a5137efb",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00039-of-00093.gguf",
+      "blobId": "28c0391e5b12266650c209d6393e4f397ff5ec19",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "9a6e62949b4674432e69568f3c56665f3a0dd79a40c17f4186717c59814876ae",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00040-of-00093.gguf",
+      "blobId": "97aa013c9cca0186e1430f7364a64d0bbf676a17",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "b3f4a873f23eb86fff5dfa634f3e89bb9b6937599ffe18c46e5f96119f8a32ce",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00041-of-00093.gguf",
+      "blobId": "0f19011ff17d677e785523b7612252cec0184d48",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "27638f9a1e94a39f150e6126ad22e71ab491587e6be8277e30ca8c04d5b4f9ab",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00042-of-00093.gguf",
+      "blobId": "44d836405453b4899bcfa647af303e5b586af846",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "fcc1e0fc2ba4ef4b5df53894537aeed1c166e17283c8cdcb7850d754f4d9d55b",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00043-of-00093.gguf",
+      "blobId": "59e4eaccf6c5d8553c1559e45c1b42c053b20bcf",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "01400bbd8494b16be95e4ea163f8266cfa532942cd28c924391c9c2a977ae464",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00044-of-00093.gguf",
+      "blobId": "ceda362c1cc78a32ac36a5eb36f0684390fc3e3d",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "92af6494f4e4e7503e66f0f4d65cf0ade03754b96e56eade9ac6804090fd3554",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00045-of-00093.gguf",
+      "blobId": "1d68f1570cf5ce48de8f3072662750b9016e56af",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "af71404c2d9fa71d780a2af1e611d91e11ea51a940889ceee06c824d621ca545",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00046-of-00093.gguf",
+      "blobId": "848c643066a6771f4d7927960f62092eab8a62b4",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "ffa376baa01bb766768547965f766a56483569fbf0f344ce202f2edc416f5293",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00047-of-00093.gguf",
+      "blobId": "c35c6d5f652f8a0b3abc4bdbaa18a71fafbd5899",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "31d9319a852caafa79fd39eff0f0fe928b006833708a9a5c1129477280225bb1",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00048-of-00093.gguf",
+      "blobId": "29ea450a50573f2b608229675de14fceca96d8ec",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "035095d5269b0011eebd53899fefc2f4711235670ae29c24388f3364f22c3088",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00049-of-00093.gguf",
+      "blobId": "fce19ec74e2d596ffb5af5ebcc90586547279a6f",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "9c30872ddb68a7c217b2fdf8776c193c3895f218e3beee1658d2555293796575",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00050-of-00093.gguf",
+      "blobId": "d16e7b4068e6ea946156fdfe38c5370a5630aecb",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "634dfb551aff64f950a7337a1fb7b4ace0463b29472bf3e2afe8c591f77adeb4",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00051-of-00093.gguf",
+      "blobId": "0567bb7de7ef3cd1a0ab40f1f4bbb7f9574c5c80",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "41761a181e61e2cc843ebe8fb0e5046ee2aedf76f40964e8fb3fd889a3ea2299",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00052-of-00093.gguf",
+      "blobId": "b08cdbade991073cb6902aafbb12c9d03ed4c50d",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "e875d2dbe8f5dcbdd5198157630a352516a1a6d65827913636a6b852f486bd74",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00053-of-00093.gguf",
+      "blobId": "041c35e555411d62b8223da9ce866e483b3eb644",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "70b92e77e2edadf24b3c98c2430f9e1c47523e9c93fb12adc609f1be53ac69f5",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00054-of-00093.gguf",
+      "blobId": "1ced8d7fc43ebfc6a33aed626d79785eee94d09f",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "c7bd40b34eb0865c9504bd68df42eca9d1788dcce438b50f03b14ea7435b342d",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00055-of-00093.gguf",
+      "blobId": "2aabe01f65ec8826573aac3979de7125b176c377",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "b3ce5171908badef67609546a668e9c02ed1f942b0046934ddf572e1dabb65d1",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00056-of-00093.gguf",
+      "blobId": "017c92180b4e22be09aa57bcf4d985b0d71c0a42",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "8e9fc1cab67342752bc7780672b44623d7657cf20904be8fe6c9abcf8c119d64",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00057-of-00093.gguf",
+      "blobId": "c7ba377af4f3bd551f583109943ba2d02937deee",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "bf1b8999866f367bcccbe6b744378cccf8d8e495c1bb774726c632900bcaaf4e",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00058-of-00093.gguf",
+      "blobId": "1bc121cc3bea85c862bdf7dc4c9f0958fe264ed4",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "63d6d362a8d0319f1190914a449aa264482abe7822df9a200bf793ce6568f9a1",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00059-of-00093.gguf",
+      "blobId": "83ee4c91912cb50acc618def8c660195fa08567e",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "5dbf67c9c6fff4c8279a0ec0f3153f689e511e93bf68f55540d339f911379f40",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00060-of-00093.gguf",
+      "blobId": "9028b92f8b93c09e6adeb6dd59affccf6d083e20",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "a9475e59e89addb2e93074bb68a3c761b2a3bd07db9f8d96af9bdafd8f98805c",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00061-of-00093.gguf",
+      "blobId": "3c4082442422ce404b5b5954c81223d510195050",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "7b9f03742f4bc5b9f4fa1db4c249b4b511d33c6803134cd06d740afe3e8efb4f",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00062-of-00093.gguf",
+      "blobId": "97a220be7ebd1c13dee9a613085d55b6f8356ff6",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "eee116b15dc50bb911cd37c1758554ca6d06cec13e7fdc5da85b877f2604dc8a",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00063-of-00093.gguf",
+      "blobId": "1c19f2f0d55ccfcffa6af0097e6e1260e499dbe3",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "aa478fcce4c9518a81da56b368321efd8501a390b171d9e5451c8d2f8c988dd0",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00064-of-00093.gguf",
+      "blobId": "cd802629997ce3d6b38768bfc4c71143d1ed7ddf",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "4a6545269924da04eac06aea81c7f506232774e53eeea8a5ebdfd62201ed9e83",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00065-of-00093.gguf",
+      "blobId": "dff94c56379d29c9791624ddbac668195fd22861",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "45f0bd323f5df31ce016a27de4352bc863be942f906c3888ff204eb107156a0e",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00066-of-00093.gguf",
+      "blobId": "a5b2c6b07fe06b7177eca9558ce7b75a63a7ecc7",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "a296f939d5019d02456f02bc6b0244a544f64cdfa7e4ba412b83a8cde74e0480",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00067-of-00093.gguf",
+      "blobId": "a2dd9b6b264fc8413670fa099ebe8bec9ed6dbeb",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "b14ca5f3982893688c3f55257d48538ba1eb61068c5c9db9a560daa1f42f9441",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00068-of-00093.gguf",
+      "blobId": "32c2daad17301ff0d73d1b909abf9398b8b0a61d",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "7ffe4c6d22aa07d6202e75f042f0b7f0593113b4d6d3c2dcce242dd32ff119a0",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00069-of-00093.gguf",
+      "blobId": "8e26e7a577068573cb7d6b91cdd158ca2450c87c",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "00b467b98d40c89de5f6bfaaa72c433a0fcae8e0e6d3c19ff4cec0f8b4232426",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00070-of-00093.gguf",
+      "blobId": "687950bd8a677b78e768d6978a919776f9a3b311",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "7462079902615bf65a1956b365644b66447e44cbcf1da79847306939b3d6818f",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00071-of-00093.gguf",
+      "blobId": "26af134f4dd25a522c6287b0e6d9d3497699f4fd",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "9fd9c81fcf1d03417beb17cd73bdbbd2c73206706cd4789411a2c259094f158f",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00072-of-00093.gguf",
+      "blobId": "775b5e28a1918035f1d9fff070ed46d6c727d70b",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "00758791b5ded8d59bb2cdab331f0da03d17671e78b30c7f70c91dc0a31ecb6e",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00073-of-00093.gguf",
+      "blobId": "eadcdbc51a3163a03b07b90dbab12cea9db41741",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "bc5a76f83599233d74ffd564ea4083d22a63f4993613dd06166136527904246c",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00074-of-00093.gguf",
+      "blobId": "ba8970805f3efdc62f432950329115e215108cb4",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "3a4f5428e3cd6b1485a90e822c8681199805f5a208d42bc62f594b60ba37aaa0",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00075-of-00093.gguf",
+      "blobId": "6c5138fb9a5704f92b1114a2e866bcc04de8cf3c",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "74befd3a47d429d25e965bf1a8d84fa38c3c91bbd4e76f8b01938cc642f4d3f5",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00076-of-00093.gguf",
+      "blobId": "1c119f903b031023798f03640af1bf6e56a63639",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "e5ccda1352ae718b7a298ed448d9cf654d454d310e529baaccbd4565f0fcf2c0",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00077-of-00093.gguf",
+      "blobId": "8ca7188ac304ce3277290b0cd760145dd2ba8c35",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "d7ddcaabcae3c096006dc95b2b888d12a03818ebdba792d1647e299ac7e0686c",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00078-of-00093.gguf",
+      "blobId": "a0565fbebb4346d4b6c005847e78f9a7738f73d3",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "1324668dc1893241f282df257627399b14636dd87cebf91c4991266f3c42225e",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00079-of-00093.gguf",
+      "blobId": "4059c2a082091c77dbb2a1f57b4c2e8cda9c8a88",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "ac63eaae5b14334a63daafbe46f2f4a2ff0f2c48217a2f736b6f481c6b35655c",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00080-of-00093.gguf",
+      "blobId": "a53a39ca37ecdfc053b3821d9e451663c4d2c5eb",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "844d2fe8a02e6d89d86ca8fcf2a89acc98089e3d782c7025e91dcad1bb0cecbc",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00081-of-00093.gguf",
+      "blobId": "b05a3e141a03d917585d02bec9f04bdeb01b507a",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "54725c1eef977fb3fd7753578d7d1c9eb51f332d4f6b433f89d02ec384fe63de",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00082-of-00093.gguf",
+      "blobId": "9df261f0af0156619d345c2ff56110b3c4fffccf",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "164bdcbd331143c1b2ffbc5ad1dab8d49a29600134ffc7ade1136f7c1d4e79d8",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00083-of-00093.gguf",
+      "blobId": "905b0867080f5df153bbdedbb13704c29d369372",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "06f6b9157a52b269d07558f31543540ba5406e9d2437f4e2dc98bc8e3bb75e1d",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00084-of-00093.gguf",
+      "blobId": "f0f74a755937befd711bbc19be2d19e2bd35d5be",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "558ec2474aa3f358385f7a5cdadc697c4cbb3c9ec071fb04e02a7416c10b1846",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00085-of-00093.gguf",
+      "blobId": "eea7e836e52a6574533907c3a4811da8920d651e",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "1bffb3730060b32857e45efb95363c23e50bbc4ed329979793cb4b7825a0dc5f",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00086-of-00093.gguf",
+      "blobId": "f4af3cffded0a43ea8df4b910fa4c3ceb3c28754",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "a4b08ba1574d10dbbc8ebcde189945f4f6da27819240966fbd14f3d1b2bbace3",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00087-of-00093.gguf",
+      "blobId": "f52774fd39c00a649faa91d73d0038dd92939c4b",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "22e28ef2902509e6ebdbacb726764df49df8c31fa6c977b70dbe8e2518c33ae0",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00088-of-00093.gguf",
+      "blobId": "2644627cd3260113408f7c78ab9c04d4f3a3f06a",
+      "size": 14312106816,
+      "lfs": {
+        "sha256": "448249ae5818ef481c99be34e5ffe72f6cd7c67b1653002e01a44c6b582a64ba",
+        "size": 14312106816,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00089-of-00093.gguf",
+      "blobId": "abb256817c8d20b59053da808fe30888d02e9abf",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "ed1be71daf204564b954f9118ec68724990f40b2770740234b216d5a8f97278b",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00090-of-00093.gguf",
+      "blobId": "100c09cc84808d0d77c1e1ac97e293168c01d79a",
+      "size": 14352168992,
+      "lfs": {
+        "sha256": "d974268fa734795920f7df96cd119f153f666bf185bd9406dcf130069976a03e",
+        "size": 14352168992,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00091-of-00093.gguf",
+      "blobId": "c470f033b412700f04e78546f4760aed63e925b9",
+      "size": 14289697632,
+      "lfs": {
+        "sha256": "5f0138026e9da9035a61abd69668707d112788ab333adc78b1ee3c1513f496b1",
+        "size": 14289697632,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00092-of-00093.gguf",
+      "blobId": "b1fae9bc0dbef63b1d71e0f09cd129ab935dffee",
+      "size": 14249635456,
+      "lfs": {
+        "sha256": "b6b923b81a8f29306936115f4785a13eb3dae16054872e3fd7bbc44055481b79",
+        "size": 14249635456,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "Q3_K_M/moonshotai.Kimi-K3.Q3_K_M-00093-of-00093.gguf",
+      "blobId": "02745e2c45b5df4561a50c51ef6c9968f1e5f88a",
+      "size": 4257792256,
+      "lfs": {
+        "sha256": "fb9555b58ca06bb07dc57097335129497b4c2e9db838067d9a6dc9611c375aa2",
+        "size": 4257792256,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d6f8c033740437ad21051dc90c1c393fd5b56c59",
+      "size": 1106
+    },
+    {
+      "rfilename": "flies-in-a-jar.html",
+      "blobId": "91ec8901ac05c9ba531d798d09010be3eb9718b5",
+      "size": 24535
+    },
+    {
+      "rfilename": "k3_chat_template.jinja",
+      "blobId": "291e8f778a7f948ea739b43f1de0afa6ee872aea",
+      "size": 11111
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-07-28T04:28:16.000Z",
+  "usedStorage": 3969082265312
+}

@@ -10,7 +10,7 @@
       "revision": "62318cd57dc63900ecb153272c0b10f78550855d+a5e045c646b70303156394d52c2ca1e415ec1544"
     },
     "flint-cpu-v1": {
-      "label": "llama.cpp b11860 (Flint / Spark)",
+      "label": "llama.cpp b11860",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11860/llama-b11860-bin-win-cpu-x64.zip",
       "sha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
       "bytes": 24178326,

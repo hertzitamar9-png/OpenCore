@@ -1,0 +1,273 @@
+{
+  "_id": "6acf42d424dd5288750d5119",
+  "id": "mistralai/Timestral-209M",
+  "private": false,
+  "pipeline_tag": "time-series-forecasting",
+  "library_name": "timestral",
+  "tags": [
+    "timestral",
+    "safetensors",
+    "time-series",
+    "forecasting",
+    "foundation-model",
+    "time-series-forecasting",
+    "license:other",
+    "model-index",
+    "region:us"
+  ],
+  "downloads": 9765,
+  "likes": 362,
+  "modelId": "mistralai/Timestral-209M",
+  "author": "mistralai",
+  "sha": "9874d252ab0aae16f7f7c999f98f98d6ad7d8365",
+  "lastModified": "2026-10-15T15:33:49.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": [
+    {
+      "name": "Timestral-209M",
+      "results": [
+        {
+          "task": {
+            "type": "time-series-forecasting",
+            "name": "Time Series Forecasting"
+          },
+          "dataset": {
+            "name": "GIFT-Eval",
+            "type": "Salesforce/GiftEval"
+          },
+          "metrics": [
+            {
+              "name": "MASE",
+              "type": "mase",
+              "value": 0.658,
+              "verified": false
+            },
+            {
+              "name": "CRPS",
+              "type": "crps",
+              "value": 0.446,
+              "verified": false
+            }
+          ],
+          "source": {
+            "name": "GIFT-Eval leaderboard",
+            "url": "https://huggingface.co/spaces/Salesforce/GIFT-Eval"
+          }
+        },
+        {
+          "task": {
+            "type": "time-series-forecasting",
+            "name": "Time Series Forecasting"
+          },
+          "dataset": {
+            "name": "TIME",
+            "type": "Real-TSF/TIME"
+          },
+          "metrics": [
+            {
+              "name": "MASE",
+              "type": "mase",
+              "value": 0.626,
+              "verified": false
+            },
+            {
+              "name": "CRPS",
+              "type": "crps",
+              "value": 0.522,
+              "verified": false
+            }
+          ],
+          "source": {
+            "name": "TIME leaderboard",
+            "url": "https://huggingface.co/spaces/Real-TSF/TIME-leaderboard"
+          }
+        },
+        {
+          "task": {
+            "type": "time-series-forecasting",
+            "name": "Time Series Forecasting"
+          },
+          "dataset": {
+            "name": "fev-bench",
+            "type": "autogluon/fev-bench"
+          },
+          "metrics": [
+            {
+              "name": "SQL skill score",
+              "type": "skill-score",
+              "value": 50.39,
+              "verified": false
+            },
+            {
+              "name": "MASE skill score",
+              "type": "skill-score",
+              "value": 39.49,
+              "verified": false
+            }
+          ],
+          "source": {
+            "name": "fev-bench leaderboard",
+            "url": "https://huggingface.co/spaces/autogluon/fev-bench"
+          }
+        }
+      ]
+    }
+  ],
+  "config": {},
+  "cardData": {
+    "pipeline_tag": "time-series-forecasting",
+    "library_name": "timestral",
+    "tags": [
+      "time-series",
+      "forecasting",
+      "foundation-model"
+    ],
+    "model-index": [
+      {
+        "name": "Timestral-209M",
+        "results": [
+          {
+            "task": {
+              "type": "time-series-forecasting",
+              "name": "Time Series Forecasting"
+            },
+            "dataset": {
+              "name": "GIFT-Eval",
+              "type": "Salesforce/GiftEval"
+            },
+            "metrics": [
+              {
+                "name": "MASE",
+                "type": "mase",
+                "value": 0.658,
+                "verified": false
+              },
+              {
+                "name": "CRPS",
+                "type": "crps",
+                "value": 0.446,
+                "verified": false
+              }
+            ],
+            "source": {
+              "name": "GIFT-Eval leaderboard",
+              "url": "https://huggingface.co/spaces/Salesforce/GIFT-Eval"
+            }
+          },
+          {
+            "task": {
+              "type": "time-series-forecasting",
+              "name": "Time Series Forecasting"
+            },
+            "dataset": {
+              "name": "TIME",
+              "type": "Real-TSF/TIME"
+            },
+            "metrics": [
+              {
+                "name": "MASE",
+                "type": "mase",
+                "value": 0.626,
+                "verified": false
+              },
+              {
+                "name": "CRPS",
+                "type": "crps",
+                "value": 0.522,
+                "verified": false
+              }
+            ],
+            "source": {
+              "name": "TIME leaderboard",
+              "url": "https://huggingface.co/spaces/Real-TSF/TIME-leaderboard"
+            }
+          },
+          {
+            "task": {
+              "type": "time-series-forecasting",
+              "name": "Time Series Forecasting"
+            },
+            "dataset": {
+              "name": "fev-bench",
+              "type": "autogluon/fev-bench"
+            },
+            "metrics": [
+              {
+                "name": "SQL skill score",
+                "type": "skill-score",
+                "value": 50.39,
+                "verified": false
+              },
+              {
+                "name": "MASE skill score",
+                "type": "skill-score",
+                "value": 39.49,
+                "verified": false
+              }
+            ],
+            "source": {
+              "name": "fev-bench leaderboard",
+              "url": "https://huggingface.co/spaces/autogluon/fev-bench"
+            }
+          }
+        ]
+      }
+    ],
+    "license": "other"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "84f5934373961902a63503ab5563636a2d9e2c05",
+      "size": 1695
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0e1d5c408376075ca297f9593e0b50f9fd01db88",
+      "size": 6711
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "b187a440b2129a3fb556cf354f3a10c11c238c0a",
+      "size": 1130
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "9404241ee9ff43683f5865eed7b1dbe0eac6b614",
+      "size": 837271648,
+      "lfs": {
+        "sha256": "1456effb9927e3daa8c7234f10497e3424233869245a9c72b8ecebaf7ad2b7fa",
+        "size": 837271648,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "timestral-hourglass.png",
+      "blobId": "76e7e95b80364be16463b9bad7e6da8d05bcdfa9",
+      "size": 1847
+    }
+  ],
+  "spaces": [
+    "mrfakename/timestral-209m",
+    "BIGJUTT/model-pulse",
+    "Bayway/due-torri-due-ruote",
+    "hrczggyorgy/TSFMs_forecasting",
+    "charlie0simmon/timestral-studio",
+    "Bayway/due-torri-due-ruote-api",
+    "ai-testack/weather-lab"
+  ],
+  "createdAt": "2026-10-14T08:52:36.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 209312256
+    },
+    "total": 209312256
+  },
+  "usedStorage": 837271648
+}

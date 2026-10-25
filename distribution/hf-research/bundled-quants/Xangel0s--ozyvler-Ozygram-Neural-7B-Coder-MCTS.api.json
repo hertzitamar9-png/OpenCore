@@ -1,0 +1,201 @@
+{
+  "_id": "6ab6e4d7367eabff4cffe677",
+  "id": "Xangel0s/ozyvler-Ozygram-Neural-7B-Coder-MCTS",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gguf",
+    "qwen2",
+    "text-generation",
+    "code",
+    "qwen2.5",
+    "neuro-symbolic",
+    "mcts",
+    "dream-rsi",
+    "kev-engine",
+    "self-healing",
+    "ast",
+    "ollama",
+    "conversational",
+    "es",
+    "en",
+    "base_model:Qwen/Qwen2.5-7B-Instruct",
+    "base_model:quantized:Qwen/Qwen2.5-7B-Instruct",
+    "license:apache-2.0",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 1517,
+  "likes": 0,
+  "modelId": "Xangel0s/ozyvler-Ozygram-Neural-7B-Coder-MCTS",
+  "author": "Xangel0s",
+  "sha": "b5f9c7542b35a62bd8cbb93628e249ffd73fb85a",
+  "lastModified": "2026-09-28T14:01:11.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2ForCausalLM"
+    ],
+    "model_type": "qwen2",
+    "tokenizer_config": {
+      "bos_token": null,
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    },
+    "chat_template_jinja": "{%- if tools %}\r\n    {{- '<|im_start|>system\\n' }}\r\n    {%- if messages[0]['role'] == 'system' %}\r\n        {{- messages[0]['content'] }}\r\n    {%- else %}\r\n        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}\r\n    {%- endif %}\r\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\r\n    {%- for tool in tools %}\r\n        {{- \"\\n\" }}\r\n        {{- tool | tojson }}\r\n    {%- endfor %}\r\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\r\n{%- else %}\r\n    {%- if messages[0]['role'] == 'system' %}\r\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\r\n    {%- else %}\r\n        {{- '<|im_start|>system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\\n' }}\r\n    {%- endif %}\r\n{%- endif %}\r\n{%- for message in messages %}\r\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\r\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\r\n    {%- elif message.role == \"assistant\" %}\r\n        {{- '<|im_start|>' + message.role }}\r\n        {%- if message.content %}\r\n            {{- '\\n' + message.content }}\r\n        {%- endif %}\r\n        {%- for tool_call in message.tool_calls %}\r\n            {%- if tool_call.function is defined %}\r\n                {%- set tool_call = tool_call.function %}\r\n            {%- endif %}\r\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\r\n            {{- tool_call.name }}\r\n            {{- '\", \"arguments\": ' }}\r\n            {{- tool_call.arguments | tojson }}\r\n            {{- '}\\n</tool_call>' }}\r\n        {%- endfor %}\r\n        {{- '<|im_end|>\\n' }}\r\n    {%- elif message.role == \"tool\" %}\r\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\r\n            {{- '<|im_start|>user' }}\r\n        {%- endif %}\r\n        {{- '\\n<tool_response>\\n' }}\r\n        {{- message.content }}\r\n        {{- '\\n</tool_response>' }}\r\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\r\n            {{- '<|im_end|>\\n' }}\r\n        {%- endif %}\r\n    {%- endif %}\r\n{%- endfor %}\r\n{%- if add_generation_prompt %}\r\n    {{- '<|im_start|>assistant\\n' }}\r\n{%- endif %}\r\n"
+  },
+  "cardData": {
+    "language": [
+      "es",
+      "en"
+    ],
+    "license": "apache-2.0",
+    "tags": [
+      "code",
+      "qwen2.5",
+      "neuro-symbolic",
+      "mcts",
+      "dream-rsi",
+      "kev-engine",
+      "self-healing",
+      "ast",
+      "gguf",
+      "ollama"
+    ],
+    "base_model": "Qwen/Qwen2.5-7B-Instruct",
+    "pipeline_tag": "text-generation",
+    "library_name": "transformers"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForCausalLM",
+    "pipeline_tag": "text-generation",
+    "processor": "AutoTokenizer"
+  },
+  "gguf": {
+    "total": 7615616512,
+    "architecture": "qwen2",
+    "context_length": 32768,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- messages[0]['content'] }}\n    {%- else %}\n        {{- 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.' }}\n    {%- endif %}\n    {{- \"\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0]['role'] == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0]['content'] + '<|im_end|>\\n' }}\n    {%- else %}\n        {{- '<|im_start|>system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) or (message.role == \"assistant\" and not message.tool_calls) %}\n        {{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {{- '<|im_start|>' + message.role }}\n        {%- if message.content %}\n            {{- '\\n' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- '\\n<tool_call>\\n{\"name\": \"' }}\n            {{- tool_call.name }}\n            {{- '\", \"arguments\": ' }}\n            {{- tool_call.arguments | tojson }}\n            {{- '}\\n</tool_call>' }}\n        {%- endfor %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- message.content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n{%- endif %}\n",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 4683074016
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "2df1656c427a30fa8b2ea03982b8c8e4e457b8b2",
+      "size": 1633
+    },
+    {
+      "rfilename": "Modelfile",
+      "blobId": "4b8e938f105ca71eddb2f8a5f7b9ab06eb9cceba",
+      "size": 877
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "d3e04ed7fd8b9e3ff1aae98a0a531db8ef6952c1",
+      "size": 9120
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "9840d40f49842423ad9d3c92bbedac488564c088",
+      "size": 2561
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "4c1128d7e5ff97615dc32e0fbcbafc6b9522d776",
+      "size": 1436
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "eb7dec66509ecf31bd7437fad51163d99730027d",
+      "size": 257
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "8f7fae147bb8c63c5bb6d6d69db081d7f00b9593",
+      "size": 3989398544,
+      "lfs": {
+        "sha256": "1dba98900295917f89917b29fbbb16f37b584d85c228e20f31d5f91f700343be",
+        "size": 3989398544,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "c95a29ee15be3e5c0161a2ad6e7c53640eb89f67",
+      "size": 3919792600,
+      "lfs": {
+        "sha256": "efb0b70f632dacc047db7f6fe9b7859be0f841f493efa7d4793abd27a1e4b3dc",
+        "size": 3919792600,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "54ea972b3c7384bd793a931c3cfdba8b3333c636",
+      "size": 3864726408,
+      "lfs": {
+        "sha256": "c4bbc7a4762b41e262b6192911e918e54c24350a38178daabaa1c0c3c543af09",
+        "size": 3864726408,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "33eeec9aa472e563c4ab813c5e48a3128113edea",
+      "size": 3457354264,
+      "lfs": {
+        "sha256": "01c849f3cee1d550163d3c4e587d23f9393cf49d663a867aba812fb3bb9c31cc",
+        "size": 3457354264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "bfbc108a858d5e407eabd48df7f4c2a993876a85",
+      "size": 28135
+    },
+    {
+      "rfilename": "ozygram-qwen7b-Q4_K_M.gguf",
+      "blobId": "430124849455604170202e9ad1436b0492a92d42",
+      "size": 4683074016,
+      "lfs": {
+        "sha256": "8ab9f4475ef26d7ab855feb52d7fb683088ca8b277921253a13581e2671cf2d1",
+        "size": 4683074016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "34510ff0037cd50428af467a17ead5a96140a32c",
+      "size": 11421892,
+      "lfs": {
+        "sha256": "3fd169731d2cbde95e10bf356d66d5997fd885dd8dbb6fb4684da3f23b2585d8",
+        "size": 11421892,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "df142d09fac6de7e48490cc3d551122ee4ef4098",
+      "size": 724
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-25T21:17:11.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 7615616512
+    },
+    "total": 7615616512
+  },
+  "usedStorage": 39840113556
+}

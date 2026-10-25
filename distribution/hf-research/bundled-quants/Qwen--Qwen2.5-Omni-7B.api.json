@@ -1,0 +1,309 @@
+{
+  "_id": "67de202b6599e7158f6912f4",
+  "id": "Qwen/Qwen2.5-Omni-7B",
+  "private": false,
+  "pipeline_tag": "any-to-any",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen2_5_omni",
+    "multimodal",
+    "any-to-any",
+    "en",
+    "arxiv:2503.20215",
+    "license:other",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 287158,
+  "likes": 1968,
+  "modelId": "Qwen/Qwen2.5-Omni-7B",
+  "author": "Qwen",
+  "sha": "ae9e1690543ffd5c0221dc27f79834d0294cba00",
+  "lastModified": "2025-04-30T13:48:45.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen2_5OmniModel"
+    ],
+    "model_type": "qwen2_5_omni",
+    "processor_config": {
+      "chat_template": "{% set audio_count = namespace(value=0) %}{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_bos|><|IMAGE|><|vision_eos|>{% elif content['type'] == 'audio' or 'audio' in content or 'audio_url' in content %}{% set audio_count.value = audio_count.value + 1 %}{% if add_audio_id %}Audio {{ audio_count.value }}: {% endif %}<|audio_bos|><|AUDIO|><|audio_eos|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_bos|><|VIDEO|><|vision_eos|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    },
+    "tokenizer_config": {
+      "bos_token": null,
+      "chat_template": "{% set audio_count = namespace(value=0) %}{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_bos|><|IMAGE|><|vision_eos|>{% elif content['type'] == 'audio' or 'audio' in content or 'audio_url' in content %}{% set audio_count.value = audio_count.value + 1 %}{% if add_audio_id %}Audio {{ audio_count.value }}: {% endif %}<|audio_bos|><|AUDIO|><|audio_eos|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_bos|><|VIDEO|><|vision_eos|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+      "eos_token": "<|im_end|>",
+      "pad_token": "<|endoftext|>",
+      "unk_token": null
+    }
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "apache-2.0",
+    "license_link": "https://huggingface.co/Qwen/Qwen2.5-Omni-7B/blob/main/LICENSE",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "multimodal"
+    ],
+    "library_name": "transformers",
+    "pipeline_tag": "any-to-any"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "9b1dd49441cd594560125cc7d79e886d0816cd8f",
+      "size": 11343
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "9eb4a8e90deb0e208a9db6fdf1ea2e4c6dbf518f",
+      "size": 36838
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "4562256351969d3b68f81fd5623ae42a9c7fbb25",
+      "size": 579
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "e696060ab7ab6e20f60e4e09b18e5da4c1830000",
+      "size": 1313
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "633e1b2b157826cce16b51dee904750f02a7ac9c",
+      "size": 13186
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "1c1ac9d737684b833c80a438e30fc3ba53e89bd4",
+      "size": 74
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00005.safetensors",
+      "blobId": "cbe9943da0e59f3ee03af9e9ed019c534e9abea6",
+      "size": 4985055504,
+      "lfs": {
+        "sha256": "5edb02fd7c98803239468375cc9dc1bff492865c2aa086b78f348597021d6cbc",
+        "size": 4985055504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00005.safetensors",
+      "blobId": "66318604f4ce70d3579cb9bbf5cc42f53a9ee5c8",
+      "size": 4991496800,
+      "lfs": {
+        "sha256": "7c99b55c6e5bc63fd4b19d4dc23cdc3ddac4b0101bb3c0958cc2b5d05c2bbafe",
+        "size": 4991496800,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00005.safetensors",
+      "blobId": "392f06b2ba109257f80458b24c3f2339b5c96f3c",
+      "size": 4991496904,
+      "lfs": {
+        "sha256": "ad00c3ac296300db905934ed213c4077ff49b85d30c0099270c814e2c77ec812",
+        "size": 4991496904,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00005.safetensors",
+      "blobId": "04a3b9dbbb7e24ba2ffde279601f7f92adfb03f4",
+      "size": 4969489824,
+      "lfs": {
+        "sha256": "152bc7d81441eaba22547d8d96c03d32dd592ce0e0e1d0e449347a4b23a532d3",
+        "size": 4969489824,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00005.safetensors",
+      "blobId": "be5679a915f09aa07fa1c8b506772090fd4231da",
+      "size": 2425322160,
+      "lfs": {
+        "sha256": "b8b18276481ba8cdf4fe2c98ac4c7a2da6e0d1c8a51850d162a391760cb2b81e",
+        "size": 2425322160,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "e8728f00dd29744bb14d7ed4f374c4f05c75b6c5",
+      "size": 233160
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "63c79f1c43bce173ab13d94096dea54b3688436f",
+      "size": 667
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "8c2a71eaac0f526df324364d953503def113b7a1",
+      "size": 832
+    },
+    {
+      "rfilename": "spk_dict.pt",
+      "blobId": "7c379649ee9423d393e21f4c22fb2478f24b4c17",
+      "size": 259544,
+      "lfs": {
+        "sha256": "6a05609b28f5d42b7b748f0f07592545c8f1f6885b9ae8fff64baf56e86b2a18",
+        "size": 259544,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "0a8d651380b80b1775af303bdabc6da4e6774ce3",
+      "size": 11421870,
+      "lfs": {
+        "sha256": "8441917e39ae0244e06d704b95b3124795cec478e297f9afac39ba670d7e9d99",
+        "size": 11421870,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "22c6d3668a32e4fe6dc09331bff96e7cc3a2290f",
+      "size": 6469
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "spaces": [
+    "hugging-apps/minimax-h3-prompt-rewriter",
+    "Steveeeeeeen/SpeechLLM-Playbook",
+    "kywpcm/SpeechLLM-Playbook",
+    "Lightricks/ltx-2-distilled",
+    "Lightricks/ltx-2",
+    "linoyts/ltx-2-first-last-frame",
+    "aimeri/Qwen2.5-Omni-7B-Demo",
+    "chenxie95/Resonate",
+    "wambugu71/Qwen2.5-Omni-7B-Demo",
+    "Gyaneshere/Qwen2.5-Omni-7B-MultimodalInput-to-Speech",
+    "Zeyue7/Audio-Omni",
+    "ericmibbler/ltx-2-distilled",
+    "owenisas/spur-spatial-audio",
+    "baryonlabs/open-ko-s2s-leaderboard",
+    "hugging-apps/light-omni-video-understanding",
+    "hugging-apps/temporal-context-routing",
+    "PabloTJ/palindroms",
+    "Sergidev/Qwen2.5-OmniAgent",
+    "kingarnica/Tuesday",
+    "pablodiaz/Final_Assignment_Template_2",
+    "diamond-in/Qwen2.5-Omni-7B-Demo",
+    "dkolarova007/chatbot-agent",
+    "diamond-in/Price-Prediction",
+    "marluwe/Final_Assignment_Template",
+    "SamiaHaque/HarmSense",
+    "BillionForgeAi/AI",
+    "DanielbDEV/AgentSubmission",
+    "gijs/qwen2.5-omni",
+    "Imaginethat/aOt",
+    "gfdsr/ltx-2-distilled",
+    "gxndxrov/ltx-2",
+    "marktech7/ltx-2",
+    "kp-forks/ltx-2",
+    "kp-forks/ltx-2-distilled",
+    "Franciscofelipemendoza/ltx-2-distilled",
+    "ComputeNerd/ltx-2",
+    "saleh7770/LTX-2-Interface",
+    "sayasaya11/ltx-2",
+    "rbeard0330/ltx-2",
+    "CedricPerauer/ltx-2",
+    "Franciscofelipemendoza/ltx-2-distilled234",
+    "jizzz/ltx-2-first-last-frame",
+    "cucdoi0898/ltx-2-distilled",
+    "EpistemeAI/ltx-2-distilled-audio",
+    "spck83/ltx-2-distilled",
+    "robustors2/ltx-2-distilled",
+    "DanielDel89/ltx-2-distilled",
+    "hrivera929/ltx-2-distilled",
+    "MihaiPopa-1/ltx-2-lite",
+    "tientrinh21/ltx-2",
+    "23w4rsdf/ltx-2-distilled",
+    "mikework/ltx-2-distilled",
+    "mikework/ltx-2",
+    "ford442/ltx-2",
+    "dtometzki/vLLMFLux",
+    "ford442/ltx-2-distilled",
+    "Limchau123/ltx-2-distilled",
+    "Hood-CS/ltx-2-first-last-frame",
+    "Dingdong01/ltx-2-distilled",
+    "aiworkshopintokyo/ltx-2-distilled-hero",
+    "nurulkadir/ltx-2-distilled",
+    "uzumbillionare/ltx-2-distilled",
+    "Sumit189/ltx-2",
+    "azyleee/ltx-2-distilled",
+    "DAVIGABRIELA/ltx-2-distilled",
+    "bruceuser/ltx-2-distilled-CPU",
+    "jerpyjerp/ltx-2-distilled",
+    "wsntxxn/HoliAntiSpoof",
+    "vdmpeniel/ltx-2-distilled",
+    "sriramark/ltx2-studio",
+    "Matheus454634373/ltx-2-distilled",
+    "editedge/ltx-2-distilled",
+    "Aved1968/ltx-2-distilled",
+    "Fookeroo26/ltx-2-distilled",
+    "arabz/ltx-2",
+    "w1cksterd00d/ltx-2",
+    "naicoi/LTX-2-3-First-Last-Frame",
+    "rahul7star/LTX-2-3-First-Last-Frame",
+    "DAVIGABRIELA/ltx-2",
+    "PreToxicc/ltx-2",
+    "Firasat-19/ltx-2",
+    "rabious83/ltx-2-distilled",
+    "CagerX/ltx-2-distilled",
+    "Y-Afonin/Final",
+    "Swytch281982/ltx-2",
+    "vivekananda0010/ltx2",
+    "kalameh/qwen-omni-test",
+    "Rafikshady/ltx-2-distilled",
+    "CYXiaofeng/ltx-2-distilled",
+    "Manuelm3103/azurtant",
+    "thedruid831/Final_Assignment_Template",
+    "Shaherove/ltx-2-distilled",
+    "baryonlabs/open-ko-s2s-insights",
+    "Pq234/open-ko-s2s-leaderboard",
+    "teamup-tech/UNISON",
+    "Karan7798/ltx-2-distilled",
+    "hugging-apps/omnifusion-translate",
+    "honmo/minimax-h3-prompt-rewriter",
+    "Hayeonbang/PitchIn",
+    "jickman125/h3-prompt-rewriter-new"
+  ],
+  "createdAt": "2025-03-22T02:27:55.000Z",
+  "safetensors": {
+    "parameters": {
+      "F32": 449051296,
+      "BF16": 10283174144
+    },
+    "total": 10732225440
+  },
+  "usedStorage": 22374542606
+}

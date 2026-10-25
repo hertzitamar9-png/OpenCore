@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "repository": "XHToken/Spark-X2.5-1.7B-GGUF",
+  "revision": "1f7fa33b1245c14730da39e125714ad3a327901b",
+  "quantization": "Q4_K_M",
+  "cpuThreads": 2,
+  "echoResponse": {
+    "role": "assistant",
+    "content": "Sapphire"
+  },
+  "streamResponse": "Stream verified.",
+  "streamingVerified": true,
+  "reasoningOffVerified": true,
+  "usage": {
+    "completion_tokens": 3,
+    "prompt_tokens": 73,
+    "total_tokens": 76,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "elapsedSeconds": 30.562999999994645,
+  "managedEngineFallbackVerified": true,
+  "inputArchitectureHint": null,
+  "engineId": "flint-cpu-v1",
+  "engineArchiveSha256": "42d5eab29bb6a2ee1c03b625be604bba40142e8011a86377d9fb9ccc9533d5ab",
+  "echoMode": "archive-retrieval",
+  "engineSelectionSourceSha256": "e761f6f632ac1462c50e646c4ca3d03a4258097b8c86e7e4462de63eda745dc9"
+}

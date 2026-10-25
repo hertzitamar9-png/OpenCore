@@ -52,3 +52,6 @@
 
 /scripts/evaluation/runs/
 /scripts/research/
+
+# Maintainer research cache; the frozen preset inputs are explicitly tracked.
+/distribution/hf-research/bundled-quants/*.api.json

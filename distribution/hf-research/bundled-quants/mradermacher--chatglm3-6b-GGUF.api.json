@@ -1,0 +1,193 @@
+{
+  "_id": "67c9491a85b7a86d7538e0d6",
+  "id": "mradermacher/chatglm3-6b-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "glm",
+    "chatglm",
+    "thudm",
+    "zh",
+    "en",
+    "base_model:zai-org/chatglm3-6b",
+    "base_model:quantized:zai-org/chatglm3-6b",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 840,
+  "likes": 1,
+  "modelId": "mradermacher/chatglm3-6b-GGUF",
+  "author": "mradermacher",
+  "sha": "b79a62fe07eb5135732d341cd8cce1777e4a7788",
+  "lastModified": "2025-07-31T09:47:15.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "zai-org/chatglm3-6b",
+    "language": [
+      "zh",
+      "en"
+    ],
+    "library_name": "transformers",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "glm",
+      "chatglm",
+      "thudm"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 6243584000,
+    "architecture": "chatglm",
+    "context_length": 8192,
+    "chat_template": "{% for message in messages %}{% if loop.first %}[gMASK]sop<|{{ message['role'] }}|>\n {{ message['content'] }}{% else %}<|{{ message['role'] }}|>\n {{ message['content'] }}{% endif %}{% endfor %}{% if add_generation_prompt %}<|assistant|>{% endif %}",
+    "eos_token": "<eos>",
+    "totalFileSize": 12489383776
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a8d2431d335cd9678aa308b5db90eb2290f6cd5c",
+      "size": 2170
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2946c8bd831efb96177e540ca0bc7dd0c785c9a7",
+      "size": 3240
+    },
+    {
+      "rfilename": "chatglm3-6b.IQ4_XS.gguf",
+      "blobId": "6f7cd0919d9b3b53be481cf4567dabed1836699e",
+      "size": 3477282656,
+      "lfs": {
+        "sha256": "0cc3a5d6246033dba758eb53e720351aa1cd8d24b8fc0877cb78991095423dca",
+        "size": 3477282656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q2_K.gguf",
+      "blobId": "d12b1da734b7e978c8de256ebc668dc741e51c69",
+      "size": 2598444896,
+      "lfs": {
+        "sha256": "2d90d0280931891ca29b0f6ca740b3e8d7d798259788ae4cf6a45975d040ce31",
+        "size": 2598444896,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q3_K_L.gguf",
+      "blobId": "179af95536d796434c30a680f7c6283564e7acd0",
+      "size": 3484049248,
+      "lfs": {
+        "sha256": "58e6b9ccd22dadac5e019dcd2db8c27dcf78f96ef673088a70c03672a1d53bd8",
+        "size": 3484049248,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q3_K_M.gguf",
+      "blobId": "2e2a1872e63ba9764f24d4ca577714076d69d48e",
+      "size": 3330662240,
+      "lfs": {
+        "sha256": "3f1552ddd0af4dbd4ee937305088a3583ab28e18bac85858c7154e1c3804a8e1",
+        "size": 3330662240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q3_K_S.gguf",
+      "blobId": "9925cb4b1ccaeb9a206bdc111cf7ba8bce90e744",
+      "size": 2998230880,
+      "lfs": {
+        "sha256": "1329daa88808188c8b8c63f83760f04b7933850778e5cc13ee414b1c722fcf3f",
+        "size": 2998230880,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q4_K_M.gguf",
+      "blobId": "bb01fb87d26a179fef14af247d90eadedd3a6aa1",
+      "size": 4140343136,
+      "lfs": {
+        "sha256": "b2ab9109616d7a38ec8b9fe605b373dd049afcb8c83829e5e3170827dc4a288a",
+        "size": 4140343136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q4_K_S.gguf",
+      "blobId": "79cc45dd6fefb26a956357e6f730c7ae8c290e56",
+      "size": 3790282592,
+      "lfs": {
+        "sha256": "de422a2db9b8cd1308cc7248bf5a9aed246fced64c3847d4e95f981282a31cd5",
+        "size": 3790282592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q5_K_M.gguf",
+      "blobId": "abcea28566180e5315cf99ee5db9f5b3ba17f8b6",
+      "size": 4744322912,
+      "lfs": {
+        "sha256": "c5934e9e34668c0760c7ac7de65454448fad967e2e96e4b65acd84fda4bf7988",
+        "size": 4744322912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q5_K_S.gguf",
+      "blobId": "2ae1827662491c8d3013b874bad4eff7c079d63e",
+      "size": 4428701536,
+      "lfs": {
+        "sha256": "6dbd2f785a978d5a82d76f5cff7604a0ed95612c2ad05259dc3eaeba5d46268a",
+        "size": 4428701536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q6_K.gguf",
+      "blobId": "838563e3c9c48875dca67a27f4bfeddc3296671b",
+      "size": 5504753504,
+      "lfs": {
+        "sha256": "487911b4509c1bce5a9dc16525feea7bb2a8ede7b196f25156e738b1ebaf607f",
+        "size": 5504753504,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.Q8_0.gguf",
+      "blobId": "d5b0b23d2454b4e0d1035e8a50b6eeb629b73786",
+      "size": 6636363616,
+      "lfs": {
+        "sha256": "ff3a1fdb079623ce66db88c005d7cc4c03aa0640e01cac5418cdaa2e9271973b",
+        "size": 6636363616,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "chatglm3-6b.f16.gguf",
+      "blobId": "68e41e88f65da728d47bcfcbe9d56e5e889737da",
+      "size": 12489383776,
+      "lfs": {
+        "sha256": "50d95da369a49d15e06e8f4cddc6ad52faafd2e9c7586ea377e1903d01266118",
+        "size": 12489383776,
+        "pointerSize": 136
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-03-06T07:04:58.000Z",
+  "usedStorage": 57622820992
+}

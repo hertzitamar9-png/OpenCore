@@ -1,0 +1,98 @@
+{
+  "_id": "699c35bbabbc2960f6de80a7",
+  "id": "docvm/medgemma-1.5-4b-it-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "tags": [
+    "gguf",
+    "medgemma",
+    "quantized",
+    "medical",
+    "maternal-health",
+    "mobile",
+    "text-generation",
+    "en",
+    "base_model:google/medgemma-1.5-4b-it",
+    "base_model:quantized:google/medgemma-1.5-4b-it",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 109,
+  "likes": 1,
+  "modelId": "docvm/medgemma-1.5-4b-it-GGUF",
+  "author": "docvm",
+  "sha": "00e7162e05ec89dae563e8b91bfe220605374bf3",
+  "lastModified": "2026-02-23T11:29:02.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "google/medgemma-1.5-4b-it",
+    "license": "other",
+    "license_name": "health-ai-developer-foundations",
+    "license_link": "https://developers.google.com/health-ai-developer-foundations/terms",
+    "tags": [
+      "medgemma",
+      "gguf",
+      "quantized",
+      "medical",
+      "maternal-health",
+      "mobile"
+    ],
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation"
+  },
+  "gguf": {
+    "total": 3880263168,
+    "architecture": "gemma3",
+    "context_length": 131072,
+    "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "totalFileSize": 2489894048
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "90d557c78f9b182e0df8c98735af59d70c3bab65",
+      "size": 1586
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "a72e98b8372ac7593888d96357b7c4ab1fbffdb6",
+      "size": 1494
+    },
+    {
+      "rfilename": "medgemma-1.5-4b-it-Q4_K_M.gguf",
+      "blobId": "770a53eb4a8d94fd750c9d1085f6961fcbcf5602",
+      "size": 2489894048,
+      "lfs": {
+        "sha256": "ae3da2995880ca51199bb3c0fbad9d6d86070d67705f58d4a9de300f605f2bf2",
+        "size": 2489894048,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-02-23T11:10:51.000Z",
+  "usedStorage": 2489894048
+}

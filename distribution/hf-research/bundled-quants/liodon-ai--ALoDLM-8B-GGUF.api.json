@@ -1,0 +1,158 @@
+{
+  "_id": "6ac6a6174675414b4f5a7bb9",
+  "id": "liodon-ai/ALoDLM-8B-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "local-llm",
+    "llama.cpp",
+    "lm-studio",
+    "quantized",
+    "ollama",
+    "qwen3",
+    "text-generation",
+    "base_model:amazon/ALoDLM-8B",
+    "base_model:quantized:amazon/ALoDLM-8B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 581,
+  "likes": 0,
+  "modelId": "liodon-ai/ALoDLM-8B-GGUF",
+  "author": "liodon-ai",
+  "sha": "bcf78100fe4da155855c447b306e100702bd1e3c",
+  "lastModified": "2026-10-08T02:12:42.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "base_model": "amazon/ALoDLM-8B",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "pipeline_tag": "text-generation",
+    "quantized_by": "liodon-ai",
+    "tags": [
+      "gguf",
+      "local-llm",
+      "llama.cpp",
+      "lm-studio",
+      "quantized",
+      "ollama",
+      "qwen3"
+    ]
+  },
+  "gguf": {
+    "total": 8190735360,
+    "architecture": "qwen3",
+    "context_length": 40960,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 3281732608
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a9d4209e95f2a07801049686d355a0c1ce547abb",
+      "size": 1917
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q2_K.gguf",
+      "blobId": "7851523a8d3b2483cdd324f6addfca145ebc01d2",
+      "size": 3281732608,
+      "lfs": {
+        "sha256": "0b80563492b55c42e5e5c65380f6c5052c547cd5bfcb6b23791eeb58095b1a31",
+        "size": 3281732608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q3_K_M.gguf",
+      "blobId": "5de5551aa57cd2b689b66ff6100f69dee5375054",
+      "size": 4124161024,
+      "lfs": {
+        "sha256": "0d694fcac0441976caf94960dee5926ceeb3a62937408af3409a738d258a9325",
+        "size": 4124161024,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q4_0.gguf",
+      "blobId": "74afee2e6a2e3d7e1e1d7300ad4bf9f832d2379d",
+      "size": 4774749184,
+      "lfs": {
+        "sha256": "e18042fe3dfb230ab0f9fc35fa6d5ca19326e4cd0e7a4d5b7c4db3423d4ce954",
+        "size": 4774749184,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q4_K_M.gguf",
+      "blobId": "039bd339bb4576e262962d53a30b44a7368b8c2e",
+      "size": 5027783680,
+      "lfs": {
+        "sha256": "b3f7066e0dbd6d4d254aeaaa8d5dabca614c63659635578275f251221872986b",
+        "size": 5027783680,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q5_K_M.gguf",
+      "blobId": "2f05daf32e969b0bce82ea784e7c0b504277865b",
+      "size": 5851112448,
+      "lfs": {
+        "sha256": "09f2974780c9b12b281601fa1d3cd21dac69929282c0699949968f3f6ce1c6f1",
+        "size": 5851112448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q6_K.gguf",
+      "blobId": "fbd36f56128e692f033d5bf1754d3a5af28d3a11",
+      "size": 6725899264,
+      "lfs": {
+        "sha256": "4618884cf6bfc2c7cf4b9f35abf4357d859e9f2e7f2ffb46ad503f9536896679",
+        "size": 6725899264,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "ALoDLM-8B-Q8_0.gguf",
+      "blobId": "1a8dabe2dc0536419c6753f145c19132ceb5e494",
+      "size": 8709518336,
+      "lfs": {
+        "sha256": "765553eb5b7b1411d9108118db12644d797786cee3f4091457a1936ad7829a8e",
+        "size": 8709518336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6ce57f250a7f7e5f82f8f9b3ef3571ade809937d",
+      "size": 1684
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-07T20:05:43.000Z",
+  "usedStorage": 38494956544
+}

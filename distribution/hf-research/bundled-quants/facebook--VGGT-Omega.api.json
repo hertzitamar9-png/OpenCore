@@ -1,0 +1,111 @@
+{
+  "_id": "69b9bdf1d3534a280fd5fffa",
+  "id": "facebook/VGGT-Omega",
+  "private": false,
+  "tags": [
+    "facebook",
+    "meta-pytorch",
+    "en",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 506,
+  "modelId": "facebook/VGGT-Omega",
+  "author": "facebook",
+  "sha": "1041e80fc0e911235d3426b0a3d9a81075111a53",
+  "lastModified": "2026-09-08T22:03:04.000Z",
+  "gated": "manual",
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "extra_gated_fields": {
+      "First Name": "text",
+      "Last Name": "text",
+      "Date of birth": "date_picker",
+      "Country": "country",
+      "Affiliation": "text",
+      "I accept the terms and conditions": "checkbox",
+      "geo": "ip_location"
+    },
+    "extra_gated_description": "The information you provide will be collected, stored, processed and shared in accordance with the [Meta Privacy Policy](https://www.facebook.com/privacy/policy/).",
+    "extra_gated_button_content": "Submit",
+    "language": [
+      "en"
+    ],
+    "tags": [
+      "facebook",
+      "meta-pytorch"
+    ],
+    "license": "other",
+    "license_name": "fair-noncommercial-research-license",
+    "license_link": "https://huggingface.co/facebook/VGGT-Omega/blob/main/LICENSE.txt"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "LICENSE.txt",
+      "blobId": "01465aec627c2698f972ca68abcabf54a497db14",
+      "size": 11720
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "ae1f7a33d93a39d369e628c53cbfb30cf27258e5",
+      "size": 2403
+    },
+    {
+      "rfilename": "vggt_omega_1b_256_text.pt",
+      "blobId": "c941c3c627b6c9afceb1ea7638e886b2b982eede",
+      "size": 5399490950,
+      "lfs": {
+        "sha256": "2c59393e2d15569498d42191e03c29aabc72bdb243a20870b22a0b24a8f8095c",
+        "size": 5399490950,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "vggt_omega_1b_416_reproduce.pt",
+      "blobId": "0b9de0b2e5b275d09d76c5da057a2a23f910fd63",
+      "size": 4576703488,
+      "lfs": {
+        "sha256": "e900833330eb0e570e10543e6108d0dd704fa7c8dbc32738a645987875298896",
+        "size": 4576703488,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "vggt_omega_1b_512.pt",
+      "blobId": "a6d6f441a083e8d857dcf7951cab7bcaeeb5c66c",
+      "size": 4576706117,
+      "lfs": {
+        "sha256": "c02da418b18bb01d0392598d3f6147366bcde1bb70fd08a5e3bf7925b0667934",
+        "size": 4576706117,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "Viggle/Meridian",
+    "facebook/vggt-omega",
+    "linoyts/meridian-new-angles",
+    "silentchen/vggt-omega",
+    "hugging-apps/dk-vlm",
+    "Yosun/AniGen-4D-Animation",
+    "broyang/vggt-omega",
+    "WitneyWW/vggt-omega-three-view-geometry",
+    "qazwsxedc/vggt-omega",
+    "hbfdhg/vggt-omega",
+    "hbfdhg/vggt-omega-2",
+    "redalert99/miriel-vggt",
+    "wincentIsMe/oh-my-Agent",
+    "gqk/ffgs",
+    "Vinay0409/humanoid-spatial"
+  ],
+  "createdAt": "2026-03-17T20:47:45.000Z",
+  "usedStorage": 23706311782
+}

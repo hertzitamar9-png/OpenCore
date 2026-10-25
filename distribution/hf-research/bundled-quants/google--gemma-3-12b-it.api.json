@@ -1,0 +1,340 @@
+{
+  "_id": "67c35be6eae05d8f94fae4c2",
+  "id": "google/gemma-3-12b-it",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "gemma3",
+    "image-text-to-text",
+    "conversational",
+    "arxiv:1905.07830",
+    "arxiv:1905.10044",
+    "arxiv:1911.11641",
+    "arxiv:1904.09728",
+    "arxiv:1705.03551",
+    "arxiv:1911.01547",
+    "arxiv:1907.10641",
+    "arxiv:1903.00161",
+    "arxiv:2009.03300",
+    "arxiv:2304.06364",
+    "arxiv:2103.03874",
+    "arxiv:2110.14168",
+    "arxiv:2311.12022",
+    "arxiv:2108.07732",
+    "arxiv:2107.03374",
+    "arxiv:2210.03057",
+    "arxiv:2106.03193",
+    "arxiv:1910.11856",
+    "arxiv:2502.12404",
+    "arxiv:2502.21228",
+    "arxiv:2404.16816",
+    "arxiv:2104.12756",
+    "arxiv:2311.16502",
+    "arxiv:2203.10244",
+    "arxiv:2404.12390",
+    "arxiv:1810.12440",
+    "arxiv:1908.02660",
+    "arxiv:2312.11805",
+    "base_model:google/gemma-3-12b-pt",
+    "base_model:finetune:google/gemma-3-12b-pt",
+    "license:gemma",
+    "eval-results",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 329716,
+  "likes": 883,
+  "modelId": "google/gemma-3-12b-it",
+  "author": "google",
+  "sha": "96b6f1eccf38110c56df3a15bffe176da04bfd80",
+  "lastModified": "2025-03-21T20:28:56.000Z",
+  "gated": "manual",
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Gemma3ForConditionalGeneration"
+    ],
+    "model_type": "gemma3",
+    "processor_config": {
+      "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n"
+    },
+    "tokenizer_config": {
+      "bos_token": "<bos>",
+      "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+      "eos_token": "<eos>",
+      "pad_token": "<pad>",
+      "unk_token": "<unk>",
+      "use_default_system_prompt": false
+    }
+  },
+  "cardData": {
+    "license": "gemma",
+    "library_name": "transformers",
+    "pipeline_tag": "image-text-to-text",
+    "extra_gated_heading": "Access Gemma on Hugging Face",
+    "extra_gated_prompt": "To access Gemma on Hugging Face, you\u2019re required to review and agree to Google\u2019s usage license. To do this, please ensure you\u2019re logged in to Hugging Face and click below. Requests are processed immediately.",
+    "extra_gated_button_content": "Acknowledge license",
+    "base_model": "google/gemma-3-12b-pt"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "3c4370fda8fab65837da0173e4e02cfa23e598b4",
+      "size": 1967
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "83dba03ddca6dff78d9c0bb6f9f93bb8eabd6410",
+      "size": 25126
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "e17bde03d42feda32d1abfca6d3b598b9a020df7",
+      "size": 35
+    },
+    {
+      "rfilename": "chat_template.json",
+      "blobId": "719b0cd0d7a373a400b0c119ee0e051f41ea88d9",
+      "size": 1615
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "0fbe1ff508fb71af7056eed3397faaa0349a8f09",
+      "size": 916
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "37a4c871d263a349f50e4a313db3e72164950702",
+      "size": 215
+    },
+    {
+      "rfilename": "model-00001-of-00005.safetensors",
+      "blobId": "b31bb2df2dc13fd8028e51899bdb1e7a4fb6d167",
+      "size": 4979902192,
+      "lfs": {
+        "sha256": "4847447e92599833e8dbaa3067cd201c3bb5c052efa91f11ba891e43234f7832",
+        "size": 4979902192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00005.safetensors",
+      "blobId": "5eb217601f2c82b83e3e7ae754d183429d9dde4e",
+      "size": 4931296592,
+      "lfs": {
+        "sha256": "891bd54eed03cba9ee1e705533a02a8217fcc29f356e4a1f53e5fd0d178883ad",
+        "size": 4931296592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00005.safetensors",
+      "blobId": "425bcf00b3eb7c7ef42496d1500591e4f8068b72",
+      "size": 4931296656,
+      "lfs": {
+        "sha256": "7cee411d9d57324e50ce064a192cc5a858276d508611b12fc599e0c9767112e0",
+        "size": 4931296656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00005.safetensors",
+      "blobId": "71b7dba9bf563fdb2f5cc1a518483adfdc91d1a3",
+      "size": 4931296656,
+      "lfs": {
+        "sha256": "8bc75a29a730c9e743cad013feda3b0991a913fafe787c58a1c6e20afad97723",
+        "size": 4931296656,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00005-of-00005.safetensors",
+      "blobId": "2e7be9e5bfa8222c2bfe34159586d2b1f35fd505",
+      "size": 4601000928,
+      "lfs": {
+        "sha256": "ed14bd4908c98fed9f61e8cd410167e0846de9abd78e0452ab092072e5d9252d",
+        "size": 4601000928,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "c5eb054c21efb5496f4623aeb619a750c9ed9357",
+      "size": 108605
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "b1e00fc184f61b698181821169c6374cd5813e5c",
+      "size": 570
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "453c7966d4b5d0b4a317c585989f64c58c2a6bf0",
+      "size": 70
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "1a6193244714d3d78be48666cb02cdbfac62ad86",
+      "size": 662
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "29401f984828a18bb09a6128d437c6766785eb66",
+      "size": 33384568,
+      "lfs": {
+        "sha256": "4667f2089529e8e7657cfb6d1c19910ae71ff5f28aa7ab2ff2763330affad795",
+        "size": 33384568,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer.model",
+      "blobId": "14f810a829755bae3fafd6f97096dbd2eac556bd",
+      "size": 4689074,
+      "lfs": {
+        "sha256": "1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
+        "size": 4689074,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "7bdd14f0eaec30c8d2c56bc9d543587676e19c0f",
+      "size": 1156999
+    }
+  ],
+  "spaces": [
+    "pliny-the-prompter/obliteratus",
+    "ginigen-ai/smol-worldcup",
+    "Genrius-AI/llm-vram-calculator",
+    "huggingface-projects/gemma-3-12b-it",
+    "build-small-hackathon/claim-ready",
+    "TIGER-Lab/MEGA-Bench",
+    "multimodalart/scenema-audio",
+    "whitecircle/circle-guard-bench",
+    "qimma/leaderboard",
+    "EuroEval/euroeval_leaderboard",
+    "VIDraft/Gemma-3-R1984-12B",
+    "merterbak/gemma-3",
+    "openfree/Gemma-3-R1984-12B",
+    "valira-ai/slo-ocr-benchmark",
+    "hugging-apps/scena-audio-scene-demo",
+    "MCP-1st-Birthday/learnbee_mcp",
+    "alexandrainst/radial-plot-generator",
+    "CalvinU/writing-prototypes",
+    "filbench/filbench-leaderboard",
+    "Tomoniai/gemma-3-chat",
+    "crusoeai/foundry-model-arena",
+    "kitab-bench/KITAB-Bench-Leaderboard",
+    "bebechien/hollow-knight-helper",
+    "Jasmineame/detect-LLM-tokens",
+    "alaub/uqied",
+    "Agents-MCP-Hackathon/AutoReadmeAgent",
+    "Legal-Assistant/LawBot",
+    "Vigneshsaminathan/VQA",
+    "ArtShumov/Whyx-PROmpTea",
+    "Slyracoon23/what_is_prompt_engineering",
+    "kakaoent/webtoon_cropper",
+    "huaweilin/VTBench",
+    "ReallyFloppyPenguin/AICodepen",
+    "Nour190/gradio-Ui",
+    "jashdoshi77/notebooklm-fast",
+    "dumbordumber/obliteratus",
+    "Kodacoda/obliteratus",
+    "beta3/Gemma_Hub_Explorer",
+    "joeygambino/joyai-echo-ltx23-surgical",
+    "ashmib/green-city-finder",
+    "PegasusPedal/gemma-examples",
+    "Bruno/gemma-3-12b-pt-br",
+    "Rohit1412/AirGPT1.04b",
+    "mohitkumarrajbadi/Finetune_Gemma_Model",
+    "HiTZ/Critical_Questions_Leaderboard",
+    "AC2513/gemma-demo",
+    "hmgill/Cellpose-SAM-Agent",
+    "AdarshJi/FALTU_ADARSH",
+    "dromero14521/obliteratus",
+    "Scribedpengenius/Barrot-Omega",
+    "rbinrs/obliteratus",
+    "kicfk/obliteratus",
+    "vfven/test",
+    "vfven/mission-control-v2",
+    "aaahmet/obliteratus",
+    "Deadmon/obliteratus",
+    "Ngixdev/obliteratus",
+    "crusoeai/doc_analysis",
+    "AlauStone/rag-assistant",
+    "webmazta/contentai",
+    "devani18/industri-fix-rag",
+    "F4biian/RAGognizer",
+    "crusoeai/snake-battle-ai",
+    "Nipun/agent-101",
+    "cyberray6801/joyai-echo-zerogpu",
+    "ICSAC-Institute/editorial-system",
+    "build-small-hackathon/letxinet-lat",
+    "ajsbsd/image2video",
+    "adityabro124/corvia-backend",
+    "vinhAIO/chatAIO",
+    "Jacobo/zetema",
+    "RavichandranJ/obliteratus",
+    "S-Dreamer/obliteratus",
+    "AlanaSky/asgaard",
+    "marchkamal51/obliteratus",
+    "ColinGPT9/Clips-Studio",
+    "hugging-apps/joyai-echo",
+    "hugging-apps/temporal-context-routing",
+    "jkorstad/daggr-studio",
+    "SEE7/gemma-3-12b-it-heretic-demo",
+    "NanobotzAI/gemma-3-chat",
+    "NanobotzAI/gemma-3-chat-api",
+    "Pamudu13/gemma-3-chat-api",
+    "Pamudu13/gemma-3-chat-api-2",
+    "NanobotzAI/gemma-3-chat-api-2",
+    "CognitiveScience/gemma-3-chat",
+    "fickya87/fic_gemma-3-12b-it",
+    "openfree/Gemma-3-R1984-4B",
+    "Himanshu806/gemma-3-12b-it",
+    "chatfinanz/new-space7",
+    "chatfinanz/chatfinanz",
+    "NanobotzAI/gemma-3-chat-api-3",
+    "feyzamiynat/goruntuIsleme",
+    "Nostraiss/Final_Assignment_Template",
+    "feyzamiynat/gemmaModel",
+    "alvarog1318/KD_USAC",
+    "jhonnygomez88/hevy_analytics",
+    "doropiza/chatbot",
+    "CamilleBorrett/model-demo",
+    "k3ybladewielder/cloudwalk_chatbot"
+  ],
+  "createdAt": "2025-03-01T19:11:34.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 12187325040
+    },
+    "total": 12187325040
+  },
+  "usedStorage": 111273492196
+}

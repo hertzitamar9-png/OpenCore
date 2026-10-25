@@ -1,0 +1,217 @@
+{
+  "_id": "68c91dbd6f5ebd944396f7da",
+  "id": "mradermacher/Holo1.5-3B-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "multimodal",
+    "action",
+    "agent",
+    "pytorch",
+    "en",
+    "base_model:Hcompany/Holo1.5-3B",
+    "base_model:quantized:Hcompany/Holo1.5-3B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 246,
+  "likes": 1,
+  "modelId": "mradermacher/Holo1.5-3B-GGUF",
+  "author": "mradermacher",
+  "sha": "e67d46124434c843f4daebc68c9ce173a7ce1f87",
+  "lastModified": "2025-09-16T08:37:51.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "Hcompany/Holo1.5-3B",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "other",
+    "license_name": "other",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "multimodal",
+      "action",
+      "agent",
+      "pytorch"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 3397103616,
+    "architecture": "qwen2vl",
+    "context_length": 128000,
+    "chat_template": "{% set image_count = namespace(value=0) %}{% set video_count = namespace(value=0) %}{% for message in messages %}{% if loop.first and message['role'] != 'system' %}<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n{% endif %}<|im_start|>{{ message['role'] }}\n{% if message['content'] is string %}{{ message['content'] }}<|im_end|>\n{% else %}{% for content in message['content'] %}{% if content['type'] == 'image' or 'image' in content or 'image_url' in content %}{% set image_count.value = image_count.value + 1 %}{% if add_vision_id %}Picture {{ image_count.value }}: {% endif %}<|vision_start|><|image_pad|><|vision_end|>{% elif content['type'] == 'video' or 'video' in content %}{% set video_count.value = video_count.value + 1 %}{% if add_vision_id %}Video {{ video_count.value }}: {% endif %}<|vision_start|><|video_pad|><|vision_end|>{% elif 'text' in content %}{{ content['text'] }}{% endif %}{% endfor %}<|im_end|>\n{% endif %}{% endfor %}{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 6800646048
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "4d8ee209f279e673bcef83875de0163ce7229c7b",
+      "size": 2345
+    },
+    {
+      "rfilename": "Holo1.5-3B.IQ4_XS.gguf",
+      "blobId": "2545b9e03fbd8ef2c7ee098d7c482f86316ef32a",
+      "size": 1918490528,
+      "lfs": {
+        "sha256": "b82e45454b76661a8f4d9531161a7ccbc337e1b498c6855f502c85762add25ce",
+        "size": 1918490528,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q2_K.gguf",
+      "blobId": "2024b23a331680c7ac4890eeeec09cc96bca7fca",
+      "size": 1376855968,
+      "lfs": {
+        "sha256": "30627c12a5f3d97da54a954994bf0557e416dafd5999d1a6746fe071de402ae9",
+        "size": 1376855968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q3_K_L.gguf",
+      "blobId": "edbf3a09ddfbd857257392b2fec4677faa9d5af8",
+      "size": 1841094560,
+      "lfs": {
+        "sha256": "2c77e5da14b89682175a6a637c4c48a1d9b3f78d025c6089c3aec0bb95bc8645",
+        "size": 1841094560,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q3_K_M.gguf",
+      "blobId": "52251dad15589ed53cf26937ded1454e6b65a777",
+      "size": 1724178336,
+      "lfs": {
+        "sha256": "bfa0a21467d1ee058e3a725c7896be3cea0ed40ccdea0f1b5f2580d25089aa53",
+        "size": 1724178336,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q3_K_S.gguf",
+      "blobId": "51440b33d2980bf144d5b8b285dda9a55ff22366",
+      "size": 1588060064,
+      "lfs": {
+        "sha256": "bed123d9b4f06e64c0fa9f30ebd32d550166fd90dbf176119cbc37c7ba6b4142",
+        "size": 1588060064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q4_K_M.gguf",
+      "blobId": "ef520396f5a42f5e4870d33494d27dbf65fcf880",
+      "size": 2104932256,
+      "lfs": {
+        "sha256": "5efb1318d439fe1f71e38825a17203c48ced7de4a5d0796427c8c638e817622a",
+        "size": 2104932256,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q4_K_S.gguf",
+      "blobId": "ca5d00bbf0ad86bc577f19a192cac5f1b5cce9b3",
+      "size": 2009413536,
+      "lfs": {
+        "sha256": "1a316b9bbd8dde6a66910564b00b3611fb77927f54927966a82dea1389f3b8c6",
+        "size": 2009413536,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q5_K_M.gguf",
+      "blobId": "eb3dfff6ea79b9a420e1728ff386ed9f7bd793c8",
+      "size": 2438739872,
+      "lfs": {
+        "sha256": "c612ee7a361881035bcc22e2303250321e60c357887d43d27448f9f82c9626e7",
+        "size": 2438739872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q5_K_S.gguf",
+      "blobId": "aec6e4104d837928470ea871e27d75f7822e55cc",
+      "size": 2383591328,
+      "lfs": {
+        "sha256": "d2262eb77689d816c0fac2b29c28b18e936ad419eb27033f86099cd15a340a75",
+        "size": 2383591328,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q6_K.gguf",
+      "blobId": "62bf54368f552b03eff5fe5c7e495c6c7748258a",
+      "size": 2793410464,
+      "lfs": {
+        "sha256": "0c7e3318f3b51b5edfd6207cc0636e4eb21646182549b89126003e18ddeabeed",
+        "size": 2793410464,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.Q8_0.gguf",
+      "blobId": "31a87f67934131207351084e0f785d52fceeca91",
+      "size": 3616087968,
+      "lfs": {
+        "sha256": "1aa8ec35564df867d361365dbd32c839683ff1072025d82671f89c098071a0f9",
+        "size": 3616087968,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.f16.gguf",
+      "blobId": "c2de65516025630d5b7dbce2430fa6c61f80c1bc",
+      "size": 6800646048,
+      "lfs": {
+        "sha256": "d395147ccd3b4b3314add67d53abf57d900f0a060250583ded315e56b36da0b3",
+        "size": 6800646048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.mmproj-Q8_0.gguf",
+      "blobId": "bb4b445887707d0c33d069c54f3a25b5107189ab",
+      "size": 847768768,
+      "lfs": {
+        "sha256": "fb5cc798b386a4b680c306f061457cb16cc627c7d9ed401d660b8b940463142b",
+        "size": 847768768,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "Holo1.5-3B.mmproj-f16.gguf",
+      "blobId": "197e33edb65dde0f0bdd07ae5bb450dbaeaa7721",
+      "size": 1338428608,
+      "lfs": {
+        "sha256": "c082ece90fc1029ab05ba98b5187076ac5a9e9e7fc42f5b96fdf714b323e151f",
+        "size": 1338428608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "59dd95ab9bab39d3939d1a80aad4a0c69fe2c553",
+      "size": 3710
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-09-16T08:20:13.000Z",
+  "usedStorage": 32781698304
+}

@@ -1,0 +1,190 @@
+{
+  "_id": "6acd16304cd2223002ab6773",
+  "id": "AtomicChat/MiniCPM-V-4.7-1B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "llama.cpp",
+    "minicpm",
+    "openbmb",
+    "imatrix",
+    "quantized",
+    "conversational",
+    "atomic-chat",
+    "image-text-to-text",
+    "base_model:openbmb/MiniCPM-V-4.7-1B",
+    "base_model:quantized:openbmb/MiniCPM-V-4.7-1B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 11157,
+  "likes": 7,
+  "modelId": "AtomicChat/MiniCPM-V-4.7-1B-GGUF",
+  "author": "AtomicChat",
+  "sha": "b0efd52562b5115d80f81eba7c2b250b5f63bcf1",
+  "lastModified": "2026-10-12T18:14:10.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "openbmb/MiniCPM-V-4.7-1B",
+    "base_model_relation": "quantized",
+    "quantized_by": "AtomicChat",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "license": "apache-2.0",
+    "tags": [
+      "gguf",
+      "llama.cpp",
+      "minicpm",
+      "openbmb",
+      "imatrix",
+      "quantized",
+      "conversational",
+      "atomic-chat"
+    ]
+  },
+  "gguf": {
+    "total": 1006209856,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "quantize_imatrix_file": "/work/MiniCPM-V-4.7-1B/imatrix/imatrix.gguf",
+    "chat_template": "{%- macro render_content(content, is_system_content=false) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is iterable and content is not mapping -%}\n        {%- set ns = namespace(parts=[]) -%}\n        {%- for item in content -%}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain images.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|image_pad|>'] -%}\n            {%- elif 'video' in item or item.type == 'video' -%}\n                {%- if is_system_content -%}\n                    {{- raise_exception('System message cannot contain videos.') -}}\n                {%- endif -%}\n                {%- set ns.parts = ns.parts + ['<|video_pad|>'] -%}\n            {%- elif 'text' in item -%}\n                {%- set ns.parts = ns.parts + [item.text] -%}\n            {%- else -%}\n                {{- raise_exception('Unexpected item type in content.') -}}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- ns.parts | join('\\n') -}}\n    {%- elif content is none or content is undefined -%}\n        {{- '' -}}\n    {%- else -%}\n        {{- raise_exception('Unexpected content type.') -}}\n    {%- endif -%}\n{%- endmacro -%}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, true)|trim %}\n        {{- '<|im_start|>system\\n' + content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if loop.index0 > ns.last_query_index and reasoning_content %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n\\n</think>\\n\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}\n",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 586882144
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "66b532528daea396ec311c188470def6aa7a81d5",
+      "size": 2960
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-AD-IQ4_XS-IQ3_S.gguf",
+      "blobId": "6aff7a3c12ba7d41492727eef8c685ff02cb13c7",
+      "size": 586882144,
+      "lfs": {
+        "sha256": "6c01a7c4cf3a236eb23cddc9e54c6b91f566e25d99f42d72518e87194a0ec866",
+        "size": 586882144,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-AD-IQ4_XS.gguf",
+      "blobId": "64513b99583339ae77741ac24c1f17a442c3b103",
+      "size": 654439520,
+      "lfs": {
+        "sha256": "6ea06a8749c83862d7dfaafc22e6ee06193262002ca05a9825dccf0f502d70a0",
+        "size": 654439520,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-AD-Q4_K_M.gguf",
+      "blobId": "8b4620ca46754ed162f3c6da090da2608d3c0d57",
+      "size": 666104928,
+      "lfs": {
+        "sha256": "f6f0f2b7f97f0a1f9886e5bf077682ef047f72c407d03e071b2ffd0cb9b6831a",
+        "size": 666104928,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-AD-Q5_K_M-Q4_K_M.gguf",
+      "blobId": "516bd636dfc6f7d908c01e569331ef62e1c3405a",
+      "size": 692790368,
+      "lfs": {
+        "sha256": "efd05c9d8ef223fcd1150eee3c3165b86f5e50b631dbb8a9d748299ca3d876b6",
+        "size": 692790368,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-AD-Q5_K_M.gguf",
+      "blobId": "7a69100155aab0a7851f9974c8ab7465ab32559d",
+      "size": 735262752,
+      "lfs": {
+        "sha256": "fb3bcf7bb2c199472e4768623e66e6ccb54f594149dadea9aa961e81b5d2a675",
+        "size": 735262752,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-AD-Q6_K.gguf",
+      "blobId": "7ceea9036765b9abbac618119e583f6fee725537",
+      "size": 1002666272,
+      "lfs": {
+        "sha256": "72f75de0ebba11c37daee78ec3f8962d2ab9008a5b27de402d4f83ad5c63dee2",
+        "size": 1002666272,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-Q6_K.gguf",
+      "blobId": "f74a6b3b06729e819cedd0d093785100eb46c43a",
+      "size": 837947424,
+      "lfs": {
+        "sha256": "4fb004a3604e51a799e875cac3d8bb61f1a99d686ef961ef20b979ef3dda05d4",
+        "size": 837947424,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MiniCPM-V-4.7-1B-Q8_0.gguf",
+      "blobId": "4be1bb97b39b4d71122042d767adcdc81c720e7b",
+      "size": 1081518112,
+      "lfs": {
+        "sha256": "92fda45b29e652457478fe4529bb92cd3afaa0f3e859f02bb061cd3f121dbdf6",
+        "size": 1081518112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6ce41ca9858d06b075d0b62d8ff11ebde87327a3",
+      "size": 8102
+    },
+    {
+      "rfilename": "mmproj-MiniCPM-V-4.7-1B-BF16.gguf",
+      "blobId": "e20436a8a6ea6fe113cb9cec3e53efc12452b4dc",
+      "size": 1110118176,
+      "lfs": {
+        "sha256": "afa7d0829262749913a9ed7855de6eb324e8cd47a29f97f5452e5cb7d8caf4f8",
+        "size": 1110118176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "mmproj-MiniCPM-V-4.7-1B-F16.gguf",
+      "blobId": "b71581ef08006d84992fd28a06a3037788a6a315",
+      "size": 1108763424,
+      "lfs": {
+        "sha256": "d49bde925d1f7b080b715829640430bb2e1f6b5e33dee15a47afc200d0cf0b5a",
+        "size": 1108763424,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-12T17:17:36.000Z",
+  "usedStorage": 14771437088
+}

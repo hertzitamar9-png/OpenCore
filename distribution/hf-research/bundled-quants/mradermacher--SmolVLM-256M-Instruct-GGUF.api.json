@@ -1,0 +1,192 @@
+{
+  "_id": "680bafba00ae1e6c85e3e03a",
+  "id": "mradermacher/SmolVLM-256M-Instruct-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "en",
+    "dataset:HuggingFaceM4/the_cauldron",
+    "dataset:HuggingFaceM4/Docmatix",
+    "base_model:HuggingFaceTB/SmolVLM-256M-Instruct",
+    "base_model:quantized:HuggingFaceTB/SmolVLM-256M-Instruct",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 472,
+  "likes": 1,
+  "modelId": "mradermacher/SmolVLM-256M-Instruct-GGUF",
+  "author": "mradermacher",
+  "sha": "a822610a13a4344f96a5895e9a601b6874c01823",
+  "lastModified": "2025-07-10T11:05:22.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "HuggingFaceTB/SmolVLM-256M-Instruct",
+    "datasets": [
+      "HuggingFaceM4/the_cauldron",
+      "HuggingFaceM4/Docmatix"
+    ],
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apache-2.0",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 162974016,
+    "architecture": "llama",
+    "context_length": 8192,
+    "chat_template": "<|im_start|>{% for message in messages %}{{message['role'] | capitalize}}{% if message['content'][0]['type'] == 'image' %}{{':'}}{% else %}{{': '}}{% endif %}{% for line in message['content'] %}{% if line['type'] == 'text' %}{{line['text']}}{% elif line['type'] == 'image' %}{{ '<image>' }}{% endif %}{% endfor %}<end_of_utterance>\n{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "bos_token": "<|im_start|>",
+    "eos_token": "<end_of_utterance>",
+    "totalFileSize": 327810176
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "ed01af4096d1e10a938608ece1c112d9acfee693",
+      "size": 2350
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "4c579789b86b1303959169af1f56e15279deecca",
+      "size": 3580
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.IQ4_XS.gguf",
+      "blobId": "73d180d92f3569e0d0ea6bdaf8f4f1e5df27874c",
+      "size": 107363456,
+      "lfs": {
+        "sha256": "3b081b3dc37cd5b103025a1946d3ebd9e30619b8a4b8c2cadbb86a2a9f2489fd",
+        "size": 107363456,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q2_K.gguf",
+      "blobId": "bf7c30c446aa60bbb770760ce2ef9b0606f967a8",
+      "size": 104253056,
+      "lfs": {
+        "sha256": "128ed7547e8f7bbacfeb2be3ae7e7a9e890be84fd89d3951a2b3ff27a502aaff",
+        "size": 104253056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q3_K_L.gguf",
+      "blobId": "8edaddabef2632992248fb890904f160c3f91573",
+      "size": 113584256,
+      "lfs": {
+        "sha256": "258a7c34d259962263582720a652f5a180a03639ed795b67f5e597e4b136cf76",
+        "size": 113584256,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q3_K_M.gguf",
+      "blobId": "702e5dfb6796ed91e959313c791f49c978358bf6",
+      "size": 109561472,
+      "lfs": {
+        "sha256": "710c06f4eef146d1df39fd5fd2b94f1658645acb5780db679d6943eef63152e1",
+        "size": 109561472,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q3_K_S.gguf",
+      "blobId": "e11cd2f7e566c117160a67deb4c51a07a3cac7e6",
+      "size": 104253056,
+      "lfs": {
+        "sha256": "fb9d67e0206f5a7707565caa1ae702978764c7501deab4c61ff25068b93b6c28",
+        "size": 104253056,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q4_K_M.gguf",
+      "blobId": "0389ec404e113894aae83621920ac384479c41a0",
+      "size": 125053568,
+      "lfs": {
+        "sha256": "04a8bb3fe980594e26f0227c9aa05298ac69cdc95b68d614352d520335c62e46",
+        "size": 125053568,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q4_K_S.gguf",
+      "blobId": "08f605f4aa52eec34042fba8fb026265c6d8f8dd",
+      "size": 121639040,
+      "lfs": {
+        "sha256": "78f1e98161f605d3fe43b87c332b725691c5626d2d562a6a4351ff4339164b61",
+        "size": 121639040,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q5_K_M.gguf",
+      "blobId": "e4fb92c89ca9dc54c280ee9dc43ff079172ad10d",
+      "size": 133476992,
+      "lfs": {
+        "sha256": "9fe1bdf16537062363de6e1246a8db4fc12667c8aa46e4664433c0627cfbb6c7",
+        "size": 133476992,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q5_K_S.gguf",
+      "blobId": "788b4664232c1cf8c1bcb7a46352147d945d03a3",
+      "size": 131348096,
+      "lfs": {
+        "sha256": "968d70b8e8f2bab77b24eb55a78e43c84befe09a2d18e9799f46b7c04d72bfe8",
+        "size": 131348096,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q6_K.gguf",
+      "blobId": "afb954049b0b2e1026e5e04a99176b3bf354069b",
+      "size": 168626816,
+      "lfs": {
+        "sha256": "e9a7d93be767c768ea82adbf3ced506936a3350a055581d663e697b683331b37",
+        "size": 168626816,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.Q8_0.gguf",
+      "blobId": "6376d57de573470a6d145c224ead0a86eacf62e4",
+      "size": 175054976,
+      "lfs": {
+        "sha256": "ccf0368c60f7331aa9b8e27d35d7155a219252c088e264c93021e02b89f4fd61",
+        "size": 175054976,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "SmolVLM-256M-Instruct.f16.gguf",
+      "blobId": "3a8998a14b5d5f64c8301baab4063c328a6cd976",
+      "size": 327810176,
+      "lfs": {
+        "sha256": "1d0bf397a2b56898df8607d036a9ad6e4eca7c292fe0dee530627bd282f435af",
+        "size": 327810176,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2025-04-25T15:52:26.000Z",
+  "usedStorage": 1722024960
+}

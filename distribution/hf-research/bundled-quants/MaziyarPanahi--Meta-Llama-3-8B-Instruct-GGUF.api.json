@@ -1,0 +1,280 @@
+{
+  "_id": "66214dadecdd46cf556f7478",
+  "id": "MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF",
+  "private": false,
+  "pipeline_tag": "text-generation",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "mistral",
+    "facebook",
+    "meta",
+    "pytorch",
+    "llama",
+    "llama-3",
+    "quantized",
+    "2-bit",
+    "3-bit",
+    "4-bit",
+    "5-bit",
+    "6-bit",
+    "8-bit",
+    "16-bit",
+    "GGUF",
+    "text-generation",
+    "en",
+    "base_model:meta-llama/Meta-Llama-3-8B-Instruct",
+    "base_model:quantized:meta-llama/Meta-Llama-3-8B-Instruct",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 73865,
+  "likes": 103,
+  "modelId": "MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF",
+  "author": "MaziyarPanahi",
+  "sha": "4ece958b356f2ec00338e5898ba0a7254d976baf",
+  "lastModified": "2024-04-23T12:55:06.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "model_type": "mistral"
+  },
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "pipeline_tag": "text-generation",
+    "tags": [
+      "facebook",
+      "meta",
+      "pytorch",
+      "llama",
+      "llama-3",
+      "quantized",
+      "2-bit",
+      "3-bit",
+      "4-bit",
+      "5-bit",
+      "6-bit",
+      "8-bit",
+      "16-bit",
+      "GGUF"
+    ],
+    "base_model": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "inference": false,
+    "model_creator": "MaziyarPanahi",
+    "model_name": "Meta-Llama-3-8B-Instruct-GGUF",
+    "quantized_by": "MaziyarPanahi",
+    "license_name": "llama3"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 8030261248,
+    "architecture": "llama",
+    "context_length": 8192,
+    "chat_template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
+    "bos_token": "<|begin_of_text|>",
+    "eos_token": "<|eot_id|>",
+    "totalFileSize": 16069403840
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "30c84f5524c635d2cb4c94aea2a3ce161467cae2",
+      "size": 2752
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.IQ1_M.gguf",
+      "blobId": "5ada3dc315c1833de6980e1a96b8b78913f49d6f",
+      "size": 2162484448,
+      "lfs": {
+        "sha256": "0d2b981d2d3ff8b76c40c25b30d16e23683986a81b3fae394979c5f12d8987ac",
+        "size": 2162484448,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.IQ1_S.gguf",
+      "blobId": "aec7897174f18ee957ded618c000bf8e3851a733",
+      "size": 2020140256,
+      "lfs": {
+        "sha256": "6a35d34a9f9ce5372192bba69f8637df55375ebcbfcba9594edb2a2b8a415b93",
+        "size": 2020140256,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.IQ2_XS.gguf",
+      "blobId": "14297049e3a43a4899317ef9660c7dac55d43fca",
+      "size": 2606294240,
+      "lfs": {
+        "sha256": "d994b4285ddac4e00f69e36aacf9a84a7f3f9e6679508c3baecf8a1d35503e10",
+        "size": 2606294240,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.IQ3_XS.gguf",
+      "blobId": "c7a254b6a0a2053db2900d86e2dfa4c24f11c7a2",
+      "size": 3519259872,
+      "lfs": {
+        "sha256": "d62fbd5cba536b03e45dc82a78fc9ac33c979129a3d386422b127bc7085af8b6",
+        "size": 3519259872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.IQ4_XS.gguf",
+      "blobId": "7e6bd877ca8d846c80f3ce0f2d2e7b3c86055247",
+      "size": 4448175328,
+      "lfs": {
+        "sha256": "f38c59ec1abcd428d2c3ab2c9c63798c2aeac5bbdf3e708f4998a69ac50dfba1",
+        "size": 4448175328,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q2_K.gguf",
+      "blobId": "92a816c1b2571eb46439474e5467e1239f0254a7",
+      "size": 3179644128,
+      "lfs": {
+        "sha256": "fc6f3ac3758ac698bad1cadaf98e6cf0dcf28ea0d7b5111379378882ce7a8be2",
+        "size": 3179644128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q3_K_L.gguf",
+      "blobId": "d1052a697b0be974166ceda21c0191e57e928ef0",
+      "size": 4322469088,
+      "lfs": {
+        "sha256": "e68e1867c60526f2b4664850a53db1cf469af8e1d0e7fc055c2ed2db7190582b",
+        "size": 4322469088,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q3_K_M.gguf",
+      "blobId": "fa5243333ed3bb5ad139e64839cb76463ac49622",
+      "size": 4019430624,
+      "lfs": {
+        "sha256": "2c48b75dcb6ffda0f1d8225b2313f86860ded09703731a27e8b924faf5b621cb",
+        "size": 4019430624,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q3_K_S.gguf",
+      "blobId": "e32c08697bf61bafb5996031d75b3609dc4932a7",
+      "size": 3665011936,
+      "lfs": {
+        "sha256": "f79b99ba3f2b666b0527591622a18a4d2a06b186f86ae82d123bfe86bf2d2b80",
+        "size": 3665011936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
+      "blobId": "2b2acf05ef14298ba3bbfec17bc304ef70bdd225",
+      "size": 4921246944,
+      "lfs": {
+        "sha256": "4903067381e3753e2629f9d20c52df0e43b675bed2735bc3efea351c7d07454d",
+        "size": 4921246944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q4_K_S.gguf",
+      "blobId": "10b50bbb966398d9c9411f4fc90e3ec761d40930",
+      "size": 4693181664,
+      "lfs": {
+        "sha256": "5eddeeb4b46b88cedf0a30ff3769cbf9167785cbbb4b336aa13347f0c94f1b3c",
+        "size": 4693181664,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q5_K_M.gguf",
+      "blobId": "7b927f15390da352bcb4dad1f9a1e1a779a353e2",
+      "size": 5733500128,
+      "lfs": {
+        "sha256": "740c575a3ceb1f1be4031797feee415db9b0595d88c5a7a18a83d9a1d741dbd7",
+        "size": 5733500128,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q5_K_S.gguf",
+      "blobId": "ce2c260168b98de5c3caafaccc055882c14afa8b",
+      "size": 5599806688,
+      "lfs": {
+        "sha256": "7d183c51c016730d1d3a501a3208c21ea8fc0c5f9856845294faf4819993579b",
+        "size": 5599806688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q6_K.gguf",
+      "blobId": "f3f1ab999882c55dbe6b6757bd0f1938905f0fa5",
+      "size": 6596519136,
+      "lfs": {
+        "sha256": "c2ca99d853de276fb25a13e369a0db2fd3782eff8d28973404ffa5ffca0b9267",
+        "size": 6596519136,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.Q8_0.gguf",
+      "blobId": "fc912844aef69f0dcaca030a091c53004d489651",
+      "size": 8541283552,
+      "lfs": {
+        "sha256": "d7efa06c16dc522fe7e6a48e36d17cc42dcadfe581ae1cdf7be9f51734eaf85d",
+        "size": 8541283552,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Meta-Llama-3-8B-Instruct.fp16.gguf",
+      "blobId": "cc28051b47d9715576beef9e2bd980b7fc99cc4e",
+      "size": 16069403840,
+      "lfs": {
+        "sha256": "e6ec30c2b58578e82030cc7a1252a99af23aa58c44668ae049a0de1fb2253c71",
+        "size": 16069403840,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c974289f01c82a50ca91a4ecfcb79ca6a28243eb",
+      "size": 25525
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "9f0f76f8d1de0ed9b8adf494540f149aaef5f07c",
+      "size": 31
+    }
+  ],
+  "spaces": [
+    "Gotab123/MediAssist-Llama3"
+  ],
+  "createdAt": "2024-04-18T16:43:25.000Z",
+  "usedStorage": 172399848032
+}

@@ -1,0 +1,547 @@
+{
+  "_id": "6ab1f740b1d5237b9a8571c0",
+  "id": "Baekpica/MiMo-V2.6-Flash-RL-Mixed-Quant-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "mixed-quant",
+    "mimo_v2",
+    "multimodal",
+    "audio",
+    "video-understanding",
+    "imatrix",
+    "dgx-spark",
+    "image-text-to-text",
+    "conversational",
+    "en",
+    "zh",
+    "base_model:XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "base_model:quantized:XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 3974,
+  "likes": 8,
+  "modelId": "Baekpica/MiMo-V2.6-Flash-RL-Mixed-Quant-GGUF",
+  "author": "Baekpica",
+  "sha": "7cbefe60ca47818074fbfa0e09f04105ee8fc673",
+  "lastModified": "2026-09-26T09:35:52.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "chat_template_jinja": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "mit",
+    "base_model": "XiaomiMiMo/MiMo-V2.6-Flash-RL",
+    "base_model_relation": "quantized",
+    "pipeline_tag": "image-text-to-text",
+    "library_name": "gguf",
+    "language": [
+      "en",
+      "zh"
+    ],
+    "tags": [
+      "gguf",
+      "mixed-quant",
+      "mimo_v2",
+      "multimodal",
+      "audio",
+      "video-understanding",
+      "imatrix",
+      "dgx-spark"
+    ]
+  },
+  "gguf": {
+    "total": 309766601088,
+    "architecture": "mimo2",
+    "context_length": 1048576,
+    "quantize_imatrix_file": "/root/mimo-work/handoff/calibration/final-imatrix.gguf",
+    "chat_template": "{%- macro render_value(value) -%}\n    {%- if value is string -%}\n        {{- value -}}\n    {%- else -%}\n        {{- value | tojson(ensure_ascii=False) -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_content(message_content) -%}\n    {%- if message_content is string -%}\n        {{- message_content -}}\n    {%- elif message_content is iterable -%}\n        {%- for part in message_content -%}\n            {%- if part is not mapping -%}\n                {{- part -}}\n            {%- elif part['type'] == 'image' or 'image' in part or 'image_url' in part -%}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}\n            {%- elif part['type'] == 'audio' or part['type'] == 'input_audio' or 'audio' in part or 'audio_url' in part or 'input_audio' in part -%}\n                {{- '<|mimo_audio_start|><|audio_pad|><|mimo_audio_end|>' -}}\n            {%- elif part['type'] == 'video' or 'video' in part or 'video_url' in part -%}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}\n            {%- elif 'text' in part -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tools(tools) -%}\n    {{- 'You are provided with the following tools:\\n\\n<tools>' -}}\n    {%- for tool in tools -%}\n        {{- '\\n' ~ (tool | tojson(ensure_ascii=False)) -}}\n    {%- endfor -%}\n    {{- '\\n</tools>' -}}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if tool_call.function is defined -%}\n            {%- set tool_call = tool_call.function -%}\n        {%- elif tool_call.custom is defined -%}\n            {%- set tool_call = tool_call.custom -%}\n        {%- endif -%}\n        {{- '<tool_call><function=' ~ tool_call.name ~ '>' -}}\n        {%- if tool_call.input is defined and tool_call.input is string -%}\n            {{- tool_call.input -}}\n        {%- elif tool_call.arguments -%}\n            {%- if tool_call.arguments is string -%}\n                {{- tool_call.arguments -}}\n            {%- else -%}\n                {%- for args_name, args_value in tool_call.arguments | items -%}\n                    {{- '<parameter=' ~ args_name ~ '>' ~ render_value(args_value) ~ '</parameter>' -}}\n                {%- endfor -%}\n            {%- endif -%}\n        {%- endif -%}\n        {{- '</function></tool_call>' -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro render_assistant_message(message) -%}\n    {%- set content = render_content(message.content) -%}\n    {%- set reasoning = message.reasoning_content if message.reasoning_content is string else '' -%}\n    {{- '<|im_start|>assistant\\n<think>' ~ reasoning ~ '</think>' ~ content -}}\n    {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 -%}\n        {{- render_tool_calls(message.tool_calls) -}}\n    {%- endif -%}\n    {{- '<|im_end|>' -}}\n{%- endmacro -%}\n\n{%- if tools is defined and tools is iterable and tools | length > 0 -%}\n    {{- '<|im_start|>system\\n' ~ render_tools(tools) ~ '<|im_end|>' -}}\n{%- endif -%}\n\n{%- for message in messages -%}\n    {%- if message.role == 'assistant' -%}\n        {{- render_assistant_message(message) -}}\n    {%- else -%}\n        {%- set body = render_content(message.content) -%}\n        {{- '<|im_start|>' ~ message.role ~ '\\n' ~ body -}}\n        {%- if message.tools is defined and message.tools is iterable and message.tools | length > 0 -%}\n            {%- if body -%}\n                {{- '\\n\\n' -}}\n            {%- endif -%}\n            {{- render_tools(message.tools) -}}\n        {%- endif -%}\n        {{- '<|im_end|>' -}}\n    {%- endif -%}\n{%- endfor -%}\n\n{%- if add_generation_prompt -%}\n    {{- '<|im_start|>assistant\\n' -}}\n    {%- if enable_thinking is false -%}\n        {{- '<think></think>' -}}\n    {%- endif -%}\n{%- endif -%}\n",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 88777763680
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "731e1c4f4e77dbc925e30b613621437113a94c93",
+      "size": 2421
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/MiMo-V2.6-Flash-RL-DFlash-Q8_0.gguf",
+      "blobId": "fa1a7703a18b35e182de67b1e27131b40a74acf6",
+      "size": 1565911104,
+      "lfs": {
+        "sha256": "06a56d466017739918f2e1c9b771f08ac5cb92d7ea2173bbb5537a82284a7d8c",
+        "size": 1565911104,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/MiMo-V2.6-Flash-RL-MQ-IQ2-XXS-XS-Q8-00001-of-00004.gguf",
+      "blobId": "8f2e184bd5c0f7491112acebc756b8305903f6e8",
+      "size": 22470644192,
+      "lfs": {
+        "sha256": "388d09c34fc87f3ef990a19c670efbf3a542b28a0a8c619140a3a299321dae9d",
+        "size": 22470644192,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/MiMo-V2.6-Flash-RL-MQ-IQ2-XXS-XS-Q8-00002-of-00004.gguf",
+      "blobId": "f170b5ea22f3b6897fd305f16c7b57e693428240",
+      "size": 22464695232,
+      "lfs": {
+        "sha256": "83bd3c37bff0541c5b9b76462a50ba112c506f80f8ab48a6d28e55830035ee3f",
+        "size": 22464695232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/MiMo-V2.6-Flash-RL-MQ-IQ2-XXS-XS-Q8-00003-of-00004.gguf",
+      "blobId": "5f75a657358dc593062bdd3febb49ce987c98178",
+      "size": 22464695232,
+      "lfs": {
+        "sha256": "aafd233222b53d1e17bc4a1419d5dc6c58e8a1db352b0078e72425d9c296baef",
+        "size": 22464695232,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/MiMo-V2.6-Flash-RL-MQ-IQ2-XXS-XS-Q8-00004-of-00004.gguf",
+      "blobId": "e3297d948a6f993797f9e3638d7aa4de6aeaa772",
+      "size": 21377729024,
+      "lfs": {
+        "sha256": "940833b0947024b26fe64149c54c78c489065fdcb84ec596ecd262425c0ff7f6",
+        "size": 21377729024,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/SHA256SUMS",
+      "blobId": "b5c2158c5835bfd86e4ac5532d415bf551dbdfc3",
+      "size": 7419
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/artifact-manifest.json",
+      "blobId": "b0249a464f02aa543c37da6fd981e77d164c8678",
+      "size": 1503
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/SOURCE-LICENSES.md",
+      "blobId": "0bce2acfc8ab3ee6cf48d34adb31ad00d4f95511",
+      "size": 2774
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/imatrix.gguf",
+      "blobId": "92c8d055740f138c94148f89e43fab38a7df7891",
+      "size": 496247072,
+      "lfs": {
+        "sha256": "265cc19bc1470b95a9157d3b2fab893f325a9e2b6ef414cdbdfac4326c9ef8e3",
+        "size": 496247072,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/licenses/Apache-2.0.txt",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/licenses/GPL-3.0.txt",
+      "blobId": "94a9ed024d3859793618152ea559a168bbcbb5e2",
+      "size": 35147
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/media-manifest.json",
+      "blobId": "180d5ee177d541bcb874245bb77d28f82272b896",
+      "size": 635296
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/sources.json",
+      "blobId": "06fc62660ef4a581e6c987e5696e14c70ecc5300",
+      "size": 1753
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/calibration/text-manifest.json",
+      "blobId": "0a6b3a86de8e8460c19b9f2d2d9e3fce40b5bd51",
+      "size": 178909
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/chat_template.jinja",
+      "blobId": "f23265d928b22848e4879cc0f1d6cfe999bf7429",
+      "size": 3868
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/dflash-audit.json",
+      "blobId": "68ff9ad7ab0938efce5dbf4792fbd33e62d49976",
+      "size": 11718
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/dflash/config.json",
+      "blobId": "890d29a0e7b0cb509374d433f217a4a5e927ce79",
+      "size": 1246
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/dflash/dflash.py",
+      "blobId": "0aea03fe130ec6070d8d94f8d11c37ee9885782f",
+      "size": 14255
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/dflash/mask_embedding.pt",
+      "blobId": "6ebcfd4abd4d19a215375c7b19684794b1b0fa3c",
+      "size": 9882,
+      "lfs": {
+        "sha256": "b35b379fe0497ffdc0d6407f502622237d9346e0d03f457ec574be60f6c2cee0",
+        "size": 9882,
+        "pointerSize": 129
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/dflash/runtime-contract.json",
+      "blobId": "fe9b1d1e278ee0a3d9ec3257e33c87dd0f9ee4ea",
+      "size": 1311
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/expected-mixed-inventory.json",
+      "blobId": "fcdb3ab7a2ba14966fdc356b0510f10103ace318",
+      "size": 73775
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/final-imatrix-coverage.json",
+      "blobId": "7ae9d28b29a180df91c90ecb09f9b6aeb1fc9b87",
+      "size": 574871
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/heldout-input-audit.json",
+      "blobId": "21b565f4599961ce35f6fdd925d3d2bd59a62942",
+      "size": 11871
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/imatrix-merge-audit.json",
+      "blobId": "e9bb73a1e3ef6d60d68e19f97a0b2d389f305c47",
+      "size": 918
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/mixed-artifact-audit.json",
+      "blobId": "1d1d72eb73502fc6d3bf1942b920cf9c6fbe4640",
+      "size": 51832
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/mmproj-MiMo-V2.6-Flash-RL-BF16.gguf",
+      "blobId": "e4bc4eba41321a2bf64172d7ada74629dae0bf74",
+      "size": 2748509792,
+      "lfs": {
+        "sha256": "7fd51cbab2e7a7c73b1d4dd2d7457dcf8175cb84db75ca8e96ff1750760b3709",
+        "size": 2748509792,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/native-media-first-checkpoint-audit.json",
+      "blobId": "fbf9906ea3fe85a555de370987f6ba915247f6fb",
+      "size": 302
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/native-media-input-audit.json",
+      "blobId": "d13331c08adb1d62d393a556451f4786b541d96c",
+      "size": 496
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/native-media-smoke-audit.json",
+      "blobId": "6a7c20744a2f4d118938315e7d39a4cc11920e3f",
+      "size": 604
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/projector-bounds-audit.json",
+      "blobId": "578ecef3ff4d92772571c0fdbed8b2c8cbe6e86e",
+      "size": 502
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/python-toolchain.json",
+      "blobId": "e7ad01bfe07ef69633ab435775fbf269132a7b89",
+      "size": 470
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/quality-status.json",
+      "blobId": "2c411a04d17dbd1aa81dbe305a43da37e9315f1e",
+      "size": 105
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/quant-recipe.json",
+      "blobId": "63462ecca97166a8829c1b8628650197b26efcd5",
+      "size": 831
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reference-holdout-review.json",
+      "blobId": "e2e582e091355d990c0f948a745e3973626e658c",
+      "size": 2253
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/README.md",
+      "blobId": "be5761d089f95cf1c7800fdf3b7722b1939ce3b4",
+      "size": 1946
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/audit_holdout_inputs.py",
+      "blobId": "1a7adb14fd098f05306890c27886b470180d097e",
+      "size": 3888
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/audit_imatrix_coverage.py",
+      "blobId": "4ec161bc77fd32e3901bdf9f6279a074077ebce9",
+      "size": 2516
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/audit_reference.py",
+      "blobId": "446a38446e7fc7c9fabeb82df1700cede2f59abe",
+      "size": 2272
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/build_embedding_imatrix.sh",
+      "blobId": "cfc0c25f8d654112673cb1a4838b1c395d89ad74",
+      "size": 465
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/build_finevideo.py",
+      "blobId": "be7bff39f4ce43656b9b959308baeaf6815cf52f",
+      "size": 2722
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/build_media.py",
+      "blobId": "ee64193f2976e5a2408c0671487ae23a1e8e9214",
+      "size": 2159
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/build_media_holdout.py",
+      "blobId": "4bb62c595e0eb4022942469cd1c48ac54770e1d2",
+      "size": 2486
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/check_conversion.py",
+      "blobId": "eddb2341289d6d249bcb77062e8ea8c69956bb91",
+      "size": 1981
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/check_gguf_shards.py",
+      "blobId": "52e0eb8e53b8ae866d19d745847af347135e2770",
+      "size": 1652
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/compare_holdout.py",
+      "blobId": "dd8aeee9cd37a9a7af04e74bab41417bee7f26ca",
+      "size": 4452
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/convert_mimo.py",
+      "blobId": "9d11a870024b461a383279a119a1f0e024adca2d",
+      "size": 4675
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/download_source.sh",
+      "blobId": "4e46b3e98432b87d45ee7bc4562025dd8ba7e451",
+      "size": 382
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/embedding_imatrix.cpp",
+      "blobId": "07789e727d8d0beb8f320cd9ec9f5a01a1b2a65c",
+      "size": 5890
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/llama.cpp-LICENSE",
+      "blobId": "e7dca554bcb802f98408383a864404e3aa4eacca",
+      "size": 1078
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/merge_and_audit_imatrix.py",
+      "blobId": "c2cf7c03bffcacb1333a67407c5cfda0895a72e6",
+      "size": 2097
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/native_audio.py",
+      "blobId": "4d52aff697665abbdb1847a774dd414d8aebb821",
+      "size": 4029
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/native_vision.py",
+      "blobId": "df47ac15e26d28ec1a6fdfd8af14580c407554f1",
+      "size": 4252
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/prepare_audio_embeddings.py",
+      "blobId": "f03af31bc8665856b041319203e5514eac1154fb",
+      "size": 2249
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/prepare_av_embeddings.py",
+      "blobId": "1d1c30c655ccca8c977af9cdec070c06218189de",
+      "size": 4022
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/prepare_visual_embeddings.py",
+      "blobId": "3eb2de1715e3cca3043640605bc0f0dadebbb84a",
+      "size": 5998
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/SGlang-LICENSE",
+      "blobId": "9c422689c8f5c317c7c65153b1209349ec57007e",
+      "size": 11346
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/manifest.json",
+      "blobId": "3b16d40f1f2e0ff03bd518079c90e3b3adac0611",
+      "size": 1108
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-dflash.py",
+      "blobId": "5722b43d45918893204ca5785e85e3c1817f141f",
+      "size": 49865
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-mimo-v2-processor.py",
+      "blobId": "e914f00b1a0e37fa3e2359b7ecba7eeea9ea7c77",
+      "size": 92014
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-mimo_v2.py",
+      "blobId": "1354710e79f1b1387f4e9174b397f1494589627c",
+      "size": 66398
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-mimo_vl.py",
+      "blobId": "3f4c7267bc206050434fab3297150e5f3156c5d5",
+      "size": 18857
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-models-mimo_audio.py",
+      "blobId": "c266e060fc14610899db00ec88a4668e3447f87f",
+      "size": 52173
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-multimodal-processors-mimo_audio.py",
+      "blobId": "909c9965b150fbe36880283002dadaef2969e098",
+      "size": 12042
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/reference-code/sglang-qwen_vl.py",
+      "blobId": "44f179393b65de81fe5583e5e202655e3a21fde1",
+      "size": 48216
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/restore_finevideo_audio.py",
+      "blobId": "59953998a3cced9f4045124374b7db2e1551fb07",
+      "size": 1941
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/run_mixed_quantization.sh",
+      "blobId": "14a551cb35129a041f6982fa09540dc06309667e",
+      "size": 1511
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/run_native_media_calibration.sh",
+      "blobId": "ade878c0733ac45dcad02921e52f3668377565ff",
+      "size": 3001
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/run_text_calibration.sh",
+      "blobId": "82c67b6d280e72327b623af496b705c09e411d45",
+      "size": 668
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/test_media_contract.py",
+      "blobId": "241ef14d7f63eac47f7cdbadca3309babd604f92",
+      "size": 1546
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/reproduction/verify_mixed_artifacts.py",
+      "blobId": "ef5ee9adcd142421f8c2e80dfe93dd44f04bfbad",
+      "size": 4540
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/tensor-types.txt",
+      "blobId": "08d4d4b770afc5e845ccc649bb41068c6e3c4989",
+      "size": 17967
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/text-final-coverage.json",
+      "blobId": "ff6f3f1fe7f972907bba0a9416459b4dd4e62a13",
+      "size": 568854
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/text-normalization-audit.json",
+      "blobId": "d89ed471084b8b8a851f807446d73ca462c319fa",
+      "size": 1202
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/toolchain-pins.json",
+      "blobId": "8ef82c5297a541158a9c05275a90e9e8501dc12c",
+      "size": 178
+    },
+    {
+      "rfilename": "MQ-IQ2-XXS-XS-Q8-MM-BF16/video-patch-weight-audit.json",
+      "blobId": "0ba3459743d3bcc882d80c4f3f2129f9481b5f06",
+      "size": 575
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "c76b36d8bc073bc8a3c35d75f188580954b040ff",
+      "size": 24181
+    },
+    {
+      "rfilename": "assets/mimo2-prefill-2k-64k-20260923.json",
+      "blobId": "20d658ce73ee39b9774fd6b6be7e21c8126ed151",
+      "size": 71087
+    },
+    {
+      "rfilename": "assets/mimo2-prefill-2k-64k-20260923.png",
+      "blobId": "b67a505173c43b882ab97782797b82df4307f90f",
+      "size": 175179,
+      "lfs": {
+        "sha256": "70f0423d22f9c9d8ec727061dc885c64e8702b4b32498cb36050897cd68109f3",
+        "size": 175179,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/mimo2-prefill-2k-64k-20260924.json",
+      "blobId": "3c1f9713877a312b7b886134665123d525ff52f8",
+      "size": 16623
+    },
+    {
+      "rfilename": "assets/mimo2-prefill-2k-64k-20260924.png",
+      "blobId": "d15b96a270660df2b09a6fc6a4a339459296d043",
+      "size": 258707,
+      "lfs": {
+        "sha256": "3d05784f19f1f6d7605faa77c1e230de8915ede33f4ba8c031d02cbf81a6afa7",
+        "size": 258707,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "f23265d928b22848e4879cc0f1d6cfe999bf7429",
+      "size": 3868
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-22T03:34:24.000Z",
+  "usedStorage": 93589171010
+}

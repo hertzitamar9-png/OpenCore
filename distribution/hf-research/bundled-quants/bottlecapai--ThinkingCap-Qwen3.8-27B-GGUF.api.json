@@ -1,0 +1,203 @@
+{
+  "_id": "6ab3f6c757658a9505f06cc9",
+  "id": "bottlecapai/ThinkingCap-Qwen3.8-27B-GGUF",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "qwen3_8",
+    "llama.cpp",
+    "token-efficient",
+    "efficient-thinking",
+    "image-text-to-text",
+    "base_model:bottlecapai/ThinkingCap-Qwen3.8-27B",
+    "base_model:quantized:bottlecapai/ThinkingCap-Qwen3.8-27B",
+    "license:other",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 884170,
+  "likes": 93,
+  "modelId": "bottlecapai/ThinkingCap-Qwen3.8-27B-GGUF",
+  "author": "bottlecapai",
+  "sha": "dc3aa8563d5d48d1d83637eb67147e1b52215cf7",
+  "lastModified": "2026-10-07T12:31:52.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "bottlecapai/ThinkingCap-Qwen3.8-27B",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "tags": [
+      "qwen3_8",
+      "gguf",
+      "llama.cpp",
+      "token-efficient",
+      "efficient-thinking"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "license": "other",
+    "license_name": "polyform-small-business-1.0.0",
+    "license_link": "LICENSE",
+    "extra_gated_heading": "Request access to the BottleCap AI model",
+    "extra_gated_prompt": "Request access below. Add your company if you're evaluating this for work \u2014 we have enterprise versions that go further, and we'll make sure you hear about them first. We'll also send you new ThinkingCap releases and early access before they're public.\n\nTell us how you plan to use the model and we can help you get the most out of it \u2014 there's [a short form](https://docs.google.com/forms/d/e/1FAIpQLSdU8MyVP_mVx0_y55d6QCMXVyCKsQ6yg68KEqWm_EIptKB0Nw/viewform) for that too.\n",
+    "extra_gated_fields": {
+      "Name": "text",
+      "Company name (enter \u201cN/A\u201d if none)": "text",
+      "Work email (enter your personal email if none)": "text"
+    },
+    "extra_gated_button_content": "Agree and request access"
+  },
+  "gguf": {
+    "total": 27320697856,
+    "architecture": "qwen35",
+    "context_length": 262144,
+    "chat_template": "{%- set image_count = namespace(value=0) %}\n{%- set video_count = namespace(value=0) %}\n{%- macro render_content(content, do_vision_count, is_system_content=false) %}\n    {%- if content is string %}\n        {{- content }}\n    {%- elif content is iterable and content is not mapping %}\n        {%- for item in content %}\n            {%- if 'image' in item or 'image_url' in item or item.type == 'image' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain images.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set image_count.value = image_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Picture ' ~ image_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|image_pad|><|vision_end|>' }}\n            {%- elif 'video' in item or item.type == 'video' %}\n                {%- if is_system_content %}\n                    {{- raise_exception('System message cannot contain videos.') }}\n                {%- endif %}\n                {%- if do_vision_count %}\n                    {%- set video_count.value = video_count.value + 1 %}\n                {%- endif %}\n                {%- if add_vision_id %}\n                    {{- 'Video ' ~ video_count.value ~ ': ' }}\n                {%- endif %}\n                {{- '<|vision_start|><|video_pad|><|vision_end|>' }}\n            {%- elif 'text' in item %}\n                {{- item.text }}\n            {%- else %}\n                {{- raise_exception('Unexpected item type in content.') }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif content is none or content is undefined %}\n        {{- '' }}\n    {%- else %}\n        {{- raise_exception('Unexpected content type.') }}\n    {%- endif %}\n{%- endmacro %}\n{%- if not messages %}\n    {{- raise_exception('No messages provided.') }}\n{%- endif %}\n{%- set reasoning_instructions = '' %}\n{%- if enable_thinking is undefined or enable_thinking is true %}\n    {%- set resolved_reasoning_effort = reasoning_effort|default('xhigh') %}\n    {%- if resolved_reasoning_effort not in ('xhigh', 'medium', 'low') %}\n        {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}\n    {%- endif %}\n    {%- if resolved_reasoning_effort == 'xhigh' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}\n    {%- elif resolved_reasoning_effort == 'low' %}\n        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}\n    {%- endif %}\n{%- endif %}\n{%- if tools and tools is iterable and tools is not mapping %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if reasoning_instructions %}\n        {{- reasoning_instructions + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou have access to the following functions:\\n\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\" }}\n    {{- '\\n\\nIf you choose to call a function ONLY reply in the following format with NO suffix:\\n\\n<tool_call>\\n<function=example_function_name>\\n<parameter=example_parameter_1>\\nvalue_1\\n</parameter>\\n<parameter=example_parameter_2>\\nThis is the value for the second parameter\\nthat can span\\nmultiple lines\\n</parameter>\\n</function>\\n</tool_call>\\n\\n<IMPORTANT>\\nReminder:\\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\\n- Required parameters MUST be specified\\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\\n</IMPORTANT>' }}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '\\n\\n' + content }}\n        {%- endif %}\n    {%- endif %}\n    {{- '<|im_end|>\\n' }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {%- set content = render_content(messages[0].content, false, true)|trim %}\n        {%- if content %}\n            {{- '<|im_start|>system\\n' + (reasoning_instructions + '\\n\\n' if reasoning_instructions else '')  + content + '<|im_end|>\\n' }}\n        {%- elif reasoning_instructions %}\n            {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- elif reasoning_instructions %}\n        {{- '<|im_start|>system\\n' + reasoning_instructions + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" %}\n        {%- set content = render_content(message.content, false)|trim %}\n        {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}\n            {%- set ns.multi_step_tool = false %}\n            {%- set ns.last_query_index = index %}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if ns.multi_step_tool %}\n    {{- raise_exception('No user query found in messages.') }}\n{%- endif %}\n{%- for message in messages %}\n    {%- set content = render_content(message.content, true)|trim %}\n    {%- if message.role == \"system\" %}\n        {%- if not loop.first %}\n            {{- raise_exception('System message must be at the beginning.') }}\n        {%- endif %}\n    {%- elif message.role == \"user\" %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- endif %}\n        {%- set reasoning_content = reasoning_content|trim %}\n        {%- if preserve_thinking is undefined or preserve_thinking is true or loop.index0 > ns.last_query_index %}\n            {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content + '\\n</think>\\n\\n' + content }}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if tool_call.function is defined %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {%- if loop.first %}\n                    {%- if content|trim %}\n                        {{- '\\n\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- else %}\n                        {{- '<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                    {%- endif %}\n                {%- else %}\n                    {{- '\\n<tool_call>\\n<function=' + tool_call.name + '>\\n' }}\n                {%- endif %}\n                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}\n                    {%- for args_name, args_value in tool_call.arguments|items %}\n                        {{- '<parameter=' + args_name + '>\\n' }}\n                        {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}\n                        {{- args_value }}\n                        {{- '\\n</parameter>\\n' }}\n                    {%- endfor %}\n                {%- endif %}\n                {{- '</function>\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.previtem and loop.previtem.role != \"tool\" %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if not loop.last and loop.nextitem.role != \"tool\" %}\n            {{- '<|im_end|>\\n' }}\n        {%- elif loop.last %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- else %}\n        {{- raise_exception('Unexpected message role.') }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n' }}\n    {%- if enable_thinking is defined and enable_thinking is false %}\n        {{- '<think>\\n\\n</think>\\n\\n' }}\n    {%- else %}\n        {{- '<think>\\n' }}\n    {%- endif %}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 54657734368
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "32bf4d4381befeba41d7d3c5c0f83690fa4db131",
+      "size": 1999
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "c6b9bd63c53617824c27b53b3a4d5bac7ecae3ac",
+      "size": 1260
+    },
+    {
+      "rfilename": "LICENSE-Apache-2.0-Qwen.txt",
+      "blobId": "1d5180a42f1c3383ba7c7bd0a50f0837ef0168df",
+      "size": 11343
+    },
+    {
+      "rfilename": "LICENSE-PolyForm-Small-Business-1.0.0.txt",
+      "blobId": "7e0a4b69b71b860912c0945237cf62860d017a50",
+      "size": 4389
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "ced5b77f44546449a24630eb7703026734250135",
+      "size": 757
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "bfed1cfbf72517ed8331fb5e1fb5d01d386dbdb1",
+      "size": 14282
+    },
+    {
+      "rfilename": "ThinkingCap-Qwen3.8-27B-IQ4_XS.gguf",
+      "blobId": "be8b980a43bc5d790b106521e835646299850794",
+      "size": 15475951712,
+      "lfs": {
+        "sha256": "c69ef3bbd56fe528bc9683186d14047243b00f41d3707016718775841d877cb2",
+        "size": 15475951712,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "ThinkingCap-Qwen3.8-27B-Q4_K_M.gguf",
+      "blobId": "aacd5301a3fb3bed9ee351d103684ad1f0dd8d72",
+      "size": 17442400352,
+      "lfs": {
+        "sha256": "fafa890ce2ce8531b4ade225c7dbd5f5d72a92303ca9ef72890c6cf78f19f299",
+        "size": 17442400352,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "ThinkingCap-Qwen3.8-27B-Q6_K.gguf",
+      "blobId": "2a535977fd3e209ed5d77f1e59e5962269b38314",
+      "size": 23860566112,
+      "lfs": {
+        "sha256": "36ab5032dc4725f8acdb237070f9e5574171e0e29cd583fcc417a6c8ef87f557",
+        "size": 23860566112,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "ThinkingCap-Qwen3.8-27B-Q8_0.gguf",
+      "blobId": "d88494a6a79a2a68146725a9a70c5c0c87edb925",
+      "size": 29047085152,
+      "lfs": {
+        "sha256": "41070725606f4be781db804e8458f3346c699d0dac24f2b96d2a734556c6c0f7",
+        "size": 29047085152,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "ThinkingCap-Qwen3.8-27B-f16.gguf",
+      "blobId": "716c0fd1ab6d147349ed4526894542e2c7bc0002",
+      "size": 54657734368,
+      "lfs": {
+        "sha256": "ea8d8472a3082aaa7bb60de48f56c2830c8594e12bfaa9af5be779d3348be00f",
+        "size": 54657734368,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "cap_header.png",
+      "blobId": "978f827a7514a5c1cad6e00a421e6aa0bce05003",
+      "size": 1058979,
+      "lfs": {
+        "sha256": "82841e4c6cc4299fafb4eef8a7175e787924f9d7de3273d0c5eaa225059ea2a1",
+        "size": 1058979,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "mmproj-ThinkingCap-Qwen3.8-27B-f16.gguf",
+      "blobId": "77941625ca891c0a34379bbf926cfd4dede98fb5",
+      "size": 931146272,
+      "lfs": {
+        "sha256": "98fa9aad59b42449786a16bbce96bcd92204d03cac0aee0cdccca711c2adefd1",
+        "size": 931146272,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "social-instagram.png",
+      "blobId": "dfeeafec8218fefac0eadd076a4babfa083b890d",
+      "size": 7993
+    },
+    {
+      "rfilename": "social-linkedin.png",
+      "blobId": "dd949306f589670307a569dec693f3f0a8fd93e1",
+      "size": 3141
+    },
+    {
+      "rfilename": "social-web.png",
+      "blobId": "6f7fd3e42016478240c38f7b79b335e75e20725e",
+      "size": 17746
+    },
+    {
+      "rfilename": "social-x.png",
+      "blobId": "a448c9d335983a785be0dd31db94d916673cb765",
+      "size": 7905
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-09-23T15:56:55.000Z",
+  "usedStorage": 141415942947
+}

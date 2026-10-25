@@ -1,0 +1,269 @@
+{
+  "_id": "666ce6f4067382b3e98317c6",
+  "id": "microsoft/Florence-2-base",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "safetensors",
+    "florence2",
+    "image-text-to-text",
+    "vision",
+    "custom_code",
+    "arxiv:2311.06242",
+    "license:mit",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 3055333,
+  "likes": 431,
+  "modelId": "microsoft/Florence-2-base",
+  "author": "microsoft",
+  "sha": "5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac",
+  "lastModified": "2025-08-04T17:36:57.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Florence2ForConditionalGeneration"
+    ],
+    "auto_map": {
+      "AutoConfig": "configuration_florence2.Florence2Config",
+      "AutoModelForCausalLM": "modeling_florence2.Florence2ForConditionalGeneration"
+    },
+    "model_type": "florence2",
+    "tokenizer_config": {}
+  },
+  "cardData": {
+    "license": "mit",
+    "license_link": "https://huggingface.co/microsoft/Florence-2-base/resolve/main/LICENSE",
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "vision"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "b78979ea6f9ebb70c99285db71b4c79ebdeaf78f",
+      "size": 1560
+    },
+    {
+      "rfilename": "CODE_OF_CONDUCT.md",
+      "blobId": "f9ba8cf65f3e3104dd061c178066ec8247811f33",
+      "size": 444
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "9e841e7a26e4eb057b24511e7b92d42b257a80e5",
+      "size": 1141
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "e87f055c30f3dab5479fc3de9231a044ea33426d",
+      "size": 14805
+    },
+    {
+      "rfilename": "SECURITY.md",
+      "blobId": "b3c89efc852e22f71eabf5dfbc6ac62493425eb6",
+      "size": 2656
+    },
+    {
+      "rfilename": "SUPPORT.md",
+      "blobId": "291d4d43733f4c15a81ff598ec1c99fd6c18f64c",
+      "size": 1244
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "74a4482afd52515c89ae8d7d388a537a16f5d350",
+      "size": 2430
+    },
+    {
+      "rfilename": "configuration_florence2.py",
+      "blobId": "b8869617ef8dfd0f04d421cf59b83ca662c363ad",
+      "size": 15119
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "26fd400b0e459331dc9f96b37d6a3e629d59d66a",
+      "size": 463221266,
+      "lfs": {
+        "sha256": "03075d2d2d2bbd3e180b9ba0afae4aa8563226e2d32911656966e05b2f2ee060",
+        "size": 463221266,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "modeling_florence2.py",
+      "blobId": "90208540137fcf518aa92186e58ac964213c6420",
+      "size": 127455
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "85cd7be3568df661ad536b6ab20d59b08ba079ae",
+      "size": 806
+    },
+    {
+      "rfilename": "processing_florence2.py",
+      "blobId": "3cd9815895c8c2b355f1e07ff983186f1e05c9e9",
+      "size": 48676
+    },
+    {
+      "rfilename": "pytorch_model.bin",
+      "blobId": "435fb4d824c99715b72335e8ab80873df19fcfb6",
+      "size": 464421827,
+      "lfs": {
+        "sha256": "b480ac374593b0dcb18ffa63b23213734e04cd43eab0d620d23e39708d4a4a7e",
+        "size": 464421827,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "ad0bcbeb288f0d1373d88e0762e66357f55b8311",
+      "size": 1355863
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "44784bc58d4cb18d3549ad71e062efcf032d9ef5",
+      "size": 34
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "94a2f4fd50e976bda926c700291522ea1a79323f",
+      "size": 1099884
+    }
+  ],
+  "spaces": [
+    "embedl/hfviewer",
+    "ovi054/image-to-prompt",
+    "microsoft/OmniParser-v2",
+    "raf2e34t/photo-to-info",
+    "AlekseyCalvin/SLM_Bistro",
+    "gokaygokay/Florence-2",
+    "SkalskiP/florence-sam",
+    "gokaygokay/PonyRealism",
+    "microsoft/OmniParser",
+    "SkalskiP/better-florence-2",
+    "gokaygokay/KolorsPlusPlus",
+    "ginipick/FLUX-Prompt-Generator",
+    "gokaygokay/FLUX.1-dev-with-Captioner",
+    "gokaygokay/AuraFlow-with-Captioner",
+    "gokaygokay/NoobAI-Animagine-T-ponynai3",
+    "fotographerai/Zenctrl-Inpaint",
+    "gokaygokay/SD3.5-with-Captioner",
+    "Nymbo/FLUX-Prompt-Generator",
+    "SkalskiP/florence-sam-masking",
+    "microsoft/Magma-UI",
+    "DamarJati/Remove-watermark",
+    "Akshayram1/image_to_promt_info",
+    "Jonny001/Image-to-Text",
+    "ginigen/OmniParser-v2-pro",
+    "phyloforfun/VoucherVision",
+    "jotase/florence-sam-masking",
+    "cibey/cibey-image-to-prompt",
+    "wjfhugging/image-to-prompt",
+    "vheer/image-to-prompt",
+    "callmeumer/OmniParser-v2",
+    "drlon/magma-ui-agent",
+    "iansee/Magma-UI-Mobile",
+    "AI-DrivenTesting/OmniParser-v2",
+    "ovi054/text-guided-mask-for-inpainting",
+    "Mahmoudmody777/image-to-prompt",
+    "build-small-hackathon/HearthNet",
+    "emanforhelp/model-pulse",
+    "tsengiii/Image_to_prompt",
+    "GoConqurer/textlens-ocr",
+    "MinhDS/Florence-2-Demo",
+    "ArtShumov/Whyx-PROmpTea",
+    "ighoshsubho/flux-sam-florence",
+    "lee-ite/Florence-2-CPU",
+    "Steven10429/apply_lora_and_quantize",
+    "bennn44/image_to_promt_info",
+    "Skydata001/Crystal-1-image-to-prombite",
+    "Laffey101/instagram-playlist-summarizer",
+    "Tas112/NoobAI-Animagine-T-ponynai3",
+    "GianJSX/Florence-2",
+    "ThreadAbort/Florence-2",
+    "pabitramahato/FLUX-Prompt-Generator",
+    "Deddy/FLUX-Prompt-Maker",
+    "UltraMarkoRJ/ImageToPrompt",
+    "aliceblue11/FLUX-Prompt-Generator123",
+    "Justforailolomg/PonyRealismNew2",
+    "tb2l/florence-sam-masking",
+    "tsi-org/FLUX-Prompt-Generator",
+    "Gordonkl/image_to_prompt",
+    "hemapage/image-to-prompt",
+    "TotoB12/OmniParser",
+    "EX4L/PonyXL",
+    "Ashoka74/ProductPlacement",
+    "ullashAi/image-to-prompt",
+    "saravatpt/smartbizai-imagecaptioning-api",
+    "SOMIA-ALSHIBAH-25/image-to-text",
+    "nofl/OmniParser-v2",
+    "pratik188/Multi_Modal_AI_Surveillance_Chatbot",
+    "victorgg/Florence-2-bot",
+    "John6666/PonyRealism",
+    "mrgoat77/ZeroAi",
+    "GF-John/Florence-2",
+    "bodyapromax2010/bodyasync-image-caption",
+    "Dreamspire/flux-style-shaping",
+    "ViberLu/media-ai-captioning-suite",
+    "heyanabelle/Florence-2-Image-Caption-2",
+    "biali/image-to-prompt",
+    "Umairbdxn/image-prompt",
+    "injectx99/image-to-prompt",
+    "Shivlal6660/RJS",
+    "nsourcee/docxcel-fallback-api",
+    "build-small-hackathon/HearthNet-Nemotron",
+    "LovnishVerma/imagecaptioningai",
+    "gatilin/florence-forge-webui",
+    "yashhh00/tutor-vision-api",
+    "LovnishVerma/SightLine",
+    "cocktailpeanut/Florence-2",
+    "lingkoai/Florence",
+    "QuinACR/deepvesionQuinV21",
+    "54xunqi/Florence-2",
+    "QuinACR/DeepVisonCoreTALI1",
+    "Ssdfiuheqwiufhuieir/FLUX-Prompt-Generatoruy",
+    "Ssdfiuheqwiufhuieir/FLUX-Prompt-Generator",
+    "NRbones/florence-sam-masking",
+    "aolko/describe-test",
+    "QQQ-XXX/florence-sam",
+    "Erfan2001/Florence-2-Erfan",
+    "mroca/Florence-2",
+    "alexbuz/florence-2-ocr",
+    "alexbuz/ocr",
+    "aliceblue11/FLUX-Prompt-Generator111"
+  ],
+  "createdAt": "2024-06-15T00:57:24.000Z",
+  "safetensors": {
+    "parameters": {
+      "F16": 231567705
+    },
+    "total": 231567705
+  },
+  "usedStorage": 1935267078
+}

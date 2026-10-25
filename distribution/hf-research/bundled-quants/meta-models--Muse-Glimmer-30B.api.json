@@ -1,0 +1,194 @@
+{
+  "_id": "6a78be27e8cfa31c8b543588",
+  "id": "meta-models/Muse-Glimmer-30B",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "muse_glimmer",
+    "image-text-to-text",
+    "conversational",
+    "arxiv:2504.13181",
+    "arxiv:2602.06036",
+    "arxiv:2610.24628",
+    "license:apache-2.0",
+    "eval-results",
+    "endpoints_compatible",
+    "deploy:sagemaker",
+    "deploy:azure",
+    "region:us"
+  ],
+  "downloads": 205081,
+  "likes": 2088,
+  "modelId": "meta-models/Muse-Glimmer-30B",
+  "author": "meta-models",
+  "sha": "cec94fcfd6512f2cfe708138c32533b346ea4f69",
+  "lastModified": "2026-10-22T02:06:52.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "MuseGlimmerForConditionalGeneration"
+    ],
+    "model_type": "muse_glimmer",
+    "tokenizer_config": {
+      "bos_token": "<|begin_of_text|>",
+      "eos_token": "<|end_of_text|>",
+      "pad_token": "<|finetune_right_pad|>"
+    },
+    "chat_template_jinja": "{#\n  Template: Muse Glimmer ATEM Chat Template\n  Renders the ATEM tool-calling protocol: reasoning channel (to=self), tool\n  channels (to=<tool>), and the user channel, plus tool definitions and the\n  valid-recipient list in the system block.\n\n  Whitespace note: every tag uses the {%- -%} / {{- -}} stripping markers, so\n  the indentation below is purely for readability and contributes nothing to\n  the rendered output.\n#}\n{%- macro render_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is not none -%}\n        {%- for part in content -%}\n            {%- if part['type'] == 'image' -%}\n                {{- '<|patch|>' -}}\n            {%- elif part['type'] == 'video' -%}\n                {{- '<|video|>' -}}\n            {%- elif part['type'] == 'text' -%}\n                {{- part['text'] -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- endif -%}\n{%- endmacro -%}\n{%- macro render_atem(tc) -%}\n    {%- set args = tc.function.arguments -%}\n    {%- if args is not mapping -%}\n        {{- raise_exception('Muse Glimmer ATEM chat template requires tool_call.function.arguments to be a dict (mapping); a JSON string cannot be parsed in the HF jinja sandbox.') -}}\n    {%- endif -%}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"' + tc.function.name + '\">\\n' -}}\n    {%- for k, v in args.items() -%}\n        {{- '<atem:parameter name=\"' + k + '\">' -}}\n        {%- if v is boolean -%}\n            {%- if v -%}\n                true\n            {%- else -%}\n                false\n            {%- endif -%}\n        {%- elif v is none -%}\n            null\n        {%- elif v is mapping or (v is iterable and v is not string) -%}\n            {{- v | tojson -}}\n        {%- else -%}\n            {{- v -}}\n        {%- endif -%}\n        {{- '</atem:parameter>\\n' -}}\n    {%- endfor -%}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n{%- macro render_tool_defs(tools) -%}\n    {{- 'In this environment you have access to a set of tools you can use to answer the user\\'s question.\\n\\n' -}}\n    {{- 'You can invoke a function by writing a \"<atem:function_calls>\" block like the following:\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"$FUNCTION_NAME\">\\n<atem:parameter name=\"$PARAMETER_NAME\">$PARAMETER_VALUE</atem:parameter>\\n...\\n</atem:invoke>\\n</atem:function_calls>\\n\\n' -}}\n    {{- 'String and scalar parameters should be specified as is, while lists and objects should use JSON format. Note that spaces for string values are not stripped. The output is not expected to be valid XML and is parsed with regular expressions.\\n' -}}\n    {{- 'Here are the functions available in JSONSchema format:\\n' -}}\n    {{- '// Tool metadata\\n' -}}\n    {%- set nsns = namespace(seen=[]) -%}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- set tns = fn.name.split('.')[0] -%}\n        {%- if tns not in nsns.seen -%}\n            {%- set nsns.seen = nsns.seen + [tns] -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set nd = tool_namespace_descriptions if tool_namespace_descriptions is defined else {} -%}\n    {%- for tns in nsns.seen -%}\n        {{- '{\"name\": ' + (tns | tojson) + ', \"description\": ' + ((nd[tns] if tns in nd else '') | tojson) + '}\\n' -}}\n    {%- endfor -%}\n    {{- '// Function schemas' -}}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {{- '\\n{\"name\": ' + (fn.name | tojson) + ', \"description\": ' + (fn.description | tojson) + ', \"parameters\": ' + (fn.parameters | tojson) + '}' -}}\n    {%- endfor -%}\n    {{- '\\n\\nHere\\'s an example of how to call a function in the tool set:\\n' -}}\n    {{- '(If the tool namespace is not specified, invoke the function directly as `example_function_name` rather than `example_tool_name.example_function_name`)\\n\\n' -}}\n    {{- 'to=example_tool_name.example_function_name\\n\\n' -}}\n    {{- '<atem:function_calls>\\n<atem:invoke name=\"example_tool_name.example_function_name\">\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_1\">value_1</atem:parameter>\\n' -}}\n    {{- '<atem:parameter name=\"example_parameter_2\">This is the value for the second parameter\\nthat can span\\n\"multiple\" lines\\n</atem:parameter>\\n' -}}\n    {{- '</atem:invoke>\\n</atem:function_calls>' -}}\n{%- endmacro -%}\n{%- macro render_reasoning() -%}\n    {%- set rs = reasoning_strength if reasoning_strength is defined and reasoning_strength else 'high' -%}\n    {{- 'Reasoning strength: ' + rs + '.' -}}\n{%- endmacro -%}\n{%- macro render_system_meta(tools) -%}\n    {%- set rns = namespace(recipients=['\"self\"'], nslist=[]) -%}\n    {%- if tools -%}\n        {%- for tool in tools -%}\n            {%- set fn = tool.function if tool.function is defined else tool -%}\n            {%- set tns = fn.name.split('.')[0] -%}\n            {%- if tns not in rns.nslist -%}\n                {%- set rns.nslist = rns.nslist + [tns] -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {%- for tns in rns.nslist -%}\n            {%- set rns.recipients = rns.recipients + ['\"' + tns + '.*\"'] -%}\n        {%- endfor -%}\n    {%- endif -%}\n    {%- set rns.recipients = rns.recipients + ['\"user\"'] -%}\n    {{- '# Valid recipients: ' + rns.recipients | join(', ') + '.' -}}\n{%- endmacro -%}\n{{- bos_token -}}\n{%- set ns = namespace(has_system=false) -%}\n{%- for m in messages -%}\n    {%- if m['role'] == 'system' -%}\n        {%- set ns.has_system = true -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if not ns.has_system -%}\n    {{- '<|start|>system<|message|>You are a helpful AI assistant.' -}}\n    {%- set kc = knowledge_cutoff if knowledge_cutoff is defined and knowledge_cutoff else '2026-01-04' -%}\n    {{- '\\nKnowledge cutoff: ' + kc + '.' -}}\n    {%- if current_date is defined and current_date -%}\n        {{- '\\nCurrent date: ' + current_date + '.' -}}\n    {%- elif strftime_now is defined -%}\n        {{- '\\nCurrent date: ' + strftime_now('%Y-%m-%d') + '.' -}}\n    {%- endif -%}\n    {{- '\\n\\n' -}}\n    {{- render_reasoning() -}}\n    {%- if tools -%}\n        {{- '\\n\\n' -}}\n        {{- render_tool_defs(tools) -}}\n    {%- endif -%}\n    {{- '\\n\\n' -}}\n    {{- render_system_meta(tools) -}}\n    {{- '<|eot|>' -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- set role = message['role'] -%}\n    {%- set end_token = '<|eom|>' if (not loop.last and messages[loop.index0 + 1]['role'] == role) else '<|eot|>' -%}\n    {%- if role == 'system' -%}\n        {#- Callers sometimes write the directive into the system prompt themselves.\n            Normalise \"Reasoning effort\" to \"Reasoning strength\" (jinja has no\n            case-insensitive replace, hence the four realistic casings), then skip\n            the kwarg-driven line below if the prompt already carries one. -#}\n        {%- set sys_text = render_content(message['content'])\n              | replace('Reasoning effort', 'Reasoning strength')\n              | replace('Reasoning Effort', 'Reasoning Strength')\n              | replace('reasoning effort', 'reasoning strength')\n              | replace('REASONING EFFORT', 'REASONING STRENGTH') -%}\n        {{- '<|start|>system<|message|>' -}}\n        {{- sys_text -}}\n        {%- if 'reasoning strength' not in (sys_text | lower) -%}\n            {{- '\\n\\n' -}}\n            {{- render_reasoning() -}}\n        {%- endif -%}\n        {%- if tools -%}\n            {{- '\\n\\n' -}}\n            {{- render_tool_defs(tools) -}}\n        {%- endif -%}\n        {{- '\\n\\n' -}}\n        {{- render_system_meta(tools) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'user' -%}\n        {{- '<|start|>user<|message|>' -}}\n        {{- render_content(message['content']) -}}\n        {{- '<|eot|>' -}}\n    {%- elif role == 'tool' -%}\n        {%- set tname = message.get('name') -%}\n        {%- if not tname -%}\n            {%- set tcid = message.get('tool_call_id') -%}\n            {%- set rns = namespace(name=tcid if tcid else '') -%}\n            {%- for m in messages -%}\n                {%- if m.get('tool_calls') -%}\n                    {%- for tc in m['tool_calls'] -%}\n                        {%- if tcid is not none and tc.id is defined and tc.id == tcid -%}\n                            {%- set rns.name = tc.function.name -%}\n                        {%- endif -%}\n                    {%- endfor -%}\n                {%- endif -%}\n            {%- endfor -%}\n            {%- set tname = rns.name -%}\n        {%- endif -%}\n        {{- '<|start|>tool ' + tname + '<|message|><tool_output name=\"' + tname + '\">\\n' -}}\n        {{- render_content(message['content']) -}}\n        {{- '\\n</tool_output><|eot|>' -}}\n    {%- elif role == 'assistant' -%}\n        {%- if message.get('reasoning_content') -%}\n            {{- '<|start|>assistant to=self<|message|>' + message['reasoning_content'] + '<|eom|>' -}}\n        {%- endif -%}\n        {%- if message.get('tool_calls') -%}\n            {%- for tc in message['tool_calls'] -%}\n                {{- '<|start|>assistant to=' + tc.function.name + '<|message|>' -}}\n                {{- render_atem(tc) -}}\n                {%- if loop.last -%}\n                    {{- end_token -}}\n                {%- else -%}\n                    {{- '<|eom|>' -}}\n                {%- endif -%}\n            {%- endfor -%}\n        {%- else -%}\n            {%- set recipient = message.get('recipient') or 'user' -%}\n            {%- set end_turn = message.get('end_turn') -%}\n            {%- if end_turn is none -%}\n                {%- set end_turn = not (recipient and recipient != 'user') -%}\n            {%- endif -%}\n            {{- '<|start|>assistant' -}}\n            {%- if recipient -%}\n                {{- ' to=' + recipient -}}\n            {%- endif -%}\n            {{- '<|message|>' -}}\n            {{- render_content(message['content']) -}}\n            {{- ('<|eot|>' if end_turn else '<|eom|>') -}}\n        {%- endif -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- '<|start|>assistant' -}}\n{%- endif -%}\n"
+  },
+  "cardData": {
+    "license": "apache-2.0",
+    "library_name": "transformers",
+    "pipeline_tag": "image-text-to-text"
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".eval_results/mmi.yaml",
+      "blobId": "09051e27cbbc2431dec7753abbf927ba0d80fd1c",
+      "size": 1285
+    },
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "2e8eff65762ef99e79d60ef4cbdb338a4b292d6f",
+      "size": 17266
+    },
+    {
+      "rfilename": "USAGE_POLICY.md",
+      "blobId": "1a9ed6cffc54585daf9cc904c07cb6e436a9444b",
+      "size": 5230
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "7507f3c9f38809152732c045df3977848f3916a6",
+      "size": 9992
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "190826dc834c13c86b8dc68e775a888a852d7c34",
+      "size": 5109
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "b69a50a4239f42707d54a479e0143b8ee56c8bcc",
+      "size": 202
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "f42d14a0a42a8282c1aafe2b15c177b92fabb19c",
+      "size": 49950112952,
+      "lfs": {
+        "sha256": "8eef61530e1283642c77ce2e6721feb5c6f348fa055c00e90f2844a136372694",
+        "size": 49950112952,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "7680911255e98d81708530b2fffb6dd7a5d79d7f",
+      "size": 9603322320,
+      "lfs": {
+        "sha256": "b58cc2144ba1ba1af4420f67f4ca3ced7f09298510b80464cc75018a0be14381",
+        "size": 9603322320,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "00b257ef0c8bce1b001a6266f6b1f66f4fe16a6b",
+      "size": 132674
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "ec9a07be13ea1dadf7395131871753b13f406c26",
+      "size": 1084
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "9489d8dc16cfee56aab409ad31c1796b71f81a13",
+      "size": 28129897,
+      "lfs": {
+        "sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
+        "size": 28129897,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "fe7f0bb90fb0d0288e3a505974ae0e4baf1d3e61",
+      "size": 79936
+    }
+  ],
+  "spaces": [
+    "ukung/Muse-Glimmer-30B-DFlash-Abliterated",
+    "quantid/huggingface-official-benchmark-leaderboards",
+    "webml-community/muse-glimmer-webgpu-kernels",
+    "akhaliq/Muse-Glimmer-30B",
+    "apathy-exe/Muse-Glimmer-30B",
+    "hugging-apps/muse-glimmer-clicking-v2",
+    "xota1999/MedPlain",
+    "Taf2023/Muse-Glimmer-30B-DFlash",
+    "localellm/WebGPU-muse-glimmer-30b-gguf",
+    "Armandoomar/muse-glimmer-demo",
+    "quantid/measurement-lab",
+    "rafaelzi/muse-glimmer-webgpu",
+    "henrybit/Muse-Glimmer-30B-Demo",
+    "Underinjoo/muse-glimmer-30b-chat",
+    "kawhifly/muse-glimmer-30b",
+    "ChuckBaggett/Muse-Glimmer-30B",
+    "developerjeremylive/muse-glimmer-webgpu-kernels-etheroi",
+    "Siminbrzq/Glimmeragent",
+    "Siminbrzq/Infere",
+    "josephaterry/openweight",
+    "oleg40a/Muse-Glimmer-Demo",
+    "Dhshshd/Ninqggoai",
+    "abhijeetnaratti/muse-glimmer-30b-chat",
+    "TorkeHub/torki-2-benchmarks",
+    "jguancheng/sales-pilot-AI-public",
+    "quaedra/best-local-llm-for-your-gpu",
+    "jefferylee0826/muse-data-explorer",
+    "kvnharb/muse-glimmer-30b",
+    "flaviojoshua/PRISM-project-Evaluation-functional-request"
+  ],
+  "createdAt": "2026-08-09T17:51:35.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 29776626688
+    },
+    "total": 29776626688
+  },
+  "usedStorage": 59581565169
+}
