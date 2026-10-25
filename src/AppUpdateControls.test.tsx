@@ -24,32 +24,32 @@ it('keeps the header Update button absent until an available update is confirmed
   expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
 });
 
-it('shows a confirmed update and requires a second click to install', async () => {
+it('starts a confirmed update directly from the same Update ready button', async () => {
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
   render(<UpdateButton />);
 
   fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
-  expect(await screen.findByText('OpenCore 1.3.0 is available.')).toBeVisible();
-  expect(api.installLatestAppUpdate).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Download update' }));
   expect(api.installLatestAppUpdate).toHaveBeenCalledOnce();
+  expect(screen.queryByRole('button', { name: 'Download update' })).not.toBeInTheDocument();
+  expect(api.checkLatestAppVersion).toHaveBeenCalledOnce();
   expect(await screen.findByText('The installer is starting. OpenCore will reopen after the update.')).toBeVisible();
 });
 
-it('hides the inline update message after five seconds while retaining the install action', async () => {
+it('hides the inline status message after five seconds while retaining one update control', async () => {
   vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
   render(<UpdateButton />);
   const update = await screen.findByRole('button', { name: 'Update ready' });
   vi.useFakeTimers();
   try {
     await act(async () => { fireEvent.click(update); });
-    const message = screen.getByText('OpenCore 1.3.0 is available.');
+    const message = screen.getByText('The installer is starting. OpenCore will reopen after the update.');
     expect(message.compareDocumentPosition(update) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     act(() => vi.advanceTimersByTime(4999));
     expect(message).toBeVisible();
     act(() => vi.advanceTimersByTime(1));
     expect(message).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Download update' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Update ready' })).toBeVisible();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   } finally { vi.useRealTimers(); }
 });
 
@@ -98,11 +98,31 @@ it('tells the user active model work is stopped before installation begins', asy
   vi.mocked(api.installLatestAppUpdate).mockReturnValue(new Promise<void>(resolve => { complete = resolve; }));
   render(<UpdateButton />);
   fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
-  await screen.findByText('OpenCore 1.3.0 is available.');
-  fireEvent.click(screen.getByRole('button', { name: 'Download update' }));
   expect(await screen.findByText('Stopping active model work, then installing OpenCore 1.3.0…')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Updating…' })).toBeDisabled();
   await act(async () => complete());
+});
+
+it('locks the same button across headers and only retries after a new click on failure', async () => {
+  vi.mocked(api.checkLatestAppVersion).mockResolvedValue({ currentVersion: '1.2.0', available: true, version: '1.3.0' });
+  let fail!: (error: Error) => void;
+  vi.mocked(api.installLatestAppUpdate).mockReturnValueOnce(new Promise<void>((_, reject) => { fail = reject; }));
+  render(<><UpdateButton /><UpdateButton /></>);
+  const buttons = await screen.findAllByRole('button', { name: 'Update ready' });
+  fireEvent.click(buttons[0]);
+  expect(await screen.findAllByRole('button', { name: 'Updating…' })).toHaveLength(2);
+  expect(buttons[0]).toHaveTextContent('Updating…');
+  expect(buttons[0]).toBeDisabled();
+  expect(buttons[1]).toBeDisabled();
+  fireEvent.click(buttons[1]);
+  expect(api.installLatestAppUpdate).toHaveBeenCalledOnce();
+  await act(async () => fail(new Error('Network interrupted')));
+  expect(await screen.findByText(/Could not install the update: Error: Network interrupted/)).toBeVisible();
+  expect(buttons[0]).toBeEnabled();
+  expect(buttons[0]).toHaveTextContent('Update ready');
+  expect(api.installLatestAppUpdate).toHaveBeenCalledOnce();
+  fireEvent.click(buttons[0]);
+  expect(api.installLatestAppUpdate).toHaveBeenCalledTimes(2);
 });
 
 it('keeps Settings update checks manual and exposes the reinstall download action', async () => {

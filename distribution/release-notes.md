@@ -2,7 +2,7 @@ Download **OpenCore.Setup.exe** below. This small downloader is under 2 MB and u
 
 This release includes shared installation progress and duplicate-install protection, managed pip repair, the requested model quantizations, the Hugging Face importer and optional token setting, connector tab/control fixes, removal of the duplicate generic Phonon card, and the gray Session / GPU / VRAM / speed footer.
 
-OpenCore checks for releases without downloading them. When an update is available, choose **Update ready**, then **Download update**. Updates preserve the installation folder and reopen the app. Your chats, credentials and model downloads are separate from the installer.
+OpenCore checks for releases without downloading them. When an update is available, press **Update ready** once. The same button shows **Updating…** while the update downloads and installs. Updates preserve the installation folder and reopen the app. Your chats, credentials and model downloads are separate from the installer.
 
 Built-in models now load their preset quantization choices directly from the app's bundled catalog. Select a quant on its card and press **Install**. The catalog contains 929 packages in 173 families. Community-search controls have been removed; the separate Hugging Face importer checks only a repository you enter. Every model is retained, including exceptions with fewer than five verified quants. Original native quant choices and installed profiles remain available on the same card.
 

@@ -24,12 +24,18 @@ function editFunction(text, name, edit) {
 let index = fs.readFileSync(path.join(original, 'assets/index-CD0EH-dA.js'), 'utf8');
 index = editFunction(index, 'p', () => 'async function p(i,s={},h){const b=globalThis.__opencoreInstallBridge;const run=()=>window.__TAURI_INTERNALS__.invoke(i,s,h);return b?b.invoke(i,s,run):run()}');
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
-app=editFunction(app,'pk',text=>replaceOnce(text,'const u=await jj();','const u=$manualUpdatePolicy.normalize(await jj());'));
+app=editFunction(app,'pk',text=>{
+  text=replaceOnce(text,'const u=await jj();','const u=$manualUpdatePolicy.normalize(await jj());');
+  return replaceOnce(text,'busy:a||l,check:c,install:d','busy:a||l,installing:l,check:c,install:d');
+});
 app=editFunction(app,'Pj',text=>{
   text=replaceOnce(text,'const m=r??(o==null?void 0:o.currentVersion);','const m=$manualUpdatePolicy.currentVersion;');
-  text=replaceOnce(text,'children:c?"Updating…":"Install update"','children:c?"Updating…":"Download update"');
-  text=replaceOnce(text,'"aria-label":"Update"','"aria-label":"Update ready"');
-  return replaceOnce(text,'children:"Update"','children:"Update ready"');
+  text=replaceOnce(text,'busy:c,check:d,install:u','busy:c,installing:$installing,check:d,install:u');
+  text=replaceOnce(text,'async function b(){e(f=>!f),t||await d()}','async function b(){e(!0),await u()}');
+  text=replaceOnce(text,'t&&(n||(o==null?void 0:o.available))','t&&n');
+  text=replaceOnce(text,',(o==null?void 0:o.available)&&i.jsx("button",{type:"button",disabled:c,onClick:()=>void u(),children:c?"Updating…":"Install update"})','');
+  text=replaceOnce(text,'"aria-label":"Update","aria-expanded":t','"aria-label":$installing?"Updating…":"Update ready","aria-busy":$installing');
+  return replaceOnce(text,'children:"Update"','children:$installing?"Updating…":"Update ready"');
 });
 app=editFunction(app,'WI',text=>replaceOnce(text,'className:"statusbar-response-total",title:',
   'className:"statusbar-response-total push",style:{color:"var(--theme-muted,#aeb9c4)"},title:'));

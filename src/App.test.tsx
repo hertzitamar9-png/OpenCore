@@ -100,9 +100,8 @@ describe("OpenCore", () => {
     try {
       render(<App />);
       fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
-      const installButton = await screen.findByRole('button', { name: 'Download update' });
-      await waitFor(() => expect(installButton).toBeEnabled());
-      fireEvent.click(installButton);
+      expect(await screen.findByRole('button', { name: 'Updating…' })).toBeDisabled();
+      expect(install).toHaveBeenCalledOnce();
       fireEvent.click(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
       const menu = await screen.findByRole('group', { name: 'Choose model profile' });
       expect(await within(menu).findByRole('button', { name: /^Swift 1\.5/ })).toBeDisabled();
