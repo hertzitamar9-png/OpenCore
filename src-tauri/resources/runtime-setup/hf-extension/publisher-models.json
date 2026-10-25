@@ -63773,6 +63773,255 @@
       "catalogOrder": 1
     },
     {
+      "id": "hf-cd31756375f9ad1a2d8db899",
+      "repository": "Jackrong/Kestrel-4B-Coder-GGUF",
+      "revision": "f2af687c1ffae94c5c243f4841cf30f7676a0696",
+      "variantKey": "gguf:Kestrel-4B-Coder-Q8_0.gguf",
+      "name": "Kestrel 4B Coder · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 5283003968,
+      "files": [
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder-GGUF",
+          "revision": "f2af687c1ffae94c5c243f4841cf30f7676a0696",
+          "filename": "Kestrel-4B-Coder-Q8_0.gguf",
+          "bytes": 4610580448,
+          "sha256": "f42efa1c790c6c663df5937dd82e728204295d4c4c1ce98081f0bcd5d4cecad4",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder-GGUF",
+          "revision": "f2af687c1ffae94c5c243f4841cf30f7676a0696",
+          "filename": "mmproj-F16.gguf",
+          "bytes": 672423520,
+          "sha256": "f8367586a5ee075e5d905d0a42405ee843ff271a921921eff2b874935e7cc070",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Jackrong/Kestrel-4B-Coder-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-kestrel-4b-coder",
+      "familyLabel": "Kestrel 4B Coder",
+      "originalRepository": "Jackrong/Kestrel-4B-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Qwen3.5 4B fine-tune for coding, reasoning and tool-use output. Offers the publisher's BF16 checkpoint and Q8_0 GGUF with the vision projector. Automatic tool execution, vision and MTP acceleration are unverified.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0
+    },
+    {
+      "id": "hf-fd91c13f61ac46c805ddf5aa",
+      "repository": "Jackrong/Kestrel-4B-Coder",
+      "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+      "variantKey": "safetensors:.",
+      "name": "Kestrel 4B Coder · BF16",
+      "quantization": "BF16",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 9348504402,
+      "files": [
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "model.safetensors-00001-of-00002.safetensors",
+          "bytes": 5329398688,
+          "sha256": "51cc03e77414ec19db5824209fb36d81ccb4ac896f8889693d4e7ee0e5a85c6e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "model.safetensors-00002-of-00002.safetensors",
+          "bytes": 3990429408,
+          "sha256": "2abd48c9efa8a4b8e8ff213f1c2713123670558b9c6b058e4079bc502d3ce41b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "added_tokens.json",
+          "bytes": 904,
+          "sha256": null,
+          "gitBlobSha1": "9955816d3da3e9560559861b82fc5a27cff5b364",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "chat_template.jinja",
+          "bytes": 7992,
+          "sha256": null,
+          "gitBlobSha1": "f210a31e5fa2e912432a30e748ac419f72744893",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "config.json",
+          "bytes": 2995,
+          "sha256": null,
+          "gitBlobSha1": "4a27b34cb081af0a1f27dbb31b96763f9f016169",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "generation_config.json",
+          "bytes": 141,
+          "sha256": null,
+          "gitBlobSha1": "4ef8dc9a1ac3932648ec52542e63ef2b1106b47e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "merges.txt",
+          "bytes": 3353273,
+          "sha256": null,
+          "gitBlobSha1": "f08945b961d2ec392da209998b51d931f1194f4c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "model.safetensors.index.json",
+          "bytes": 76196,
+          "sha256": null,
+          "gitBlobSha1": "fddda6039f7c1d17260c9e923b8a72fd025d9a86",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "preprocessor_config.json",
+          "bytes": 781,
+          "sha256": null,
+          "gitBlobSha1": "484b50c430e48aa6732a3ebb1b72f77cdaf8fc9e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "processor_config.json",
+          "bytes": 1325,
+          "sha256": null,
+          "gitBlobSha1": "a9804dd9789683a33fe72bd98bc0ccb71663afd1",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "special_tokens_map.json",
+          "bytes": 876,
+          "sha256": null,
+          "gitBlobSha1": "fca0ded4fda885a161deeda0547c114ddbc97093",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "tokenizer.json",
+          "bytes": 19989325,
+          "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+          "gitBlobSha1": null,
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "tokenizer_config.json",
+          "bytes": 7187,
+          "sha256": null,
+          "gitBlobSha1": "d80a16d4d4af710da639ea02daffe470d3629ec6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "vocab.json",
+          "bytes": 5234494,
+          "sha256": null,
+          "gitBlobSha1": "b94df23d650b0c60a2264d9de779cb3b7fb8570c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder",
+          "revision": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+          "filename": "video_preprocessor_config.json",
+          "bytes": 817,
+          "sha256": null,
+          "gitBlobSha1": "e32b1d90356f74457edbfca27aa1e121dab7cdc7",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen3_5",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "runtime": {
+        "adapter": "transformers",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/Jackrong/Kestrel-4B-Coder",
+      "status": "not-installed",
+      "familyId": "publisher-kestrel-4b-coder",
+      "familyLabel": "Kestrel 4B Coder",
+      "originalRepository": "Jackrong/Kestrel-4B-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Qwen3.5 4B fine-tune for coding, reasoning and tool-use output. Offers the publisher's BF16 checkpoint and Q8_0 GGUF with the vision projector. Automatic tool execution, vision and MTP acceleration are unverified.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 0
+    },
+    {
       "id": "hf-96549e02786077ceed35b033",
       "repository": "mradermacher/Mano-CUA-2.0-4B-GGUF",
       "revision": "639f9a5263a7cd54f240f8d15ed1184867ab2cf7",
@@ -67699,6 +67948,64 @@
       "builtIn": true
     },
     {
+      "id": "hf-bca08f8559afb4337b22f275",
+      "repository": "talxcc/Tals-coder-flash-02",
+      "revision": "e92cf31a12a6fd62a7faba8c244c138c1491fe1a",
+      "variantKey": "gguf:Tals-coder-flash-02.gguf",
+      "name": "Tals-coder-flash-02 · Custom ternary",
+      "quantization": "Custom ternary",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 8879684128,
+      "files": [
+        {
+          "repository": "talxcc/Tals-coder-flash-02",
+          "revision": "e92cf31a12a6fd62a7faba8c244c138c1491fe1a",
+          "filename": "Tals-coder-flash-02.gguf",
+          "bytes": 8250437152,
+          "sha256": "63c191d934c839e313eaa3ae069048720997b6dfd4968b496cf00cceae94886d",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "talxcc/Tals-coder-flash-02",
+          "revision": "e92cf31a12a6fd62a7faba8c244c138c1491fe1a",
+          "filename": "Tals-coder-flash-02-mmproj.gguf",
+          "bytes": 629246976,
+          "sha256": "6807ede61d570bb86ba34b756a0fa109edc33668604de867c6ea6d8f1d631903",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires a publisher-compatible llama.cpp build with Hadamard kernels (Prism ML / Pascal). This custom ternary format has no verified OpenCore managed adapter. The vision projector is included; MTP and vision execution remain unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/talxcc/Tals-coder-flash-02",
+      "status": "not-installed",
+      "familyId": "publisher-tals-coder-flash-02",
+      "familyLabel": "Tals-coder-flash-02",
+      "originalRepository": "talxcc/Tals-coder-flash-02",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Custom 27B ternary coding checkpoint with grafted MTP weights and its published vision projector. This is the Tals edition, kept separate from its Ternary Bonsai training base. Publisher speed claims have not been verified in OpenCore.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "catalogOrder": 1
+    },
+    {
       "id": "hf-dd6430a21252859dfa053b81",
       "repository": "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF",
       "revision": "f2b788a1938fb9ee75c30e7a71b594487281df06",
@@ -71121,6 +71428,65 @@
       ],
       "originalRepository": "migtissera/Tess-4.5-27B",
       "builtIn": true
+    },
+    {
+      "id": "hf-9d8e46bd6ae97cab99766a79",
+      "repository": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+      "revision": "c9e2b524e76ca7dbe755bfad62a62879d15ce65c",
+      "variantKey": "gguf:Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "name": "Tiel-Coder 35B A3B APEX-I-MiniPlus V2.1 · APEX-I-MiniPlus V2.1",
+      "quantization": "APEX-I-MiniPlus V2.1",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 15841470272,
+      "files": [
+        {
+          "repository": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+          "revision": "c9e2b524e76ca7dbe755bfad62a62879d15ce65c",
+          "filename": "Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+          "bytes": 15230814816,
+          "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+          "revision": "c9e2b524e76ca7dbe755bfad62a62879d15ce65c",
+          "filename": "mmproj-Q8_0.gguf",
+          "bytes": 610655456,
+          "sha256": "9ac93c41709665f4df9365c1de6e634ab429b33d74a5f052dcebf04d7c95720f",
+          "gitBlobSha1": null,
+          "role": "companion",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35moe",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+      "status": "not-installed",
+      "familyId": "publisher-tiel-coder-apex-miniplus-v2-1",
+      "familyLabel": "Tiel-Coder 35B A3B APEX-I-MiniPlus V2.1",
+      "originalRepository": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Publisher's custom mixed-tensor APEX-I-MiniPlus V2.1 coding checkpoint. Includes the Q8_0 vision projector. This exact edition remains separate from Ornith and Cyber-Tiel checkpoints; vision and MTP acceleration are unverified.",
+      "contextTokens": 8192,
+      "license": "mit",
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0
     }
   ]
 }

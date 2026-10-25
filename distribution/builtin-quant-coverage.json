@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 530,
+  "families": 533,
   "withFive": 208,
   "models": [
     {
@@ -5260,6 +5260,18 @@
       ]
     },
     {
+      "id": "publisher-kestrel-4b-coder",
+      "label": "Kestrel 4B Coder",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "Jackrong/Kestrel-4B-Coder",
+        "Jackrong/Kestrel-4B-Coder-GGUF"
+      ]
+    },
+    {
       "id": "publisher-mano-cua-2-0-4b",
       "label": "Mano-CUA 2.0 4B",
       "category": "computer-use",
@@ -5270,6 +5282,17 @@
         "Mininglamp-2718/Mano-CUA-2.0-4B",
         "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
         "mradermacher/Mano-CUA-2.0-4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-tals-coder-flash-02",
+      "label": "Tals-coder-flash-02",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "talxcc/Tals-coder-flash-02"
       ]
     },
     {
@@ -5284,6 +5307,17 @@
         "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF",
         "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
         "mradermacher/Terminal-RSI-27B-i1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-tiel-coder-apex-miniplus-v2-1",
+      "label": "Tiel-Coder 35B A3B APEX-I-MiniPlus V2.1",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF"
       ]
     }
   ]

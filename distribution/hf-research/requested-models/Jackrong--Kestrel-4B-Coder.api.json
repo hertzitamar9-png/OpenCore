@@ -1,0 +1,378 @@
+{
+  "_id": "6adc11bc041ae0c501b63781",
+  "id": "Jackrong/Kestrel-4B-Coder",
+  "private": false,
+  "pipeline_tag": "image-text-to-text",
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "safetensors",
+    "qwen3_5",
+    "image-text-to-text",
+    "unsloth",
+    "merged",
+    "sft",
+    "distillation",
+    "reasoning",
+    "code-generation",
+    "coder",
+    "tool-use",
+    "function-calling",
+    "agent",
+    "mtp",
+    "multi-token-prediction",
+    "speculative-decoding",
+    "local-inference",
+    "edge-computing",
+    "on-device",
+    "gguf",
+    "llama.cpp",
+    "vision",
+    "multimodal",
+    "conversational",
+    "en",
+    "zh",
+    "ko",
+    "ja",
+    "ru",
+    "es",
+    "base_model:unsloth/Qwen3.5-4B",
+    "base_model:finetune:unsloth/Qwen3.5-4B",
+    "license:apache-2.0",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 2,
+  "modelId": "Jackrong/Kestrel-4B-Coder",
+  "author": "Jackrong",
+  "sha": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245",
+  "lastModified": "2026-10-25T14:50:51.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "Hi, what can you help me with?"
+    },
+    {
+      "text": "What is 84 * 3 / 2?"
+    },
+    {
+      "text": "Tell me an interesting fact about the universe!"
+    },
+    {
+      "text": "Explain quantum computing in simple terms."
+    }
+  ],
+  "model-index": null,
+  "config": {
+    "architectures": [
+      "Qwen3_5ForConditionalGeneration"
+    ],
+    "torch_dtype": "bfloat16",
+    "image_token_id": 248056,
+    "model_name": "unsloth/Qwen3.5-4B",
+    "model_type": "qwen3_5",
+    "mtp_num_hidden_layers": 1,
+    "pad_token_id": 248055,
+    "text_config": {
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "attn_output_gate": true,
+      "bos_token_id": null,
+      "torch_dtype": "bfloat16",
+      "eos_token_id": 248044,
+      "full_attention_interval": 4,
+      "head_dim": 256,
+      "hidden_act": "silu",
+      "hidden_size": 2560,
+      "initializer_range": 0.02,
+      "intermediate_size": 9216,
+      "layer_types": [
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention",
+        "linear_attention",
+        "linear_attention",
+        "linear_attention",
+        "full_attention"
+      ],
+      "linear_conv_kernel_dim": 4,
+      "linear_key_head_dim": 128,
+      "linear_num_key_heads": 16,
+      "linear_num_value_heads": 32,
+      "linear_value_head_dim": 128,
+      "mamba_ssm_dtype": "float32",
+      "max_position_embeddings": 262144,
+      "mlp_only_layers": [],
+      "model_type": "qwen3_5_text",
+      "mtp_num_hidden_layers": 1,
+      "mtp_use_dedicated_embeddings": false,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 32,
+      "num_key_value_heads": 4,
+      "pad_token_id": null,
+      "partial_rotary_factor": 0.25,
+      "rms_norm_eps": 1e-06,
+      "rope_parameters": {
+        "mrope_interleaved": true,
+        "mrope_section": [
+          11,
+          11,
+          10
+        ],
+        "partial_rotary_factor": 0.25,
+        "rope_theta": 10000000,
+        "rope_type": "default"
+      },
+      "tie_word_embeddings": true,
+      "use_cache": false,
+      "vocab_size": 248320
+    },
+    "tie_word_embeddings": true,
+    "unsloth_fixed_mtp": true,
+    "unsloth_version": "2026.8.19",
+    "video_token_id": 248057,
+    "vision_config": {
+      "deepstack_visual_indexes": [],
+      "depth": 24,
+      "torch_dtype": "bfloat16",
+      "hidden_act": "gelu_pytorch_tanh",
+      "hidden_size": 1024,
+      "in_channels": 3,
+      "initializer_range": 0.02,
+      "intermediate_size": 4096,
+      "model_type": "qwen3_5",
+      "num_heads": 16,
+      "num_position_embeddings": 2304,
+      "out_hidden_size": 2560,
+      "patch_size": 16,
+      "spatial_merge_size": 2,
+      "temporal_patch_size": 2
+    },
+    "vision_end_token_id": 248054,
+    "vision_start_token_id": 248053,
+    "num_nextn_predict_layers": 1
+  },
+  "cardData": {
+    "library_name": "transformers",
+    "base_model": "unsloth/Qwen3.5-4B",
+    "base_model_relation": "finetune",
+    "license": "apache-2.0",
+    "language": [
+      "en",
+      "zh",
+      "ko",
+      "ja",
+      "ru",
+      "es"
+    ],
+    "pipeline_tag": "image-text-to-text",
+    "tags": [
+      "qwen3_5",
+      "unsloth",
+      "merged",
+      "sft",
+      "distillation",
+      "reasoning",
+      "code-generation",
+      "coder",
+      "tool-use",
+      "function-calling",
+      "agent",
+      "mtp",
+      "multi-token-prediction",
+      "speculative-decoding",
+      "local-inference",
+      "edge-computing",
+      "on-device",
+      "gguf",
+      "llama.cpp",
+      "vision",
+      "multimodal",
+      "safetensors"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModelForMultimodalLM",
+    "pipeline_tag": "image-text-to-text",
+    "processor": "AutoProcessor"
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "e290923a3b92bf6c9f0f655f293085f4d71a7e15",
+      "size": 1761
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "f938136e3adacfd92be087f6e113b5d6d97f678f",
+      "size": 11544
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "b9836cd6ba4a820266146650dea961fd295604e3",
+      "size": 16974
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "9955816d3da3e9560559861b82fc5a27cff5b364",
+      "size": 904
+    },
+    {
+      "rfilename": "assets/benchlocal_capabilities.png",
+      "blobId": "b6470407fc876de483e5d4074f785db32c551761",
+      "size": 114754,
+      "lfs": {
+        "sha256": "4bfcc4cf51428a550888d2f6e050bcf5026d3a47fa191d6ca62a737711b48550",
+        "size": 114754,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/benchlocal_scores.png",
+      "blobId": "683f368065fa27e89295e9ab28fdc32c604127be",
+      "size": 73015
+    },
+    {
+      "rfilename": "assets/coding_quality.png",
+      "blobId": "b5e42a1e57477ff86b71ccc35b454188fdb4bae1",
+      "size": 201564,
+      "lfs": {
+        "sha256": "cdaf04bebe884dc68655ead5033261bd8d2c2621b06ca55cc4d74e9c007190df",
+        "size": 201564,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/model_hero.png",
+      "blobId": "25f35803a06f68c4591ca6a1ab2ff33d8f18db99",
+      "size": 111162,
+      "lfs": {
+        "sha256": "f1a28fc3d00c76446f5fdbac888ba7e1c242b8f45591513351b11a133f61d3a8",
+        "size": 111162,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "f210a31e5fa2e912432a30e748ac419f72744893",
+      "size": 7992
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "4a27b34cb081af0a1f27dbb31b96763f9f016169",
+      "size": 2995
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "4ef8dc9a1ac3932648ec52542e63ef2b1106b47e",
+      "size": 141
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "f08945b961d2ec392da209998b51d931f1194f4c",
+      "size": 3353273
+    },
+    {
+      "rfilename": "model.safetensors-00001-of-00002.safetensors",
+      "blobId": "8c50760ae896d424368d3fca3805089f4eb8dc6c",
+      "size": 5329398688,
+      "lfs": {
+        "sha256": "51cc03e77414ec19db5824209fb36d81ccb4ac896f8889693d4e7ee0e5a85c6e",
+        "size": 5329398688,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors-00002-of-00002.safetensors",
+      "blobId": "e0a04a079f64ff34f8ffab36a89f00bf4ce2e4d6",
+      "size": 3990429408,
+      "lfs": {
+        "sha256": "2abd48c9efa8a4b8e8ff213f1c2713123670558b9c6b058e4079bc502d3ce41b",
+        "size": 3990429408,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "fddda6039f7c1d17260c9e923b8a72fd025d9a86",
+      "size": 76196
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "484b50c430e48aa6732a3ebb1b72f77cdaf8fc9e",
+      "size": 781
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "a9804dd9789683a33fe72bd98bc0ccb71663afd1",
+      "size": 1325
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "fca0ded4fda885a161deeda0547c114ddbc97093",
+      "size": 876
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "5520bfd2dd834ce386c1312c410fa71af56db5ad",
+      "size": 19989325,
+      "lfs": {
+        "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+        "size": 19989325,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "d80a16d4d4af710da639ea02daffe470d3629ec6",
+      "size": 7187
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "blobId": "e32b1d90356f74457edbfca27aa1e121dab7cdc7",
+      "size": 817
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "b94df23d650b0c60a2264d9de779cb3b7fb8570c",
+      "size": 5234494
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-24T02:02:36.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 4659861248,
+      "F32": 3840
+    },
+    "total": 4659865088
+  },
+  "usedStorage": 9340911011
+}

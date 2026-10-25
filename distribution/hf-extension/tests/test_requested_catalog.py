@@ -1,4 +1,4 @@
-"""Offline regressions for the four requested model identities and their packages."""
+"""Offline regressions for the explicitly requested model identities and packages."""
 import copy
 import json
 from pathlib import Path
@@ -24,11 +24,13 @@ class RequestedCatalogTests(unittest.TestCase):
     def family(self, suffix):
         return [entry for entry in self.entries if entry['familyId'] == 'publisher-' + suffix]
 
-    def test_exactly_the_four_requested_models_are_separate_cards(self):
+    def test_exactly_the_seven_requested_models_are_separate_cards(self):
         self.assertEqual({row['repository'] for row in self.rows}, {
             'Hobbylm/hobbylm-1B-computer-use', 'Mininglamp-2718/Mano-CUA-2.0-4B',
-            'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B'})
-        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 4)
+            'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B',
+            'IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF',
+            'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'})
+        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 7)
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
         self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
@@ -67,9 +69,26 @@ class RequestedCatalogTests(unittest.TestCase):
             if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
-        self.assertEqual(report['families'], 4)
+        self.assertEqual(report['families'], 7)
         self.assertEqual(report['withFive'], 3)
         self.assertFalse(report['allModelsMeetMinimum'])
+
+    def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):
+        tiel = self.family('tiel-coder-apex-miniplus-v2-1')
+        tals = self.family('tals-coder-flash-02')
+        kestrel = self.family('kestrel-4b-coder')
+        self.assertEqual([entry['quantization'] for entry in tiel], ['APEX-I-MiniPlus V2.1'])
+        self.assertEqual([entry['quantization'] for entry in tals], ['Custom ternary'])
+        self.assertEqual({entry['quantization'] for entry in kestrel}, {'BF16', 'Q8_0'})
+        self.assertIsNone(tals[0]['runtime']['adapter'])
+        self.assertIn('Hadamard', tals[0]['runtime']['reason'])
+        self.assertNotIn('managedEngine', tals[0])
+        for entry in [*tiel, *tals, *(entry for entry in kestrel if entry['format'] == 'gguf')]:
+            self.assertEqual(sum(pin['role'] == 'model' for pin in entry['files']), 1)
+            self.assertEqual(sum(pin['role'] == 'companion' for pin in entry['files']), 1)
+        self.assertTrue(all(entry['originalRepository'].startswith('IsValorum/Tiel-Coder-') for entry in tiel))
+        self.assertEqual(tals[0]['originalRepository'], 'talxcc/Tals-coder-flash-02')
+        self.assertTrue(all(entry['originalRepository'] == 'Jackrong/Kestrel-4B-Coder' for entry in kestrel))
 
     def test_specialized_packages_keep_their_quantization_and_processor_configurations(self):
         exl = next(entry for entry in self.entries if entry['quantization'] == 'EXL3 4.0 bpw')

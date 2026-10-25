@@ -28,7 +28,7 @@ for(const id of ['llama32-1b','sage-a15-q4-k-m','holo4-27b']){
  record(id+' offers direct installation',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  await card.screenshot({path:path.join(__dirname,'.output/builtin-'+id+'.png')});
 }
-const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29]];
+const requested=[['publisher-hobbylm-1b-computer-use',1],['publisher-mano-cua-2-0-4b',14],['publisher-terminal-rsi-27b',28],['publisher-discoveryrsi-27b',29],['publisher-tiel-coder-apex-miniplus-v2-1',1],['publisher-tals-coder-flash-02',1],['publisher-kestrel-4b-coder',2]];
 const screenshotDirectory=process.env.OPENCORE_MODEL_QA_DIR||path.join(require('os').tmpdir(),'opencore-requested-models-qa');fs.mkdirSync(screenshotDirectory,{recursive:true});
 for(const [family,count] of requested){
  const entries=presetCatalog.entries.filter(entry=>entry.familyId===family),entry=entries[0];
@@ -38,10 +38,14 @@ for(const [family,count] of requested){
  record(entry.familyLabel+' has one card with every reviewed preset package',await card.count()===1&&await card.locator('select option').count()===count);
  record(entry.familyLabel+' has a direct Install button',await card.getByRole('button',{name:'Install',exact:true}).isEnabled());
  if(family==='publisher-hobbylm-1b-computer-use')record('HobbyLM explains the separate base model and missing Windows adapter',await card.innerText().then(text=>text.includes('harims95/hobbylm-1B-instruct')&&text.includes('no OpenCore Windows adapter')));
- else{
-  const quant=entries.find(value=>value.format==='gguf'&&value.quantization==='Q4_K_M');
+ else if(entries.some(value=>value.format==='gguf'&&['Q4_K_M','Q8_0'].includes(value.quantization))){
+  const quant=entries.find(value=>value.format==='gguf'&&value.quantization==='Q4_K_M')||entries.find(value=>value.format==='gguf'&&value.quantization==='Q8_0');
   await card.locator('select').selectOption(quant.id);
-  record(entry.familyLabel+' switches to its pinned Q4_K_M package',await card.locator('select').inputValue()===quant.id&&await card.innerText().then(text=>text.includes(quant.repository)));
+  record(entry.familyLabel+' switches to its pinned '+quant.quantization+' package',await card.locator('select').inputValue()===quant.id&&await card.innerText().then(text=>text.includes(quant.repository)));
+ }
+ else{
+  record(entry.familyLabel+' keeps the publisher custom quantization label',await card.locator('select').inputValue()===entry.id&&await card.locator('select option').first().innerText().then(text=>text.includes(entry.quantization)));
+  if(family==='publisher-tals-coder-flash-02')record('Tals shows its required Hadamard runtime without claiming readiness',await card.innerText().then(text=>text.includes('Hadamard')&&text.includes('Compatible adapter required')&&!text.includes('Ready to use')));
  }
  await card.screenshot({path:path.join(screenshotDirectory,family+'.png')});
 }

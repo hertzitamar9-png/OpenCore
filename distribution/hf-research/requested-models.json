@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "scope": "Four model names copied from WhatsApp on 2026-10-25. Other pasted text is excluded. Quantizations are frozen build inputs, never searched from built-in cards.",
+  "scope": "Seven explicitly requested models from 2026-10-25 and 2026-10-26. Non-model pasted text is excluded. Quantizations are frozen build inputs, never searched from built-in cards; custom checkpoint editions remain distinct from their training bases.",
   "models": [
     {
       "repository": "Hobbylm/hobbylm-1B-computer-use",
@@ -69,6 +69,47 @@
           "quantization": "EXL3 4.0 bpw",
           "runtimeReason": "EXL3 4.0 bpw requires a compatible ExLlamaV3 runtime and sufficient GPU memory. No OpenCore managed adapter for this format is integrated."
         }
+      ]
+    },
+    {
+      "repository": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+      "familyId": "publisher-tiel-coder-apex-miniplus-v2-1",
+      "label": "Tiel-Coder 35B A3B APEX-I-MiniPlus V2.1",
+      "category": "text",
+      "description": "Publisher's custom mixed-tensor APEX-I-MiniPlus V2.1 coding checkpoint. Includes the Q8_0 vision projector. This exact edition remains separate from Ornith and Cyber-Tiel checkpoints; vision and MTP acceleration are unverified.",
+      "sources": [
+        {
+          "repository": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+          "quantization": "APEX-I-MiniPlus V2.1"
+        }
+      ]
+    },
+    {
+      "repository": "talxcc/Tals-coder-flash-02",
+      "familyId": "publisher-tals-coder-flash-02",
+      "label": "Tals-coder-flash-02",
+      "category": "text",
+      "description": "Custom 27B ternary coding checkpoint with grafted MTP weights and its published vision projector. This is the Tals edition, kept separate from its Ternary Bonsai training base. Publisher speed claims have not been verified in OpenCore.",
+      "sources": [
+        {
+          "repository": "talxcc/Tals-coder-flash-02",
+          "quantization": "Custom ternary",
+          "runtimeReason": "Requires a publisher-compatible llama.cpp build with Hadamard kernels (Prism ML / Pascal). This custom ternary format has no verified OpenCore managed adapter. The vision projector is included; MTP and vision execution remain unverified."
+        }
+      ]
+    },
+    {
+      "repository": "Jackrong/Kestrel-4B-Coder",
+      "familyId": "publisher-kestrel-4b-coder",
+      "label": "Kestrel 4B Coder",
+      "category": "text",
+      "description": "Qwen3.5 4B fine-tune for coding, reasoning and tool-use output. Offers the publisher's BF16 checkpoint and Q8_0 GGUF with the vision projector. Automatic tool execution, vision and MTP acceleration are unverified.",
+      "sources": [
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder-GGUF",
+          "publisherEvidence": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245"
+        },
+        {"repository": "Jackrong/Kestrel-4B-Coder"}
       ]
     }
   ]
