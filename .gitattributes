@@ -20,4 +20,6 @@ tests/fusion/*.py text eol=lf
 tests/fusion/*.cpp text eol=lf
 tests/fusion/fixtures/*.json text eol=lf
 distribution/recovered-dist/** -text -whitespace
+distribution/bootstrap/permanent/*.exe -text
+distribution/bootstrap/permanent/*.exe.sig -text
 src-tauri/resources/agent-platform/TENCENT-MEMORY-LICENSE.txt -text -whitespace

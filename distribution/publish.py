@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 
 from package import file_hash
+from permanent_bootstrap import load_pin as load_bootstrap_pin, validate_files as validate_bootstrap_files
 
 HERE = Path(__file__).resolve().parent
 REPOSITORY = 'hertzitamar9-png/OpenCore'
@@ -78,12 +79,15 @@ def publish(folder, version, commit):
     signature = folder / 'OpenCore Package.exe.sig'
     bootstrap = folder / 'OpenCore Setup.exe'
     bootstrap_check = json.loads((folder / 'bootstrap-verification.json').read_text(encoding='utf-8'))
-    if (not bootstrap_check.get('passed') or bootstrap_check.get('version') != version
+    pin = load_bootstrap_pin()
+    if (not bootstrap_check.get('passed') or bootstrap_check.get('verifiedForAppVersion') != version
+            or not bootstrap_check.get('permanent') or bootstrap_check.get('bootstrapVersion') != pin['bootstrapVersion']
             or not 0 < bootstrap.stat().st_size <= 2_000_000
             or bootstrap_check.get('sha256') != file_hash(bootstrap)
             or not all(bootstrap_check.get(key) for key in
                        ['signatureVerificationPassed', 'tamperedSignatureRejected', 'tamperedHashRejected'])):
         raise ValueError('The small setup downloader has not passed its size and signature checks')
+    validate_bootstrap_files(folder, pin)
     for signed in [installer, bootstrap]:
         subprocess.run(['node', str(HERE / 'verify-signature.cjs'), str(signed), str(signed) + '.sig',
                         str(HERE.parent / 'src-tauri/tauri.conf.json')], check=True)

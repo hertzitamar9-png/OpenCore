@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "bootstrapVersion": "0.3.157",
+  "bytes": 483328,
+  "sha256": "29eb275a1a46ad8d17f8a95268460f70a81c3b93427bfcf6621f5b59a5fab822",
+  "signatureSha256": "ee8657e62b15e6c27914cf6d0aed58fbdf2c2f5d65057f82a9a9c8c17bcb6f31",
+  "source": "https://github.com/hertzitamar9-png/OpenCore/releases/download/app-v0.3.157/OpenCore.Setup.exe",
+  "behavior": "One permanent setup file. It discovers the latest stable app at run time; its own file version does not select or limit the app version."
+}

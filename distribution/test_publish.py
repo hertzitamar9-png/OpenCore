@@ -49,8 +49,12 @@ class ReleasePublicationTests(unittest.TestCase):
         (self.folder / 'OpenCore Package.exe.sig').write_text('signature-fixture', encoding='utf-8')
         (self.folder / 'OpenCore Setup.exe').write_bytes(b'verified-bootstrap-fixture')
         (self.folder / 'OpenCore Setup.exe.sig').write_text('bootstrap-signature-fixture', encoding='utf-8')
+        self.bootstrap_pin = dict(bootstrapVersion='0.3.157', bytes=(self.folder / 'OpenCore Setup.exe').stat().st_size,
+            sha256=publish.file_hash(self.folder / 'OpenCore Setup.exe'),
+            signatureSha256=publish.file_hash(self.folder / 'OpenCore Setup.exe.sig'))
         (self.folder / 'bootstrap-verification.json').write_text(json.dumps({
-            'passed': True, 'version': self.version, 'sha256': publish.file_hash(self.folder / 'OpenCore Setup.exe'),
+            'passed': True, 'permanent': True, 'bootstrapVersion': '0.3.157', 'verifiedForAppVersion': self.version,
+            'sha256': publish.file_hash(self.folder / 'OpenCore Setup.exe'),
             'signatureVerificationPassed': True, 'tamperedSignatureRejected': True, 'tamperedHashRejected': True}))
         for name, value in {
             'package-manifest.json': {'build': self.version, 'commit': self.commit, 'appExeSha256': 'app-hash'},
@@ -104,6 +108,7 @@ class ReleasePublicationTests(unittest.TestCase):
 
     def run_publication(self):
         with patch.object(publish, 'api', side_effect=self.api), \
+             patch.object(publish, 'load_bootstrap_pin', return_value=self.bootstrap_pin), \
              patch.object(publish, 'command', side_effect=self.command), \
              patch.object(publish.subprocess, 'run', side_effect=self.run_tool), redirect_stdout(io.StringIO()):
             publish.publish(self.folder, self.version, self.commit)
@@ -181,6 +186,16 @@ class ReleasePublicationTests(unittest.TestCase):
         with setup.open('wb') as output:
             output.truncate(2_000_001)
         with self.assertRaisesRegex(ValueError, 'small setup'):
+            self.run_publication()
+        self.assertFalse(self.commands)
+
+    def test_rebuilt_setup_is_rejected_even_if_its_new_hash_is_reported(self):
+        setup = self.folder / 'OpenCore Setup.exe'
+        setup.write_bytes(b'a-new-per-release-bootstrap')
+        report = self.folder / 'bootstrap-verification.json'
+        value = json.loads(report.read_text()); value['sha256'] = publish.file_hash(setup)
+        report.write_text(json.dumps(value))
+        with self.assertRaisesRegex(ValueError, 'permanent OpenCore Setup'):
             self.run_publication()
         self.assertFalse(self.commands)
 

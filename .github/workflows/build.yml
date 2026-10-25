@@ -55,6 +55,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Push-Location distribution
           python -m unittest -v test_publish
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest -v test_permanent_bootstrap
           $publishTestsExit = $LASTEXITCODE
           Pop-Location
           if ($publishTestsExit -ne 0) { exit $publishTestsExit }
@@ -126,9 +128,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "$testRoot/test-python/python.exe" -I -B distribution/qa-portable-runtime.py --root $testRoot --output distribution/.output/release/runtime-verification.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Build the small setup downloader
-        run: python distribution/build-bootstrap.py --output distribution/.output/release --version $env:OPENCORE_RELEASE_VERSION
-      - name: Sign the verified app package and small setup
+      - name: Reuse the permanent signed setup unchanged
+        run: python distribution/permanent_bootstrap.py --output distribution/.output/release --app-version $env:OPENCORE_RELEASE_VERSION
+      - name: Sign the new app package and verify the permanent setup
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -136,8 +138,6 @@ jobs:
           npx tauri signer sign 'distribution/.output/release/OpenCore Package.exe'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Package.exe' 'distribution/.output/release/OpenCore Package.exe.sig' src-tauri/tauri.conf.json
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npx tauri signer sign 'distribution/.output/release/OpenCore Setup.exe'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node distribution/verify-signature.cjs 'distribution/.output/release/OpenCore Setup.exe' 'distribution/.output/release/OpenCore Setup.exe.sig' src-tauri/tauri.conf.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
