@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 
-from hf_catalog import build_plan, parse_repository
+from hf_catalog import build_plan, parse_repository, quantization_count
 
 
 def quantized_relation(metadata):
@@ -150,5 +150,5 @@ def discover(client, repository):
             'originalRepository': spelling, 'relatedRepositories': [plan['repository'] for plan in accepted],
             'discoveryErrors': discovery_errors,
             'rejectedRepositories': rejected, 'searchedRepositories': len(names),
-            'quantizationCount': len({entry['quantization'] for entry in variants if entry['installable']}),
+            'quantizationCount': quantization_count(variants),
             'warning': 'These published files require compatible hardware and runtime verification before use.'}

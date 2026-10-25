@@ -59,6 +59,12 @@ class CatalogTests(unittest.TestCase):
                 entry = catalog.build_plan(metadata([file(filename)]))['variants'][0]
                 self.assertEqual(entry['quantization'], expected)
 
+    def test_unnamed_packages_and_precision_aliases_do_not_pad_the_quantization_count(self):
+        plan = catalog.build_plan(metadata([file('model.gguf'), file('model-Q4_K_M.gguf'),
+                                            file('model-F16.gguf'), file('model-FP16.gguf')]))
+        self.assertEqual(len(plan['variants']), 4)
+        self.assertEqual(plan['quantizationCount'], 2)
+
     def test_dflash_is_a_draft_companion_and_not_a_main_quantization(self):
         plan = catalog.build_plan(metadata([file('model-Q4_K_M.gguf'), file('model-DFlash2-Q8_0.gguf')]))
         self.assertEqual([v['quantization'] for v in plan['variants']], ['Q4_K_M'])

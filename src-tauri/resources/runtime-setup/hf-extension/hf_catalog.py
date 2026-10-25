@@ -104,6 +104,16 @@ def _quantization(name, config, format_name):
     return {"bfloat16": "BF16", "float16": "FP16", "float32": "FP32"}.get(str(dtype), "Original" if format_name != "gguf" else "GGUF")
 
 
+def quantization_count(variants):
+    labels = set()
+    for entry in variants:
+        label = str(entry.get('quantization') or '').strip().upper()
+        if not entry.get('installable') or label in ('', 'ORIGINAL', 'GGUF', 'UNKNOWN', 'CHECKPOINT', 'SAFETENSORS'):
+            continue
+        labels.add({'FP16': 'F16', 'FP32': 'F32'}.get(label, label))
+    return len(labels)
+
+
 def build_plan(metadata):
     if not isinstance(metadata, dict):
         raise ValueError("Invalid Hub metadata")
@@ -187,5 +197,5 @@ def build_plan(metadata):
     identity = json.dumps({"repository": repo, "revision": revision, "variants": variants}, sort_keys=True, separators=(",", ":"))
     return {"planId": hashlib.sha256(identity.encode("utf-8")).hexdigest(), "repository": repo, "revision": revision,
             "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),
-            "pipelineTag": metadata.get("pipeline_tag"), "variants": variants,
+            "pipelineTag": metadata.get("pipeline_tag"), "variants": variants, "quantizationCount": quantization_count(variants),
             "warning": None if variants else "No supported main model files were found; repository code is never executed"}
