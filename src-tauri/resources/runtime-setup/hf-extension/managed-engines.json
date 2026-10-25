@@ -1,6 +1,14 @@
 {
   "schema": 1,
   "engines": {
+    "edgerock-cpu-v1": {
+      "label": "EdgeRock RMA",
+      "url": "https://github.com/hertzitamar9-png/OpenCore/releases/download/recovery-base-20261024/edgerock-windows-x64-a5e045c6.zip",
+      "sha256": "b467fb526817ad3fac30fef0c0e2094602c545e3c3b9999ce068ba36d3fc80b3",
+      "bytes": 12792921,
+      "source": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF/tree/a5e045c646b70303156394d52c2ca1e415ec1544",
+      "revision": "62318cd57dc63900ecb153272c0b10f78550855d+a5e045c646b70303156394d52c2ca1e415ec1544"
+    },
     "flint-cpu-v1": {
       "label": "Flint",
       "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11860/llama-b11860-bin-win-cpu-x64.zip",

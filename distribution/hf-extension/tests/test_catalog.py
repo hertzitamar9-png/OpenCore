@@ -50,6 +50,25 @@ class CatalogTests(unittest.TestCase):
         self.assertFalse(plan["variants"][0]["installable"])
         self.assertIn("missing", plan["variants"][0]["reason"].lower())
 
+    def test_quant_suffix_wins_over_model_version_and_mixed_packages_stay_distinct(self):
+        for filename, expected in [('LFM-Q3.8-TBrilliance-Q8_0.gguf', 'Q8_0'),
+                                   ('model-Mix-13G.gguf', 'Mix 13G'), ('model-Mix-15.7G.gguf', 'Mix 15.7G'),
+                                   ('Sage.MXFP4_MOE.gguf', 'MXFP4_MOE')]:
+            with self.subTest(filename=filename):
+                entry = catalog.build_plan(metadata([file(filename)]))['variants'][0]
+                self.assertEqual(entry['quantization'], expected)
+
+    def test_dflash_is_a_draft_companion_and_not_a_main_quantization(self):
+        plan = catalog.build_plan(metadata([file('model-Q4_K_M.gguf'), file('model-DFlash2-Q8_0.gguf')]))
+        self.assertEqual([v['quantization'] for v in plan['variants']], ['Q4_K_M'])
+
+    def test_non_text_downloads_do_not_claim_a_text_runtime(self):
+        plan = catalog.build_plan(metadata([file('model.safetensors')], pipeline_tag='text-to-image'))
+        entry = plan['variants'][0]
+        self.assertTrue(entry['installable'])
+        self.assertEqual(entry['category'], 'image')
+        self.assertIsNone(entry['runtime']['adapter'])
+
     def test_safetensors_are_one_checkpoint_per_subdirectory_with_safe_support_files(self):
         plan = catalog.build_plan(metadata([file("config.json"), file("tokenizer.json"), file("remote_model.py"),
             file("bf16/model-00001-of-00002.safetensors"), file("bf16/model-00002-of-00002.safetensors"),

@@ -104,7 +104,7 @@ class HubClient:
         except (URLError, OSError, TimeoutError):
             raise HubError("The Hugging Face request timed out or could not connect") from None
 
-    def json(self, path, *, token=None, anonymous_first=True, limit=16 * 1024 * 1024):
+    def json(self, path, *, token=None, anonymous_first=True, limit=16 * 1024 * 1024, expected_type=dict):
         try:
             with self.open(path, token=token, anonymous_first=anonymous_first) as response:
                 length = response.headers.get("Content-Length")
@@ -114,7 +114,7 @@ class HubClient:
             if len(body) > limit:
                 raise HubError("Hub metadata exceeds the supported size limit")
             result = json.loads(body)
-            if not isinstance(result, dict):
+            if not isinstance(result, expected_type):
                 raise ValueError()
             return result
         except (ValueError, UnicodeError):
@@ -123,6 +123,17 @@ class HubClient:
     def metadata(self, repository):
         repository = parse_repository(repository)
         return self.json("/api/models/" + quote(repository, safe="/") + "/revision/main?blobs=true")
+
+    def search_quantizations(self, query):
+        if not isinstance(query, str) or not 1 <= len(query) <= 192:
+            raise ValueError('Invalid model search')
+        return self.json('/api/models?filter=gguf&search=' + quote(query, safe='') +
+                         '&limit=40&sort=downloads&direction=-1', expected_type=list, limit=2 * 1024 * 1024)
+
+    def quantization_derivatives(self, repository):
+        repository = parse_repository(repository)
+        return self.json('/api/models?filter=' + quote('base_model:quantized:' + repository, safe='') +
+                         '&limit=100&sort=downloads&direction=-1', expected_type=list, limit=2 * 1024 * 1024)
 
     def validate_token(self, token):
         if not isinstance(token, str) or not re.fullmatch(r"hf_[A-Za-z0-9_]{5,250}", token):

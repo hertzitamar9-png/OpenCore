@@ -9,9 +9,9 @@ HUB = "https://huggingface.co"
 HEX40 = re.compile(r"[0-9a-fA-F]{40}\Z")
 HEX64 = re.compile(r"[0-9a-fA-F]{64}\Z")
 REPO_PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,95}\Z")
-QUANT = re.compile(r"(?<![A-Z0-9])((?:IQ|Q)[1-9][0-9]?(?:_[A-Z0-9]+)*|BF16|FP16|F16|FP32|F32)(?![A-Z0-9])", re.I)
+QUANT = re.compile(r"(?<![A-Z0-9])((?:IQ|Q)[1-9][0-9]?(?:_[A-Z0-9]+)*|(?:NV|MX)FP4(?:_[A-Z0-9]+)*|FP8(?:_[A-Z0-9]+)*|BF16|FP16|F16|FP32|F32|MIX[-_ ]\d+(?:\.\d+)?G)(?![A-Z0-9])", re.I)
 SHARD = re.compile(r"[-_](\d{1,6})-of-(\d{1,6})(?=\.[^.]+$)", re.I)
-AUXILIARY = re.compile(r"(?:^|[/_.-])(mmproj|imatrix|importance[-_]?matrix|draft|optimizer|optim|training|trainer|checkpoint[-_]?step|scheduler|rng[-_]?state)(?:[/_.-]|$)", re.I)
+AUXILIARY = re.compile(r"(?:^|[/_.-])(mmproj|imatrix|importance[-_]?matrix|draft|dflash\d*|optimizer|optim|training|trainer|checkpoint[-_]?step|scheduler|rng[-_]?state)(?:[/_.-]|$)", re.I)
 RESERVED = {"CON", "PRN", "AUX", "NUL", *("COM" + str(i) for i in range(1, 10)), *("LPT" + str(i) for i in range(1, 10))}
 SUPPORT = {"config.json", "generation_config.json", "tokenizer.json", "tokenizer.model", "tokenizer_config.json",
            "special_tokens_map.json", "added_tokens.json", "vocab.json", "vocab.txt", "merges.txt",
@@ -91,9 +91,10 @@ def _shard_problem(names):
 
 
 def _quantization(name, config, format_name):
-    match = QUANT.search(name.upper())
-    if match:
-        return match.group(1).upper()
+    matches = list(QUANT.finditer(PurePosixPath(name).name.upper()))
+    if matches:
+        label = matches[-1].group(1).upper()
+        return re.sub(r'^MIX[-_ ]', 'Mix ', label)
     settings = config.get("quantization_config") or {}
     if isinstance(settings, dict) and settings:
         method = str(settings.get("quant_method", "quantized")).upper()[:40]
@@ -165,12 +166,19 @@ def build_plan(metadata):
         reason = _shard_problem([i["rfilename"] for i in items])
         if any(not pin["pinned"] for pin in pins):
             reason = reason or "The Hub did not provide a file size and checksum for every required file"
-        runtime_kind = "gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None
+        task = str(metadata.get('pipeline_tag') or '')
+        category = {'text-to-image': 'image', 'image-to-image': 'image', 'text-to-video': 'video',
+                    'image-to-video': 'video', 'automatic-speech-recognition': 'speech',
+                    'text-to-speech': 'tts', 'text-to-audio': 'tts', 'feature-extraction': 'embedding',
+                    'sentence-similarity': 'embedding', 'text-classification': 'classification',
+                    'image-classification': 'classification'}.get(task, 'text' if task in (
+                        '', 'text-generation', 'text2text-generation', 'image-text-to-text', 'conversational') else 'omni')
+        runtime_kind = ("gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None) if category == 'text' else None
         runtime = {"adapter": runtime_kind, "available": False, "inferenceVerified": False,
                    "reason": "Runtime discovery and an actual generation are required" if runtime_kind else "No verified managed runtime adapter supports this format"}
         variants.append({"id": stable_id(repo, key), "repository": repo, "revision": revision, "variantKey": key,
             "name": repo.split("/", 1)[1] + " · " + quant + (" · " + subdir if subdir else ""),
-            "quantization": quant, "format": format_name, "subdirectory": subdir,
+            "quantization": quant, "format": format_name, "subdirectory": subdir, 'category': category,
             "bytes": sum(p["bytes"] for p in pins), "files": pins, "installable": reason is None,
             "reason": reason, "modelType": config.get("model_type") or (metadata.get("gguf") or {}).get("architecture"), "architectures": config.get("architectures", []),
             "runtime": runtime, "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),

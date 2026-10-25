@@ -1,0 +1,41 @@
+name: Verify community model runtimes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  edgerock-five-quants:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch the exact compiled EdgeRock candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: edgerock-windows-runtime
+          run-id: 40166845675
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: distribution/.output/edgerock-ci-runtime
+      - name: Verify five real quantizations and ECHO streaming
+        shell: pwsh
+        run: |
+          python distribution/qa-edgerock-quants.py --runtime-archive distribution/.output/edgerock-ci-runtime/edgerock-windows-x64-a5e045c6.zip --discard-weights
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: edgerock-quant-verification
+          path: |
+            distribution/.output/edgerock-quant-verification.json
+            distribution/.output/edgerock-quant-verification/runtime-setup/hub-runs/**/runtime.log
+          if-no-files-found: warn
+          retention-days: 7

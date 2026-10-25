@@ -31,6 +31,8 @@ AUTH_HEADER = "X-OpenCore-Hub-Secret"
 TAURI_ORIGINS = {"http://tauri.localhost", "https://tauri.localhost", "tauri://localhost"}
 ID = re.compile(r"hf-[0-9a-f]{24}\Z")
 ACTIVE = {"running", "pausing"}
+MAX_CATALOG_ENTRIES = 10000
+MAX_CATALOG_BYTES = 64 * 1024 * 1024
 
 
 class Conflict(ValueError):
@@ -90,10 +92,10 @@ class BridgeState:
 
     def _load_catalog(self):
         try:
-            saved = _read_json(self.catalog_path)
+            saved = _read_json(self.catalog_path, MAX_CATALOG_BYTES)
         except FileNotFoundError:
             return
-        if not isinstance(saved, dict) or saved.get("schema") != 1 or not isinstance(saved.get("entries"), list) or len(saved["entries"]) > 2000:
+        if not isinstance(saved, dict) or saved.get("schema") != 1 or not isinstance(saved.get("entries"), list) or len(saved["entries"]) > MAX_CATALOG_ENTRIES:
             raise ValueError("Managed Hugging Face catalog is invalid")
         for entry in saved["entries"]:
             if not isinstance(entry, dict) or not ID.fullmatch(str(entry.get("id", ""))):
@@ -104,7 +106,10 @@ class BridgeState:
             self.entries[entry["id"]] = entry
 
     def persist_catalog(self):
-        atomic_json(self.catalog_path, {"schema": 1, "entries": list(self.entries.values())})
+        value = {"schema": 1, "entries": list(self.entries.values())}
+        if len(json.dumps(value, ensure_ascii=True, indent=2).encode('utf-8')) > MAX_CATALOG_BYTES:
+            raise ValueError('Managed model metadata exceeds the catalog size limit')
+        atomic_json(self.catalog_path, value)
 
     def _seed_publisher_catalog(self):
         source = self.resources / 'runtime-setup/hf-extension/publisher-models.json'
@@ -184,8 +189,12 @@ class BridgeState:
             return {"schema": 1, "healthy": True, "catalog": self.catalog(), "progress": copy.deepcopy(self.progress),
                     "tokenConfigured": self.tokens.status()["configured"], "runtimeAdapterAvailable": not isinstance(self.runtime, RuntimeUnavailable)}
 
-    def plan(self, repository):
-        plan = build_plan(self.client.metadata(parse_repository(repository)))
+    def plan(self, repository, include_community=False):
+        if include_community:
+            from hf_discovery import discover
+            plan = discover(self.client, repository)
+        else:
+            plan = build_plan(self.client.metadata(parse_repository(repository)))
         with self.lock:
             now = time.monotonic()
             self.plans = {key: item for key, item in self.plans.items() if now - item[0] < 900}
@@ -206,19 +215,30 @@ class BridgeState:
             variants = [copy.deepcopy(x) for x in plan["variants"] if x["id"] in wanted]
             if len(variants) != len(wanted) or not variants:
                 raise ValueError("Selected variants do not belong to this inspected repository")
-            if len(set(self.entries) | wanted) > 2000:
+            if len(set(self.entries) | wanted) > MAX_CATALOG_ENTRIES:
                 raise ValueError("The managed model catalog is full")
             if self.progress and self.progress.get("status") in ACTIVE and self.progress.get("id") in wanted:
                 raise Conflict("Wait for or pause the active model job before updating its metadata")
+            family = next((self.entries[value['id']] for value in plan['variants']
+                           if self.entries.get(value['id'], {}).get('familyId')), None)
+            previous_entries = dict(self.entries)
             for entry in variants:
                 previous = self.entries.get(entry["id"], {})
+                if family and plan.get('originalRepository'):
+                    for field in ('familyId', 'familyLabel', 'nativeModelIds'):
+                        if field in family:
+                            entry[field] = copy.deepcopy(family[field])
                 for field in ("profileId", "providerId", "familyId", "familyLabel", "nativeModelIds"):
                     if previous.get(field):
                         entry[field] = previous[field]
                 if previous.get("revision") == entry["revision"] and previous.get("files") == entry["files"] and previous.get("runtimePreparation"):
                     entry["runtimePreparation"] = previous["runtimePreparation"]
                 self.entries[entry["id"]] = entry
-            self.persist_catalog()
+            try:
+                self.persist_catalog()
+            except Exception:
+                self.entries = previous_entries
+                raise
             return {"added": [x["id"] for x in variants], "catalog": self.catalog()}
 
     def entry(self, model_id, installed=False):
@@ -508,7 +528,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         elif self.command != "POST":
             self._send(405, {"error": "Method not allowed"})
         elif route == "/plan":
-            self._send(200, state.plan(body.get("repository")))
+            self._send(200, state.plan(body.get("repository"), body.get('includeCommunity') is True))
         elif route == "/catalog/add":
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":
