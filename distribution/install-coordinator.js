@@ -19,7 +19,7 @@ function createInstallNotificationPolicy(options = {}) {
       if (saved?.schema === 1 && Array.isArray(saved.items)) for (const item of saved.items.slice(-128)) {
         if (typeof item.modelId === 'string' && item.modelId.length < 512 &&
             (item.operationId === null || typeof item.operationId === 'string' && item.operationId.length < 1024)) {
-          dismissed.set(item.modelId, item);
+          dismissed.set(JSON.stringify([item.modelId, item.operationId]), item);
         }
       }
     } catch {}
@@ -32,26 +32,29 @@ function createInstallNotificationPolicy(options = {}) {
   }
   function begin(modelId) {
     load();
-    if (dismissed.delete(modelId)) save();
+    let changed = false;
+    for (const [key, item] of dismissed) if (item.modelId === modelId) { dismissed.delete(key); changed = true; }
+    if (changed) save();
   }
   function observe(progress) {
     load();
-    const previous = dismissed.get(progress?.modelId), id = operation(progress);
-    if (previous && id && id !== previous.operationId && !terminal.has(progress.phase)) begin(progress.modelId);
+    const previous = [...dismissed.values()].filter(item => item.modelId === progress?.modelId), id = operation(progress);
+    if (previous.length && id && !previous.some(item => item.operationId === id) && !terminal.has(progress.phase)) begin(progress.modelId);
   }
   function hidden(progress) {
     load();
     if (!terminal.has(progress?.phase)) return false;
-    const previous = dismissed.get(progress.modelId), id = operation(progress);
+    const previous = [...dismissed.values()].filter(item => item.modelId === progress.modelId), id = operation(progress);
     // Legacy catalog progress can omit the ID present in runtime status. Keep
     // its acknowledgement until this model starts another real operation.
-    return !!previous && (!previous.operationId || !id || previous.operationId === id);
+    return previous.some(item => !item.operationId || !id || item.operationId === id);
   }
   function dismiss(progress) {
     load();
     if (!progress?.modelId || !terminal.has(progress.phase)) return;
-    dismissed.delete(progress.modelId);
-    dismissed.set(progress.modelId, {modelId: progress.modelId, operationId: operation(progress)});
+    const key = JSON.stringify([progress.modelId, operation(progress)]);
+    dismissed.delete(key);
+    dismissed.set(key, {modelId: progress.modelId, operationId: operation(progress)});
     save();
   }
   function same(left, right) {

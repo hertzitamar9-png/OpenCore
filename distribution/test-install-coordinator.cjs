@@ -190,3 +190,19 @@ test('acknowledgements are isolated between account scopes', async () => {
   store.setScope('account-b'); assert.equal(visible(state).modelId, 'phonon-2');
   store.setScope('account-a'); assert.equal(visible(state), null);
 });
+
+test('runtime and native catalog identities of one completed install stay acknowledged after reload', async () => {
+  const store = notificationStorage(), state = fixture(store.policy());
+  const native = {...completed, operationId: 'native-download'};
+  state.setStatus({activeJobId: 'runtime-job', jobs: [{id: 'runtime-job', targetId: 'phonon-2', status: 'running', stage: 'verifying'}], receipts: []});
+  state.setProgress(native); await state.coordinator.refresh(); await library(state, native);
+  state.setStatus({activeJobId: null, jobs: [{id: 'runtime-job', targetId: 'phonon-2', status: 'ready', stage: 'ready'}], receipts: []});
+  await state.coordinator.refresh(); const expected = state.coordinator.getSnapshot().progress;
+  assert.equal(expected.operationId, 'runtime-job');
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected}, async () => false);
+  assert.equal(visible(state), null);
+  const reloaded = fixture(store.policy()); await library(reloaded, native);
+  assert.equal(visible(reloaded), null);
+  await library(reloaded, {...native, operationId: 'another-install'});
+  assert.equal(visible(reloaded).operationId, 'another-install');
+});

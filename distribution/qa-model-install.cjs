@@ -122,9 +122,12 @@ const server = http.createServer((request, response) => {
       }
     }
     await page.evaluate(async()=>{
-      const terminal={modelId:'phonon-2',phase:'ready',downloadedBytes:100,totalBytes:100,currentFile:'Ready',error:null};
+      const terminal={modelId:'phonon-2',operationId:'native-phonon-download',phase:'ready',downloadedBytes:100,totalBytes:100,currentFile:'Ready',error:null};
       fixture.models.push({...fixture.models.find(model=>model.id==='plain-gguf'),id:'phonon-2',label:'Phonon-2'});
       fixture.progress=terminal;sessionStorage.setItem('notification-qa-terminal',JSON.stringify(terminal));
+      const runtime={id:'runtime-phonon-prepare',targetId:'phonon-2',status:'running',stage:'verifying',detail:'Checking the installed speech runtime'};
+      fixture.jobs.push(runtime);fixture.activeJobId=runtime.id;await invokeForTest('runtime_setup_status');
+      runtime.status='ready';runtime.stage='ready';fixture.activeJobId=null;await invokeForTest('runtime_setup_status');
       const library=await invokeForTest('list_model_library');
       window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));
     });
