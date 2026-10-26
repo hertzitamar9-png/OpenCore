@@ -16,6 +16,7 @@ const fixture = `
 window.fixture={calls:[],jobs:[],receipts:[],activeJobId:null,progress:null,holdStart:true,release:null};
 const base={description:'Installation QA fixture',contextTokens:8192,license:'test',precision:'BF16',experimental:false,note:'test',selectable:true,installed:false,externalManaged:false,downloadBytes:100,totalBytes:100,category:'text',installable:true,runtimeReady:false,memoryMode:'echo'};
 fixture.models=[{...base,id:'edgerock-4b',label:'EdgeRock-4B',backend:'managed-text',managedInstallation:true},{...base,id:'orca-cyber',label:'OrcaCyber Nano 1.0',backend:'gguf',managedInstallation:true},{...base,id:'spark-x26',label:'Spark X2.6 4B',backend:'managed-text',managedInstallation:true},{...base,id:'plain-gguf',label:'Plain GGUF',backend:'gguf',runtimeReady:true,managedInstallation:false}];
+const oldTerminal=sessionStorage.getItem('notification-qa-terminal');if(oldTerminal){fixture.progress=JSON.parse(oldTerminal);fixture.models.push({...fixture.models[3],id:'phonon-2',label:'Phonon-2'});}
 fixture.recipes=fixture.models.filter(m=>m.managedInstallation).map(m=>({id:'fixture-'+m.id,label:m.label,kind:m.backend==='managed-text'?'text':'gguf',modelIds:[m.id],sourceUrls:[],limitations:'QA fixture'}));
 fixture.complete=function(id){const m=this.models.find(m=>m.id===id);m.installed=true;m.runtimeReady=true;const job=this.jobs.findLast(j=>j.targetId===id);if(job){job.status='ready';job.stage='ready';job.detail='Ready';job.error=null;}this.activeJobId=null;this.progress=null;this.receipts=[...this.receipts.filter(r=>r.targetId!==id),{targetId:id,dependenciesVerified:true,inferenceVerified:true}];};
 window.__TAURI_INTERNALS__={invoke:async function(command,args={}){
@@ -40,6 +41,7 @@ default:return null;
 const html = `<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/assets/index-CsoxYKnK.css"><link rel="stylesheet" href="/assets/App-C9duitZV.css"><div id="test-root"></div><script>${fixture}</script><script type="module">
 import {r as React,TestDOM,i as invoke} from '/assets/${indexName}';
 import {TestModels} from '/assets/${appName}';
+globalThis.__opencoreModelLibrary?.setScope('notification-qa-account');
 window.invokeForTest=invoke;
 const root=TestDOM.createRoot(document.getElementById('test-root'));
 window.remountModels=()=>{root.render(null);setTimeout(()=>root.render(React.createElement(TestModels,{selectedProfile:'none',onSelect:id=>window.selectedModel=id,runtimeActive:false,onNotice:message=>window.lastNotice=message})),0);};
@@ -119,6 +121,33 @@ const server = http.createServer((request, response) => {
         record('terminal notification can be dismissed',await page.locator('.model-install-progress').count()===0);
       }
     }
+    await page.evaluate(async()=>{
+      const terminal={modelId:'phonon-2',phase:'ready',downloadedBytes:100,totalBytes:100,currentFile:'Ready',error:null};
+      fixture.models.push({...fixture.models.find(model=>model.id==='plain-gguf'),id:'phonon-2',label:'Phonon-2'});
+      fixture.progress=terminal;sessionStorage.setItem('notification-qa-terminal',JSON.stringify(terminal));
+      const library=await invokeForTest('list_model_library');
+      window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));
+    });
+    await page.locator('.model-install-progress').getByText('Phonon-2',{exact:true}).waitFor();
+    await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).click();
+    await page.waitForTimeout(2200);
+    record('dismissed Phonon ready notification stays hidden through repeated native polls',await page.locator('.model-install-progress').count()===0);
+    await page.evaluate(async()=>{
+      const library=await invokeForTest('list_model_library');
+      library.progress={...library.progress,currentFile:'Readiness checked again'};
+      window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));
+      remountModels();
+    });
+    await card('Phonon-2').waitFor();await page.waitForTimeout(250);
+    record('dismissal survives model-library refresh and component remount',await page.locator('.model-install-progress').count()===0);
+    await page.reload();await card('Phonon-2').waitFor();await page.waitForTimeout(1500);
+    record('dismissal survives a new app page with the same old native completion',await page.locator('.model-install-progress').count()===0);
+    await page.evaluate(async()=>{fixture.holdStart=false;await invokeForTest('install_model',{id:'phonon-2'});});
+    await page.locator('.model-install-progress progress').waitFor();
+    record('a new installation of the same model shows progress after the previous dismissal',await page.locator('.model-install-progress').innerText().then(text=>text.includes('Phonon-2')));
+    await page.evaluate(()=>{fixture.complete('phonon-2');sessionStorage.removeItem('notification-qa-terminal');});
+    await page.locator('.model-install-progress').getByText('ready',{exact:true}).waitFor();
+    record('the new installation can display its own completion notification',await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).count()===1);
     await page.screenshot({ path: path.join(__dirname, (process.argv[2] || 'baseline') + '-models.png'), fullPage: true });
     record('no browser runtime errors', errors.length === 0, errors);
   } finally {

@@ -65,7 +65,7 @@ function createModelLibraryCache(version, storage, changed = () => {}) {
     revision++; verified = false;
     if (reader) void refresh().catch(() => {});
   }
-  return {setScope, hydrate, read, accept, invalidate, peek: () => value};
+  return {setScope, getScope: () => scope, hydrate, read, accept, invalidate, peek: () => value};
 }
 
 function createModelCacheStorage() {

@@ -1,10 +1,71 @@
 /* Shared installation admission and progress for the recovered v0.2.305 UI. */
-function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
+function createInstallNotificationPolicy(options = {}) {
+  const scope = options.scope || (() => globalThis.__opencoreModelLibrary?.getScope?.() || '');
+  const read = options.read || (key => globalThis.localStorage?.getItem(key));
+  const write = options.write || ((key, value) => globalThis.localStorage?.setItem(key, value));
+  const terminal = new Set(['ready', 'failed', 'paused', 'cancelled', 'canceled', 'completed']);
+  let loadedScope, dismissed = new Map();
+  const operation = value => {
+    const id = value?.operationId || value?.jobId;
+    return typeof id === 'string' ? id : typeof id === 'number' ? String(id) : null;
+  };
+  function load() {
+    const current = String(scope());
+    if (current === loadedScope) return;
+    loadedScope = current; dismissed = new Map();
+    if (!current) return;
+    try {
+      const saved = JSON.parse(read('opencore.install-dismissals.v1:' + current) || 'null');
+      if (saved?.schema === 1 && Array.isArray(saved.items)) for (const item of saved.items.slice(-128)) {
+        if (typeof item.modelId === 'string' && item.modelId.length < 512 &&
+            (item.operationId === null || typeof item.operationId === 'string' && item.operationId.length < 1024)) {
+          dismissed.set(item.modelId, item);
+        }
+      }
+    } catch {}
+  }
+  function save() {
+    while (dismissed.size > 128) dismissed.delete(dismissed.keys().next().value);
+    if (loadedScope) try {
+      write('opencore.install-dismissals.v1:' + loadedScope, JSON.stringify({schema: 1, items: [...dismissed.values()]}));
+    } catch {}
+  }
+  function begin(modelId) {
+    load();
+    if (dismissed.delete(modelId)) save();
+  }
+  function observe(progress) {
+    load();
+    const previous = dismissed.get(progress?.modelId), id = operation(progress);
+    if (previous && id && id !== previous.operationId && !terminal.has(progress.phase)) begin(progress.modelId);
+  }
+  function hidden(progress) {
+    load();
+    if (!terminal.has(progress?.phase)) return false;
+    const previous = dismissed.get(progress.modelId), id = operation(progress);
+    // Legacy catalog progress can omit the ID present in runtime status. Keep
+    // its acknowledgement until this model starts another real operation.
+    return !!previous && (!previous.operationId || !id || previous.operationId === id);
+  }
+  function dismiss(progress) {
+    load();
+    if (!progress?.modelId || !terminal.has(progress.phase)) return;
+    dismissed.delete(progress.modelId);
+    dismissed.set(progress.modelId, {modelId: progress.modelId, operationId: operation(progress)});
+    save();
+  }
+  function same(left, right) {
+    return !!left && !!right && left.modelId === right.modelId && operation(left) === operation(right);
+  }
+  return {begin, observe, hidden, dismiss, same};
+}
+
+function createInstallCoordinator(nativeInvoke, now = () => Date.now(), notifications = createInstallNotificationPolicy()) {
   const listeners = new Set();
   const starts = new Set(['install_model', 'runtime_setup_start', 'install_publisher_model', 'register_prepared_model', 'hub_prepare_model']);
   const activePhases = new Set(['preparing', 'downloading', 'verifying', 'uninstalling']);
   const activeStatuses = new Set(['queued', 'running', 'cancelling']);
-  let snapshot = { active: null, progress: null, runtime: null, library: null, initialized: false, terminal: 0, receiptsRevision: 0 };
+  let snapshot = { active: null, progress: null, runtime: null, library: null, initialized: false, terminal: 0, receiptsRevision: 0, notificationsRevision: 0 };
   let runtime = null, catalogueProgress = null, starting = null, polling = null, timer = null;
   let receiptKey = '', paused = new Set();
 
@@ -45,11 +106,13 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
       const phase = status === 'ready' ? 'ready' : status === 'cancelled' || /cancelled|canceled/i.test(error || '') ? 'paused' :
         status === 'failed' || error ? 'failed' : paused.has(previous.modelId) ? 'paused' : 'ready';
       progress = { ...(snapshot.progress || {}), modelId: previous.modelId, phase,
+        operationId: terminalJob?.id || terminalDownload?.operationId || terminalDownload?.jobId || snapshot.progress?.operationId,
         currentFile: phase === 'paused' ? 'Paused. Completed files are kept for the next attempt.' : terminalJob?.detail || terminalDownload?.currentFile || (phase === 'failed' ? 'Installation failed.' : 'Installation complete.'),
         error: phase === 'failed' ? error || 'Installation failed.' : null };
       starting = null;
     }
     const terminal = snapshot.terminal + (snapshot.active && !active ? 1 : 0);
+    if (active) notifications.observe(progress);
     const key = JSON.stringify(runtime?.receipts || []);
     const receiptsRevision = snapshot.receiptsRevision + (key !== receiptKey ? 1 : 0);
     const libraryChanged = terminal !== snapshot.terminal || (receiptKey && key !== receiptKey);
@@ -91,6 +154,7 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
       if (!snapshot.initialized) throw new Error('Cannot check installation status. Retry when the current status is available.');
       if (snapshot.active || starting?.pending) throw new Error('Another model is installing. Pause it or wait for it to finish.');
       const modelId = args.targetId || args.id || args.modelId;
+      notifications.begin(modelId);
       paused.delete(modelId);
       starting = { modelId, pending: true, at: now() };
       reconcile(); ensurePolling();
@@ -123,6 +187,15 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
       } catch (error) { if (modelId) paused.delete(modelId); throw error; }
       finally { starting = null; await refresh(true); }
     }
+    if (command === 'dismiss_model_install_progress') {
+      const current = snapshot.progress || snapshot.library?.progress || catalogueProgress;
+      if (snapshot.active || !notifications.same(args.expected, current)) return false;
+      // Acknowledge before native cleanup. Polls and cached library snapshots
+      // may still carry the completed operation after native dismissal returns.
+      for (const progress of [snapshot.library?.progress, catalogueProgress, snapshot.progress, args.expected]) notifications.dismiss(progress);
+      publish({progress: null, notificationsRevision: snapshot.notificationsRevision + 1});
+      try { return await run(); } catch { return false; }
+    }
     const result = await run();
     if (['uninstall_model', 'register_prepared_model'].includes(command) && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('opencore-model-library-invalidated'));
@@ -130,8 +203,6 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
     if (command === 'runtime_setup_status') { runtime = result; reconcile(); }
     if (command === 'model_install_progress') { catalogueProgress = result; reconcile(); }
     if (command === 'list_model_library') publish({ library: result });
-    if (command === 'dismiss_model_install_progress' && !snapshot.active &&
-        JSON.stringify(args.expected) === JSON.stringify(snapshot.progress)) publish({ progress: null });
     return result;
   }
   async function pause() {
@@ -149,6 +220,10 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
   }
   return {
     invoke, refresh, pause, getSnapshot: () => snapshot,
+    visibleProgress(...values) {
+      const progress = values.find(Boolean) || null;
+      return notifications.hidden(progress) ? null : progress;
+    },
     subscribe(listener) { listeners.add(listener); ensurePolling(); return () => {
       listeners.delete(listener);
       if (!listeners.size && !snapshot.active && timer) { clearInterval(timer); timer = null; }

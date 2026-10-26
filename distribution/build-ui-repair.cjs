@@ -81,7 +81,7 @@ app = editFunction(app, 'yj', text => {
   text = replaceOnce(text, 'const[a,o]=p.useState(null)', 'const[a,o]=p.useState(()=>globalThis.__opencoreModelLibrary.peek())');
   text = replaceOnce(text, 'p.useEffect(()=>{J()},[J])', 'p.useEffect(()=>{J()},[J,$shared.terminal,$shared.receiptsRevision])');
   text = replaceOnce(text, 'const B=!!(a!=null', 'const B=!$shared.initialized||!!$shared.active||!!(a!=null');
-  text = replaceOnce(text, 'K=me===d?null:a==null?void 0:a.progress', 'K=$shared.progress||(me===d?null:a==null?void 0:a.progress)');
+  text = replaceOnce(text, 'K=me===d?null:a==null?void 0:a.progress', 'K=$installCoordinator.visibleProgress($shared.progress,a?.progress)');
   text = replaceOnce(text, 'value:K.phase==="preparing"?void 0:K.downloadedBytes', 'value:K.phase==="preparing"||!K.totalBytes?void 0:K.downloadedBytes');
   text = replaceOnce(text, 'children:K.currentFile==="Preparing speech runtime"?', 'children:!K.totalBytes?K.currentFile||"Preparing installation…":K.currentFile==="Preparing speech runtime"?');
   text = replaceOnce(text, 'onClick:()=>void cp().catch(se=>r(String(se))),children:"Cancel download"', 'disabled:$shared.active?.pausing||$shared.active?.kind==="starting",onClick:()=>void $installCoordinator.pause().catch(se=>r(String(se))),children:$shared.active?.pausing?"Pausing…":"Pause installation"');

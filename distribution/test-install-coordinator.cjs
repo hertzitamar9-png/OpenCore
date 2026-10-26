@@ -3,14 +3,14 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const test = require('node:test');
 const source = fs.readFileSync(require('path').join(__dirname, 'install-coordinator.js'), 'utf8').split('const $installCoordinator =')[0];
-const create = vm.runInNewContext(source + ';createInstallCoordinator;', { setInterval: () => 1, clearInterval() {}, Date, Set, Promise });
-function fixture() {
+const {createInstallCoordinator: create, createInstallNotificationPolicy: createNotifications} = vm.runInNewContext(source + ';({createInstallCoordinator,createInstallNotificationPolicy});', { setInterval: () => 1, clearInterval() {}, Date, Set, Promise });
+function fixture(notifications) {
   let status = { jobs: [], receipts: [], activeJobId: null }, progress = null, failedReads = false;
   let clock = 0;
   const coordinator = create(async command => {
     if (failedReads) throw new Error('Transient status failure');
     return command === 'runtime_setup_status' ? status : progress;
-  }, () => clock);
+  }, () => clock, notifications);
   return { coordinator, setStatus(value) { status = value; }, setProgress(value) { progress = value; }, failReads() { failedReads = true; }, advance(value) { clock += value; } };
 }
 
@@ -104,4 +104,89 @@ test('a delayed dismissal cannot clear a newer active installation', async () =>
   await state.coordinator.refresh(); release(); await dismiss;
   assert.equal(state.coordinator.getSnapshot().progress.modelId, 'two');
   assert.equal(state.coordinator.getSnapshot().active.modelId, 'two');
+});
+
+function notificationStorage() {
+  const records = new Map(); let scope = 'account-a';
+  return {records, setScope: value => { scope = value; }, policy: () => createNotifications({scope: () => scope,
+    read: key => records.get(key), write: (key, value) => records.set(key, value)})};
+}
+const completed = {modelId: 'phonon-2', phase: 'ready', totalBytes: 100, downloadedBytes: 100, currentFile: 'Ready', error: null};
+async function library(state, progress) {
+  return state.coordinator.invoke('list_model_library', {}, async () => ({models: [{id: 'phonon-2'}], progress}));
+}
+const visible = state => state.coordinator.visibleProgress(state.coordinator.getSnapshot().progress, state.coordinator.getSnapshot().library?.progress);
+
+test('dismissed legacy completion stays hidden through repeated polls and cached library refreshes', async () => {
+  const store = notificationStorage(), state = fixture(store.policy());
+  state.setProgress(completed); await state.coordinator.refresh(); await library(state, completed);
+  assert.equal(visible(state).modelId, 'phonon-2');
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => false);
+  for (let index = 0; index < 4; index++) {
+    await state.coordinator.refresh(); await library(state, {...completed, currentFile: 'Rechecked ready ' + index});
+    assert.equal(visible(state), null);
+  }
+});
+
+test('a recreated coordinator restores the account acknowledgement without storing progress details', async () => {
+  const store = notificationStorage(), first = fixture(store.policy()); await library(first, completed);
+  await first.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => {});
+  const second = fixture(store.policy()); second.setProgress(completed);
+  await second.coordinator.refresh(); await library(second, completed);
+  assert.equal(visible(second), null);
+  const saved = JSON.parse([...store.records.values()][0]);
+  assert.deepEqual(saved, {schema: 1, items: [{modelId: 'phonon-2', operationId: null}]});
+});
+
+test('a new installation of the same model clears its previous acknowledgement', async () => {
+  const state = fixture(); await state.coordinator.refresh(); await library(state, completed);
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => {});
+  await state.coordinator.invoke('install_model', {id: 'phonon-2'}, async () => {
+    state.setProgress({...completed, phase: 'downloading', downloadedBytes: 20, operationId: 'new-download'});
+  });
+  assert.equal(visible(state).phase, 'downloading');
+  state.advance(3000); state.setProgress({...completed, operationId: 'new-download'}); await state.coordinator.refresh();
+  assert.equal(visible(state).phase, 'ready');
+});
+
+test('stale activity for an acknowledged operation does not erase its acknowledgement', async () => {
+  const state = fixture(), old = {...completed, operationId: 'previous'};
+  await state.coordinator.refresh(); await library(state, old);
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: old}, async () => {});
+  state.setProgress({...old, phase: 'downloading'}); await state.coordinator.refresh();
+  assert.equal(visible(state).phase, 'downloading');
+  state.setProgress(old); await state.coordinator.refresh();
+  assert.equal(visible(state), null);
+});
+
+test('a new externally observed operation remains visible after the old completion was dismissed', async () => {
+  const state = fixture(), old = {...completed, operationId: 'previous'};
+  await state.coordinator.refresh(); await library(state, old);
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: old}, async () => {});
+  state.setProgress({...completed, phase: 'downloading', operationId: 'later'}); await state.coordinator.refresh();
+  state.setProgress({...completed, operationId: 'later'}); await state.coordinator.refresh();
+  assert.equal(visible(state).operationId, 'later');
+});
+
+test('native cleanup failure cannot resurrect a locally acknowledged completion', async () => {
+  const state = fixture(); await library(state, completed);
+  assert.equal(await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => { throw Error('IPC unavailable'); }), false);
+  await library(state, completed); assert.equal(visible(state), null);
+});
+
+test('a dismissal cannot hide active work or a different newer completion', async () => {
+  const state = fixture(); state.setProgress({...completed, phase: 'downloading', operationId: 'active'});
+  await state.coordinator.refresh(); let calls = 0;
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => { calls++; });
+  assert.equal(calls, 0); assert.equal(visible(state).phase, 'downloading');
+  state.setProgress({...completed, operationId: 'newer'}); await state.coordinator.refresh();
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => { calls++; });
+  assert.equal(calls, 0); assert.equal(visible(state).operationId, 'newer');
+});
+
+test('acknowledgements are isolated between account scopes', async () => {
+  const store = notificationStorage(), state = fixture(store.policy()); await library(state, completed);
+  await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => {});
+  store.setScope('account-b'); assert.equal(visible(state).modelId, 'phonon-2');
+  store.setScope('account-a'); assert.equal(visible(state), null);
 });
