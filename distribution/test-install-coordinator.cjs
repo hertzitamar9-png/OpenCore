@@ -111,16 +111,16 @@ function notificationStorage() {
   return {records, setScope: value => { scope = value; }, policy: () => createNotifications({scope: () => scope,
     read: key => records.get(key), write: (key, value) => records.set(key, value)})};
 }
-const completed = {modelId: 'phonon-2', phase: 'ready', totalBytes: 100, downloadedBytes: 100, currentFile: 'Ready', error: null};
+const completed = {modelId: 'test-model', phase: 'ready', totalBytes: 100, downloadedBytes: 100, currentFile: 'Ready', error: null};
 async function library(state, progress) {
-  return state.coordinator.invoke('list_model_library', {}, async () => ({models: [{id: 'phonon-2'}], progress}));
+  return state.coordinator.invoke('list_model_library', {}, async () => ({models: [{id: 'test-model'}], progress}));
 }
 const visible = state => state.coordinator.visibleProgress(state.coordinator.getSnapshot().progress, state.coordinator.getSnapshot().library?.progress);
 
 test('dismissed legacy completion stays hidden through repeated polls and cached library refreshes', async () => {
   const store = notificationStorage(), state = fixture(store.policy());
   state.setProgress(completed); await state.coordinator.refresh(); await library(state, completed);
-  assert.equal(visible(state).modelId, 'phonon-2');
+  assert.equal(visible(state).modelId, 'test-model');
   await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => false);
   for (let index = 0; index < 4; index++) {
     await state.coordinator.refresh(); await library(state, {...completed, currentFile: 'Rechecked ready ' + index});
@@ -135,13 +135,13 @@ test('a recreated coordinator restores the account acknowledgement without stori
   await second.coordinator.refresh(); await library(second, completed);
   assert.equal(visible(second), null);
   const saved = JSON.parse([...store.records.values()][0]);
-  assert.deepEqual(saved, {schema: 1, items: [{modelId: 'phonon-2', operationId: null}]});
+  assert.deepEqual(saved, {schema: 1, items: [{modelId: 'test-model', operationId: null}]});
 });
 
 test('a new installation of the same model clears its previous acknowledgement', async () => {
   const state = fixture(); await state.coordinator.refresh(); await library(state, completed);
   await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => {});
-  await state.coordinator.invoke('install_model', {id: 'phonon-2'}, async () => {
+  await state.coordinator.invoke('install_model', {id: 'test-model'}, async () => {
     state.setProgress({...completed, phase: 'downloading', downloadedBytes: 20, operationId: 'new-download'});
   });
   assert.equal(visible(state).phase, 'downloading');
@@ -187,34 +187,53 @@ test('a dismissal cannot hide active work or a different newer completion', asyn
 test('acknowledgements are isolated between account scopes', async () => {
   const store = notificationStorage(), state = fixture(store.policy()); await library(state, completed);
   await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => {});
-  store.setScope('account-b'); assert.equal(visible(state).modelId, 'phonon-2');
+  store.setScope('account-b'); assert.equal(visible(state).modelId, 'test-model');
   store.setScope('account-a'); assert.equal(visible(state), null);
 });
 
 test('runtime and native catalog identities of one completed install stay acknowledged after reload', async () => {
   const store = notificationStorage(), state = fixture(store.policy());
   const native = {...completed, operationId: 'native-download'};
-  state.setStatus({activeJobId: 'runtime-job', jobs: [{id: 'runtime-job', targetId: 'phonon-2', status: 'running', stage: 'verifying'}], receipts: []});
+  state.setStatus({activeJobId: 'runtime-job', jobs: [{id: 'runtime-job', targetId: 'test-model', status: 'running', stage: 'verifying'}], receipts: []});
   state.setProgress(native); await state.coordinator.refresh(); await library(state, native);
-  state.setStatus({activeJobId: null, jobs: [{id: 'runtime-job', targetId: 'phonon-2', status: 'ready', stage: 'ready'}], receipts: []});
+  state.setStatus({activeJobId: null, jobs: [{id: 'runtime-job', targetId: 'test-model', status: 'ready', stage: 'ready'}], receipts: []});
   await state.coordinator.refresh(); const expected = state.coordinator.getSnapshot().progress;
   assert.equal(expected.operationId, 'runtime-job');
   await state.coordinator.invoke('dismiss_model_install_progress', {expected}, async () => false);
   assert.equal(visible(state), null);
   const reloaded = fixture(store.policy()); await library(reloaded, native);
   assert.equal(visible(reloaded), null);
-  await reloaded.coordinator.invoke('install_model', {id:'phonon-2'}, async()=>{});
+  await reloaded.coordinator.invoke('install_model', {id:'test-model'}, async()=>{});
   reloaded.advance(3000);reloaded.setProgress({...native,operationId:'another-install'});await reloaded.coordinator.refresh();
   await library(reloaded, {...native, operationId: 'another-install'});
   assert.equal(visible(reloaded).operationId, 'another-install');
 });
 
 test('a Phonon startup validation with a new worker ID does not revive its dismissed success', async () => {
-  const store=notificationStorage(),state=fixture(store.policy()),old={...completed,operationId:'old-install'};
+  const store=notificationStorage(),state=fixture(store.policy()),old={...completed,modelId:'phonon-2',operationId:'old-install'};
   await library(state,old);await state.coordinator.invoke('dismiss_model_install_progress',{expected:old},async()=>{});
   const next=fixture(store.policy());
-  next.setProgress({...completed,phase:'preparing',operationId:'startup-check'});await next.coordinator.refresh();
+  next.setProgress({...completed,modelId:'phonon-2',phase:'preparing',operationId:'startup-check'});await next.coordinator.refresh();
   assert.equal(visible(next).phase,'preparing');
-  next.setProgress({...completed,operationId:'startup-check'});await next.coordinator.refresh();
+  next.setProgress({...completed,modelId:'phonon-2',operationId:'startup-check'});await next.coordinator.refresh();
   assert.equal(visible(next),null);
+});
+
+test('an old Phonon success is not shown on startup even without a saved dismissal', async () => {
+  const state = fixture(notificationStorage().policy());
+  state.setProgress({...completed, modelId:'phonon-2', operationId:'leftover-from-last-launch'});
+  await state.coordinator.refresh();
+  await library(state, {...completed, modelId:'phonon-2', operationId:'leftover-from-last-launch'});
+  assert.equal(visible(state), null);
+});
+
+test('a new Phonon install still shows both progress and its completion', async () => {
+  const state=fixture(notificationStorage().policy()), phonon={...completed,modelId:'phonon-2',operationId:'fresh'};
+  await state.coordinator.refresh();
+  await state.coordinator.invoke('install_model',{id:'phonon-2'},async()=>{
+    state.setProgress({...phonon,phase:'downloading',downloadedBytes:15});
+  });
+  assert.equal(visible(state).phase,'downloading');
+  state.advance(3000);state.setProgress(phonon);await state.coordinator.refresh();
+  assert.equal(visible(state).phase,'ready');
 });

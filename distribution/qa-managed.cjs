@@ -11,7 +11,7 @@ window.fetch=async(url,options={})=>{
  const route=new URL(url).pathname.replace('/api',''),body=options.body?JSON.parse(options.body):{};
  if(!['/search','/private/open','/private/send','/private/close','/remote/status','/remote/start','/remote/stop','/remote/pairing','/remote/revoke'].includes(route))return originalFetch(url,options);
  fixture.calls.push({route,body});let value={};
- if(route==='/search')value={models:[{repository:'fixture/Falcon-Instruct',task:'text-generation',library:'gguf',downloads:1234,gated:false}],limited:false};
+ if(route==='/search')value={models:['Falcon-Instruct','Fable','Fennec','Fugu','Flame','Fjord'].map(name=>({repository:'fixture/'+name,task:'text-generation',library:'gguf',downloads:1234,gated:false})),limited:false};
  if(route==='/remote/status')value=fixture.remote;
  if(route==='/remote/start')value=fixture.remote={enabled:true,port:8842,devices:[]};
  if(route==='/remote/stop')value=fixture.remote={enabled:false,devices:[]};
@@ -32,8 +32,17 @@ fs.writeFileSync(path.join(__dirname,'.output/managed-harness.html'),html);
  try{
   await page.goto('http://127.0.0.1:'+server.address().port);
   const hub=page.getByRole('region',{name:'Add from Hugging Face',exact:true}),query=hub.getByLabel('Hugging Face repository',{exact:true});
+  await hub.getByRole('tab',{name:'Trending',exact:true}).click();
+  await page.waitForFunction(()=>fixture.calls.some(call=>call.route==='/search'&&call.body.sort==='trendingScore'&&call.body.query===''));
+  record('the discovery tabs browse trending models without typing',await hub.getByRole('tab',{name:'Trending',exact:true}).getAttribute('aria-selected')==='true');
   await query.fill('F');await page.getByRole('button',{name:/fixture\/Falcon-Instruct/}).waitFor();
   record('typing a single letter runs prefix discovery',await page.evaluate(()=>fixture.calls.some(call=>call.route==='/search'&&call.body.query==='F'&&call.body.match==='prefix')));
+  const placements=await hub.locator('.hub-search-results button').evaluateAll(nodes=>nodes.slice(0,6).map(node=>{const r=node.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,right:r.right};}));
+  record('model search uses three columns and wraps the fourth card to a new row',placements.length===6&&placements[0].y===placements[1].y&&placements[1].y===placements[2].y&&placements[0].x<placements[1].x&&placements[1].x<placements[2].x&&placements[3].y>placements[0].y&&placements[3].x===placements[0].x);
+  record('search cards do not overlap each other',placements[0].right<=placements[1].x&&placements[1].right<=placements[2].x);
+  await page.setViewportSize({width:390,height:844});
+  record('search results remain readable at phone width',await hub.locator('.hub-search-results').evaluate(element=>getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length===1));
+  await page.setViewportSize({width:1450,height:1050});
   record('search controls use a themed background and visible text',await query.evaluate(input=>{const style=getComputedStyle(input);return style.backgroundColor!=='rgb(59, 59, 59)'&&style.color!==style.backgroundColor&&parseFloat(style.minHeight)>=40;}));
   await hub.getByLabel('Match',{exact:true}).selectOption('words');await hub.getByLabel('Task',{exact:true}).selectOption('text-generation');await hub.getByLabel('Format / library',{exact:true}).selectOption('gguf');
   await page.waitForFunction(()=>fixture.calls.some(call=>call.route==='/search'&&call.body.match==='words'&&call.body.task==='text-generation'&&call.body.library==='gguf'));

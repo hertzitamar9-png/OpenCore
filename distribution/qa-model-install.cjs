@@ -131,10 +131,8 @@ const server = http.createServer((request, response) => {
       const library=await invokeForTest('list_model_library');
       window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));
     });
-    await page.locator('.model-install-progress').getByText('Phonon-2',{exact:true}).waitFor();
-    await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).click();
     await page.waitForTimeout(2200);
-    record('dismissed Phonon ready notification stays hidden through repeated native polls',await page.locator('.model-install-progress').count()===0);
+    record('old Phonon completion stays hidden through repeated native polls without another dismissal',await page.locator('.model-install-progress').count()===0);
     await page.evaluate(async()=>{
       const library=await invokeForTest('list_model_library');
       library.progress={...library.progress,currentFile:'Readiness checked again'};
@@ -142,15 +140,18 @@ const server = http.createServer((request, response) => {
       remountModels();
     });
     await card('Phonon-2').waitFor();await page.waitForTimeout(250);
-    record('dismissal survives model-library refresh and component remount',await page.locator('.model-install-progress').count()===0);
+    record('old Phonon success stays hidden through model-library refresh and component remount',await page.locator('.model-install-progress').count()===0);
     await page.reload();await card('Phonon-2').waitFor();await page.waitForTimeout(1500);
-    record('dismissal survives a new app page with the same old native completion',await page.locator('.model-install-progress').count()===0);
+    record('old Phonon success stays hidden after an app page reload',await page.locator('.model-install-progress').count()===0);
     await page.evaluate(async()=>{fixture.holdStart=false;await invokeForTest('install_model',{id:'phonon-2'});});
     await page.locator('.model-install-progress progress').waitFor();
     record('a new installation of the same model shows progress after the previous dismissal',await page.locator('.model-install-progress').innerText().then(text=>text.includes('Phonon-2')));
     await page.evaluate(()=>{fixture.complete('phonon-2');sessionStorage.removeItem('notification-qa-terminal');});
     await page.locator('.model-install-progress').getByText('ready',{exact:true}).waitFor();
     record('the new installation can display its own completion notification',await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).count()===1);
+    await page.locator('.model-install-progress').getByRole('button',{name:'Dismiss notification',exact:true}).click();
+    await page.waitForTimeout(1200);
+    record('the new Phonon completion remains dismissed',await page.locator('.model-install-progress').count()===0);
     await page.screenshot({ path: path.join(__dirname, (process.argv[2] || 'baseline') + '-models.png'), fullPage: true });
     record('no browser runtime errors', errors.length === 0, errors);
   } finally {
