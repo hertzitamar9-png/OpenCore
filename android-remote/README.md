@@ -2,11 +2,12 @@
 
 The Android client connects directly to the running Windows OpenCore app. The PC performs every operation. Its live app view is streamed over TLS, and generated media can be received by the paired phone. There is no OpenCore cloud account, analytics endpoint or payload relay.
 
-1. Install `OpenCore.Remote.apk` on Android 8 or later.
-2. In PC OpenCore, open **Settings → Remote access** and enable access.
-3. Enter the PC's reachable Wi-Fi IP address or direct private VPN address. Create pairing text and paste it into the phone within two minutes.
-4. Use the live view to select existing chats, generate, view images and operate the app. **Files** lists generated outputs. Pinch to zoom; tap to click; swipe to scroll. **Text** types into the currently focused PC field.
-5. Turn access off or revoke a paired phone from PC Settings.
+1. Install `OpenCore.Remote.apk` on an Android phone running Android 8 or later. Open the phone app.
+2. On the PC, open **OpenCore → Settings → Remote access** and turn access on. Keep OpenCore open and the PC awake.
+3. For a first connection, put the phone and PC on the same Wi-Fi. Choose a suggested address on the PC and select **Create pairing code**.
+4. On the phone, choose **Scan pairing code**, allow camera access and point the camera at the PC's code. If scanning is unavailable, open the pairing-text fallback on the PC, transfer the text to the phone and choose **Connect to PC**. The code expires after two minutes and can be used once.
+5. The phone displays the same live OpenCore window. Tap to click, swipe to scroll and pinch to zoom. Select a text field on the PC view, then use **Type** to send text. **Files** opens generated outputs, **Game** shows game controls, and **Help** opens the interactive tour.
+6. On the PC, **Your phones** shows connection status and lets you revoke access. You can also turn remote access off there.
 
 The PC must remain awake with OpenCore open. Cellular/away-from-home access needs an existing private network route to the PC (for example a direct WireGuard VPN). This implementation does not provision a VPN, change router settings, expose an unauthenticated public service, or use OpenAI's remote-control infrastructure. A phone on cellular cannot reach a private home IP without that route. Windows Firewall may require the user to allow the selected port on their private network.
 

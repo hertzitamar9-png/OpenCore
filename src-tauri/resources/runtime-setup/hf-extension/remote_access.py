@@ -7,14 +7,42 @@ import ipaddress
 import json
 import os
 import mimetypes
+import re
 from pathlib import Path
 import secrets
 import socket
+import subprocess
 import threading
 import time
 from urllib.parse import quote, unquote, urlencode, urlsplit
 
 from hf_download import atomic_json, managed_path
+
+
+def local_addresses():
+    """Find this PC's private IPv4 addresses without contacting another host."""
+    try:
+        result = subprocess.run(['ipconfig.exe'], capture_output=True, text=True, timeout=4,
+                                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        if result.returncode: return []
+    except (OSError, subprocess.TimeoutExpired): return []
+    ranges = tuple(ipaddress.ip_network(value) for value in ('10.0.0.0/8','172.16.0.0/12','192.168.0.0/16','100.64.0.0/10'))
+    found = []
+    for line in result.stdout.splitlines():
+        match = re.search(r'\bIPv4\b[^:]*:\s*(\d{1,3}(?:\.\d{1,3}){3})', line, re.I)
+        if not match: continue
+        try: address = ipaddress.ip_address(match.group(1))
+        except ValueError: continue
+        if any(address in network for network in ranges) and str(address) not in found: found.append(str(address))
+    return found[:16]
+
+
+def pairing_qr(text):
+    import qrcode
+    code = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=4)
+    code.add_data(text)
+    code.make(fit=True)
+    return [''.join('1' if bit else '0' for bit in row) for row in code.get_matrix()]
 
 
 class RemoteAccess:
@@ -23,7 +51,8 @@ class RemoteAccess:
         self.owner, self.surface, self.tls_factory = owner, surface, tls_factory
         self.lock, self.server, self.thread = threading.RLock(), None, None
         self.pair_code, self.pair_until, self.fingerprint = None, 0, ''
-        self.attempts, self.last_input = {}, {}
+        self.attempts, self.last_input, self.last_seen = {}, {}, {}
+        self.addresses, self.addresses_checked = [], 0
         self.last_frame, self.last_frame_at = None, 0
         self.devices_path = managed_path(self.root, 'secrets', 'remote-device-identities.json')
         self.config_path = managed_path(self.root, 'runtime-setup', 'remote-access.json')
@@ -42,10 +71,16 @@ class RemoteAccess:
         self.output_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.mp4', '.webm', '.html', '.pdf', '.txt', '.glb', '.zip', '.wav', '.mp3', '.flac', '.ogg', '.gltf', '.obj', '.stl', '.csv', '.md'}
 
     def status(self):
+        now = time.monotonic()
+        if now - self.addresses_checked > 60:
+            self.addresses = local_addresses()
+            self.addresses_checked = now
         with self.lock:
             return {'enabled': self.server is not None, 'port': self.server.server_port if self.server else None,
                     'fingerprint': self.fingerprint, 'pairingExpiresIn': max(0, int(self.pair_until - time.monotonic())),
-                    'devices': [{'id': d['id'], 'name': d.get('name', 'Phone')} for d in self.devices.values()],
+                    'addresses': list(self.addresses),
+                    'devices': [{'id': d['id'], 'name': d.get('name', 'Phone'),
+                                 'connected': now-self.last_seen.get(d['id'], -100) < 10} for d in self.devices.values()],
                     'network': 'direct', 'relay': False}
 
     def start(self, options):
@@ -92,8 +127,8 @@ class RemoteAccess:
             endpoint = 'https://' + host + ':' + str(parsed.port or self.server.server_port)
             self.pair_code, self.pair_until = secrets.token_urlsafe(32), time.monotonic() + 120
             self.attempts.clear()
-            return {'pairingText': 'opencore://pair?' + urlencode({'url': endpoint, 'pin': self.fingerprint, 'code': self.pair_code}),
-                    'expiresIn': 120, 'fingerprint': self.fingerprint}
+            text = 'opencore://pair?' + urlencode({'url': endpoint, 'pin': self.fingerprint, 'code': self.pair_code})
+            return {'pairingText': text, 'qrRows': pairing_qr(text), 'expiresIn': 120, 'fingerprint': self.fingerprint}
 
     def pair(self, code, name, address):
         with self.lock:
@@ -116,12 +151,15 @@ class RemoteAccess:
         if not isinstance(authorization, str) or not authorization.startswith('Bearer ') or len(authorization) > 256: return None
         digest = hashlib.sha256(authorization[7:].encode()).hexdigest()
         with self.lock:
-            return next((item['id'] for item in self.devices.values() if hmac.compare_digest(item['hash'], digest)), None)
+            identity = next((item['id'] for item in self.devices.values() if hmac.compare_digest(item['hash'], digest)), None)
+            if identity: self.last_seen[identity] = time.monotonic()
+            return identity
 
     def revoke(self, identity):
         with self.lock:
             if identity not in self.devices: raise ValueError('Phone is not paired')
             del self.devices[identity]
+            self.last_seen.pop(identity, None)
             atomic_json(self.devices_path, list(self.devices.values()))
             return self.status()
 
@@ -132,6 +170,7 @@ class RemoteAccess:
         if server: server.shutdown(); server.server_close()
         if self.surface and hasattr(self.surface, 'release'): self.surface.release()
         self.last_frame = None
+        self.last_seen.clear()
         return self.status()
 
     def close(self):

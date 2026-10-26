@@ -19,7 +19,9 @@ public final class MainActivity extends Activity {
     volatile boolean resumed=false;
     final AtomicBoolean showing=new AtomicBoolean(false);
     LinearLayout root; TextView status; FrameView display; EditText pairing;
-    boolean game=false;
+    Button pairButton;
+    boolean game=false, pairingInProgress=false;
+    static final int SCAN_PAIRING = 30;
     interface Work{void run()throws Exception;}
     int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     TextView label(String text){TextView view=new TextView(this);view.setText(text);view.setTextColor(0xffc7d2df);view.setPadding(dp(12),dp(8),dp(12),dp(8));return view;}
@@ -35,6 +37,7 @@ public final class MainActivity extends Activity {
         });
         try{connection=Connection.load(this);}catch(Exception ignored){}
         if(connection==null)pairingScreen();else liveScreen();
+        acceptPairingLink(getIntent());
         frames.scheduleWithFixedDelay(()->{
             Connection selected=connection;
             if(!resumed||selected==null||display==null||!showing.compareAndSet(false,true))return;
@@ -42,41 +45,94 @@ public final class MainActivity extends Activity {
                 byte[] data=selected.bytes("/frame",null,32*1024*1024);
                 Bitmap bitmap=BitmapFactory.decodeByteArray(data,0,data.length);
                 if(bitmap==null)throw new IOException("PC frame could not be decoded");
-                runOnUiThread(()->{if(connection==selected&&display!=null){display.bitmap=bitmap;display.invalidate();status.setText("Live · actions run on your PC");}});
+                runOnUiThread(()->{if(connection==selected&&display!=null){display.bitmap=bitmap;display.invalidate();status.setText(game?"Live · game controls on":"Live · tap to control your PC");}});
             }catch(Exception e){message(e.getMessage()==null?"PC disconnected. Reconnecting…":e.getMessage());}
             finally{showing.set(false);}
         },0,150,TimeUnit.MILLISECONDS);
     }
     void pairingScreen(){
-        display=null;root.removeAllViews();root.addView(label("OpenCore Remote"));
-        root.addView(label("On your PC, open Settings → Remote access. Enable it and create pairing text using your PC’s Wi-Fi or private VPN address."));
-        pairing=new EditText(this);pairing.setTextColor(0xffe0e9f5);pairing.setHintTextColor(0xffa4b2c3);pairing.setHint("Paste opencore://pair?…");pairing.setSingleLine(false);root.addView(pairing);
-        status=label("Phone and PC connect directly using a pinned, encrypted connection. For cellular access, connect your phone to a private VPN that reaches the PC.");root.addView(status);
-        root.addView(button("Pair with PC",()->{
-            String raw=pairing.getText().toString().trim();
-            work(()->{
-                Uri uri=Uri.parse(raw);if(!"opencore".equals(uri.getScheme())||!"pair".equals(uri.getHost()))throw new IOException("Paste the complete pairing text from the PC.");
-                String url=uri.getQueryParameter("url"),pin=uri.getQueryParameter("pin"),code=uri.getQueryParameter("code");
-                if(url==null||pin==null||code==null)throw new IOException("Pairing text is incomplete");
-                Connection candidate=new Connection(url,pin,null);
-                JSONObject paired=candidate.json("/pair",new JSONObject().put("code",code).put("name",Build.MANUFACTURER+" "+Build.MODEL));
-                Connection ready=new Connection(url,pin,paired.getString("token"));ready.save(this);connection=ready;
-                runOnUiThread(()->{pairing.setText("");liveScreen();});
-            });
-        }));
+        display=null;root.removeAllViews();
+        ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);
+        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(8),dp(8),dp(8),dp(16));scroll.addView(content);root.addView(scroll);
+        TextView title=label("Connect to your PC");title.setTextSize(24);title.setTextColor(0xffeef6ff);content.addView(title);
+        content.addView(label("1. Open OpenCore on your PC. In Settings, choose Remote access and turn it on."));
+        content.addView(label("2. For the first connection, put your phone and PC on the same Wi-Fi. On the PC, choose an address and create a pairing code."));
+        content.addView(label("3. Tap Scan pairing code below. Point the camera at the code on your PC; this phone connects after scanning."));
+        content.addView(button("Scan pairing code",()->startActivityForResult(new Intent(this,ScannerActivity.class),SCAN_PAIRING)));
+        content.addView(label("Can’t scan? Copy the pairing text from your PC, move it to this phone, and paste it here."));
+        pairing=new EditText(this);pairing.setTextColor(0xffe0e9f5);pairing.setHintTextColor(0xffa4b2c3);pairing.setHint("Pairing text from your PC");pairing.setSingleLine(false);content.addView(pairing);
+        LinearLayout actionsRow=new LinearLayout(this);
+        actionsRow.addView(button("Paste",()->{
+            android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+            if(clipboard!=null&&clipboard.hasPrimaryClip()&&clipboard.getPrimaryClip()!=null){CharSequence value=clipboard.getPrimaryClip().getItemAt(0).coerceToText(this);pairing.setText(value);}
+            else message("No pairing text found. Copy it from your PC first.");
+        }),new LinearLayout.LayoutParams(0,-2,1));
+        pairButton=button("Connect to PC",()->beginPair(pairing.getText().toString().trim()));
+        actionsRow.addView(pairButton,new LinearLayout.LayoutParams(0,-2,1));content.addView(actionsRow);
+        status=label("Ready to scan or paste a pairing code.");content.addView(status);
+        content.addView(button("Show me how to use remote control",()->showTour(0)));
+        content.addView(label("Away from home? Connect both devices to a private VPN first, then use the PC’s VPN address. Keep the PC awake and OpenCore open."));
+    }
+    void beginPair(String raw){
+        if(pairingInProgress)return;
+        pairingInProgress=true;if(pairButton!=null)pairButton.setEnabled(false);message("Connecting to your PC…");
+        actions.execute(()->{try{
+            Uri uri=Uri.parse(raw);if(!"opencore".equals(uri.getScheme())||!"pair".equals(uri.getHost()))throw new IOException("Use the complete pairing code shown by OpenCore on your PC.");
+            String url=uri.getQueryParameter("url"),pin=uri.getQueryParameter("pin"),code=uri.getQueryParameter("code");
+            if(url==null||pin==null||code==null)throw new IOException("The pairing text is incomplete. Create a new code on your PC.");
+            Connection candidate=new Connection(url,pin,null);
+            JSONObject paired=candidate.json("/pair",new JSONObject().put("code",code).put("name",Build.MANUFACTURER+" "+Build.MODEL));
+            Connection ready=new Connection(url,pin,paired.getString("token"));ready.save(this);connection=ready;
+            runOnUiThread(()->{if(pairing!=null)pairing.setText("");liveScreen();});
+        }catch(Exception error){
+            String message=error instanceof javax.net.ssl.SSLException?"The PC identity did not match. Create a new pairing code on your PC.":
+                error instanceof java.net.SocketTimeoutException||error instanceof java.net.ConnectException||error instanceof java.net.UnknownHostException?
+                "Can’t reach the PC. Keep OpenCore open and use the same Wi-Fi or a private VPN on both devices.":
+                error.getMessage()==null?"Connection failed. Create a new pairing code on the PC and try again.":error.getMessage();
+            message(message);
+        }finally{runOnUiThread(()->{pairingInProgress=false;if(pairButton!=null)pairButton.setEnabled(true);});}});
+    }
+    @Override protected void onActivityResult(int request,int result,Intent data){
+        super.onActivityResult(request,result,data);
+        if(request==SCAN_PAIRING&&result==RESULT_OK&&data!=null){String value=data.getStringExtra("pairing");if(value!=null&&pairing!=null){pairing.setText(value);beginPair(value);}}
+    }
+    @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);acceptPairingLink(intent);}
+    void acceptPairingLink(Intent intent){
+        if(intent==null||intent.getData()==null)return;
+        String value=intent.getDataString();intent.setData(null);
+        if(connection==null){if(pairing!=null)pairing.setText(value);message("Pairing code received. Tap Connect to PC.");}
+        else new AlertDialog.Builder(this).setTitle("Pair a different PC?").setMessage("Your current PC stays paired unless you choose to switch.")
+            .setNegativeButton("Keep current PC",null).setPositiveButton("Pair another PC",(dialog,which)->{connection=null;pairingScreen();pairing.setText(value);}).show();
+    }
+    void showTour(int step){
+        String[] titles={"1 of 5 · Your PC on your phone","2 of 5 · Tap and scroll","3 of 5 · Type and chat","4 of 5 · Files and games","5 of 5 · Away from home"};
+        String[] pages={"The big live view is the same OpenCore window on your PC. Your chats stay on the PC. Keep it awake and leave OpenCore open.",
+            "Tap the live view to click. Swipe to scroll. Pinch to zoom; when zoomed, drag to move around the view.",
+            "Tap a text field in the live view. Tap Type, enter your message, and tap Send text. Use Enter on the game-controls row when needed.",
+            "Tap Files to see generated images and files. To play a generated game, open it in OpenCore’s live view, then turn on Game controls for keys and mouse dragging.",
+            "On mobile data or another Wi-Fi, connect the phone and PC to the same private VPN. Pair using the PC’s VPN address. OpenCore connects directly and has no cloud relay."};
+        AlertDialog.Builder dialog=new AlertDialog.Builder(this).setTitle(titles[step]).setMessage(pages[step]);
+        if(step>0)dialog.setNegativeButton("Back",(which,button)->showTour(step-1));else dialog.setNegativeButton("Close",null);
+        if(step<titles.length-1)dialog.setPositiveButton("Next",(which,button)->showTour(step+1));else dialog.setPositiveButton("Got it",null);
+        dialog.show();
     }
     void liveScreen(){
         root.removeAllViews();
         LinearLayout toolbar=new LinearLayout(this);toolbar.setOrientation(LinearLayout.HORIZONTAL);
-        toolbar.addView(button("Files",this::files));
-        toolbar.addView(button("Text",this::text));
-        toolbar.addView(button("Wake PC app",()->input("wake",null)));
-        toolbar.addView(button("Disconnect",()->{
+        toolbar.addView(button("Files",this::files),new LinearLayout.LayoutParams(0,-2,1));
+        toolbar.addView(button("Type",this::text),new LinearLayout.LayoutParams(0,-2,1));
+        toolbar.addView(button("Help",()->showTour(0)),new LinearLayout.LayoutParams(0,-2,1));
+        root.addView(toolbar);
+        LinearLayout secondary=new LinearLayout(this);
+        secondary.addView(button("Restore app",()->input("wake",null)),new LinearLayout.LayoutParams(0,-2,1));
+        Button gameButton=button(game?"Game: on":"Game: off",()->{});
+        secondary.addView(gameButton,new LinearLayout.LayoutParams(0,-2,1));
+        secondary.addView(button("Disconnect",()->{
             connection=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().apply();
             File received=new File(getCacheDir(),"received");File[] existing=received.listFiles();if(existing!=null)for(File file:existing)file.delete();
             pairingScreen();
-        }));
-        HorizontalScrollView top=new HorizontalScrollView(this);top.addView(toolbar);root.addView(top);
+        }),new LinearLayout.LayoutParams(0,-2,1));
+        root.addView(secondary);
         status=label("Connecting directly to your PC…");root.addView(status);
         display=new FrameView();root.addView(display,new LinearLayout.LayoutParams(-1,0,1));
         LinearLayout keys=new LinearLayout(this);
@@ -88,8 +144,9 @@ public final class MainActivity extends Activity {
                 target.setPressed(action==MotionEvent.ACTION_DOWN);
             }catch(Exception ignored){}return true;});keys.addView(view);
         }
-        keys.addView(button("Touch / game",()->{game=!game;message(game?"Game pointer · drag to hold the mouse":"Touch · tap to click, swipe to scroll, pinch to zoom");}));
-        HorizontalScrollView controls=new HorizontalScrollView(this);controls.addView(keys);root.addView(controls);
+        HorizontalScrollView controls=new HorizontalScrollView(this);controls.addView(keys);controls.setVisibility(game?View.VISIBLE:View.GONE);root.addView(controls);
+        gameButton.setOnClickListener(view->{game=!game;gameButton.setText(game?"Game: on":"Game: off");controls.setVisibility(game?View.VISIBLE:View.GONE);
+            if(!game)input("release",null);message(game?"Game mode: drag to hold the mouse; use the keys below.":"Touch mode: tap to click, swipe to scroll, pinch to zoom.");});
     }
     void input(String kind,JSONObject body){Connection selected=connection;if(selected==null)return;work(()->{
         JSONObject value=body==null?new JSONObject():body;value.put("kind",kind);selected.json("/input",value);

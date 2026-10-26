@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import socket
 import ssl
+import shutil
+import subprocess
 import sys
 import tempfile
 import threading
@@ -33,6 +35,72 @@ class RemoteTests(unittest.TestCase):
         self.remote = RemoteAccess(self.root, self.root, surface=Surface())
 
     def tearDown(self): self.remote.close(); self.temp.cleanup()
+
+    def test_address_discovery_only_returns_private_pc_addresses(self):
+        from remote_access import local_addresses
+        sample = ('IPv4 Address. . . . . . . . . . . : 192.168.1.33(Preferred)\n'
+                  'Default Gateway . . . . . . . . . : 192.168.1.1\n'
+                  'IPv4 Address. . . . . . . . . . . : 100.101.102.103\n'
+                  'IPv4 Address. . . . . . . . . . . : 127.0.0.1\n'
+                  'IPv4 Address. . . . . . . . . . . : 8.8.8.8\n')
+        with patch('remote_access.subprocess.run', return_value=type('Result',(),{'returncode':0,'stdout':sample})()):
+            self.assertEqual(local_addresses(), ['192.168.1.33', '100.101.102.103'])
+
+    def test_pairing_qr_contains_the_exact_one_time_code_and_no_extra_data(self):
+        self.remote.server = type('Server',(),{'server_port':12345})()
+        self.remote.fingerprint = 'ab' * 32
+        value = self.remote.pairing('192.168.1.33')
+        self.assertIn('pairingText', value)
+        self.assertGreater(len(value['qrRows']), 20)
+        self.assertTrue(all(set(row) <= {'0','1'} and len(row)==len(value['qrRows']) for row in value['qrRows']))
+        # Real offline QR decode on developer machines when OpenCV is installed.
+        try: import cv2, numpy as np
+        except ImportError: pass
+        else:
+            pixels = np.array([[0 if bit=='1' else 255 for bit in row] for row in value['qrRows']], dtype=np.uint8)
+            decoded, _, _ = cv2.QRCodeDetector().detectAndDecode(np.kron(pixels, np.ones((8,8), dtype=np.uint8)))
+            self.assertEqual(decoded, value['pairingText'])
+        self.remote.server = None
+
+    @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'JDK is needed to exercise the Android QR decoder')
+    def test_phone_decoder_reads_the_pc_pairing_code(self):
+        from remote_access import pairing_qr
+        expected = 'opencore://pair?url=https%3A%2F%2F192.168.1.33%3A12345&pin=' + 'ab'*32 + '&code=fixture-one-use-code'
+        rows = pairing_qr(expected)
+        scale = 6
+        width = len(rows)*scale
+        pixels = bytearray()
+        for row in rows:
+            expanded = bytes(color for bit in row for color in ([0 if bit == '1' else 255]*scale))
+            for _ in range(scale): pixels.extend(expanded)
+        raw = self.root/'qr.raw'; raw.write_bytes(pixels)
+        source = self.root/'DecodeFixture.java'
+        source.write_text('''import java.nio.file.*;
+import com.google.zxing.*;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.QRCodeReader;
+public class DecodeFixture {
+  public static void main(String[] args) throws Exception {
+    int size = Integer.parseInt(args[1]);
+    byte[] pixels = Files.readAllBytes(Paths.get(args[0]));
+    LuminanceSource image = new PlanarYUVLuminanceSource(pixels,size,size,0,0,size,size,false);
+    System.out.print(new QRCodeReader().decode(new BinaryBitmap(new HybridBinarizer(image))).getText());
+  }
+}''', encoding='utf-8')
+        jar = ROOT/'android-remote/vendor/zxing-core-3.5.3.jar'
+        subprocess.run(['javac','-encoding','UTF-8','-cp',str(jar),str(source)],check=True,capture_output=True)
+        decoded = subprocess.run(['java','-cp',str(self.root)+os.pathsep+str(jar),'DecodeFixture',str(raw),str(width)],check=True,capture_output=True,text=True)
+        self.assertEqual(decoded.stdout, expected)
+
+    def test_phone_connection_status_is_ephemeral_and_follows_authorized_activity(self):
+        self.remote.pair_code, self.remote.pair_until = 'one-time', time.monotonic()+120
+        phone = self.remote.pair('one-time','Test phone','127.0.0.1')
+        self.assertFalse(self.remote.status()['devices'][0]['connected'])
+        self.assertEqual(self.remote.authorize('Bearer '+phone['token']),phone['deviceId'])
+        self.assertTrue(self.remote.status()['devices'][0]['connected'])
+        self.remote.last_seen[phone['deviceId']] = time.monotonic()-20
+        self.assertFalse(self.remote.status()['devices'][0]['connected'])
+        self.assertNotIn('last_seen', self.remote.devices_path.read_text())
 
     def test_default_off_single_use_expiring_pairing_and_revocation(self):
         self.assertFalse(self.remote.status()['enabled'])

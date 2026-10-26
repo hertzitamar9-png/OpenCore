@@ -1,18 +1,21 @@
 {
   "schema": 1,
   "package": "ai.opencore.remote",
-  "versionCode": 1,
-  "version": "1.0",
-  "bytes": 172506,
-  "sha256": "08594ba011764726864a1556319c40b08bf11d5c2c41f168ce5d7bbee80cd886",
+  "versionCode": 2,
+  "version": "1.1",
+  "bytes": 442842,
+  "sha256": "9cfad7ef3274370c3faedc13f1be48d5b11f946977e9981aed8eeeba83024fc5",
   "signatureVerified": true,
   "sources": {
-    "android-remote/AndroidManifest.xml": "19234e835cc31f68ce2905868d1f069fb50fcab2f9adcec4128c9b6766ea812e",
-    "android-remote/build.py": "4c2e64308d0d6205aefbba43b44123ff62dd7c1751a9ca6c11e9ffcc3696cfa9",
-    "android-remote/README.md": "303ceb431b8dfc98de5079d8f8672ff688f2fd759617056868e0627c54faa836",
+    "android-remote/AndroidManifest.xml": "13419669350c7bf6183bdfc1f3f71fb33d1dea3c4adf546f7a03f20d471accd0",
+    "android-remote/build.py": "626118d1cbfe736e0b7dec74c41d4ba891f624ebbab1e720a692017e8daa5944",
+    "android-remote/README.md": "448d1b45e4ad44022e01b6fad6322ab28ad8232fa1fa69ef4b57aa22612400cb",
     "android-remote/src/ai/opencore/remote/Connection.java": "f7a23f838e5d9860b7a484d6c6a405b2720b8841e85e3055e78cd956d5aa9bdc",
-    "android-remote/src/ai/opencore/remote/MainActivity.java": "14d511f649849e780c0eb1d1627ad678f8c7372f749c390684ee146b3faddd65",
+    "android-remote/src/ai/opencore/remote/MainActivity.java": "7dad7a16c7ecaf8da119eaf0a8104b85950b4e340627c180ba337c2d43de4443",
+    "android-remote/src/ai/opencore/remote/ScannerActivity.java": "5dc3ab8068bde78ca44897054e354de08d1559fbddc96cc20e702a565b3e942a",
     "android-remote/src/ai/opencore/remote/SharedFileProvider.java": "e3fb17476a904aa859d987b52687107d30feef76792bf43de743ad7ce1d8d9fe",
+    "android-remote/vendor/zxing-core-3.5.3.jar": "8d8064c1636fdaef7189dd9055c7d59950a8940a12f2293956446ec3c109fd82",
+    "android-remote/vendor/ZXING-LICENSE.txt": "3f62881f0566227a24b12e5a754cc79f39aaa94883038e95c94812e1f50af42f",
     "src-tauri/icons/icon.png": "ba08b03e82e13a4ef4287a3c0fb6f8d4dba3bd9a4e00e47e56da2dd7ee5e99a5"
   }
 }

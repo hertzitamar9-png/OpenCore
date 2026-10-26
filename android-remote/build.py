@@ -1,5 +1,6 @@
 """Build the small native Android client with the official Android SDK tools."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -24,6 +25,9 @@ def main():
     platform = sorted((sdk / 'platforms').iterdir(), key=lambda path: int(path.name.split('-')[-1]))[-1] / 'android.jar'
     java = Path(os.environ.get('JAVA_HOME') or Path(shutil.which('java')).parent.parent)
     build = ROOT.parent / 'distribution/.output/android/build'
+    zxing = ROOT / 'vendor/zxing-core-3.5.3.jar'
+    if not zxing.is_file() or hashlib.sha256(zxing.read_bytes()).hexdigest() != '8d8064c1636fdaef7189dd9055c7d59950a8940a12f2293956446ec3c109fd82':
+        raise ValueError('The pinned QR scanner dependency is missing or changed')
     if build.exists():
         # No recursive deletion: use a new, uniquely named build directory.
         build = build.with_name('build-' + secrets.token_hex(5))
@@ -38,12 +42,12 @@ def main():
     run([tools/'aapt2.exe', 'compile', '--dir', build/'res', '-o', build/'resources.zip'])
     run([tools/'aapt2.exe', 'link', '-o', build/'resources.apk', '-I', platform, '--manifest', ROOT/'AndroidManifest.xml',
          '--java', build/'generated', build/'resources.zip'])
-    run([java/'bin/javac.exe', '-encoding', 'UTF-8', '--release', '8', '-classpath', platform,
+    run([java/'bin/javac.exe', '-encoding', 'UTF-8', '--release', '8', '-classpath', str(platform)+os.pathsep+str(zxing),
          '-d', build/'classes', *ROOT.glob('src/**/*.java'), *build.glob('generated/**/*.java')])
     with zipfile.ZipFile(build/'classes.jar', 'w', zipfile.ZIP_DEFLATED) as archive:
         for file in (build/'classes').rglob('*.class'): archive.write(file, file.relative_to(build/'classes').as_posix())
     run([java/'bin/java.exe', '-cp', tools/'lib/d8.jar', 'com.android.tools.r8.D8', '--min-api', '26', '--lib', platform,
-         '--output', build/'dex', build/'classes.jar'])
+         '--output', build/'dex', build/'classes.jar', zxing])
     shutil.copyfile(build/'resources.apk', build/'unsigned.apk')
     with zipfile.ZipFile(build/'unsigned.apk', 'a', zipfile.ZIP_DEFLATED) as archive:
         for file in (build/'dex').glob('*.dex'): archive.write(file, file.name)
@@ -67,7 +71,6 @@ def main():
          '--ks-key-alias', 'opencore-remote', '--ks-pass', 'env:OPENCORE_APK_STORE_PASSWORD', '--key-pass', 'env:OPENCORE_APK_STORE_PASSWORD',
          '--out', args.output, build/'aligned.apk'])
     run([java/'bin/java.exe', '-jar', tools/'lib/apksigner.jar', 'verify', '--verbose', args.output])
-    import hashlib
     print(json.dumps({'apk': str(args.output.resolve()), 'bytes': args.output.stat().st_size,
                       'sha256': hashlib.sha256(args.output.read_bytes()).hexdigest()}))
 
