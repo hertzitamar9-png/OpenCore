@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 # The bundled interpreter is launched with -I; only this managed extension folder is admitted.
 if str(Path(__file__).resolve().parent) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-from hf_catalog import build_plan, parse_repository
+from hf_catalog import build_plan, parse_repository, DRAFT
 from hf_lineage import source_identity
 from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry
 from hf_security import TokenStore
@@ -75,6 +75,7 @@ class BridgeState:
         self.catalog_epoch, self.catalog_snapshot = 0, None
         self.catalog_snapshot_at, self.catalog_fingerprint, self.catalog_revision = 0, None, None
         self.progress, self.worker = None, None
+        self.owner, self.remote, self.private = None, None, None
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
         self._seed_publisher_catalog()
@@ -125,6 +126,13 @@ class BridgeState:
         if seed.get('schema') != 1 or not isinstance(seed.get('entries'), list):
             raise ValueError('The bundled publisher catalog is invalid')
         changed = False
+        for identity, existing in list(self.entries.items()):
+            weights = [pin for pin in existing.get('files', []) if pin.get('role') == 'model']
+            if existing.get('builtIn') and weights and all(DRAFT.search(pin.get('filename', '')) for pin in weights):
+                # Earlier catalogs advertised separate MTP draft components as
+                # full-model quants. Remove the metadata only; keep local files.
+                del self.entries[identity]
+                changed = True
         for value in seed['entries']:
             if value.get('installable'):
                 validate_entry(value)
@@ -406,6 +414,8 @@ class BridgeState:
             return {'uninstalled':True,'id':model_id}
 
     def close(self):
+        if self.remote: self.remote.shutdown()
+        if self.private: self.private.shutdown()
         if self.closed:
             return
         self.closed = True
@@ -542,6 +552,15 @@ class BridgeHandler(BaseHTTPRequestHandler):
             raise ValueError("Query parameters are not accepted")
         route = path[4:] if path.startswith("/api/") else path
         state = self.server.state
+        if route.startswith('/remote/') and state.remote is None:
+            from remote_access import RemoteAccess
+            with state.lock:
+                if state.remote is None: state.remote = RemoteAccess(state.root, state.resources, state.owner)
+        if route.startswith('/private/') and state.private is None:
+            from private_chat import PrivateChats
+            with state.lock:
+                if state.private is None:
+                    state.private = PrivateChats(state.resources, backend=getattr(state.runtime, 'private_backend', None))
         if self.command == "GET":
             if route == '/health':
                 self._send(200, {'schema': 1, 'healthy': not state.closed, 'instanceId': self.server.instance_id})
@@ -554,6 +573,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, {"catalog": state.catalog()})
             elif route == "/token":
                 self._send(200, state.tokens.status())
+            elif route == '/remote/status':
+                self._send(200, state.remote.status())
             elif route == "/v1/models":
                 self._send(200, state.runtime.models(state.catalog()))
             else:
@@ -571,6 +592,36 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(405, {"error": "Method not allowed"})
         elif route == "/plan":
             self._send(200, state.plan(body.get("repository")))
+        elif route == "/search":
+            self._send(200, state.client.search_models(body))
+        elif route == '/remote/start':
+            self._send(200, state.remote.start(body))
+        elif route == '/remote/stop':
+            self._send(200, state.remote.close())
+        elif route == '/remote/pairing':
+            self._send(200, state.remote.pairing(body.get('address')))
+        elif route == '/remote/revoke':
+            self._send(200, state.remote.revoke(body.get('deviceId')))
+        elif route == '/private/open':
+            backend = state.runtime.private_backend(body.get('runtime'))
+            self._send(200, state.private.open(backend=backend))
+        elif route == '/private/close':
+            self._send(200, state.private.close(body.get('sessionId')))
+        elif route == '/private/send':
+            raw = state.private.send(body.get('sessionId'), body.get('text'))
+            try:
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/event-stream')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Connection', 'close')
+                origin = self.headers.get('Origin')
+                if origin in TAURI_ORIGINS:
+                    self.send_header('Access-Control-Allow-Origin', origin)
+                    self.send_header('Vary', 'Origin')
+                self.end_headers()
+                self.close_connection = True
+                for chunk in raw: self.wfile.write(chunk); self.wfile.flush()
+            finally: raw.close()
         elif route == "/catalog/add":
             self._send(200, state.add(body.get("planId"), body.get("variantIds")))
         elif route == "/catalog/profile":
@@ -819,6 +870,12 @@ def serve(root, resources, owner):
     if not owner_alive(owner):
         return 1
     state = BridgeState(root, resources)
+    state.owner = owner
+    remote_config = managed_path(Path(root).resolve(), 'runtime-setup', 'remote-access.json')
+    if remote_config.exists():
+        from remote_access import RemoteAccess
+        state.remote = RemoteAccess(state.root, state.resources, owner)
+        state.remote.restore()
     secret = secrets.token_urlsafe(48)
     server = BridgeServer(("127.0.0.1", 0), state, secret)
     directory = managed_path(Path(root).resolve(), "runtime-setup", "hub-bridge")

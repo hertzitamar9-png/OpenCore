@@ -1,0 +1,192 @@
+{
+  "_id": "69d6b724a7eb8f2043522564",
+  "id": "mradermacher/SimpleSD-4B-thinking-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "self-distillation",
+    "code-generation",
+    "en",
+    "base_model:apple/SimpleSD-4B-thinking",
+    "base_model:quantized:apple/SimpleSD-4B-thinking",
+    "license:apple-amlr",
+    "endpoints_compatible",
+    "region:us",
+    "conversational"
+  ],
+  "downloads": 60,
+  "likes": 0,
+  "modelId": "mradermacher/SimpleSD-4B-thinking-GGUF",
+  "author": "mradermacher",
+  "sha": "3be766eb789dca7fbbf8e5d46bb8c2cbfbefaf16",
+  "lastModified": "2026-04-09T06:28:59.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "apple/SimpleSD-4B-thinking",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apple-amlr",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "self-distillation",
+      "code-generation"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 4022468096,
+    "architecture": "qwen3",
+    "context_length": 262144,
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n<think>\\n' }}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 8051285696
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "6f4075d780e1083dfbc6694aba6016bfdd4343c6",
+      "size": 2338
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "83945539ed2a7db33b276c9ab3f4ca964e213c68",
+      "size": 3669
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.IQ4_XS.gguf",
+      "blobId": "16eadd292f21ad6a193851a8cb1285d211cd86bb",
+      "size": 2286316736,
+      "lfs": {
+        "sha256": "a57ef74c9f042b7a2dcfc6f87429fe70ea522386e428792c6601f9ecdbafebcb",
+        "size": 2286316736,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q2_K.gguf",
+      "blobId": "bfe3b4fe6dbe2dba17cd008012fece9e9368f9e3",
+      "size": 1669500096,
+      "lfs": {
+        "sha256": "fca9f53788347fd9d367e97176edd97ea4758632fd61a9f27b13c551b9b2bb92",
+        "size": 1669500096,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q3_K_L.gguf",
+      "blobId": "60fc2dd71cd5b2d4449316b8b75daa47ec5b3eae",
+      "size": 2239786176,
+      "lfs": {
+        "sha256": "babb8d1e34522c157ceed22c2071f2bec6d7161d8875a74e29f08cb2b955c337",
+        "size": 2239786176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q3_K_M.gguf",
+      "blobId": "2db270baf1aee531988759fa00d48ced8ff5f4f9",
+      "size": 2075618496,
+      "lfs": {
+        "sha256": "41995d5ba1fe74782846ab936f2033e3a3a4c081dcc4bb27d753a30cbd828462",
+        "size": 2075618496,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q3_K_S.gguf",
+      "blobId": "15d5229032510a8efe46fbc26c5dc7dea75756ab",
+      "size": 1886997696,
+      "lfs": {
+        "sha256": "c88529c2166984b7d741a960243357929756c6e27dc5e9a62239e2c3728fc783",
+        "size": 1886997696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q4_K_M.gguf",
+      "blobId": "0a2e3f64ad9c52f30f2e451d41437aa7cec4230d",
+      "size": 2497281216,
+      "lfs": {
+        "sha256": "7955b98e0bc58877361b23f4f5a3324aa9a82482f4589e67bf7ab64b10dafc7a",
+        "size": 2497281216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q4_K_S.gguf",
+      "blobId": "e49d19c28cc626f2711904d50a13c7ad16175b4c",
+      "size": 2383310016,
+      "lfs": {
+        "sha256": "b4bd6d282631f7eff8b32447fc9864703cdba08967392daff25ceb1adfc18f36",
+        "size": 2383310016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q5_K_M.gguf",
+      "blobId": "a6ab6123ae7ceca1d19e006a4e965ad60a022e40",
+      "size": 2889514176,
+      "lfs": {
+        "sha256": "daa3ece272dbf0107d30ac0e85de4680f9064b5147a1afed0fb55e18a67c2dc4",
+        "size": 2889514176,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q5_K_S.gguf",
+      "blobId": "8dc295f73daa4c3c001dc5d7feaeae6d84ec850a",
+      "size": 2823711936,
+      "lfs": {
+        "sha256": "8d83dabfc72bc3b6d8129e5cef3743bf7e4854e7d68586f6e2289fc470bfe605",
+        "size": 2823711936,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q6_K.gguf",
+      "blobId": "57d8448cbf546c4618e2742e6d43c93a1bf9959b",
+      "size": 3306261696,
+      "lfs": {
+        "sha256": "16012e420c0f06654f89baa38fa54ffa49ecccba5094cd6cf787869cba6e268d",
+        "size": 3306261696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.Q8_0.gguf",
+      "blobId": "530d116ea61803c15fe12407e91d06719c925419",
+      "size": 4280405696,
+      "lfs": {
+        "sha256": "27aac1a6ea0ef3814168f51df1f750a5dce55192f7adac7a9eb521cdc9ea4e2c",
+        "size": 4280405696,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.f16.gguf",
+      "blobId": "836fbef27cd7a97b6fb1d06599f6ffe43f7d6e30",
+      "size": 8051285696,
+      "lfs": {
+        "sha256": "f7196ffe18a4b75405f7ff392ee230c34d2dd4db745b30a9fcff6d3c700a99e1",
+        "size": 8051285696,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-04-08T20:14:28.000Z",
+  "usedStorage": 36389989632
+}

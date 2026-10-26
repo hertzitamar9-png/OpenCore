@@ -12,6 +12,7 @@ REPO_PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,95}\Z")
 QUANT = re.compile(r"(?<![A-Z0-9])((?:IQ|PTQ|PQ|TQ|Q)[1-9][0-9]?(?:_[A-Z0-9]+)*|(?:NV|MX)FP4(?:_[A-Z0-9]+)*|FP8(?:_[A-Z0-9]+)*|BF16|FP16|F16|FP32|F32|MIX[-_ ]\d+(?:\.\d+)?G)(?![A-Z0-9])", re.I)
 SHARD = re.compile(r"[-_](\d{1,6})-of-(\d{1,6})(?=\.[^.]+$)", re.I)
 AUXILIARY = re.compile(r"(?:^|[/_.-])(mmproj|imatrix|importance[-_]?matrix|draft|dflash\d*|optimizer|optim|training|trainer|checkpoint[-_]?step|scheduler|rng[-_]?state)(?:[/_.-]|$)", re.I)
+DRAFT = re.compile(r'(?:^|/)mtp[-_]|(?:^|/)model[-_]mtp\.', re.I)
 RESERVED = {"CON", "PRN", "AUX", "NUL", *("COM" + str(i) for i in range(1, 10)), *("LPT" + str(i) for i in range(1, 10))}
 SUPPORT = {"config.json", "generation_config.json", "tokenizer.json", "tokenizer.model", "tokenizer_config.json",
            "special_tokens_map.json", "added_tokens.json", "vocab.json", "vocab.txt", "merges.txt",
@@ -140,23 +141,43 @@ def build_plan(metadata):
         config = {}
     adapter_only = any(PurePosixPath(item['rfilename']).name == 'adapter_config.json' for item in files) and not any(
         PurePosixPath(item['rfilename']).name == 'config.json' for item in files)
+    image = metadata.get('pipeline_tag') in ('text-to-image', 'image-to-image', 'text-to-video', 'image-to-video')
+    image_lora = image and (adapter_only or any('lora' in str(tag).lower() for tag in metadata.get('tags', [])))
+    pipeline_roots = [str(PurePosixPath(item['rfilename']).parent) for item in files
+                      if image and PurePosixPath(item['rfilename']).name in ('model_index.json', 'modular_model_index.json')]
+    components = ('text_encoder', 'text_encoder_2', 'text_encoder_3', 'tokenizer', 'tokenizer_2', 'tokenizer_3',
+                  'processor', 'transformer', 'unet', 'vae', 'scheduler')
     groups = {}
     companions = [i for i in files if "mmproj" in PurePosixPath(i["rfilename"]).name.lower() and i["rfilename"].lower().endswith(".gguf")]
     for item in files:
         name = item["rfilename"]
         path = PurePosixPath(name)
-        if AUXILIARY.search(name):
+        if AUXILIARY.search(name) or DRAFT.search(name):
             continue
         extension = path.suffix.lower()
-        if extension == ".gguf":
+        pipe_root = None
+        for root in pipeline_roots:
+            prefix = root + '/' if root != '.' else ''
+            relative = name[len(prefix):] if name.startswith(prefix) else ''
+            if relative.split('/')[0] in components and extension == '.safetensors':
+                pipe_root = root
+                break
+        if pipe_root is not None:
+            key, format_name = 'diffusers:' + pipe_root, 'diffusers'
+        elif extension == ".gguf":
             stem = SHARD.sub("", name)
             key, format_name = "gguf:" + stem, "gguf"
+        elif name.endswith('.bps.tar.zst'):
+            key, format_name = 'archive:' + name, 'archive'
+        elif image_lora and extension == '.safetensors':
+            key, format_name = 'lora:' + name, 'lora'
         elif extension in (".safetensors", ".bin", ".onnx", ".ggml", ".pt", ".pth"):
             format_name = {".safetensors": "safetensors", ".bin": "pytorch", ".onnx": "onnx"}.get(extension, extension[1:])
             key = format_name + ":" + str(path.parent)
         else:
             continue
-        group = groups.setdefault(key, {"format": format_name, "subdirectory": "" if str(path.parent) == "." else str(path.parent), "items": []})
+        subdirectory = pipe_root if pipe_root is not None else str(path.parent)
+        group = groups.setdefault(key, {"format": format_name, "subdirectory": "" if subdirectory == "." else subdirectory, "items": []})
         group["items"].append(item)
     variants = []
     for key, group in sorted(groups.items()):
@@ -164,12 +185,26 @@ def build_plan(metadata):
         format_name, subdir = group["format"], group["subdirectory"]
         quant = _quantization(key, config, format_name)
         pins = [_pin(repo, revision, item, "model") for item in items]
+        if format_name == 'lora':
+            quant = 'LoRA · ' + ('ComfyUI' if 'comfy' in key.lower() else 'Diffusers')
+        elif format_name == 'archive':
+            quant = 'Packed checkpoint'
         if format_name == "gguf":
             candidates = [i for i in companions if str(PurePosixPath(i["rfilename"]).parent) == (subdir or ".")]
             if candidates:
                 # Prefer one full precision projector; including every projector can multiply disk use.
                 candidates.sort(key=lambda i: (not bool(re.search(r"(?:bf16|f16|fp16)", i["rfilename"], re.I)), i["rfilename"]))
                 pins.append(_pin(repo, revision, candidates[0], "companion"))
+        elif format_name == 'diffusers':
+            prefix = subdir + '/' if subdir else ''
+            selected = {pin['filename'] for pin in pins}
+            for item in files:
+                name = item['rfilename']
+                relative = name[len(prefix):] if name.startswith(prefix) else ''
+                path = PurePosixPath(relative)
+                if name not in selected and (relative in ('model_index.json', 'modular_model_index.json') or
+                        relative.split('/')[0] in components and path.suffix in ('.json', '.txt', '.model', '.jinja', '.tiktoken')):
+                    pins.append(_pin(repo, revision, item, 'support'))
         else:
             support_dirs = {".", subdir or "."}
             for item in files:
@@ -187,11 +222,12 @@ def build_plan(metadata):
                     'image-classification': 'classification'}.get(task, 'text' if task in (
                         '', 'text-generation', 'text2text-generation', 'image-text-to-text', 'conversational') else 'omni')
         runtime_kind = ("gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None) if category == 'text' else None
-        if adapter_only and format_name != 'gguf':
+        is_adapter = (adapter_only and format_name != 'gguf') or format_name == 'lora'
+        if is_adapter:
             runtime_kind = None
         runtime = {"adapter": runtime_kind, "available": False, "inferenceVerified": False,
                    "reason": "Runtime discovery and an actual generation are required" if runtime_kind else
-                             "Adapter package only; the base model and a compatible adapter runtime are required" if adapter_only else
+                             "Adapter package only; the base model and a compatible adapter runtime are required" if is_adapter else
                              "No verified managed runtime adapter supports this format"}
         variants.append({"id": stable_id(repo, key), "repository": repo, "revision": revision, "variantKey": key,
             "name": repo.split("/", 1)[1] + " · " + quant + (" · " + subdir if subdir else ""),
@@ -200,6 +236,13 @@ def build_plan(metadata):
             "reason": reason, "modelType": config.get("model_type") or (metadata.get("gguf") or {}).get("architecture"), "architectures": config.get("architectures", []),
             "runtime": runtime, "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),
             "sourceUrl": HUB + "/" + repo, "status": "not-installed"})
+        if is_adapter:
+            variants[-1]['packageKind'] = 'adapter'
+            base = (metadata.get('cardData') or {}).get('base_model')
+            if isinstance(base, list): base = base[0] if len(base) == 1 else None
+            if isinstance(base, str):
+                try: variants[-1]['baseRepository'] = parse_repository(base)
+                except ValueError: pass
     # Key and commit pin bind Add to the metadata that was actually reviewed.
     identity = json.dumps({"repository": repo, "revision": revision, "variants": variants}, sort_keys=True, separators=(",", ":"))
     return {"planId": hashlib.sha256(identity.encode("utf-8")).hexdigest(), "repository": repo, "revision": revision,

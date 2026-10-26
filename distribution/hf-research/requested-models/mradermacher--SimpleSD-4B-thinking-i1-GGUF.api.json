@@ -1,0 +1,324 @@
+{
+  "_id": "69d73c6905e25098c788db3c",
+  "id": "mradermacher/SimpleSD-4B-thinking-i1-GGUF",
+  "private": false,
+  "library_name": "transformers",
+  "tags": [
+    "transformers",
+    "gguf",
+    "self-distillation",
+    "code-generation",
+    "en",
+    "base_model:apple/SimpleSD-4B-thinking",
+    "base_model:quantized:apple/SimpleSD-4B-thinking",
+    "license:apple-amlr",
+    "endpoints_compatible",
+    "region:us",
+    "imatrix",
+    "conversational"
+  ],
+  "downloads": 312,
+  "likes": 0,
+  "modelId": "mradermacher/SimpleSD-4B-thinking-i1-GGUF",
+  "author": "mradermacher",
+  "sha": "962cb15cddc7624950c537620c55e1fa52d5161e",
+  "lastModified": "2026-04-09T07:24:18.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "apple/SimpleSD-4B-thinking",
+    "language": [
+      "en"
+    ],
+    "library_name": "transformers",
+    "license": "apple-amlr",
+    "mradermacher": {
+      "readme_rev": 1
+    },
+    "quantized_by": "mradermacher",
+    "tags": [
+      "self-distillation",
+      "code-generation"
+    ]
+  },
+  "transformersInfo": {
+    "auto_model": "AutoModel"
+  },
+  "gguf": {
+    "total": 4022468096,
+    "architecture": "qwen3",
+    "context_length": 262144,
+    "quantize_imatrix_file": "SimpleSD-4B-thinking-i1-GGUF/SimpleSD-4B-thinking.imatrix.gguf",
+    "chat_template": "{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>\" }}\n    {%- for tool in tools %}\n        {{- \"\\n\" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- \"\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{\\\"name\\\": <function-name>, \\\"arguments\\\": <args-json-object>}\\n</tool_call><|im_end|>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}\n{%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}\n{%- for message in messages[::-1] %}\n    {%- set index = (messages|length - 1) - loop.index0 %}\n    {%- if ns.multi_step_tool and message.role == \"user\" and message.content is string and not(message.content.startswith('<tool_response>') and message.content.endswith('</tool_response>')) %}\n        {%- set ns.multi_step_tool = false %}\n        {%- set ns.last_query_index = index %}\n    {%- endif %}\n{%- endfor %}\n{%- for message in messages %}\n    {%- if message.content is string %}\n        {%- set content = message.content %}\n    {%- else %}\n        {%- set content = '' %}\n    {%- endif %}\n    {%- if (message.role == \"user\") or (message.role == \"system\" and not loop.first) %}\n        {{- '<|im_start|>' + message.role + '\\n' + content + '<|im_end|>' + '\\n' }}\n    {%- elif message.role == \"assistant\" %}\n        {%- set reasoning_content = '' %}\n        {%- if message.reasoning_content is string %}\n            {%- set reasoning_content = message.reasoning_content %}\n        {%- else %}\n            {%- if '</think>' in content %}\n                {%- set reasoning_content = content.split('</think>')[0].rstrip('\\n').split('<think>')[-1].lstrip('\\n') %}\n                {%- set content = content.split('</think>')[-1].lstrip('\\n') %}\n            {%- endif %}\n        {%- endif %}\n        {%- if loop.index0 > ns.last_query_index %}\n            {%- if loop.last or (not loop.last and reasoning_content) %}\n                {{- '<|im_start|>' + message.role + '\\n<think>\\n' + reasoning_content.strip('\\n') + '\\n</think>\\n\\n' + content.lstrip('\\n') }}\n            {%- else %}\n                {{- '<|im_start|>' + message.role + '\\n' + content }}\n            {%- endif %}\n        {%- else %}\n            {{- '<|im_start|>' + message.role + '\\n' + content }}\n        {%- endif %}\n        {%- if message.tool_calls %}\n            {%- for tool_call in message.tool_calls %}\n                {%- if (loop.first and content) or (not loop.first) %}\n                    {{- '\\n' }}\n                {%- endif %}\n                {%- if tool_call.function %}\n                    {%- set tool_call = tool_call.function %}\n                {%- endif %}\n                {{- '<tool_call>\\n{\"name\": \"' }}\n                {{- tool_call.name }}\n                {{- '\", \"arguments\": ' }}\n                {%- if tool_call.arguments is string %}\n                    {{- tool_call.arguments }}\n                {%- else %}\n                    {{- tool_call.arguments | tojson }}\n                {%- endif %}\n                {{- '}\\n</tool_call>' }}\n            {%- endfor %}\n        {%- endif %}\n        {{- '<|im_end|>\\n' }}\n    {%- elif message.role == \"tool\" %}\n        {%- if loop.first or (messages[loop.index0 - 1].role != \"tool\") %}\n            {{- '<|im_start|>user' }}\n        {%- endif %}\n        {{- '\\n<tool_response>\\n' }}\n        {{- content }}\n        {{- '\\n</tool_response>' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != \"tool\") %}\n            {{- '<|im_end|>\\n' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- '<|im_start|>assistant\\n<think>\\n' }}\n{%- endif %}",
+    "bos_token": "<|endoftext|>",
+    "eos_token": "<|im_end|>",
+    "totalFileSize": 1127018432
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "80bbcc49ffd05ec2ecbe7109391dc3080549fb5d",
+      "size": 3305
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "15768e96be80b59a474c4b1823c8a09336ab3dbf",
+      "size": 6202
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ1_M.gguf",
+      "blobId": "d2ca924d31a847eaf61ffba1656347020b8377fd",
+      "size": 1127018432,
+      "lfs": {
+        "sha256": "78609ab73288c1bd38d29b9acfb192379ce351460cfe4b70035524c08400bacf",
+        "size": 1127018432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ1_S.gguf",
+      "blobId": "9efaf737d0069a0763003ed5ae57a880662455c5",
+      "size": 1055256512,
+      "lfs": {
+        "sha256": "9b86a2ea14d9a1e91707990f3e39cbce4e297bc527072029d1ddda74638526c3",
+        "size": 1055256512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ2_M.gguf",
+      "blobId": "1f9dc1075f596eacacf0e6d9834164366c1d4c64",
+      "size": 1512984512,
+      "lfs": {
+        "sha256": "cc605942570a7b327542c61305a4de7dfb53fe7c096d04c54c122836c6a72c53",
+        "size": 1512984512,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ2_S.gguf",
+      "blobId": "307ef2370abbf08ff9604cc36ab7e1a6ef634145",
+      "size": 1417301952,
+      "lfs": {
+        "sha256": "328eb3ec69f7c3b9bfec5a723687b3bb95a5958234de2d67af56c3d40ea7f592",
+        "size": 1417301952,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ2_XS.gguf",
+      "blobId": "ba1026e73545d73071f179c097a6d29598c9e036",
+      "size": 1354100672,
+      "lfs": {
+        "sha256": "4016904b55ec96111a1b5fa568f9ca655b82a2a8516e44eb9db5027d30cd2e4b",
+        "size": 1354100672,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ2_XXS.gguf",
+      "blobId": "2071c060040509eb7217cda43fb5e973e415198b",
+      "size": 1246621632,
+      "lfs": {
+        "sha256": "0d326b96ef8ca17a5dca8d3bf4363512c0980e56b94d201d4e2d45e17cf71e1f",
+        "size": 1246621632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ3_M.gguf",
+      "blobId": "2934e39b9b166f798ed6adbd3c94b163cb17d08b",
+      "size": 1962896832,
+      "lfs": {
+        "sha256": "23fd9095ab9f467541f376fcd0ace72ecd1a50c8df668e89312eab6ada683cca",
+        "size": 1962896832,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ3_S.gguf",
+      "blobId": "0085608b105a6f735074a0fc9bed6b1d525380c7",
+      "size": 1899531712,
+      "lfs": {
+        "sha256": "da59f4f7a8ce7a51ecc2b90ee1d6ff848bdf2a684ffb3145df55bde93f7643c0",
+        "size": 1899531712,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ3_XS.gguf",
+      "blobId": "f02d2afa598c0deb0e62b031dea626dfae51ce30",
+      "size": 1814375872,
+      "lfs": {
+        "sha256": "65f734da784a6c3dff7f275357db7007741d073e75a6efc0d2bc05e095b1ac73",
+        "size": 1814375872,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ3_XXS.gguf",
+      "blobId": "fe1e01e965c459017676da02e6b76baac1aca06c",
+      "size": 1670188992,
+      "lfs": {
+        "sha256": "861484793a620c47ac0520725af99f0b8746990e61666f0c9060816c245e87a7",
+        "size": 1670188992,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ4_NL.gguf",
+      "blobId": "24518b36143efcebb3d0fa04af0b12d1bce9f295",
+      "size": 2381344192,
+      "lfs": {
+        "sha256": "ce488ce8f320b8ee7bb3d2a051488bf030b3aa7df68e0bc584eaf56477bd5ff7",
+        "size": 2381344192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-IQ4_XS.gguf",
+      "blobId": "403dfb1a81a860d3e7a331e0fa0b279ef70cbb84",
+      "size": 2270752192,
+      "lfs": {
+        "sha256": "2cbe43ade2533b5452c2e5bd1739d98858a8ac6e92369c1fe466a8a7f90354ad",
+        "size": 2270752192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q2_K.gguf",
+      "blobId": "f2d773aa514f3a5e01034f62ec7f33a375b90293",
+      "size": 1669500352,
+      "lfs": {
+        "sha256": "0d5785bd672b4ca6f0b9420a2a567c85acb558ec8fe50fe33d03c50030022d46",
+        "size": 1669500352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q2_K_S.gguf",
+      "blobId": "465380ed29b5814d3c92a4e24944d36877852bde",
+      "size": 1563454912,
+      "lfs": {
+        "sha256": "08736f1891d38c5a416c173f199894cc4f7dde04cd2a961d50c0cad24ae34016",
+        "size": 1563454912,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q3_K_L.gguf",
+      "blobId": "115ace8b3028ebce99d9a0a3bc10c157182629e3",
+      "size": 2239786432,
+      "lfs": {
+        "sha256": "20365dc036266cd466a543c056f651e35fdb61b05b2277ef2e56c86102b60ebb",
+        "size": 2239786432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q3_K_M.gguf",
+      "blobId": "f65c54eec4e39e544e004458bc237a25e66051ca",
+      "size": 2075618752,
+      "lfs": {
+        "sha256": "e1e6ff880140e30680e99058758f39dbc24b9d2c42ae51a32dd6b19ac2815136",
+        "size": 2075618752,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q3_K_S.gguf",
+      "blobId": "26c4eef21410a6e41e94ca63f9f9d5fd0f016e9a",
+      "size": 1886997952,
+      "lfs": {
+        "sha256": "97d67c6b375375b577cdbf24cc962c30d44029d1850822214c25cd2564e65bfe",
+        "size": 1886997952,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q4_0.gguf",
+      "blobId": "15bd9e6f5327bf6a25ffb09b690ced068d7ffe04",
+      "size": 2375773632,
+      "lfs": {
+        "sha256": "53da7c6b6529650f8d2bedbb487cf880f60904227a8af023ad45711793f7d816",
+        "size": 2375773632,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q4_1.gguf",
+      "blobId": "885ffa8b023ca718f9342961513386e626f48fa6",
+      "size": 2596629952,
+      "lfs": {
+        "sha256": "49359fcd85dc24f31548f2bcd8bb08125cc1bd20750ff9ed9fa5df22d5521fce",
+        "size": 2596629952,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q4_K_M.gguf",
+      "blobId": "1a7a7458679ffbbe736bb954ddc0dcdb4e0f50ae",
+      "size": 2497281472,
+      "lfs": {
+        "sha256": "8a885c7261c3607e5b7c8a719ad649adfa65f60d83e0fb1c638f740728f62132",
+        "size": 2497281472,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q4_K_S.gguf",
+      "blobId": "ce4aaac6d9bdf7dadb0561886304362ad94f5268",
+      "size": 2383310272,
+      "lfs": {
+        "sha256": "221aad6ca6a3add8db4e97008e69bf5ba60ab18381fb3650d5154ea792dc6e0e",
+        "size": 2383310272,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q5_K_M.gguf",
+      "blobId": "fc34d189c2e199191ec60679d69fd3f0ce5a3daf",
+      "size": 2889514432,
+      "lfs": {
+        "sha256": "cfc99c808d0176dd748aeb15239e635598ec02472a0b6b0ba1a483c811e19896",
+        "size": 2889514432,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q5_K_S.gguf",
+      "blobId": "2140124b4927ba914c043a04446b4e5bb8c4aa1f",
+      "size": 2823712192,
+      "lfs": {
+        "sha256": "3ddf490df9d668237f7c0925e23f9fabb136d106ce06e8731470ff26d05da6cc",
+        "size": 2823712192,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.i1-Q6_K.gguf",
+      "blobId": "c51d9b2118c2ba48638a376e3a1f9bb18e9ee935",
+      "size": 3306261952,
+      "lfs": {
+        "sha256": "0c6ece573b982de8e4fa7882c2dd8ce1f831e10ba04b310b56de87df9b78c03d",
+        "size": 3306261952,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "SimpleSD-4B-thinking.imatrix.gguf",
+      "blobId": "58214120a78fd597e734d0b7c2e35ad4711bf507",
+      "size": 3872640,
+      "lfs": {
+        "sha256": "5d96007f35c466b3dac674fe661f05ec66c73f062cd21291505fcf81743eae0c",
+        "size": 3872640,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-04-09T05:43:05.000Z",
+  "usedStorage": 48024088448
+}

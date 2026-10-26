@@ -15,7 +15,7 @@ module.exports=function(app,{editFunction,replaceOnce}){
     // Settings retains the existing layout and adds a user-bound Hub credential panel.
     const from='t==="settings"?';const pos=text.indexOf(from);if(pos<0)throw Error('Missing settings branch');
     const open=text.indexOf('children:[',pos);if(open<0)throw Error('Missing settings content');
-    text=text.slice(0,open+10)+'i.jsx($HubSettings,{}),'+text.slice(open+10);return text;
+    text=text.slice(0,open+10)+'i.jsx($HubSettings,{}),i.jsx($RemoteSettings,{}),'+text.slice(open+10);return text;
   });
   return app+'\n'+fs.readFileSync(path.join(__dirname,'hub-ui.js'),'utf8');
 };

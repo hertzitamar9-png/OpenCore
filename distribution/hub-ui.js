@@ -142,19 +142,49 @@ async function $hubInvoke(command,args,run) {
   }
   return run();
 }
+const $hubSearchCache=new Map();
 function $HubBrowser({onChanged,onNotice}) {
   const state=$useHub(),[repository,setRepository]=p.useState(''),[plan,setPlan]=p.useState(null),[selected,setSelected]=p.useState([]),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),checking=p.useRef(false);
+  const [filters,setFilters]=p.useState({match:'prefix',task:'',library:'',author:'',license:'',sort:'downloads',private:false}),[results,setResults]=p.useState(null),[searching,setSearching]=p.useState(false),searchId=p.useRef(0);
   const h=p.createElement;
+  async function search(){
+    const id=++searchId.current,options={query:repository,...filters},key=JSON.stringify(options),cached=!filters.private&&$hubSearchCache.get(key);
+    setError('');if(cached&&Date.now()-cached.at<300000){setResults(cached.value);setSearching(false);return;}
+    setSearching(true);
+    try{const value=await $hubRequest('/search',options);if(id!==searchId.current)return;
+      if(!filters.private){$hubSearchCache.set(key,{at:Date.now(),value});if($hubSearchCache.size>32)$hubSearchCache.delete($hubSearchCache.keys().next().value);}
+      setResults(value);
+    }catch(e){if(id===searchId.current){setResults(null);setError(String(e));}}finally{if(id===searchId.current)setSearching(false);}
+  }
+  p.useEffect(()=>{++searchId.current;setSearching(false);setResults(null);if(!repository.trim()||repository.includes('/'))return;
+    const timer=setTimeout(()=>void search(),350);return()=>{clearTimeout(timer);++searchId.current;};},[repository,JSON.stringify(filters)]);
+  p.useEffect(()=>{if(state.loaded&&!state.tokenConfigured&&filters.private)setFilters(old=>({...old,private:false}));},[state.loaded,state.tokenConfigured,filters.private]);
+  function filter(key,value){setFilters(old=>({...old,[key]:value}));}
+  function picker(key,label,values){return h('label',null,label,h('select',{'aria-label':label,value:filters[key],onChange:e=>filter(key,e.target.value)},...values.map(([value,text])=>h('option',{key:value,value},text))));}
   async function inspectRepository(value){if(checking.current)return;checking.current=true;setBusy(true);setError('');setPlan(null);setRepository(value);
     try{const plan=await $hubRequest('/plan',{repository:value});setPlan(plan);const seen=new Set();setSelected(plan.variants.filter(v=>{if(!v.installable||seen.has(v.quantization))return false;seen.add(v.quantization);return true;}).map(v=>v.id));}
     catch(e){setError(String(e));}finally{checking.current=false;setBusy(false);}}
-  async function inspect(event){event.preventDefault();await inspectRepository(repository);}
+  async function inspect(event){event.preventDefault();if(repository.includes('/'))await inspectRepository(repository);else await search();}
   async function add(){setBusy(true);setError('');try{const value=await $hubRequest('/catalog/add',{planId:plan.planId,variantIds:selected});await $hubRefresh(true);await onChanged?.();onNotice?.(`Added ${value.added.length} published variants. Choose a quantization to install.`);setPlan(null);}
     catch(e){setError(String(e));}finally{setBusy(false);}}
   return h('section',{className:'hub-browser','aria-label':'Add from Hugging Face'},
-    h('h3',null,'Add from Hugging Face'),h('p',null,'Enter a public model repository or link. For private or gated models, add your access token in Settings.'),
-    h('form',{onSubmit:inspect,className:'hub-repository-form'},h('input',{'aria-label':'Hugging Face repository',placeholder:'owner/model or https://huggingface.co/owner/model',value:repository,onChange:e=>setRepository(e.target.value)}),
-      h('button',{type:'submit',disabled:busy||!repository.trim()},busy?'Checking…':'Check repository')),
+    h('h3',null,'Add from Hugging Face'),h('p',null,'Search by name or words, or paste a repository link. Choose a result to see its published packages.'),
+    h('form',{onSubmit:inspect,className:'hub-repository-form'},h('input',{'aria-label':'Hugging Face repository',placeholder:'Search models or enter owner/model',value:repository,onChange:e=>{setRepository(e.target.value);setPlan(null);}}),
+      h('button',{type:'submit',disabled:busy||searching||!repository.trim()},busy?'Checking…':searching?'Searching…':repository.includes('/')?'Check repository':'Search models')),
+    h('div',{className:'hub-search-filters'},
+      picker('match','Match',[['prefix','Starts with'],['words','All words'],['contains','Contains']]),
+      picker('task','Task',[['','All tasks'],['text-generation','Text / coding'],['image-text-to-text','Vision / text'],['text-to-image','Image generation'],['image-to-image','Image editing'],['automatic-speech-recognition','Speech recognition'],['text-to-speech','Speech generation'],['text-to-video','Video generation'],['feature-extraction','Embeddings']]),
+      picker('library','Format / library',[['','All libraries'],['gguf','GGUF'],['transformers','Transformers'],['diffusers','Diffusers'],['mlx','MLX'],['peft','LoRA / PEFT']]),
+      picker('sort','Sort',[['downloads','Downloads'],['likes','Likes'],['lastModified','Recently updated'],['createdAt','Newest'],['trendingScore','Trending'],['name','Name']]),
+      h('label',null,'Publisher',h('input',{'aria-label':'Publisher',placeholder:'Any publisher',value:filters.author,onChange:e=>filter('author',e.target.value)})),
+      h('label',null,'License',h('input',{'aria-label':'License',placeholder:'e.g. apache-2.0',value:filters.license,onChange:e=>filter('license',e.target.value)}))),
+    h('label',{className:'hub-private-search'},h('input',{type:'checkbox',checked:filters.private,disabled:!state.tokenConfigured&&!filters.private,onChange:e=>filter('private',e.target.checked)}),'Include models accessible with my token'),
+    h('details',null,h('summary',null,state.tokenConfigured?'Hugging Face access · token saved':'Private / gated models · add access token'),h($HubSettings,{inline:true})),
+    searching?h('p',{role:'status'},'Searching Hugging Face…'):null,
+    results?h('section',{'aria-label':'Hugging Face search results',className:'hub-search-results'},
+      h('p',{role:'status'},results.models.length?`${results.models.length} results${results.limited?' · Refine your filters for more matches':''}`:'No matching models. Try All words or another publisher.'),
+      ...results.models.map(model=>h('button',{key:model.repository,type:'button',disabled:busy,onClick:()=>void inspectRepository(model.repository)},
+        h('strong',null,model.repository),h('span',null,[model.task,model.library,`${model.downloads.toLocaleString()} downloads`,model.private?'Private':model.gated?'Gated':'Public'].filter(Boolean).join(' · '))))):null,
     error?h('p',{role:'alert'},error):null,
     plan?h('div',{className:'hub-plan'},h('strong',null,plan.repository),h('p',null,`${plan.variants.length} published model variants · Revision ${plan.revision.slice(0,8)}`),
       h('p',null,'Select quantizations to add. Weights download only when you press Install on a card.'),
@@ -164,12 +194,12 @@ function $HubBrowser({onChanged,onNotice}) {
       h('button',{disabled:busy||!selected.length,onClick:add},busy?'Adding…':`Add ${selected.length} variants`)):null,
     state.error&&!state.available?h('p',{role:'status'},state.error):null);
 }
-function $HubSettings() {
+function $HubSettings({inline=false}) {
   const state=$useHub(),[token,setToken]=p.useState(''),[busy,setBusy]=p.useState(false),[message,setMessage]=p.useState('');const h=p.createElement;
   async function save(event){event.preventDefault();setBusy(true);setMessage('');try{await $hubRequest('/token',{token},'PUT');setToken('');await $hubRefresh(true);setMessage('Hugging Face token saved securely for this Windows user.');}catch(e){setMessage(String(e).replaceAll(token||'\u0000','[redacted]'));}finally{setBusy(false);}}
   async function remove(){setBusy(true);try{await $hubRequest('/token',undefined,'DELETE');await $hubRefresh(true);setMessage('Token removed. Public model downloads remain available.');}catch(e){setMessage(String(e));}finally{setBusy(false);}}
-  return h('section',{className:'hub-browser','aria-label':'Hugging Face access'},h('h2',null,'Hugging Face access'),h('p',null,'Public models work without a token. A read token enables private and gated repositories your account can access.'),
-    h('p',{role:'status'},state.tokenConfigured?'Access token saved':'No token saved'),h('form',{onSubmit:save,className:'hub-repository-form'},h('input',{type:'password',autoComplete:'off',value:token,'aria-label':'Hugging Face access token',placeholder:'hf_…',onChange:e=>setToken(e.target.value)}),
+  return h('section',{className:'hub-browser','aria-label':inline?'Hugging Face access for model browser':'Hugging Face access'},h('h2',null,'Hugging Face access'),h('p',null,'Public models work without a token. A read token enables private and gated repositories your account can access.'),
+    h('p',{role:'status'},state.tokenConfigured?'Access token saved':'No token saved'),h('form',{onSubmit:save,className:'hub-repository-form'},h('input',{type:'password',autoComplete:'off',value:token,'aria-label':inline?'Hugging Face access token for model browser':'Hugging Face access token',placeholder:'hf_…',onChange:e=>setToken(e.target.value)}),
       h('button',{disabled:busy||!token},busy?'Saving…':'Save token')),state.tokenConfigured?h('button',{disabled:busy,onClick:remove},'Remove token'):null,message?h('p',{role:'status'},message):null);
 }
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
@@ -194,4 +224,4 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     active?h('p',{role:'status'},shared.progress?.currentFile||'Starting installation…'):null,error?h('p',{role:'alert'},error):null,
     entry.downloadProgress?.status==='failed'?h('p',{role:'alert'},entry.downloadProgress.error):null);
 }
-const $hubStyle=document.createElement('style');$hubStyle.textContent=`.hub-browser{padding:16px;border:1px solid var(--border,#34404c);border-radius:10px;margin:16px 0}.hub-browser h3{margin:0 0 8px}.hub-browser p{font-size:12px}.hub-repository-form{display:flex;gap:10px;flex-wrap:wrap}.hub-repository-form input{flex:1;min-width:260px}.hub-plan{margin-top:14px}.hub-variant-list{display:grid;gap:9px;max-height:240px;overflow:auto;margin:12px 0}.hub-variant-list label{display:flex;gap:10px}.hub-model-card header{display:flex;gap:12px;justify-content:space-between}.hub-model-card label{display:grid;gap:8px}.hub-model-card footer{display:flex;gap:8px}`;document.head.appendChild($hubStyle);
+const $hubStyle=document.createElement('style');$hubStyle.textContent=`.hub-browser{padding:16px;border:1px solid var(--border,#34404c);border-radius:10px;margin:16px 0}.hub-browser h3{margin:0 0 8px}.hub-browser p{font-size:12px}.hub-repository-form{display:flex;gap:10px;flex-wrap:wrap}.hub-repository-form input{flex:1;min-width:260px}.hub-repository-form input,.hub-search-filters input,.hub-search-filters select{color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px;font:inherit;min-height:42px;box-sizing:border-box}.hub-repository-form input:focus,.hub-search-filters input:focus,.hub-search-filters select:focus{outline:2px solid var(--theme-accent,#6dacf5);outline-offset:2px}.hub-repository-form input::placeholder,.hub-search-filters input::placeholder{color:var(--theme-muted,#aab7c6)}.hub-search-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0}.hub-search-filters label{display:grid;gap:6px;font-size:12px}.hub-search-filters input,.hub-search-filters select{width:100%;min-width:0}.hub-private-search{display:flex;align-items:center;gap:8px;margin:12px 0}.hub-browser summary{cursor:pointer;color:var(--theme-text,#dbe5f0);padding:8px 0}.hub-search-results{display:grid;gap:8px;max-height:350px;overflow:auto;margin:12px 0}.hub-search-results button{display:grid;gap:6px;text-align:left;padding:12px;min-height:48px;overflow-wrap:anywhere}.hub-search-results span{color:var(--theme-muted,#aab7c6);font-size:12px}.hub-plan{margin-top:14px}.hub-variant-list{display:grid;gap:9px;max-height:240px;overflow:auto;margin:12px 0}.hub-variant-list label{display:flex;gap:10px}.hub-model-card header{display:flex;gap:12px;justify-content:space-between}.hub-model-card label{display:grid;gap:8px}.hub-model-card footer{display:flex;gap:8px}`;document.head.appendChild($hubStyle);

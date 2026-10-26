@@ -1,0 +1,1049 @@
+{
+  "_id": "6ad46bb8f3bd06768c76e02d",
+  "id": "axiomofmind/Moss-image-nsfw-uncensored-lora",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "safetensors",
+    "text-to-image",
+    "lora",
+    "moss-image",
+    "nsfw",
+    "adult-content",
+    "template:sd-lora",
+    "base_model:OpenMOSS-Team/MOSS-Image-SFT",
+    "base_model:adapter:OpenMOSS-Team/MOSS-Image-SFT",
+    "license:apache-2.0",
+    "region:us",
+    "not-for-all-audiences"
+  ],
+  "downloads": 27073,
+  "likes": 430,
+  "modelId": "axiomofmind/Moss-image-nsfw-uncensored-lora",
+  "author": "axiomofmind",
+  "sha": "5f24e258ebb2a7d8aa77ee4940504dd57b54d5b9",
+  "lastModified": "2026-10-25T04:13:37.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "moss_xvstyle, a close-up photograph of an adult woman with fair skin and long blonde hair, viewed from behind as she bends forward over a gray surface. Her body is positioned with her buttocks prominently displayed, revealing her vulva and labia in a natural, unposed state. She wears a white thong that is pulled down to expose her intimate area. The lighting is soft and natural, highlighting the smooth texture of her skin. The background is blurred, suggesting an indoor setting with neutral tones.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_0_s0p9.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, A full-body photograph shows an adult woman with a curvaceous body and long brown hair styled in a braid, kneeling on a wooden floor with her back to the camera and her head resting on her arms. Her skin tone is light tan, and she is completely nude, with her large buttocks prominently displayed and her vulva visible between her thighs. She wears a gold anklet and a green floral hair accessory. Her gaze is directed downward, and her expression is neutral. The setting is a bedroom with a large mirror reflecting her pose, a white upholstered chair, and light-colored curtains. The lighting is soft and indoor, and the camera angle is a medium shot from behind.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_1_s0p8.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, a nude adult woman with fair skin and shoulder-length light brown hair is photographed in a medium close-up from a slightly low angle. She is crouching with her legs spread wide, exposing her vulva and labia, while her left hand rests on a wooden surface behind her. Her right arm is raised above her head. She has a belly button piercing with a silver stud and is wearing white ankle socks with yellow smiley faces. Her facial expression is neutral, and she gazes directly at the camera. The setting is an indoor room with a white wall, a dark television screen, and a white lamp in the background. The lighting is soft and even, highlighting her smooth skin and large breasts. The image is a photograph.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_3_s0p9.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, an adult woman with long blonde hair styled in loose waves and fair skin is positioned in a close-up POV shot, lying on her back with her legs spread wide to expose her vulva and labia. She wears a black halter-style top that leaves her breasts bare and has a tattoo on her lower abdomen. Her right hand rests between her thighs with fingers near her clitoris, and she wears a ring on her finger. Her mouth is slightly open and she gazes directly at the camera with an aroused expression. The setting appears to be a modern indoor room with light-colored walls, a metal railing, and wooden cabinetry in the background, illuminated by soft overhead lighting. The image is a photograph.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_6_s0p8.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, A close-up photograph of an adult woman lying on her side on a gray fabric surface, her left hand resting on her upper thigh with pink-painted fingernails visible. She has light brown skin and is nude, with her legs bent and pressed together, exposing her vulva and inner thighs. Her gaze is directed toward the camera with a neutral expression. The background is softly blurred, suggesting an indoor setting with natural lighting. The image is a photograph.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/sft_lora_sample_7.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, A realistic adult photograph of a curvy woman with long dark wavy hair kneeling near the edge of an unmade bed in a rear three-quarter pose. She wears a burgundy lace camisole lifted above her waist and matching panties pulled down around her upper thighs, leaving her buttocks, vulva, and labia visibly exposed. She looks back over her shoulder toward the camera with a calm expression. Soft bedside lamplight mixes with cool evening window light, creating detailed natural skin texture and gentle shadows. The framing is a medium full-body portrait in a tasteful contemporary bedroom.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-1-rear-bedside-pose.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, A close natural-light photograph of an adult woman with warm brown skin and short curly black hair reclining on her side across a deep green velvet sofa. She is nude with her upper leg raised and bent, naturally revealing her breasts, inner thighs, vulva, and labia while her lower hand rests loosely on her hip. She looks directly at the camera with a neutral, intimate expression. Diffuse morning light from a nearby window creates soft dimensional shadows, realistic pores, and detailed fabric texture. The composition is a horizontal-feeling three-quarter body portrait captured from sofa height in a quiet living room.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-2-reclining-sofa-side-pose.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, A realistic frontal photograph of an adult East Asian woman with long straight black hair seated on the edge of a white marble bathroom vanity. She wears an open cream satin robe around her shoulders and is otherwise nude, sitting with her legs apart so her breasts, vulva, and labia are naturally and clearly visible. One hand rests beside her on the counter while the other touches the robe collar. Her expression is calm and self-assured as she looks toward the camera. Soft morning window light and warm vanity bulbs create balanced highlights, realistic skin texture, and gentle shadows in a refined modern bathroom.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-3-marble-vanity.png"
+      }
+    },
+    {
+      "text": "moss_xvstyle, A detailed adult photograph of a freckled woman with long copper-red hair posed on her hands and knees across rumpled white bedsheets, viewed from a rear three-quarter angle. She wears a sheer pale-blue lingerie top and matching underwear pulled down below her buttocks, clearly revealing her vulva and labia between her thighs. She turns her head toward the camera with a relaxed expression. Strong but diffused midday sunlight passes through gauzy curtains, producing natural skin tones, visible freckles, soft shadows, and crisp bedding texture in an airy bedroom.",
+      "output": {
+        "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-4-sunlit-bed-rear.png"
+      }
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "base_model": "OpenMOSS-Team/MOSS-Image-SFT",
+    "base_model_relation": "adapter",
+    "license": "apache-2.0",
+    "library_name": "diffusers",
+    "pipeline_tag": "text-to-image",
+    "instance_prompt": "moss_xvstyle",
+    "tags": [
+      "text-to-image",
+      "diffusers",
+      "lora",
+      "moss-image",
+      "nsfw",
+      "adult-content",
+      "template:sd-lora"
+    ],
+    "widget": [
+      {
+        "text": "moss_xvstyle, a close-up photograph of an adult woman with fair skin and long blonde hair, viewed from behind as she bends forward over a gray surface. Her body is positioned with her buttocks prominently displayed, revealing her vulva and labia in a natural, unposed state. She wears a white thong that is pulled down to expose her intimate area. The lighting is soft and natural, highlighting the smooth texture of her skin. The background is blurred, suggesting an indoor setting with neutral tones.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_0_s0p9.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, A full-body photograph shows an adult woman with a curvaceous body and long brown hair styled in a braid, kneeling on a wooden floor with her back to the camera and her head resting on her arms. Her skin tone is light tan, and she is completely nude, with her large buttocks prominently displayed and her vulva visible between her thighs. She wears a gold anklet and a green floral hair accessory. Her gaze is directed downward, and her expression is neutral. The setting is a bedroom with a large mirror reflecting her pose, a white upholstered chair, and light-colored curtains. The lighting is soft and indoor, and the camera angle is a medium shot from behind.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_1_s0p8.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, a nude adult woman with fair skin and shoulder-length light brown hair is photographed in a medium close-up from a slightly low angle. She is crouching with her legs spread wide, exposing her vulva and labia, while her left hand rests on a wooden surface behind her. Her right arm is raised above her head. She has a belly button piercing with a silver stud and is wearing white ankle socks with yellow smiley faces. Her facial expression is neutral, and she gazes directly at the camera. The setting is an indoor room with a white wall, a dark television screen, and a white lamp in the background. The lighting is soft and even, highlighting her smooth skin and large breasts. The image is a photograph.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_3_s0p9.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, an adult woman with long blonde hair styled in loose waves and fair skin is positioned in a close-up POV shot, lying on her back with her legs spread wide to expose her vulva and labia. She wears a black halter-style top that leaves her breasts bare and has a tattoo on her lower abdomen. Her right hand rests between her thighs with fingers near her clitoris, and she wears a ring on her finger. Her mouth is slightly open and she gazes directly at the camera with an aroused expression. The setting appears to be a modern indoor room with light-colored walls, a metal railing, and wooden cabinetry in the background, illuminated by soft overhead lighting. The image is a photograph.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative_lora_sample_6_s0p8.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, A close-up photograph of an adult woman lying on her side on a gray fabric surface, her left hand resting on her upper thigh with pink-painted fingernails visible. She has light brown skin and is nude, with her legs bent and pressed together, exposing her vulva and inner thighs. Her gaze is directed toward the camera with a neutral expression. The background is softly blurred, suggesting an indoor setting with natural lighting. The image is a photograph.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/sft_lora_sample_7.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, A realistic adult photograph of a curvy woman with long dark wavy hair kneeling near the edge of an unmade bed in a rear three-quarter pose. She wears a burgundy lace camisole lifted above her waist and matching panties pulled down around her upper thighs, leaving her buttocks, vulva, and labia visibly exposed. She looks back over her shoulder toward the camera with a calm expression. Soft bedside lamplight mixes with cool evening window light, creating detailed natural skin texture and gentle shadows. The framing is a medium full-body portrait in a tasteful contemporary bedroom.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-1-rear-bedside-pose.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, A close natural-light photograph of an adult woman with warm brown skin and short curly black hair reclining on her side across a deep green velvet sofa. She is nude with her upper leg raised and bent, naturally revealing her breasts, inner thighs, vulva, and labia while her lower hand rests loosely on her hip. She looks directly at the camera with a neutral, intimate expression. Diffuse morning light from a nearby window creates soft dimensional shadows, realistic pores, and detailed fabric texture. The composition is a horizontal-feeling three-quarter body portrait captured from sofa height in a quiet living room.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-2-reclining-sofa-side-pose.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, A realistic frontal photograph of an adult East Asian woman with long straight black hair seated on the edge of a white marble bathroom vanity. She wears an open cream satin robe around her shoulders and is otherwise nude, sitting with her legs apart so her breasts, vulva, and labia are naturally and clearly visible. One hand rests beside her on the counter while the other touches the robe collar. Her expression is calm and self-assured as she looks toward the camera. Soft morning window light and warm vanity bulbs create balanced highlights, realistic skin texture, and gentle shadows in a refined modern bathroom.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-3-marble-vanity.png"
+        }
+      },
+      {
+        "text": "moss_xvstyle, A detailed adult photograph of a freckled woman with long copper-red hair posed on her hands and knees across rumpled white bedsheets, viewed from a rear three-quarter angle. She wears a sheer pale-blue lingerie top and matching underwear pulled down below her buttocks, clearly revealing her vulva and labia between her thighs. She turns her head toward the camera with a relaxed expression. Strong but diffused midday sunlight passes through gauzy curtains, producing natural skin tones, visible freckles, soft shadows, and crisp bedding texture in an airy bedroom.",
+        "output": {
+          "url": "https://huggingface.co/axiomofmind/Moss-image-nsfw-uncensored-lora/resolve/main/images/alternative-comparison-checkpoint-1750-scale-0p8-4-sunlit-bed-rear.png"
+        }
+      }
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "23757e6734bf1351eddb25faf8c40eb430459fa2",
+      "size": 6680
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "MOSS-Image-NSFW-Uncensored-LoRA-ComfyUI.safetensors",
+      "blobId": "eb149ef0dd6d905e58d0559b2a90d0b4529baf54",
+      "size": 74379592,
+      "lfs": {
+        "sha256": "4480e3154fd663d5ee6daa86ac59d0fd211ce495b9dfeedfb914c38f777f3a0b",
+        "size": 74379592,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "fd94d20d9013440faa2bbf734b250235aad9482b",
+      "size": 33917
+    },
+    {
+      "rfilename": "adapter_config.json",
+      "blobId": "55a1d8734f0a1acb7c45b99d2be003981f7e795d",
+      "size": 203
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p7-0-frontal-window-portrait.png",
+      "blobId": "75d9cf23e40dd20c87a1b8769f154bd263c64916",
+      "size": 1096844,
+      "lfs": {
+        "sha256": "7d3d286d3289e1ac1c19a907a13f93cfb4e0ae71917389ae89db6973d57e9bd0",
+        "size": 1096844,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p7-1-rear-bedside-pose.png",
+      "blobId": "7443905a855198e7dbf1333eaa610cfae703568a",
+      "size": 1034442,
+      "lfs": {
+        "sha256": "6c264000e8b6ff774d608b02e514b25832d81e4f5a9c385aef49020b6481940f",
+        "size": 1034442,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p7-2-reclining-sofa-side-pose.png",
+      "blobId": "78e40f70b440f72465e245f6c47ab48c0daa1928",
+      "size": 1184746,
+      "lfs": {
+        "sha256": "3cda0475a068056474493f90a6efe90e6a642203deca34b0f212095da3028998",
+        "size": 1184746,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p8-0-frontal-window-portrait.png",
+      "blobId": "a82be36b5dc336422f634232782c04059e9b69fe",
+      "size": 1093573,
+      "lfs": {
+        "sha256": "1ee529891a759b3035ae753d23d940cc13f4f5cfd5da1faeaed9d4aab525bcfe",
+        "size": 1093573,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p8-1-rear-bedside-pose.png",
+      "blobId": "3c7c5b9044b7ddff8ee2b2de6808da10f6dee2f3",
+      "size": 1063499,
+      "lfs": {
+        "sha256": "8ec7fe12c0b025878cdfca1ba9f8f0961ee4b33d690f12c8464b16b9e2ffbe83",
+        "size": 1063499,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p8-2-reclining-sofa-side-pose.png",
+      "blobId": "91896dd024aaf2bd6b6b3366b3b9235509411855",
+      "size": 1219448,
+      "lfs": {
+        "sha256": "9e86962e16e42f54c3f3412fa9732129c2916111ef8ce60d566437f0d81e09af",
+        "size": 1219448,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p8-3-marble-vanity.png",
+      "blobId": "e18212624328b8f5aaf095f7a3c3465e1e6f4252",
+      "size": 1118385,
+      "lfs": {
+        "sha256": "db6e7509f9b21124d0dd674607495608ed96eb83fb66e50f02c9e0b993ec435f",
+        "size": 1118385,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p8-4-sunlit-bed-rear.png",
+      "blobId": "0d9122254d61dfc7128d72b205f69eba2e665987",
+      "size": 1424877,
+      "lfs": {
+        "sha256": "dc1ed74b10e6fd36be2f84c35e85b2db4632656f9d53c4afebf546684cd8b61d",
+        "size": 1424877,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-checkpoint-1750-scale-0p8-5-leather-chair-recline.png",
+      "blobId": "a6aeb9fb570b4343110b8d3348c61cfd20c84b3f",
+      "size": 1215461,
+      "lfs": {
+        "sha256": "e53f61a00cb45ae7525623ae67a70f0eb738fabb30b99a51ebc3c3a79da5e5ab",
+        "size": 1215461,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-primary-scale-0p7-0-frontal-window-portrait.png",
+      "blobId": "922895a45af6a2a0f2cd51622589077e66ca8f64",
+      "size": 1131475,
+      "lfs": {
+        "sha256": "f36f634d797339b89e1aa5904fb0d9b9afb85a8ed1ffdfe8108c804f73ab83c8",
+        "size": 1131475,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-primary-scale-0p7-1-rear-bedside-pose.png",
+      "blobId": "32a6f416371309dabb7bf93f010067f32ce03ab2",
+      "size": 1129621,
+      "lfs": {
+        "sha256": "9cc74eecdeafba75164df281c445ec3a92f6116f17bf5db11688d1ebaf8e0e06",
+        "size": 1129621,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-primary-scale-0p7-2-reclining-sofa-side-pose.png",
+      "blobId": "3555ad3ddeaaab46901dd024a3b0523d132652af",
+      "size": 1209713,
+      "lfs": {
+        "sha256": "cbdcb04cef5bc8eb946d039a8dad2b3a74c65d8970c4ccf1af77b23329713304",
+        "size": 1209713,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-primary-scale-0p7-3-marble-vanity.png",
+      "blobId": "2c8f529f35b5b869753768a779cf9c6056f5cee6",
+      "size": 1166093,
+      "lfs": {
+        "sha256": "349f1459a842099a5dc53657ebf2879092fee5cf7f7d5d9e80c1bba18ce714ab",
+        "size": 1166093,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-primary-scale-0p7-4-sunlit-bed-rear.png",
+      "blobId": "edd9c7545718a77c28e75e9b66228a2b64a6ff14",
+      "size": 1326152,
+      "lfs": {
+        "sha256": "2ddbfba6618e2f4ff8c47fc9977a536ba92277348ed71341546e629ac6825d20",
+        "size": 1326152,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-primary-scale-0p7-5-leather-chair-recline.png",
+      "blobId": "a113d53218572fd6e311e6fcac5424b7a047f7bd",
+      "size": 1219495,
+      "lfs": {
+        "sha256": "b33c275ed50ba40c7a727efb85b08db96965ded61a75ac7efa0a1a48e99ef2be",
+        "size": 1219495,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-stock-sft-0-frontal-window-portrait.png",
+      "blobId": "fb17cfda89d0591267f4646f7c199603e4d73f5e",
+      "size": 1067982,
+      "lfs": {
+        "sha256": "064385b272f18928cc64a5da563760e9845c583cf774017134ecee0479f2f6a7",
+        "size": 1067982,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-stock-sft-1-rear-bedside-pose.png",
+      "blobId": "c235200c805dc00ea5b2d8964e2237f40e4b9c2b",
+      "size": 1074980,
+      "lfs": {
+        "sha256": "b048fe6ab5e19b00d3f717d762f2ea1688eab2736d114b5e89f9050e6b3799dd",
+        "size": 1074980,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-stock-sft-2-reclining-sofa-side-pose.png",
+      "blobId": "b4348009cdd0e2a79730c04e9f4a88a0924c842a",
+      "size": 1125721,
+      "lfs": {
+        "sha256": "e36eb4b5c53f9c58ce825b1c2618ab99e476f3471d1273e1ff465d02f69e1499",
+        "size": 1125721,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-stock-sft-3-marble-vanity.png",
+      "blobId": "deb508c575fb49f6fefd7a38dde526e3920b6973",
+      "size": 1096848,
+      "lfs": {
+        "sha256": "cec1363775691cf0e3311004c740db40757f5b078d4c925cadb48c81ab892c98",
+        "size": 1096848,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-stock-sft-4-sunlit-bed-rear.png",
+      "blobId": "9fab37b080631def7ba175653693672bd49a1760",
+      "size": 1295736,
+      "lfs": {
+        "sha256": "2158de00054ac73723eb3732b9067de0bc781b4e064560ec1a0874425b74e89a",
+        "size": 1295736,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative-comparison-stock-sft-5-leather-chair-recline.png",
+      "blobId": "a3d74ee017c7b3e3313f39817ae72738414d3860",
+      "size": 1198177,
+      "lfs": {
+        "sha256": "55cccb682bce4a9f238262bbaa75361b8d32fc9b0580d0854f4d621175d4e2ce",
+        "size": 1198177,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_0_s0p9.png",
+      "blobId": "0b9d8939f8d208ce59fa5978659e3c2c55aaff56",
+      "size": 1147627,
+      "lfs": {
+        "sha256": "dd823d5644b4dfcb15f6e522864a5bbf681273b85a9cf3ff332e133603c56c37",
+        "size": 1147627,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_1_s0p8.png",
+      "blobId": "3452be828b04452ff8da9c161db191d25ff09768",
+      "size": 1159119,
+      "lfs": {
+        "sha256": "bb8fc9843b2c23b9623d65dbc2c1400a4c738c7fd2e93ff5590f37a598932ce0",
+        "size": 1159119,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_2_s0p8.png",
+      "blobId": "67ac15d3f1817c75a5e8c77d7aae20f79c370956",
+      "size": 1166973,
+      "lfs": {
+        "sha256": "164d593d713147f3834e8c7bc199e6f38238c80f6ee021c14d7ed5eaac8def38",
+        "size": 1166973,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_3_s0p9.png",
+      "blobId": "61f5ac3525a0678242ad17495bfb457390a8badc",
+      "size": 1184013,
+      "lfs": {
+        "sha256": "2ff4c825d30107e811b8e26a80fb220e15d35052dbff5c54d7ab210809affb6e",
+        "size": 1184013,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_4_s0p8.png",
+      "blobId": "51b2191c9382f03988847e26cb49e3c78942a779",
+      "size": 1252256,
+      "lfs": {
+        "sha256": "a13a0e09c7672b212277e4d5d86e2c517dc863526385e45d9da9a64a8ccc02bb",
+        "size": 1252256,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_5_s0p9.png",
+      "blobId": "eac5a600cbe3ccbdb385624b1c0db37686318337",
+      "size": 1350246,
+      "lfs": {
+        "sha256": "33f3345245602a90a7b3d4dffdc997ca625a0f45814ec4e6e084ef9319ede56f",
+        "size": 1350246,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_6_s0p8.png",
+      "blobId": "dd91b2f3eff14c8b5345a29bb6f197f2530facb1",
+      "size": 1196451,
+      "lfs": {
+        "sha256": "86f7684d096aaf41e0a87b03de08319cfbc2ac186e171a283322d9681583d5be",
+        "size": 1196451,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/alternative_lora_sample_7_s0p9.png",
+      "blobId": "5af6c2411a7322410abe7c73f216dbbd44d559cf",
+      "size": 1178745,
+      "lfs": {
+        "sha256": "db9d110c70e9a83b0c2babd990a6c0365dbb3bfdd6d61173740ab1e51983d857",
+        "size": 1178745,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_0.png",
+      "blobId": "1f54ceb5023794c48909cf7185d5e26f51b04518",
+      "size": 1205845,
+      "lfs": {
+        "sha256": "82f8e01305af48617117de495aebfe5d92621b8d90684706e79ceb83e80f22c8",
+        "size": 1205845,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_1.png",
+      "blobId": "c32170b7227988dfa12bcdf5ccb45b74e12256b0",
+      "size": 1369469,
+      "lfs": {
+        "sha256": "06715b7e5b3e642a63e0d8741973d4906200ede135cff84e5cd70d3408439fc9",
+        "size": 1369469,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_2.png",
+      "blobId": "7dbdb86d4ba47acb93de736ad14c1cf92584ba6e",
+      "size": 1146690,
+      "lfs": {
+        "sha256": "691440e6fe3afdc3dddf8d61b1bfc64087bc3a2ba384bd7e245e9b589cecba71",
+        "size": 1146690,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_3.png",
+      "blobId": "e3f047400f89ec232714c0b2e724ef04e3bcf3da",
+      "size": 1389592,
+      "lfs": {
+        "sha256": "80be934054734136191f43231acbc804ee69632b47917229a1e8b4f60cbc74d5",
+        "size": 1389592,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_4.png",
+      "blobId": "7f7319da2a59972497c517d4ffb6fd2eed440de5",
+      "size": 1227505,
+      "lfs": {
+        "sha256": "5adc2d2da51afb930a2008af3ca46296c200ed30cf8db67cb51641ca143a9697",
+        "size": 1227505,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_5.png",
+      "blobId": "bce21f6b0a7bbaff3d2aee42810c240f603a6937",
+      "size": 1522596,
+      "lfs": {
+        "sha256": "445cf12719aa4618e1fd0a7550625e33df1d7c1a469f38bc57881c8330e8a7f4",
+        "size": 1522596,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_6.png",
+      "blobId": "f352c30f24daa9ab5e7ded715a2c5947044f7cb1",
+      "size": 1385549,
+      "lfs": {
+        "sha256": "bad2bcb26bff70c360982ab9bf58672ee9f6fd7f7c0611dfaf0abfe83e2ab0a0",
+        "size": 1385549,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/base_lora_sample_7.png",
+      "blobId": "60b9ea27d67bb5b01ed21f89b95bb6c3483703f9",
+      "size": 1335220,
+      "lfs": {
+        "sha256": "5870ba7c6a66d1d9f95e19e3efc32a0ab44e341ea65627dbb012d8299cad08e2",
+        "size": 1335220,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_0.png",
+      "blobId": "ad96b5de139ddb18341b4331afa7bfb117ba03b3",
+      "size": 990704,
+      "lfs": {
+        "sha256": "07479ec70ad80e4afbf768a8ca0b055d75633d2623c1e97472d6b6f01f2783d8",
+        "size": 990704,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_1.png",
+      "blobId": "515032b4721280d023a03566b743510892318273",
+      "size": 1192267,
+      "lfs": {
+        "sha256": "9e665a2f3b6303d1c34bff30fa9bd8a98050d7970d3f1b11abc9a8bee8f1e714",
+        "size": 1192267,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_2.png",
+      "blobId": "eda6fcd0c3c23b6cace1f42e4dc4bdc9f844328a",
+      "size": 1015631,
+      "lfs": {
+        "sha256": "16ab51fddbf4322970e868bc3fb2270e003a935e42f582a708aab7abec43811a",
+        "size": 1015631,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_3.png",
+      "blobId": "f5f1b506a030365312fd3ccfdc3d01c8755234f0",
+      "size": 1161817,
+      "lfs": {
+        "sha256": "3441e9b22fe353bca2248c2467ee9ead3151ea2a056b337748ffd0c42fe5ec3a",
+        "size": 1161817,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_4.png",
+      "blobId": "9c859792f4fb16214185ddacfdc9f259f35c7f10",
+      "size": 1072911,
+      "lfs": {
+        "sha256": "34854e0cc9e338c5e8d187c11af3feae6c01d7a37c891001cb1031da512a31f1",
+        "size": 1072911,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_5.png",
+      "blobId": "22c6fd070e7061425aa0c8151e18387ac3a9b32d",
+      "size": 1367166,
+      "lfs": {
+        "sha256": "25855063e6f493b5445e3a7e5d4fc621075449567bf7c5c906eb669e928e3c08",
+        "size": 1367166,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_6.png",
+      "blobId": "9a34132fe522c6b3f0ed02561db9e810bdd88c4a",
+      "size": 1235253,
+      "lfs": {
+        "sha256": "66c18f13674236aea69bfc9fdf0c1dcc52b89c216bc9641dd8528e9a6b4c617b",
+        "size": 1235253,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/sft_lora_sample_7.png",
+      "blobId": "8b23d0e38bfb2e7debbd5a90bebe6738d0dc8be0",
+      "size": 1104270,
+      "lfs": {
+        "sha256": "45c265c1993de77a3965406f577de1fa8ca32d3bbf05d275a6ea2b56dfa53943",
+        "size": 1104270,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_0.png",
+      "blobId": "b9fc593647ef80932088daec592a15603d3b69a7",
+      "size": 954763,
+      "lfs": {
+        "sha256": "5146f35af4a729477fcede3c934065f5bb73673c32494d8aa8682aeb785b32b3",
+        "size": 954763,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_1.png",
+      "blobId": "f3f059810ec038d9f1e9715f0d12a1d02581615b",
+      "size": 1151748,
+      "lfs": {
+        "sha256": "1c0e7d12af21f6eb219127bc96c86e0b7c1aa733f39931bee68b1ba6200aa92b",
+        "size": 1151748,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_2.png",
+      "blobId": "68da47366f16e99b38c24733160e2fcb09c03fd9",
+      "size": 907567,
+      "lfs": {
+        "sha256": "b6366265e40104b40c67d383c8c56b432e53c68b85dfc550d62034e8b87e1aa3",
+        "size": 907567,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_3.png",
+      "blobId": "50c00b7e8a52d36be7218f637f34d11bf2d4910f",
+      "size": 1060524,
+      "lfs": {
+        "sha256": "ae8b1168b528218e23a30a7d05213f47a6ac11ff1386059592adcc55a6b2757b",
+        "size": 1060524,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_4.png",
+      "blobId": "3bd807d6a8c4913505184069cb19cd1132c5f594",
+      "size": 1043733,
+      "lfs": {
+        "sha256": "6845f79401681a82e4e6955cc47539a006d95bfaa5916697f37e763784b941db",
+        "size": 1043733,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_5.png",
+      "blobId": "ff4b7aff257831e8a797d25925344e113af7e35d",
+      "size": 1281033,
+      "lfs": {
+        "sha256": "a0a1602e340ca120cdee083ae4f0cfd0a0e76f0f9e34cbd47eab05cdae49295c",
+        "size": 1281033,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_6.png",
+      "blobId": "07c32a97dcadaedc4d653f22c05bc7caf2f74a95",
+      "size": 1136561,
+      "lfs": {
+        "sha256": "ca5f2723cdddd62f1e441f1799a5b14547794cbfc3c0d8608abff7060bf8f03e",
+        "size": 1136561,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/stock_sft_sample_7.png",
+      "blobId": "413d21eea901dac80f0f2243095dfdf1e7ab916e",
+      "size": 1097135,
+      "lfs": {
+        "sha256": "a9007b18660a4800a0db8b05817269db30f7084bf3ac1d3c41933a507b7c1a40",
+        "size": 1097135,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "merged-model/.gitattributes",
+      "blobId": "8616a0640af640df6f924caacf83058f62b4a403",
+      "size": 663
+    },
+    {
+      "rfilename": "merged-model/.gitignore",
+      "blobId": "f42621bc383dac4b301daf05a85126ffa710b570",
+      "size": 27
+    },
+    {
+      "rfilename": "merged-model/LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "merged-model/assets/comparison/base.webp",
+      "blobId": "62fe3f952c62d3da172a28466b81acf0368a6a85",
+      "size": 101944,
+      "lfs": {
+        "sha256": "dd0eccae7f9c591b65c8161bb2d8515a3fdfe124d4be015f660ffa96c5c7a8b8",
+        "size": 101944,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "merged-model/assets/comparison/sft.webp",
+      "blobId": "99cea7763baf61db22749c3c9e7a5f5144402c45",
+      "size": 152796,
+      "lfs": {
+        "sha256": "de1ba44f48d49e792b16aac26f2d260beefbcb9fbfa72f3ace363ff8a9917f71",
+        "size": 152796,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "merged-model/assets/feishu-builders-badge.svg",
+      "blobId": "5c5c6a76fe5753a802dacdc798e3d4d9ab1fde58",
+      "size": 8007
+    },
+    {
+      "rfilename": "merged-model/assets/lockup-dark.svg",
+      "blobId": "88b992738f3519681f8a9307a0918978d5bbc911",
+      "size": 9826
+    },
+    {
+      "rfilename": "merged-model/assets/lockup-light.svg",
+      "blobId": "84b3a608bd86352302c3c5ca8db446f2b7bc7908",
+      "size": 9826
+    },
+    {
+      "rfilename": "merged-model/assets/modelscope-base-badge.svg",
+      "blobId": "4ac81084919c7019d68513a09c20c66544297d8b",
+      "size": 1243
+    },
+    {
+      "rfilename": "merged-model/assets/modelscope-sft-badge.svg",
+      "blobId": "e9599798f95df2b1089463e977bc4fb39b70a5a7",
+      "size": 1239
+    },
+    {
+      "rfilename": "merged-model/assets/showcase/layout-bboxes.webp",
+      "blobId": "b986f798563739099bd6d34b61f669d96f6d7f13",
+      "size": 851254,
+      "lfs": {
+        "sha256": "0cd091fbd9145b9dc640e1d70dc10e6776b661bb1f443bdefadc9a24f78214d1",
+        "size": 851254,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "merged-model/assets/showcase/overview.webp",
+      "blobId": "ab87d5626213e6309902907094cf844bd78027ce",
+      "size": 1128906,
+      "lfs": {
+        "sha256": "ae5039bc1ea15b1be43662aabb90539332815230bbc7f56d9481ce53f79131f1",
+        "size": 1128906,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "merged-model/assets/showcase/overview2.webp",
+      "blobId": "330808085a71decddff7d5a58ad743c981a2f02a",
+      "size": 4626816,
+      "lfs": {
+        "sha256": "a51172680bcddd6fad2edf0bc6bd0c26e509aa52ac9e3b57f95e914bd6d223f0",
+        "size": 4626816,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "merged-model/assets/showcase/text-rendering.webp",
+      "blobId": "c7acce2e9f6eebf9eba7914af95a51eec4143b1b",
+      "size": 1861652,
+      "lfs": {
+        "sha256": "e3dac88a40868bf4a51b27d74b09cbddd30260f1ce118c6d6ba60ad5b97ea83e",
+        "size": 1861652,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "merged-model/assets/teaser.webp",
+      "blobId": "cc8cfeff5e787a107bf013d59405aad5f7f897bd",
+      "size": 438380,
+      "lfs": {
+        "sha256": "47d1ae8ebf4f7dc0db2c85dc7f71f182cd2205b19932211e831e1cb24b17efc1",
+        "size": 438380,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "merged-model/merge_info.json",
+      "blobId": "73109ff9bb7317d782ab6121e640e83e7e22352f",
+      "size": 827
+    },
+    {
+      "rfilename": "merged-model/model_index.json",
+      "blobId": "e0d852161bd5721db9faf3827b6a589cc063840f",
+      "size": 412
+    },
+    {
+      "rfilename": "merged-model/pipeline_moss_image.py",
+      "blobId": "60ceb4b6962a6b3d3c57e404b4d7d26fa4b49b07",
+      "size": 25060
+    },
+    {
+      "rfilename": "merged-model/scheduler/pipeline_moss_image.py",
+      "blobId": "60ceb4b6962a6b3d3c57e404b4d7d26fa4b49b07",
+      "size": 25060
+    },
+    {
+      "rfilename": "merged-model/scheduler/scheduler_config.json",
+      "blobId": "899d57de13c4ed6ee76ed25117e382e99efbfccc",
+      "size": 494
+    },
+    {
+      "rfilename": "merged-model/text_encoder/config.json",
+      "blobId": "a745bd0815eddf6b913e3a4ecf9cc9ed5f5f5625",
+      "size": 2813
+    },
+    {
+      "rfilename": "merged-model/text_encoder/model-00001-of-00004.safetensors",
+      "blobId": "0d38dfc792ed083694e3c270b665ad1829b55f2f",
+      "size": 4973910744,
+      "lfs": {
+        "sha256": "abfaa3d3a8612508c85ee8f6da9c734b862f10298b903765c4ad384177c32b0b",
+        "size": 4973910744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "merged-model/text_encoder/model-00002-of-00004.safetensors",
+      "blobId": "23d42f85dff3e5c4e640717ea5add712b8d0b76a",
+      "size": 4988364288,
+      "lfs": {
+        "sha256": "9112637fa6bf4d07bafd6ae268852b18d3d0c1242f4ee901c5579006e5bd4894",
+        "size": 4988364288,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "merged-model/text_encoder/model-00003-of-00004.safetensors",
+      "blobId": "11b611fa24601f8c4997820bce15e78aa54ee92f",
+      "size": 4954202112,
+      "lfs": {
+        "sha256": "956f1ef51d0cfe610b0d22987c0b7821c36e3ce228abceccef523518bcf079dc",
+        "size": 4954202112,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "merged-model/text_encoder/model-00004-of-00004.safetensors",
+      "blobId": "237590900c1935ec3fa8faee4e9e605368108631",
+      "size": 1869001848,
+      "lfs": {
+        "sha256": "9e21d20e8adde88c3e0b65d4a0d251f143d98ee9d52db36b4348361091e4e208",
+        "size": 1869001848,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "merged-model/text_encoder/model.safetensors.index.json",
+      "blobId": "f0ed1b0ede41b6f8b6e1170abebf8d4468a93779",
+      "size": 64641
+    },
+    {
+      "rfilename": "merged-model/tokenizer/chat_template.jinja",
+      "blobId": "a585dec894e63da457d9440ec6aa7caa16d20860",
+      "size": 7756
+    },
+    {
+      "rfilename": "merged-model/tokenizer/tokenizer.json",
+      "blobId": "5520bfd2dd834ce386c1312c410fa71af56db5ad",
+      "size": 19989325,
+      "lfs": {
+        "sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+        "size": 19989325,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "merged-model/tokenizer/tokenizer_config.json",
+      "blobId": "6913705fa6a05ee4498df98d776803ba8b39f413",
+      "size": 1123
+    },
+    {
+      "rfilename": "merged-model/transformer/config.json",
+      "blobId": "c7399a7b727ef8774dece76c543d33ae7e813e98",
+      "size": 406
+    },
+    {
+      "rfilename": "merged-model/transformer/diffusion_pytorch_model-00001-of-00003.safetensors",
+      "blobId": "063a866aea26b410199c4846cbdfbdf351f57a84",
+      "size": 4991978016,
+      "lfs": {
+        "sha256": "732f946c7e59b3051694f52a3bf9953f2333d821d98df7a4d2691d60a5739d2b",
+        "size": 4991978016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "merged-model/transformer/diffusion_pytorch_model-00002-of-00003.safetensors",
+      "blobId": "0a711466c9d74d306a05cce129b481520c020020",
+      "size": 4983137016,
+      "lfs": {
+        "sha256": "ff9005c244c2a294ab7939e17ab33b62f8f70a4809b08035ecbe05c992b36f00",
+        "size": 4983137016,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "merged-model/transformer/diffusion_pytorch_model-00003-of-00003.safetensors",
+      "blobId": "47afb5b30c781b537df123350fee6589d7b000c2",
+      "size": 189549184,
+      "lfs": {
+        "sha256": "b4e65ca0fe215e043fa7b56c0dfb3bef709b122b652db485cc8749f4053e63a5",
+        "size": 189549184,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "merged-model/transformer/diffusion_pytorch_model.safetensors.index.json",
+      "blobId": "30826725e02cfa75772b14ff6a8aa232629e08a9",
+      "size": 40768
+    },
+    {
+      "rfilename": "merged-model/vae/config.json",
+      "blobId": "3c982a055138a9d5b52bac025c1831949c489a92",
+      "size": 838
+    },
+    {
+      "rfilename": "merged-model/vae/diffusion_pytorch_model.safetensors",
+      "blobId": "e81a7a291d5de6a0b0303cf19f07b109bebfde1b",
+      "size": 249521372,
+      "lfs": {
+        "sha256": "c3bdf94dc67ec69b30ea9fe1fa8340085679cae64d019f7c7e4a9921f1a7f17a",
+        "size": 249521372,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "original-checkpoint-2000/MOSS-Image-NSFW-Uncensored-LoRA-ComfyUI.safetensors",
+      "blobId": "d84fed63b2924cf9f2453c469caed450a88a7c41",
+      "size": 74379584,
+      "lfs": {
+        "sha256": "f766c5774a3fb68caa490bbc3f8153e8b5ccacafc36a1ee7f9ad6ec230ff11a3",
+        "size": 74379584,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "original-checkpoint-2000/adapter_config.json",
+      "blobId": "55a1d8734f0a1acb7c45b99d2be003981f7e795d",
+      "size": 203
+    },
+    {
+      "rfilename": "original-checkpoint-2000/pytorch_lora_weights.safetensors",
+      "blobId": "8c891f57671375ce2f97cb32d10963ff4ee9aed9",
+      "size": 74377208,
+      "lfs": {
+        "sha256": "d62ce599744d3e3f07f55a1f539052a99acc38d34bf35c13518aa949fc856afa",
+        "size": 74377208,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "pytorch_lora_weights.safetensors",
+      "blobId": "bf217e05fec086fbc96ae6ac7672726798e79b52",
+      "size": 74377208,
+      "lfs": {
+        "sha256": "79b9c653f58453f84a44f2be67aa45f4f998618b0af5d84a5b9066e8c5666ba3",
+        "size": 74377208,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "scripts/convert_moss_lora_for_comfyui.py",
+      "blobId": "fdb30b08072e9a23de7cfba00ec025b15f4886e1",
+      "size": 3720
+    },
+    {
+      "rfilename": "scripts/merge_moss_lora.py",
+      "blobId": "dfeed0dffdf510bebc75dda4f9fde3a884f9c1c5",
+      "size": 6787
+    }
+  ],
+  "spaces": [
+    "Matt6134/moss-image-nsfw-lora",
+    "asrarkhann112/moss-image-nsfw-lora",
+    "sandy-677/moss-nsfw-lora-demo",
+    "crxop/moss-image-studio",
+    "eren544/moss-nsfw-lora-demo",
+    "dakshrealm/NSFW",
+    "Maadi167/moss-image-lora-demo",
+    "cortis/moss-image-nsfw-uncensored-demo",
+    "Riknel/moss-image-nsfw-lora-demo",
+    "ludo727/moss-image-nsfw-lora",
+    "Arif1110/moss-image-nsfw-lora",
+    "niuhesanlu/moss-image-lora-demo",
+    "Xsaaadd/moss-image-nsfw-uncensored-demo",
+    "Dani987N/moss-image-nsfw-lora",
+    "asim586/moss-image-adult-fiction-demo",
+    "sniperkudus/moss-nsfw-lora-demo",
+    "Tas112/moss-sft-kromoss"
+  ],
+  "createdAt": "2026-10-18T06:48:24.000Z",
+  "usedStorage": 37761904059
+}

@@ -38,6 +38,9 @@ function createInstallNotificationPolicy(options = {}) {
   }
   function observe(progress) {
     load();
+    // Phonon revalidates its installed runtime on startup. A new verifier ID
+    // is not another installation; explicit admission already calls begin().
+    if(progress?.modelId==='phonon-2'&&['preparing','verifying'].includes(progress.phase))return;
     const previous = [...dismissed.values()].filter(item => item.modelId === progress?.modelId), id = operation(progress);
     if (previous.length && id && !previous.some(item => item.operationId === id) && !terminal.has(progress.phase)) begin(progress.modelId);
   }
@@ -45,6 +48,7 @@ function createInstallNotificationPolicy(options = {}) {
     load();
     if (!terminal.has(progress?.phase)) return false;
     const previous = [...dismissed.values()].filter(item => item.modelId === progress.modelId), id = operation(progress);
+    if(progress.modelId==='phonon-2'&&progress.phase==='ready'&&previous.length)return true;
     // Legacy catalog progress can omit the ID present in runtime status. Keep
     // its acknowledgement until this model starts another real operation.
     return previous.some(item => !item.operationId || !id || item.operationId === id);

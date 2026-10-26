@@ -1,0 +1,375 @@
+{
+  "_id": "6ace0ee0f2cb8dbe6c7bfdcf",
+  "id": "black-forest-labs/flux-3-image-klein",
+  "private": false,
+  "pipeline_tag": "image-to-image",
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "safetensors",
+    "image-generation",
+    "image-editing",
+    "flux",
+    "flux-3",
+    "black-forest-labs",
+    "image-to-image",
+    "en",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 119172,
+  "likes": 719,
+  "modelId": "black-forest-labs/flux-3-image-klein",
+  "author": "black-forest-labs",
+  "sha": "337337621b8526e120f2275d250242f4a6bedd75",
+  "lastModified": "2026-10-16T04:58:03.000Z",
+  "gated": "auto",
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "language": [
+      "en"
+    ],
+    "license": "other",
+    "license_name": "flux-kommunity-license",
+    "license_link": "LICENSE.md",
+    "pipeline_tag": "image-to-image",
+    "library_name": "diffusers",
+    "tags": [
+      "image-generation",
+      "image-editing",
+      "flux",
+      "flux-3",
+      "black-forest-labs"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "7b250ea585da834cbf00cf193a4a5af2d6831d9b",
+      "size": 1902
+    },
+    {
+      "rfilename": "LICENSE.md",
+      "blobId": "044cf48568c278150d132a7479ea237a79766ea7",
+      "size": 19593
+    },
+    {
+      "rfilename": "NOTICE.md",
+      "blobId": "ee97a99bbf8ad09b197cf3cb6a079084876b0376",
+      "size": 330
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "0e982c06ad459fa612d9db2bdac2c36e8bebc6c1",
+      "size": 14525
+    },
+    {
+      "rfilename": "ae.safetensors",
+      "blobId": "78f8fcf4adb004763e3335b937a9d7a6dfa9f5b5",
+      "size": 336211292,
+      "lfs": {
+        "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3",
+        "size": 336211292,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "assets/1_figurine.png",
+      "blobId": "9d978260bf5218852b0a12d714ec85f3cf0ad6f9",
+      "size": 1774274,
+      "lfs": {
+        "sha256": "86a6e6b61773c00dca976c3698d7727cabbeef05af8a5c0da039ae92da967fcf",
+        "size": 1774274,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/2_coffee.png",
+      "blobId": "fbf05b8243fbe1ea337f17095fc9126741d5db58",
+      "size": 1512352,
+      "lfs": {
+        "sha256": "1ddf8a42ce2e1029a43887e77656f4aebf4d9156a80c4f04fff879a4c5dceb63",
+        "size": 1512352,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/balloons.png",
+      "blobId": "f5f082110799e5c864d373f10b0aecb3e0ecacfd",
+      "size": 1498230,
+      "lfs": {
+        "sha256": "ea9bed1b7db91453433b6cae390e31478cfcb4ee10b1427323c5e32f6bfcdd79",
+        "size": 1498230,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "42ecddf05e20cb81ffa81d1325bcd39b66cfc7eb",
+      "size": 828
+    },
+    {
+      "rfilename": "launch-gallery.jpg",
+      "blobId": "5ecf2330448a251f9ea4db2229ff79a7c9907665",
+      "size": 6537996,
+      "lfs": {
+        "sha256": "0c6efa4c1cae8648a3d491431dd77c507979e309f655fb0c44bd1c827f8d5f9f",
+        "size": 6537996,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "manifest.json",
+      "blobId": "9f9e477cd556e3446fc874dd3f7424e3d6e5db1e",
+      "size": 582
+    },
+    {
+      "rfilename": "model.safetensors",
+      "blobId": "36d986aa9c4e54eb26e1b5d80455cc6546da9ce3",
+      "size": 11097404512,
+      "lfs": {
+        "sha256": "c3e9813cdd049c831c836b2e9db61150e49a93fc1a4c63b256494642fee0bd7c",
+        "size": 11097404512,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "modular_model_index.json",
+      "blobId": "b0ce87edf5923b7ea2dbde5bf182a69c90d522a5",
+      "size": 2115
+    },
+    {
+      "rfilename": "teaser.jpg",
+      "blobId": "652724a89b2dfb0885d7ac2158700be443b06f37",
+      "size": 3075038,
+      "lfs": {
+        "sha256": "db996bd5e2d8781ff6b830788e9b22568eec9e3d8bf20197006e17f1ed4bb097",
+        "size": 3075038,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "text_encoder/LICENSE",
+      "blobId": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "size": 11357
+    },
+    {
+      "rfilename": "text_encoder/README.md",
+      "blobId": "542417095b66d3fc13be22bbf6722928787b8ef4",
+      "size": 7133
+    },
+    {
+      "rfilename": "text_encoder/chat_template.json",
+      "blobId": "e49e75bdda104c8de941eb20e0b3765184fb27bc",
+      "size": 5502
+    },
+    {
+      "rfilename": "text_encoder/config.json",
+      "blobId": "22be8bb79043d39840ca5e70d7a2dab80311602c",
+      "size": 1505
+    },
+    {
+      "rfilename": "text_encoder/generation_config.json",
+      "blobId": "e116347d7ef42621c7a5957f82c015c38d939c1f",
+      "size": 269
+    },
+    {
+      "rfilename": "text_encoder/merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "text_encoder/model-00001-of-00002.safetensors",
+      "blobId": "c76bab650cbb4864c0f85f6d3af26ba3fe857165",
+      "size": 4967229296,
+      "lfs": {
+        "sha256": "30a01a0556622645a3cce87b655bbbbbc1f170c196099f1b666c93202c3339a9",
+        "size": 4967229296,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoder/model-00002-of-00002.safetensors",
+      "blobId": "e2792feb019e73e6f15d89bc62295fd424807583",
+      "size": 3908490048,
+      "lfs": {
+        "sha256": "046296a2a387efb43b0c997d5833c789604d168834f6e0d3064bf7bb13d002a6",
+        "size": 3908490048,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "text_encoder/model.safetensors.index.json",
+      "blobId": "3b52de97496e2f4501dfa92a87642f60db3e22a1",
+      "size": 64742
+    },
+    {
+      "rfilename": "text_encoder/preprocessor_config.json",
+      "blobId": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+      "size": 390
+    },
+    {
+      "rfilename": "text_encoder/tokenizer.json",
+      "blobId": "c6cc1014128b19d1fc46b1d30a23e3b1d35db421",
+      "size": 7032403
+    },
+    {
+      "rfilename": "text_encoder/tokenizer_config.json",
+      "blobId": "d3d3763207692c78780f4bf42d4dadf49a5c8012",
+      "size": 10868
+    },
+    {
+      "rfilename": "text_encoder/video_preprocessor_config.json",
+      "blobId": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+      "size": 385
+    },
+    {
+      "rfilename": "text_encoder/vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    },
+    {
+      "rfilename": "transformer/config.json",
+      "blobId": "84626bbb88a60c8904542727b500b6cdce2b918c",
+      "size": 436
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "blobId": "798bdcba42d4954b206c5d060bf5df64f7095f1a",
+      "size": 9907529352,
+      "lfs": {
+        "sha256": "4f01de41470090586d7a25aa4aec93987724eae45db45b68de2b3f566f438a8b",
+        "size": 9907529352,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+      "blobId": "e3a5f7133407a10d741945ae3d078b2a195e9a53",
+      "size": 1189878064,
+      "lfs": {
+        "sha256": "6f6217ab2c7ce5ef177ec202f79d4c2ddab78111c4645030c8828ec615d5f02c",
+        "size": 1189878064,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model.safetensors.index.json",
+      "blobId": "8f2daa0415e6bea35c8f7fb643058554050b3ed0",
+      "size": 37951
+    },
+    {
+      "rfilename": "vae/config.json",
+      "blobId": "2410d0e0a4b381022ad7ab0ac3007c3c8a5d010c",
+      "size": 808
+    },
+    {
+      "rfilename": "vae/diffusion_pytorch_model.safetensors",
+      "blobId": "1fd5b4913b6a9147a73b62f1ffcaf6fdc892a0df",
+      "size": 336213556,
+      "lfs": {
+        "sha256": "d64f3a68e1cc4f9f4e29b6e0da38a0204fe9a49f2d4053f0ec1fa1ca02f9c4b5",
+        "size": 336213556,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "variants/fp8r/config.json",
+      "blobId": "76a3e5f8bb24ac284d7851688eec8be57d52204b",
+      "size": 830
+    },
+    {
+      "rfilename": "variants/fp8r/hf_quant_config.json",
+      "blobId": "1efac853ddbfaae29f9b873e7dfe3ee748442409",
+      "size": 1438
+    },
+    {
+      "rfilename": "variants/fp8r/manifest.json",
+      "blobId": "88c5a3b28dd07092b6e41d7ae1305b53a55604c4",
+      "size": 1872
+    },
+    {
+      "rfilename": "variants/fp8r/model.safetensors",
+      "blobId": "edebe283e32f72121a7d355e90e8004736d27673",
+      "size": 6270949144,
+      "lfs": {
+        "sha256": "30054053f630725b488aead9a81b422793cee18027856a16bd17b902ad612018",
+        "size": 6270949144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "variants/nvfp4/config.json",
+      "blobId": "b30d2574e6e9c2a72d663149fe4c6976d3646c72",
+      "size": 831
+    },
+    {
+      "rfilename": "variants/nvfp4/hf_quant_config.json",
+      "blobId": "b1acde2731fda96f786d5ef34cb51d3d45de7ea7",
+      "size": 2784
+    },
+    {
+      "rfilename": "variants/nvfp4/manifest.json",
+      "blobId": "5627c64a10b558cb4b1cb8c5ce88292a5c1a0390",
+      "size": 3974
+    },
+    {
+      "rfilename": "variants/nvfp4/model.safetensors",
+      "blobId": "4cc80e8e2d4f6cded11ce0e7fcaa0950afa7b368",
+      "size": 5277674144,
+      "lfs": {
+        "sha256": "30b110b0675249cf0461247b4613240312c8064ccc4ef486f4d025c9ff65fb83",
+        "size": 5277674144,
+        "pointerSize": 135
+      }
+    }
+  ],
+  "spaces": [
+    "black-forest-labs/flux-3-image-klein",
+    "RioShiina/ImageGen",
+    "amisima/Flux-3-Image",
+    "Diskfo/flux-3-image-klein",
+    "Gramlin/ImageGennew",
+    "prithivMLmods/flux-3-image-klein-loras-fast",
+    "BIGJUTT/model-pulse",
+    "Or1290/LP12",
+    "vrishv/graphics-studio",
+    "factblink514/Bg",
+    "akhaliq/flux3-klein-angles-demo",
+    "diffusers-modular/flux3-image-klein-bbox",
+    "fffiloni/image-to-fragrance-v2",
+    "hmb/flux-3-compare",
+    "hmb/flux-compare",
+    "Muinez/flux3-klein-4step-demo",
+    "djrichcmusic/Flux-3-Image",
+    "Felox/restore_skin_v1",
+    "krymwsym4/ImageGen",
+    "ATom-Votrexian/flux-3-image-klein-demo",
+    "yogeshkumar25/flux-3-image-klein-demo",
+    "addlabsviral/flux-3-image-klein",
+    "bep40/flux-3-image-klein",
+    "Automatisieren/flux-3-image-klein",
+    "ysharma/gr-workflow-pocket-planner-arena",
+    "ausboss/flux-3-image-klein-consistency",
+    "marksenlit/flux3-klein-console",
+    "bakerdas1/flux3-klein",
+    "amold-78/flux-3-image-klein-base-demo",
+    "douccana/flux-3-image-klein",
+    "ysharma/gr-workflow-pocket-planner-arena-cp",
+    "factblink514/cf-ai-tester",
+    "Johnswilliam80/flux-3-image-klein-demo",
+    "DollasAndSpence/LP12",
+    "Dekonstruktio/Fluxus",
+    "photoforge-dmitri/PhotoForge-AI"
+  ],
+  "createdAt": "2026-10-13T10:58:40.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 5548681984
+    },
+    "total": 5548681984
+  },
+  "usedStorage": 43319416391
+}

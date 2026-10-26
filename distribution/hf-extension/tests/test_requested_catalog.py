@@ -14,6 +14,29 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_latest_requested_models_have_all_verified_preset_options(self):
+        expected = {'qwen38-jumbo-fusion-neo-mtp':7, 'phonon-2-5':1, 'kat-coder-apex-miniplus-v2-1':1,
+                    'simplesd-4b-thinking':27, 'cortiq-qwopus-dev':5, 'nemotron-3-5-bolt-e4b':10,
+                    'fibo-2-0-dev':1, 'flux-3-image-klein':13, 'moss-image-nsfw-lora':2, 'qwen-image-2-1-nsfw-lora':1}
+        for family, count in expected.items():
+            with self.subTest(family=family): self.assertEqual(len(self.family(family)), count)
+        cyber = [entry for entry in self.entries if entry['familyId']=='builtin-b3765810015c2fb7f52d5378']
+        self.assertEqual(len(cyber),12)
+        self.assertTrue(all(entry['repository'].endswith('GGUF-MTP') for entry in cyber))
+
+    def test_new_image_pipelines_and_loras_do_not_masquerade_as_text_models(self):
+        flux=[entry for entry in self.family('flux-3-image-klein') if entry['format']=='image-pipeline']
+        self.assertEqual({entry['quantization'] for entry in flux},{'BF16','FP8','NVFP4'})
+        for entry in flux:
+            names={pin['filename'] for pin in entry['files']}
+            self.assertIn('ae.safetensors',names)
+            self.assertEqual(sum(name.startswith('text_encoder/') and name.endswith('.safetensors') for name in names),2)
+            self.assertIsNone(entry['runtime']['adapter'])
+        for family in ('fibo-2-0-dev','flux-3-image-klein','moss-image-nsfw-lora','qwen-image-2-1-nsfw-lora'):
+            self.assertTrue(all(entry['category']=='image' and not entry['runtime']['adapter'] for entry in self.family(family)))
+        fibo=self.family('fibo-2-0-dev')[0]
+        self.assertEqual(sum(pin['role']=='model' for pin in fibo['files']),4)
+        self.assertTrue(fibo['gated'])
     @classmethod
     def setUpClass(cls):
         cls.manifest = ROOT / 'hf-research/requested-models.json'
@@ -24,13 +47,13 @@ class RequestedCatalogTests(unittest.TestCase):
     def family(self, suffix):
         return [entry for entry in self.entries if entry['familyId'] == 'publisher-' + suffix]
 
-    def test_exactly_the_seven_requested_models_are_separate_cards(self):
-        self.assertEqual({row['repository'] for row in self.rows}, {
+    def test_all_requested_models_are_retained_as_separate_cards(self):
+        self.assertTrue({
             'Hobbylm/hobbylm-1B-computer-use', 'Mininglamp-2718/Mano-CUA-2.0-4B',
             'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B',
             'IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF',
-            'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'})
-        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 7)
+            'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'}.issubset({row['repository'] for row in self.rows}))
+        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 18)
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
         self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
@@ -69,8 +92,8 @@ class RequestedCatalogTests(unittest.TestCase):
             if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
-        self.assertEqual(report['families'], 7)
-        self.assertEqual(report['withFive'], 3)
+        self.assertEqual(report['families'], 18)
+        self.assertEqual(report['withFive'], 9)
         self.assertFalse(report['allModelsMeetMinimum'])
 
     def test_custom_editions_keep_their_real_labels_projectors_and_runtime_requirements(self):

@@ -1,7 +1,7 @@
 """Prepare isolated Whisper packages; preserve existing ASR checkpoints and environments."""
 import argparse
 from pathlib import Path
-from runtime_setup import prepare, verify, write_receipt, receipt_shared_cuda_runtime
+from runtime_setup import prepare, verify, write_receipt, receipt_shared_cuda_runtime, cached_verification, environment_signature
 
 PACKAGES = {'transformers':'4.48.3','accelerate':'1.2.1','av':'13.1.0','psutil':'6.1.1',
     'faster-whisper':'1.2.1','ctranslate2':'4.8.2'}
@@ -18,6 +18,9 @@ def main():
     root = Path(args.root).resolve()
     root.mkdir(parents=True,exist_ok=True)
     python = root/'whisper-venv/Scripts/python.exe'
+    if not args.verify_only and cached_verification(root, 'whisper', PACKAGES):
+        print('Whisper verified speech runtime reused.', flush=True)
+        return
     shared = None
     if not args.verify_only:
         python, shared = prepare(root,'whisper-venv',PACKAGES,IMPORTS)
@@ -25,7 +28,8 @@ def main():
     if args.verify_only and args.refresh_receipt:
         shared = receipt_shared_cuda_runtime(root/'whisper-runtime.json')
     if not args.verify_only or args.refresh_receipt:
-        write_receipt(root/'whisper-runtime.json', verification, sharedCudaRuntime=shared)
+        write_receipt(root/'whisper-runtime.json', verification, sharedCudaRuntime=shared,
+                      python=str(python.resolve()), environmentSignature=environment_signature(python, PACKAGES))
     print('Whisper speech runtime ready.',flush=True)
 
 

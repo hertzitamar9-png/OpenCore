@@ -18,10 +18,12 @@
 !/tests/
 !/scripts/
 !/docs/
+!/android-remote/
 /docs/*
 !/docs/echo-virtual-context.md
 !/docs/echo-virtual-execution.md
 !/docs/platform-models-music-and-training.md
+!/docs/superpowers/
 !/.github/
 !/distribution/
 
@@ -37,6 +39,9 @@
 **/.env.*
 **/*secret*
 **/*private-key*
+**/*.jks
+**/*.keystore
+**/*.dpapi
 /src-tauri/gen/
 /src-tauri/resources/inspector/
 /src-tauri/resources/*.exe

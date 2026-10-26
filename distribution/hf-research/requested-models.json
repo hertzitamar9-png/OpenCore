@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "scope": "Seven explicitly requested models from 2026-10-25 and 2026-10-26. Non-model pasted text is excluded. Quantizations are frozen build inputs, never searched from built-in cards; custom checkpoint editions remain distinct from their training bases.",
+  "scope": "Explicitly requested model checkpoints and their verified published packages. Frozen build inputs; no community search on built-in cards.",
   "models": [
     {
       "repository": "Hobbylm/hobbylm-1B-computer-use",
@@ -23,8 +23,12 @@
       "category": "computer-use",
       "description": "Qwen3-VL model trained for screenshot understanding and GUI action prediction. GGUF packages include the published vision projector. Desktop action execution requires an action harness.",
       "sources": [
-        {"repository": "mradermacher/Mano-CUA-2.0-4B-GGUF"},
-        {"repository": "Mininglamp-2718/Mano-CUA-2.0-4B"},
+        {
+          "repository": "mradermacher/Mano-CUA-2.0-4B-GGUF"
+        },
+        {
+          "repository": "Mininglamp-2718/Mano-CUA-2.0-4B"
+        },
         {
           "repository": "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
           "publisherEvidence": "3b3173712a855f1556ee2d41d2c622b91deb7649",
@@ -40,9 +44,15 @@
       "category": "text",
       "description": "Qwen3.8 27B checkpoint trained for terminal-agent tasks and recursive self-improvement. ECHO archives and retrieves conversation history within the runtime's working context.",
       "sources": [
-        {"repository": "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF"},
-        {"repository": "mradermacher/Terminal-RSI-27B-i1-GGUF"},
-        {"repository": "Teriminal-RSI/Terminal-RSI-27B"},
+        {
+          "repository": "bartowski/Teriminal-RSI_Terminal-RSI-27B-GGUF"
+        },
+        {
+          "repository": "mradermacher/Terminal-RSI-27B-i1-GGUF"
+        },
+        {
+          "repository": "Teriminal-RSI/Terminal-RSI-27B"
+        },
         {
           "repository": "klcharizardqwq/Terminal-RSI-27B-nvfp4-mlx",
           "quantization": "MLX NVFP4",
@@ -57,13 +67,19 @@
       "category": "text",
       "description": "Qwen3.8 27B instruction model for scientific hypotheses, evidence-grounded research planning and experiment critique. ECHO archives and retrieves conversation history within the runtime's working context.",
       "sources": [
-        {"repository": "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF"},
-        {"repository": "mradermacher/DiscoveryRSI-27B-i1-GGUF"},
+        {
+          "repository": "bartowski/Gen-Verse_DiscoveryRSI-27B-GGUF"
+        },
+        {
+          "repository": "mradermacher/DiscoveryRSI-27B-i1-GGUF"
+        },
         {
           "repository": "mkurman/DiscoveryRSI-27B-GGUF",
           "runtimeReason": "This publisher's Q2_0 conversion requires a compatible runtime. Its quantization is not verified with the integrated Windows engine."
         },
-        {"repository": "Gen-Verse/DiscoveryRSI-27B"},
+        {
+          "repository": "Gen-Verse/DiscoveryRSI-27B"
+        },
         {
           "repository": "nonkronk/DiscoveryRSI-27B-EXL3-4.0bpw",
           "quantization": "EXL3 4.0 bpw",
@@ -109,8 +125,213 @@
           "repository": "Jackrong/Kestrel-4B-Coder-GGUF",
           "publisherEvidence": "46fdfa2c75949c6e3abd4c62d7a1c079ffc18245"
         },
-        {"repository": "Jackrong/Kestrel-4B-Coder"}
+        {
+          "repository": "Jackrong/Kestrel-4B-Coder"
+        }
       ]
+    },
+    {
+      "repository": "DavidAU/Qwen3.8-27B-Jumbo-Fusion-IQ-747-900-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF",
+      "familyId": "publisher-qwen38-jumbo-fusion-neo-mtp",
+      "label": "Qwen3.8 27B Jumbo Fusion NEO MAX MTP",
+      "category": "text",
+      "description": "Publisher mixed-precision reasoning and instruction checkpoint. Includes all seven published GGUF options; speed and MTP acceleration claims are unverified.",
+      "sources": [
+        {
+          "repository": "DavidAU/Qwen3.8-27B-Jumbo-Fusion-IQ-747-900-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF"
+        }
+      ]
+    },
+    {
+      "repository": "peculiar-ragdoll/Cyber-Tiel-Coder-35B-A3B-GGUF-MTP",
+      "familyId": "builtin-b3765810015c2fb7f52d5378",
+      "label": "Cyber-Tiel Coder 35B A3B MTP",
+      "category": "text",
+      "description": "The exact Cyber-Tiel MTP edition with its published quantizations and vision projector; retained separately from the non-MTP checkpoint.",
+      "sources": [
+        {
+          "repository": "peculiar-ragdoll/Cyber-Tiel-Coder-35B-A3B-GGUF-MTP"
+        }
+      ],
+      "reuseFamily": true
+    },
+    {
+      "repository": "FermionResearch/Phonon-2.5",
+      "familyId": "publisher-phonon-2-5",
+      "label": "Phonon-2.5",
+      "category": "speech",
+      "description": "Packed multilingual Parakeet-derived speech recognition checkpoint for 25 languages. The compressed download size is not its runtime memory requirement.",
+      "sources": [
+        {
+          "repository": "FermionResearch/Phonon-2.5",
+          "runtimeReason": "Packed multilingual speech checkpoint. Its Phonon-2.5 CPU/MLX decoder is different from Phonon-2; the matching managed Windows decoder must be integrated before transcription."
+        }
+      ]
+    },
+    {
+      "repository": "IsValorum/KAT-Coder-V2.5-Dev-APEX-I-MiniPlus-V2.1-GGUF",
+      "familyId": "publisher-kat-coder-apex-miniplus-v2-1",
+      "label": "KAT-Coder V2.5 Dev APEX-I-MiniPlus V2.1",
+      "category": "text",
+      "description": "Publisher custom mixed-tensor coding checkpoint. The separate MTP draft is not counted as a quantization.",
+      "sources": [
+        {
+          "repository": "IsValorum/KAT-Coder-V2.5-Dev-APEX-I-MiniPlus-V2.1-GGUF",
+          "quantization": "APEX-I-MiniPlus V2.1"
+        }
+      ]
+    },
+    {
+      "repository": "apple/SimpleSD-4B-thinking",
+      "familyId": "publisher-simplesd-4b-thinking",
+      "label": "SimpleSD 4B Thinking",
+      "category": "text",
+      "description": "Apple Qwen3-based thinking checkpoint with its original weights and verified same-checkpoint community GGUF quantizations. Subject to Apple model license terms.",
+      "sources": [
+        {
+          "repository": "mradermacher/SimpleSD-4B-thinking-GGUF"
+        },
+        {
+          "repository": "mradermacher/SimpleSD-4B-thinking-i1-GGUF"
+        },
+        {
+          "repository": "apple/SimpleSD-4B-thinking"
+        }
+      ]
+    },
+    {
+      "repository": "infosave/cortiq_qwopus_dev",
+      "familyId": "publisher-cortiq-qwopus-dev",
+      "label": "Cortiq Qwopus Dev",
+      "category": "text",
+      "description": "Task-specialized CORTIQ coding checkpoint with four published GGUF precisions and original BF16 weights. The effective parameter budget differs from stored tensor count; performance is unverified.",
+      "sources": [
+        {
+          "repository": "infosave/cortiq_qwopus_dev"
+        }
+      ]
+    },
+    {
+      "repository": "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB",
+      "familyId": "publisher-nemotron-3-5-bolt-e4b",
+      "label": "NVIDIA Nemotron 3.5 Bolt E4B",
+      "category": "text",
+      "description": "Includes NVIDIA’s official 4GB Q4_K_M edition and verified quantizations of its linked BF16 checkpoint. Other precisions have different memory requirements.",
+      "sources": [
+        {
+          "repository": "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB"
+        },
+        {
+          "repository": "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF",
+          "derivationRoot": "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-BF16",
+          "publisherLinkedRoot": "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-BF16",
+          "publisherEvidence": "1db54d5b12533ff1bcaa8e42cf4c667988a1f1be"
+        }
+      ]
+    },
+    {
+      "repository": "briaai/Fibo-2.0-dev",
+      "familyId": "publisher-fibo-2-0-dev",
+      "label": "Fibo 2.0 Dev",
+      "category": "image",
+      "description": "Bria image generation and editing pipeline. Includes text encoder, transformer, VAE, processor and scheduler; publisher access terms apply.",
+      "sources": [
+        {
+          "repository": "briaai/Fibo-2.0-dev",
+          "runtimeReason": "Complete Diffusers BriaFibo2 pipeline; requires a compatible Fibo-2.0 image runtime and publisher access. This architecture is not served by a text-model runtime."
+        }
+      ]
+    },
+    {
+      "repository": "black-forest-labs/flux-3-image-klein",
+      "familyId": "publisher-flux-3-image-klein",
+      "label": "FLUX 3 Image Klein",
+      "category": "image",
+      "description": "Distilled 5.6B image transformer for generation and image editing, with separate text encoder and VAE. Includes official BF16, FP8 and NVFP4 packages and published GGUF image-transformer variants.",
+      "sources": [
+        {
+          "repository": "black-forest-labs/flux-3-image-klein",
+          "packages": [
+            {
+              "key": "image-pipeline:bf16",
+              "format": "image-pipeline",
+              "quantization": "BF16",
+              "files": [
+                "model.safetensors",
+                "config.json",
+                "manifest.json",
+                "ae.safetensors",
+                "text_encoder/*.json",
+                "text_encoder/*.txt",
+                "text_encoder/*.safetensors"
+              ]
+            },
+            {
+              "key": "image-pipeline:fp8r",
+              "format": "image-pipeline",
+              "quantization": "FP8",
+              "files": [
+                "variants/fp8r/*.json",
+                "variants/fp8r/model.safetensors",
+                "ae.safetensors",
+                "text_encoder/*.json",
+                "text_encoder/*.txt",
+                "text_encoder/*.safetensors"
+              ]
+            },
+            {
+              "key": "image-pipeline:nvfp4",
+              "format": "image-pipeline",
+              "quantization": "NVFP4",
+              "files": [
+                "variants/nvfp4/*.json",
+                "variants/nvfp4/model.safetensors",
+                "ae.safetensors",
+                "text_encoder/*.json",
+                "text_encoder/*.txt",
+                "text_encoder/*.safetensors"
+              ]
+            }
+          ],
+          "runtimeReason": "Complete BFL native image package with its text encoder and autoencoder. Requires the FLUX 3 Image Klein generation runtime and prompt upsampling; this is separate from the PUP text model."
+        },
+        {
+          "repository": "unsloth/flux-3-image-klein-GGUF",
+          "runtimeReason": "GGUF image transformer. Requires FLUX 3 Image Klein text encoder, VAE and a Flux3Transformer2DModel-compatible image pipeline; it cannot run in the text llama-server."
+        }
+      ]
+    },
+    {
+      "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora",
+      "familyId": "publisher-moss-image-nsfw-lora",
+      "label": "MOSS Image NSFW LoRA",
+      "category": "image",
+      "description": "Image LoRA adapter for OpenMOSS-Team/MOSS-Image-SFT. Includes the published ComfyUI and Diffusers adapter formats; base model weights are separate.",
+      "sources": [
+        {
+          "repository": "axiomofmind/Moss-image-nsfw-uncensored-lora",
+          "runtimeReason": "Image LoRA adapter. Requires OpenMOSS-Team/MOSS-Image-SFT and a compatible image LoRA workflow. Adapter weights are not a standalone image generator.",
+          "onlyVariantKeys": [
+            "lora:pytorch_lora_weights.safetensors",
+            "lora:MOSS-Image-NSFW-Uncensored-LoRA-ComfyUI.safetensors"
+          ]
+        }
+      ],
+      "baseRepository": "OpenMOSS-Team/MOSS-Image-SFT"
+    },
+    {
+      "repository": "f23gg/NSFW-LORA-Qwen-Image-2.1",
+      "familyId": "publisher-qwen-image-2-1-nsfw-lora",
+      "label": "Qwen Image 2.1 NSFW LoRA",
+      "category": "image",
+      "description": "Image LoRA adapter for Qwen/Qwen-Image-2.1. Requires the matching base checkpoint and a compatible image-adapter runtime.",
+      "sources": [
+        {
+          "repository": "f23gg/NSFW-LORA-Qwen-Image-2.1",
+          "runtimeReason": "Image LoRA adapter. Requires Qwen/Qwen-Image-2.1 and a compatible image LoRA workflow. Adapter weights are not a standalone image generator."
+        }
+      ],
+      "baseRepository": "Qwen/Qwen-Image-2.1"
     }
   ]
 }

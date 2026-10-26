@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 533,
+  "families": 543,
   "withFive": 208,
   "models": [
     {
@@ -2192,8 +2192,8 @@
       "id": "mimo-v26-pro-rl",
       "label": "MiMo-V2.6-Pro-RL",
       "category": "text",
-      "quantizations": 5,
-      "readyToInstallChoices": true,
+      "quantizations": 4,
+      "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [
         "DevQuasar/XiaomiMiMo.MiMo-V2.6-Pro-RL-GGUF",
@@ -2204,8 +2204,8 @@
       "id": "mimo-v26-pro-mopd",
       "label": "MiMo-V2.6-Pro-MOPD",
       "category": "text",
-      "quantizations": 5,
-      "readyToInstallChoices": true,
+      "quantizations": 2,
+      "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [
         "AesSedai/MiMo-V2.6-Pro-MOPD-GGUF",
@@ -2216,8 +2216,8 @@
       "id": "mimo-v26-flash-rl",
       "label": "MiMo-V2.6-Flash-RL",
       "category": "text",
-      "quantizations": 5,
-      "readyToInstallChoices": true,
+      "quantizations": 4,
+      "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [
         "Baekpica/MiMo-V2.6-Flash-RL-GGUF",
@@ -2776,8 +2776,8 @@
       "id": "hf-sc117-qwen3-8-flash-next-gsq-rco-abliterated-gguf",
       "label": "Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF",
       "category": "omni",
-      "quantizations": 5,
-      "readyToInstallChoices": true,
+      "quantizations": 4,
+      "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [
         "SC117/Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF"
@@ -3373,13 +3373,12 @@
       "id": "hf-ista-daslab-qwen3-8-flash-next-gsq-rco-coder-gguf",
       "label": "Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
       "category": "omni",
-      "quantizations": 3,
+      "quantizations": 2,
       "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [
         "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF",
-        "cleyesode/Qwen3.8-Flash-Next-GSQ-RCO-CODER-GGUF-MTP",
-        "oisee/Qwen3.8-Flash-Next-GSQ-RCO-Coder-192E-GGUF"
+        "cleyesode/Qwen3.8-Flash-Next-GSQ-RCO-CODER-GGUF-MTP"
       ]
     },
     {
@@ -4091,8 +4090,8 @@
       "id": "hf-sc117-swift-1-5-qwen3-8-flash-next-gsq-rco-abliterated-gguf",
       "label": "Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF",
       "category": "omni",
-      "quantizations": 5,
-      "readyToInstallChoices": true,
+      "quantizations": 4,
+      "readyToInstallChoices": false,
       "source": "bundled packages",
       "repositories": [
         "SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF"
@@ -5234,6 +5233,17 @@
       ]
     },
     {
+      "id": "publisher-cortiq-qwopus-dev",
+      "label": "Cortiq Qwopus Dev",
+      "category": "text",
+      "quantizations": 5,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "infosave/cortiq_qwopus_dev"
+      ]
+    },
+    {
       "id": "publisher-discoveryrsi-27b",
       "label": "DiscoveryRSI 27B",
       "category": "text",
@@ -5249,6 +5259,29 @@
       ]
     },
     {
+      "id": "publisher-fibo-2-0-dev",
+      "label": "Fibo 2.0 Dev",
+      "category": "image",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "briaai/Fibo-2.0-dev"
+      ]
+    },
+    {
+      "id": "publisher-flux-3-image-klein",
+      "label": "FLUX 3 Image Klein",
+      "category": "image",
+      "quantizations": 12,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "black-forest-labs/flux-3-image-klein",
+        "unsloth/flux-3-image-klein-GGUF"
+      ]
+    },
+    {
       "id": "publisher-hobbylm-1b-computer-use",
       "label": "HobbyLM 1B Computer Use",
       "category": "computer-use",
@@ -5257,6 +5290,17 @@
       "source": "bundled packages",
       "repositories": [
         "Hobbylm/hobbylm-1B-computer-use"
+      ]
+    },
+    {
+      "id": "publisher-kat-coder-apex-miniplus-v2-1",
+      "label": "KAT-Coder V2.5 Dev APEX-I-MiniPlus V2.1",
+      "category": "text",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "IsValorum/KAT-Coder-V2.5-Dev-APEX-I-MiniPlus-V2.1-GGUF"
       ]
     },
     {
@@ -5282,6 +5326,75 @@
         "Mininglamp-2718/Mano-CUA-2.0-4B",
         "Mininglamp-2718/Mano-CUA-2.0-4B-MLX-8bit",
         "mradermacher/Mano-CUA-2.0-4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-moss-image-nsfw-lora",
+      "label": "MOSS Image NSFW LoRA",
+      "category": "image",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "axiomofmind/Moss-image-nsfw-uncensored-lora"
+      ]
+    },
+    {
+      "id": "publisher-nemotron-3-5-bolt-e4b",
+      "label": "NVIDIA Nemotron 3.5 Bolt E4B",
+      "category": "text",
+      "quantizations": 10,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB",
+        "unsloth/NVIDIA-Nemotron-3.5-Bolt-E4B-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-phonon-2-5",
+      "label": "Phonon-2.5",
+      "category": "speech",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "FermionResearch/Phonon-2.5"
+      ]
+    },
+    {
+      "id": "publisher-qwen-image-2-1-nsfw-lora",
+      "label": "Qwen Image 2.1 NSFW LoRA",
+      "category": "image",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "f23gg/NSFW-LORA-Qwen-Image-2.1"
+      ]
+    },
+    {
+      "id": "publisher-qwen38-jumbo-fusion-neo-mtp",
+      "label": "Qwen3.8 27B Jumbo Fusion NEO MAX MTP",
+      "category": "text",
+      "quantizations": 7,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "DavidAU/Qwen3.8-27B-Jumbo-Fusion-IQ-747-900-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-simplesd-4b-thinking",
+      "label": "SimpleSD 4B Thinking",
+      "category": "text",
+      "quantizations": 27,
+      "readyToInstallChoices": true,
+      "source": "bundled packages",
+      "repositories": [
+        "apple/SimpleSD-4B-thinking",
+        "mradermacher/SimpleSD-4B-thinking-GGUF",
+        "mradermacher/SimpleSD-4B-thinking-i1-GGUF"
       ]
     },
     {

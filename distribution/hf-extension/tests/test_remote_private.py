@@ -1,0 +1,156 @@
+import hashlib
+import http.client
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
+import os
+from pathlib import Path
+import socket
+import ssl
+import sys
+import tempfile
+import threading
+import time
+import unittest
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from remote_access import RemoteAccess
+from private_chat import PrivateChats
+from pc_window import png
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+class Surface:
+    def frame(self): return png(1, 1, b'\0\0\xff\0'), 1, 1
+    def input(self, value): self.last = value
+
+
+class RemoteTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.remote = RemoteAccess(self.root, self.root, surface=Surface())
+
+    def tearDown(self): self.remote.close(); self.temp.cleanup()
+
+    def test_default_off_single_use_expiring_pairing_and_revocation(self):
+        self.assertFalse(self.remote.status()['enabled'])
+        self.remote.pair_code, self.remote.pair_until = 'one-time-code', time.monotonic() + 120
+        paired = self.remote.pair('one-time-code', 'Test phone', '127.0.0.1')
+        header = 'Bearer ' + paired['token']
+        self.assertEqual(self.remote.authorize(header), paired['deviceId'])
+        self.assertNotIn(paired['token'], self.remote.devices_path.read_text())
+        with self.assertRaises(PermissionError): self.remote.pair('one-time-code', 'Replay', '127.0.0.1')
+        self.remote.revoke(paired['deviceId'])
+        self.assertIsNone(self.remote.authorize(header))
+        self.remote.pair_code, self.remote.pair_until = 'expired', time.monotonic() - 1
+        with self.assertRaises(PermissionError): self.remote.pair('expired', 'Phone', '127.0.0.1')
+
+    def test_media_cannot_escape_generated_roots_or_share_model_and_secret_directories(self):
+        (self.root / 'artifacts').mkdir()
+        (self.root / 'artifacts/image.png').write_bytes(b'image')
+        self.assertEqual(self.remote.media_path('artifacts', 'image.png').read_bytes(), b'image')
+        for root, name in [('secrets', 'anything'), ('artifacts', '../secret'), ('artifacts', 'C:\\secret'), ('artifacts', '/absolute')]:
+            with self.subTest(root=root, name=name), self.assertRaises(ValueError): self.remote.media_path(root, name)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows owns the local TLS key')
+    def test_actual_tls_pair_frame_and_origin_rejection(self):
+        status = self.remote.start({'bind': '127.0.0.1'})
+        port = status['port']
+        self.assertNotIn(port, (8840, 8841, 8842, 8811, 8812, 8813, 8850, 8860))
+        self.assertTrue(status['enabled'])
+        from urllib.parse import urlsplit, parse_qs
+        pairing = self.remote.pairing('127.0.0.1')
+        code = parse_qs(urlsplit(pairing['pairingText']).query)['code'][0]
+        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT); tls.check_hostname = False; tls.verify_mode = ssl.CERT_NONE
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.connect()
+        self.assertEqual(hashlib.sha256(connection.sock.getpeercert(binary_form=True)).hexdigest(), status['fingerprint'])
+        connection.request('POST', '/pair', json.dumps({'code': code, 'name': 'Fixture phone'}), {'Content-Type': 'application/json'})
+        response = connection.getresponse(); self.assertEqual(response.status, 200); paired = json.loads(response.read()); connection.close()
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('GET', '/frame', headers={'Authorization': 'Bearer ' + paired['token']})
+        response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertTrue(response.read().startswith(b'\x89PNG')); connection.close()
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('GET', '/frame', headers={'Authorization': 'Bearer ' + paired['token'], 'Origin': 'https://evil.invalid'})
+        response = connection.getresponse(); self.assertEqual(response.status, 403); response.read(); connection.close()
+
+
+class LocalModel(BaseHTTPRequestHandler):
+    def log_message(self, *_): pass
+    def do_POST(self):
+        self.server.payloads.append(json.loads(self.rfile.read(int(self.headers['Content-Length']))))
+        value = b'data: {"choices":[{"delta":{"content":"PRIVATE_TEST_REPLY"}}]}\n\ndata: [DONE]\n\n'
+        self.send_response(200); self.send_header('Content-Type', 'text/event-stream'); self.send_header('Content-Length', str(len(value))); self.end_headers(); self.wfile.write(value)
+
+
+class PrivateTests(unittest.TestCase):
+    def test_native_backend_uses_the_actual_running_profile_port(self):
+        from hf_runtime import RuntimeManager
+        with tempfile.TemporaryDirectory() as directory:
+            manager = RuntimeManager(directory, ROOT/'src-tauri/resources')
+            for profile,port in [('doucode',8840),('nanbeige-bf16',8860),('dualcore-kv',8850),('echo',8811),('attached-local',59173)]:
+                with self.subTest(profile=profile):
+                    self.assertEqual(manager.private_backend({'profile':profile,'status':'running','backendPort':port}), ('http://127.0.0.1:'+str(port),None))
+            for snapshot in [None,{'profile':'api:cloud','status':'running','backendPort':443},{'status':'running','backendPort':8813},{'status':'off','backendPort':8811}]:
+                with self.assertRaises(ValueError): manager.private_backend(snapshot)
+
+    def test_close_clears_an_unstarted_stream_reservation_and_archive(self):
+        private = PrivateChats(ROOT/'src-tauri/resources')
+        try:
+            identity = private.open()['sessionId']; session = private.sessions[identity]
+            stream = private.send(identity,'never sent to the model')
+            stream.close()
+            self.assertFalse(session['busy'])
+            private.close(identity)
+            self.assertIsNone(session['archive']._db)
+            self.assertTrue(private.generation.acquire(blocking=False));private.generation.release()
+        finally: private.shutdown()
+
+    def test_close_aborts_a_real_request_before_response_headers(self):
+        entered, release = threading.Event(), threading.Event()
+        class Slow(LocalModel):
+            def do_POST(self):
+                self.rfile.read(int(self.headers['Content-Length']));entered.set();release.wait(5)
+        server = ThreadingHTTPServer(('127.0.0.1',0),Slow)
+        threading.Thread(target=server.serve_forever,daemon=True).start()
+        private=PrivateChats(ROOT/'src-tauri/resources',backend=lambda:('http://127.0.0.1:'+str(server.server_port),None))
+        try:
+            identity=private.open()['sessionId'];session=private.sessions[identity]
+            worker=threading.Thread(target=lambda:list(private.send(identity,'cancel during prefill')),daemon=True);worker.start()
+            self.assertTrue(entered.wait(2));private.close(identity);worker.join(2)
+            self.assertFalse(worker.is_alive())
+            self.assertIsNone(session['archive']._db)
+            self.assertTrue(private.generation.acquire(blocking=False));private.generation.release()
+        finally: release.set();private.shutdown();server.shutdown();server.server_close()
+
+    def test_real_echo_retrieval_is_in_memory_and_close_removes_the_session(self):
+        server = ThreadingHTTPServer(('127.0.0.1', 0), LocalModel); server.payloads = []
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        private = PrivateChats(ROOT / 'src-tauri/resources', backend=lambda: ('http://127.0.0.1:' + str(server.server_port), None))
+        try:
+            identity = private.open()['sessionId']
+            archive = private.sessions[identity]['archive']
+            self.assertEqual(archive.db.execute('PRAGMA database_list').fetchone()[2], '')
+            with patch.dict(os.environ, {'HTTP_PROXY':'http://outside.invalid:9999', 'http_proxy':'http://outside.invalid:9999', 'NO_PROXY':'', 'no_proxy':''}):
+                self.assertIn(b'PRIVATE_TEST_REPLY', b''.join(private.send(identity, 'Secret marker octopus-731')))
+            private.sessions[identity]['messages'].clear()
+            b''.join(private.send(identity, 'What was the octopus-731 marker?'))
+            self.assertIn('Secret marker octopus-731', json.dumps(server.payloads[-1]))
+            self.assertFalse(server.payloads[-1]['cache_prompt'])
+            private.close(identity)
+            self.assertNotIn(identity, private.sessions)
+            with self.assertRaises(ValueError): private.send(identity, 'cannot reuse')
+        finally: private.shutdown(); server.shutdown(); server.server_close()
+
+    def test_external_backend_is_rejected_before_any_request(self):
+        private = PrivateChats(ROOT / 'src-tauri/resources', backend=lambda: ('https://outside.invalid', 'not-to-be-sent'))
+        try:
+            identity = private.open()['sessionId']
+            self.assertIn(b'"error"', b''.join(private.send(identity, 'private prompt')))
+            self.assertEqual(private.sessions[identity]['bytes'], 0)
+        finally: private.shutdown()
+
+
+if __name__ == '__main__': unittest.main()

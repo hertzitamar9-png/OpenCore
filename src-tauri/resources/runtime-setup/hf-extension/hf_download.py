@@ -131,6 +131,64 @@ class HubClient:
         return self.json('/api/models?filter=gguf&search=' + quote(query, safe='') +
                          '&limit=40&sort=downloads&direction=-1', expected_type=list, limit=2 * 1024 * 1024)
 
+    def search_models(self, options):
+        """Bounded Hub discovery. Only explicit private searches use credentials."""
+        from urllib.parse import urlencode
+        if not isinstance(options, dict):
+            raise ValueError('Invalid search options')
+        query = options.get('query', '')
+        if not isinstance(query, str) or len(query) > 192 or any(ord(c) < 32 for c in query):
+            raise ValueError('Enter at most 192 characters to search')
+        query = query.strip()
+        mode, sort = options.get('match', 'prefix'), options.get('sort', 'downloads')
+        if mode not in ('prefix', 'words', 'contains') or sort not in ('downloads', 'likes', 'lastModified', 'createdAt', 'trendingScore', 'name'):
+            raise ValueError('Invalid search mode or sort order')
+        limit = options.get('limit', 60)
+        private = options.get('private', False)
+        if type(limit) is not int or not 1 <= limit <= 100 or type(private) is not bool:
+            raise ValueError('Invalid search limit or private search setting')
+        fields = {}
+        for key in ('task', 'library', 'author', 'license'):
+            value = options.get(key, '')
+            if not isinstance(value, str) or (value and not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,95}', value)):
+                raise ValueError('Invalid search filter')
+            fields[key] = value
+        # Empty token explicitly disables HubClient.open's saved-token fallback.
+        token = self.token_provider() if private else ''
+        if private and not token:
+            raise ValueError('Save a Hugging Face token before searching private models')
+        params = {'search': query.split()[0] if mode == 'words' and query else query,
+                  'limit': 100, 'sort': 'downloads' if sort == 'name' else sort,
+                  'direction': -1, 'full': 'true'}
+        if fields['task']: params['pipeline_tag'] = fields['task']
+        if fields['author']: params['author'] = fields['author']
+        filters = [fields['library']] if fields['library'] else []
+        if fields['license']: filters.append('license:' + fields['license'])
+        if filters: params['filter'] = ','.join(filters)
+        rows = self.json('/api/models?' + urlencode(params), token=token, anonymous_first=not private,
+                         expected_type=list, limit=4 * 1024 * 1024)
+        models = []
+        for row in rows[:100]:
+            if not isinstance(row, dict): continue
+            try: repository = parse_repository(row.get('id', ''))
+            except ValueError: continue
+            name = repository.split('/', 1)[1].casefold()
+            full = repository.casefold()
+            needle = query.casefold()
+            if query and not (name.startswith(needle) or '/' in needle and full.startswith(needle) if mode == 'prefix' else
+                              all(word in full for word in needle.split()) if mode == 'words' else needle in full):
+                continue
+            def count(key):
+                value = row.get(key)
+                return value if type(value) is int and value >= 0 else 0
+            models.append({'repository': repository, 'task': str(row.get('pipeline_tag') or '')[:80],
+                           'library': str(row.get('library_name') or '')[:80], 'downloads': count('downloads'),
+                           'likes': count('likes'), 'gated': bool(row.get('gated')), 'private': row.get('private') is True,
+                           'lastModified': str(row.get('lastModified') or '')[:40]})
+        if sort == 'name': models.sort(key=lambda item: item['repository'].casefold())
+        return {'models': models[:limit], 'query': query, 'scanned': min(len(rows), 100),
+                'limited': len(rows) >= 100, 'privateSearch': private}
+
     def quantization_derivatives(self, repository):
         repository = parse_repository(repository)
         return self.json('/api/models?filter=' + quote('base_model:quantized:' + repository, safe='') +

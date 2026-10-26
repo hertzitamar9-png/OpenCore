@@ -1,0 +1,243 @@
+{
+  "_id": "6ad977e767f361f7743fbe63",
+  "id": "FermionResearch/Phonon-2.5",
+  "private": false,
+  "pipeline_tag": "automatic-speech-recognition",
+  "library_name": "mlx",
+  "tags": [
+    "mlx",
+    "parakeet_tdt_five_value",
+    "apple-silicon",
+    "speech-to-text",
+    "asr",
+    "stt",
+    "multilingual",
+    "low-bit",
+    "on-device",
+    "automatic-speech-recognition",
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "pt",
+    "nl",
+    "pl",
+    "ru",
+    "uk",
+    "ro",
+    "cs",
+    "sk",
+    "bg",
+    "hr",
+    "sv",
+    "da",
+    "fi",
+    "et",
+    "lv",
+    "lt",
+    "hu",
+    "sl",
+    "mt",
+    "el",
+    "base_model:nvidia/parakeet-tdt-0.6b-v3",
+    "base_model:quantized:nvidia/parakeet-tdt-0.6b-v3",
+    "license:cc-by-4.0",
+    "region:us"
+  ],
+  "downloads": 528,
+  "likes": 37,
+  "modelId": "FermionResearch/Phonon-2.5",
+  "author": "FermionResearch",
+  "sha": "2673618ad8636c8dfd20fe57e94d1f67f75bdeaa",
+  "lastModified": "2026-10-24T20:26:51.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "model_type": "parakeet_tdt_five_value",
+    "model_id": "FermionResearch/Phonon-2.5",
+    "base_model": "nvidia/parakeet-tdt-0.6b-v3",
+    "license": "cc-by-4.0",
+    "languages": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "it",
+      "pt",
+      "nl",
+      "pl",
+      "ru",
+      "uk",
+      "ro",
+      "cs",
+      "sk",
+      "bg",
+      "hr",
+      "sv",
+      "da",
+      "fi",
+      "et",
+      "lv",
+      "lt",
+      "hu",
+      "sl",
+      "mt",
+      "el"
+    ],
+    "artifact": {
+      "profile": "five-value-25",
+      "backend": "phonon2-five-value",
+      "filename": "phonon-2.5.bps.tar.zst",
+      "download_bytes": 162587031,
+      "sha256": "1faa04053a472cabab3bc31d07f30c23f22906f71044ca10eb1f0de36d1f19a9",
+      "unpacked_bytes": 177871642,
+      "unpack_dir": "model_phonon25_f25x1_48k_int6",
+      "container": "model.fermion",
+      "container_bytes": 177593644,
+      "container_sha256": "17cb62d08e751a41819eb779db089aa7ac4eb2bab433ba5c2991d8cbd3cfefb9"
+    },
+    "artifact_fsq": {
+      "format": "fermion-squeeze-v1",
+      "filename": "phonon-2.5.fsq",
+      "download_bytes": 156181652,
+      "sha256": "49da2dbe8301433caf7486368afa98c8d1a0e0477fbbc465895713ff6b510a66",
+      "unpacked_bytes": 177871642,
+      "unpack_dir": "model_phonon25_f25x1_48k_int6",
+      "container_sha256": "17cb62d08e751a41819eb779db089aa7ac4eb2bab433ba5c2991d8cbd3cfefb9"
+    },
+    "runtime": {
+      "fermion-research": ">= 0.2.13",
+      "reference": "transformers ParakeetForTDT via reference_transformers.py"
+    }
+  },
+  "cardData": {
+    "license": "cc-by-4.0",
+    "thumbnail": "https://huggingface.co/FermionResearch/Phonon-2.5/resolve/main/phonon-2.5-card.jpg",
+    "base_model": "nvidia/parakeet-tdt-0.6b-v3",
+    "base_model_relation": "quantized",
+    "language": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "it",
+      "pt",
+      "nl",
+      "pl",
+      "ru",
+      "uk",
+      "ro",
+      "cs",
+      "sk",
+      "bg",
+      "hr",
+      "sv",
+      "da",
+      "fi",
+      "et",
+      "lv",
+      "lt",
+      "hu",
+      "sl",
+      "mt",
+      "el"
+    ],
+    "library_name": "mlx",
+    "pipeline_tag": "automatic-speech-recognition",
+    "tags": [
+      "mlx",
+      "apple-silicon",
+      "speech-to-text",
+      "asr",
+      "stt",
+      "multilingual",
+      "low-bit",
+      "on-device"
+    ],
+    "metrics": [
+      "wer"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "474ca9d3286cacf5329486c92925dab5b708dea8",
+      "size": 1765
+    },
+    {
+      "rfilename": "LICENSE-CODE-Apache-2.0.txt",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "LICENSE-WEIGHTS-CC-BY-4.0.txt",
+      "blobId": "da6ab6cc8f333d7e89a99812866df8f24374d47c",
+      "size": 18657
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "73a13b2f9e9f0195746eb393ccdf8adfa7fd5fa5",
+      "size": 2664
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "7c19255abe657d7ecdb185cf6e6c39f692060344",
+      "size": 4038
+    },
+    {
+      "rfilename": "SHA256SUMS.txt",
+      "blobId": "83da05cf43aebb46f84e1cc6804e3e97b21a8b8b",
+      "size": 1020
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "d7ece98c88874205c11bdf48f568d8bea6136a23",
+      "size": 1343
+    },
+    {
+      "rfilename": "fermion_container.py",
+      "blobId": "03ca940aeec206ce25a6287a1f0b41dfe589ba9e",
+      "size": 3915
+    },
+    {
+      "rfilename": "packed_manifest.json",
+      "blobId": "e60cb806d860932643e5a8335a0d05ecebc38be0",
+      "size": 503
+    },
+    {
+      "rfilename": "phonon-2.5-card.jpg",
+      "blobId": "8e44f3399c3fe704bf38707e3d9e42db049e5b7d",
+      "size": 55326
+    },
+    {
+      "rfilename": "phonon-2.5.bps.tar.zst",
+      "blobId": "09ec18221109cfe8e264bff87e11c4d7c63c3220",
+      "size": 162587031,
+      "lfs": {
+        "sha256": "1faa04053a472cabab3bc31d07f30c23f22906f71044ca10eb1f0de36d1f19a9",
+        "size": 162587031,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "phonon-2.5.fsq",
+      "blobId": "915a010e029543239dc9c75f7af1696ab5b69d24",
+      "size": 156181652,
+      "lfs": {
+        "sha256": "49da2dbe8301433caf7486368afa98c8d1a0e0477fbbc465895713ff6b510a66",
+        "size": 156181652,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "reference_transformers.py",
+      "blobId": "74b3d69e2f7b71caba4505b3b3b088a0aceaafff",
+      "size": 6823
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-22T02:41:43.000Z",
+  "usedStorage": 318768683
+}

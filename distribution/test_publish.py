@@ -43,6 +43,7 @@ class ReleasePublicationTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.folder = Path(self.temporary.name).resolve()
+        publish.prepare_mobile(self.folder)
         self.version = '0.3.145'
         self.commit = 'a' * 40
         (self.folder / 'OpenCore Package.exe').write_bytes(b'verified-installer-fixture')

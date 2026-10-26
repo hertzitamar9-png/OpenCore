@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 import prepare_phonon_runtime as runtime
+import runtime_setup
 
 
 class IdentityDecompressor:
@@ -19,6 +20,26 @@ class Decoder:
 
 
 class ContainerPreparation(unittest.TestCase):
+    def test_unchanged_verified_environment_is_reused_but_changed_dependencies_are_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            python = root / 'phonon-venv/Scripts/python.exe'
+            python.parent.mkdir(parents=True)
+            python.write_bytes(b'python')
+            receipt = {'schema': runtime_setup.RUNTIME_SCHEMA, 'executionContract': runtime_setup.EXECUTION_CONTRACT,
+                       'dependenciesVerified': True, 'packages': runtime.PACKAGES,
+                       'hardware': {'cudaBuild': '12.4', 'cudaAvailable': True, 'kernelVerified': True},
+                       'environmentSignature': 'verified-signature', 'python': str(python.resolve())}
+            import json
+            (root / 'phonon-runtime.json').write_text(json.dumps(receipt))
+            with patch.object(runtime_setup, 'environment_signature', return_value='verified-signature'):
+                self.assertEqual(runtime_setup.cached_verification(root, 'phonon', runtime.PACKAGES), receipt)
+            with patch.object(runtime_setup, 'environment_signature', return_value='changed-signature'):
+                self.assertIsNone(runtime_setup.cached_verification(root, 'phonon', runtime.PACKAGES))
+            python.unlink()
+            with patch.object(runtime_setup, 'environment_signature', return_value='verified-signature'):
+                self.assertIsNone(runtime_setup.cached_verification(root, 'phonon', runtime.PACKAGES))
+
     def test_extracts_only_verified_container_and_reuses_it(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

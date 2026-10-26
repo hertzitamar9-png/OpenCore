@@ -203,6 +203,18 @@ test('runtime and native catalog identities of one completed install stay acknow
   assert.equal(visible(state), null);
   const reloaded = fixture(store.policy()); await library(reloaded, native);
   assert.equal(visible(reloaded), null);
+  await reloaded.coordinator.invoke('install_model', {id:'phonon-2'}, async()=>{});
+  reloaded.advance(3000);reloaded.setProgress({...native,operationId:'another-install'});await reloaded.coordinator.refresh();
   await library(reloaded, {...native, operationId: 'another-install'});
   assert.equal(visible(reloaded).operationId, 'another-install');
+});
+
+test('a Phonon startup validation with a new worker ID does not revive its dismissed success', async () => {
+  const store=notificationStorage(),state=fixture(store.policy()),old={...completed,operationId:'old-install'};
+  await library(state,old);await state.coordinator.invoke('dismiss_model_install_progress',{expected:old},async()=>{});
+  const next=fixture(store.policy());
+  next.setProgress({...completed,phase:'preparing',operationId:'startup-check'});await next.coordinator.refresh();
+  assert.equal(visible(next).phase,'preparing');
+  next.setProgress({...completed,operationId:'startup-check'});await next.coordinator.refresh();
+  assert.equal(visible(next),null);
 });

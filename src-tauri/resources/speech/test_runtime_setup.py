@@ -25,7 +25,9 @@ class RuntimeDiskSpace(unittest.TestCase):
             target = root / 'whisper-venv/Scripts/python.exe'
             target.parent.mkdir(parents=True)
             target.write_bytes(b'placeholder')
-            with patch.object(runtime, 'probe', return_value=None), \
+            with patch.object(runtime, 'probe', side_effect=[None, {'version':'2.5.1+cu124','cuda':'12.4'}]), \
+                 patch.object(runtime, 'python_candidates', return_value=[]), \
+                 patch.object(runtime, 'probe_packages', side_effect=[['test-package'], []]), \
                  patch.object(runtime.shutil, 'disk_usage', return_value=SimpleNamespace(free=free)), \
                  patch.object(runtime.subprocess, 'run') as run:
                 result = runtime.prepare(root, 'whisper-venv', {'test-package': '1.0'})
@@ -34,6 +36,17 @@ class RuntimeDiskSpace(unittest.TestCase):
 
     def test_cuda_runtime_fits_with_less_than_100_gb_free(self):
         self.prepare_without_downloads(88_000_000_000)
+
+    def test_usable_existing_environment_never_reinstalls_packages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / 'whisper-venv/Scripts/python.exe'
+            target.parent.mkdir(parents=True); target.write_bytes(b'placeholder')
+            with patch.object(runtime, 'probe', return_value={'version':'2.5.1+cu124','cuda':'12.4'}), \
+                 patch.object(runtime, 'probe_packages', return_value=[]), \
+                 patch.object(runtime.subprocess, 'run') as run:
+                self.assertEqual(runtime.prepare(root, 'whisper-venv', {'test-package':'1.0'}), (target, None))
+                run.assert_not_called()
 
     def test_cuda_runtime_still_rejects_insufficient_space(self):
         with self.assertRaisesRegex(RuntimeError, 'disk space'):

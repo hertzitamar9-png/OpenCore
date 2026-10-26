@@ -1,0 +1,470 @@
+{
+  "_id": "6ad4cd2ac37f597f211f1834",
+  "id": "briaai/Fibo-2.0-dev",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "safetensors",
+    "image-editing",
+    "text-to-image",
+    "image-to-image",
+    "inpainting",
+    "multi-reference",
+    "fine-tuning",
+    "structured-prompts",
+    "vgl",
+    "fibo",
+    "en",
+    "arxiv:2511.06876",
+    "license:other",
+    "diffusers:BriaFibo2Pipeline",
+    "region:us"
+  ],
+  "downloads": 1267,
+  "likes": 166,
+  "modelId": "briaai/Fibo-2.0-dev",
+  "author": "briaai",
+  "sha": "72415bd021af33b2cbc63525683a114ff8ac294e",
+  "lastModified": "2026-10-25T06:55:44.000Z",
+  "gated": "auto",
+  "disabled": false,
+  "model-index": null,
+  "config": {
+    "diffusers": {
+      "_class_name": "BriaFibo2Pipeline"
+    }
+  },
+  "cardData": {
+    "license": "other",
+    "license_name": "bria-fibo",
+    "license_link": "https://creativecommons.org/licenses/by-nc/4.0/deed.en",
+    "language": [
+      "en"
+    ],
+    "library_name": "diffusers",
+    "pipeline_tag": "text-to-image",
+    "extra_gated_description": "Bria AI Model weights are open source for non commercial use only, per the provided [license](https://platform.bria.ai/licensing/pricing?model=fibo-2).",
+    "extra_gated_heading": "Fill in this form to immediately access the model for non commercial use",
+    "extra_gated_fields": {
+      "Company/Org name": "text",
+      "Company Website URL": "text",
+      "Discord user": "text",
+      "Intended Use": {
+        "type": "select",
+        "options": [
+          "Commercial",
+          "Academic - Research",
+          "Personal"
+        ]
+      },
+      "I understand that commercial use of this model requires a separate commercial agreement with BRIA AI, and that academic access is granted on request and is limited to non-commercial research and teaching": "checkbox",
+      "I agree to BRIA's Privacy Policy and Terms & Conditions": "checkbox"
+    },
+    "tags": [
+      "image-editing",
+      "text-to-image",
+      "image-to-image",
+      "inpainting",
+      "multi-reference",
+      "fine-tuning",
+      "structured-prompts",
+      "vgl",
+      "fibo"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "f0f3b9d8a52c7c907e18eabb1563ccf5f77a3699",
+      "size": 2665
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "08c6f22894698a1be6af3554e385f1dfbe233cd1",
+      "size": 23580
+    },
+    {
+      "rfilename": "assets/benchmarks/aa_image_editing_v2.1.png",
+      "blobId": "995790501fc79173ce0dac19e654384a7db20e0f",
+      "size": 368303,
+      "lfs": {
+        "sha256": "ebbdd89dda3becd4f0618a807cbf4fd71261ccc5f1b8e2a4d1d7365635bf989e",
+        "size": 368303,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/benchmarks/aa_image_t2i_v2.1.png",
+      "blobId": "55bf0817521fd8490cb3f0b5c1a52f8a1dd6ca2c",
+      "size": 408175,
+      "lfs": {
+        "sha256": "456969d3ffe5d8a7ab9d9e4862e3728e146276923f9da9b9dccbd85d20281431",
+        "size": 408175,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/edit/masked_suitcase.png",
+      "blobId": "273d27fca58ddfdc6f0be0dfe503cc8e39eb5672",
+      "size": 2099371,
+      "lfs": {
+        "sha256": "d98cdf0d385cdc282a7584232569c6ab7ce6f341c9e2e4c4b2fde009012d7d50",
+        "size": 2099371,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/edit/multiref_dress.png",
+      "blobId": "71852854b5c5146cf2703beff49ca95f47d4eea4",
+      "size": 2143747,
+      "lfs": {
+        "sha256": "d503f4f842e3ab45999aaf44b4bf14a96b120950e274e40f433dc5a4f62502e5",
+        "size": 2143747,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/edit/red_jacket.png",
+      "blobId": "5c06394077b8f2c5cc300851ef1bda12dbce335f",
+      "size": 1462967,
+      "lfs": {
+        "sha256": "a5bec8056a35590f7dfc66d773df8f0a96748a9c857f7f8dd2a5572e9f22ac5b",
+        "size": 1462967,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/fibo2_edit_strip.jpg",
+      "blobId": "75c16760e3ca637c300e6622e277622db8e3f12a",
+      "size": 630577,
+      "lfs": {
+        "sha256": "ed738e9e3ccb55f253295438c230f2ac39f14adadaff8171fc113fe3d340334b",
+        "size": 630577,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/fibo2_showcase.mp4",
+      "blobId": "997ad6f782fb40d7d51f48d16326a69998d515a4",
+      "size": 7934028,
+      "lfs": {
+        "sha256": "0912b1ac57c53b14ddb663a95511510f43e54ab5e8eae2a4819f2227c560b85e",
+        "size": 7934028,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/fibo2_showcase_poster.jpg",
+      "blobId": "9d5b3c49056fe41e28bc6c3e3e722440d47f3f1b",
+      "size": 104847,
+      "lfs": {
+        "sha256": "24e0ea5e6e0f95e45f5cb95e221cdf2b88c8888380ba7bf72e4f70ff02ae6eb6",
+        "size": 104847,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/fibo2_t2i_collage_opd.jpg",
+      "blobId": "da06ab7b0fd2e488c1732036ed0b8235507147e4",
+      "size": 448270,
+      "lfs": {
+        "sha256": "28c87ceaf3e970c6d79ce7a59daa1245fba72fb7f6560260b2a5bc7289383c84",
+        "size": 448270,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/t2i/inspire_blue_whale.png",
+      "blobId": "df7c1e7502780ae2ee739630771ff5e10507c644",
+      "size": 1345454,
+      "lfs": {
+        "sha256": "6b502d2a6cdfa451a90e1fa1913ce26f51a77336df82af26b64a499891a40a05",
+        "size": 1345454,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/t2i/origami_whale.png",
+      "blobId": "b8f37c744c15c1a2b6189b6a0b948ef2ac1fc84f",
+      "size": 1320919,
+      "lfs": {
+        "sha256": "257674d37acac2d70f7e722e36dddf3d7c3fb77b44897e828d49a1c4277f3f71",
+        "size": 1320919,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/t2i/still_life_alignment.png",
+      "blobId": "3494ca3258af6d94695786d7bc3ddf3486ce2ea5",
+      "size": 1377762,
+      "lfs": {
+        "sha256": "e2b654a1c242a8c186032ea0fc5f78ece0e996b0869996cf15e64412a55b8cc8",
+        "size": 1377762,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "assets/t2i/styles_dog_beach.jpg",
+      "blobId": "3a0b19a6ab2105a87e40b777d0e60749260c6f86",
+      "size": 315210,
+      "lfs": {
+        "sha256": "b18b9c1c119b5dea268298ac6fb05fc9618cf391ec90eba98936a1cdac457dfc",
+        "size": 315210,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/t2i/styles_dog_beach_5.jpg",
+      "blobId": "5c39a7ee19d5a570c9d2a4c1a51a1072b87adb5a",
+      "size": 389192,
+      "lfs": {
+        "sha256": "d06af373c641b485b1733c79796fa807327646360109d725428ddde2946bf8a6",
+        "size": 389192,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "fine_tuning/README.md",
+      "blobId": "846d667e349ead5b4ab0269afb44d0ffb3d5988c",
+      "size": 5186
+    },
+    {
+      "rfilename": "fine_tuning/train_lora.py",
+      "blobId": "d6831f9a10a263a5d33fe6ae72ab66a359075e40",
+      "size": 22050
+    },
+    {
+      "rfilename": "fonts/Aileron-Regular.otf",
+      "blobId": "4248f6ff3efb5ec0be0e5ef9055c6d16134604aa",
+      "size": 27644
+    },
+    {
+      "rfilename": "fonts/DejaVuSans.ttf",
+      "blobId": "83f0bb734d1a4e8b069fc13c2dad5de5ce5483bf",
+      "size": 757076,
+      "lfs": {
+        "sha256": "437a5ecec2ec177cba9284cbffc56055311347f3e9fe4f2b4b40323d0290a6db",
+        "size": 757076,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "fonts/LICENSE-Aileron.txt",
+      "blobId": "fd71d1133b300e3fe855171e335f694b975b656e",
+      "size": 673
+    },
+    {
+      "rfilename": "fonts/LICENSE-DejaVu.txt",
+      "blobId": "746d06306361f071b3a67226dce6c5971563fa50",
+      "size": 3844
+    },
+    {
+      "rfilename": "fonts/README.md",
+      "blobId": "dfc96a940e968426e24188938781df7ce2e871e9",
+      "size": 1059
+    },
+    {
+      "rfilename": "model_index.json",
+      "blobId": "e9cb915b39418f62c7be1e2435279ac77f509c72",
+      "size": 438
+    },
+    {
+      "rfilename": "processor/chat_template.jinja",
+      "blobId": "124386803f142761528f710e77ae483f5f8c4fc4",
+      "size": 5292
+    },
+    {
+      "rfilename": "processor/processor_config.json",
+      "blobId": "cad4b8dd372047a9660ae8763f68cc111dd19ee6",
+      "size": 1218
+    },
+    {
+      "rfilename": "processor/tokenizer.json",
+      "blobId": "c7afbed2efcdf019f88ab0572ec29d3bf595dfe2",
+      "size": 11422650,
+      "lfs": {
+        "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+        "size": 11422650,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "processor/tokenizer_config.json",
+      "blobId": "42bc491eccb6f2ad617f7fe78ea277b8d37c44fc",
+      "size": 734
+    },
+    {
+      "rfilename": "scheduler/scheduler_config.json",
+      "blobId": "9570e9eaa10d0aba9020b0adc8431d0ee321d70a",
+      "size": 486
+    },
+    {
+      "rfilename": "styles/boring_reality/negative_prompt.json",
+      "blobId": "3d841279eead1eb62de13a8c6fddb1b4ba740cfc",
+      "size": 802
+    },
+    {
+      "rfilename": "styles/boring_reality/system_prompt.txt",
+      "blobId": "9a09543df297fae425534dd07cf038810ac7f628",
+      "size": 14834
+    },
+    {
+      "rfilename": "styles/boring_reality/user_prompt.txt",
+      "blobId": "5a2571317208a2105bddbc1777b9c3e5f7ae0970",
+      "size": 134
+    },
+    {
+      "rfilename": "styles/hard_flash/negative_prompt.json",
+      "blobId": "b6f200325dffaa144e68ff1d3180ca58e5a5fa63",
+      "size": 903
+    },
+    {
+      "rfilename": "styles/hard_flash/system_prompt.txt",
+      "blobId": "7ebe4301693b64eaf14b00b4508321a5511e8982",
+      "size": 16396
+    },
+    {
+      "rfilename": "styles/hard_flash/user_prompt.txt",
+      "blobId": "5a2571317208a2105bddbc1777b9c3e5f7ae0970",
+      "size": 134
+    },
+    {
+      "rfilename": "styles/hazy_dreamy/negative_prompt.json",
+      "blobId": "8d00d4cee00d0b6c63327452fa8e6c3a42528238",
+      "size": 788
+    },
+    {
+      "rfilename": "styles/hazy_dreamy/system_prompt.txt",
+      "blobId": "e54f81ba91df0bf153bd2ce5d2757f4a0946fcea",
+      "size": 17915
+    },
+    {
+      "rfilename": "styles/hazy_dreamy/user_prompt.txt",
+      "blobId": "8168b91fa480140c6a7d423a87ff1d214ab15169",
+      "size": 186
+    },
+    {
+      "rfilename": "styles/kodak_film/negative_prompt.json",
+      "blobId": "c6443d9d30c8f654fff2c59b7f844c0ad114b984",
+      "size": 915
+    },
+    {
+      "rfilename": "styles/kodak_film/system_prompt.txt",
+      "blobId": "ab82bda74381f0c84317a4bc3260b7fcc899508f",
+      "size": 14900
+    },
+    {
+      "rfilename": "styles/kodak_film/user_prompt.txt",
+      "blobId": "5a2571317208a2105bddbc1777b9c3e5f7ae0970",
+      "size": 134
+    },
+    {
+      "rfilename": "styles/lens_distortion/negative_prompt.json",
+      "blobId": "3d841279eead1eb62de13a8c6fddb1b4ba740cfc",
+      "size": 802
+    },
+    {
+      "rfilename": "styles/lens_distortion/system_prompt.txt",
+      "blobId": "50181b9f46553aad50d4727c6d2c1d7119e38756",
+      "size": 12922
+    },
+    {
+      "rfilename": "styles/lens_distortion/user_prompt.txt",
+      "blobId": "5a2571317208a2105bddbc1777b9c3e5f7ae0970",
+      "size": 134
+    },
+    {
+      "rfilename": "text_encoder/config.json",
+      "blobId": "b05250e498c109e7ce0c59df65f50f026844f0cb",
+      "size": 1674
+    },
+    {
+      "rfilename": "text_encoder/generation_config.json",
+      "blobId": "72036625a2e5d41aec4a700c71acc6c5f72c889d",
+      "size": 242
+    },
+    {
+      "rfilename": "text_encoder/model.safetensors",
+      "blobId": "431ac79fc03e5336825508b7d0fb9e378147d76b",
+      "size": 8875719408,
+      "lfs": {
+        "sha256": "f0b24fc5c8d7c0ea6ca909da14c20af5cac53f22506be942c6c956f838b9630f",
+        "size": 8875719408,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/config.json",
+      "blobId": "346391123dfa8bfeab1183f6f6da5297e57fc862",
+      "size": 623
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "blobId": "282d2c6df395d2a7ddcba462c7039f865c940357",
+      "size": 9991176550,
+      "lfs": {
+        "sha256": "a7c0121ba051a8f9d5e447ab4d11e1e202a94971313936c5cce1daaf31c897f6",
+        "size": 9991176550,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+      "blobId": "14350c92c674a5cfcc61a73f8941fb3caf34e5c2",
+      "size": 6263592868,
+      "lfs": {
+        "sha256": "0edf2f2d5e8338f126f7992561e7691909392417dc4d484a9d3865709ef84a73",
+        "size": 6263592868,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "transformer/diffusion_pytorch_model.safetensors.index.json",
+      "blobId": "e8669c03243cc00e38345c5e13e2bf727ea7c4a9",
+      "size": 73887
+    },
+    {
+      "rfilename": "vae/config.json",
+      "blobId": "b3ced8b2f94f5526a8033e021bf7428025c9e8c3",
+      "size": 909
+    },
+    {
+      "rfilename": "vae/diffusion_pytorch_model.safetensors",
+      "blobId": "1fd5b4913b6a9147a73b62f1ffcaf6fdc892a0df",
+      "size": 336213556,
+      "lfs": {
+        "sha256": "d64f3a68e1cc4f9f4e29b6e0da38a0204fe9a49f2d4053f0ec1fa1ca02f9c4b5",
+        "size": 336213556,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "vgl/README.md",
+      "blobId": "d46616a67e7ad6879fe28c445ada642fc57ba260",
+      "size": 20268
+    }
+  ],
+  "spaces": [
+    "briaai/Fibo-2.0-editing",
+    "RioShiina/ImageGen",
+    "briaai/Fibo-2.0-T2I",
+    "akhaliq/fibo-2.0-workflow",
+    "BIGJUTT/model-pulse",
+    "Or1290/LP12",
+    "jekverse/Fibo-2.0-editing",
+    "DollasAndSpence/LP12",
+    "rahul7star/Fibo-2.0-FUll",
+    "Dekonstruktio/Fluxus",
+    "Ethanol777/fibo-2-studio"
+  ],
+  "createdAt": "2026-10-18T13:44:10.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 8127342213
+    },
+    "total": 8127342213
+  },
+  "usedStorage": 25499453513
+}

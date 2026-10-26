@@ -6,6 +6,7 @@ import subprocess
 
 from package import file_hash
 from permanent_bootstrap import load_pin as load_bootstrap_pin, validate_files as validate_bootstrap_files
+from mobile_client import prepare as prepare_mobile
 
 HERE = Path(__file__).resolve().parent
 REPOSITORY = 'hertzitamar9-png/OpenCore'
@@ -110,6 +111,7 @@ def publish(folder, version, commit):
     initial = [installer, signature, bootstrap, folder / 'OpenCore Setup.exe.sig',
                folder / 'bootstrap-verification.json', folder / 'package-manifest.json',
                folder / 'installer-verification.json', folder / 'runtime-verification.json']
+    initial += prepare_mobile(folder)
     pending = [local for local in initial if not asset_matches(remote_asset(release, local), local)]
     if pending:
         command('gh', 'release', 'upload', tag, '--repo', REPOSITORY, '--clobber', *map(str, pending))

@@ -1,11 +1,12 @@
 """Append individually reviewed Hub models to the offline bundled package catalog."""
 import copy
+import fnmatch
 import json
 from pathlib import PurePosixPath
 
-from hf_catalog import build_plan, _pin
+from hf_catalog import build_plan, _pin, stable_id
 from hf_download import validate_entry
-from hf_lineage import same_checkpoint
+from hf_lineage import same_checkpoint, bases, quantized_relation, checkpoint_name
 
 
 def append_requested(entries, manifest, snapshots):
@@ -20,14 +21,24 @@ def append_requested(entries, manifest, snapshots):
 
     for row in research['models']:
         original = read(row['repository'])
-        known = set()
+        family = row['familyId']
+        prior = [entry for entry in entries if entry.get('familyId') == family]
+        if prior and not row.get('reuseFamily'):
+            raise ValueError('Requested family already exists without an explicit reuse contract')
+        known = {(entry['format'], entry['quantization'].upper().replace('FP16', 'F16').replace('FP32', 'F32')) for entry in prior}
         for source in row['sources']:
             repository = source['repository']
             metadata = read(repository)
             if repository.lower() != row['repository'].lower() and not same_checkpoint(metadata, {row['repository'].lower()}):
                 evidence = source.get('publisherEvidence')
                 readme = snapshots / (row['repository'].replace('/', '--') + '.README.md')
-                if not (evidence == original['sha'] and repository.split('/')[0] == row['repository'].split('/')[0]
+                alias = source.get('derivationRoot')
+                alias_ok = (alias and alias == source.get('publisherLinkedRoot') and source.get('publisherEvidence') == original['sha']
+                            and readme.is_file() and 'https://huggingface.co/' + alias in readme.read_text(encoding='utf-8')
+                            and (same_checkpoint(metadata, {alias.lower()}) or
+                                 quantized_relation(metadata) and bases(metadata) == {alias.lower()}
+                                 and checkpoint_name(repository) == checkpoint_name(alias.removesuffix('-BF16'))))
+                if not alias_ok and not (evidence == original['sha'] and repository.split('/')[0] == row['repository'].split('/')[0]
                         and repository.startswith(row['repository'] + '-') and readme.is_file()
                         and 'https://huggingface.co/' + repository in readme.read_text(encoding='utf-8')):
                     raise ValueError('Requested package does not declare the exact checkpoint: ' + repository)
@@ -38,6 +49,23 @@ def append_requested(entries, manifest, snapshots):
                 config['dtype'] = text_config.get('dtype', text_config.get('torch_dtype', ''))
             metadata['config'] = config
             plan = build_plan(metadata)
+            if source.get('packages'):
+                variants = []
+                for package in source['packages']:
+                    pins = [_pin(repository, metadata['sha'], item,
+                                 'model' if item['rfilename'].endswith(('.safetensors', '.gguf')) else 'support')
+                            for item in metadata['siblings'] if any(fnmatch.fnmatchcase(item['rfilename'], pattern) for pattern in package['files'])]
+                    if not pins or any(not pin['pinned'] for pin in pins):
+                        raise ValueError('Incomplete curated package: ' + repository)
+                    key = package['key']
+                    variants.append({'id': stable_id(repository, key), 'variantKey': key, 'repository': repository,
+                        'revision': metadata['sha'], 'format': package['format'], 'quantization': package['quantization'],
+                        'subdirectory': '', 'category': row['category'], 'files': pins, 'bytes': sum(pin['bytes'] for pin in pins),
+                        'installable': True, 'status': 'not-installed', 'sourceUrl': 'https://huggingface.co/' + repository,
+                        'gated': bool(metadata.get('gated')), 'runtime': {'adapter': None, 'available': False, 'inferenceVerified': False}})
+                plan['variants'] = variants
+            if source.get('onlyVariantKeys'):
+                plan['variants'] = [entry for entry in plan['variants'] if entry['variantKey'] in source['onlyVariantKeys']]
             # Split GGUF checkpoints often share one projector at the repository
             # root. Attach that pinned companion instead of omitting vision files.
             projectors = [pin for variant in plan['variants'] for pin in variant['files'] if pin['role'] == 'companion']
@@ -72,11 +100,13 @@ def append_requested(entries, manifest, snapshots):
                 entry['name'] = row['label'] + ' · ' + quant
                 if source.get('runtimeReason'):
                     entry['runtime'].update(adapter=None, reason=source['runtimeReason'])
-                elif entry['format'] == 'gguf':
+                elif entry['format'] == 'gguf' and entry['category'] == 'text':
                     entry['managedEngine'] = 'flint-cpu-v1'
                     entry['runtime']['reason'] = 'The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified.'
-                else:
+                elif entry['runtime'].get('adapter') == 'transformers':
                     entry['runtime']['reason'] = 'The isolated Transformers text runtime prepares automatically; generation must pass before Ready. Vision and action-harness execution are unverified.'
+                elif not entry['runtime'].get('reason'):
+                    entry['runtime']['reason'] = 'This complete pinned package requires an integrated runtime for its architecture. A download is not a generation test.'
                 if row.get('baseRepository'):
                     entry['baseRepository'] = row['baseRepository']
                     entry['packageKind'] = 'adapter'

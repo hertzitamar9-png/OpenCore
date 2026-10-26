@@ -151,6 +151,18 @@ def _available_memory():
 
 class RuntimeManager:
     automatic_preparation=True
+    def private_backend(self, native=None):
+        with self._state_lock:
+            if self._active:
+                upstream = self._active.get('upstream')
+                if not upstream: raise ValueError('Reload this local model to enable temporary chat')
+                return upstream, self._active['key']
+        if not isinstance(native, dict) or native.get('status') != 'running':
+            raise ValueError('Start a local model before opening temporary chat')
+        port, profile = native.get('backendPort'), str(native.get('profile') or '')
+        if type(port) is not int or not 1024 <= port <= 65535 or port in (8812, 8813) or profile.startswith('api:'):
+            raise ValueError('Temporary chat needs the direct local model backend, separate from saved ECHO or cloud providers')
+        return 'http://127.0.0.1:' + str(port), None
     def __init__(self, root, resources):
         self.root, self.resources = Path(root).resolve(), Path(resources).resolve()
         self._children, self._logs = [], []
@@ -359,7 +371,7 @@ class RuntimeManager:
             proof['engineId'] = plan['publisherEngine']
             proof['engineArchiveSha256'] = definition(plan['publisherEngine'])['sha256']
         (run_dir / 'inference-receipt.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
-        self._active = {'id': entry['id'], 'url': echo_url, 'key': key, 'proof': proof}
+        self._active = {'id': entry['id'], 'url': echo_url, 'upstream': upstream, 'key': key, 'proof': proof}
         return proof
 
     def chat(self, entry, payload):

@@ -1,0 +1,91 @@
+{
+  "_id": "6ab55334448d46cb5f77c48c",
+  "id": "f23gg/NSFW-LORA-Qwen-Image-2.1",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "diffusers",
+  "tags": [
+    "diffusers",
+    "text-to-image",
+    "lora",
+    "template:diffusion-lora",
+    "base_model:Qwen/Qwen-Image-2.1",
+    "base_model:adapter:Qwen/Qwen-Image-2.1",
+    "region:us",
+    "not-for-all-audiences"
+  ],
+  "downloads": 18945,
+  "likes": 27,
+  "modelId": "f23gg/NSFW-LORA-Qwen-Image-2.1",
+  "author": "f23gg",
+  "sha": "ed1acb15578a4d16d26032e8b8c10ca439843ecf",
+  "lastModified": "2026-09-24T16:43:40.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "output": {
+        "url": "https://huggingface.co/f23gg/NSFW-LORA-Qwen-Image-2.1/resolve/main/images/CopyQ.yzlOCU.png"
+      },
+      "text": "-"
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "tags": [
+      "text-to-image",
+      "lora",
+      "diffusers",
+      "template:diffusion-lora"
+    ],
+    "widget": [
+      {
+        "output": {
+          "url": "https://huggingface.co/f23gg/NSFW-LORA-Qwen-Image-2.1/resolve/main/images/CopyQ.yzlOCU.png"
+        },
+        "text": "-"
+      }
+    ],
+    "base_model": "Qwen/Qwen-Image-2.1",
+    "instance_prompt": null
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "28df5f900b358436f0267334b3e3e9af33f917ba",
+      "size": 2307
+    },
+    {
+      "rfilename": "NSFW Qwen Lora.safetensors",
+      "blobId": "b9f2d4b06e5d8095bc71fd2ece8f738972b3da01",
+      "size": 159436456,
+      "lfs": {
+        "sha256": "c29f503f3515877882fd6b10f6849c78a4f2337c09021f4bd4b93d060c311aea",
+        "size": 159436456,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "e11bdcbd710160dc3c688631481e62104408292d",
+      "size": 352
+    },
+    {
+      "rfilename": "images/CopyQ.yzlOCU.png",
+      "blobId": "ffd0bc300f841b247294dd2ffe6b2f6735345e44",
+      "size": 818860,
+      "lfs": {
+        "sha256": "2c9c0dee3ae8ebc36685cfcbba49f90bca8960fcb171e58ded4802c955d14422",
+        "size": 818860,
+        "pointerSize": 131
+      }
+    }
+  ],
+  "spaces": [
+    "niuhesanlu/qwen-image-21-lora-demo",
+    "hehyhub/Qwen-Image-2.1-Uncencored-with-LoRA"
+  ],
+  "createdAt": "2026-09-24T16:43:32.000Z",
+  "usedStorage": 160255316
+}

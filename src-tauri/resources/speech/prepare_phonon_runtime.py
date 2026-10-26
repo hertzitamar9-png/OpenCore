@@ -75,7 +75,10 @@ def main():
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0,
             stdout=sys.stdout, stderr=sys.stderr)
         return
-    from runtime_setup import prepare, verify, write_receipt, receipt_shared_cuda_runtime
+    from runtime_setup import prepare, verify, write_receipt, receipt_shared_cuda_runtime, cached_verification, environment_signature
+    if not args.verify_only and cached_verification(root, 'phonon', PACKAGES):
+        print('Phonon-2 verified speech runtime reused.', flush=True)
+        return
     shared = None
     if not args.verify_only:
         python, shared = prepare(root,'phonon-venv',PACKAGES,IMPORTS)
@@ -90,6 +93,7 @@ def main():
         shared = receipt_shared_cuda_runtime(root/'phonon-runtime.json')
     if not args.verify_only or args.refresh_receipt:
         write_receipt(root/'phonon-runtime.json', verification, transformers=TRANSFORMERS, zstandard=ZSTANDARD,
+            python=str(python.resolve()), environmentSignature=environment_signature(python, PACKAGES),
             sharedCudaRuntime=shared, backend='transformers-reference', sourceExpansionDtype='float32',
             runtimePrecisions=['bf16','fp32'], defaultRuntimePrecision='bf16')
     print('Phonon-2 reference speech runtime ready.', flush=True)

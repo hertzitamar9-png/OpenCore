@@ -11,6 +11,63 @@ RUNTIME_SCHEMA = 3
 EXECUTION_CONTRACT = 'cuda-kernel-v1'
 
 
+def environment_signature(python, packages):
+    """Cheap package/interpreter identity; never imports Torch or starts CUDA."""
+    code = '''import hashlib,importlib.metadata,json,os,sys
+from pathlib import Path
+rows=[]
+def record(path):
+    path=Path(path)
+    if path.is_file():
+        stat=path.stat();rows.append([str(path.resolve()),stat.st_size,stat.st_mtime_ns])
+record(sys.executable)
+record(Path(sys.prefix)/'pyvenv.cfg')
+for name,want in json.loads(sys.argv[1]).items():
+    dist=importlib.metadata.distribution(name)
+    if dist.version.split('+')[0]!=want:raise RuntimeError('Package version changed')
+    record(dist._path/'METADATA');record(dist._path/'RECORD')
+    top=dist.read_text('top_level.txt') or name.replace('-','_')
+    for module in top.splitlines():record(dist.locate_file(module)/'__init__.py')
+torch=importlib.metadata.distribution('torch')
+record(torch._path/'METADATA');record(torch._path/'RECORD')
+for path in Path(torch.locate_file('torch')).glob('_C*.pyd'):record(path)
+record(torch.locate_file('torch/lib/torch_cuda.dll'))
+for site in sys.path:
+    if Path(site).name=='site-packages':
+        for path in Path(site).glob('*.pth'):record(path)
+if os.name=='nt':record(Path(os.environ.get('WINDIR','C:/Windows'))/'System32/nvcuda.dll')
+print(hashlib.sha256(json.dumps(sorted(rows)).encode()).hexdigest())
+'''
+    try:
+        result = subprocess.run([str(python), '-I', '-c', code, json.dumps(packages)],
+                                capture_output=True, text=True, timeout=15,
+                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+        value = result.stdout.strip()
+        if not result.returncode and len(value) == 64 and all(c in '0123456789abcdef' for c in value):
+            return value
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return None
+
+
+def cached_verification(root, name, packages):
+    """Reuse completed evidence only while this managed environment is unchanged."""
+    root = Path(root)
+    python = root / (name + '-venv') / 'Scripts/python.exe'
+    try:
+        receipt = json.loads((root / (name + '-runtime.json')).read_text(encoding='utf-8'))
+        hardware = receipt.get('hardware') or {}
+        if (not python.is_file() or receipt.get('schema') != RUNTIME_SCHEMA or
+                receipt.get('executionContract') != EXECUTION_CONTRACT or not receipt.get('dependenciesVerified') or
+                receipt.get('python') != str(python.resolve()) or not receipt.get('environmentSignature') or
+                not hardware.get('cudaBuild') or hardware.get('cudaAvailable') is not True or hardware.get('kernelVerified') is not True or
+                any(receipt.get('packages', {}).get(key, '').split('+')[0] != value for key, value in packages.items())):
+            return None
+        return receipt if environment_signature(python, packages) == receipt['environmentSignature'] else None
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
 def verify(python, packages, imports):
     """Verify versions/imports and a small CUDA kernel before claiming readiness."""
     code = '''import importlib,importlib.metadata,json,sys
@@ -178,9 +235,11 @@ def prepare(root, name, packages, imports=None):
         if not probe(target):
             raise RuntimeError('The managed speech runtime still cannot import CUDA PyTorch after repair')
         shared = None
-    subprocess.run([str(target),'-m','pip','install','--disable-pip-version-check','--no-cache-dir',
-        *[f'{package}=={version}' for package,version in packages.items()]],check=True)
     failed = probe_packages(target, packages, imports)
+    if failed:
+        subprocess.run([str(target),'-m','pip','install','--disable-pip-version-check','--no-cache-dir',
+            *[f'{package}=={packages[package]}' for package in failed]],check=True)
+        failed = probe_packages(target, packages, imports)
     if failed:
         # Overlay only broken selected pins. --ignore-installed protects shared package owners.
         subprocess.run([str(target),'-m','pip','install','--disable-pip-version-check','--no-cache-dir',

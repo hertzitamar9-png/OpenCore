@@ -21,6 +21,40 @@ def metadata(files, **extra):
 
 
 class CatalogTests(unittest.TestCase):
+    def test_mtp_draft_prefix_is_not_a_model_but_fused_mtp_is_retained(self):
+        plan = catalog.build_plan(metadata([file('KAT-APEX-MTP.gguf'), file('mtp-KAT-Q4_0.gguf'),
+                                            file('model-mtp.safetensors'), file('model.safetensors')]))
+        self.assertEqual(len(plan['variants']), 2)
+        self.assertFalse(any('model-mtp' in p['filename'] or p['filename'].startswith('mtp-')
+                             for v in plan['variants'] for p in v['files']))
+
+    def test_diffusers_components_are_one_complete_package(self):
+        plan = catalog.build_plan(metadata([file('model_index.json'), file('scheduler/scheduler_config.json'),
+            file('text_encoder/config.json'), file('text_encoder/model.safetensors'), file('tokenizer/tokenizer.json'),
+            file('transformer/config.json'), file('transformer/diffusion_pytorch_model.safetensors'),
+            file('vae/config.json'), file('vae/diffusion_pytorch_model.safetensors'), file('pipeline_unsafe.py')],
+            pipeline_tag='text-to-image', library_name='diffusers'))
+        self.assertEqual(len(plan['variants']), 1)
+        entry = plan['variants'][0]
+        self.assertEqual(entry['format'], 'diffusers')
+        self.assertEqual(sum(p['role'] == 'model' for p in entry['files']), 3)
+        self.assertIn('scheduler/scheduler_config.json', {p['filename'] for p in entry['files']})
+        self.assertFalse(any(p['filename'].endswith('.py') for p in entry['files']))
+        self.assertIsNone(entry['runtime']['adapter'])
+
+    def test_image_lora_is_one_adapter_not_a_text_checkpoint(self):
+        data = metadata([file('NSFW Qwen Lora.safetensors')], pipeline_tag='text-to-image', tags=['lora'])
+        entry = catalog.build_plan(data)['variants'][0]
+        self.assertEqual(entry['packageKind'], 'adapter')
+        self.assertIsNone(entry['runtime']['adapter'])
+
+    def test_speech_archive_is_downloadable_without_executing_repo_code(self):
+        plan = catalog.build_plan(metadata([file('phonon-2.5.bps.tar.zst'), file('config.json'), file('reference.py')],
+                                           pipeline_tag='automatic-speech-recognition'))
+        self.assertEqual(len(plan['variants']), 1)
+        self.assertEqual(plan['variants'][0]['format'], 'archive')
+        self.assertTrue(plan['variants'][0]['installable'])
+
     def setUp(self):
         self.assertIsNotNone(catalog, "The catalog planner is not implemented")
 

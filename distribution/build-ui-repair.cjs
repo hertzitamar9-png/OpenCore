@@ -65,6 +65,7 @@ app=editFunction(app,'v8',text=>replaceOnce(text,
   'i.jsxs("span",{className:"push",children:["GPU ",t.telemetry.gpuUtilization,"%"]}),i.jsx(WI,{entries:a,liveStartedAt:o})',
   'i.jsx(WI,{entries:a,liveStartedAt:o}),i.jsxs("span",{children:["GPU ",t.telemetry.gpuUtilization,"%"]})'));
 app = editFunction(app, 'Rs', text => {
+  text = replaceOnce(text, '!s||!d||!F||E', '!s||!d||!F||F.kind==="speech"||E');
   text = replaceOnce(text, 'const[d,u]=p.useState(null)', 'const[$localStatus,u]=p.useState(null)');
   text = replaceOnce(text, 'M=p.useRef(!1);', 'M=p.useRef(!1);const $shared=$useInstallState(),d=$shared.runtime||$localStatus;');
   text = replaceOnce(text, 'H=Of(Q),J=!!(d!=null&&d.activeJobId)&&d.activeJobId!==(Q==null?void 0:Q.id)', 'H=Of(Q)||$shared.active?.modelId===t,J=!!$shared.active&&$shared.active.modelId!==t');
@@ -102,7 +103,8 @@ app=editFunction(app,'yj',text=>{
 app=editFunction(app,'h8',text=>pauseHiddenEffects(replaceOnce(text,
   'var Ut,vn,hs,Ci,ni,gs,tn,nn;', 'var Ut,vn,hs,Ci,ni,gs,tn,nn;const $pageActive=$usePageActive();')));
 app=editFunction(app,'w8',text=>replaceOnce(text,
-  'className:"section-main",children:tr','className:"section-main",children:i.jsx($RetainedViews,{view:d,content:tr})'));
+  'className:"section-main",children:tr','className:"section-main",children:i.jsxs(i.Fragment,{children:[i.jsx($PrivateChatLauncher,{}),i.jsx($RetainedViews,{view:d,content:tr})]})'));
+app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
 app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
