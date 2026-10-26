@@ -52,8 +52,10 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
     const terminal = snapshot.terminal + (snapshot.active && !active ? 1 : 0);
     const key = JSON.stringify(runtime?.receipts || []);
     const receiptsRevision = snapshot.receiptsRevision + (key !== receiptKey ? 1 : 0);
+    const libraryChanged = terminal !== snapshot.terminal || (receiptKey && key !== receiptKey);
     receiptKey = key;
     publish({ active, progress, runtime, terminal, receiptsRevision });
+    if (libraryChanged && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('opencore-model-library-invalidated'));
     if (!listeners.size && !active && timer) { clearInterval(timer); timer = null; }
   }
   async function refresh(fresh = false) {
@@ -122,6 +124,9 @@ function createInstallCoordinator(nativeInvoke, now = () => Date.now()) {
       finally { starting = null; await refresh(true); }
     }
     const result = await run();
+    if (['uninstall_model', 'register_prepared_model'].includes(command) && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('opencore-model-library-invalidated'));
+    }
     if (command === 'runtime_setup_status') { runtime = result; reconcile(); }
     if (command === 'model_install_progress') { catalogueProgress = result; reconcile(); }
     if (command === 'list_model_library') publish({ library: result });

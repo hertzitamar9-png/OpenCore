@@ -20,9 +20,31 @@ function editFunction(text, name, edit) {
   if (!node) throw new Error('Missing function ' + name);
   return text.slice(0, node.start) + edit(text.slice(node.start, node.end)) + text.slice(node.end);
 }
+function pauseHiddenEffects(text) {
+  const tree=acorn.parse(text,{ecmaVersion:'latest',sourceType:'module'}),changes=[];
+  function walk(node) {
+    if(!node||typeof node!=='object')return;
+    if(node.type==='CallExpression'&&node.callee?.object?.name==='p'&&node.callee?.property?.name==='useEffect') {
+      const [callback,deps]=node.arguments;
+      if(callback?.body?.type!=='BlockStatement'||deps?.type!=='ArrayExpression')throw Error('Unsupported retained-page effect');
+      changes.push([callback.body.start+1,callback.body.start+1,'if(!$pageActive)return;']);
+      changes.push([deps.end-1,deps.end-1,(deps.elements.length?',':'')+'$pageActive']);
+    }
+    for(const value of Object.values(node))if(Array.isArray(value))value.forEach(walk);else if(value&&typeof value==='object')walk(value);
+  }
+  walk(tree);
+  if(!changes.length)throw Error('No retained-page effects found');
+  for(const [start,end,value] of changes.sort((a,b)=>b[0]-a[0]))text=text.slice(0,start)+value+text.slice(end);
+  return text;
+}
 
 let index = fs.readFileSync(path.join(original, 'assets/index-CD0EH-dA.js'), 'utf8');
 index = editFunction(index, 'p', () => 'async function p(i,s={},h){const b=globalThis.__opencoreInstallBridge;const run=()=>window.__TAURI_INTERNALS__.invoke(i,s,h);return b?b.invoke(i,s,run):run()}');
+index=editFunction(index,'bp',text=>replaceOnce(text,
+  'const o=await Kn("model-library",()=>p("list_model_library"));',
+  'const o=await globalThis.__opencoreModelLibrary.read(()=>p("list_model_library"),{fresh:!!i?.fresh});'));
+index=editFunction(index,'Xv',()=>fs.readFileSync(path.join(root,'startup-entry.js'),'utf8'));
+index+='\nconst $viewCacheVersion='+JSON.stringify(releaseVersion)+';\n'+fs.readFileSync(path.join(root,'model-view-cache.js'),'utf8');
 let app = fs.readFileSync(path.join(original, 'assets/App-kNA9sRUP.js'), 'utf8');
 app=editFunction(app,'pk',text=>{
   text=replaceOnce(text,'const u=await jj();','const u=$manualUpdatePolicy.normalize(await jj());');
@@ -56,6 +78,7 @@ app = editFunction(app, 'Rs', text => {
 });
 app = editFunction(app, 'yj', text => {
   text = replaceOnce(text, 'var Oe;', 'var Oe;const $shared=$useInstallState();');
+  text = replaceOnce(text, 'const[a,o]=p.useState(null)', 'const[a,o]=p.useState(()=>globalThis.__opencoreModelLibrary.peek())');
   text = replaceOnce(text, 'p.useEffect(()=>{J()},[J])', 'p.useEffect(()=>{J()},[J,$shared.terminal,$shared.receiptsRevision])');
   text = replaceOnce(text, 'const B=!!(a!=null', 'const B=!$shared.initialized||!!$shared.active||!!(a!=null');
   text = replaceOnce(text, 'K=me===d?null:a==null?void 0:a.progress', 'K=$shared.progress||(me===d?null:a==null?void 0:a.progress)');
@@ -70,6 +93,17 @@ app = editFunction(app, 'yj', text => {
 });
 app = require('./connector-research/connector-patches.cjs').applyConnectorPatches(app,{editFunction,replaceOnce});
 app = require('./hub-patches.cjs')(app,{editFunction,replaceOnce});
+app=editFunction(app,'yj',text=>{
+  text=replaceOnce(text,'J=p.useCallback(async(se=!0)=>','J=p.useCallback(async(se=!1)=>');
+  text=replaceOnce(text,'p.useEffect(()=>{J()},[J,$shared.terminal,$shared.receiptsRevision,$hub.catalog])',
+    'p.useEffect(()=>{J()},[J])');
+  return text;
+});
+app=editFunction(app,'h8',text=>pauseHiddenEffects(replaceOnce(text,
+  'var Ut,vn,hs,Ci,ni,gs,tn,nn;', 'var Ut,vn,hs,Ci,ni,gs,tn,nn;const $pageActive=$usePageActive();')));
+app=editFunction(app,'w8',text=>replaceOnce(text,
+  'className:"section-main",children:tr','className:"section-main",children:i.jsx($RetainedViews,{view:d,content:tr})'));
+app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
 app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
 

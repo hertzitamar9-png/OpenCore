@@ -35,9 +35,9 @@ async function $hubRefresh(force=false) {
   if ($hubStatusPending) return $hubStatusPending;
   if (!force && Date.now()-$hubStatusAt<800) return $hubState;
   $hubStatusPending=$hubRequest('/status').then(value=>{
-    const old=JSON.stringify($hubState.catalog.map(e=>[e.id,e.revision,e.status,e.runtimeReady,e.profileId]));
+    const old=$hubState.catalog;
     $hubStatusAt=Date.now();$hubPublish({...value,available:true,loaded:true,error:''});
-    const changed=old!==JSON.stringify($hubState.catalog.map(e=>[e.id,e.revision,e.status,e.runtimeReady,e.profileId]));
+    const changed=old!==$hubState.catalog;
     if(changed&&$hubNativeLibrary)window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:$hubAugment($hubNativeLibrary)}));
     for(const entry of value.catalog||[]){
       const key=$hubDescriptor.url+'/'+entry.id;
@@ -114,7 +114,7 @@ async function $hubRegister(entry) {
 }
 async function $hubInvoke(command,args,run) {
   if(command==='list_model_library'){
-    const library=await run();$hubNativeLibrary=library;if($hubDescriptor)await $hubRefresh().catch(()=>{});return $hubAugment(library);
+    const library=await run();$hubNativeLibrary=library;await $hubRefresh().catch(()=>{});return $hubAugment(library);
   }
   if(command==='model_install_progress'){
     const native=await run();if($hubDescriptor)await $hubRefresh().catch(()=>{});

@@ -69,6 +69,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-install-coordinator.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test-model-view-cache.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Test Hugging Face metadata, token protection, downloads and runtime isolation
         env:
           PYTHONPATH: ${{ github.workspace }}/src-tauri/resources/runtime-setup/hf-extension
@@ -93,6 +95,8 @@ jobs:
         run: npx playwright install chromium
       - name: Verify rendered downloads, connectors, footer and manual updates
         working-directory: distribution
+        env:
+          OPENCORE_VIEW_QA_REPORT: .output/cached-views-qa.json
         run: |
           node qa-model-install.cjs candidate-dist
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -106,9 +110,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-updates.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-cached-views.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-branding.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Build OpenCore Setup with the official app logo and complete runtime
+      - name: Build the complete app package with the official logo and runtime
         run: |
           $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS/makensis.exe'
           if (!(Test-Path -LiteralPath $nsis)) {
@@ -160,6 +166,7 @@ jobs:
           path: |
             distribution/.output/update-controls.png
             distribution/.output/update-controls-qa.json
+            distribution/.output/cached-views-qa.json
             distribution/.output/browser-branding.png
             distribution/.output/browser-branding-qa.json
             distribution/.output/release/*verification.json

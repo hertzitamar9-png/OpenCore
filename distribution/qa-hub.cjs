@@ -48,6 +48,9 @@ await page.getByRole('button',{name:'Install',exact:true}).click();await page.ge
 record('install immediately locks its card',await page.getByRole('button',{name:'Installing…',exact:true}).isDisabled());
 await page.waitForTimeout(1400);record('Hub progress uses the shared top panel',await page.locator('.model-install-progress progress').getAttribute('value')==='30');
 await page.locator('.model-install-progress').getByRole('button',{name:'Pause installation',exact:true}).click();await page.getByRole('button',{name:'Install',exact:true}).waitFor();
+// The card can render before the shared coordinator has confirmed the pause.
+// Wait for authoritative admission to release the control, not just its label.
+await (await page.getByRole('button',{name:'Install',exact:true}).elementHandle()).waitForElementState('enabled');
 record('pause reaches service and releases the same install lock',await page.getByRole('button',{name:'Install',exact:true}).isEnabled()&&await page.evaluate(()=>fixture.calls.some(c=>c.route==='/pause')));
 await page.evaluate(()=>{fixture.catalog[0].status='installed';fixture.progress=null;});await page.getByRole('button',{name:'Prepare runtime',exact:true}).waitFor();
 await page.getByRole('button',{name:'Prepare runtime',exact:true}).click();await page.waitForTimeout(1300);record('runtime preparation uses indeterminate shared progress',await page.locator('.model-install-progress progress').getAttribute('value')===null);
