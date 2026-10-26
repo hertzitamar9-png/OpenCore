@@ -3,11 +3,11 @@
 The Android client connects directly to the running Windows OpenCore app. The PC performs every operation. Its live app view is streamed over TLS, and generated media can be received by the paired phone. There is no OpenCore cloud account, analytics endpoint or payload relay.
 
 1. Install `OpenCore.Remote.apk` on an Android phone running Android 8 or later. Open the phone app.
-2. On the PC, open **OpenCore → Settings → Remote access** and turn access on. Keep OpenCore open and the PC awake.
-3. For a first connection, put the phone and PC on the same Wi-Fi. Choose a suggested address on the PC and select **Create pairing code**.
-4. On the phone, choose **Scan pairing code**, allow camera access and point the camera at the PC's code. If scanning is unavailable, open the pairing-text fallback on the PC, transfer the text to the phone and choose **Connect to PC**. The code expires after two minutes and can be used once.
+2. On the PC, open **OpenCore → Settings → Remote access**. Keep OpenCore open and the PC awake.
+3. For a first connection, use the same home network: the phone can use Wi-Fi even if the PC uses Ethernet. Choose the matching Wi-Fi or Ethernet address on the PC and select **Reveal QR code**. This turns access on if necessary.
+4. On the phone, choose **Scan pairing code**, allow camera access, point the camera at the PC's code, and approve access. If scanning is unavailable, open the pairing-text fallback on the PC, transfer the text to the phone and choose **Connect to PC**. The code expires after two minutes and can be used once.
 5. The phone displays the same live OpenCore window. Tap to click, swipe to scroll and pinch to zoom. Select a text field on the PC view, then use **Type** to send text. **Files** opens generated outputs, **Game** shows game controls, and **Help** opens the interactive tour.
-6. On the PC, **Your phones** shows connection status and lets you revoke access. You can also turn remote access off there.
+6. Pairing stays saved through OpenCore sign-outs and app restarts. The phone reconnects when the same PC address is reachable. You can rename the PC on either device. On the PC, **Your phones** shows connection status and lets you remove a phone; the phone also has **Remove PC**.
 
 The PC must remain awake with OpenCore open. Cellular/away-from-home access needs an existing private network route to the PC (for example a direct WireGuard VPN). This implementation does not provision a VPN, change router settings, expose an unauthenticated public service, or use OpenAI's remote-control infrastructure. A phone on cellular cannot reach a private home IP without that route. Windows Firewall may require the user to allow the selected port on their private network.
 

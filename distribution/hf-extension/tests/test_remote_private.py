@@ -38,13 +38,19 @@ class RemoteTests(unittest.TestCase):
 
     def test_address_discovery_only_returns_private_pc_addresses(self):
         from remote_access import local_addresses
-        sample = ('IPv4 Address. . . . . . . . . . . : 192.168.1.33(Preferred)\n'
+        sample = ('Ethernet adapter vEthernet:\n'
+                  '   IPv4 Address. . . . . . . . . . . : 172.20.1.5(Preferred)\n'
+                  'Ethernet adapter Ethernet:\n'
+                  '   IPv4 Address. . . . . . . . . . . : 192.168.1.33(Preferred)\n'
                   'Default Gateway . . . . . . . . . : 192.168.1.1\n'
-                  'IPv4 Address. . . . . . . . . . . : 100.101.102.103\n'
+                  'Wireless LAN adapter Wi-Fi:\n'
+                  '   IPv4 Address. . . . . . . . . . . : 10.10.0.4\n'
+                  'Tunnel adapter Private VPN:\n'
+                  '   IPv4 Address. . . . . . . . . . . : 100.101.102.103\n'
                   'IPv4 Address. . . . . . . . . . . : 127.0.0.1\n'
                   'IPv4 Address. . . . . . . . . . . : 8.8.8.8\n')
         with patch('remote_access.subprocess.run', return_value=type('Result',(),{'returncode':0,'stdout':sample})()):
-            self.assertEqual(local_addresses(), ['192.168.1.33', '100.101.102.103'])
+            self.assertEqual(local_addresses(), [{'address':'10.10.0.4','interface':'Wi-Fi'}, {'address':'192.168.1.33','interface':'Ethernet'}, {'address':'100.101.102.103','interface':'Private VPN'}, {'address':'172.20.1.5','interface':'vEthernet'}])
 
     def test_pairing_qr_contains_the_exact_one_time_code_and_no_extra_data(self):
         self.remote.server = type('Server',(),{'server_port':12345})()
@@ -102,6 +108,37 @@ public class DecodeFixture {
         self.assertFalse(self.remote.status()['devices'][0]['connected'])
         self.assertNotIn('last_seen', self.remote.devices_path.read_text())
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows owns the local TLS key')
+    def test_pairing_name_and_port_survive_restart_and_disabling_access(self):
+        with patch.dict(os.environ, {'COMPUTERNAME': 'Original PC'}):
+            first = RemoteAccess(self.root, self.root, surface=Surface())
+            second = None
+            try:
+                self.assertEqual(first.status()['pcName'], 'Original PC')
+                port = first.start({'bind':'127.0.0.1'})['port']
+                first.pair_code, first.pair_until = 'one-time', time.monotonic()+120
+                paired = first.pair('one-time', 'Test phone', '127.0.0.1')
+                self.assertEqual(paired['name'], 'Original PC')
+                first.rename('Studio PC')
+                first.shutdown()
+                second = RemoteAccess(self.root, self.root, surface=Surface())
+                second.restore()
+                self.assertTrue(second.status()['enabled'])
+                self.assertEqual(second.status()['port'], port)
+                self.assertEqual(second.status()['pcName'], 'Studio PC')
+                self.assertEqual(second.authorize('Bearer '+paired['token']), paired['deviceId'])
+                second.close()
+                self.assertFalse(second.status()['enabled'])
+                self.assertEqual(second.start({})['port'], port)
+                self.assertEqual(second.authorize('Bearer '+paired['token']), paired['deviceId'])
+                second.revoke(paired['deviceId'])
+                self.assertIsNone(second.authorize('Bearer '+paired['token']))
+                for invalid in ('', 'x'*81, 'bad\nname'):
+                    with self.assertRaises(ValueError): second.rename(invalid)
+            finally:
+                first.shutdown()
+                if second: second.shutdown()
+
     def test_default_off_single_use_expiring_pairing_and_revocation(self):
         self.assertFalse(self.remote.status()['enabled'])
         self.remote.pair_code, self.remote.pair_until = 'one-time-code', time.monotonic() + 120
@@ -141,8 +178,18 @@ public class DecodeFixture {
         connection.request('GET', '/frame', headers={'Authorization': 'Bearer ' + paired['token']})
         response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertTrue(response.read().startswith(b'\x89PNG')); connection.close()
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('GET', '/info')
+        response = connection.getresponse(); self.assertEqual(response.status, 403); response.read(); connection.close()
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('POST', '/rename', json.dumps({'name':'New PC name'}), {'Authorization':'Bearer '+paired['token'], 'Content-Type':'application/json'})
+        response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertEqual(json.loads(response.read())['name'],'New PC name'); connection.close()
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
         connection.request('GET', '/frame', headers={'Authorization': 'Bearer ' + paired['token'], 'Origin': 'https://evil.invalid'})
         response = connection.getresponse(); self.assertEqual(response.status, 403); response.read(); connection.close()
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('POST', '/unpair', '{}', {'Authorization':'Bearer '+paired['token'], 'Content-Type':'application/json'})
+        response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertTrue(json.loads(response.read())['removed']); connection.close()
+        self.assertIsNone(self.remote.authorize('Bearer '+paired['token']))
 
 
 class LocalModel(BaseHTTPRequestHandler):

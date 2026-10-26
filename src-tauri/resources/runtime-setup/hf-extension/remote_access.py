@@ -22,18 +22,29 @@ from hf_download import atomic_json, managed_path
 def local_addresses():
     """Find this PC's private IPv4 addresses without contacting another host."""
     try:
-        result = subprocess.run(['ipconfig.exe'], capture_output=True, text=True, timeout=4,
+        result = subprocess.run(['ipconfig.exe'], capture_output=True, text=True, errors='replace', timeout=4,
                                 creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         if result.returncode: return []
     except (OSError, subprocess.TimeoutExpired): return []
     ranges = tuple(ipaddress.ip_network(value) for value in ('10.0.0.0/8','172.16.0.0/12','192.168.0.0/16','100.64.0.0/10'))
-    found = []
+    found, interface = [], ''
     for line in result.stdout.splitlines():
+        if line.strip() and not line[0].isspace() and line.rstrip().endswith(':'):
+            interface = re.sub(r'^(?:(?:Wireless LAN|Ethernet|Tunnel) adapter)\s+', '', line.strip().rstrip(':'), flags=re.I)
+            continue
         match = re.search(r'\bIPv4\b[^:]*:\s*(\d{1,3}(?:\.\d{1,3}){3})', line, re.I)
         if not match: continue
         try: address = ipaddress.ip_address(match.group(1))
         except ValueError: continue
-        if any(address in network for network in ranges) and str(address) not in found: found.append(str(address))
+        if any(address in network for network in ranges) and not any(item['address'] == str(address) for item in found):
+            found.append({'address': str(address), 'interface': interface[:100] or 'Network adapter'})
+    def priority(item):
+        name = item['interface']
+        if re.search(r'\bwi[ -]?fi\b|wireless', name, re.I): return 0
+        if re.match(r'^ethernet(?:\s+\d+)?$', name, re.I): return 1
+        if re.search(r'vethernet|virtual|hyper-v', name, re.I): return 3
+        return 2
+    found.sort(key=priority)
     return found[:16]
 
 
@@ -56,6 +67,10 @@ class RemoteAccess:
         self.last_frame, self.last_frame_at = None, 0
         self.devices_path = managed_path(self.root, 'secrets', 'remote-device-identities.json')
         self.config_path = managed_path(self.root, 'runtime-setup', 'remote-access.json')
+        configured = self.config()
+        self.pc_name = configured.get('name') or os.environ.get('COMPUTERNAME') or socket.gethostname() or 'OpenCore PC'
+        if not isinstance(self.pc_name, str) or len(self.pc_name) > 80 or any(ord(c) < 32 for c in self.pc_name):
+            self.pc_name = 'OpenCore PC'
         try:
             value = json.loads(self.devices_path.read_text(encoding='utf-8'))
             self.devices = {item['id']: item for item in value if isinstance(item, dict) and
@@ -70,13 +85,29 @@ class RemoteAccess:
             self.media_roots.update({'app-artifacts': app_root / 'artifacts', 'app-studio': app_root / 'studio'})
         self.output_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.mp4', '.webm', '.html', '.pdf', '.txt', '.glb', '.zip', '.wav', '.mp3', '.flac', '.ogg', '.gltf', '.obj', '.stl', '.csv', '.md'}
 
+    def config(self):
+        try:
+            value = json.loads(self.config_path.read_text(encoding='utf-8'))
+            return value if isinstance(value, dict) else {}
+        except (OSError, ValueError): return {}
+
+    def rename(self, value):
+        if not isinstance(value, str) or not 1 <= len(value.strip()) <= 80 or any(ord(c) < 32 for c in value):
+            raise ValueError('Choose a PC name from 1 to 80 characters')
+        with self.lock:
+            self.pc_name = value.strip()
+            options = self.config()
+            options['name'] = self.pc_name
+            atomic_json(self.config_path, options)
+            return self.status()
+
     def status(self):
         now = time.monotonic()
         if now - self.addresses_checked > 60:
             self.addresses = local_addresses()
             self.addresses_checked = now
         with self.lock:
-            return {'enabled': self.server is not None, 'port': self.server.server_port if self.server else None,
+            return {'enabled': self.server is not None, 'port': self.server.server_port if self.server else None, 'pcName': self.pc_name,
                     'fingerprint': self.fingerprint, 'pairingExpiresIn': max(0, int(self.pair_until - time.monotonic())),
                     'addresses': list(self.addresses),
                     'devices': [{'id': d['id'], 'name': d.get('name', 'Phone'),
@@ -86,10 +117,11 @@ class RemoteAccess:
     def start(self, options):
         with self.lock:
             if self.server: return self.status()
-            host = options.get('bind', '0.0.0.0')
+            saved = self.config()
+            host = options.get('bind', saved.get('bind', '0.0.0.0'))
             try: ipaddress.ip_address(host)
             except (ValueError, TypeError): raise ValueError('Bind to a local IP address') from None
-            port = options.get('port', 0)
+            port = options.get('port', saved.get('port', 0))
             if type(port) is not int or not (port == 0 or 1024 <= port <= 65535):
                 raise ValueError('Choose a port between 1024 and 65535')
             if self.surface is None:
@@ -104,7 +136,7 @@ class RemoteAccess:
             self.server, self.fingerprint = server, fingerprint
             self.thread = threading.Thread(target=server.serve_forever, daemon=True)
             self.thread.start()
-            atomic_json(self.config_path, {'enabled': True, 'bind': host, 'port': server.server_port})
+            atomic_json(self.config_path, {'enabled': True, 'bind': host, 'port': server.server_port, 'name': self.pc_name})
             return self.status()
 
     def restore(self):
@@ -127,7 +159,7 @@ class RemoteAccess:
             endpoint = 'https://' + host + ':' + str(parsed.port or self.server.server_port)
             self.pair_code, self.pair_until = secrets.token_urlsafe(32), time.monotonic() + 120
             self.attempts.clear()
-            text = 'opencore://pair?' + urlencode({'url': endpoint, 'pin': self.fingerprint, 'code': self.pair_code})
+            text = 'opencore://pair?' + urlencode({'url': endpoint, 'pin': self.fingerprint, 'code': self.pair_code, 'name': self.pc_name})
             return {'pairingText': text, 'qrRows': pairing_qr(text), 'expiresIn': 120, 'fingerprint': self.fingerprint}
 
     def pair(self, code, name, address):
@@ -145,7 +177,7 @@ class RemoteAccess:
             self.devices[identity] = {'id': identity, 'name': name, 'hash': hashlib.sha256(token.encode()).hexdigest()}
             atomic_json(self.devices_path, list(self.devices.values()))
             self.pair_code, self.pair_until = None, 0
-            return {'deviceId': identity, 'token': token, 'name': 'OpenCore PC'}
+            return {'deviceId': identity, 'token': token, 'name': self.pc_name}
 
     def authorize(self, authorization):
         if not isinstance(authorization, str) or not authorization.startswith('Bearer ') or len(authorization) > 256: return None
@@ -174,7 +206,10 @@ class RemoteAccess:
         return self.status()
 
     def close(self):
-        if self.config_path.exists(): atomic_json(self.config_path, {'enabled': False})
+        if self.config_path.exists():
+            saved = self.config()
+            saved.update(enabled=False, name=self.pc_name)
+            atomic_json(self.config_path, saved)
         return self.shutdown()
 
     def media_path(self, root, relative):
@@ -270,6 +305,11 @@ class RemoteHandler(BaseHTTPRequestHandler):
             body = self.body(); return self.send(200, state.pair(body.get('code'), body.get('name', 'Android phone'), self.client_address[0]))
         device = state.authorize(self.headers.get('Authorization'))
         if not device: raise PermissionError('Pair this phone from the PC app')
+        if self.command == 'GET' and parsed.path == '/info': return self.send(200, {'name': state.pc_name})
+        if self.command == 'POST' and parsed.path == '/rename':
+            state.rename(self.body().get('name')); return self.send(200, {'name': state.pc_name})
+        if self.command == 'POST' and parsed.path == '/unpair':
+            state.revoke(device); return self.send(200, {'removed': True})
         if self.command == 'GET' and parsed.path == '/frame':
             value, width, height = state.frame()
             return self.send(200, value, 'image/png', {'X-Frame-Width': str(width), 'X-Frame-Height': str(height)})

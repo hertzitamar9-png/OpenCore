@@ -602,6 +602,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.remote.pairing(body.get('address')))
         elif route == '/remote/revoke':
             self._send(200, state.remote.revoke(body.get('deviceId')))
+        elif route == '/remote/name':
+            self._send(200, state.remote.rename(body.get('name')))
         elif route == '/private/open':
             backend = state.runtime.private_backend(body.get('runtime'))
             self._send(200, state.private.open(backend=backend))

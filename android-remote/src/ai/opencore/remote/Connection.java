@@ -18,6 +18,7 @@ import javax.net.ssl.*;
 final class Connection {
     final String endpoint, pin, token;
     final SSLSocketFactory factory;
+    volatile String name = "OpenCore PC";
     Connection(String endpoint, String pin, String token) throws Exception {
         URI uri = new URI(endpoint);
         if (!"https".equals(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null || uri.getQuery() != null ||
@@ -41,7 +42,7 @@ final class Connection {
     static String hex(byte[] bytes){ StringBuilder result=new StringBuilder(); for(byte b:bytes)result.append(String.format(Locale.ROOT,"%02x",b&255));return result.toString(); }
     HttpsURLConnection open(String path, JSONObject body) throws Exception {
         if (!path.matches("/[a-z]+")) throw new IOException("Invalid remote endpoint");
-        HttpsURLConnection request=(HttpsURLConnection)new URL(endpoint+path).openConnection();
+        HttpsURLConnection request=(HttpsURLConnection)new URL(endpoint+path).openConnection(Proxy.NO_PROXY);
         request.setSSLSocketFactory(factory);
         request.setHostnameVerifier((hostname, session)->{
             try {return hex(MessageDigest.getInstance("SHA-256").digest(session.getPeerCertificates()[0].getEncoded())).equals(pin);}
@@ -74,7 +75,7 @@ final class Connection {
             while((count=input.read(buffer))!=-1){total+=count;if(total>1024L*1024*1024)throw new IOException("File exceeds the phone download limit");stream.write(buffer,0,count);}
         }catch(Exception e){output.delete();throw e;}finally{request.disconnect();}
     }
-    JSONObject value()throws Exception{return new JSONObject().put("url",endpoint).put("pin",pin).put("token",token);}
+    JSONObject value()throws Exception{return new JSONObject().put("url",endpoint).put("pin",pin).put("token",token).put("name",name);}
     static SecretKey key()throws Exception{
         KeyStore store=KeyStore.getInstance("AndroidKeyStore");store.load(null);
         if(!store.containsAlias("opencore-pc")){
@@ -86,13 +87,15 @@ final class Connection {
     void save(Context context)throws Exception{
         Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.ENCRYPT_MODE,key());
         String iv=Base64.encodeToString(cipher.getIV(),Base64.NO_WRAP),data=Base64.encodeToString(cipher.doFinal(value().toString().getBytes(StandardCharsets.UTF_8)),Base64.NO_WRAP);
-        context.getSharedPreferences("paired-pc",Context.MODE_PRIVATE).edit().putString("iv",iv).putString("data",data).apply();
+        if(!context.getSharedPreferences("paired-pc",Context.MODE_PRIVATE).edit().putString("iv",iv).putString("data",data).commit())
+            throw new IOException("Could not save the paired PC on this phone.");
     }
     static Connection load(Context context)throws Exception{
         android.content.SharedPreferences prefs=context.getSharedPreferences("paired-pc",Context.MODE_PRIVATE);
         if(!prefs.contains("data"))return null;
         Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.DECRYPT_MODE,key(),new GCMParameterSpec(128,Base64.decode(prefs.getString("iv",""),Base64.NO_WRAP)));
         JSONObject value=new JSONObject(new String(cipher.doFinal(Base64.decode(prefs.getString("data",""),Base64.NO_WRAP)),StandardCharsets.UTF_8));
-        return new Connection(value.getString("url"),value.getString("pin"),value.getString("token"));
+        Connection connection=new Connection(value.getString("url"),value.getString("pin"),value.getString("token"));
+        connection.name=value.optString("name","OpenCore PC");return connection;
     }
 }

@@ -15,12 +15,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class MainActivity extends Activity {
     final ExecutorService actions=Executors.newSingleThreadExecutor();
     final ScheduledExecutorService frames=Executors.newSingleThreadScheduledExecutor();
+    final Object pairingLock=new Object();
     volatile Connection connection;
     volatile boolean resumed=false;
     final AtomicBoolean showing=new AtomicBoolean(false);
-    LinearLayout root; TextView status; FrameView display; EditText pairing;
+    LinearLayout root; TextView status,pcNameLabel; FrameView display; EditText pairing;
     Button pairButton;
     boolean game=false, pairingInProgress=false;
+    volatile long nextInfoAt=0;
     static final int SCAN_PAIRING = 30;
     interface Work{void run()throws Exception;}
     int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
@@ -45,8 +47,14 @@ public final class MainActivity extends Activity {
                 byte[] data=selected.bytes("/frame",null,32*1024*1024);
                 Bitmap bitmap=BitmapFactory.decodeByteArray(data,0,data.length);
                 if(bitmap==null)throw new IOException("PC frame could not be decoded");
+                if(SystemClock.elapsedRealtime()>=nextInfoAt){
+                    nextInfoAt=SystemClock.elapsedRealtime()+10000;
+                    try{String name=selected.json("/info",null).optString("name",selected.name);
+                        if(!name.equals(selected.name)){synchronized(pairingLock){if(connection==selected){selected.name=name;selected.save(this);}}runOnUiThread(()->updatePcName(selected));}
+                    }catch(Exception ignored){}
+                }
                 runOnUiThread(()->{if(connection==selected&&display!=null){display.bitmap=bitmap;display.invalidate();status.setText(game?"Live · game controls on":"Live · tap to control your PC");}});
-            }catch(Exception e){message(e.getMessage()==null?"PC disconnected. Reconnecting…":e.getMessage());}
+            }catch(Exception e){String detail=e.getMessage();message(detail!=null&&detail.contains("not paired")?detail:"PC unavailable · reconnecting automatically. Keep OpenCore open on your PC.");}
             finally{showing.set(false);}
         },0,150,TimeUnit.MILLISECONDS);
     }
@@ -55,9 +63,9 @@ public final class MainActivity extends Activity {
         ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(8),dp(8),dp(8),dp(16));scroll.addView(content);root.addView(scroll);
         TextView title=label("Connect to your PC");title.setTextSize(24);title.setTextColor(0xffeef6ff);content.addView(title);
-        content.addView(label("1. Open OpenCore on your PC. In Settings, choose Remote access and turn it on."));
-        content.addView(label("2. For the first connection, put your phone and PC on the same Wi-Fi. On the PC, choose an address and create a pairing code."));
-        content.addView(label("3. Tap Scan pairing code below. Point the camera at the code on your PC; this phone connects after scanning."));
+        content.addView(label("1. Open OpenCore on your PC. In Settings, choose Remote access."));
+        content.addView(label("2. Connect the phone to your home Wi-Fi. The PC can use Wi-Fi or an Ethernet cable on the same network. On the PC, choose the matching address and reveal the QR code."));
+        content.addView(label("3. Tap Scan pairing code below. Point the camera at the code on your PC, then approve access."));
         content.addView(button("Scan pairing code",()->startActivityForResult(new Intent(this,ScannerActivity.class),SCAN_PAIRING)));
         content.addView(label("Can’t scan? Copy the pairing text from your PC, move it to this phone, and paste it here."));
         pairing=new EditText(this);pairing.setTextColor(0xffe0e9f5);pairing.setHintTextColor(0xffa4b2c3);pairing.setHint("Pairing text from your PC");pairing.setSingleLine(false);content.addView(pairing);
@@ -67,11 +75,19 @@ public final class MainActivity extends Activity {
             if(clipboard!=null&&clipboard.hasPrimaryClip()&&clipboard.getPrimaryClip()!=null){CharSequence value=clipboard.getPrimaryClip().getItemAt(0).coerceToText(this);pairing.setText(value);}
             else message("No pairing text found. Copy it from your PC first.");
         }),new LinearLayout.LayoutParams(0,-2,1));
-        pairButton=button("Connect to PC",()->beginPair(pairing.getText().toString().trim()));
+        pairButton=button("Connect to PC",()->confirmPair(pairing.getText().toString().trim()));
         actionsRow.addView(pairButton,new LinearLayout.LayoutParams(0,-2,1));content.addView(actionsRow);
         status=label("Ready to scan or paste a pairing code.");content.addView(status);
         content.addView(button("Show me how to use remote control",()->showTour(0)));
         content.addView(label("Away from home? Connect both devices to a private VPN first, then use the PC’s VPN address. Keep the PC awake and OpenCore open."));
+    }
+    void confirmPair(String raw){
+        String name;
+        try{Uri uri=Uri.parse(raw);name=uri.getQueryParameter("name");}catch(Exception ignored){name=null;}
+        if(name==null||name.trim().isEmpty()||name.length()>80)name="this PC";
+        new AlertDialog.Builder(this).setTitle("Connect to "+name+"?")
+            .setMessage("Allow this phone to view and control OpenCore on the PC and receive its generated files? This pairing stays saved until you remove it.")
+            .setNegativeButton("Cancel",null).setPositiveButton("Allow and connect",(dialog,which)->beginPair(raw)).show();
     }
     void beginPair(String raw){
         if(pairingInProgress)return;
@@ -82,19 +98,20 @@ public final class MainActivity extends Activity {
             if(url==null||pin==null||code==null)throw new IOException("The pairing text is incomplete. Create a new code on your PC.");
             Connection candidate=new Connection(url,pin,null);
             JSONObject paired=candidate.json("/pair",new JSONObject().put("code",code).put("name",Build.MANUFACTURER+" "+Build.MODEL));
-            Connection ready=new Connection(url,pin,paired.getString("token"));ready.save(this);connection=ready;
+            Connection ready=new Connection(url,pin,paired.getString("token"));ready.name=paired.optString("name","OpenCore PC");
+            try{synchronized(pairingLock){ready.save(this);connection=ready;}}catch(Exception error){try{ready.json("/unpair",new JSONObject());}catch(Exception ignored){}throw error;}
             runOnUiThread(()->{if(pairing!=null)pairing.setText("");liveScreen();});
         }catch(Exception error){
             String message=error instanceof javax.net.ssl.SSLException?"The PC identity did not match. Create a new pairing code on your PC.":
                 error instanceof java.net.SocketTimeoutException||error instanceof java.net.ConnectException||error instanceof java.net.UnknownHostException?
-                "Can’t reach the PC. Keep OpenCore open and use the same Wi-Fi or a private VPN on both devices.":
+                "Can’t reach the PC. Keep OpenCore open and connect both devices to the same home network or private VPN.":
                 error.getMessage()==null?"Connection failed. Create a new pairing code on the PC and try again.":error.getMessage();
             message(message);
         }finally{runOnUiThread(()->{pairingInProgress=false;if(pairButton!=null)pairButton.setEnabled(true);});}});
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
-        if(request==SCAN_PAIRING&&result==RESULT_OK&&data!=null){String value=data.getStringExtra("pairing");if(value!=null&&pairing!=null){pairing.setText(value);beginPair(value);}}
+        if(request==SCAN_PAIRING&&result==RESULT_OK&&data!=null){String value=data.getStringExtra("pairing");if(value!=null&&pairing!=null){pairing.setText(value);confirmPair(value);}}
     }
     @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);acceptPairingLink(intent);}
     void acceptPairingLink(Intent intent){
@@ -102,7 +119,7 @@ public final class MainActivity extends Activity {
         String value=intent.getDataString();intent.setData(null);
         if(connection==null){if(pairing!=null)pairing.setText(value);message("Pairing code received. Tap Connect to PC.");}
         else new AlertDialog.Builder(this).setTitle("Pair a different PC?").setMessage("Your current PC stays paired unless you choose to switch.")
-            .setNegativeButton("Keep current PC",null).setPositiveButton("Pair another PC",(dialog,which)->{connection=null;pairingScreen();pairing.setText(value);}).show();
+            .setNegativeButton("Keep current PC",null).setPositiveButton("Pair another PC",(dialog,which)->{synchronized(pairingLock){connection=null;}pairingScreen();pairing.setText(value);}).show();
     }
     void showTour(int step){
         String[] titles={"1 of 5 · Your PC on your phone","2 of 5 · Tap and scroll","3 of 5 · Type and chat","4 of 5 · Files and games","5 of 5 · Away from home"};
@@ -118,6 +135,10 @@ public final class MainActivity extends Activity {
     }
     void liveScreen(){
         root.removeAllViews();
+        nextInfoAt=0;
+        LinearLayout identity=new LinearLayout(this);
+        pcNameLabel=label("PC: "+connection.name);identity.addView(pcNameLabel,new LinearLayout.LayoutParams(0,-2,1));
+        identity.addView(button("Rename PC",this::renamePc));root.addView(identity);
         LinearLayout toolbar=new LinearLayout(this);toolbar.setOrientation(LinearLayout.HORIZONTAL);
         toolbar.addView(button("Files",this::files),new LinearLayout.LayoutParams(0,-2,1));
         toolbar.addView(button("Type",this::text),new LinearLayout.LayoutParams(0,-2,1));
@@ -127,11 +148,7 @@ public final class MainActivity extends Activity {
         secondary.addView(button("Restore app",()->input("wake",null)),new LinearLayout.LayoutParams(0,-2,1));
         Button gameButton=button(game?"Game: on":"Game: off",()->{});
         secondary.addView(gameButton,new LinearLayout.LayoutParams(0,-2,1));
-        secondary.addView(button("Disconnect",()->{
-            connection=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().apply();
-            File received=new File(getCacheDir(),"received");File[] existing=received.listFiles();if(existing!=null)for(File file:existing)file.delete();
-            pairingScreen();
-        }),new LinearLayout.LayoutParams(0,-2,1));
+        secondary.addView(button("Remove PC",this::removePc),new LinearLayout.LayoutParams(0,-2,1));
         root.addView(secondary);
         status=label("Connecting directly to your PC…");root.addView(status);
         display=new FrameView();root.addView(display,new LinearLayout.LayoutParams(-1,0,1));
@@ -147,6 +164,30 @@ public final class MainActivity extends Activity {
         HorizontalScrollView controls=new HorizontalScrollView(this);controls.addView(keys);controls.setVisibility(game?View.VISIBLE:View.GONE);root.addView(controls);
         gameButton.setOnClickListener(view->{game=!game;gameButton.setText(game?"Game: on":"Game: off");controls.setVisibility(game?View.VISIBLE:View.GONE);
             if(!game)input("release",null);message(game?"Game mode: drag to hold the mouse; use the keys below.":"Touch mode: tap to click, swipe to scroll, pinch to zoom.");});
+    }
+    void updatePcName(Connection selected){if(connection==selected&&pcNameLabel!=null)pcNameLabel.setText("PC: "+selected.name);}
+    void renamePc(){
+        Connection selected=connection;if(selected==null)return;
+        EditText field=new EditText(this);field.setSingleLine(true);field.setText(selected.name);field.selectAll();
+        new AlertDialog.Builder(this).setTitle("Rename this PC").setView(field).setNegativeButton("Cancel",null)
+            .setPositiveButton("Save",(dialog,which)->{String name=field.getText().toString().trim();work(()->{
+                String saved=selected.json("/rename",new JSONObject().put("name",name)).getString("name");
+                synchronized(pairingLock){if(connection!=selected)return;selected.name=saved;selected.save(this);}runOnUiThread(()->updatePcName(selected));message("PC name updated.");
+            });}).show();
+    }
+    void removePc(){
+        Connection selected=connection;if(selected==null)return;
+        new AlertDialog.Builder(this).setTitle("Remove "+selected.name+"?")
+            .setMessage("This phone will no longer reconnect. If the PC is offline, revoke this phone later in OpenCore’s Remote access settings.")
+            .setNegativeButton("Keep PC",null).setPositiveButton("Remove PC",(dialog,which)->{
+                synchronized(pairingLock){if(connection!=selected)return;connection=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().commit();}
+                message("Removing this PC…");actions.execute(()->{
+                    boolean revoked=false;try{selected.json("/unpair",new JSONObject());revoked=true;}catch(Exception ignored){}
+                    final boolean removedOnPc=revoked;
+                    File received=new File(getCacheDir(),"received");File[] existing=received.listFiles();if(existing!=null)for(File file:existing)file.delete();
+                    runOnUiThread(()->{if(connection==null){pairingScreen();message(removedOnPc?"PC removed from this phone.":"Removed from this phone. Revoke it on the PC when it is online.");}});
+                });
+            }).show();
     }
     void input(String kind,JSONObject body){Connection selected=connection;if(selected==null)return;work(()->{
         JSONObject value=body==null?new JSONObject():body;value.put("kind",kind);selected.json("/input",value);
