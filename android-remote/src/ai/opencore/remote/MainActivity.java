@@ -64,9 +64,9 @@ public final class MainActivity extends Activity {
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(8),dp(8),dp(8),dp(16));scroll.addView(content);root.addView(scroll);
         TextView title=label("Connect to your PC");title.setTextSize(24);title.setTextColor(0xffeef6ff);content.addView(title);
         content.addView(label("1. Open OpenCore on your PC. In Settings, choose Remote access."));
-        content.addView(label("2. Connect the phone to your home Wi-Fi. The PC can use Wi-Fi or an Ethernet cable on the same network. On the PC, choose the matching address and reveal the QR code."));
-        content.addView(label("3. Tap Scan pairing code below. Point the camera at the code on your PC, then approve access."));
-        content.addView(button("Scan pairing code",()->startActivityForResult(new Intent(this,ScannerActivity.class),SCAN_PAIRING)));
+        content.addView(label("2. Connect the phone to your home Wi-Fi. In OpenCore on the PC, tap Reveal QR code."));
+        content.addView(label("3. Tap Scan QR code below. Point the camera at the code on your PC, then approve access."));
+        content.addView(button("Scan QR code",()->startActivityForResult(new Intent(this,ScannerActivity.class),SCAN_PAIRING)));
         content.addView(label("Can’t scan? Copy the pairing text from your PC, move it to this phone, and paste it here."));
         pairing=new EditText(this);pairing.setTextColor(0xffe0e9f5);pairing.setHintTextColor(0xffa4b2c3);pairing.setHint("Pairing text from your PC");pairing.setSingleLine(false);content.addView(pairing);
         LinearLayout actionsRow=new LinearLayout(this);

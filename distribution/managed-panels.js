@@ -1,13 +1,13 @@
 /* These surfaces use only the authenticated, PC-owned loopback helper. */
 function $RemoteSettings(){
-  const h=p.createElement,[state,setState]=p.useState(null),[address,setAddress]=p.useState(''),[name,setName]=p.useState(''),[pair,setPair]=p.useState(null),[pairedNotice,setPairedNotice]=p.useState(''),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[copy,setCopy]=p.useState(''),[tick,setTick]=p.useState(Date.now()),textRef=p.useRef(null),choseAddress=p.useRef(false);
+  const h=p.createElement,[state,setState]=p.useState(null),[address,setAddress]=p.useState(''),[name,setName]=p.useState(''),[pair,setPair]=p.useState(null),[pairedNotice,setPairedNotice]=p.useState(''),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[copy,setCopy]=p.useState(''),[tick,setTick]=p.useState(Date.now()),textRef=p.useRef(null),optionsRef=p.useRef(null),choseAddress=p.useRef(false);
   p.useEffect(()=>{let live=true;const refresh=()=>void $hubRequest('/remote/status').then(value=>{if(live)setState(value);}).catch(e=>{if(live)setError(String(e));});refresh();const timer=setInterval(refresh,4000);return()=>{live=false;clearInterval(timer);};},[]);
   p.useEffect(()=>{if(!choseAddress.current&&state?.addresses?.length){const first=state.addresses[0];setAddress(typeof first==='string'?first:first.address);choseAddress.current=true;}},[state?.addresses]);
   p.useEffect(()=>{if(state?.pcName)setName(state.pcName);},[state?.pcName]);
   p.useEffect(()=>{if(!pair)return;const timer=setInterval(()=>setTick(Date.now()),1000);return()=>clearInterval(timer);},[pair]);
   p.useEffect(()=>{if(pair&&state?.devices?.some(device=>!pair.existingDevices.includes(device.id))){setPair(null);setPairedNotice('Phone paired. It will reconnect while the PC is available.');}},[state?.devices,pair]);
   async function action(path,body){setBusy(true);setError('');setCopy('');try{const value=await $hubRequest('/remote/'+path,body);setState(value);if(path==='stop'||path==='name')setPair(null);}catch(e){setError(String(e));}finally{setBusy(false);}}
-  async function revealPair(){if(!state||!address.trim()||busy)return;setBusy(true);setError('');setCopy('');setPairedNotice('');try{let current=state;if(!current.enabled){current=await $hubRequest('/remote/start',{});setState(current);}const value=await $hubRequest('/remote/pairing',{address:address.trim()});setTick(Date.now());setPair({...value,until:Date.now()+value.expiresIn*1000,existingDevices:(current.devices||[]).map(device=>device.id)});}catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function revealPair(){if(!state||busy)return;if(!address.trim()){setError('Could not find this PC on your network. Enter its address in Connection options below.');if(optionsRef.current)optionsRef.current.open=true;return;}setBusy(true);setError('');setCopy('');setPairedNotice('');try{let current=state;if(!current.enabled){current=await $hubRequest('/remote/start',{});setState(current);}const value=await $hubRequest('/remote/pairing',{address:address.trim()});setTick(Date.now());setPair({...value,until:Date.now()+value.expiresIn*1000,existingDevices:(current.devices||[]).map(device=>device.id)});}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function copyPair(){try{await navigator.clipboard.writeText(pair.pairingText);setCopy('Pairing text copied. Paste it in the phone app.');}catch{const field=textRef.current,details=field?.closest('details');if(details)details.open=true;field?.focus();field?.select();setCopy('Pairing text selected. Press Ctrl+C to copy it.');}}
   const seconds=pair?Math.max(0,Math.ceil((pair.until-tick)/1000)):0,rows=pair?.qrRows||[];
   const validQr=rows.length>0&&rows.length<=200&&rows.every(row=>typeof row==='string'&&row.length===rows.length&&/^[01]+$/.test(row));
@@ -19,30 +19,26 @@ function $RemoteSettings(){
     pairedNotice?h('p',{role:'status'},pairedNotice):null,
     h('form',{className:'hub-repository-form remote-name',onSubmit:event=>{event.preventDefault();void action('name',{name:name.trim()});}},h('label',{htmlFor:'remote-pc-name'},'This PC’s name'),h('input',{id:'remote-pc-name',value:name,maxLength:80,disabled:!state,onChange:e=>setName(e.target.value)}),h('button',{disabled:busy||!state||!name.trim()||name===state.pcName},'Save PC name')),
     h('div',{className:'remote-steps'},
-      h('section',{className:'remote-step'},h('h3',null,'1 · Get your phone ready'),
-        h('p',null,'Install and open OpenCore Remote on your Android phone. For the first connection, put both devices on the same home network.'),
-        h('a',{href:'https://raw.githubusercontent.com/hertzitamar9-png/OpenCore/main/distribution/mobile/OpenCore.Remote.apk',target:'_blank',rel:'noreferrer'},'Download the Android app')),
-      h('section',{className:'remote-step'},h('h3',null,'2 · Turn on PC access'),
-        h('p',null,'Keep OpenCore open and your PC awake. Revealing the code also turns on access.'),
-        h('button',{disabled:busy||!state,onClick:()=>void action(state?.enabled?'stop':'start',{})},busy?'Working…':state?.enabled?'Turn off remote access':'Enable remote access'),
-        state?.enabled&&state.port?h('p',null,`Remote connection port: ${state.port}`):null),
-      h('section',{className:'remote-step'},h('h3',null,'3 · Choose this PC’s address'),
-        h('p',null,'On your home network, choose Wi-Fi if the PC uses Wi-Fi, or Ethernet if it uses a cable. The phone can use Wi-Fi on the same router. Away from home, connect both devices to a private VPN and choose its address.'),
-        (state?.addresses||[]).length?h('div',{className:'remote-addresses'},...(state.addresses||[]).map(item=>{const value=typeof item==='string'?item:item.address,label=typeof item==='string'?item:`${item.interface} · ${item.address}`;return h('button',{key:value,type:'button',disabled:busy,'aria-pressed':address===value,onClick:()=>{choseAddress.current=true;setAddress(value);setPair(null);}},label);})):h('p',null,'No address found automatically. Enter your PC’s Wi-Fi or VPN address below.'),
-        h('form',{className:'hub-repository-form',onSubmit:event=>{event.preventDefault();void revealPair();}},
-          h('input',{'aria-label':'PC address for phone',value:address,disabled:!state,placeholder:'PC Wi-Fi or VPN address',onChange:e=>{choseAddress.current=true;setAddress(e.target.value);setPair(null);}}),h('button',{disabled:busy||!state||!address.trim()},'Reveal QR code'))),
-      h('section',{className:'remote-step'},h('h3',null,'4 · Connect from your phone'),
-        !pair?h('p',null,'Reveal the QR code above. In the phone app, tap Scan pairing code, point the camera at it and approve access.'):
+      h('section',{className:'remote-step'},h('h3',null,'Connect your phone'),
+        h('p',null,'1. Install and open OpenCore Remote on your Android phone.'),
+        h('a',{href:'https://raw.githubusercontent.com/hertzitamar9-png/OpenCore/main/distribution/mobile/OpenCore.Remote.apk',target:'_blank',rel:'noreferrer'},'Download the Android app'),
+        h('p',null,'2. Keep the PC awake and the phone on your home Wi-Fi. Then reveal the QR code.'),
+        h('button',{disabled:busy||!state,onClick:()=>void revealPair()},busy?'Getting the code…':'Reveal QR code'),
+        h('p',null,'3. On your phone, tap Scan QR code, point the camera at this screen, and allow access.')),
+      h('section',{className:'remote-step'},h('h3',null,'Your pairing code'),
+        !pair?h('p',null,'Your QR code will appear here. OpenCore chooses the connection automatically.'):
         seconds>0?h('div',{className:'remote-pair'},
           validQr?h('svg',{role:'img','aria-label':'Pairing QR code',viewBox:`0 0 ${rows.length} ${rows.length}`,className:'remote-qr',shapeRendering:'crispEdges'},h('rect',{width:rows.length,height:rows.length,fill:'#fff'}),h('path',{d:pixels,fill:'#000'})):null,
-          h('div',null,h('p',null,'On the phone, tap Scan pairing code, point its camera here, then approve access.'),h('p',{role:'status'},`Code expires in ${seconds} seconds · one phone`),
+          h('div',null,h('p',null,'On the phone, tap Scan QR code, point its camera here, then approve access.'),h('p',{role:'status'},`Code expires in ${seconds} seconds · one phone`),
             h('button',{type:'button',onClick:copyPair},'Copy pairing text'),h('details',null,h('summary',null,'Can’t scan? Paste the pairing text instead'),h('textarea',{ref:textRef,readOnly:true,value:pair.pairingText,'aria-label':'Phone pairing text',rows:4,onFocus:e=>e.target.select()})),copy?h('p',{role:'status'},copy):null)):
-        h('div',null,h('p',null,'This code expired. Reveal a fresh one to connect.'),h('button',{disabled:busy||!address.trim(),onClick:()=>void revealPair()},'Reveal a new code')))),
-    h('section',{className:'remote-phones'},h('h3',null,'Your phones'),h('p',null,'Paired phones stay saved through sign-outs and reconnect when the PC is available. Remove a phone to revoke its access.'),devices.length?devices.map(device=>h('div',{key:device.id,className:'remote-device'},h('span',null,device.name,' · ',device.connected?'Connected':'Not connected'),h('button',{disabled:busy,onClick:()=>void action('revoke',{deviceId:device.id})},'Remove phone'))):h('p',null,'No phones paired yet. A phone will appear here after it connects.')),
-    h('details',{className:'remote-help'},h('summary',null,'Having trouble connecting?'),
-      h('p',null,'Check that both devices use the same home network, then try another suggested PC address. Guest Wi-Fi networks can block devices from seeing each other.'),
-      h('p',null,'For mobile data or another Wi-Fi, set up a private VPN on both devices first. OpenCore does not set up the VPN; choose the PC’s VPN address above.'),
-      h('p',null,'Keep this PC awake and OpenCore open. If the phone still cannot connect, Windows Firewall may need to allow the shown remote port on your private network.')),
+        h('div',null,h('p',null,'This code expired. Reveal a fresh one to connect.'),h('button',{disabled:busy,onClick:()=>void revealPair()},'Reveal a new code')))),
+    h('section',{className:'remote-phones'},h('h3',null,'Your phones'),h('p',null,'Paired phones stay saved through sign-outs and reconnect when the PC is available. Remove a phone to revoke its access.'),devices.length?devices.map(device=>h('div',{key:device.id,className:'remote-device'},h('span',null,device.name,' · ',device.connected?'Connected':'Not connected'),h('button',{disabled:busy,onClick:()=>void action('revoke',{deviceId:device.id})},'Remove phone'))):h('p',null,'No phones paired yet. A phone will appear here after it connects.'),state?.enabled?h('button',{disabled:busy,onClick:()=>void action('stop',{})},'Turn off remote access'):null),
+    h('details',{className:'remote-help',ref:optionsRef},h('summary',null,'Connection options · VPN or troubleshooting'),
+      h('p',null,'OpenCore picks your home connection automatically. On mobile data or another Wi-Fi, first connect both devices to a private VPN, then choose the PC’s VPN address below.'),
+      (state?.addresses||[]).length?h('div',{className:'remote-addresses'},...(state.addresses||[]).map(item=>{const value=typeof item==='string'?item:item.address,label=typeof item==='string'?item:`${item.interface} · ${item.address}`;return h('button',{key:value,type:'button',disabled:busy,'aria-pressed':address===value,onClick:()=>{choseAddress.current=true;setAddress(value);setPair(null);}},label);})):h('p',null,'No address found automatically. Enter your PC’s Wi-Fi or VPN address below.'),
+      h('input',{'aria-label':'PC address for phone',value:address,disabled:!state,placeholder:'PC Wi-Fi or VPN address',onChange:e=>{choseAddress.current=true;setAddress(e.target.value);setPair(null);}}),
+      state?.enabled&&state.port?h('p',null,`Remote connection port: ${state.port}`):null,
+      h('p',null,'Keep the PC awake and OpenCore open. Guest Wi-Fi may block devices from seeing each other. Windows Firewall may need to allow the connection.')),
     error?h('p',{role:'alert'},error):null);
 }
 function $PrivateChatLauncher(){
