@@ -1,7 +1,14 @@
-param([Parameter(Mandatory=$true)][string]$AppPath)
+param([Parameter(Mandatory=$true)][string]$AppPath, [switch]$CheckOnly)
 $ErrorActionPreference = 'Stop'
 $target = [IO.Path]::GetFullPath($AppPath)
 if ([IO.Path]::GetFileName($target) -ine 'OpenCore.exe') { throw 'Invalid OpenCore update target' }
+if ($CheckOnly) {
+    $running = @(Get-CimInstance Win32_Process -Filter "Name='OpenCore.exe'" | Where-Object {
+        $_.ExecutablePath -and [IO.Path]::GetFullPath($_.ExecutablePath) -ieq $target
+    })
+    if ($running.Count) { exit 5 }
+    exit 0
+}
 $quietSince = $null
 $deadline = [DateTime]::UtcNow.AddSeconds(30)
 while ([DateTime]::UtcNow -lt $deadline) {

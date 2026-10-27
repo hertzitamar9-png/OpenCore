@@ -17,6 +17,8 @@ class UpdateHandoff(unittest.TestCase):
         self.assertIn('stop-opencore-update.ps1', script)
         self.assertIn('$UpdateInstall == "1"', script)
         self.assertIn('-AppPath "$INSTDIR\\OpenCore.exe"', script)
+        self.assertIn('-CheckOnly', script)
+        self.assertNotIn('FindWindow', script)
 
     @unittest.skipUnless(os.name == 'nt', 'Windows process handoff')
     def test_restarted_app_is_stopped_but_another_installation_is_left_running(self):
@@ -37,6 +39,10 @@ class UpdateHandoff(unittest.TestCase):
             try:
                 processes.extend([subprocess.Popen([str(target)], creationflags=creation),
                                   subprocess.Popen([str(other)], creationflags=creation)])
+                check = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                    '-File', str(helper), '-AppPath', str(target), '-CheckOnly'], capture_output=True, creationflags=creation)
+                self.assertEqual(check.returncode, 5)
+                self.assertIsNone(processes[0].poll(), 'An ordinary install check stopped OpenCore')
                 handoff = subprocess.Popen(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
                     '-File', str(helper), '-AppPath', str(target)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=creation)
                 time.sleep(1)

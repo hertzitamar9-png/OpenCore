@@ -141,43 +141,27 @@ Function .onInit
   ${{IfNot}} ${{Errors}}
     StrCpy $RestartAfterInstall "1"
   ${{EndIf}}
+  ; Window titles are not process identities: an Explorer folder can also
+  ; be titled OpenCore. Only check the executable at this installation path.
+  InitPluginsDir
+  SetOutPath "$PLUGINSDIR"
+  File "/oname=stop-opencore-update.ps1" "{nsis_literal(Path(__file__).resolve().with_name('stop-opencore-update.ps1'))}"
   ${{If}} $UpdateInstall == "1"
-    ; The old app's updater may relaunch it immediately. Stop only the exact
-    ; installed executable and wait for its restart race to settle.
-    InitPluginsDir
-    SetOutPath "$PLUGINSDIR"
-    File "/oname=stop-opencore-update.ps1" "{nsis_literal(Path(__file__).resolve().with_name('stop-opencore-update.ps1'))}"
+    ; The old app's updater may relaunch it immediately. Wait for that race.
     nsExec::ExecToStack '"$SYSDIR\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe"'
-    Pop $0
-    Pop $1
-    ${{If}} $0 != "0"
-      SetErrorLevel 5
-      Quit
-    ${{EndIf}}
-    Goto app_closed
+  ${{Else}}
+    nsExec::ExecToStack '"$SYSDIR\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe" -CheckOnly'
   ${{EndIf}}
-  StrCpy $2 0
-  wait_for_app:
-    FindWindow $1 "" "OpenCore"
-    ${{If}} $1 != 0
-      ${{If}} $UpdateInstall == "1"
-        IntOp $2 $2 + 1
-        ${{If}} $2 < 60
-          Sleep 500
-          Goto wait_for_app
-        ${{EndIf}}
-      ${{EndIf}}
-      IfSilent app_still_open
+  Pop $0
+  Pop $1
+  ${{If}} $0 != "0"
+    ${{If}} $UpdateInstall != "1"
+      IfSilent +2
       MessageBox MB_ICONINFORMATION "Close OpenCore, including its tray icon, before installing."
-      app_still_open:
-      ${{If}} $UpdateInstall == "1"
-        SetOutPath "$INSTDIR"
-        ExecShell "open" "$INSTDIR\\OpenCore.exe"
-      ${{EndIf}}
-      SetErrorLevel 5
-      Quit
     ${{EndIf}}
-  app_closed:
+    SetErrorLevel 5
+    Quit
+  ${{EndIf}}
 FunctionEnd
 Section "OpenCore"
   ${{If}} $TestInstall != "1"
