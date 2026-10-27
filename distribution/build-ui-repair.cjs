@@ -121,6 +121,7 @@ app=editFunction(app,'w8',text=>replaceOnce(text,
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 app+='\nconst $railHoverStyle=document.createElement("style");$railHoverStyle.textContent=".conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}";document.head.appendChild($railHoverStyle);\n';
+app+='\nconst $navDividerStyle=document.createElement("style");$navDividerStyle.textContent=".nav-rail .nav-group-start{border-top:2px solid var(--theme-accent-ink,#8ec4ff)}";document.head.appendChild($navDividerStyle);\n';
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
 app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';

@@ -79,7 +79,7 @@ code, pre, .log-canvas { font-family: "Cascadia Code", Consolas, monospace; }
 .nav-item { width: 100%; min-height: 43px; padding: 0 9px; margin: 2px 0; border: 0; background: transparent; justify-content: flex-start; color: var(--theme-muted,#b2c3d2); font-size:calc(12px * var(--ui-scale,1)); }
 .nav-item.active { background: var(--theme-raised,#16447a); color: var(--theme-ink,white); }
 .nav-item:hover:not(:disabled) { background: var(--theme-panel,#10283d); border: 0; }
-.nav-group-start { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.nav-group-start { margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--theme-accent-ink,#8ec4ff); }
 .nav-footer { margin-top: auto; padding: 12px 10px 15px; border-top: 1px solid var(--line-soft); font-size:calc(10px * var(--ui-scale,1)); color: var(--muted); }
 .nav-footer div { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; color: var(--theme-muted,#bdcbd8); }
 
