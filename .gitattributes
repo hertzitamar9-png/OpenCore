@@ -23,3 +23,5 @@ distribution/recovered-dist/** -text -whitespace
 distribution/bootstrap/permanent/*.exe -text
 distribution/bootstrap/permanent/*.exe.sig -text
 src-tauri/resources/agent-platform/TENCENT-MEMORY-LICENSE.txt -text -whitespace
+# These publisher-pinned loader bytes must not be rewritten by Windows line-ending conversion.
+src-tauri/resources/model-runtime-sources/moss-comfy/** -text -whitespace
