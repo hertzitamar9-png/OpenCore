@@ -19,6 +19,19 @@ def runner(*args):
 
 
 class SetupBehavior(unittest.TestCase):
+    def test_publisher_pinned_moss_loader_bundle_is_complete(self):
+        from managed_model_sources import verify_pinned_plugin_sources
+        resources = Path(setup.__file__).resolve().parent.parent
+        recipe = setup.recipe_for('moss-image-sft-int4-convrot')
+        verify_pinned_plugin_sources(resources, recipe)
+
+    def test_missing_loader_fails_closed_before_pip(self):
+        from managed_model_sources import verify_pinned_plugin_sources
+        with tempfile.TemporaryDirectory() as directory:
+            recipe = setup.recipe_for('qwen-image-21-uc')
+            with self.assertRaisesRegex(RuntimeError, 'Missing or unverified'):
+                verify_pinned_plugin_sources(Path(directory), recipe)
+
     def test_comfy_runtime_dependency_pins_support_spandrel_and_transformers(self):
         for recipe in setup.MANIFEST['recipes']:
             if recipe.get('engine') not in ('comfyui-moss-v1', 'comfyui-qwen21-v1'):
