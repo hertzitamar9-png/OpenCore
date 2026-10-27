@@ -1,26 +1,20 @@
-# OpenCore Remote
+# OpenCore for Android
 
-The Android client connects directly to the running Windows OpenCore app. The PC performs every operation. Its live app view is streamed over TLS, and generated media can be received by the paired phone. There is no OpenCore cloud account, analytics endpoint or payload relay.
+The Android client opens the same OpenCore interface as the PC, reshaped into a phone layout with a labeled bottom navigation bar. Chats, settings, models, tools, voice transcription, and generation commands run in the OpenCore app on the paired PC. Generated previews appear in the app; selected PC generated files can be opened on the phone. The phone does not mirror or control the Windows desktop.
 
-1. Install `OpenCore.Remote.apk` on an Android phone running Android 8 or later. Open the phone app.
-2. On the PC, open **OpenCore → Settings → Remote access**. Keep OpenCore open and the PC awake.
-3. For a first connection, use the same home network: the phone can use Wi-Fi even if the PC uses Ethernet. On the PC, select **Reveal QR code**. OpenCore chooses the connection and turns access on if necessary.
-4. On the phone, choose **Scan QR code**, allow camera access, point the camera at the PC's code, and approve access. If scanning is unavailable, open the pairing-text fallback on the PC, transfer the text to the phone and choose **Connect to PC**. The code expires after two minutes and can be used once.
-5. The phone displays the same live OpenCore window. Tap to click, swipe to scroll and pinch to zoom. Select a text field on the PC view, then use **Type** to send text. **Files** opens generated outputs, **Game** shows game controls, and **Help** opens the interactive tour.
-6. Pairing stays saved through OpenCore sign-outs and app restarts. The phone reconnects when the same PC address is reachable. You can rename the PC on either device. On the PC, **Your phones** shows connection status and lets you remove a phone; the phone also has **Remove PC**.
+1. Install and open `OpenCore.Remote.apk` on Android 8 or later.
+2. Keep OpenCore open on the PC. In **Settings → Remote access**, choose **Reveal QR code**.
+3. Scan it from the Android app and approve the PC name. The phone saves the pairing in Android Keystore and reconnects automatically.
+4. Use the bottom tabs to open the same views as OpenCore on the PC. The PC must stay awake and OpenCore must remain running.
 
-The PC must remain awake with OpenCore open. Cellular/away-from-home access needs an existing private network route to the PC (for example a direct WireGuard VPN). This implementation does not provision a VPN, change router settings, expose an unauthenticated public service, or use OpenAI's remote-control infrastructure. A phone on cellular cannot reach a private home IP without that route. Windows Firewall may require the user to allow the selected port on their private network.
+For access away from the home network, connect the PC and phone to the same private VPN before pairing. This direct connection does not use a cloud relay. Keep pairing codes private; removing the phone in OpenCore settings revokes its access.
 
-Pairing pins the exact PC certificate; the client rejects a different certificate even with the same IP address. Phone credentials are encrypted with Android Keystore, Android backup is disabled, and screenshots of the phone app are blocked. PC stores only hashes of paired credentials. Pairing text is single use and expires after two minutes. Remote access defaults off.
+The phone app requests camera access only to scan the pairing QR code. It requests microphone access only when voice capture is used. Android's document picker lets you attach files or send a bounded folder copy to the PC. The paired OpenCore desktop process handles commands, generated content, local model access, and app preferences; only OpenCore preference keys are synchronized.
 
-Only app-created output directories are exposed to Files. Models, databases, credentials and arbitrary paths are excluded. Images can be viewed in the app; other files can be opened in a user-chosen phone app. Complete games run on the PC through the live view so all their local assets are available.
-
-Build using the official Android SDK and a JDK:
+Build with an installed Android SDK and JDK:
 
 ```powershell
 python android-remote/build.py --sdk C:/path/to/Android/Sdk
 ```
 
-The signing key is created once in the current user's `.opencore/distribution-keys` directory, outside the repository. Keep it for compatible APK updates. Its password is protected by Windows DPAPI. No signing credentials belong in Git.
-
-Release verification must include an actual paired phone sending a known test message, viewing a generated image and opening a generated artifact. PC-only fixtures do not establish mobile-network reachability or real phone success.
+Keep the signing key at `.opencore/distribution-keys` for compatible in-place Android updates. Release verification still needs a real Android phone to confirm pairing, a known chat request, and opening generated media.

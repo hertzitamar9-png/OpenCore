@@ -105,6 +105,7 @@ app=editFunction(app,'h8',text=>pauseHiddenEffects(replaceOnce(text,
 app=editFunction(app,'w8',text=>replaceOnce(text,
   'className:"section-main",children:tr','className:"section-main",children:i.jsxs(i.Fragment,{children:[i.jsx($PrivateChatLauncher,{}),i.jsx($RetainedViews,{view:d,content:tr})]})'));
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
+app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
 app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';

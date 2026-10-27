@@ -1,7 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ai.opencore.remote" android:versionCode="4" android:versionName="1.3">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ai.opencore.remote" android:versionCode="5" android:versionName="2.0">
   <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <uses-feature android:name="android.hardware.camera.any" android:required="false" />
   <application android:label="OpenCore Remote" android:icon="@drawable/opencore" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:fullBackupContent="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
     <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:configChanges="orientation|screenSize|keyboardHidden">
@@ -9,6 +10,7 @@
       <intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="opencore" android:host="pair"/></intent-filter>
     </activity>
     <activity android:name=".ScannerActivity" android:exported="false" />
+    <activity android:name=".MobileActivity" android:exported="false" android:configChanges="orientation|screenSize|keyboardHidden" android:windowSoftInputMode="adjustResize" />
     <provider android:name=".SharedFileProvider" android:authorities="ai.opencore.remote.files" android:exported="false" android:grantUriPermissions="true" />
   </application>
 </manifest>

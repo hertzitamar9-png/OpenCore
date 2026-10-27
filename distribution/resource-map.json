@@ -107,6 +107,7 @@
   "runtime-setup/hf-extension/managed-engines.json": "src-tauri/resources/runtime-setup/hf-extension/managed-engines.json",
   "runtime-setup/hf-extension/managed_engines.py": "src-tauri/resources/runtime-setup/hf-extension/managed_engines.py",
   "runtime-setup/hf-extension/pc_window.py": "src-tauri/resources/runtime-setup/hf-extension/pc_window.py",
+  "runtime-setup/hf-extension/mobile_bridge.py": "src-tauri/resources/runtime-setup/hf-extension/mobile_bridge.py",
   "runtime-setup/hf-extension/private_chat.py": "src-tauri/resources/runtime-setup/hf-extension/private_chat.py",
   "runtime-setup/hf-extension/publisher-models.json": "src-tauri/resources/runtime-setup/hf-extension/publisher-models.json",
   "runtime-setup/hf-extension/qrcode/LICENSE": "src-tauri/resources/runtime-setup/hf-extension/qrcode/LICENSE",

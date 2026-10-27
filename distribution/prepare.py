@@ -47,6 +47,8 @@ def main():
                        OPENCORE_PATCHED_APP=str(app / 'OpenCore.exe'))
     subprocess.run(['node', str(HERE / 'build-ui-repair.cjs')], cwd=HERE, env=environment, check=True)
     subprocess.run(['node', str(HERE / 'patch-executable.cjs')], cwd=HERE, env=environment, check=True)
+    from mobile_ui import prepare as prepare_mobile_ui
+    prepare_mobile_ui(app / 'runtime-setup/mobile-ui')
     print(json.dumps({'prepared': True, 'app': str(app), 'nativeBaseline': baseline['nativeVersion']}))
 
 

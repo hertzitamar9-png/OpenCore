@@ -33,6 +33,7 @@ def main():
         build = build.with_name('build-' + secrets.token_hex(5))
     for name in ('classes', 'dex', 'generated', 'res/drawable'): (build / name).mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT.parent / 'src-tauri/icons/icon.png', build / 'res/drawable/opencore.png')
+    shutil.copytree(ROOT/'assets', build/'assets/phone')
     environment = dict(os.environ, JAVA_HOME=str(java))
     def run(command):
         result = subprocess.run([str(value) for value in command], capture_output=True, text=True, env=environment,
@@ -40,7 +41,7 @@ def main():
         if result.returncode:
             raise RuntimeError(str(command[0]) + ': ' + (result.stderr + result.stdout)[-12000:])
     run([tools/'aapt2.exe', 'compile', '--dir', build/'res', '-o', build/'resources.zip'])
-    run([tools/'aapt2.exe', 'link', '-o', build/'resources.apk', '-I', platform, '--manifest', ROOT/'AndroidManifest.xml',
+    run([tools/'aapt2.exe', 'link', '-o', build/'resources.apk', '-I', platform, '--manifest', ROOT/'AndroidManifest.xml', '-A', build/'assets',
          '--java', build/'generated', build/'resources.zip'])
     run([java/'bin/javac.exe', '-encoding', 'UTF-8', '--release', '8', '-classpath', str(platform)+os.pathsep+str(zxing),
          '-d', build/'classes', *ROOT.glob('src/**/*.java'), *build.glob('generated/**/*.java')])

@@ -16,6 +16,11 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.net.ssl.*;
 
 final class Connection {
+    static final class SessionExpired extends IOException { SessionExpired(){super("Phone session expired");} }
+    static final class ArtifactData {
+        final byte[] bytes; final String mime, name;
+        ArtifactData(byte[] bytes,String mime,String name){this.bytes=bytes;this.mime=mime;this.name=name;}
+    }
     final String endpoint, pin, token;
     final SSLSocketFactory factory;
     volatile String name = "OpenCore PC";
@@ -48,7 +53,7 @@ final class Connection {
             try {return hex(MessageDigest.getInstance("SHA-256").digest(session.getPeerCertificates()[0].getEncoded())).equals(pin);}
             catch(Exception e){return false;}
         });
-        request.setInstanceFollowRedirects(false);request.setConnectTimeout(10000);request.setReadTimeout(15000);request.setUseCaches(false);
+        request.setInstanceFollowRedirects(false);request.setConnectTimeout(10000);request.setReadTimeout(60000);request.setUseCaches(false);
         if(token!=null)request.setRequestProperty("Authorization","Bearer "+token);
         if(body!=null){
             byte[] raw=body.toString().getBytes(StandardCharsets.UTF_8);request.setRequestMethod("POST");request.setDoOutput(true);
@@ -56,7 +61,17 @@ final class Connection {
             try(OutputStream stream=request.getOutputStream()){stream.write(raw);}
         }
         int status=request.getResponseCode();
-        if(status!=200){request.disconnect();throw new IOException(status==403?"This phone is not paired. Create new pairing text on the PC.":"PC request failed ("+status+"). Keep OpenCore open on your PC.");}
+        if(status!=200){
+            String detail="";
+            try(InputStream input=request.getErrorStream()){
+                if(input!=null){ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] buffer=new byte[2048];int count;
+                    while(bytes.size()<16384&&(count=input.read(buffer))!=-1)bytes.write(buffer,0,count);
+                    detail=new JSONObject(new String(bytes.toByteArray(),StandardCharsets.UTF_8)).optString("error","");}
+            }catch(Exception ignored){}finally{request.disconnect();}
+            if(status==400&&detail.contains("phone session expired"))throw new SessionExpired();
+            throw new IOException(status==403?"This phone is not paired. Create a new QR code on the PC.":
+                detail.isEmpty()?"PC request failed ("+status+"). Keep OpenCore open on your PC.":detail);
+        }
         return request;
     }
     byte[] bytes(String path, JSONObject body, int limit) throws Exception {
@@ -66,7 +81,21 @@ final class Connection {
             while((count=input.read(buffer))!=-1){if(output.size()+count>limit)throw new IOException("PC response exceeded its size limit");output.write(buffer,0,count);}return output.toByteArray();
         }finally{request.disconnect();}
     }
-    JSONObject json(String path,JSONObject body)throws Exception{return new JSONObject(new String(bytes(path,body,1024*1024),StandardCharsets.UTF_8));}
+    ArtifactData artifact(String id)throws Exception{
+        if(id==null||!id.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
+            throw new IOException("This OpenCore file is unavailable.");
+        HttpsURLConnection request=open("/artifact",new JSONObject().put("id",id));
+        try(InputStream input=request.getInputStream();ByteArrayOutputStream output=new ByteArrayOutputStream()){
+            long expected=request.getContentLengthLong();if(expected>16L*1024*1024)throw new IOException("The OpenCore file is larger than the supported limit.");
+            byte[] buffer=new byte[32768];int count;
+            while((count=input.read(buffer))!=-1){if(output.size()+count>16*1024*1024)throw new IOException("The OpenCore file is larger than the supported limit.");output.write(buffer,0,count);}
+            String type=request.getContentType(),mime=type==null?"application/octet-stream":type.split(";",2)[0].trim();
+            String name="OpenCore file",disposition=request.getHeaderField("Content-Disposition"),marker="filename*=UTF-8''";
+            if(disposition!=null){int at=disposition.indexOf(marker);if(at>=0)try{name=URLDecoder.decode(disposition.substring(at+marker.length()),"UTF-8");}catch(Exception ignored){}}
+            return new ArtifactData(output.toByteArray(),mime,name);
+        }finally{request.disconnect();}
+    }
+    JSONObject json(String path,JSONObject body)throws Exception{return new JSONObject(new String(bytes(path,body,48*1024*1024),StandardCharsets.UTF_8));}
     void download(JSONObject item,File output)throws Exception{
         JSONObject body=new JSONObject().put("root",item.getString("root")).put("path",item.getString("path"));
         HttpsURLConnection request=open("/file",body);

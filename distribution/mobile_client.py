@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 
 def source_hashes(root):
     files = sorted(path for path in (root / 'android-remote').rglob('*') if path.is_file()
-                   and '__pycache__' not in path.parts and path.suffix in ('.java', '.py', '.xml', '.md', '.jar', '.txt'))
+                   and '__pycache__' not in path.parts and path.suffix in ('.java', '.py', '.xml', '.md', '.jar', '.txt', '.js', '.css'))
     files.append(root / 'src-tauri/icons/icon.png')
     return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')
             if path.suffix not in ('.png', '.jar') else path.read_bytes()).hexdigest() for path in files}

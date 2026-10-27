@@ -1,5 +1,6 @@
 """Opt-in direct TLS phone connection. No relay, cloud account or outbound service."""
 from collections import OrderedDict
+import base64
 import hashlib
 import hmac
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -12,11 +13,13 @@ from pathlib import Path
 import secrets
 import socket
 import subprocess
+import shutil
 import threading
 import time
 from urllib.parse import quote, unquote, urlencode, urlsplit
 
-from hf_download import atomic_json, managed_path
+from hf_download import atomic_json, managed_path, normalized_path
+from mobile_bridge import MobileBridge
 
 
 def local_addresses():
@@ -56,6 +59,12 @@ def pairing_qr(text):
     return [''.join('1' if bit else '0' for bit in row) for row in code.get_matrix()]
 
 
+def safe_windows_name(value):
+    return isinstance(value, str) and 0 < len(value) <= 120 and value not in ('.', '..') and not value.endswith(('.', ' ')) \
+        and not any(ord(char) < 32 or char in '<>:"/\\|?*' for char in value) \
+        and not re.fullmatch(r'(?i:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])', value)
+
+
 class RemoteAccess:
     def __init__(self, root, resources, owner=None, *, surface=None, tls_factory=None):
         self.root, self.resources = Path(root).resolve(), Path(resources).resolve()
@@ -63,8 +72,13 @@ class RemoteAccess:
         self.lock, self.server, self.thread = threading.RLock(), None, None
         self.pair_code, self.pair_until, self.fingerprint = None, 0, ''
         self.attempts, self.last_input, self.last_seen = {}, {}, {}
+        self.mobile = MobileBridge()
+        appdata = os.environ.get('APPDATA')
+        upload_base = Path(appdata).resolve() / 'ai.opencore.control-center' if appdata else self.root / 'runtime-setup'
+        self.artifact_root = upload_base / 'artifacts'
+        self.mobile_upload_root = managed_path(upload_base, 'mobile-uploads')
+        self.folder_uploads, self.folder_upload_lock = {}, threading.RLock()
         self.addresses, self.addresses_checked = [], 0
-        self.last_frame, self.last_frame_at = None, 0
         self.devices_path = managed_path(self.root, 'secrets', 'remote-device-identities.json')
         self.config_path = managed_path(self.root, 'runtime-setup', 'remote-access.json')
         configured = self.config()
@@ -79,7 +93,6 @@ class RemoteAccess:
         # Only app-created outputs are exposed. Models, user-selected files,
         # credentials, databases and arbitrary absolute paths are never roots.
         self.media_roots = {name: self.root / name for name in ('artifacts', 'generated', 'studio/outputs')}
-        appdata = os.environ.get('APPDATA')
         if appdata:
             app_root = Path(appdata).resolve() / 'ai.opencore.control-center'
             self.media_roots.update({'app-artifacts': app_root / 'artifacts', 'app-studio': app_root / 'studio'})
@@ -124,10 +137,6 @@ class RemoteAccess:
             port = options.get('port', saved.get('port', 0))
             if type(port) is not int or not (port == 0 or 1024 <= port <= 65535):
                 raise ValueError('Choose a port between 1024 and 65535')
-            if self.surface is None:
-                if not self.owner: raise ValueError('A running OpenCore PC app is required')
-                from pc_window import WindowSurface
-                self.surface = WindowSurface(self.owner['pid'])
             if self.tls_factory: tls, fingerprint = self.tls_factory()
             else:
                 from tls_identity import context
@@ -192,6 +201,7 @@ class RemoteAccess:
             if identity not in self.devices: raise ValueError('Phone is not paired')
             del self.devices[identity]
             self.last_seen.pop(identity, None)
+            self.mobile.forget(identity)
             atomic_json(self.devices_path, list(self.devices.values()))
             return self.status()
 
@@ -200,9 +210,8 @@ class RemoteAccess:
             server, self.server = self.server, None
             self.pair_code, self.pair_until = None, 0
         if server: server.shutdown(); server.server_close()
-        if self.surface and hasattr(self.surface, 'release'): self.surface.release()
-        self.last_frame = None
         self.last_seen.clear()
+        self.mobile.close()
         return self.status()
 
     def close(self):
@@ -226,6 +235,123 @@ class RemoteAccess:
             raise ValueError('This file is not a generated media output')
         return path
 
+    def media_reference(self, absolute):
+        if not isinstance(absolute, str) or len(absolute) > 4096: raise ValueError('Generated file is unavailable')
+        try: path = normalized_path(absolute).resolve(strict=True)
+        except (OSError, ValueError): raise ValueError('Generated file is unavailable') from None
+        for name, expected in self.media_roots.items():
+            try: base = expected.resolve(strict=True)
+            except OSError: continue
+            if base != expected.resolve(): continue
+            if path.is_relative_to(base) and path.is_file():
+                relative = path.relative_to(base).as_posix()
+                self.media_path(name, relative)
+                return {'root': name, 'path': relative}
+        raise ValueError('Only OpenCore generated files can be opened on the phone')
+
+    def artifact(self, identity):
+        if not isinstance(identity, str) or not re.fullmatch(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', identity):
+            raise ValueError('This OpenCore file is unavailable')
+        identity = identity.lower()
+        try:
+            base = self.artifact_root.resolve(strict=True)
+            if base != self.artifact_root.resolve(): raise ValueError('The OpenCore file directory is redirected')
+            metadata_path = (base / (identity + '.json')).resolve(strict=True)
+            content_path = (base / (identity + '.bin')).resolve(strict=True)
+            if not metadata_path.is_relative_to(base) or not content_path.is_relative_to(base):
+                raise ValueError('This OpenCore file is unavailable')
+            metadata = json.loads(metadata_path.read_text(encoding='utf-8'))
+            if not isinstance(metadata, dict): raise ValueError('This OpenCore file is unavailable')
+            mime, name, size = metadata.get('mime'), metadata.get('name'), metadata.get('size')
+            allowed = {'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf',
+                       'text/plain', 'text/markdown', 'application/json', 'text/javascript', 'text/csv',
+                       'text/typescript', 'text/x-python', 'text/x-rust', 'application/xml', 'text/html'}
+            if metadata.get('id') != identity or mime not in allowed or not safe_windows_name(name):
+                raise ValueError('This OpenCore file is unavailable')
+            if type(size) is not int or not 0 < size <= 16 * 1024 * 1024:
+                raise ValueError('This OpenCore file is unavailable')
+            data = content_path.read_bytes()
+            if len(data) != size: raise ValueError('This OpenCore file is unavailable')
+            return data, mime, name
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            raise ValueError('This OpenCore file is unavailable') from None
+
+    def mobile_asset(self, relative):
+        if not isinstance(relative, str) or len(relative) > 160 or '\\' in relative:
+            raise ValueError('Invalid mobile interface asset')
+        base = (self.resources/'runtime-setup/mobile-ui').resolve()
+        if not base.is_relative_to(self.resources): raise ValueError('Mobile interface is unavailable')
+        try:
+            manifest = json.loads((base/'manifest.json').read_text(encoding='utf-8'))
+            item = manifest['files'][relative]
+            path = (base/relative).resolve(strict=True)
+            if not path.is_relative_to(base) or not path.is_file() or item['bytes'] > 8 * 1024 * 1024:
+                raise ValueError('Invalid mobile interface asset')
+            data = path.read_bytes()
+            if len(data) != item['bytes'] or hashlib.sha256(data).hexdigest() != item['sha256']:
+                raise ValueError('Mobile interface asset failed verification')
+            if item['mime'] not in ('text/html; charset=utf-8','text/javascript; charset=utf-8','text/css; charset=utf-8','image/png'):
+                raise ValueError('Invalid mobile interface content type')
+            return data, item['mime']
+        except (KeyError, OSError, TypeError, json.JSONDecodeError):
+            raise ValueError('Update OpenCore on the PC to use the phone interface') from None
+
+    def folder_upload(self, device, body):
+        if not isinstance(body, dict): raise ValueError('Invalid folder upload')
+        action, identity = body.get('action'), body.get('uploadId')
+        with self.folder_upload_lock:
+            now = time.monotonic()
+            for old_id, old in list(self.folder_uploads.items()):
+                if now - old['created'] > 3600:
+                    shutil.rmtree(old['root'], ignore_errors=True)
+                    del self.folder_uploads[old_id]
+            if action == 'begin':
+                name = body.get('name')
+                if not isinstance(name, str) or not safe_windows_name(name.strip()):
+                    raise ValueError('The selected folder name is invalid')
+                if len(self.folder_uploads) >= 8: raise ValueError('Finish or cancel another folder transfer first')
+                self.mobile_upload_root.mkdir(parents=True, exist_ok=True)
+                if self.mobile_upload_root.resolve() != self.mobile_upload_root: raise ValueError('The folder upload directory is redirected')
+                identity = secrets.token_hex(16)
+                root = self.mobile_upload_root / identity
+                root.mkdir()
+                destination = root / name.strip()
+                destination.mkdir()
+                (root / '.upload-created').write_text(str(time.time()), encoding='ascii')
+                self.folder_uploads[identity] = {'device': device, 'root': root, 'path': destination,
+                                                 'created': now, 'bytes': 0, 'files': set()}
+                return {'uploadId': identity}
+            upload = self.folder_uploads.get(identity) if isinstance(identity, str) and re.fullmatch('[a-f0-9]{32}', identity) else None
+            if not upload or upload['device'] != device: raise ValueError('Folder transfer expired or unavailable')
+            if action == 'cancel':
+                shutil.rmtree(upload['root']); del self.folder_uploads[identity]
+                return {'cancelled': True}
+            if action == 'finish':
+                if not upload['files']: raise ValueError('The selected folder contains no files')
+                path = upload['path'].resolve()
+                if not path.is_relative_to(upload['root'].resolve()): raise ValueError('Invalid staged folder path')
+                del self.folder_uploads[identity]
+                return {'path': str(path)}
+            if action != 'file': raise ValueError('Invalid folder upload action')
+            relative, encoded = body.get('path'), body.get('dataBase64')
+            if not isinstance(relative, str) or not relative or len(relative) > 512 or '\\' in relative or ':' in relative:
+                raise ValueError('Invalid folder file path')
+            parts = relative.split('/')
+            if len(parts) > 24 or any(not safe_windows_name(part) for part in parts):
+                raise ValueError('Invalid folder file path')
+            if not isinstance(encoded, str) or len(encoded) > 11 * 1024 * 1024: raise ValueError('Folder file exceeds the 8 MiB transfer limit')
+            try: data = base64.b64decode(encoded, validate=True)
+            except (ValueError, base64.binascii.Error): raise ValueError('Invalid folder file data') from None
+            if not data or len(data) > 8 * 1024 * 1024 or upload['bytes'] + len(data) > 64 * 1024 * 1024:
+                raise ValueError('Folder transfer exceeds the 64 MiB limit')
+            if relative in upload['files'] or len(upload['files']) >= 512: raise ValueError('Folder has too many or duplicate files')
+            target = upload['path'].joinpath(*parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.resolve().is_relative_to(upload['path'].resolve()) or target.is_symlink(): raise ValueError('Invalid folder file path')
+            with target.open('xb') as output: output.write(data)
+            upload['bytes'] += len(data); upload['files'].add(relative)
+            return {'accepted': True, 'files': len(upload['files']), 'bytes': upload['bytes']}
+
     def media(self):
         items = []
         for root, base in self.media_roots.items():
@@ -246,15 +372,6 @@ class RemoteAccess:
                     items.append({'root': root, 'path': relative, 'bytes': stat.st_size, 'modified': stat.st_mtime})
                 if visited > 5000: break
         return {'files': sorted(items, key=lambda item: item['modified'], reverse=True)[:200]}
-
-    def frame(self):
-        with self.lock:
-            now = time.monotonic()
-            if self.last_frame is None or now - self.last_frame_at >= .12:
-                self.last_frame = self.surface.frame()
-                self.last_frame_at = now
-            return self.last_frame
-
 
 class RemoteServer(ThreadingHTTPServer):
     daemon_threads, allow_reuse_address, request_queue_size = True, True, 8
@@ -290,9 +407,9 @@ class RemoteHandler(BaseHTTPRequestHandler):
                          'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', **(headers or {})}.items(): self.send_header(key, val)
         self.end_headers(); self.wfile.write(raw)
 
-    def body(self):
+    def body(self, limit=128 * 1024):
         length = self.headers.get('Content-Length', '')
-        if not length.isdigit() or not 0 < int(length) <= 128 * 1024 or self.headers.get('Transfer-Encoding'): raise ValueError('Invalid remote request size')
+        if not length.isdigit() or not 0 < int(length) <= limit or self.headers.get('Transfer-Encoding'): raise ValueError('Invalid remote request size')
         value = json.loads(self.rfile.read(int(length)))
         if not isinstance(value, dict): raise ValueError('Expected a request object')
         return value
@@ -305,21 +422,24 @@ class RemoteHandler(BaseHTTPRequestHandler):
             body = self.body(); return self.send(200, state.pair(body.get('code'), body.get('name', 'Android phone'), self.client_address[0]))
         device = state.authorize(self.headers.get('Authorization'))
         if not device: raise PermissionError('Pair this phone from the PC app')
+        if self.command == 'POST' and parsed.path == '/session':
+            self.body(); return self.send(200, state.mobile.open_session(device))
+        if self.command == 'POST' and parsed.path == '/request':
+            return self.send(200, state.mobile.enqueue(device, self.body(48 * 1024 * 1024)))
+        if self.command == 'POST' and parsed.path == '/updates':
+            return self.send(200, state.mobile.updates(device, self.body().get('session')))
+        if self.command == 'POST' and parsed.path == '/preferences':
+            return self.send(200, state.mobile.phone_preferences(device, self.body().get('session')))
+        if self.command == 'POST' and parsed.path == '/folder':
+            return self.send(200, state.folder_upload(device, self.body(12 * 1024 * 1024)))
+        if self.command == 'POST' and parsed.path == '/ui':
+            data, mime = state.mobile_asset(self.body().get('path'))
+            return self.send(200, data, mime)
         if self.command == 'GET' and parsed.path == '/info': return self.send(200, {'name': state.pc_name})
         if self.command == 'POST' and parsed.path == '/rename':
             state.rename(self.body().get('name')); return self.send(200, {'name': state.pc_name})
         if self.command == 'POST' and parsed.path == '/unpair':
             state.revoke(device); return self.send(200, {'removed': True})
-        if self.command == 'GET' and parsed.path == '/frame':
-            value, width, height = state.frame()
-            return self.send(200, value, 'image/png', {'X-Frame-Width': str(width), 'X-Frame-Height': str(height)})
-        if self.command == 'POST' and parsed.path == '/input':
-            body = self.body()
-            with state.lock:
-                now = time.monotonic()
-                if now - state.last_input.get(device, 0) < .008: raise ValueError('Input arrived too quickly')
-                state.last_input[device] = now
-            state.surface.input(body); return self.send(200, {'accepted': True})
         if self.command == 'GET' and parsed.path == '/media': return self.send(200, state.media())
         if self.command == 'POST' and parsed.path == '/file':
             body = self.body(); path = state.media_path(body.get('root'), body.get('path'))
@@ -334,6 +454,18 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 for chunk in iter(lambda: source.read(65536), b''): self.wfile.write(chunk)
             return
+        if self.command == 'POST' and parsed.path == '/artifact':
+            data, kind, name = state.artifact(self.body().get('id'))
+            self.send_response(200)
+            self.send_header('Content-Type', kind)
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Content-Disposition', "inline; filename*=UTF-8''" + quote(name))
+            self.end_headers(); self.wfile.write(data)
+            return
+        if self.command == 'POST' and parsed.path == '/media-path':
+            return self.send(200, state.media_reference(self.body().get('path')))
         return self.send(404, {'error': 'Unknown remote endpoint'})
 
     def _handle(self):

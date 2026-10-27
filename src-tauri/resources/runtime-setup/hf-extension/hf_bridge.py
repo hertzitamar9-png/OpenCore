@@ -552,7 +552,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             raise ValueError("Query parameters are not accepted")
         route = path[4:] if path.startswith("/api/") else path
         state = self.server.state
-        if route.startswith('/remote/') and state.remote is None:
+        if (route.startswith('/remote/') or route.startswith('/mobile/host/')) and state.remote is None:
             from remote_access import RemoteAccess
             with state.lock:
                 if state.remote is None: state.remote = RemoteAccess(state.root, state.resources, state.owner)
@@ -575,6 +575,11 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.tokens.status())
             elif route == '/remote/status':
                 self._send(200, state.remote.status())
+            elif route == '/mobile/host/poll':
+                devices = set(state.remote.devices) if state.remote.server else set()
+                self._send(200, state.remote.mobile.take(devices))
+            elif route == '/mobile/host/preferences':
+                self._send(200, {'values': dict(state.remote.mobile.preferences)})
             elif route == "/v1/models":
                 self._send(200, state.runtime.models(state.catalog()))
             else:
@@ -583,7 +588,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
+        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
@@ -604,6 +609,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.remote.revoke(body.get('deviceId')))
         elif route == '/remote/name':
             self._send(200, state.remote.rename(body.get('name')))
+        elif route == '/mobile/host/result':
+            self._send(200, state.remote.mobile.result(body, set(state.remote.devices)))
+        elif route == '/mobile/host/event':
+            self._send(200, state.remote.mobile.event(body, set(state.remote.devices)))
+        elif route == '/mobile/host/preferences':
+            self._send(200, state.remote.mobile.publish_preferences(body.get('values')))
         elif route == '/private/open':
             backend = state.runtime.private_backend(body.get('runtime'))
             self._send(200, state.private.open(backend=backend))
