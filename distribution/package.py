@@ -141,6 +141,21 @@ Function .onInit
   ${{IfNot}} ${{Errors}}
     StrCpy $RestartAfterInstall "1"
   ${{EndIf}}
+  ${{If}} $UpdateInstall == "1"
+    ; The old app's updater may relaunch it immediately. Stop only the exact
+    ; installed executable and wait for its restart race to settle.
+    InitPluginsDir
+    SetOutPath "$PLUGINSDIR"
+    File "/oname=stop-opencore-update.ps1" "{nsis_literal(Path(__file__).resolve().with_name('stop-opencore-update.ps1'))}"
+    nsExec::ExecToStack '"$SYSDIR\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe"'
+    Pop $0
+    Pop $1
+    ${{If}} $0 != "0"
+      SetErrorLevel 5
+      Quit
+    ${{EndIf}}
+    Goto app_closed
+  ${{EndIf}}
   StrCpy $2 0
   wait_for_app:
     FindWindow $1 "" "OpenCore"
@@ -162,6 +177,7 @@ Function .onInit
       SetErrorLevel 5
       Quit
     ${{EndIf}}
+  app_closed:
 FunctionEnd
 Section "OpenCore"
   ${{If}} $TestInstall != "1"

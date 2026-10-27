@@ -47,11 +47,14 @@ function createInstallNotificationPolicy(options = {}) {
   }
   function hidden(progress) {
     load();
+    // Startup verification is not an installation the user started. It must
+    // not reopen the progress panel on every launch, even with a new job ID.
+    if(String(progress?.modelId||'').toLowerCase()==='phonon-2'&&
+       ['preparing','verifying','ready'].includes(progress.phase)&&!startedHere.has('phonon-2'))return true;
     if (!terminal.has(progress?.phase)) return false;
     // Native progress can replay an old Phonon completion on every launch,
     // including before any dismissal was saved. Only show its success when
     // this app session actually started another installation.
-    if(String(progress.modelId||'').toLowerCase()==='phonon-2'&&progress.phase==='ready'&&!startedHere.has('phonon-2'))return true;
     const previous = [...dismissed.values()].filter(item => item.modelId === progress.modelId), id = operation(progress);
     if(progress.modelId==='phonon-2'&&progress.phase==='ready'&&previous.length)return true;
     // Legacy catalog progress can omit the ID present in runtime status. Keep

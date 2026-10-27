@@ -80,7 +80,9 @@ app=editFunction(app,'v8',text=>replaceOnce(text,
 app = editFunction(app, 'Rs', text => {
   text = replaceOnce(text, '!s||!d||!F||E', '!s||!d||!F||F.kind==="speech"||E');
   text = replaceOnce(text, 'const[d,u]=p.useState(null)', 'const[$localStatus,u]=p.useState(null)');
-  text = replaceOnce(text, 'M=p.useRef(!1);', 'M=p.useRef(!1);const $shared=$useInstallState(),d=$shared.runtime||$localStatus;');
+  text = replaceOnce(text, 'M=p.useRef(!1);', 'M=p.useRef(!1);const $jobSeenAtMount=p.useRef(false),$shared=$useInstallState(),d=$shared.runtime||$localStatus;');
+  text = replaceOnce(text, 'const Ce=[...ge.jobs].reverse().find(D=>D.targetId===t);Ce&&!Of(Ce)',
+    'const Ce=[...ge.jobs].reverse().find(D=>D.targetId===t);if(!$jobSeenAtMount.current){$jobSeenAtMount.current=true;if(Ce&&!Of(Ce))N.current=Ce.id}Ce&&!Of(Ce)');
   text = replaceOnce(text, 'H=Of(Q),J=!!(d!=null&&d.activeJobId)&&d.activeJobId!==(Q==null?void 0:Q.id)', 'H=Of(Q)||$shared.active?.modelId===t,J=!!$shared.active&&$shared.active.modelId!==t');
   text = replaceOnce(text, 'async function $(){if(Q)try{await vj(Q.id),u(await Wl())}catch(T){m(String(T))}}', 'async function $(){try{await $installCoordinator.pause();u(await Wl())}catch(T){m(String(T))}}');
   const pauseDisabled = 'disabled:(Q==null?void 0:Q.status)==="cancelling"';

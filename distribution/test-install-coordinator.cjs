@@ -214,9 +214,16 @@ test('a Phonon startup validation with a new worker ID does not revive its dismi
   await library(state,old);await state.coordinator.invoke('dismiss_model_install_progress',{expected:old},async()=>{});
   const next=fixture(store.policy());
   next.setProgress({...completed,modelId:'phonon-2',phase:'preparing',operationId:'startup-check'});await next.coordinator.refresh();
-  assert.equal(visible(next).phase,'preparing');
+  assert.equal(visible(next),null);
   next.setProgress({...completed,modelId:'phonon-2',operationId:'startup-check'});await next.coordinator.refresh();
   assert.equal(visible(next),null);
+});
+
+test('automatic Phonon startup preparation stays hidden before any dismissal', async () => {
+  const state=fixture(notificationStorage().policy());
+  state.setProgress({...completed,modelId:'phonon-2',phase:'verifying',operationId:'startup'});
+  await state.coordinator.refresh();
+  assert.equal(visible(state),null);
 });
 
 test('an old Phonon success is not shown on startup even without a saved dismissal', async () => {

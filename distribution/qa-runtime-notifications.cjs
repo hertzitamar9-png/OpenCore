@@ -1,0 +1,23 @@
+const fs=require('fs'),path=require('path'),http=require('http'),acorn=require('acorn');
+const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT || 'playwright');
+const output=process.env.OPENCORE_UI_OUTPUT || __dirname,directory=path.join(output,'candidate-dist');
+const entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
+let entry=fs.readFileSync(path.join(directory,'assets',entryName),'utf8');
+const tree=acorn.parse(entry,{ecmaVersion:'latest',sourceType:'module'}),mount=tree.body.find(n=>n.type==='ExpressionStatement'&&entry.slice(n.start,n.end).includes('createRoot('));
+entry=entry.slice(0,mount.start)+entry.slice(mount.end)+'\nexport{ev as TestDOM};';
+const app=fs.readFileSync(path.join(directory,'assets',appName),'utf8')+'\nexport{Rs as TestSetup};';
+const fixture=`window.fixture={notices:[],status:{jobs:[{id:'old-dory',targetId:'dory-4b',status:'ready',stage:'ready'}],receipts:[],recipes:[],activeJobId:null}};
+window.__TAURI_INTERNALS__={invoke:async(command)=>{if(command==='runtime_setup_status')return fixture.status;if(command==='model_install_progress')return null;if(command==='runtime_setup_probe')return{hubBridge:{available:false}};return null;}};`;
+const html=`<!doctype html><meta charset="utf-8"><div id="root"></div><script>${fixture}</script><script type="module">
+import{r as React,TestDOM}from'/assets/${entryName}';import{TestSetup}from'/assets/${appName}';
+const root=TestDOM.createRoot(document.getElementById('root'));window.show=()=>root.render(React.createElement(TestSetup,{targetId:'dory-4b',label:'Dory',installed:true,onRefresh:()=>{},onNotice:text=>fixture.notices.push(text)}));window.show();</script>`;
+const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://local').pathname;if(name==='/'){res.setHeader('Content-Type','text/html');return res.end(html);}res.setHeader('Content-Type',name.endsWith('.css')?'text/css':'text/javascript');if(name==='/assets/'+entryName)return res.end(entry);if(name==='/assets/'+appName)return res.end(app);const file=path.resolve(directory,'.'+name);if(!file.startsWith(directory+path.sep)||!fs.existsSync(file)){res.statusCode=404;return res.end();}res.end(fs.readFileSync(file));});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({...(process.env.OPENCORE_QA_CHANNEL?{channel:process.env.OPENCORE_QA_CHANNEL}:{}),headless:true,args:['--mute-audio']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+try{await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForTimeout(2000);
+if(await page.evaluate(()=>fixture.notices.length)!==0)throw Error('A completed Dory job was announced on startup');
+await page.reload();await page.waitForTimeout(2000);if(await page.evaluate(()=>fixture.notices.length)!==0)throw Error('A completed Dory job was announced again after restart');
+await page.evaluate(()=>{fixture.status={...fixture.status,activeJobId:'new-dory',jobs:[...fixture.status.jobs,{id:'new-dory',targetId:'dory-4b',status:'running',stage:'verifying'}]}});
+await page.waitForTimeout(2300);await page.evaluate(()=>{fixture.status={...fixture.status,activeJobId:null,jobs:fixture.status.jobs.map(j=>j.id==='new-dory'?{...j,status:'ready',stage:'ready'}:j)}});
+await page.waitForTimeout(2300);if(await page.evaluate(()=>fixture.notices.length)!==1)throw Error('A newly completed installation was not reported once');
+if(errors.length)throw Error(errors.join('; '));console.log('Old runtime notifications stay hidden; a new completed job is reported once.');
+}finally{await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;server.close();});

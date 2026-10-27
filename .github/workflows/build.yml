@@ -67,6 +67,8 @@ jobs:
         run: |
           python -m unittest -v test_setup_repair
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest -v test_update_handoff
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-install-coordinator.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-model-view-cache.cjs
@@ -107,6 +109,8 @@ jobs:
           node qa-hub-pagination.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub-ocr.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-runtime-notifications.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-managed.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
