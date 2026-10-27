@@ -1,5 +1,7 @@
 """Bounded Hub HTTP and resumable, checksum verified managed downloads."""
 import hashlib
+import base64
+import hmac
 import json
 import os
 from pathlib import Path
@@ -8,7 +10,7 @@ import secrets
 import shutil
 import time
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlsplit
+from urllib.parse import parse_qs, quote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from hf_catalog import HUB, HEX40, HEX64, parse_repository, safe_filename
@@ -80,6 +82,7 @@ class HubClient:
         self.endpoint, self.token_provider = endpoint.rstrip("/"), token_provider
         self.timeout = min(max(timeout, 1), 30)
         self.opener = build_opener(SafeRedirect(allow_test_http))
+        self._search_key = secrets.token_bytes(32)
 
     def _request(self, path, *, headers=None, token=None):
         values = {"User-Agent": "OpenCore-Managed-Hub/1", "Accept-Encoding": "identity", **(headers or {})}
@@ -125,6 +128,53 @@ class HubClient:
         repository = parse_repository(repository)
         return self.json("/api/models/" + quote(repository, safe="/") + "/revision/main?blobs=true")
 
+    def json_page(self, path, *, token, anonymous_first):
+        """Read a bounded Hub page and extract only its trusted continuation cursor."""
+        try:
+            with self.open(path, token=token, anonymous_first=anonymous_first) as response:
+                body = response.read(4 * 1024 * 1024 + 1)
+                link = response.headers.get('Link', '')
+            if len(body) > 4 * 1024 * 1024:
+                raise HubError('Hub search results exceed the supported size limit')
+            rows = json.loads(body)
+            if not isinstance(rows, list) or len(rows) > 100:
+                raise ValueError()
+            next_cursor = None
+            match = re.search(r'<([^>]+)>\s*;\s*rel\s*=\s*"?next"?', link, re.IGNORECASE)
+            if match:
+                target, allowed = urlsplit(match.group(1)), urlsplit(self.endpoint)
+                if (target.scheme, target.netloc, target.path) != (allowed.scheme, allowed.netloc, '/api/models') or target.username or target.password:
+                    raise HubError('The Hub returned an untrusted search continuation')
+                values = parse_qs(target.query, max_num_fields=30).get('cursor', [])
+                if len(values) != 1 or not 1 <= len(values[0]) <= 8192 or any(ord(c) < 32 for c in values[0]):
+                    raise HubError('The Hub returned an invalid search continuation')
+                next_cursor = values[0]
+            return rows, next_cursor
+        except (ValueError, UnicodeError):
+            raise HubError('The Hub returned invalid search metadata') from None
+
+    def _search_cursor(self, state):
+        raw = json.dumps(state, separators=(',', ':'), sort_keys=True).encode('utf-8')
+        payload = base64.urlsafe_b64encode(raw).decode('ascii').rstrip('=')
+        signature = hmac.new(self._search_key, raw, hashlib.sha256).hexdigest()
+        return payload + '.' + signature
+
+    def _read_search_cursor(self, token, fingerprint):
+        try:
+            if not isinstance(token, str) or len(token) > 16000:
+                raise ValueError()
+            payload, signature = token.split('.')
+            raw = base64.b64decode(payload + '=' * (-len(payload) % 4), altchars=b'-_', validate=True)
+            if not hmac.compare_digest(signature, hmac.new(self._search_key, raw, hashlib.sha256).hexdigest()):
+                raise ValueError()
+            state = json.loads(raw)
+            after, index = state.get('after'), state.get('index')
+            if state.get('fingerprint') != fingerprint or (after is not None and (not isinstance(after, str) or len(after) > 8192)) or type(index) is not int or not 0 <= index < 100:
+                raise ValueError()
+            return after, index
+        except (ValueError, TypeError, AttributeError):
+            raise ValueError('This search page expired or its filters changed. Search again.') from None
+
     def search_quantizations(self, query):
         if not isinstance(query, str) or not 1 <= len(query) <= 192:
             raise ValueError('Invalid model search')
@@ -143,7 +193,7 @@ class HubClient:
         mode, sort = options.get('match', 'prefix'), options.get('sort', 'downloads')
         if mode not in ('prefix', 'words', 'contains') or sort not in ('downloads', 'likes', 'lastModified', 'createdAt', 'trendingScore', 'name'):
             raise ValueError('Invalid search mode or sort order')
-        limit = options.get('limit', 60)
+        limit = options.get('limit', 100)
         private = options.get('private', False)
         if type(limit) is not int or not 1 <= limit <= 100 or type(private) is not bool:
             raise ValueError('Invalid search limit or private search setting')
@@ -158,36 +208,57 @@ class HubClient:
         if private and not token:
             raise ValueError('Save a Hugging Face token before searching private models')
         params = {'search': query.split()[0] if mode == 'words' and query else query,
-                  'limit': 100, 'sort': 'downloads' if sort == 'name' else sort,
-                  'direction': -1, 'full': 'true'}
+                  'limit': 100, 'sort': 'id' if sort == 'name' else sort,
+                  'direction': 1 if sort == 'name' else -1, 'full': 'true'}
         if fields['task']: params['pipeline_tag'] = fields['task']
         if fields['author']: params['author'] = fields['author']
         filters = [fields['library']] if fields['library'] else []
         if fields['license']: filters.append('license:' + fields['license'])
         if filters: params['filter'] = ','.join(filters)
-        rows = self.json('/api/models?' + urlencode(params), token=token, anonymous_first=not private,
-                         expected_type=list, limit=4 * 1024 * 1024)
-        models = []
-        for row in rows[:100]:
-            if not isinstance(row, dict): continue
-            try: repository = parse_repository(row.get('id', ''))
-            except ValueError: continue
-            name = repository.split('/', 1)[1].casefold()
-            full = repository.casefold()
-            needle = query.casefold()
-            if query and not (name.startswith(needle) or '/' in needle and full.startswith(needle) if mode == 'prefix' else
-                              all(word in full for word in needle.split()) if mode == 'words' else needle in full):
-                continue
-            def count(key):
-                value = row.get(key)
-                return value if type(value) is int and value >= 0 else 0
-            models.append({'repository': repository, 'task': str(row.get('pipeline_tag') or '')[:80],
-                           'library': str(row.get('library_name') or '')[:80], 'downloads': count('downloads'),
-                           'likes': count('likes'), 'gated': bool(row.get('gated')), 'private': row.get('private') is True,
-                           'lastModified': str(row.get('lastModified') or '')[:40]})
-        if sort == 'name': models.sort(key=lambda item: item['repository'].casefold())
-        return {'models': models[:limit], 'query': query, 'scanned': min(len(rows), 100),
-                'limited': len(rows) >= 100, 'privateSearch': private}
+        fingerprint = hashlib.sha256(json.dumps([query, mode, sort, fields, private, limit], sort_keys=True).encode()).hexdigest()
+        after, offset = self._read_search_cursor(options['cursor'], fingerprint) if options.get('cursor') else (None, 0)
+        models, scanned, requests, continuation = [], 0, 0, None
+        started = time.monotonic()
+        while True:
+            page_params = dict(params)
+            if after is not None:
+                page_params['cursor'] = after
+            rows, next_after = self.json_page('/api/models?' + urlencode(page_params), token=token, anonymous_first=not private)
+            requests += 1
+            if offset > len(rows):
+                raise ValueError('This search page expired. Search again.')
+            for index in range(offset, len(rows)):
+                row = rows[index]
+                scanned += 1
+                if not isinstance(row, dict): continue
+                try: repository = parse_repository(row.get('id', ''))
+                except ValueError: continue
+                name, full, needle = repository.split('/', 1)[1].casefold(), repository.casefold(), query.casefold()
+                if query and not (name.startswith(needle) or '/' in needle and full.startswith(needle) if mode == 'prefix' else
+                                  all(word in full for word in needle.split()) if mode == 'words' else needle in full):
+                    continue
+                def count(key):
+                    value = row.get(key)
+                    return value if type(value) is int and value >= 0 else 0
+                models.append({'repository': repository, 'task': str(row.get('pipeline_tag') or '')[:80],
+                               'library': str(row.get('library_name') or '')[:80], 'downloads': count('downloads'),
+                               'likes': count('likes'), 'gated': bool(row.get('gated')), 'private': row.get('private') is True,
+                               'lastModified': str(row.get('lastModified') or '')[:40]})
+                if len(models) == limit:
+                    if index + 1 < len(rows): continuation = (after, index + 1)
+                    elif next_after: continuation = (next_after, 0)
+                    break
+            if len(models) == limit or not next_after:
+                break
+            if next_after == after:
+                raise HubError('The Hub returned a repeated search page')
+            after, offset = next_after, 0
+            if requests >= 30 or time.monotonic() - started >= 20:
+                continuation = (after, 0)
+                break
+        next_cursor = self._search_cursor({'fingerprint': fingerprint, 'after': continuation[0], 'index': continuation[1]}) if continuation else None
+        return {'models': models, 'query': query, 'scanned': scanned, 'limited': bool(next_cursor),
+                'nextCursor': next_cursor, 'privateSearch': private}
 
     def quantization_derivatives(self, repository):
         repository = parse_repository(repository)

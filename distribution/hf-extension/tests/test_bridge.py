@@ -106,6 +106,22 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(self.wait_job()['status'],'ready')
         self.assertTrue(self.state.catalog()[0]['runtimeReady'])
 
+    def test_specialist_ocr_is_prepared_without_becoming_a_chat_model(self):
+        entry = self.seed()
+        proof = {'inferenceVerified': True, 'revision': entry['revision'], 'workerVersion': 1}
+        with patch.object(bridge, 'supports_ocr', side_effect=lambda value: value.get('id') == entry['id']), \
+             patch.object(self.state.ocr, 'prepare', return_value=proof), \
+             patch.object(self.state.ocr, 'ready', side_effect=lambda model, saved: bool(saved)), \
+             patch.object(self.state.ocr, 'start', return_value={'id': 'ocr-job', 'status': 'running'}):
+            self.assertEqual(self.request('POST', '/api/install', {'id': entry['id']})[0], 202)
+            self.assertEqual(self.wait_job()['status'], 'ready')
+            model = self.state.catalog()[0]
+            self.assertTrue(model['specialistReady'])
+            self.assertFalse(model['runtimeReady'])
+            self.assertEqual(model['specialist'], 'ocr')
+            self.assertEqual(self.request('POST', '/api/specialist/ocr', {'id': entry['id'], 'image': 'YWJj'})[0], 202)
+            self.assertEqual(self.request('POST', '/api/specialist/ocr', {'id': entry['id'], 'image': 'YWJj'}, secret=None)[0], 401)
+
     def setUp(self):
         self.assertIsNotNone(bridge, "The authenticated bridge is not implemented")
         self.temp = tempfile.TemporaryDirectory()

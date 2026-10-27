@@ -19,6 +19,12 @@ def runner(*args):
 
 
 class SetupBehavior(unittest.TestCase):
+    def test_isolated_bootstrap_can_import_only_its_bundled_helpers(self):
+        script = str(Path(setup.__file__).resolve())
+        code = "import runpy,sys;runpy.run_path(sys.argv[1]);import managed_model_sources;print(managed_model_sources.__name__)"
+        result = subprocess.check_output([sys.executable, '-I', '-c', code, script], text=True)
+        self.assertIn('managed_model_sources', result)
+
     def test_recipe_fingerprint_matches_native_canonical_utf8_fixture(self):
         # The same fixture and digest live in runtime_setup.rs.
         recipe = {"supported": True, "nested": {"z": 2, "a": 1}, "label": "café", "id": "fixture"}

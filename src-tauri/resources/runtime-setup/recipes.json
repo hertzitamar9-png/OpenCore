@@ -2,6 +2,32 @@
   "schema": 1,
   "recipes": [
     {
+      "id": "unlimited-ocr-2-v1",
+      "label": "Unlimited OCR 2 local runtime",
+      "kind": "studio",
+      "modelIds": ["hf-7baefbb2d1bf1bedf992295b"],
+      "packages": {
+        "transformers": "4.52.1",
+        "accelerate": "1.15.0",
+        "huggingface-hub": "0.36.0",
+        "tokenizers": "0.21.4",
+        "pillow": "12.3.0",
+        "numpy": "2.5.2",
+        "addict": "2.4.0",
+        "einops": "0.8.2",
+        "easydict": "1.13",
+        "safetensors": "0.8.0"
+      },
+      "torchPackages": {"torch": "2.13.0", "torchvision": "0.28.0"},
+      "torchIndex": "https://download.pytorch.org/whl/cu126",
+      "imports": {"transformers": ["AutoTokenizer"], "PIL.Image": ["Image"]},
+      "minimumDiskBytes": 9000000000,
+      "minimumRamBytes": 8000000000,
+      "requiresCuda": true,
+      "sourceUrls": ["https://huggingface.co/baidu/Unlimited-OCR-2", "https://pytorch.org/get-started/previous-versions/"],
+      "limitations": "Isolated Windows CUDA OCR runtime. Real recognition of two sample images and a blank image must pass before the model is marked ready."
+    },
+    {
       "id": "diffusers-images-v1",
       "label": "Isolated image runtime",
       "kind": "studio",

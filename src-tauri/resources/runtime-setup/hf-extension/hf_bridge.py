@@ -28,6 +28,7 @@ from hf_catalog import build_plan, parse_repository, DRAFT
 from hf_lineage import source_identity
 from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry
 from hf_security import TokenStore
+from hf_specialist_ocr import OCRManager, supports as supports_ocr
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -75,6 +76,7 @@ class BridgeState:
         self.catalog_epoch, self.catalog_snapshot = 0, None
         self.catalog_snapshot_at, self.catalog_fingerprint, self.catalog_revision = 0, None, None
         self.progress, self.worker = None, None
+        self.ocr = OCRManager(self.root, self.resources)
         self.owner, self.remote, self.private = None, None, None
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
@@ -141,7 +143,7 @@ class BridgeState:
             existing = self.entries.get(value['id'])
             entry = copy.deepcopy(value)
             if existing and existing['revision'] == value['revision']:
-                for key in ('providerId', 'profileId', 'runtimePreparation'):
+                for key in ('providerId', 'profileId', 'runtimePreparation', 'specialistPreparation'):
                     if key in existing:
                         entry[key] = copy.deepcopy(existing[key])
             if existing != entry:
@@ -181,6 +183,9 @@ class BridgeState:
         result = copy.deepcopy(entry)
         receipt = self._receipt(entry) if entry.get("installable") else None
         result["status"] = "installed" if receipt else "not-installed"
+        if supports_ocr(entry):
+            result['specialist'] = 'ocr'
+            result['specialistReady'] = self.ocr.ready(result, entry.get('specialistPreparation'))
         preparation = entry.get("runtimePreparation") or {}
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
         if result['runtimeReady']:
@@ -325,11 +330,21 @@ class BridgeState:
                 if time.monotonic() - last_saved[0] > 1:
                     self._persist_progress()
                     last_saved[0] = time.monotonic()
+        def prepare_ocr():
+            result = self.ocr.prepare(self.entry(entry['id'], installed=True), report, pause)
+            if pause.is_set():
+                raise Paused('OCR preparation stopped; downloaded files were retained')
+            with self.lock:
+                self.entries[entry['id']]['specialistPreparation'] = result
+                self.persist_catalog()
+            return {'status': 'ready', 'stage': 'ready', 'bytesDone': entry['bytes'], 'bytesTotal': entry['bytes']}
         try:
             if kind == "download":
                 result = self.downloader.install(entry, pause, report)
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
-                if entry.get('runtime',{}).get('adapter') and getattr(self.runtime,'automatic_preparation',False):
+                if supports_ocr(entry):
+                    final = prepare_ocr()
+                elif entry.get('runtime',{}).get('adapter') and getattr(self.runtime,'automatic_preparation',False):
                     if pause.is_set():raise Paused('Installation paused after downloading; files were retained')
                     report({'stage':'preparing-runtime','detail':'Download verified. Preparing and testing the model runtime.','bytesTotal':0})
                     self.runtime.on_progress=lambda **value:report(value)
@@ -343,6 +358,8 @@ class BridgeState:
                         self.entries[entry['id']]['runtimePreparation']={**result,'receiptRevision':entry['revision']}
                         self.persist_catalog()
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
+            elif supports_ocr(entry):
+                final = prepare_ocr()
             else:
                 self.runtime.on_progress=lambda **value:report(value)
                 result = self.runtime.prepare(entry)
@@ -374,7 +391,10 @@ class BridgeState:
                 raise Conflict("The requested job is no longer the active model job")
             self.pause_event.set()
             self.progress.update(status="pausing", stage="pausing")
-            if self.progress.get('kind')=='prepare' or self.progress.get('stage') not in ('queued','downloading','verifying'):
+            ocr_job = supports_ocr(self.entries.get(self.progress.get('id'), {}))
+            if ocr_job and self.ocr.active():
+                self.ocr.stop()
+            if not ocr_job and (self.progress.get('kind')=='prepare' or self.progress.get('stage') not in ('queued','downloading','verifying')):
                 cancellation=getattr(self.runtime,'_cancel',None)
                 if cancellation:cancellation.set()
                 else:self.runtime.stop()
@@ -401,6 +421,8 @@ class BridgeState:
         with self.lock:
             if self.progress and self.progress.get('status') in ACTIVE:
                 raise Conflict('Pause or finish the current installation before removing model files')
+            if self.ocr.active():
+                raise Conflict('Wait for the current OCR operation to finish before removing model files')
             entry=self.entry(model_id)
             if getattr(self.runtime,'_generation',None) and self.runtime._generation.locked():
                 raise Conflict('Wait for the current response before removing this model')
@@ -409,6 +431,7 @@ class BridgeState:
             folder=managed_path(managed_path(self.root,'models','hub'),entry['id'])
             if folder.is_dir():shutil.rmtree(folder)
             self.entries[model_id].pop('runtimePreparation',None)
+            self.entries[model_id].pop('specialistPreparation',None)
             self.receipt_cache.pop(model_id,None)
             self.persist_catalog()
             return {'uninstalled':True,'id':model_id}
@@ -420,6 +443,7 @@ class BridgeState:
             return
         self.closed = True
         self.pause_event.set()
+        self.ocr.stop()
         self.runtime.stop()
         if self.worker and self.worker is not threading.current_thread():
             self.worker.join(timeout=2)
@@ -575,6 +599,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.tokens.status())
             elif route == '/remote/status':
                 self._send(200, state.remote.status())
+            elif route == '/specialist/ocr/status':
+                self._send(200, state.ocr.status())
             elif route == '/mobile/host/poll':
                 devices = set(state.remote.devices) if state.remote.server else set()
                 self._send(200, state.remote.mobile.take(devices))
@@ -588,7 +614,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if self.command == "DELETE" and route == "/token":
             self._send(200, state.tokens.clear())
             return
-        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
+        body = self._body(48 * 1024 * 1024 if route.startswith('/mobile/host/') else 7 * 1024 * 1024 if route == '/specialist/ocr' else 2 * 1024 * 1024 if route == "/v1/chat/completions" else 256 * 1024)
         if body is None:
             return
         if self.command == "PUT" and route == "/token":
@@ -647,6 +673,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(202, state.start(body.get("id"), "download"))
         elif route == "/prepare":
             self._send(202, state.start(body.get("id"), "prepare"))
+        elif route == '/specialist/ocr':
+            with state.lock:
+                if state.progress and state.progress.get('status') in ACTIVE:
+                    raise Conflict('Wait for the active installation to finish before using OCR')
+                entry = state.entry(body.get('id'), installed=True)
+                self._send(202, state.ocr.start(entry, body.get('image')))
         elif route == "/pause":
             self._send(200, state.pause(body.get("jobId")))
         elif route == "/stop":

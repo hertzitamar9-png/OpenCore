@@ -23,6 +23,12 @@ import time
 import urllib.request
 import zipfile
 
+# Isolated Python intentionally omits the script directory. Admit only the
+# bundled setup helpers before importing a recipe-specific module.
+_HELPERS = str(Path(__file__).resolve().parent)
+if _HELPERS not in sys.path:
+    sys.path.insert(0, _HELPERS)
+
 MANIFEST = json.loads(Path(__file__).with_name("recipes.json").read_text(encoding="utf-8"))
 
 

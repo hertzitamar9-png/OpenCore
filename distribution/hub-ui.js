@@ -145,19 +145,20 @@ async function $hubInvoke(command,args,run) {
 const $hubSearchCache=new Map();
 function $HubBrowser({onChanged,onNotice}) {
   const state=$useHub(),[repository,setRepository]=p.useState(''),[plan,setPlan]=p.useState(null),[selected,setSelected]=p.useState([]),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),checking=p.useRef(false);
-  const [filters,setFilters]=p.useState({match:'prefix',task:'',library:'',author:'',license:'',sort:'downloads',private:false}),[results,setResults]=p.useState(null),[searching,setSearching]=p.useState(false),[browse,setBrowse]=p.useState(false),searchId=p.useRef(0);
+  const [filters,setFilters]=p.useState({match:'prefix',task:'',library:'',author:'',license:'',sort:'downloads',private:false}),[results,setResults]=p.useState(null),[searching,setSearching]=p.useState(false),[browse,setBrowse]=p.useState(false),[page,setPage]=p.useState(0),searchId=p.useRef(0),pages=p.useRef([]),resultList=p.useRef(null);
   const tabs=[['downloads','Popular'],['trendingScore','Trending'],['lastModified','Recently updated'],['likes','Most liked'],['createdAt','Newly added'],['name','A–Z']];
   const h=p.createElement;
-  async function search(){
-    const id=++searchId.current,options={query:repository,...filters},key=JSON.stringify(options),cached=!filters.private&&$hubSearchCache.get(key);
-    setError('');if(cached&&Date.now()-cached.at<300000){setResults(cached.value);setSearching(false);return;}
+  async function search(cursor=null,target=0){
+    const id=++searchId.current,options={query:repository,...filters,limit:100,...(cursor?{cursor}:{})},key=JSON.stringify([state.instanceId,options]),cached=!filters.private&&$hubSearchCache.get(key);
+    function show(value){if(target===0)pages.current=[value];else pages.current[target]=value;setPage(target);setResults(value);if(resultList.current)resultList.current.scrollTop=0;}
+    setError('');if(cached&&Date.now()-cached.at<300000){show(cached.value);setSearching(false);return;}
     setSearching(true);
     try{const value=await $hubRequest('/search',options);if(id!==searchId.current)return;
       if(!filters.private){$hubSearchCache.set(key,{at:Date.now(),value});if($hubSearchCache.size>32)$hubSearchCache.delete($hubSearchCache.keys().next().value);}
-      setResults(value);
-    }catch(e){if(id===searchId.current){setResults(null);setError(String(e));}}finally{if(id===searchId.current)setSearching(false);}
+      show(value);
+    }catch(e){if(id===searchId.current){if(cursor&&String(e).toLowerCase().includes('search page expired')){const first={query:repository,...filters,limit:100};$hubSearchCache.delete(JSON.stringify([state.instanceId,first]));pages.current=[];setPage(0);setResults(null);await search();return;}if(target===0)setResults(null);setError(String(e));}}finally{if(id===searchId.current)setSearching(false);}
   }
-  p.useEffect(()=>{++searchId.current;setSearching(false);setResults(null);if((!repository.trim()&&!browse)||repository.includes('/'))return;
+  p.useEffect(()=>{++searchId.current;setSearching(false);setResults(null);setPage(0);pages.current=[];if((!repository.trim()&&!browse)||repository.includes('/'))return;
     const timer=setTimeout(()=>void search(),350);return()=>{clearTimeout(timer);++searchId.current;};},[repository,JSON.stringify(filters),browse]);
   p.useEffect(()=>{if(state.loaded&&!state.tokenConfigured&&filters.private)setFilters(old=>({...old,private:false}));},[state.loaded,state.tokenConfigured,filters.private]);
   function filter(key,value){setFilters(old=>({...old,[key]:value}));}
@@ -167,6 +168,8 @@ function $HubBrowser({onChanged,onNotice}) {
     try{const plan=await $hubRequest('/plan',{repository:value});setPlan(plan);const seen=new Set();setSelected(plan.variants.filter(v=>{if(!v.installable||seen.has(v.quantization))return false;seen.add(v.quantization);return true;}).map(v=>v.id));}
     catch(e){setError(String(e));}finally{checking.current=false;setBusy(false);}}
   async function inspect(event){event.preventDefault();if(repository.includes('/'))await inspectRepository(repository);else await search();}
+  function previousPage(){if(page>0){setPage(page-1);setResults(pages.current[page-1]);if(resultList.current)resultList.current.scrollTop=0;}}
+  function nextPage(){if(pages.current[page+1]){setPage(page+1);setResults(pages.current[page+1]);if(resultList.current)resultList.current.scrollTop=0;}else if(results?.nextCursor)void search(results.nextCursor,page+1);}
   async function add(){setBusy(true);setError('');try{const value=await $hubRequest('/catalog/add',{planId:plan.planId,variantIds:selected});await $hubRefresh(true);await onChanged?.();onNotice?.(`Added ${value.added.length} published variants. Choose a quantization to install.`);setPlan(null);}
     catch(e){setError(String(e));}finally{setBusy(false);}}
   return h('section',{className:'hub-browser','aria-label':'Add from Hugging Face'},
@@ -190,10 +193,13 @@ function $HubBrowser({onChanged,onNotice}) {
     h('label',{className:'hub-private-search'},h('input',{type:'checkbox',checked:filters.private,disabled:!state.tokenConfigured&&!filters.private,onChange:e=>filter('private',e.target.checked)}),'Include models accessible with my token'),
     h('details',null,h('summary',null,state.tokenConfigured?'Hugging Face access · token saved':'Private / gated models · add access token'),h($HubSettings,{inline:true})),
     searching?h('p',{role:'status'},'Searching Hugging Face…'):null,
-    results?h('section',{'aria-label':'Hugging Face search results',className:'hub-search-results'},
-      h('p',{role:'status'},results.models.length?`${results.models.length} results${results.limited?' · Refine your filters for more matches':''}`:'No matching models. Try All words or another publisher.'),
-      ...results.models.map(model=>h('button',{key:model.repository,type:'button',disabled:busy,onClick:()=>void inspectRepository(model.repository)},
-        h('strong',null,model.repository),h('span',null,[model.task,model.library,`${model.downloads.toLocaleString()} downloads`,model.private?'Private':model.gated?'Gated':'Public'].filter(Boolean).join(' · '))))):null,
+    results?h('section',{'aria-label':'Hugging Face search results'},
+      h('div',{className:'hub-pagination','aria-label':'Search result pages'},h('button',{type:'button',disabled:searching||page===0,onClick:previousPage},'Previous page'),
+        h('span',{role:'status'},`Page ${page+1} · ${results.models.length} models`),
+        h('button',{type:'button',disabled:searching||!(pages.current[page+1]||results.nextCursor),onClick:nextPage},'Next page')),
+      !results.models.length?h('p',{role:'status'},results.nextCursor?'No matches on this page. More results are available.':'No matching models. Try All words or another publisher.'):null,
+      h('div',{className:'hub-search-results',ref:resultList},...results.models.map(model=>h('button',{key:model.repository,type:'button',disabled:busy,onClick:()=>void inspectRepository(model.repository)},
+        h('strong',null,model.repository),h('span',null,[model.task,model.library,`${model.downloads.toLocaleString()} downloads`,model.private?'Private':model.gated?'Gated':'Public'].filter(Boolean).join(' · ')))))):null,
     error?h('p',{role:'alert'},error):null,
     plan?h('div',{className:'hub-plan'},h('strong',null,plan.repository),h('p',null,`${plan.variants.length} published model variants · Revision ${plan.revision.slice(0,8)}`),
       h('p',null,'Select quantizations to add. Weights download only when you press Install on a card.'),
@@ -211,8 +217,29 @@ function $HubSettings({inline=false}) {
     h('p',{role:'status'},state.tokenConfigured?'Access token saved':'No token saved'),h('form',{onSubmit:save,className:'hub-repository-form'},h('input',{type:'password',autoComplete:'off',value:token,'aria-label':inline?'Hugging Face access token for model browser':'Hugging Face access token',placeholder:'hf_…',onChange:e=>setToken(e.target.value)}),
       h('button',{disabled:busy||!token},busy?'Saving…':'Save token')),state.tokenConfigured?h('button',{disabled:busy,onClick:remove},'Remove token'):null,message?h('p',{role:'status'},message):null);
 }
+function $HubOCR({entry}) {
+  const h=p.createElement,[file,setFile]=p.useState(null),[job,setJob]=p.useState(null),[error,setError]=p.useState(''),[starting,setStarting]=p.useState(false);
+  p.useEffect(()=>{let alive=true;
+    async function poll(){try{const value=await $hubRequest('/specialist/ocr/status');if(alive&&value.status!=='idle')setJob(value);}catch(e){if(alive)setError(String(e));}}
+    void poll();return()=>{alive=false;};},[entry.id]);
+  p.useEffect(()=>{if(job?.status!=='running')return;let alive=true,timer;
+    async function poll(){try{const value=await $hubRequest('/specialist/ocr/status');if(!alive)return;setJob(value);if(value.status==='running')timer=setTimeout(poll,1200);}catch(e){if(alive)setError(String(e));}}
+    timer=setTimeout(poll,1200);return()=>{alive=false;clearTimeout(timer);};},[job?.id,job?.status]);
+  async function recognize(){if(!file)return;setError('');setStarting(true);try{
+    if(file.size>5*1024*1024)throw new Error('Choose an image up to 5 MB.');
+    const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('The image could not be opened.'));reader.readAsDataURL(file);});
+    const image=data.slice(data.indexOf(',')+1);setJob(await $hubRequest('/specialist/ocr',{id:entry.id,image}));
+  }catch(e){setError(String(e));}finally{setStarting(false);}}
+  const busy=starting||job?.status==='running';
+  return h('section',{className:'hub-ocr','aria-label':'Unlimited OCR'},h('p',null,'Choose an image to extract text locally on this PC. PNG, JPEG or WebP, up to 5 MB.'),
+    h('input',{type:'file',accept:'image/png,image/jpeg,image/webp','aria-label':'Image for OCR',disabled:busy,onChange:e=>{setFile(e.target.files?.[0]||null);setJob(null);setError('');}}),
+    h('button',{type:'button',disabled:busy||!file,onClick:recognize},busy?'Reading image…':'Extract text'),
+    job?.status==='complete'?h('label',null,'Recognized text',h('textarea',{readOnly:true,value:job.text||'',rows:6,'aria-label':'Recognized text'})):null,
+    job?.status==='complete'&&!job.text?h('p',{role:'status'},'No text was recognized.'):null,
+    job?.status==='failed'?h('p',{role:'alert'},job.error):null,error?h('p',{role:'alert'},error):null);
+}
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
-  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false);
+  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false),[ocrOpen,setOCROpen]=p.useState(false);
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],entry=state.catalog.find(v=>v.id===model.id)||model.hubEntry;
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
@@ -220,17 +247,20 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=entry.nativeProfile?entry.id:await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   function askRemove(){setError('');if(entry.nativeProfile){onNativeRemove?.(model);return;}setRemoving(true);}
   async function uninstall(){setBusy(true);try{await $hubRequest('/uninstall',{id:entry.id});await $hubRefresh(true);await onChanged?.();setRemoving(false);}catch(e){setError(String(e));}finally{setBusy(false);}}
-  return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
-    h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
+  return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
+    h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='ocr'?'OCR · Image to text':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
-    h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
-    h('small',null,entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
+    h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.specialistReady?'Local OCR verified':entry.specialist==='ocr'?'OCR runtime prepares after download':entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
+    h('small',null,entry.specialist==='ocr'?'Local image OCR needs a CUDA-capable NVIDIA GPU with BF16 and enough free GPU memory.':entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):
+      entry.specialistReady?h('button',{disabled:locked,onClick:()=>setOCROpen(v=>!v)},ocrOpen?'Close OCR':'Use OCR'):
       entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
-      h('button',{disabled:locked||!entry.runtime?.adapter,onClick:prepare},active?'Preparing…':'Prepare runtime'),
+      h('button',{disabled:locked||!(entry.runtime?.adapter||entry.specialist==='ocr'),onClick:prepare},active?'Preparing…':entry.specialist==='ocr'?'Prepare OCR':'Prepare runtime'),
       entry.status==='installed'?h('button',{className:'model-delete-button',disabled:locked,onClick:askRemove},'Uninstall'):null),
+    ocrOpen&&entry.specialistReady?h($HubOCR,{entry}):null,
     removing?h('section',{role:'dialog','aria-label':'Uninstall '+entry.name},h('p',null,'Remove this downloaded package? Conversation history is kept.'),h('button',{disabled:busy,onClick:uninstall},'Remove downloaded files'),h('button',{disabled:busy,onClick:()=>setRemoving(false)},'Cancel')):null,
     active?h('p',{role:'status'},shared.progress?.currentFile||'Starting installation…'):null,error?h('p',{role:'alert'},error):null,
     entry.downloadProgress?.status==='failed'?h('p',{role:'alert'},entry.downloadProgress.error):null);
 }
 const $hubStyle=document.createElement('style');$hubStyle.textContent=`.hub-browser{padding:16px;border:1px solid var(--border,#34404c);border-radius:10px;margin:16px 0}.hub-browser h3{margin:0 0 8px}.hub-browser p{font-size:12px}.hub-repository-form{display:flex;gap:10px;flex-wrap:wrap}.hub-repository-form input{flex:1;min-width:260px}.hub-repository-form input,.hub-search-filters input,.hub-search-filters select{color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px;font:inherit;min-height:42px;box-sizing:border-box}.hub-repository-form input:focus,.hub-search-filters input:focus,.hub-search-filters select:focus{outline:2px solid var(--theme-accent,#6dacf5);outline-offset:2px}.hub-repository-form input::placeholder,.hub-search-filters input::placeholder{color:var(--theme-muted,#aab7c6)}.hub-discovery-tabs{display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px}.hub-discovery-tabs [role=tab]{white-space:nowrap;min-height:40px;padding:8px 14px;border:1px solid var(--theme-border,#527397);border-radius:7px;background:#142233;color:#dbe5f0}.hub-discovery-tabs [aria-selected=true]{background:#235aa3;border-color:#80baff;color:#fff}.hub-discovery-tabs [role=tab]:focus-visible{outline:2px solid #80baff;outline-offset:2px}.hub-search-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0}.hub-search-filters label{display:grid;gap:6px;font-size:12px}.hub-search-filters input,.hub-search-filters select{width:100%;min-width:0}.hub-private-search{display:flex;align-items:center;gap:8px;margin:12px 0}.hub-browser summary{cursor:pointer;color:var(--theme-text,#dbe5f0);padding:8px 0}.hub-search-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:8px;max-height:350px;overflow:auto;margin:12px 0}.hub-search-results>p{grid-column:1/-1}.hub-search-results button{display:grid;align-content:start;justify-content:start;justify-items:start;gap:6px;width:100%;min-width:0;text-align:left;padding:12px;min-height:60px;overflow-wrap:anywhere}@media(max-width:980px){.hub-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.hub-search-results{grid-template-columns:1fr}}.hub-search-results span{color:var(--theme-muted,#aab7c6);font-size:12px}.hub-plan{margin-top:14px}.hub-variant-list{display:grid;gap:9px;max-height:240px;overflow:auto;margin:12px 0}.hub-variant-list label{display:flex;gap:10px}.hub-model-card header{display:flex;gap:12px;justify-content:space-between}.hub-model-card label{display:grid;gap:8px}.hub-model-card footer{display:flex;gap:8px}`;document.head.appendChild($hubStyle);
+$hubStyle.textContent+=`.hub-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.hub-pagination button{min-height:40px}@media(max-width:480px){.hub-pagination{display:grid;grid-template-columns:auto 1fr auto;gap:6px}.hub-pagination button{font-size:12px;padding:6px}.hub-pagination span{text-align:center;font-size:12px}}.hub-ocr{display:grid;gap:10px;margin-top:14px;min-width:0}.hub-ocr input,.hub-ocr textarea{max-width:100%;min-width:0;font:inherit}.hub-ocr textarea{box-sizing:border-box;width:100%;color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px}.hub-ocr button{min-height:42px;justify-self:start}`;

@@ -104,6 +104,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-hub-pagination.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-hub-ocr.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-managed.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-builtin-presets.cjs
