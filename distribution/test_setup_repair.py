@@ -14,6 +14,25 @@ import managed_model_sources
 import setup_manager as setup
 
 
+class ComfyRuntimeReleaseTests(unittest.TestCase):
+    def test_signed_release_package_includes_pinned_moss_loader(self):
+        from managed_model_sources import verify_pinned_plugin_sources
+        repository = Path(__file__).resolve().parents[1]
+        source_root = repository / 'src-tauri/resources'
+        recipe = setup.recipe_for('moss-image-sft-int4-convrot')
+        verify_pinned_plugin_sources(source_root, recipe)
+        mappings = json.loads((repository/'distribution/resource-map.json').read_text(encoding='utf-8'))
+        for pin in recipe['pluginFiles']:
+            relative = 'model-runtime-sources/moss-comfy/' + pin['path']
+            with self.subTest(loader=relative):
+                self.assertEqual(mappings.get(relative), 'src-tauri/resources/' + relative)
+                self.assertEqual(hashlib.sha256((repository/mappings[relative]).read_bytes()).hexdigest(), pin['sha256'])
+        for resource in ('studio/comfy_worker.py', 'studio/asset_worker.py',
+                         'runtime-setup/recipes.json', 'runtime-setup/setup_manager.py',
+                         'runtime-setup/managed_model_sources.py'):
+            self.assertEqual(mappings.get(resource), 'src-tauri/resources/' + resource)
+
+
 class FixtureRunner:
     """Replace package installation; receipt publication stays real."""
 

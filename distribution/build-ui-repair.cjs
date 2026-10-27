@@ -132,8 +132,8 @@ app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+
   const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};';
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode]]) {
     const seen = new Set();
-    const result = await terser.minify(code, { module: true, mangle: false,
-      compress: { passes: 1, unused: false },
+    const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,
+      compress: { passes: name === 'App-kNA9sRUP.js' ? 3 : 1, unused: false },
       format: { comments: (_node, comment) => {
         if (!/@license|@preserve|^!/.test(comment.value) || seen.has(comment.value)) return false;
         seen.add(comment.value); return true;

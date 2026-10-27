@@ -81,7 +81,7 @@ function $hubAugment(library) {
   const imported=new Set($hubState.catalog.map(entry=>entry.repository.toLowerCase())),parents=new Set(library.models.map(model=>model.variantOf).filter(Boolean));
   const models=library.models.filter(model=>{if(nativeFamilies.has(model.id))return false;
     if(model.backend==='external'&&!model.installed&&!parents.has(model.id)){try{const url=new URL(model.sourceUrl||model.setupUrl);if(['huggingface.co','hf.co'].includes(url.hostname)&&imported.has(url.pathname.split('/').filter(Boolean).slice(0,2).join('/').toLowerCase()))return false;}catch{}}
-    return true;});
+    return true;}).map(model=>{const adapter=$hubBuiltInAdapter(model);return adapter?{...model,hubModel:true,hubEntry:adapter}:model;});
   const precision=value=>String(value||'').toUpperCase().replace(/^FP16$/,'F16').replace(/^FP32$/,'F32');
   for(const [family,entries] of families){
     const packaged=library.models.filter(model=>nativeFamilies.get(model.id)===family&&(model.installed||model.id===globalThis.__opencoreHubSelectedProfile||model.totalBytes>0||model.weightBytes>0));
@@ -167,6 +167,7 @@ function $HubBrowser({onChanged,onNotice}) {
   async function inspectRepository(value){if(checking.current)return;checking.current=true;setBusy(true);setError('');setPlan(null);setRepository(value);
     try{const plan=await $hubRequest('/plan',{repository:value});setPlan(plan);const seen=new Set();setSelected(plan.variants.filter(v=>{if(!v.installable||seen.has(v.quantization))return false;seen.add(v.quantization);return true;}).map(v=>v.id));}
     catch(e){setError(String(e));}finally{checking.current=false;setBusy(false);}}
+  p.useEffect(()=>{const onBase=event=>{const repo=event.detail?.repository;if(typeof repo==='string'&&/^[^/]+\/[^/]+$/.test(repo)){setBrowse(false);void inspectRepository(repo);document.querySelector('.hub-browser[aria-label="Add from Hugging Face"]')?.scrollIntoView({behavior:'smooth',block:'start'});}};window.addEventListener('opencore-hub-find-base',onBase);return()=>window.removeEventListener('opencore-hub-find-base',onBase);},[]);
   async function inspect(event){event.preventDefault();if(repository.includes('/'))await inspectRepository(repository);else await search();}
   function previousPage(){if(page>0){setPage(page-1);setResults(pages.current[page-1]);if(resultList.current)resultList.current.scrollTop=0;}}
   function nextPage(){if(pages.current[page+1]){setPage(page+1);setResults(pages.current[page+1]);if(resultList.current)resultList.current.scrollTop=0;}else if(results?.nextCursor)void search(results.nextCursor,page+1);}
@@ -238,10 +239,138 @@ function $HubOCR({entry}) {
     job?.status==='complete'&&!job.text?h('p',{role:'status'},'No text was recognized.'):null,
     job?.status==='failed'?h('p',{role:'alert'},job.error):null,error?h('p',{role:'alert'},error):null);
 }
+function $hubRepositoryOf(url) {
+  try {const parsed=new URL(url||'');return ['huggingface.co','hf.co'].includes(parsed.hostname)?parsed.pathname.split('/').filter(Boolean).slice(0,2).join('/').toLowerCase():'';}catch{return '';}
+}
+function $hubIsAdapterCheckpoint(model) {
+  if(model?.packageKind==='adapter'||model?.format==='lora')return true;
+  // Only known publisher LoRA repositories, rather than loosely excluding fine-tunes by name.
+  const repository=$hubRepositoryOf(model?.sourceUrl);
+  return ['lightx2v/qwen-image-2.1-lightning','akhaliq/qwen-image-2.1-multiple-angles-lora',
+    'akhaliq/qwen-image-2.1-next-scene-lora','gribbliest/qwen-image-2.1-qma-camera-angles',
+    'ausboss/qwen-image-2.1-outfit-swap-consistency-lora'].includes(repository);
+}
+function $hubBuiltInAdapter(model) {
+  const repo=$hubRepositoryOf(model.sourceUrl);
+  if(!['lightx2v/qwen-image-2.1-lightning','akhaliq/qwen-image-2.1-multiple-angles-lora'].includes(repo))return null;
+  return {id:model.id,nativeProfile:true,repository:repo,baseRepository:'Qwen/Qwen-Image-2.1',packageKind:'adapter',
+    format:'lora',familyLabel:model.label,quantization:model.precision,bytes:model.totalBytes||model.downloadBytes||0,
+    category:'image',installable:model.installable!==false,status:model.installed?'installed':'not-installed',
+    runtime:{adapter:null,reason:'This is a LoRA add-on, not a standalone base generator. Select an installed compatible Qwen checkpoint.'}};
+}
+function $hubBaseModels(entry) {
+  const repository=String(entry?.baseRepository||'').toLowerCase();
+  if(!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/.test(repository))return [];
+  const native=$hubNativeLibrary?.models||[];
+  const catalog=$hubState.catalog||[];
+  const all=[...native.map(model=>({...model,native:true})),...catalog.map(model=>({...model,native:false}))];
+  const byId=new Map(all.map(model=>[model.id,model]));
+  // Only expand a quantization family after a publisher-declared or explicitly researched anchor matches.
+  function family(model,seen=new Set()) {
+    if(!model?.id||seen.has(model.id))return '';
+    seen.add(model.id);
+    return model.variantOf&&byId.has(model.variantOf)?family(byId.get(model.variantOf),seen):model.id;
+  }
+  const knownArchitecture=repository==='qwen/qwen-image-2.1'?'qwen21':repository==='openmoss-team/moss-image-sft'?'moss-sft':entry.repository?.startsWith('Muapi/ltx-2-2.3-')?'ltx23':'';
+  function matches(model) {
+    if(!model||model.category!==entry.category||$hubIsAdapterCheckpoint(model))return null;
+    if(model.id===entry.id)return null;
+    if(!model.native) {
+      if(knownArchitecture==='ltx23'&&model.repository?.toLowerCase()==='lightricks/ltx-2.3')return 'family';
+      if(knownArchitecture==='ltx23'&&model.repository?.toLowerCase()==='lightricks/ltx-2.5')return 'related';
+      if(model.repository?.toLowerCase()===repository&&model.packageKind!=='adapter')return 'exact';
+      return null;
+    }
+    const fromSource=$hubRepositoryOf(model.sourceUrl);
+    const lineage=String(model.installation?.sourceIdentity||'').split('@')[0].toLowerCase();
+    if(fromSource===repository||lineage===repository)return 'exact';
+    if(knownArchitecture==='moss-sft'&&['moss-image-sft','moss-image-sft-int4-convrot','moss-image-sft-int8-convrot'].includes(model.id))return 'family';
+    if(knownArchitecture==='ltx23') {
+      if(model.id.startsWith('ltx-25-'))return 'related'; // Official LTX reports many, but not all, 2.3 LoRAs work with 2.5.
+      if(model.id==='ltx-2'||model.id.startsWith('ltx-2-published-')||model.id.startsWith('ltx-23-'))return 'family';
+      if(model.id==='ltx-video'||model.id.startsWith('ltx-video-'))return 'related';
+    }
+    if(knownArchitecture==='qwen21') {
+      if(model.id==='qwen-image-21'||model.id.startsWith('qwen-image-21-gguf'))return 'family';
+      // Publisher labels these as Qwen Image 2.1 derived/quantized checkpoints, not identical weights.
+      if(model.id==='qwen-image-21-uc'||model.id.startsWith('qwen-image-21-uc-'))return 'related';
+    }
+    // Other architectures can still reuse quantizations of the same authoritative base model.
+    return null;
+  }
+  const anchors=new Map(all.map(model=>[model.id,matches(model)]).filter(([,kind])=>kind));
+  const suggestions=all.filter(model=>model.id&&!$hubIsAdapterCheckpoint(model)&&model.category===entry.category)
+    .map(model=>({model,compatibility:anchors.get(model.id)||anchors.get(family(model))}))
+    .filter(item=>item.compatibility)
+    .map(({model,compatibility})=>({
+      id:model.id,label:model.label||model.name||model.repository||model.id,precision:model.precision||model.quantization||'Publisher format',
+      bytes:model.totalBytes||model.bytes||model.downloadBytes||0,installed:model.native?!!model.installed:model.status==='installed',
+      installable:model.installable!==false,backend:model.backend||model.runtime?.adapter||null,
+      native:!!model.native,category:model.category,compatibility,sourceRepository:$hubRepositoryOf(model.sourceUrl)||model.repository||'',
+      runtimeSupported:!!model.native&&model.backend==='comfyui'&&model.runtimeReady!==false
+    }));
+  const unique=new Map();
+  for(const model of suggestions)if(!unique.has(model.id))unique.set(model.id,model);
+  const order={exact:0,family:1,related:2};
+  return [...unique.values()].sort((a,b)=>Number(b.installed)-Number(a.installed)||order[a.compatibility]-order[b.compatibility]||a.label.localeCompare(b.label)||a.precision.localeCompare(b.precision));
+}
+function $hubChosenAdapterPath(entry) {
+  if(entry?.status!=='installed'||!Array.isArray(entry.installReceipt?.files))return null;
+  return entry.installReceipt.files.find(file=>file.role==='model'&&typeof file.localPath==='string')?.localPath||null;
+}
 function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,selectedProfile}) {
-  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false),[ocrOpen,setOCROpen]=p.useState(false);
+  const state=$useHub(),shared=$useInstallState(),h=p.createElement,[choice,setChoice]=p.useState(()=>group.variants.find(v=>v.hubEntry?.profileId===selectedProfile)?.id||group.variants.find(v=>v.installed)?.id||group.variants[0].id),[busy,setBusy]=p.useState(false),[error,setError]=p.useState(''),[removing,setRemoving]=p.useState(false),[ocrOpen,setOCROpen]=p.useState(false),[baseChoice,setBaseChoice]=p.useState(''),[adapterPrompt,setAdapterPrompt]=p.useState(''),[adapterStrength,setAdapterStrength]=p.useState(0.8),[pairedBaseId,setPairedBaseId]=p.useState(()=>{try{return JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[group.variants[0].id]||'';}catch{return '';}});
   const model=group.variants.find(v=>v.id===choice)||group.variants[0],entry=state.catalog.find(v=>v.id===model.id)||model.hubEntry;
   const active=shared.active?.modelId===entry.id,locked=disabled||!!shared.active||busy;
+  const adapter=entry.packageKind==='adapter'||entry.format==='lora';
+  const bases=adapter?$hubBaseModels(entry):[];
+  const selectedBase=bases.find(item=>item.id===baseChoice)||bases.find(item=>item.id===pairedBaseId)||bases[0]||null;
+  p.useEffect(()=>{try{setPairedBaseId(JSON.parse(window.localStorage.getItem('opencore-lora-base-pairings-v1')||'{}')[entry.id]||'');}catch{setPairedBaseId('');}},[entry.id]);
+  const pair=bases.find(item=>item.id===pairedBaseId&&item.installed);
+  const connected=!!pair&&selectedBase?.id===pair.id;
+  function connectBase() {
+    if(!selectedBase?.installed)return;
+    try {
+      const key='opencore-lora-base-pairings-v1';
+      const current=JSON.parse(window.localStorage.getItem(key)||'{}');
+      current[entry.id]=selectedBase.id;
+      window.localStorage.setItem(key,JSON.stringify(current));
+      setPairedBaseId(selectedBase.id);
+      onNotice?.('Connected this LoRA to the existing '+selectedBase.label+' checkpoint. No base model was downloaded.');
+    }catch(e){setError('The model pairing could not be saved: '+e);}
+  }
+  function disconnectBase() {
+    try {
+      const key='opencore-lora-base-pairings-v1';
+      const current=JSON.parse(window.localStorage.getItem(key)||'{}');
+      delete current[entry.id];
+      window.localStorage.setItem(key,JSON.stringify(current));
+      setPairedBaseId('');
+    }catch(e){setError('The model pairing could not be cleared: '+e);}
+  }
+  const readyMoss=adapter&&entry.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&entry.variantKey?.toLowerCase().includes('comfyui')&&selectedBase?.backend==='comfyui'&&selectedBase.installed&&connected&&entry.status==='installed';
+  const readyQwen=adapter&&entry.repository==='f23gg/NSFW-LORA-Qwen-Image-2.1'&&entry.variantKey==='lora:NSFW Qwen Lora.safetensors'&&selectedBase?.installed&&connected&&entry.status==='installed'&&((selectedBase.id==='qwen-image-21'&&selectedBase.backend==='diffusers')||(selectedBase.id.startsWith('qwen-image-21-uc')&&selectedBase.backend==='comfyui'));
+  const experimentalQwen=readyQwen&&selectedBase.compatibility==='related';
+  const canGenerate=readyMoss||readyQwen;
+  async function installBase(){if(!selectedBase?.installable)return;setBusy(true);setError('');try{await Ue('install_model',{id:selectedBase.id});await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function prepareBase(){if(!selectedBase?.native||!['comfyui','diffusers'].includes(selectedBase.backend))return;setBusy(true);setError('');try{
+    await window.__TAURI_INTERNALS__.invoke('runtime_setup_start',{targetId:selectedBase.id,options:{installWeights:!selectedBase.installed,acceptLicenses:false,allowAdministrator:false}});
+    onNotice?.('The selected base runtime setup was queued. Its progress appears in Runtime setup.');
+  }catch(e){setError(String(e));}finally{setBusy(false);}}
+  async function generateWithBase(){if(!canGenerate||!adapterPrompt.trim())return;setBusy(true);setError('');try{
+    const path=$hubChosenAdapterPath(entry);if(!path)throw Error('Install and verify the supported LoRA file before generating.');
+    const status=await window.__TAURI_INTERNALS__.invoke('runtime_setup_status',{});
+    const receipt=status.receipts?.find(value=>value.targetId===selectedBase.id&&value.dependenciesVerified);
+    if(!receipt?.python||(selectedBase.backend==='comfyui'&&(!receipt.runner||!receipt.sourceDir)))
+      throw Error('Prepare the selected image base runtime first. A verified interpreter and supported engine are required.');
+    const runtime={modelId:selectedBase.id,python:receipt.python,...(receipt.runner?{runner:receipt.runner}:{}),...(receipt.sourceDir?{sourceDir:receipt.sourceDir}:{})};
+    await window.__TAURI_INTERNALS__.invoke('configure_studio_runtime',{runtime});
+    await window.__TAURI_INTERNALS__.invoke('submit_studio_job',{request:{modelId:selectedBase.id,prompt:readyMoss&&!/\bmoss_xvstyle\b/i.test(adapterPrompt)?'moss_xvstyle, '+adapterPrompt.trim():adapterPrompt.trim(),settings:{loraPath:path,loraStrength:adapterStrength,width:512,height:512,steps:30,guidanceScale:3,numImages:1,outputFormat:'png'}}});
+    window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));
+    onNotice?.('Generation queued with the selected image base quantization and verified LoRA.');
+  }catch(e){setError(String(e));}finally{setBusy(false);}}
+  function findBase(repository){const preferred=repository||(entry.repository?.startsWith('Muapi/ltx-2-2.3-')?'Lightricks/LTX-2.3':entry.baseRepository);if(!preferred)return;window.dispatchEvent(new CustomEvent('opencore-hub-find-base',{detail:{repository:preferred}}));}
+
   async function start(){setError('');try{await Ue('install_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function prepare(){setError('');try{await Ue(entry.nativeProfile?'install_model':'hub_prepare_model',{id:entry.id});}catch(e){setError(String(e));}}
   async function use(){setBusy(true);setError('');try{await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});const profile=entry.nativeProfile?entry.id:await $hubRegister(entry);await onSelect(profile);await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
@@ -251,6 +380,36 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='ocr'?'OCR · Image to text':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
     h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.specialistReady?'Local OCR verified':entry.specialist==='ocr'?'OCR runtime prepares after download':entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
+    adapter?h('section',{className:'hub-base-picker','aria-label':'Compatible base model'},
+      h('strong',null,'Base model and quantization'),
+      h('p',null,entry.baseRepository?'Publisher base: '+entry.baseRepository:'The publisher did not declare a base model. Automatic compatibility cannot be verified.'),
+      bases.length?h('label',null,'Select base model or quantization already in your library',h('select',{'aria-label':'Base model for '+entry.repository,value:selectedBase?.id||'',disabled:locked,onChange:e=>setBaseChoice(e.target.value)},
+        ...[true,false].map(installed=>h('optgroup',{key:installed?'installed':'available',label:installed?'Installed on this PC':'Available quantizations (not downloaded)'},
+          ...bases.filter(base=>base.installed===installed).map(base=>h('option',{key:base.id,value:base.id},
+            base.label,' · ',base.precision,' · ',(base.bytes/1e9).toFixed(2),' GB',
+            base.compatibility==='related'?' · related version (unverified)':'',
+            !base.runtimeSupported?' · runtime not verified':'')))))):null,
+      selectedBase?h('p',null,selectedBase.installed?'Base weights already downloaded. You can connect this LoRA without downloading them again.':'Base weights not yet installed.'):null,
+      selectedBase?.compatibility==='related'?h('small',{role:'status'},'This is a related checkpoint rather than the exact publisher training base. Tensor compatibility and generation have not been verified; the LoRA may have no effect.'):null,
+      entry.repository?.startsWith('Muapi/ltx-2-2.3-')?h('small',{role:'status'},'LTX 2.3-compatible checkpoints are preferred. LTX 2.5 can sometimes reuse LTX 2.3 LoRAs, but this specific adapter is untested. The OpenCore LTX generation runtime is not installed or verified.'):null,
+      pair?h('p',{role:'status'},'Connected to: '+pair.label+' · '+pair.precision):null,
+      h('div',{className:'hub-base-actions'},
+        selectedBase&&!selectedBase.installed?h('button',{type:'button',disabled:locked||!selectedBase.installable,onClick:()=>void installBase()},'Install selected base'):null,
+        selectedBase?.installed&&!connected?h('button',{type:'button',disabled:locked,onClick:connectBase},'Connect to installed model'):null,
+        connected?h('button',{type:'button',disabled:locked,onClick:disconnectBase},'Disconnect LoRA'):null,
+        selectedBase?.native&&['comfyui','diffusers'].includes(selectedBase.backend)?h('button',{type:'button',disabled:locked||!selectedBase.installed,onClick:()=>void prepareBase()},'Prepare base runtime'):null,
+        entry.baseRepository?h('button',{type:'button',disabled:locked,onClick:()=>findBase()},bases.length?'Browse other base variants':'Find base checkpoint'):null,
+        entry.repository?.startsWith('Muapi/ltx-2-2.3-')?h('button',{type:'button',disabled:locked,onClick:()=>findBase('Lightricks/LTX-2.5')},'Inspect LTX 2.5 (experimental)'):null,
+        null),
+      canGenerate?h('div',{className:'hub-adapter-generate'},
+        experimentalQwen?h('small',{role:'status'},'Experimental pairing with a Qwen uncensored fine-tune. LoRA tensor names may not match; a real generated image is needed to verify this combination.'):null,
+        h('label',null,'Image prompt',h('textarea',{'aria-label':'Image prompt for selected LoRA',value:adapterPrompt,rows:3,placeholder:'Describe the image to generate',onChange:e=>setAdapterPrompt(e.target.value)})),
+        h('label',null,'LoRA strength',h('input',{type:'number','aria-label':'Selected LoRA strength',min:0,max:2,step:0.1,value:adapterStrength,onChange:e=>{const n=Number(e.target.value);if(Number.isFinite(n)&&n>=0&&n<=2)setAdapterStrength(n);}})),
+        h('button',{type:'button',disabled:locked||!adapterPrompt.trim(),onClick:()=>void generateWithBase()},busy?'Starting…':'Generate with this LoRA and base')):null,
+      !canGenerate?h('small',null,connected
+        ? 'Connected to the selected checkpoint. Inference remains unavailable until OpenCore verifies a compatible LoRA loading runtime for this specific model and adapter.'
+        : selectedBase?.installed?'Connect this LoRA to the downloaded checkpoint. Pairing and runnable inference are separate checks.'
+        :selectedBase?'Install only the chosen quantization, or choose another model already on this PC.':'No verified base-model lineage is available for this adapter.'):null):null,
     h('small',null,entry.specialist==='ocr'?'Local image OCR needs a CUDA-capable NVIDIA GPU with BF16 and enough free GPU memory.':entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):
       entry.specialistReady?h('button',{disabled:locked,onClick:()=>setOCROpen(v=>!v)},ocrOpen?'Close OCR':'Use OCR'):
@@ -263,4 +422,4 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     entry.downloadProgress?.status==='failed'?h('p',{role:'alert'},entry.downloadProgress.error):null);
 }
 const $hubStyle=document.createElement('style');$hubStyle.textContent=`.hub-browser{padding:16px;border:1px solid var(--border,#34404c);border-radius:10px;margin:16px 0}.hub-browser h3{margin:0 0 8px}.hub-browser p{font-size:12px}.hub-repository-form{display:flex;gap:10px;flex-wrap:wrap}.hub-repository-form input{flex:1;min-width:260px}.hub-repository-form input,.hub-search-filters input,.hub-search-filters select{color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px;font:inherit;min-height:42px;box-sizing:border-box}.hub-repository-form input:focus,.hub-search-filters input:focus,.hub-search-filters select:focus{outline:2px solid var(--theme-accent,#6dacf5);outline-offset:2px}.hub-repository-form input::placeholder,.hub-search-filters input::placeholder{color:var(--theme-muted,#aab7c6)}.hub-discovery-tabs{display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px}.hub-discovery-tabs [role=tab]{white-space:nowrap;min-height:40px;padding:8px 14px;border:1px solid var(--theme-border,#527397);border-radius:7px;background:#142233;color:#dbe5f0}.hub-discovery-tabs [aria-selected=true]{background:#235aa3;border-color:#80baff;color:#fff}.hub-discovery-tabs [role=tab]:focus-visible{outline:2px solid #80baff;outline-offset:2px}.hub-search-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0}.hub-search-filters label{display:grid;gap:6px;font-size:12px}.hub-search-filters input,.hub-search-filters select{width:100%;min-width:0}.hub-private-search{display:flex;align-items:center;gap:8px;margin:12px 0}.hub-browser summary{cursor:pointer;color:var(--theme-text,#dbe5f0);padding:8px 0}.hub-search-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:8px;max-height:350px;overflow:auto;margin:12px 0}.hub-search-results>p{grid-column:1/-1}.hub-search-results button{display:grid;align-content:start;justify-content:start;justify-items:start;gap:6px;width:100%;min-width:0;text-align:left;padding:12px;min-height:60px;overflow-wrap:anywhere}@media(max-width:980px){.hub-search-results{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.hub-search-results{grid-template-columns:1fr}}.hub-search-results span{color:var(--theme-muted,#aab7c6);font-size:12px}.hub-plan{margin-top:14px}.hub-variant-list{display:grid;gap:9px;max-height:240px;overflow:auto;margin:12px 0}.hub-variant-list label{display:flex;gap:10px}.hub-model-card header{display:flex;gap:12px;justify-content:space-between}.hub-model-card label{display:grid;gap:8px}.hub-model-card footer{display:flex;gap:8px}`;document.head.appendChild($hubStyle);
-$hubStyle.textContent+=`.hub-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.hub-pagination button{min-height:40px}@media(max-width:480px){.hub-pagination{display:grid;grid-template-columns:auto 1fr auto;gap:6px}.hub-pagination button{font-size:12px;padding:6px}.hub-pagination span{text-align:center;font-size:12px}}.hub-ocr{display:grid;gap:10px;margin-top:14px;min-width:0}.hub-ocr input,.hub-ocr textarea{max-width:100%;min-width:0;font:inherit}.hub-ocr textarea{box-sizing:border-box;width:100%;color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px}.hub-ocr button{min-height:42px;justify-self:start}`;
+$hubStyle.textContent+=`.hub-adapter-generate{display:grid;gap:8px}.hub-adapter-generate textarea,.hub-adapter-generate input{width:100%;min-width:0;box-sizing:border-box}.hub-base-picker{display:grid;gap:8px;padding:12px;margin:12px 0;border:1px solid var(--theme-border,#527397);border-radius:8px}.hub-base-actions{display:flex;gap:8px;flex-wrap:wrap}.hub-base-picker p,.hub-base-picker small{overflow-wrap:anywhere}.hub-base-picker select{width:100%;min-width:0}.hub-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.hub-pagination button{min-height:40px}@media(max-width:480px){.hub-pagination{display:grid;grid-template-columns:auto 1fr auto;gap:6px}.hub-pagination button{font-size:12px;padding:6px}.hub-pagination span{text-align:center;font-size:12px}}.hub-ocr{display:grid;gap:10px;margin-top:14px;min-width:0}.hub-ocr input,.hub-ocr textarea{max-width:100%;min-width:0;font:inherit}.hub-ocr textarea{box-sizing:border-box;width:100%;color:var(--theme-text,#dbe5f0);background:var(--theme-input-bg,#132435);border:1px solid var(--theme-border,#527397);border-radius:6px;padding:10px}.hub-ocr button{min-height:42px;justify-self:start}`;

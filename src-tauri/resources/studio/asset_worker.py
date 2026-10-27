@@ -120,6 +120,24 @@ def load_moss_pipeline(model,torch,diffusers):
     return pipeline
 
 
+def apply_diffusers_image_lora(generator,model_id,root,settings):
+    if not settings.get('loraPath'):
+        return False
+    if model_id != 'qwen-image-21':
+        raise ValueError('This LoRA cannot be applied to a different Diffusers model family')
+    from comfy_worker import managed_qwen_lora
+    lora=managed_qwen_lora(root,settings)
+    if not hasattr(generator,'load_lora_weights') or not hasattr(generator,'set_adapters'):
+        raise RuntimeError('The installed Qwen Diffusers pipeline lacks supported LoRA loading')
+    strength=settings.get('loraStrength',0.8)
+    import math
+    if isinstance(strength,bool) or not isinstance(strength,(int,float)) or not math.isfinite(strength) or not 0<=strength<=2:
+        raise ValueError('Qwen LoRA strength must be between 0 and 2')
+    generator.load_lora_weights(str(lora.parent),weight_name=lora.name,adapter_name='opencore-qwen-image-21')
+    generator.set_adapters(['opencore-qwen-image-21'],adapter_weights=[strength])
+    return True
+
+
 def generate(request, output):
     settings = request.get("settings") or {}
     model_id = request["modelId"]
@@ -180,6 +198,7 @@ def generate(request, output):
             if variant:load_options["variant"] = variant
             generator = DiffusionPipeline.from_pretrained(str(model), **load_options)
             generator.enable_model_cpu_offload()
+        apply_diffusers_image_lora(generator,model_id,Path(request['modelRoot']).resolve(),settings)
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
         args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
         if model_id in ('moss-image-sft','kromoss'):args['uncond_skip_layers']=[22]

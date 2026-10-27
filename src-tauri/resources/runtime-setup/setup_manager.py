@@ -489,7 +489,9 @@ def install(root, resources, target, options, runner, recipe_id=None):
     runner.reporter("checking-hardware", detail="Checking host memory, disk and supported worker requirements")
     kind = recipe["kind"]
     if kind == "studio":
-        from managed_model_sources import shared_torch_source,attach_shared_packages,prepare_comfy_source,runtime_package_pins
+        from managed_model_sources import shared_torch_source,attach_shared_packages,prepare_comfy_source,runtime_package_pins,verify_pinned_plugin_sources
+        if recipe.get('engine') in ('comfyui-moss-v1','comfyui-qwen21-v1'):
+            verify_pinned_plugin_sources(resources,recipe)
         shared=shared_torch_source(root,recipe,runner)
         runtime_peak=recipe['minimumDiskBytes'] if shared or not recipe.get('shareManagedTorch') else recipe.get('fallbackDiskBytes',recipe['minimumDiskBytes'])
         required=options.get('minimumFreeBytes',0)+options.get('remainingWeightBytes',0)+runtime_peak

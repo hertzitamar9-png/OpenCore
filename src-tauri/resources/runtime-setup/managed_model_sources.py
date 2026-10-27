@@ -37,22 +37,44 @@ def attach_shared_packages(root,environment,source):
 def shared_torch_source(root,recipe,runner):
     if not recipe.get('shareManagedTorch'):return None
     root=Path(root).resolve()
-    candidate=root/'speech/phonon-venv'/('Scripts/python.exe' if sys.platform=='win32' else 'bin/python')
-    if not candidate.is_file():return None
+    exe='Scripts/python.exe' if sys.platform=='win32' else 'bin/python'
+    candidates=[root/'runtime-setup/environments/qwen-image-21-comfy-v1'/exe,
+                root/'runtime-setup/environments/moss-comfy-convrot-v1'/exe,
+                root/'speech/phonon-venv'/exe]
     code="import importlib.metadata as m,json,sys;d=m.distribution('torch');print(json.dumps({'version':d.version,'site':str(d.locate_file('')),'python':sys.executable,'bits':__import__('struct').calcsize('P')*8}))"
-    try:
-        result=runner.run([candidate,'-I','-c',code],timeout=15)
-        value=json.loads(result.stdout.splitlines()[-1])
-        expected=recipe['torchPackages']['torch']
-        flavor=recipe['torchIndex'].rstrip('/').split('/')[-1]
-        site=Path(value['site']).resolve()
-        if value['bits']!=64 or value['version']!=expected+'+'+flavor or not managed_package_source(root,site):return None
-        return {'python':candidate,'site':site,'torch':value['version']}
-    except (OSError,RuntimeError,ValueError,KeyError):return None
+    expected=recipe['torchPackages']['torch']+'+'+recipe['torchIndex'].rstrip('/').split('/')[-1]
+    for candidate in candidates:
+        if not candidate.is_file():continue
+        try:
+            result=runner.run([candidate,'-I','-c',code],timeout=15)
+            value=json.loads(result.stdout.splitlines()[-1])
+            site=Path(value['site']).resolve()
+            if value['bits']==64 and value['version']==expected and managed_package_source(root,site):
+                return {'python':candidate,'site':site,'torch':value['version']}
+        except (OSError,RuntimeError,ValueError,KeyError):continue
+    return None
+
+
+def verify_pinned_plugin_sources(resources,recipe):
+    """Reject incomplete or modified ComfyUI loader bundles before expensive pip downloads."""
+    resources=Path(resources).resolve()
+    plugin=recipe.get('pluginName','moss-image')
+    source_name=recipe.get('pluginSource','moss-comfy')
+    if (plugin,source_name) not in [('moss-image','moss-comfy'),('qwen-image-gguf','qwen-image-gguf')]:
+        raise ValueError('Unknown managed plugin source')
+    source_root=resources/'model-runtime-sources'/source_name
+    for pin in recipe['pluginFiles']:
+        name=pin['path']
+        if Path(name).name!=name or '/' in name or '\\' in name:
+            raise ValueError('Invalid pinned plugin path')
+        file=source_root/name
+        if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest()!=pin['sha256']:
+            raise RuntimeError(f'Missing or unverified {plugin} loader bundle file: {name}. Install an OpenCore build containing the publisher-verified runtime sources.')
 
 
 def install_moss_plugin(engine,resources,recipe):
     engine,resources=Path(engine).resolve(),Path(resources).resolve()
+    verify_pinned_plugin_sources(resources,recipe)
     plugin=recipe.get('pluginName','moss-image')
     source_name=recipe.get('pluginSource','moss-comfy')
     if (plugin,source_name) not in [('moss-image','moss-comfy'),('qwen-image-gguf','qwen-image-gguf')]:raise ValueError('Unknown managed plugin source')
