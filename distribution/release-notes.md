@@ -2,7 +2,7 @@ The permanent **OpenCore Setup.exe** is unchanged: 483,328 bytes (472 KB in Wind
 
 This release adds word/prefix discovery and task, format, publisher, license and sorting filters to the Hugging Face browser. Public searches are anonymous. Token-backed discovery is explicit, tokens stay protected by Windows DPAPI, and removing a token returns search to public mode.
 
-The built-in catalog now contains 1,000 pinned packages in 186 families. It includes the latest requested Jumbo Fusion, Cyber-Tiel MTP, Phonon-2.5, KAT APEX, SimpleSD, Cortiq, Nemotron Bolt, Fibo, FLUX 3 Image Klein and image LoRA packages. Cyber-Tiel's existing card is extended. Separate MTP drafts no longer masquerade as full-model quants. Image pipelines include their required components. Every real verified option is retained; no quantization is fabricated.
+The built-in catalog now contains 1,004 pinned packages in 189 families. It includes Hi3D v1.0, Unlimited OCR 2, Qwen3.5 4B 3D Coder, and the previously listed Fibo 2.0 Dev. The 3D Coder provides the publisher's Q4_K_M and Q8_0 GGUF options. Hi3D, Unlimited OCR 2 and Fibo require compatible specialized runtimes that are not yet integrated; Fibo also requires publisher approval. The catalog retains real verified options and does not fabricate quantizations.
 
 Downloads and working inference remain separate. Supported text formats prepare their managed runtime and must pass a real generation before Ready. The newly cataloged specialized image, LoRA and Phonon-2.5 packages show their missing runtime/base-model requirements. This release does not certify that every Hub architecture runs locally.
 

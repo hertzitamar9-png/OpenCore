@@ -65289,6 +65289,120 @@
       "catalogOrder": 1
     },
     {
+      "id": "hf-fa73f86b61e5193610deaac2",
+      "variantKey": "3d-pipeline:hi3d-v1",
+      "repository": "hi3d-official/Hi3Dv1.0",
+      "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+      "format": "3d-pipeline",
+      "quantization": "Publisher checkpoint",
+      "subdirectory": "",
+      "category": "3d",
+      "files": [
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "model_index.json",
+          "bytes": 224,
+          "sha256": null,
+          "gitBlobSha1": "b63881777731bd5093112b934721202d01771065",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "scheduler/scheduler_config.json",
+          "bytes": 127,
+          "sha256": null,
+          "gitBlobSha1": "2a070592ea631dc2f158cf56ef0076cc87f2b872",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "transformer_1024/config.json",
+          "bytes": 1337,
+          "sha256": null,
+          "gitBlobSha1": "daa180abc108fc26a5d60501d77b1118ae94a0f6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "transformer_1024/model.safetensors",
+          "bytes": 3675679280,
+          "sha256": "a2ca5e44dde51cacecd59b42fceeb5f14e75d55e6dd047337752c4e6f281008c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "transformer_512/config.json",
+          "bytes": 1336,
+          "sha256": null,
+          "gitBlobSha1": "47d2b9e97f8002913a47dbd58c55ee1ae6fa2cf5",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "transformer_512/model.safetensors",
+          "bytes": 3675679280,
+          "sha256": "8ba88311dccf23463c6e10dd0d3bd5e0c5c35d1608c6f466413b6428b5ad8e56",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "vae/config.json",
+          "bytes": 131,
+          "sha256": null,
+          "gitBlobSha1": "c4f94b13cc30945292da5aac233405496a271dcc",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "revision": "d502e938cbedc6e87aba8884614c5ca6d177a4b6",
+          "filename": "vae/model.safetensors",
+          "bytes": 376629712,
+          "sha256": "605d207c77f8db0b33c567a5861252f0090cf3c3604dfda1cfee09e8f0b53f3e",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 7727991427,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/hi3d-official/Hi3Dv1.0",
+      "gated": false,
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires the publisher Sparc3D refinement runtime on Linux, compatible NVIDIA CUDA kernels, and a coarse mesh. The Windows adapter has not been integrated or verified."
+      },
+      "familyId": "publisher-hi3d-v1",
+      "familyLabel": "Hi3D v1.0",
+      "originalRepository": "hi3d-official/Hi3Dv1.0",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "3d",
+      "builtInDescription": "Refines an existing coarse mesh using a reference image; includes the publisher's 512 and 1024 transformers and VAE. Geometry only.",
+      "contextTokens": 8192,
+      "license": "other",
+      "name": "Hi3D v1.0 · Publisher checkpoint",
+      "catalogOrder": 1
+    },
+    {
       "id": "hf-de5e149fce74297ac87d954d",
       "repository": "Hobbylm/hobbylm-1B-computer-use",
       "revision": "4ea1389b68f5a6f7ec72200543fd8374c14d4526",
@@ -67511,6 +67625,104 @@
       "contextTokens": 8192,
       "license": "Publisher terms",
       "catalogOrder": 1
+    },
+    {
+      "id": "hf-0a6d05f30e9318c71b0893c9",
+      "repository": "ccore/Qwen3.5-4B-3D-Coder",
+      "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+      "variantKey": "gguf:Qwen3.5-4B-3D-Coder-Q4_K_M.gguf",
+      "name": "Qwen3.5 4B 3D Coder · Q4_K_M",
+      "quantization": "Q4_K_M",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 2708804096,
+      "files": [
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+          "filename": "Qwen3.5-4B-3D-Coder-Q4_K_M.gguf",
+          "bytes": 2708804096,
+          "sha256": "ca7442573cdede7b62e80eabc1d78dfa1e0fade28058e414042ef714adadb36b",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+      "status": "not-installed",
+      "familyId": "publisher-qwen35-4b-3d-coder",
+      "familyLabel": "Qwen3.5 4B 3D Coder",
+      "originalRepository": "ccore/Qwen3.5-4B-3D-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the publisher's Q4_K_M and Q8_0 GGUF checkpoints.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0
+    },
+    {
+      "id": "hf-c0548deccd6d28ad099cce96",
+      "repository": "ccore/Qwen3.5-4B-3D-Coder",
+      "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+      "variantKey": "gguf:Qwen3.5-4B-3D-Coder-Q8_0.gguf",
+      "name": "Qwen3.5 4B 3D Coder · Q8_0",
+      "quantization": "Q8_0",
+      "format": "gguf",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 4482402816,
+      "files": [
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder",
+          "revision": "521105ad3b04abcd4d8f6e00d0a1e92ee9e9173e",
+          "filename": "Qwen3.5-4B-3D-Coder-Q8_0.gguf",
+          "bytes": 4482402816,
+          "sha256": "fee6c198e151d8ba4b032c98e44d810a0a2dc8e947ee9f9f933137a3a5528b91",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "qwen35",
+      "architectures": [],
+      "runtime": {
+        "adapter": "gguf",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Windows runtime prepares automatically; actual generation is checked after installation. Vision and action-harness execution are unverified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+      "status": "not-installed",
+      "familyId": "publisher-qwen35-4b-3d-coder",
+      "familyLabel": "Qwen3.5 4B 3D Coder",
+      "originalRepository": "ccore/Qwen3.5-4B-3D-Coder",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "text",
+      "builtInDescription": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the publisher's Q4_K_M and Q8_0 GGUF checkpoints.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "managedEngine": "flint-cpu-v1",
+      "catalogOrder": 0
     },
     {
       "id": "hf-c1c94c0d3ffe885b06c57631",
@@ -75706,6 +75918,126 @@
       "license": "mit",
       "managedEngine": "flint-cpu-v1",
       "catalogOrder": 0
+    },
+    {
+      "id": "hf-7baefbb2d1bf1bedf992295b",
+      "repository": "baidu/Unlimited-OCR-2",
+      "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+      "variantKey": "safetensors:.",
+      "name": "Unlimited OCR 2 · Original",
+      "quantization": "Original",
+      "format": "safetensors",
+      "subdirectory": "",
+      "category": "text",
+      "bytes": 6698712725,
+      "files": [
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "model-00001-of-00002.safetensors",
+          "bytes": 4998430312,
+          "sha256": "4c40b740f209fd7682040d4ebf19409208acde5c401ccd2dde426d0f41542f18",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "model-00002-of-00002.safetensors",
+          "bytes": 1689875264,
+          "sha256": "9490b82fa47f89e5110eb5577f8ab1b6694c12121905dbc086ddb10207a4ba0c",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "config.json",
+          "bytes": 5525,
+          "sha256": null,
+          "gitBlobSha1": "a1ea89c4c965d5c5bd5c77b21b928aa710aa7af6",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "generation_config.json",
+          "bytes": 111,
+          "sha256": null,
+          "gitBlobSha1": "6f7f9313195af78c979fc889accc234edb6e0d3c",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "model.safetensors.index.json",
+          "bytes": 254054,
+          "sha256": null,
+          "gitBlobSha1": "bc164961600a572ed4ff5215eee526d9fe706774",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "special_tokens_map.json",
+          "bytes": 549,
+          "sha256": null,
+          "gitBlobSha1": "ae2383ca05f494aa736e72e6a874332cd2f1c67e",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "tokenizer.json",
+          "bytes": 9980278,
+          "sha256": null,
+          "gitBlobSha1": "d5909a7c1e63a78be90fe2bde6c8464e6e9e8540",
+          "role": "support",
+          "pinned": true
+        },
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "revision": "9cf077c4b206e0e2a31879df937b0b0bcba3661c",
+          "filename": "tokenizer_config.json",
+          "bytes": 166632,
+          "sha256": null,
+          "gitBlobSha1": "e97c1bb98fa1de585d85259b77e4785bf1c195a2",
+          "role": "support",
+          "pinned": true
+        }
+      ],
+      "installable": true,
+      "reason": null,
+      "modelType": "unlimited-ocr",
+      "architectures": [
+        "UnlimitedOCRForCausalLM"
+      ],
+      "runtime": {
+        "adapter": null,
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "Requires the publisher custom OCR model code, processor and compatible GPU dependencies; no OpenCore OCR runtime adapter has been integrated or verified."
+      },
+      "private": false,
+      "gated": false,
+      "sourceUrl": "https://huggingface.co/baidu/Unlimited-OCR-2",
+      "status": "not-installed",
+      "familyId": "publisher-unlimited-ocr-2",
+      "familyLabel": "Unlimited OCR 2",
+      "originalRepository": "baidu/Unlimited-OCR-2",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "ocr",
+      "builtInDescription": "Baidu multilingual image and document OCR model. Published checkpoint contains two safetensors shards and tokenizer configuration.",
+      "contextTokens": 8192,
+      "license": "mit",
+      "catalogOrder": 1
     }
   ]
 }

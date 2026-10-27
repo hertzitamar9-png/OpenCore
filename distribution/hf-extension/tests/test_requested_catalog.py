@@ -14,6 +14,21 @@ from hf_download import validate_entry
 
 
 class RequestedCatalogTests(unittest.TestCase):
+    def test_new_requested_publishers_have_pinned_real_packages(self):
+        hi3d=self.family('hi3d-v1')
+        ocr=self.family('unlimited-ocr-2')
+        coder=self.family('qwen35-4b-3d-coder')
+        self.assertEqual(len(hi3d),1)
+        self.assertEqual(len(ocr),1)
+        self.assertEqual({e['quantization'] for e in coder},{'Q4_K_M','Q8_0'})
+        self.assertEqual({e['originalRepository'] for e in hi3d+ocr+coder},
+                         {'hi3d-official/Hi3Dv1.0','baidu/Unlimited-OCR-2','ccore/Qwen3.5-4B-3D-Coder'})
+        self.assertTrue(all(p['pinned'] for entry in hi3d+ocr+coder for p in entry['files']))
+        self.assertTrue(all(e['runtime']['adapter'] is None for e in hi3d+ocr))
+        self.assertEqual(sum(p['role']=='model' for p in hi3d[0]['files']),3)
+        self.assertEqual(sum(p['role']=='model' for p in ocr[0]['files']),2)
+        self.assertTrue(all(e['format']=='gguf' and e['runtime']['adapter']=='gguf' for e in coder))
+
     def test_latest_requested_models_have_all_verified_preset_options(self):
         expected = {'qwen38-jumbo-fusion-neo-mtp':7, 'phonon-2-5':1, 'kat-coder-apex-miniplus-v2-1':1,
                     'simplesd-4b-thinking':27, 'cortiq-qwopus-dev':5, 'nemotron-3-5-bolt-e4b':10,
@@ -53,7 +68,7 @@ class RequestedCatalogTests(unittest.TestCase):
             'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B',
             'IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF',
             'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'}.issubset({row['repository'] for row in self.rows}))
-        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 18)
+        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 21)
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
         self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
@@ -92,7 +107,7 @@ class RequestedCatalogTests(unittest.TestCase):
             if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
-        self.assertEqual(report['families'], 18)
+        self.assertEqual(report['families'], 21)
         self.assertEqual(report['withFive'], 9)
         self.assertFalse(report['allModelsMeetMinimum'])
 

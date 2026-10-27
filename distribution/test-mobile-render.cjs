@@ -55,7 +55,7 @@ const fake=({snapshot,timeline})=>{
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser=await chromium.launch({...(process.env.OPENCORE_QA_CHANNEL?{channel:process.env.OPENCORE_QA_CHANNEL}:{}),headless:true,args:['--mute-audio']});
-  const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:2,isMobile:true,hasTouch:true}),errors=[];
+  const page=await browser.newPage({viewport:{width:Number(process.env.OPENCORE_MOBILE_WIDTH||393),height:852},deviceScaleFactor:2,isMobile:true,hasTouch:true}),errors=[];
   page.on('pageerror',error=>errors.push(error.stack||error.message));
   await page.addInitScript(fake,{snapshot,timeline});
   try{
@@ -67,10 +67,19 @@ const fake=({snapshot,timeline})=>{
     await page.getByRole('navigation',{name:'OpenCore sections'}).waitFor({timeout:10000});
     const nav=page.getByRole('navigation',{name:'OpenCore sections'});
     const names=await nav.getByRole('button').allTextContents();
+    const composerButtons=page.locator('.chat-composer').getByRole('button');
+    const composerBounds=await composerButtons.evaluateAll(items=>items.filter(e=>e.offsetParent!==null).map(e=>{const r=e.getBoundingClientRect();return {name:e.getAttribute('aria-label')||e.textContent.trim(),x:r.x,y:r.y,width:r.width,height:r.height};}));
+    assert.ok(composerBounds.length>=5,'Composer controls must be present');
+    assert.ok(composerBounds.every(r=>r.width>=44&&r.height>=44),`Composer touch targets must be at least 44px: ${JSON.stringify(composerBounds)}`);
+    assert.ok(Math.max(...composerBounds.map(r=>r.y+r.height/2))-Math.min(...composerBounds.map(r=>r.y+r.height/2))<=2,'Composer buttons must be vertically aligned');
+    const ordered=[...composerBounds].sort((a,b)=>a.x-b.x),viewport=page.viewportSize();
+    assert.ok(ordered[0].x>=0&&ordered.at(-1).x+ordered.at(-1).width<=viewport.width,'Composer buttons must fit inside the screen');
+    assert.ok(ordered.every((r,i)=>i===0||ordered[i-1].x+ordered[i-1].width<=r.x+1),'Composer buttons must not overlap');
     if(process.env.OPENCORE_MOBILE_TRACE){
       console.log(JSON.stringify(await page.evaluate(()=>({
         inputs:[...document.querySelectorAll('textarea,input')].map(e=>({tag:e.tagName,aria:e.getAttribute('aria-label'),placeholder:e.getAttribute('placeholder')})),
         buttons:[...document.querySelectorAll('button')].filter(e=>e.offsetParent!==null).map(e=>({text:e.innerText,aria:e.getAttribute('aria-label'),title:e.getAttribute('title'),cls:e.className})),
+        composer:[...document.querySelectorAll('.chat-composer button')].filter(e=>e.offsetParent!==null).map(e=>{const r=e.getBoundingClientRect();return {name:e.getAttribute('aria-label')||e.textContent.trim(),className:e.className,x:r.x,y:r.y,width:r.width,height:r.height,parent:e.parentElement.className}}),
         reason:[...document.querySelectorAll('*')].filter(e=>e.childElementCount===0&&e.textContent?.trim()==='Reasoned').map(e=>e.parentElement?.outerHTML.slice(0,2500))
       })),null,2));
     }

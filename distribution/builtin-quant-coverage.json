@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 543,
+  "families": 546,
   "withFive": 208,
   "models": [
     {
@@ -5282,6 +5282,17 @@
       ]
     },
     {
+      "id": "publisher-hi3d-v1",
+      "label": "Hi3D v1.0",
+      "category": "3d",
+      "quantizations": 1,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "hi3d-official/Hi3Dv1.0"
+      ]
+    },
+    {
       "id": "publisher-hobbylm-1b-computer-use",
       "label": "HobbyLM 1B Computer Use",
       "category": "computer-use",
@@ -5374,6 +5385,17 @@
       ]
     },
     {
+      "id": "publisher-qwen35-4b-3d-coder",
+      "label": "Qwen3.5 4B 3D Coder",
+      "category": "text",
+      "quantizations": 2,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "ccore/Qwen3.5-4B-3D-Coder"
+      ]
+    },
+    {
       "id": "publisher-qwen38-jumbo-fusion-neo-mtp",
       "label": "Qwen3.8 27B Jumbo Fusion NEO MAX MTP",
       "category": "text",
@@ -5431,6 +5453,17 @@
       "source": "bundled packages",
       "repositories": [
         "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-unlimited-ocr-2",
+      "label": "Unlimited OCR 2",
+      "category": "ocr",
+      "quantizations": 0,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "baidu/Unlimited-OCR-2"
       ]
     }
   ]

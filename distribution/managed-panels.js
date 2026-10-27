@@ -107,6 +107,10 @@ body{background:var(--theme-canvas,#08121b)}
 .aui-thread-viewport{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:8px!important}
 .chat-composer-wrap{padding:6px 8px 8px!important}
 .chat-composer{padding:6px!important;border-radius:16px!important}
+.chat-composer{grid-template-columns:44px 44px minmax(0,1fr) 44px!important;column-gap:3px!important;align-items:center!important}
+.chat-composer :is(.attach-button,.speech-button,.send-button){width:44px!important;height:44px!important;min-height:44px!important}
+.chat-composer .composer-controls{min-width:0;gap:4px!important;align-items:center}
+.chat-composer .composer-controls .composer-control-button{min-width:0;min-height:44px}
 .chat-composer .composer-control-button .control-copy{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;line-height:1.05!important;min-width:0!important}
 .chat-composer .composer-control-button .control-copy small{display:none!important}
 .chat-composer .composer-control-button .control-copy strong{font-size:11px!important;max-width:74px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}

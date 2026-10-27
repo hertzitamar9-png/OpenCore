@@ -332,6 +332,61 @@
         }
       ],
       "baseRepository": "Qwen/Qwen-Image-2.1"
+    },
+    {
+      "repository": "hi3d-official/Hi3Dv1.0",
+      "familyId": "publisher-hi3d-v1",
+      "label": "Hi3D v1.0",
+      "category": "3d",
+      "description": "Refines an existing coarse mesh using a reference image; includes the publisher's 512 and 1024 transformers and VAE. Geometry only.",
+      "sources": [
+        {
+          "repository": "hi3d-official/Hi3Dv1.0",
+          "runtimeReason": "Requires the publisher Sparc3D refinement runtime on Linux, compatible NVIDIA CUDA kernels, and a coarse mesh. The Windows adapter has not been integrated or verified.",
+          "packages": [
+            {
+              "key": "3d-pipeline:hi3d-v1",
+              "format": "3d-pipeline",
+              "quantization": "Publisher checkpoint",
+              "files": [
+                "model_index.json",
+                "scheduler/*.json",
+                "transformer_512/*.json",
+                "transformer_512/*.safetensors",
+                "transformer_1024/*.json",
+                "transformer_1024/*.safetensors",
+                "vae/*.json",
+                "vae/*.safetensors"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "baidu/Unlimited-OCR-2",
+      "familyId": "publisher-unlimited-ocr-2",
+      "label": "Unlimited OCR 2",
+      "category": "ocr",
+      "description": "Baidu multilingual image and document OCR model. Published checkpoint contains two safetensors shards and tokenizer configuration.",
+      "sources": [
+        {
+          "repository": "baidu/Unlimited-OCR-2",
+          "runtimeReason": "Requires the publisher custom OCR model code, processor and compatible GPU dependencies; no OpenCore OCR runtime adapter has been integrated or verified."
+        }
+      ]
+    },
+    {
+      "repository": "ccore/Qwen3.5-4B-3D-Coder",
+      "familyId": "publisher-qwen35-4b-3d-coder",
+      "label": "Qwen3.5 4B 3D Coder",
+      "category": "text",
+      "description": "Qwen3.5 4B coding fine-tune focused on 3D and Three.js. Includes the publisher's Q4_K_M and Q8_0 GGUF checkpoints.",
+      "sources": [
+        {
+          "repository": "ccore/Qwen3.5-4B-3D-Coder"
+        }
+      ]
     }
   ]
 }
