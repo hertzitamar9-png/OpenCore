@@ -10,7 +10,7 @@ window.fixture={catalog:[],progress:null,calls:[],token:false};
 fixture.variants=['Q4_K_M','Q8_0'].map((q,j)=>({id:'hf-'+String(j+1).repeat(24),repository:'fixture/tiny-model',revision:'a'.repeat(40),variantKey:'gguf:'+q,name:'tiny-model',quantization:q,format:'gguf',subdirectory:'',bytes:100+j,files:[{filename:'model-'+q+'.gguf',bytes:100+j,role:'model',sha256:'b'.repeat(64)}],installable:true,runtime:{adapter:'gguf'},sourceUrl:'https://huggingface.co/fixture/tiny-model',status:'not-installed'}));
 window.__TAURI_INTERNALS__={invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
 case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.1:59999',secret:'fixture-secret-secret-secret-secret',authHeader:'X-OpenCore-Hub-Secret'}};
-case 'runtime_setup_status':return{jobs:[],receipts:[],recipes:[],activeJobId:null};
+case 'runtime_setup_status':return{jobs:[],receipts:fixture.runtimeReceipts||[],recipes:[],activeJobId:null};
 case 'model_install_progress':return null;
 case 'list_model_library':return{models:fixture.nativeModels||[],progress:null,diskFreeBytes:100e9,minimumFreeBytes:0};
 case 'model_removal_plan':return{modelId:args.id,label:'Existing Q4 profile',scope:'verified-native-scope',confirmationToken:'verified-native-removal-plan',profiles:[],files:[{path:'fixture/models/native.gguf',bytes:100,external:!!fixture.nativeExternal}],retainedFiles:[{path:'fixture/shared/tokenizer.json',bytes:50,sharedWith:['another-profile']}],totalBytes:100};
@@ -94,5 +94,38 @@ await preset.locator('option[value="native-extra"]').waitFor({state:'attached'})
 record('an original native quant outside the five presets remains available to install',await preset.locator('select option').count()===6&&await preset.getByRole('button',{name:'Install',exact:true}).isEnabled());
 const hubDownloadsBefore=await page.evaluate(()=>fixture.calls.filter(call=>call.route==='/install').length);await preset.getByRole('button',{name:'Install',exact:true}).click();
 record('original native quant installation keeps its native backend',await page.evaluate(()=>fixture.calls.some(call=>call.command==='install_model'&&call.args.id==='native-extra')&&fixture.calls.filter(call=>call.route==='/install').length)===hubDownloadsBefore);
+await page.evaluate(async()=>{
+  fixture.progress=null;
+  fixture.nativeModels=[
+    {id:'moss-image-sft-int4-convrot',label:'MOSS INT4',precision:'INT4 ConvRot',backend:'comfyui',category:'image',installed:false,installable:true,runtimeReady:true,totalBytes:11000000000},
+    {id:'moss-image-sft-int8-convrot',label:'MOSS INT8',precision:'INT8 ConvRot',backend:'comfyui',category:'image',installed:true,installable:true,runtimeReady:true,totalBytes:13000000000}
+  ];
+  fixture.catalog=[
+    {id:'hf-'+'a'.repeat(24),familyId:'moss-lora-fixture',familyLabel:'MOSS Image NSFW LoRA',repository:'axiomofmind/Moss-image-nsfw-uncensored-lora',baseRepository:'OpenMOSS-Team/MOSS-Image-SFT',category:'image',packageKind:'adapter',format:'lora',variantKey:'lora:MOSS-Image-NSFW-Uncensored-LoRA-ComfyUI.safetensors',quantization:'LoRA · ComfyUI',status:'installed',installable:true,bytes:74379592,files:[{role:'model',bytes:74379592,filename:'MOSS-Image-NSFW-Uncensored-LoRA-ComfyUI.safetensors'}],installReceipt:{files:[{role:'model',localPath:'C:/example/verified.safetensors'}]},runtime:{adapter:null}},
+    {id:'hf-'+'b'.repeat(24),familyId:'ltx-lora-fixture',familyLabel:'LTX video LoRA',repository:'Muapi/ltx-2-2.3-i2v-nsfw-furry-multi-purpose-sex-lora',baseRepository:'Lightricks/LTX-Video',category:'video',packageKind:'adapter',format:'lora',quantization:'LoRA · Diffusers',status:'installed',installable:true,bytes:5000000,files:[{role:'model',bytes:5000000,filename:'video_lora.safetensors'}],runtime:{adapter:null}}
+  ];
+  const {TestInvoke}=await import('/assets/App-kNA9sRUP.js');
+  const library=await TestInvoke('list_model_library',{},()=>window.__TAURI_INTERNALS__.invoke('list_model_library'));
+  window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:library}));
+});
+await page.getByRole('article',{name:'MOSS Image NSFW LoRA'}).waitFor({timeout:7000});
+const mossCard=page.getByRole('article',{name:'MOSS Image NSFW LoRA'}),ltxCard=page.getByRole('article',{name:'LTX video LoRA'});
+record('LoRA card shows a separate compatible base and quantization menu',await mossCard.getByLabel('Base model for axiomofmind/Moss-image-nsfw-uncensored-lora').locator('option').count()===2);
+record('LoRA does not advertise downloaded weights as an inference-ready model',await mossCard.getByText('Base weights not yet installed.').isVisible());
+await mossCard.getByLabel('Base model for axiomofmind/Moss-image-nsfw-uncensored-lora').selectOption('moss-image-sft-int8-convrot');
+record('installed INT8 base enables a LoRA generation prompt',await mossCard.getByLabel('Image prompt for selected LoRA').isVisible());
+record('LTX LoRA presents publisher base discovery without false ready button',await ltxCard.getByRole('button',{name:'Find base checkpoint'}).isEnabled()&&await ltxCard.getByRole('button',{name:'Generate with this LoRA and base'}).count()===0);
+await mossCard.getByLabel('Image prompt for selected LoRA').fill('A safe photo of a mountain valley');
+await mossCard.getByRole('button',{name:'Generate with this LoRA and base'}).click();
+await mossCard.getByRole('alert').getByText(/Prepare the selected MOSS base runtime first/).waitFor();
+record('LoRA generation fails closed when the base runtime lacks verified dependencies',await page.evaluate(()=>!fixture.calls.some(call=>call.command==='submit_studio_job')));
+await page.evaluate(()=>{fixture.runtimeReceipts=[{targetId:'moss-image-sft-int8-convrot',dependenciesVerified:true,python:'C:/OpenCore/runtime/python.exe',runner:'C:/OpenCore/studio/asset_worker.py',sourceDir:'C:/OpenCore/runtime/sources/comfy'}];});
+await mossCard.getByRole('button',{name:'Generate with this LoRA and base'}).click();
+await page.waitForFunction(()=>fixture.calls.some(call=>call.command==='submit_studio_job'));
+record('installed LoRA is submitted with the chosen base, native ComfyUI path and strength',await page.evaluate(()=>{
+  const config=fixture.calls.find(call=>call.command==='configure_studio_runtime')?.args.runtime;
+  const request=fixture.calls.find(call=>call.command==='submit_studio_job')?.args.request;
+  return config?.modelId==='moss-image-sft-int8-convrot'&&config.runner.endsWith('asset_worker.py')&&config.sourceDir.endsWith('comfy')&&request?.modelId==='moss-image-sft-int8-convrot'&&request.settings.loraStrength===0.8&&request.settings.loraPath==='C:/example/verified.safetensors'&&request.prompt.startsWith('moss_xvstyle');
+}));
 record('no runtime errors',errors.length===0);await page.screenshot({path:path.join(__dirname,'hub-qa.png'),fullPage:true});
 }catch(error){console.log('QA failure',error.message,'errors',errors,'body',(await page.locator('body').innerText()).slice(0,6000));throw error;}finally{await browser.close();await new Promise(r=>server.close(r));fs.writeFileSync(path.join(__dirname,'hub-qa.json'),JSON.stringify({results,errors},null,2));}console.log(JSON.stringify(results,null,2));if(results.some(r=>!r.pass))process.exitCode=1;})().catch(e=>{console.error(e);process.exitCode=1;server.close();});
