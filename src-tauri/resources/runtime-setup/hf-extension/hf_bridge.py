@@ -609,6 +609,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.remote.revoke(body.get('deviceId')))
         elif route == '/remote/name':
             self._send(200, state.remote.rename(body.get('name')))
+        elif route == '/remote/ddns':
+            self._send(200, state.remote.configure_ddns(body.get('domain'), body.get('token')))
+        elif route == '/remote/permanent':
+            self._send(200, state.remote.ensure_permanent())
         elif route == '/mobile/host/result':
             self._send(200, state.remote.mobile.result(body, set(state.remote.devices)))
         elif route == '/mobile/host/event':
