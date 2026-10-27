@@ -160,7 +160,7 @@ public class DecodeFixture {
             with self.subTest(root=root, name=name), self.assertRaises(ValueError): self.remote.media_path(root, name)
 
     @unittest.skipUnless(os.name == 'nt', 'Windows owns the local TLS key')
-    def test_actual_tls_pair_frame_and_origin_rejection(self):
+    def test_actual_tls_pair_native_bridge_and_origin_rejection(self):
         status = self.remote.start({'bind': '127.0.0.1'})
         port = status['port']
         self.assertNotIn(port, (8840, 8841, 8842, 8811, 8812, 8813, 8850, 8860))
@@ -187,8 +187,8 @@ public class DecodeFixture {
         connection.request('POST','/updates',json.dumps({'session':session}),{'Authorization':'Bearer '+paired['token'],'Content-Type':'application/json'})
         response=connection.getresponse();self.assertEqual(response.status,200);self.assertTrue(json.loads(response.read())['items'][0]['value']['samePc']);connection.close()
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
-        connection.request('GET', '/frame', headers={'Authorization': 'Bearer ' + paired['token']})
-        response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertTrue(response.read().startswith(b'\x89PNG')); connection.close()
+        connection.request('GET', '/info', headers={'Authorization': 'Bearer ' + paired['token']})
+        response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertEqual(json.loads(response.read())['name'], self.remote.pc_name); connection.close()
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
         connection.request('GET', '/info')
         response = connection.getresponse(); self.assertEqual(response.status, 403); response.read(); connection.close()
@@ -196,7 +196,7 @@ public class DecodeFixture {
         connection.request('POST', '/rename', json.dumps({'name':'New PC name'}), {'Authorization':'Bearer '+paired['token'], 'Content-Type':'application/json'})
         response = connection.getresponse(); self.assertEqual(response.status, 200); self.assertEqual(json.loads(response.read())['name'],'New PC name'); connection.close()
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
-        connection.request('GET', '/frame', headers={'Authorization': 'Bearer ' + paired['token'], 'Origin': 'https://evil.invalid'})
+        connection.request('GET', '/info', headers={'Authorization': 'Bearer ' + paired['token'], 'Origin': 'https://evil.invalid'})
         response = connection.getresponse(); self.assertEqual(response.status, 403); response.read(); connection.close()
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
         connection.request('POST', '/unpair', '{}', {'Authorization':'Bearer '+paired['token'], 'Content-Type':'application/json'})
