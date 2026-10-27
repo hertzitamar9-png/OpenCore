@@ -31,7 +31,7 @@ QWEN_VARIANTS={
 QWEN_ENCODER='qwen3vl_8b_int8_convrot.safetensors'
 QWEN_VAE='qwen_image_2.1_vae_bf16.safetensors'
 
-def build_qwen_workflow(request,dit):
+def build_qwen_workflow(request,dit,lora_name=None):
     settings=request.get('settings') or {}
     width=bounded_integer(settings,'width',1024,128,2048)
     height=bounded_integer(settings,'height',1024,128,2048)
@@ -40,17 +40,23 @@ def build_qwen_workflow(request,dit):
     cfg=settings.get('guidanceScale',1.0)
     if isinstance(cfg,bool) or not isinstance(cfg,(int,float)) or not 0<=cfg<=30:raise ValueError('guidanceScale must be from 0 to 30')
     def node(kind,**inputs):return {'class_type':kind,'inputs':inputs}
-    return {
+    if lora_name:
+        strength=settings.get('loraStrength',0.8)
+        if isinstance(strength,bool) or not isinstance(strength,(int,float)) or not math.isfinite(strength) or not 0<=strength<=2:
+            raise ValueError('Qwen LoRA strength must be between 0 and 2')
+    graph={
         '1':node('UnetLoaderGGUF',unet_name=dit) if dit.endswith('.gguf') else node('UNETLoader',unet_name=dit,weight_dtype='default'),
         '2':node('CLIPLoader',clip_name=QWEN_ENCODER,type='qwen_image',device='default'),
         '3':node('VAELoader',vae_name=QWEN_VAE),
         '4':node('TextEncodeQwenImage21',clip=['2',0],prompt=request['prompt'],negative_prompt=settings.get('negativePrompt',''),resolution=1024),
         '6':node('EmptyLatentImage',width=width,height=height,batch_size=1),
         '16':node('KSampler',seed=bounded_integer(settings,'seed',831001,0,2**32-1),steps=bounded_integer(settings,'steps',25,1,100),cfg=cfg,
-            sampler_name='euler',scheduler='simple',denoise=1.0,model=['1',0],positive=['4',0],negative=['4',1],latent_image=['6',0]),
+            sampler_name='euler',scheduler='simple',denoise=1.0,model=['19',0] if lora_name else ['1',0],positive=['4',0],negative=['4',1],latent_image=['6',0]),
         '17':node('VAEDecode',samples=['16',0],vae=['3',0]),
         '18':node('SaveImage',images=['17',0],filename_prefix='OpenCore-Qwen'),
     }
+    if lora_name:graph['19']=node('LoraLoaderModelOnly',model=['1',0],lora_name=lora_name,strength_model=strength)
+    return graph
 
 
 def build_moss_workflow(request,dit,lora_name=None):
@@ -108,6 +114,30 @@ def managed_moss_lora(root,settings):
     return path
 
 
+def managed_qwen_lora(root,settings):
+    """Only the pinned Qwen 2.1 LoRA format with an intact OpenCore Hub download receipt."""
+    raw=settings.get('loraPath')
+    if raw in ('',None):return None
+    if not isinstance(raw,str):raise ValueError('Qwen LoRA path must be a string')
+    hub=(root/'models'/'hub').resolve()
+    path=Path(raw).resolve(strict=True)
+    if not path.is_file() or path.parent.parent!=hub or not path.is_relative_to(hub):
+        raise ValueError('Choose an installed OpenCore Hub LoRA')
+    if path.name!='NSFW Qwen Lora.safetensors':
+        raise ValueError('This Qwen 2.1 worker supports the pinned f23gg LoRA format only')
+    if path.stat().st_size>256_000_000:raise ValueError('Qwen LoRA exceeds the 256 MB adapter limit')
+    receipt=json.loads((path.parent/'install-receipt.json').read_text(encoding='utf-8'))
+    if receipt.get('repository')!='f23gg/NSFW-LORA-Qwen-Image-2.1':
+        raise ValueError('The LoRA repository is not approved for this Qwen workflow')
+    files=[f for f in receipt.get('files',[]) if f.get('role')=='model' and f.get('filename')==path.name]
+    if len(files)!=1 or path.stat().st_size!=files[0].get('bytes'):
+        raise ValueError('Qwen LoRA does not match its installed receipt')
+    with path.open('rb') as stream: actual=hashlib.file_digest(stream,'sha256').hexdigest()
+    if actual!=files[0].get('sha256') or actual!=files[0].get('actualSha256'):
+        raise ValueError('Qwen LoRA checksum differs from the verified download')
+    return path
+
+
 def validate_history_output(root,image):
     filename=image.get('filename','')
     subfolder=image.get('subfolder','')
@@ -137,10 +167,10 @@ def generate_comfy(request,output):
     if not engine.is_absolute() or not engine.resolve().is_relative_to(root/'runtime-setup'/'sources') or not (engine/'main.py').is_file():
         raise RuntimeError('The pinned managed ComfyUI source is not prepared')
     settings=request.get('settings') or {}
-    if qwen and settings.get('loraPath'):raise ValueError('MOSS LoRA cannot be used with a Qwen image checkpoint')
-    lora=managed_moss_lora(root,settings) if not qwen else None
+    lora=managed_qwen_lora(root,settings) if qwen else managed_moss_lora(root,settings)
     if lora:required_nodes.add('LoraLoaderModelOnly')
-    graph=build_qwen_workflow(request,variant) if qwen else build_moss_workflow(request,variant,'opencore-moss-lora.safetensors' if lora else None)
+    lora_name=('opencore-qwen-lora.safetensors' if qwen else 'opencore-moss-lora.safetensors') if lora else None
+    graph=build_qwen_workflow(request,variant,lora_name) if qwen else build_moss_workflow(request,variant,lora_name)
     output_format=validate_output_format(settings.get('outputFormat','png'),{'png','jpeg','webp'},'outputFormat')
     component=root/'models'/'components'/('qwen-image-21-abenzerps' if qwen else 'moss-int8-convrot')
     dit=root/'models'/'library'/target/'diffusion_models'
@@ -157,8 +187,8 @@ def generate_comfy(request,output):
     paths=output/'comfy-model-paths.json'
     model_folders={'base_path':str(root),'diffusion_models':str(dit),'text_encoders':str(component/'text_encoders'),'vae':str(vae)}
     if lora:
-        lora_folder=output/'moss-loras';lora_folder.mkdir(exist_ok=True)
-        shutil.copyfile(lora,lora_folder/'opencore-moss-lora.safetensors')
+        lora_folder=output/'image-loras';lora_folder.mkdir(exist_ok=True)
+        shutil.copyfile(lora,lora_folder/lora_name)
         model_folders['loras']=str(lora_folder)
     paths.write_text(json.dumps({'opencore':model_folders}),encoding='utf-8')
     images=output/'comfy-output';images.mkdir(exist_ok=True)

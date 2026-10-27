@@ -19,6 +19,16 @@ def runner(*args):
 
 
 class SetupBehavior(unittest.TestCase):
+    def test_comfy_runtime_dependency_pins_support_spandrel_and_transformers(self):
+        for recipe in setup.MANIFEST['recipes']:
+            if recipe.get('engine') not in ('comfyui-moss-v1', 'comfyui-qwen21-v1'):
+                continue
+            with self.subTest(runtime=recipe['id']):
+                versions = recipe['packages']
+                self.assertEqual(versions['spandrel'], '0.4.2')
+                self.assertGreaterEqual(tuple(int(n) for n in versions['safetensors'].split('.')), (0, 8, 0))
+                self.assertEqual(versions['transformers'], '5.18.0')
+
     def test_isolated_bootstrap_can_import_only_its_bundled_helpers(self):
         script = str(Path(setup.__file__).resolve())
         code = "import runpy,sys;runpy.run_path(sys.argv[1]);import managed_model_sources;print(managed_model_sources.__name__)"
