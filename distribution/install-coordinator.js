@@ -4,7 +4,7 @@ function createInstallNotificationPolicy(options = {}) {
   const read = options.read || (key => globalThis.localStorage?.getItem(key));
   const write = options.write || ((key, value) => globalThis.localStorage?.setItem(key, value));
   const terminal = new Set(['ready', 'failed', 'paused', 'cancelled', 'canceled', 'completed']);
-  let loadedScope, dismissed = new Map(), startedHere = new Set();
+  let loadedScope, dismissed = new Map(), startedHere = new Set(), observedActive = new Set();
   const operation = value => {
     const id = value?.operationId || value?.jobId;
     return typeof id === 'string' ? id : typeof id === 'number' ? String(id) : null;
@@ -12,7 +12,7 @@ function createInstallNotificationPolicy(options = {}) {
   function load() {
     const current = String(scope());
     if (current === loadedScope) return;
-    loadedScope = current; dismissed = new Map(); startedHere = new Set();
+    loadedScope = current; dismissed = new Map(); startedHere = new Set(); observedActive = new Set();
     if (!current) return;
     try {
       const saved = JSON.parse(read('opencore.install-dismissals.v1:' + current) || 'null');
@@ -42,6 +42,7 @@ function createInstallNotificationPolicy(options = {}) {
     // Phonon revalidates its installed runtime on startup. A new verifier ID
     // is not another installation; explicit admission already calls begin().
     if(progress?.modelId==='phonon-2'&&['preparing','verifying'].includes(progress.phase))return;
+    if(progress?.modelId)observedActive.add(String(progress.modelId).toLowerCase());
     const previous = [...dismissed.values()].filter(item => item.modelId === progress?.modelId), id = operation(progress);
     if (previous.length && id && !previous.some(item => item.operationId === id) && !terminal.has(progress.phase)) begin(progress.modelId);
   }
@@ -52,6 +53,10 @@ function createInstallNotificationPolicy(options = {}) {
     if(String(progress?.modelId||'').toLowerCase()==='phonon-2'&&
        ['preparing','verifying','ready'].includes(progress.phase)&&!startedHere.has('phonon-2'))return true;
     if (!terminal.has(progress?.phase)) return false;
+    // Persisted terminal records are history, not fresh notifications. A job
+    // observed running this session may still report its completion normally.
+    const modelId=String(progress?.modelId||'').toLowerCase();
+    if(!startedHere.has(modelId)&&!observedActive.has(modelId))return true;
     // Native progress can replay an old Phonon completion on every launch,
     // including before any dismissal was saved. Only show its success when
     // this app session actually started another installation.

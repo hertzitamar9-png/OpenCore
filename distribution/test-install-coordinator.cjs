@@ -119,6 +119,7 @@ const visible = state => state.coordinator.visibleProgress(state.coordinator.get
 
 test('dismissed legacy completion stays hidden through repeated polls and cached library refreshes', async () => {
   const store = notificationStorage(), state = fixture(store.policy());
+  state.setProgress({...completed, phase: 'downloading'}); await state.coordinator.refresh();
   state.setProgress(completed); await state.coordinator.refresh(); await library(state, completed);
   assert.equal(visible(state).modelId, 'test-model');
   await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => false);
@@ -187,8 +188,30 @@ test('a dismissal cannot hide active work or a different newer completion', asyn
 test('acknowledgements are isolated between account scopes', async () => {
   const store = notificationStorage(), state = fixture(store.policy()); await library(state, completed);
   await state.coordinator.invoke('dismiss_model_install_progress', {expected: completed}, async () => {});
-  store.setScope('account-b'); assert.equal(visible(state).modelId, 'test-model');
+  store.setScope('account-b'); assert.equal(visible(state), null);
+  state.setProgress({...completed,phase:'downloading',operationId:'account-b-job'});await state.coordinator.refresh();
+  state.setProgress({...completed,operationId:'account-b-job'});await state.coordinator.refresh();
+  assert.equal(visible(state).operationId,'account-b-job');
   store.setScope('account-a'); assert.equal(visible(state), null);
+});
+
+test('old completion records for any model stay hidden after opening or reopening the app', async () => {
+  const store=notificationStorage();
+  for(const modelId of ['dory-4b','another-model']) {
+    for(let launch=0;launch<2;launch++) {
+      const state=fixture(store.policy()),old={...completed,modelId,operationId:'old-job'};
+      state.setProgress(old);await state.coordinator.refresh();await library(state,old);
+      assert.equal(visible(state),null);
+    }
+  }
+});
+
+test('a job already running at launch can show its completion', async () => {
+  const state=fixture(notificationStorage().policy()),job={...completed,operationId:'running-at-launch'};
+  state.setProgress({...job,phase:'downloading'});await state.coordinator.refresh();
+  assert.equal(visible(state).phase,'downloading');
+  state.setProgress(job);await state.coordinator.refresh();
+  assert.equal(visible(state).phase,'ready');
 });
 
 test('runtime and native catalog identities of one completed install stay acknowledged after reload', async () => {
