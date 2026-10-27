@@ -87,6 +87,7 @@ VIAddVersionKey "LegalCopyright" "OpenCore and bundled component authors"
 Var TestInstall
 Var UpdateInstall
 Var RestartAfterInstall
+Var UpdateInstallSucceeded
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -103,6 +104,7 @@ Function .onInit
     Abort
   ${{EndIf}}
   ${{GetParameters}} $0
+  StrCpy $UpdateInstallSucceeded "0"
   ClearErrors
   ${{GetOptions}} $0 "/TEST" $1
   ${{IfNot}} ${{Errors}}
@@ -153,6 +155,10 @@ Function .onInit
       IfSilent app_still_open
       MessageBox MB_ICONINFORMATION "Close OpenCore, including its tray icon, before installing."
       app_still_open:
+      ${{If}} $UpdateInstall == "1"
+        SetOutPath "$INSTDIR"
+        ExecShell "open" "$INSTDIR\\OpenCore.exe"
+      ${{EndIf}}
       SetErrorLevel 5
       Quit
     ${{EndIf}}
@@ -199,6 +205,7 @@ Section "OpenCore"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "UninstallString" '$\\"$INSTDIR\\uninstall.exe$\\"'
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "DisplayIcon" "$INSTDIR\\OpenCore.exe"
+  StrCpy $UpdateInstallSucceeded "1"
   installed:
 SectionEnd
 Function .onInstSuccess
@@ -206,6 +213,7 @@ Function .onInstSuccess
     Return
   ${{EndIf}}
   ${{If}} $RestartAfterInstall == "1"
+  ${{OrIf}} $UpdateInstall == "1"
     ${{GetParameters}} $0
     StrCpy $1 ""
     ClearErrors
@@ -214,7 +222,16 @@ Function .onInstSuccess
       StrCpy $1 ""
     ${{EndIf}}
     SetOutPath "$INSTDIR"
-    Exec '"$INSTDIR\\OpenCore.exe" $1'
+    ExecShell "open" "$INSTDIR\\OpenCore.exe" $1
+  ${{EndIf}}
+FunctionEnd
+Function .onGUIEnd
+  ; The Tauri updater exits the running app as soon as NSIS starts. If NSIS
+  ; fails before the install section completes, reopen the still-installed app.
+  ${{If}} $UpdateInstall == "1"
+  ${{AndIf}} $UpdateInstallSucceeded != "1"
+    SetOutPath "$INSTDIR"
+    ExecShell "open" "$INSTDIR\\OpenCore.exe"
   ${{EndIf}}
 FunctionEnd
 Section "Uninstall"
