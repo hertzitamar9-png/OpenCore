@@ -12,10 +12,12 @@ module.exports=function(app,{editFunction,replaceOnce}){
     return text;
   });
   app=editFunction(app,'h8',text=>{
-    // Settings retains the existing layout and adds a user-bound Hub credential panel.
+    // Keep the existing Settings layout and place the new controls in their categories.
     const from='t==="settings"?';const pos=text.indexOf(from);if(pos<0)throw Error('Missing settings branch');
-    const open=text.indexOf('children:[',pos);if(open<0)throw Error('Missing settings content');
-    text=text.slice(0,open+10)+'i.jsx($HubSettings,{}),i.jsx($RemoteSettings,{}),'+text.slice(open+10);return text;
+    const marker='i.jsxs(Kj,{selected:Ke,onSelect:vt,children:[';
+    const open=text.indexOf(marker,pos);if(open<0)throw Error('Missing Settings categories');
+    const at=open+marker.length;
+    text=text.slice(0,at)+'i.jsx(ho,{category:"tools",children:i.jsxs(i.Fragment,{children:[i.jsx($HubSettings,{}),i.jsx($RemoteSettings,{})]})}),i.jsx(ho,{category:"data",children:i.jsx($PrivateChatLauncher,{})}),'+text.slice(at);return text;
   });
   return app+'\n'+fs.readFileSync(path.join(__dirname,'hub-ui.js'),'utf8');
 };

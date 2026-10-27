@@ -34,7 +34,7 @@ globalThis.__opencoreModelLibrary.setScope('qa-model-account');await globalThis.
 const root=TestDOM.createRoot(document.getElementById('root'));
 function Navigation(){const[view,setView]=React.useState('models');return React.createElement(React.Fragment,null,
 React.createElement('nav',{className:'qa-nav'},...['models','other'].map(value=>React.createElement('button',{key:value,onClick:()=>setView(value)},value==='models'?'Models tab':'Other tab'))),
-React.createElement('div',{className:'qa-content'},React.createElement(TestViews,{view,content:view==='models'?React.createElement(TestSupport,{view:'models',snapshot:{runtime:{status:'stopped',modelPath:''},activeConversationIds:[]},selectedProfile:'none',onSelectProfile:()=>{},onNotice:()=>{},onRefresh:async()=>{},appearance:{},platformConfiguration:{}}):React.createElement('p',null,'Another tab is open')})));}
+React.createElement('div',{className:'qa-content section-main'},React.createElement(TestViews,{view,content:view==='models'?React.createElement(TestSupport,{view:'models',snapshot:{runtime:{status:'stopped',modelPath:''},activeConversationIds:[]},selectedProfile:'none',onSelectProfile:()=>{},onNotice:()=>{},onRefresh:async()=>{},appearance:{},platformConfiguration:{}}):React.createElement('p',null,'Another tab is open')})));}
 root.render(React.createElement(Navigation));`);
 const server=http.createServer((request,response)=>{
  const name=new URL(request.url,'http://local').pathname;

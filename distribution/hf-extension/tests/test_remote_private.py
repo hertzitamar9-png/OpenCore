@@ -30,6 +30,12 @@ class Surface:
 
 class RemoteTests(unittest.TestCase):
     def setUp(self):
+        # These tests exercise a loopback fixture; never modify the developer's
+        # router or register a real public DNS address while running them.
+        for name in ('_refresh_internet', '_start_internet_thread', '_create_permanent'):
+            stub = patch.object(RemoteAccess, name)
+            stub.start()
+            self.addCleanup(stub.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.remote = RemoteAccess(self.root, self.root, surface=Surface())
@@ -177,6 +183,29 @@ public class DecodeFixture {
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
         connection.request('POST','/session','{}',{'Authorization':'Bearer '+paired['token'],'Content-Type':'application/json'})
         response = connection.getresponse(); self.assertEqual(response.status,200); session=json.loads(response.read())['session']; connection.close()
+        # A paired Android client asks for its UI immediately after opening a
+        # session. Exercise the real authenticated endpoint, including its
+        # manifest verification, so an older server cannot report success
+        # while returning "Unknown remote endpoint" to the phone.
+        ui = self.root/'runtime-setup/mobile-ui'; ui.mkdir(parents=True)
+        html = b'<html><head></head><body>OpenCore phone fixture</body></html>'
+        (ui/'index.html').write_bytes(html)
+        (ui/'manifest.json').write_text(json.dumps({'files':{'index.html':{'bytes':len(html),'sha256':hashlib.sha256(html).hexdigest(),'mime':'text/html; charset=utf-8'}}}))
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('POST','/ui',json.dumps({'path':'index.html'}),{'Authorization':'Bearer '+paired['token'],'Content-Type':'application/json'})
+        response=connection.getresponse();self.assertEqual(response.status,200);self.assertEqual(response.read(),html);connection.close()
+        (ui/'index.html').write_bytes(b'tampered')
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('POST','/ui',json.dumps({'path':'index.html'}),{'Authorization':'Bearer '+paired['token'],'Content-Type':'application/json'})
+        response=connection.getresponse();self.assertEqual(response.status,400);response.read();connection.close()
+        artifact_id='12345678-1234-1234-1234-123456789abc'
+        self.remote.artifact_root=self.root/'artifacts';self.remote.artifact_root.mkdir()
+        image=png(1,1,b'\0\0\xff\0')
+        (self.remote.artifact_root/(artifact_id+'.bin')).write_bytes(image)
+        (self.remote.artifact_root/(artifact_id+'.json')).write_text(json.dumps({'id':artifact_id,'mime':'image/png','name':'fixture.png','size':len(image)}))
+        connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
+        connection.request('POST','/artifact',json.dumps({'id':artifact_id}),{'Authorization':'Bearer '+paired['token'],'Content-Type':'application/json'})
+        response=connection.getresponse();self.assertEqual(response.status,200);self.assertEqual(response.getheader('Content-Type'),'image/png');self.assertEqual(response.read(),image);connection.close()
         connection = http.client.HTTPSConnection('127.0.0.1', port, context=tls)
         command={'session':session,'id':'snapshot','kind':'invoke','command':'get_snapshot','args':{}}
         connection.request('POST','/request',json.dumps(command),{'Authorization':'Bearer '+paired['token'],'Content-Type':'application/json'})

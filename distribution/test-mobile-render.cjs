@@ -1,8 +1,8 @@
 // Browser plugin is unavailable; render the actual recovered UI with a disposable PC bridge.
-const fs=require('fs'),path=require('path'),http=require('http'),vm=require('vm');
+const fs=require('fs'),path=require('path'),http=require('http'),vm=require('vm'),assert=require('assert/strict');
 const ts=require('../node_modules/typescript');
 const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright');
-const root=__dirname,dist=path.join(root,'candidate-dist'),android=path.join(root,'../android-remote/assets');
+const root=__dirname,dist=path.join(process.env.OPENCORE_UI_OUTPUT||root,'candidate-dist'),android=path.join(root,'../android-remote/assets');
 const compiled=ts.transpileModule(fs.readFileSync(path.join(root,'../src/mock.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
 const values={exports:{},Date};vm.runInNewContext(compiled,values);
 const snapshot=values.exports.previewSnapshot,timeline=values.exports.previewTimeline;
@@ -33,7 +33,9 @@ const fake=({snapshot,timeline})=>{
         else if(command==='list_model_library')value={models:[],progress:null,diskFreeBytes:100e9,minimumFreeBytes:0};
         else if(command==='speech_status')value={enabled:false,installed:false,modelId:'whisper-large-v3-turbo',phase:'off'};
         else if(command==='get_version'||command==='plugin:app|version')value='0.3.168';
-        else if(command==='agent_platform_configuration')value={appearance:{theme:'dark',accentColor:'#4389d0',fontFamily:'system',fontSize:14,density:'comfortable',reducedMotion:false,highContrast:false},skillDirectories:[],pluginDirectories:[],disabledSkills:[],disabledPlugins:[],mcpServers:[],activityEnabled:true,memoryEnabled:true};
+        else if(command==='agent_platform_configuration')value={systemPrompt:'',compactAtTokens:200000,verification:'default',repairAttempts:3,appearance:{theme:'dark',accentColor:'#4389d0',fontFamily:'system',fontSize:14,density:'comfortable',reducedMotion:false,highContrast:false},skillDirectories:[],pluginDirectories:[],disabledSkills:[],disabledPlugins:[],mcpServers:[],activityEnabled:true,memoryEnabled:true};
+        else if(command==='workspace_files')value={files:[],coverage:[]};
+        else if(command==='agent_platform_skills'||command==='agent_platform_plugins')value=[];
         else if(command==='list_studio_jobs')value=[];
         else if(command==='experimental_fast_mode')value={supported:false,enabled:false,active:false,restartRequired:false};
         else if(command==='send_chat_message'){
@@ -52,18 +54,57 @@ const fake=({snapshot,timeline})=>{
 };
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-  const browser=await chromium.launch({channel:process.env.OPENCORE_QA_CHANNEL||'msedge',headless:true,args:['--mute-audio']});
+  const browser=await chromium.launch({...(process.env.OPENCORE_QA_CHANNEL?{channel:process.env.OPENCORE_QA_CHANNEL}:{}),headless:true,args:['--mute-audio']});
   const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:2,isMobile:true,hasTouch:true}),errors=[];
   page.on('pageerror',error=>errors.push(error.stack||error.message));
   await page.addInitScript(fake,{snapshot,timeline});
   try{
     await page.goto('http://127.0.0.1:'+server.address().port+'/index.html');
+    // The tab bar can appear during the loading screen. Wait for the actual
+    // workspace and its PC snapshot before accepting a successful phone render.
+    await page.locator('.opencore-shell').waitFor({timeout:15000});
+    await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='get_snapshot'),null,{timeout:15000});
     await page.getByRole('navigation',{name:'OpenCore sections'}).waitFor({timeout:10000});
     const nav=page.getByRole('navigation',{name:'OpenCore sections'});
     const names=await nav.getByRole('button').allTextContents();
+    if(process.env.OPENCORE_MOBILE_TRACE){
+      console.log(JSON.stringify(await page.evaluate(()=>({
+        inputs:[...document.querySelectorAll('textarea,input')].map(e=>({tag:e.tagName,aria:e.getAttribute('aria-label'),placeholder:e.getAttribute('placeholder')})),
+        buttons:[...document.querySelectorAll('button')].filter(e=>e.offsetParent!==null).map(e=>({text:e.innerText,aria:e.getAttribute('aria-label'),title:e.getAttribute('title'),cls:e.className})),
+        reason:[...document.querySelectorAll('*')].filter(e=>e.childElementCount===0&&e.textContent?.trim()==='Reasoned').map(e=>e.parentElement?.outerHTML.slice(0,2500))
+      })),null,2));
+    }
     await page.screenshot({path:process.env.OPENCORE_MOBILE_SCREENSHOT||path.join(require('os').tmpdir(),'opencore-mobile-overview.png')});
-    console.log(JSON.stringify({loaded:true,navigation:names,commands:await page.evaluate(()=>fixture.calls.map(item=>item.command).filter(Boolean).slice(0,40)),errors},null,2));
-    if(errors.length)process.exitCode=1;
+    assert.deepEqual(names,['Chats','Overview','Models','Settings','More']);
+    const labels=await page.locator('.assistant-disclosure.kind-thinking>summary>strong').evaluateAll(items=>items.map(e=>({height:e.getBoundingClientRect().height,line:parseFloat(getComputedStyle(e).fontSize)})));
+    assert.ok(labels.length&&labels.every(item=>item.height<item.line*1.7),'Phone reasoning labels must fit on one line');
+    await page.getByLabel('Message OpenCore').fill('PHONE_FIXTURE_MESSAGE');
+    await page.getByRole('button',{name:'Send message'}).click();
+    await page.waitForFunction(()=>fixture.calls.some(item=>item.command==='send_chat_message'&&item.args?.request?.text==='PHONE_FIXTURE_MESSAGE'),null,{timeout:10000});
+    await page.getByText('PHONE_FIXTURE_REPLY').first().waitFor({timeout:10000});
+    await nav.getByRole('button',{name:'Chats'}).click();
+    if(process.env.OPENCORE_MOBILE_TRACE) console.log('Conversation drawer:',await page.locator('.conversation-list').evaluate(e=>{const a=[];for(let p=e;p;p=p.parentElement)a.push({tag:p.tagName,cls:p.className,display:getComputedStyle(p).display});return a;}));
+    assert.ok(await page.locator('.conversation-list').isVisible(),'The Chats tab must show the conversation list');
+    const rows=page.locator('.conversation-list .conversation-row');
+    assert.ok(await rows.count()>=2,'The drawer must show multiple conversations');
+    await rows.filter({hasText:'Generate image prompt ideas'}).first().click();
+    await page.locator('.timeline-heading').getByText('Generate image prompt ideas',{exact:true}).waitFor({timeout:10000});
+    await page.waitForFunction(()=>!document.body.classList.contains('oc-chats-open'));
+    assert.ok((await nav.boundingBox()).height<=60,'The bottom navigation must not waste screen space');
+    await nav.getByRole('button',{name:'Models'}).click();
+    await page.locator('.section-header').getByText('Models',{exact:true}).waitFor({timeout:10000});
+    await nav.getByRole('button',{name:'Settings'}).click();
+    await page.locator('.section-header').getByText('Settings',{exact:true}).waitFor({timeout:10000});
+    await nav.getByRole('button',{name:'More'}).click();
+    await page.getByRole('dialog',{name:'All OpenCore sections'}).waitFor({timeout:10000});
+    if(process.env.OPENCORE_MOBILE_TRACE) console.log('More sections:',await page.getByRole('dialog',{name:'All OpenCore sections'}).getByRole('button').allTextContents());
+    for(const [index,section] of ['Game Dev Studio','Media Studio','Music Studio'].entries()){
+      if(index)await nav.getByRole('button',{name:'More'}).click();
+      await page.getByRole('dialog',{name:'All OpenCore sections'}).getByRole('button',{name:section,exact:true}).click();
+      await page.locator('.section-header').getByText(section,{exact:true}).waitFor({timeout:10000});
+    }
+    assert.deepEqual(errors,[]);
+    console.log(JSON.stringify({loaded:true,navigation:names,chat:'request sent and fixture reply rendered',models:true,settings:true,more:true,studios:['Game Dev Studio','Media Studio','Music Studio'],errors},null,2));
   }catch(error){console.error(String(error));console.error('Errors:',errors);console.error('Calls:',await page.evaluate(()=>fixture.calls.slice(0,20)));console.error((await page.locator('body').innerText()).slice(0,3000));process.exitCode=1;}
   finally{await browser.close();server.close();}
 })();

@@ -23,12 +23,15 @@ test('the phone can read PC state without receiving the local helper secret',asy
 });
 test('event callbacks are registered on the PC and delivered to the originating phone session',async()=>{
   const h=host();await h.run({device:'phone',session:'session',id:'listen',kind:'invoke',command:'plugin:event|listen',args:{event:'opencore-generation',handler:8,target:{kind:'Any'}}});
+  const phoneListenerId=h.sent.at(-1).body.value;
+  assert.equal(phoneListenerId,8);
   h.callbacks.get(1)({event:'opencore-generation',payload:{text:'one'}});
   await new Promise(resolve=>setImmediate(resolve));
   const event=h.sent.find(item=>item.route.endsWith('/event')).body;
   assert.equal(event.device,'phone');assert.equal(event.session,'session');assert.equal(event.handler,8);assert.equal(event.payload.payload.text,'one');
-  await h.run({device:'phone',session:'session',id:'stop',kind:'invoke',command:'plugin:event|unlisten',args:{event:'opencore-generation',eventId:71}});
+  await h.run({device:'phone',session:'session',id:'stop',kind:'invoke',command:'plugin:event|unlisten',args:{event:'opencore-generation',eventId:phoneListenerId}});
   assert.equal(h.calls.at(-1).command,'plugin:event|unlisten');
+  assert.equal(h.calls.at(-1).args.eventId,71);
 });
 test('local service streaming is forwarded in order from the PC',async()=>{
   const h=host();await h.run({device:'phone',session:'session',id:'stream',kind:'hub',method:'POST',path:'/api/private/send',body:'{}'});

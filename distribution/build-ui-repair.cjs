@@ -4,11 +4,13 @@ const acorn = require('acorn');
 const terser = require('terser');
 const zlib = require('zlib');
 const root = __dirname;
+const artifacts = process.env.OPENCORE_UI_OUTPUT || root;
 const releaseVersion = process.env.OPENCORE_RELEASE_VERSION || '0.3.0';
 const {createManualUpdatePolicy} = require('./manual-update-policy.cjs');
 createManualUpdatePolicy(releaseVersion);
 const original = path.join(root, 'recovered-dist');
-const output = path.join(root, 'candidate-dist');
+const output = path.join(artifacts, 'candidate-dist');
+fs.mkdirSync(artifacts, { recursive: true });
 fs.cpSync(original, output, { recursive: true });
 function replaceOnce(text, from, to) {
   if (text.split(from).length !== 2) throw new Error('Expected one source match: ' + from.slice(0, 140));
@@ -20,24 +22,30 @@ function editFunction(text, name, edit) {
   if (!node) throw new Error('Missing function ' + name);
   return text.slice(0, node.start) + edit(text.slice(node.start, node.end)) + text.slice(node.end);
 }
-function pauseHiddenEffects(text) {
-  const tree=acorn.parse(text,{ecmaVersion:'latest',sourceType:'module'}),changes=[];
+function retainSupportPage(text) {
+  text=replaceOnce(text,'var Ut,vn,hs,Ci,ni,gs,tn,nn;',
+    'var Ut,vn,hs,Ci,ni,gs,tn,nn;const $pageActive=$usePageActive();');
+  const tree=acorn.parse(text,{ecmaVersion:'latest',sourceType:'module'}),fn=tree.body[0],changes=[];
   function walk(node) {
     if(!node||typeof node!=='object')return;
+    if(node!==fn&&['FunctionDeclaration','FunctionExpression','ArrowFunctionExpression'].includes(node.type))return;
+    if(node.type==='ReturnStatement'&&node.argument) {
+      changes.push([node.argument.start,'$decorateRetainedPage(']);
+      changes.push([node.argument.end,',$pageActive,t)']);
+    }
     if(node.type==='CallExpression'&&node.callee?.object?.name==='p'&&node.callee?.property?.name==='useEffect') {
       const [callback,deps]=node.arguments;
       if(callback?.body?.type!=='BlockStatement'||deps?.type!=='ArrayExpression')throw Error('Unsupported retained-page effect');
-      changes.push([callback.body.start+1,callback.body.start+1,'if(!$pageActive)return;']);
-      changes.push([deps.end-1,deps.end-1,(deps.elements.length?',':'')+'$pageActive']);
+      changes.push([callback.body.start+1,'if(!$pageActive)return;']);
+      changes.push([deps.end-1,(deps.elements.length?',':'')+'$pageActive']);
     }
-    for(const value of Object.values(node))if(Array.isArray(value))value.forEach(walk);else if(value&&typeof value==='object')walk(value);
+    for(const value of Object.values(node))if(Array.isArray(value))value.forEach(walk);else if(value&&typeof value==='object'&&value.type)walk(value);
   }
-  walk(tree);
-  if(!changes.length)throw Error('No retained-page effects found');
-  for(const [start,end,value] of changes.sort((a,b)=>b[0]-a[0]))text=text.slice(0,start)+value+text.slice(end);
+  walk(fn);
+  if(!changes.some(([,value])=>value==='$decorateRetainedPage('))throw Error('No support-page returns found');
+  for(const [at,value] of changes.sort((a,b)=>b[0]-a[0]))text=text.slice(0,at)+value+text.slice(at);
   return text;
 }
-
 let index = fs.readFileSync(path.join(original, 'assets/index-CD0EH-dA.js'), 'utf8');
 index = editFunction(index, 'p', () => 'async function p(i,s={},h){const b=globalThis.__opencoreInstallBridge;const run=()=>window.__TAURI_INTERNALS__.invoke(i,s,h);return b?b.invoke(i,s,run):run()}');
 index=editFunction(index,'bp',text=>replaceOnce(text,
@@ -59,6 +67,11 @@ app=editFunction(app,'Pj',text=>{
   text=replaceOnce(text,'"aria-label":"Update","aria-expanded":t','"aria-label":$installing?"Updating…":"Update ready","aria-busy":$installing');
   return replaceOnce(text,'children:"Update"','children:$installing?"Updating…":"Update ready"');
 });
+// Local UI recovery can pin the version while the matching release is prepared.
+// Normal releases retain the manual update control above.
+if (process.env.OPENCORE_UI_PIN_RELEASE === '1') {
+  app=editFunction(app,'Pj',()=>`function Pj(){return i.jsx("div",{className:"manual-update-control",children:i.jsx("span",{className:"manual-update-version",title:"OpenCore ${releaseVersion}",children:"v${releaseVersion}"})})}`);
+}
 app=editFunction(app,'WI',text=>replaceOnce(text,'className:"statusbar-response-total",title:',
   'className:"statusbar-response-total push",style:{color:"var(--theme-muted,#aeb9c4)"},title:'));
 app=editFunction(app,'v8',text=>replaceOnce(text,
@@ -100,12 +113,12 @@ app=editFunction(app,'yj',text=>{
     'p.useEffect(()=>{J()},[J])');
   return text;
 });
-app=editFunction(app,'h8',text=>pauseHiddenEffects(replaceOnce(text,
-  'var Ut,vn,hs,Ci,ni,gs,tn,nn;', 'var Ut,vn,hs,Ci,ni,gs,tn,nn;const $pageActive=$usePageActive();')));
+app=editFunction(app,'h8',retainSupportPage);
 app=editFunction(app,'w8',text=>replaceOnce(text,
-  'className:"section-main",children:tr','className:"section-main",children:i.jsxs(i.Fragment,{children:[i.jsx($PrivateChatLauncher,{}),i.jsx($RetainedViews,{view:d,content:tr})]})'));
+  'className:"section-main",children:tr','className:"section-main",children:i.jsx($RetainedViews,{view:d,content:tr})'));
 app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
+app+='\nconst $railHoverStyle=document.createElement("style");$railHoverStyle.textContent=".conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}";document.head.appendChild($railHoverStyle);\n';
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
 app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';
@@ -125,9 +138,9 @@ app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+
     acorn.parse(result.code, { ecmaVersion: 'latest', sourceType: 'module' });
     fs.writeFileSync(path.join(output, 'assets', name), result.code);
     const compressed = zlib.brotliCompressSync(Buffer.from(result.code), { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } });
-    fs.writeFileSync(path.join(root, name + '.br'), compressed);
+    fs.writeFileSync(path.join(artifacts, name + '.br'), compressed);
     report.push({ name, bytes: Buffer.byteLength(result.code), compressedBytes: compressed.length });
   }
-  fs.writeFileSync(path.join(root, 'candidate-ui.json'), JSON.stringify(report, null, 2));
+  fs.writeFileSync(path.join(artifacts, 'candidate-ui.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
 })().catch(error => { console.error(error); process.exitCode = 1; });

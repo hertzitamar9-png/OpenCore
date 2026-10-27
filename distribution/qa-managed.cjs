@@ -6,7 +6,7 @@ code=code.replace('$hubInvoke as TestInvoke','$hubInvoke as TestInvoke,$RemoteSe
 code=code.replace('TestModels,TestHubSettings}', 'TestModels,TestHubSettings,TestRemote,TestPrivate}');
 code=code.replace('React.createElement(TestHubSettings)))','React.createElement(TestHubSettings),React.createElement(TestRemote),React.createElement(TestPrivate)))');
 const extra=String.raw`
-const originalFetch=window.fetch;const fixtureAddresses=[{address:'192.168.1.33',interface:'Wi-Fi'},{address:'100.101.102.103',interface:'Private VPN'}];fixture.remote={enabled:false,devices:[],addresses:fixtureAddresses,pcName:'Desk PC'};fixture.privateCount=0;
+const originalFetch=window.fetch;const fixtureAddresses=[{address:'192.168.1.33',interface:'Wi-Fi'},{address:'100.101.102.103',interface:'Private VPN'}];fixture.remote={enabled:false,devices:[],addresses:fixtureAddresses,pcName:'Desk PC',publicAddress:'remote.fixture.invalid'};fixture.privateCount=0;
 window.fetch=async(url,options={})=>{
  const route=new URL(url).pathname.replace('/api',''),body=options.body?JSON.parse(options.body):{};
  if(!['/search','/private/open','/private/send','/private/close','/remote/status','/remote/start','/remote/stop','/remote/pairing','/remote/revoke','/remote/name'].includes(route))return originalFetch(url,options);
@@ -59,10 +59,15 @@ fs.writeFileSync(path.join(__dirname,'.output/managed-harness.html'),html);
   record('the normal pairing flow hides technical connection options',!await remote.getByLabel('PC address for phone').isVisible());
   await remote.getByRole('button',{name:'Reveal QR code',exact:true}).click();
   await remote.getByRole('img',{name:'Pairing QR code'}).waitFor();
-  record('revealing a QR code enables access and automatically chooses the network',await page.evaluate(()=>fixture.calls.some(call=>call.route==='/remote/start')&&fixture.calls.some(call=>call.route==='/remote/pairing'&&call.body.address==='192.168.1.33'))&&await remote.getByText(/Code expires in \d+ seconds/).count()===1);
+  record('the desktop pairing QR is large enough to scan comfortably',(await remote.getByRole('img',{name:'Pairing QR code'}).boundingBox()).width>=300);
+  record('revealing a QR code enables access and automatically chooses the internet address',await page.evaluate(()=>fixture.calls.some(call=>call.route==='/remote/start')&&fixture.calls.some(call=>call.route==='/remote/pairing'&&call.body.address==='remote.fixture.invalid'))&&await remote.getByText(/Code expires in \d+ seconds/).count()===1);
   await remote.screenshot({path:path.join(__dirname,'.output/remote-guide-desktop.png')});
-  await remote.getByText('Connection options · VPN or troubleshooting',{exact:true}).click();
-  record('VPN and firewall options remain available when needed',await remote.getByRole('button',{name:'Wi-Fi · 192.168.1.33',exact:true}).getAttribute('aria-pressed')==='true'&&await remote.getByText('Remote connection port: 8842',{exact:true}).count()===1);
+  await remote.getByText('Connection options · manual address or VPN',{exact:true}).click();
+  record('VPN and firewall options remain available when needed',await remote.getByRole('button',{name:'Wi-Fi · 192.168.1.33',exact:true}).isVisible()&&await remote.getByText('Remote connection port: 8842',{exact:true}).count()===1);
+  await remote.getByRole('button',{name:'Private VPN · 100.101.102.103',exact:true}).click();
+  await remote.getByRole('button',{name:'Reveal QR code',exact:true}).click();
+  await page.waitForFunction(()=>fixture.calls.filter(call=>call.route==='/remote/pairing').at(-1)?.body.address==='100.101.102.103');
+  record('an explicitly selected VPN address is used even when an internet address exists',await remote.getByText('100.101.102.103',{exact:true}).count()>=1);
   await remote.getByText('Can’t scan? Paste the pairing text instead').click();
   record('a manual pairing-text fallback is available',await remote.getByLabel('Phone pairing text').isVisible());
   await page.setViewportSize({width:390,height:844});
@@ -71,7 +76,7 @@ fs.writeFileSync(path.join(__dirname,'.output/managed-harness.html'),html);
   await page.evaluate(()=>{fixture.remote.devices=[{id:'phone-fixture',name:'Test phone',connected:true}];});
   await remote.getByText('Test phone · Connected',{exact:true}).waitFor({timeout:6000});
   record('the PC guide reports when a paired phone is connected',await remote.getByText('1 phone connected',{exact:true}).count()===1);
-  record('the used QR code closes after a phone is paired',await remote.getByText('Phone paired. It will reconnect while the PC is available.',{exact:true}).count()===1&&await remote.getByRole('img',{name:'Pairing QR code'}).count()===0);
+  record('the used QR code closes after a phone is paired',await remote.getByText('Phone paired. It will reconnect when the PC is reachable.',{exact:true}).count()===1&&await remote.getByRole('img',{name:'Pairing QR code'}).count()===0);
   await remote.getByRole('button',{name:'Turn off remote access',exact:true}).click();record('turning remote access off clears pairing text',await remote.getByLabel('Phone pairing text').count()===0);
   await page.getByRole('button',{name:'Temporary chat',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Temporary chat',exact:true});await dialog.getByLabel('Temporary message').fill('LOCAL_PRIVATE_MARKER');await dialog.getByRole('button',{name:'Send',exact:true}).click();await dialog.getByText('PRIVATE_REPLY',{exact:true}).waitFor();
   record('temporary chat streams a response without the native saved-chat command',await page.evaluate(()=>!fixture.calls.some(call=>call.command==='send_chat_message')));
