@@ -18,6 +18,7 @@ class UpdateHandoff(unittest.TestCase):
         self.assertIn('$UpdateInstall == "1"', script)
         self.assertIn('-AppPath "$INSTDIR\\OpenCore.exe"', script)
         self.assertIn('-CheckOnly', script)
+        self.assertIn('$WINDIR\\Sysnative\\WindowsPowerShell', script)
         self.assertNotIn('FindWindow', script)
 
     @unittest.skipUnless(os.name == 'nt', 'Windows process handoff')

@@ -148,9 +148,9 @@ Function .onInit
   File "/oname=stop-opencore-update.ps1" "{nsis_literal(Path(__file__).resolve().with_name('stop-opencore-update.ps1'))}"
   ${{If}} $UpdateInstall == "1"
     ; The old app's updater may relaunch it immediately. Wait for that race.
-    nsExec::ExecToStack '"$SYSDIR\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe"'
+    nsExec::ExecToStack '"$WINDIR\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe"'
   ${{Else}}
-    nsExec::ExecToStack '"$SYSDIR\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe" -CheckOnly'
+    nsExec::ExecToStack '"$WINDIR\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\\stop-opencore-update.ps1" -AppPath "$INSTDIR\\OpenCore.exe" -CheckOnly'
   ${{EndIf}}
   Pop $0
   Pop $1
