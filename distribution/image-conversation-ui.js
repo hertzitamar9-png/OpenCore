@@ -2,7 +2,11 @@
 let $imageConversations=[], $imageNativeIds=new Set();
 globalThis.__opencoreImageConversationInvoke=async(command,args,run)=>{
   args=args||{};
-  if(!['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command)||!$hubDescriptor)return run();
+  if(!['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return run();
+  if(!$hubDescriptor){
+    try{if(command==='get_snapshot'&&localStorage.getItem('opencore.image-chat-history')==='1')void $hubConnect().catch(()=>{});}catch{}
+    return run();
+  }
   if(command==='get_snapshot'||command==='list_conversations'){
     const native=await run();
     try{$imageConversations=(await $hubRequest('/images/conversations')).conversations||[];}catch{return native;}

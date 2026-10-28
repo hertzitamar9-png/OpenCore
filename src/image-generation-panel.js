@@ -87,6 +87,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(prompt)?'moss_xvstyle, '+prompt.trim():prompt.trim(),conversationId:conversation.current,settings:{width:size,height:size,steps,guidanceScale:guidance,numImages:1,outputFormat:'png',...(file?{loraPath:file.localPath,loraStrength:strength}:{})}};
       if(model.hubEntry?.format==='diffusers'&&!model.hubEntry?.nativeProfile){
         const hub=globalThis.__opencoreImageHub;if(!hub)throw Error('Update OpenCore to enable imported image generation.');
+        try{window.localStorage.setItem('opencore.image-chat-history','1');}catch{}
         request.conversationId=request.conversationId||(studio?null:'opencore:'+crypto.randomUUID());
         const job=await hub.generate(request);if(request.conversationId){conversation.current=request.conversationId;onConversationId?.(request.conversationId);}
         setJobs(old=>[job,...old].slice(0,6));setPrompt('');setBusy(false);onNotice?.('Image generation queued. Runtime preparation and progress appear here.');onRefresh?.();return;

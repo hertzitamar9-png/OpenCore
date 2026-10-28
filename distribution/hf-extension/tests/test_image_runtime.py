@@ -45,7 +45,7 @@ class ImageRuntimeTests(unittest.TestCase):
                 self.assertEqual(result['status'],'completed',result)
                 verify.assert_called_once()
                 request=json.loads((manager.directory/(job['id']+'.json')).read_text())
-                self.assertEqual(Path(request['modelDirectory']),Path(entry['localDirectory']))
+                self.assertEqual(Path(request['modelDirectory']).resolve(),Path(entry['localDirectory']).resolve())
                 self.assertEqual(request['sourceRepository'],'owner/image')
                 self.assertEqual(request['conversationId'],'opencore:test')
                 self.assertTrue(manager.preview(job['id'],result['outputs'][0])['dataUrl'].startswith('data:image/png;base64,'))
