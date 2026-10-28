@@ -10,7 +10,7 @@ import {
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import ReactMarkdown from "react-markdown";
-import { ImageGenerationPanel } from './image-generation-panel.js';
+import { ImageGenerationPanel,selectChatImageModel } from './image-generation-panel.js';
 import './ImageGenerationPanel.css';
 import remarkGfm from "remark-gfm";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -917,7 +917,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     </AssistantRuntimeProvider>
 
     <div className="chat-composer-wrap">
-      <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} />
+      <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} embedded={embedded}/>
       {matchingSkills.length > 0 ? <div className="composer-skill-menu" role="listbox" aria-label="Skills">{matchingSkills.map((skill) => <button type="button" role="option" aria-selected={selectedSkills.includes(skill.id)} key={skill.id} onClick={() => selectSkill(skill.id)}><strong>/{skill.id}</strong><small>{skill.description}</small></button>)}</div> : null}
       {queue.length > 0 && <div className="prompt-queue">
         <div className="queue-heading"><strong>Queued</strong><span>{queue.length}</span></div>
@@ -967,7 +967,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           </div> : null}
           {composerMenu === "model" ? <div className="composer-action-popover composer-model-popover" id={composerMenuId} role="menu" aria-label="Model selection">
             <div className="composer-model-heading"><button type="button" aria-label="Back to composer actions" onClick={() => setComposerMenu("actions")}><ArrowLeft size={14} /></button><span><strong>Model</strong><small>Current · {profileLabel(selectedProfile)}</small></span></div>
-            <ModelProfileOptions selectedProfile={selectedProfile} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} disabled={profileLocked} id={embedded ? `side-model-options-${surfaceId}` : "composer-model-profile-options"} className="composer-model-options" />
+            <ModelProfileOptions selectedProfile={selectedProfile} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} onSelectImage={(model,event)=>{if(selectChatImageModel(model,{scope:event.currentTarget.closest('.chat-composer-wrap'),primary:!embedded}))setComposerMenu(null);}} disabled={profileLocked} id={embedded ? `side-model-options-${surfaceId}` : "composer-model-profile-options"} className="composer-model-options" />
           </div> : null}
         </div>
         <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { modelLibrary } from "./api";
 import type { RuntimeProfile } from "./types";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
+import {ChatImageModelOptions,clearChatImageSelection} from './image-generation-panel.js';
+import type {MouseEvent} from 'react';
 
 const catalogModels = modelCatalog.models as { id: string; label: string; description: string; selectable: boolean; memoryMode?: string }[];
 const catalogProfiles = new Map(catalogModels.filter(model => model.selectable).map(model => [model.id, model]));
@@ -21,7 +23,11 @@ export function useInstalledModelProfiles() {
     let active = true;
     void modelLibrary({ fresh: true }).then(library => {
       if (active) setInstalledProfiles(library.models.filter(model => model.installed && model.selectable)
-        .map(model => ({ id: model.id, label: catalogProfiles.get(model.id)?.label || model.label, description: model.description })));
+        .map(model => ({ id: model.id,
+          label: model.variantOf && model.backend==='gguf'
+            ? `${(catalogProfiles.get(model.variantOf)?.label||model.label).replace(/(?:[\s·]+(?:ECHO|Native))?([\s·]+)?$/, '')} · ${model.precision} · ${model.memoryMode==='native'?'Native':'ECHO'}`
+            : catalogProfiles.get(model.id)?.label || model.label,
+          description: model.backend==='gguf'&&model.precision?model.description.replace(/^((?:Optional\s+)?)(?:Q\d(?:_[A-Z0-9]+)*|IQ\d(?:_[A-Z0-9]+)*|BF16|F16)(?=\s)/,(_match,prefix)=>prefix+model.precision.split(' + ')[0]):model.description })));
     }).catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, []);
@@ -73,9 +79,10 @@ export const profileDescription = (profile: RuntimeProfile) =>
 export const isSelectableModelProfile = (profile: string) =>
   profile === "unsloth-echo" || selectableModelProfiles.some(item => item.id === profile) || catalogProfiles.has(profile);
 
-export function ModelProfileOptions({ selectedProfile, onSelect, disabled = false, id = "model-profile-options", className = "" }: {
+export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, disabled = false, id = "model-profile-options", className = "" }: {
   selectedProfile: RuntimeProfile;
   onSelect: (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => void;
+  onSelectImage?: (model:any,event:MouseEvent<HTMLButtonElement>)=>void;
   disabled?: boolean;
   id?: string;
   className?: string;
@@ -83,6 +90,7 @@ export function ModelProfileOptions({ selectedProfile, onSelect, disabled = fals
   const { installedProfiles, error } = useInstalledModelProfiles();
   const profiles = profilesForInstalledModels(installedProfiles || []);
   return <div className={`model-picker-options ${className}`} id={id} role="group" aria-label="Choose model profile">
+    {onSelectImage?<ChatImageModelOptions onSelect={onSelectImage} disabled={disabled} loadModels={modelLibrary}/>:null}
     {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
       : installedProfiles === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
       : profiles.length === 0 ? <p className="model-picker-empty" role="status">No downloaded text models. Install one in Models.</p> : null}
@@ -92,7 +100,7 @@ export function ModelProfileOptions({ selectedProfile, onSelect, disabled = fals
       type="button"
       aria-pressed={selectedProfile === profile}
       disabled={disabled}
-      onClick={() => onSelect(profile)}
+      onClick={event => {if(!onSelectImage||clearChatImageSelection({scope:event.currentTarget.closest('.chat-composer-wrap'),primary:!id.startsWith('side-')}))onSelect(profile);}}
     >
       <span><strong>{label}</strong><small>{description}</small></span>
       {selectedProfile === profile ? <Check size={16} aria-hidden="true" /> : null}

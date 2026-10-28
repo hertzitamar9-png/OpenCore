@@ -1257,6 +1257,7 @@ export default function App() {
   const updatingApp = useAppUpdateInstalling();
   const [snapshot, setSnapshot] = useState<AppSnapshot | null>(null);
   const [view, setView] = useState<View>("conversations");
+  useEffect(()=>{const open=(event:Event)=>{if((event as CustomEvent).detail?.primary!==false&&!event.defaultPrevented)setView('conversations');};window.addEventListener('opencore-chat-image-selected',open);return()=>window.removeEventListener('opencore-chat-image-selected',open);},[]);
   const [assetCategory,setAssetCategory]=useState('image');
   const [mediaCategory,setMediaCategory]=useState('video');
   useEffect(()=>{let disposed=false;let stop:(()=>void)|undefined;void listen<{view:View;category?:string}>('opencore-navigate',({payload})=>{if(disposed||!nav.some(item=>item.id===payload.view))return;setView(payload.view);if(payload.category){if(payload.view==='media')setMediaCategory(payload.category);if(payload.view==='assets')setAssetCategory(payload.category);}}).then(unlisten=>{if(disposed)unlisten();else stop=unlisten;}).catch(()=>{});return()=>{disposed=true;stop?.();};},[]);
