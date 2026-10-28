@@ -393,7 +393,8 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
       throw Error('Prepare the selected image base runtime first. A verified interpreter and supported engine are required.');
     const runtime={modelId:selectedBase.id,python:receipt.python,...(receipt.runner?{runner:receipt.runner}:{}),...(receipt.sourceDir?{sourceDir:receipt.sourceDir}:{})};
     await window.__TAURI_INTERNALS__.invoke('configure_studio_runtime',{runtime});
-    await window.__TAURI_INTERNALS__.invoke('submit_studio_job',{request:{modelId:selectedBase.id,prompt:readyMoss&&!/\bmoss_xvstyle\b/i.test(adapterPrompt)?'moss_xvstyle, '+adapterPrompt.trim():adapterPrompt.trim(),settings:{loraPath:path,loraStrength:adapterStrength,width:512,height:512,steps:30,guidanceScale:3,numImages:1,outputFormat:'png'}}});
+    const qwen=selectedBase.id.startsWith('qwen-image-21');
+    await window.__TAURI_INTERNALS__.invoke('submit_studio_job',{request:{modelId:selectedBase.id,prompt:readyMoss&&!/\bmoss_xvstyle\b/i.test(adapterPrompt)?'moss_xvstyle, '+adapterPrompt.trim():adapterPrompt.trim(),settings:{loraPath:path,loraStrength:adapterStrength,width:qwen?2048:1024,height:qwen?2048:1024,steps:qwen?40:50,guidanceScale:qwen?1:3,numImages:1,outputFormat:'png'}}});
     window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));
     onNotice?.('Generation queued with the selected image base quantization and verified LoRA.');
   }catch(e){setError(String(e));}finally{setBusy(false);}}
