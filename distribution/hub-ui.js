@@ -41,7 +41,7 @@ async function $hubRefresh(force=false) {
     if(changed&&$hubNativeLibrary)window.dispatchEvent(new CustomEvent('opencore-model-library-changed',{detail:$hubAugment($hubNativeLibrary)}));
     for(const entry of value.catalog||[]){
       const key=$hubDescriptor.url+'/'+entry.id;
-      if(entry.runtimeReady&&entry.providerId&&!$hubProviderSync.has(key)){
+      if(entry.runtimeReady&&(entry.libraryCategory||entry.category||'text')==='text'&&entry.providerId&&!$hubProviderSync.has(key)){
         $hubProviderSync.add(key);
         setTimeout(()=>void $hubRegister(entry).catch(()=>{$hubProviderSync.delete(key);}),0);
       }
@@ -68,8 +68,8 @@ function $hubProgress() {
 }
 function $hubModel(entry) {
   return {id:entry.id,label:entry.familyLabel||entry.repository.split('/').at(-1),description:entry.repository,precision:entry.quantization,
-    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:entry.runtime?.adapter?'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
-    selectable:!!entry.runtimeReady,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
+    variantOf:'hub-family-'+(entry.familyId||entry.repository.toLowerCase()).replace(/[^a-z0-9]+/g,'-'),memoryMode:(entry.libraryCategory||entry.category||'text')==='text'&&entry.runtime?.adapter?'echo':'native',backend:'hub',hubModel:true,hubEntry:entry,
+    selectable:(entry.libraryCategory||entry.category||'text')==='text'&&!!entry.runtimeReady,installed:entry.status==='installed',runtimeReady:!!entry.runtimeReady,installable:entry.installable,
     category:entry.libraryCategory||entry.category||'text',contextTokens:entry.contextTokens||32768,totalBytes:entry.bytes,downloadBytes:entry.status==='installed'?0:entry.bytes,
     weightBytes:entry.files.filter(f=>f.role==='model').reduce((n,f)=>n+f.bytes,0),experimental:false,sourceUrl:entry.sourceUrl,
     note:'Hugging Face checkpoint. Download, runtime preparation and actual generation are verified separately.',license:entry.license||'Publisher terms'};
@@ -113,6 +113,7 @@ async function $hubRegister(entry) {
   await $hubRefresh(true);return profile.profileId;
 }
 async function $hubInvoke(command,args,run) {
+  if(globalThis.__opencoreImageConversationInvoke&&['get_snapshot','list_conversations','get_conversation','rename_conversation','set_conversation_pinned','move_conversation_to_project','delete_conversation'].includes(command))return globalThis.__opencoreImageConversationInvoke(command,args,run);
   if(command==='list_model_library'){
     const library=await run();$hubNativeLibrary=library;await $hubRefresh().catch(()=>{});return $hubAugment(library);
   }
@@ -307,7 +308,7 @@ function $hubBaseModels(entry) {
       bytes:model.totalBytes||model.bytes||model.downloadBytes||0,installed:model.native?!!model.installed:model.status==='installed',
       installable:model.installable!==false,backend:model.backend||model.runtime?.adapter||null,
       native:!!model.native,category:model.category,compatibility,sourceRepository:$hubRepositoryOf(model.sourceUrl)||model.repository||'',
-      runtimeSupported:!!model.native&&model.backend==='comfyui'&&model.runtimeReady!==false
+      runtimeSupported:!!model.native&&['comfyui','diffusers'].includes(model.backend)&&model.runtimeReady!==false||model.format==='diffusers'
     }));
   const unique=new Map();
   for(const model of suggestions)if(!unique.has(model.id))unique.set(model.id,model);
@@ -351,16 +352,30 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   const readyMoss=adapter&&entry.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&entry.variantKey?.toLowerCase().includes('comfyui')&&selectedBase?.backend==='comfyui'&&selectedBase.installed&&connected&&entry.status==='installed';
   const readyQwen=adapter&&entry.repository==='f23gg/NSFW-LORA-Qwen-Image-2.1'&&entry.variantKey==='lora:NSFW Qwen Lora.safetensors'&&selectedBase?.installed&&connected&&entry.status==='installed'&&((selectedBase.id==='qwen-image-21'&&selectedBase.backend==='diffusers')||(selectedBase.id.startsWith('qwen-image-21-uc')&&selectedBase.backend==='comfyui'));
   const experimentalQwen=readyQwen&&selectedBase.compatibility==='related';
-  const canGenerate=readyMoss||readyQwen;
+  const genericImagePair=adapter&&entry.category==='image'&&selectedBase?.installed&&connected&&globalThis.__opencoreImageAdapterChoices?.({id:selectedBase.id,backend:selectedBase.backend,sourceUrl:'https://huggingface.co/'+selectedBase.sourceRepository},[entry]).length>0&&['diffusers','comfyui'].includes(selectedBase.backend);
+  const canGenerate=readyMoss||readyQwen||genericImagePair;
   async function installBase(){if(!selectedBase?.installable)return;setBusy(true);setError('');try{await Ue('install_model',{id:selectedBase.id});await onChanged?.();}catch(e){setError(String(e));}finally{setBusy(false);}}
   async function prepareBase(){if(!selectedBase?.native||!['comfyui','diffusers'].includes(selectedBase.backend))return;setBusy(true);setError('');try{
-    await window.__TAURI_INTERNALS__.invoke('runtime_setup_start',{targetId:selectedBase.id,options:{installWeights:!selectedBase.installed,acceptLicenses:false,allowAdministrator:false}});
+    await window.__TAURI_INTERNALS__.invoke('runtime_setup_start',{targetId:selectedBase.id,options:{installWeights:!selectedBase.installed,verifyInference:true,acceptLicenses:false,allowAdministrator:false}});
     onNotice?.('The selected base runtime setup was queued. Its progress appears in Runtime setup.');
   }catch(e){setError(String(e));}finally{setBusy(false);}}
   async function generateWithBase(){if(!canGenerate||!adapterPrompt.trim())return;setBusy(true);setError('');try{
+    if(!readyMoss&&!readyQwen){globalThis.__opencoreImageDraft={modelId:selectedBase.id,adapterId:entry.id,prompt:adapterPrompt.trim(),strength:adapterStrength};globalThis.__opencoreRequestedImageModel=selectedBase.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));return;}
     const path=$hubChosenAdapterPath(entry);if(!path)throw Error('Install and verify the supported LoRA file before generating.');
-    const status=await window.__TAURI_INTERNALS__.invoke('runtime_setup_status',{});
-    const receipt=status.receipts?.find(value=>value.targetId===selectedBase.id&&value.dependenciesVerified);
+    let status=await window.__TAURI_INTERNALS__.invoke('runtime_setup_status',{});
+    let receipt=status.receipts?.find(value=>value.targetId===selectedBase.id&&value.dependenciesVerified&&value.inferenceVerified);
+    if(!receipt){
+      const setup=await window.__TAURI_INTERNALS__.invoke('runtime_setup_start',{targetId:selectedBase.id,options:{installWeights:false,verifyInference:true,acceptLicenses:false,allowAdministrator:false}});
+      if(!setup?.id)throw Error('The image runtime could not start preparing. Update OpenCore and retry.');
+      onNotice?.('Preparing the selected image base. Your image prompt will run when verification finishes.');
+      const deadline=Date.now()+3600000;
+      while(!receipt&&Date.now()<deadline){
+        await new Promise(resolve=>setTimeout(resolve,2000));status=await window.__TAURI_INTERNALS__.invoke('runtime_setup_status',{});
+        receipt=status.receipts?.find(value=>value.targetId===selectedBase.id&&value.dependenciesVerified&&value.inferenceVerified);
+        const progress=status.jobs?.find(value=>value.id===setup.id);
+        if(progress&&['failed','cancelled','interrupted'].includes(progress.status))throw Error(progress.error||'Image preparation stopped; retry to resume.');
+      }
+    }
     if(!receipt?.python||(selectedBase.backend==='comfyui'&&(!receipt.runner||!receipt.sourceDir)))
       throw Error('Prepare the selected image base runtime first. A verified interpreter and supported engine are required.');
     const runtime={modelId:selectedBase.id,python:receipt.python,...(receipt.runner?{runner:receipt.runner}:{}),...(receipt.sourceDir?{sourceDir:receipt.sourceDir}:{})};
@@ -377,7 +392,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
   function askRemove(){setError('');if(entry.nativeProfile){onNativeRemove?.(model);return;}setRemoving(true);}
   async function uninstall(){setBusy(true);try{await $hubRequest('/uninstall',{id:entry.id});await $hubRefresh(true);await onChanged?.();setRemoving(false);}catch(e){setError(String(e));}finally{setBusy(false);}}
   return h('article',{'aria-label':entry.familyLabel||entry.repository,className:'model-library-card hub-model-card'},h('header',null,h('h3',null,entry.familyLabel||entry.repository.split('/').at(-1)),h('span',{className:'model-install-state'},active?shared.progress?.phase==='preparing'?'Preparing runtime…':'Installing…':entry.runtimeReady||entry.specialistReady?'Ready to use':entry.status==='installed'?'Downloaded':'Not installed')),
-    h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='ocr'?'OCR · Image to text':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
+    h('p',null,entry.repository),entry.builtInDescription?h('p',null,entry.builtInDescription):null,h('p',null,entry.nativeProfile?'OpenCore profile':entry.specialist==='ocr'?'OCR · Image to text':entry.category==='image'?'Image model':entry.runtime?.adapter?'ECHO · Text model':entry.category+' model'),h('label',{className:'model-quantization-picker'},'Quantization',h('select',{'aria-label':'Quantization for '+entry.repository,value:entry.id,disabled:locked,onChange:e=>setChoice(e.target.value)},
       ...group.variants.map(v=>h('option',{key:v.id,value:v.id},v.precision,' · ',((v.totalBytes||v.hubEntry?.bytes||0)/1e9).toFixed(3),' GB · ',v.hubEntry?.nativeProfile?(v.installed?'Installed':'Native')+' · '+(v.memoryMode||'native').toUpperCase():v.hubEntry?.repository.split('/')[0])))),
     h('dl',null,h('div',null,h('dt',null,'Download'),h('dd',null,(entry.bytes/1e9).toFixed(3)+' GB')),h('div',null,h('dt',null,'Runtime'),h('dd',null,entry.specialistReady?'Local OCR verified':entry.specialist==='ocr'?'OCR runtime prepares after download':entry.nativeProfile&&entry.runtimeReady?'Installed native runtime':entry.runtimeReady?'Generation verified · ECHO connected':entry.runtime?.adapter?'Prepared automatically after download':'Compatible adapter required'))),
     adapter?h('section',{className:'hub-base-picker','aria-label':'Compatible base model'},
@@ -405,7 +420,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
         experimentalQwen?h('small',{role:'status'},'Experimental pairing with a Qwen uncensored fine-tune. LoRA tensor names may not match; a real generated image is needed to verify this combination.'):null,
         h('label',null,'Image prompt',h('textarea',{'aria-label':'Image prompt for selected LoRA',value:adapterPrompt,rows:3,placeholder:'Describe the image to generate',onChange:e=>setAdapterPrompt(e.target.value)})),
         h('label',null,'LoRA strength',h('input',{type:'number','aria-label':'Selected LoRA strength',min:0,max:2,step:0.1,value:adapterStrength,onChange:e=>{const n=Number(e.target.value);if(Number.isFinite(n)&&n>=0&&n<=2)setAdapterStrength(n);}})),
-        h('button',{type:'button',disabled:locked||!adapterPrompt.trim(),onClick:()=>void generateWithBase()},busy?'Starting…':'Generate with this LoRA and base')):null,
+        h('button',{type:'button',disabled:locked||!adapterPrompt.trim(),onClick:()=>void generateWithBase()},busy?'Starting…':readyMoss||readyQwen?'Generate with this LoRA and base':'Open image generator with this LoRA')):null,
       !canGenerate?h('small',null,connected
         ? 'Connected to the selected checkpoint. Inference remains unavailable until OpenCore verifies a compatible LoRA loading runtime for this specific model and adapter.'
         : selectedBase?.installed?'Connect this LoRA to the downloaded checkpoint. Pairing and runnable inference are separate checks.'
@@ -413,6 +428,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     h('small',null,entry.specialist==='ocr'?'Local image OCR needs a CUDA-capable NVIDIA GPU with BF16 and enough free GPU memory.':entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):
       entry.specialistReady?h('button',{disabled:locked,onClick:()=>setOCROpen(v=>!v)},ocrOpen?'Close OCR':'Use OCR'):
+      entry.category==='image'&&entry.format==='diffusers'?h('button',{disabled:locked,onClick:()=>{globalThis.__opencoreRequestedImageModel=entry.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));}},'Generate images'):
       entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
       h('button',{disabled:locked||!(entry.runtime?.adapter||entry.specialist==='ocr'),onClick:prepare},active?'Preparing…':entry.specialist==='ocr'?'Prepare OCR':'Prepare runtime'),
       entry.status==='installed'?h('button',{className:'model-delete-button',disabled:locked,onClick:askRemove},'Uninstall'):null),

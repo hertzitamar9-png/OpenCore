@@ -124,9 +124,9 @@ record('connected INT8 base enables a LoRA generation prompt',await mossCard.get
 record('LTX LoRA presents publisher base discovery without false ready button',await ltxCard.getByRole('button',{name:'Browse other base variants'}).isEnabled()&&await ltxCard.getByRole('button',{name:'Generate with this LoRA and base'}).count()===0);
 await mossCard.getByLabel('Image prompt for selected LoRA').fill('A safe photo of a mountain valley');
 await mossCard.getByRole('button',{name:'Generate with this LoRA and base'}).click();
-await mossCard.getByRole('alert').getByText(/Prepare the selected image base runtime first/).waitFor();
+await mossCard.getByRole('alert').getByText(/The image runtime could not start preparing/).waitFor();
 record('LoRA generation fails closed when the base runtime lacks verified dependencies',await page.evaluate(()=>!fixture.calls.some(call=>call.command==='submit_studio_job')));
-await page.evaluate(()=>{fixture.runtimeReceipts=[{targetId:'moss-image-sft-int8-convrot',dependenciesVerified:true,python:'C:/OpenCore/runtime/python.exe',runner:'C:/OpenCore/studio/asset_worker.py',sourceDir:'C:/OpenCore/runtime/sources/comfy'}];});
+await page.evaluate(()=>{fixture.runtimeReceipts=[{targetId:'moss-image-sft-int8-convrot',dependenciesVerified:true,inferenceVerified:true,python:'C:/OpenCore/runtime/python.exe',runner:'C:/OpenCore/studio/asset_worker.py',sourceDir:'C:/OpenCore/runtime/sources/comfy'}];});
 await mossCard.getByRole('button',{name:'Generate with this LoRA and base'}).click();
 await page.waitForFunction(()=>fixture.calls.some(call=>call.command==='submit_studio_job'));
 record('installed LoRA is submitted with the chosen base, native ComfyUI path and strength',await page.evaluate(()=>{
@@ -143,8 +143,8 @@ await qwenCard.getByRole('button',{name:'Connect to installed model'}).click();
 record('Qwen Diffusers runtime can be selected for an exact publisher base',await qwenCard.getByLabel('Image prompt for selected LoRA').isVisible()&&await page.evaluate(n=>fixture.calls.filter(x=>x.command==='install_model').length===n,downloadsBefore));
 await qwenCard.getByLabel('Image prompt for selected LoRA').fill('A landscape at sunrise');
 await qwenCard.getByRole('button',{name:'Generate with this LoRA and base'}).click();
-await qwenCard.getByRole('alert').getByText(/Prepare the selected image base runtime first/).waitFor();
-await page.evaluate(()=>{fixture.runtimeReceipts.push({targetId:'qwen-image-21',dependenciesVerified:true,python:'C:/OpenCore/runtime/qwen-python.exe'});});
+await qwenCard.getByRole('alert').getByText(/The image runtime could not start preparing/).waitFor();
+await page.evaluate(()=>{fixture.runtimeReceipts.push({targetId:'qwen-image-21',dependenciesVerified:true,inferenceVerified:true,python:'C:/OpenCore/runtime/qwen-python.exe'});});
 await qwenCard.getByRole('button',{name:'Generate with this LoRA and base'}).click();
 await page.waitForFunction(()=>fixture.calls.filter(call=>call.command==='submit_studio_job').length===2);
 record('Qwen LoRA submits exact Diffusers base and adapter path',await page.evaluate(()=>{

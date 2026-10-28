@@ -56,9 +56,14 @@ class SetupBehavior(unittest.TestCase):
         self.assertEqual(setup.recipe_fingerprint({key: value for key, value in recipe.items() if key != "supported"}), expected)
 
     def test_unknown_architecture_cannot_select_a_generic_recipe(self):
-        result = setup.recipe_for("flux-2-klein-4b")
+        result = setup.recipe_for("unknown-image-architecture")
         self.assertFalse(result["supported"])
         self.assertIn("publisher-compatible", result["reason"])
+
+    def test_standard_image_routes_and_the_owned_hub_target_use_one_recipe(self):
+        self.assertEqual(setup.recipe_for('flux-2-klein-4b')['id'],'diffusers-images-v1')
+        self.assertTrue(setup.recipe_for('hub-image-runtime','diffusers-images-v1')['supported'])
+        self.assertFalse(setup.recipe_for('unregistered-image','diffusers-images-v1')['supported'])
 
     def test_bad_dependency_version_is_not_verified(self):
         with self.assertRaisesRegex(RuntimeError, "pip.*version"):

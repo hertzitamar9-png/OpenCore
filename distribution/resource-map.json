@@ -110,6 +110,7 @@
   "runtime-setup/hf-extension/hf_download.py": "src-tauri/resources/runtime-setup/hf-extension/hf_download.py",
   "runtime-setup/hf-extension/hf_lineage.py": "src-tauri/resources/runtime-setup/hf-extension/hf_lineage.py",
   "runtime-setup/hf-extension/hf_runtime.py": "src-tauri/resources/runtime-setup/hf-extension/hf_runtime.py",
+  "runtime-setup/hf-extension/hf_image_runtime.py": "src-tauri/resources/runtime-setup/hf-extension/hf_image_runtime.py",
   "runtime-setup/hf-extension/hf_security.py": "src-tauri/resources/runtime-setup/hf-extension/hf_security.py",
   "runtime-setup/hf-extension/hf_specialist_ocr.py": "src-tauri/resources/runtime-setup/hf-extension/hf_specialist_ocr.py",
   "runtime-setup/hf-extension/hf_specialist_ocr_worker.py": "src-tauri/resources/runtime-setup/hf-extension/hf_specialist_ocr_worker.py",

@@ -18,6 +18,10 @@ DIFFUSERS_IMAGE_MODELS = {
     "hunyuan-dit-v12-distilled": None,
     "moss-image-sft": None,
     "kromoss": None,
+    "flux-2-klein-4b": None,
+    "flux-2-klein-base-4b": None,
+    "z-image-turbo": None,
+    "z-image-base": None,
 }
 
 
@@ -28,14 +32,21 @@ def bounded_integer(settings, name, default, low, high):
     return value
 
 
-def checkpoint_dtypes(model):
+def checkpoint_dtypes(model,variant=None):
     """Read only safetensors headers; never make a float master copy."""
     result = {}
     for component in model.iterdir():
         if not component.is_dir():
             continue
         dtypes = set()
-        for checkpoint in component.glob("*.safetensors"):
+        files=list(component.glob('*.safetensors'))
+        def tagged(path):
+            import re
+            match=re.search(r'\.([A-Za-z][A-Za-z0-9_]*)(?:-\d+-of-\d+)?\.safetensors$',path.name)
+            return match.group(1).lower() if match else ''
+        selected=[file for file in files if tagged(file)==(variant or '')]
+        if not selected and variant:selected=[file for file in files if not tagged(file)]
+        for checkpoint in selected:
             with checkpoint.open("rb") as stream:
                 size = struct.unpack("<Q", stream.read(8))[0]
                 if size > 64 * 1024 * 1024:
@@ -120,21 +131,35 @@ def load_moss_pipeline(model,torch,diffusers):
     return pipeline
 
 
-def apply_diffusers_image_lora(generator,model_id,root,settings):
-    if not settings.get('loraPath'):
-        return False
-    if model_id != 'qwen-image-21':
-        raise ValueError('This LoRA cannot be applied to a different Diffusers model family')
-    from comfy_worker import managed_qwen_lora
-    lora=managed_qwen_lora(root,settings)
+IMAGE_BASE_REPOSITORIES = {
+    'qwen-image-21':'Qwen/Qwen-Image-2.1',
+    'flux-2-klein-4b':'black-forest-labs/FLUX.2-klein-4B',
+    'flux-2-klein-base-4b':'black-forest-labs/FLUX.2-klein-base-4B',
+    'z-image-turbo':'Tongyi-MAI/Z-Image-Turbo',
+    'z-image-base':'Tongyi-MAI/Z-Image',
+    'animation-diffusion-2d':'ModelsLab/3D-Animation-Diffusion',
+    'sana-16':'Efficient-Large-Model/Sana_1600M_1024px_diffusers',
+    'hunyuan-dit-v12-distilled':'Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled',
+    'moss-image-sft':'OpenMOSS-Team/MOSS-Image-SFT',
+    'kromoss':'lodestones/Kromoss',
+}
+
+
+def apply_diffusers_image_lora(generator,model_id,root,settings,source_repository=None):
+    if not settings.get('loraPath'):return False
+    from comfy_worker import managed_image_lora
+    base=IMAGE_BASE_REPOSITORIES.get(model_id) or source_repository
+    if not base:raise ValueError('The base repository for this image model is not registered')
+    lora=managed_image_lora(root,settings,base)
     if not hasattr(generator,'load_lora_weights') or not hasattr(generator,'set_adapters'):
-        raise RuntimeError('The installed Qwen Diffusers pipeline lacks supported LoRA loading')
+        raise RuntimeError('This Diffusers pipeline does not expose a compatible LoRA loader')
     strength=settings.get('loraStrength',0.8)
-    import math
-    if isinstance(strength,bool) or not isinstance(strength,(int,float)) or not math.isfinite(strength) or not 0<=strength<=2:
-        raise ValueError('Qwen LoRA strength must be between 0 and 2')
-    generator.load_lora_weights(str(lora.parent),weight_name=lora.name,adapter_name='opencore-qwen-image-21')
-    generator.set_adapters(['opencore-qwen-image-21'],adapter_weights=[strength])
+    if isinstance(strength,bool) or not isinstance(strength,(int,float)) or not __import__('math').isfinite(strength) or not 0<=strength<=2:
+        raise ValueError('LoRA strength must be between 0 and 2')
+    generator.load_lora_weights(str(lora.parent),weight_name=lora.name,adapter_name='opencore-image-lora',local_files_only=True)
+    generator.set_adapters(['opencore-image-lora'],adapter_weights=[strength])
+    if hasattr(generator,'get_active_adapters') and 'opencore-image-lora' not in generator.get_active_adapters():
+        raise RuntimeError('The image pipeline did not activate the selected LoRA')
     return True
 
 
@@ -142,6 +167,11 @@ def generate(request, output):
     settings = request.get("settings") or {}
     model_id = request["modelId"]
     model = Path(request["modelRoot"]) / "models" / "library" / model_id
+    if request.get('modelDirectory'):
+        from comfy_worker import canonical_path
+        model=canonical_path(request['modelDirectory'])
+        hub=canonical_path(Path(request['modelRoot'])/'models/hub')
+        if not model.is_relative_to(hub) or model==hub:raise ValueError('Imported image model leaves the managed Hub folder')
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     if not model.is_dir():
@@ -177,7 +207,7 @@ def generate(request, output):
             scene = generator([pixels], device="cuda")
             meshes = generator.extract_mesh(scene, True, resolution=resolution)
         meshes[0].export(output / f"asset.{output_format}")
-    elif model_id in DIFFUSERS_IMAGE_MODELS:
+    elif model_id in DIFFUSERS_IMAGE_MODELS or (model/'model_index.json').is_file():
         import torch
         import diffusers
         from diffusers import DiffusionPipeline
@@ -192,13 +222,25 @@ def generate(request, output):
         else:
             # Keep the shipped precision; bounded CPU offload lowers VRAM residency.
             formats = {"F32": torch.float32, "F16": torch.float16, "BF16": torch.bfloat16}
-            dtypes = {name: formats[dtype] for name, dtype in checkpoint_dtypes(model).items()}
-            load_options = {"torch_dtype": dtypes, "local_files_only": True}
-            variant = DIFFUSERS_IMAGE_MODELS[model_id]
+            variant = DIFFUSERS_IMAGE_MODELS.get(model_id) or request.get('pipelineVariant')
+            if variant and (not isinstance(variant,str) or not variant.replace('_','').isalnum() or len(variant)>40):raise ValueError('Invalid pipeline precision variant')
+            dtypes = {name: formats[dtype] for name, dtype in checkpoint_dtypes(model,variant).items()}
+            load_options = {"torch_dtype": dtypes, "local_files_only": True,'trust_remote_code':False,'use_safetensors':True}
             if variant:load_options["variant"] = variant
+            index=json.loads((model/'model_index.json').read_text(encoding='utf-8'))
+            name=index.get('_class_name')
+            if not isinstance(name,str) or not name.endswith('Pipeline') or not isinstance(getattr(diffusers,name,None),type):
+                raise RuntimeError('The installed Diffusers runtime does not support this pipeline class: '+str(name))
+            import psutil
+            required=sum(file.stat().st_size for part in model.iterdir() if part.is_dir() for file in part.glob('*.safetensors'))+4_000_000_000
+            if required>psutil.virtual_memory().available:
+                raise RuntimeError(f'This published checkpoint needs approximately {required/1e9:.1f} GB available host RAM including load buffers. Select a smaller supported quantization or free memory.')
             generator = DiffusionPipeline.from_pretrained(str(model), **load_options)
+            # Release checkpoint mappings after the host-memory admission check.
+            for component in generator.components.values():
+                if hasattr(component,'_apply'):component._apply(lambda tensor:tensor.clone())
             generator.enable_model_cpu_offload()
-        apply_diffusers_image_lora(generator,model_id,Path(request['modelRoot']).resolve(),settings)
+        apply_diffusers_image_lora(generator,model_id,Path(request['modelRoot']).resolve(),settings,request.get('sourceRepository'))
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
         args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
         if model_id in ('moss-image-sft','kromoss'):args['uncond_skip_layers']=[22]
@@ -213,7 +255,7 @@ def generate(request, output):
         for index, image in enumerate(result.images):
             image.save(output / f"image-{index+1}.{extension}", format=output_format.upper())
     else:
-        raise RuntimeError(f"{model_id} needs its upstream worker connected in Game Dev Studio. The generic worker does not support this architecture.")
+        raise RuntimeError(f"The installed runtime does not support {model_id}'s architecture. Its weights are retained; choose a supported model in Chat or Media Studio.")
     progress(output, "Generation complete")
 
 

@@ -52,6 +52,7 @@ class StudioBounds(unittest.TestCase):
             def save(self, path, format=None): Path(path).write_bytes(b"image")
         class Result: images = [Image()]
         class Pipeline:
+            components={}
             loaded = None
             @classmethod
             def from_pretrained(cls, path, **kwargs):
@@ -68,9 +69,10 @@ class StudioBounds(unittest.TestCase):
         torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"
         torch.Generator=Generator
         diffusers=types.ModuleType("diffusers")
-        diffusers.__version__="0.35.0"; diffusers.DiffusionPipeline=Pipeline
+        diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline; diffusers.SanaPipeline=Pipeline
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder); (root/"models"/"library"/"sana-16").mkdir(parents=True)
+            (root/'models/library/sana-16/model_index.json').write_text(json.dumps({'_class_name':'SanaPipeline'}))
             self.write_safetensors_header(root/"models"/"library"/"sana-16"/"transformer"/"diffusion_pytorch_model.fp16.safetensors", "F16")
             output=root/"output"
             request={"modelId":"sana-16","modelRoot":str(root),"prompt":"a game icon","settings":{}}
@@ -85,6 +87,7 @@ class StudioBounds(unittest.TestCase):
             def save(self, path, format=None): Path(path).write_bytes(b"image")
         class Result: images = [Image()]
         class Pipeline:
+            components={}
             loaded = None
             @classmethod
             def from_pretrained(cls, path, **kwargs):
@@ -101,9 +104,10 @@ class StudioBounds(unittest.TestCase):
         torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"
         torch.Generator=Generator
         diffusers=types.ModuleType("diffusers")
-        diffusers.__version__="0.35.0"; diffusers.DiffusionPipeline=Pipeline
+        diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline; diffusers.HunyuanDiTPipeline=Pipeline
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder); (root/"models"/"library"/"hunyuan-dit-v12-distilled").mkdir(parents=True)
+            (root/'models/library/hunyuan-dit-v12-distilled/model_index.json').write_text(json.dumps({'_class_name':'HunyuanDiTPipeline'}))
             self.write_safetensors_header(root/"models"/"library"/"hunyuan-dit-v12-distilled"/"transformer"/"diffusion_pytorch_model.safetensors", "BF16")
             output=root/"output"
             request={"modelId":"hunyuan-dit-v12-distilled","modelRoot":str(root),"prompt":"a game icon","settings":{}}
@@ -118,6 +122,7 @@ class StudioBounds(unittest.TestCase):
         class Image:
             def save(self, path, format=None): Path(path).write_bytes(b"image")
         class Pipeline:
+            components={}
             @classmethod
             def from_pretrained(cls, path, **kwargs): return cls()
             def enable_model_cpu_offload(self): pass
@@ -129,10 +134,11 @@ class StudioBounds(unittest.TestCase):
         torch=types.ModuleType("torch")
         torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"; torch.Generator=Generator
         diffusers=types.ModuleType("diffusers")
-        diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline
+        diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline; diffusers.StableDiffusionPipeline=Pipeline
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)
             self.write_safetensors_header(root/"models/library/animation-diffusion-2d/unet/model.safetensors", "F16")
+            (root/'models/library/animation-diffusion-2d/model_index.json').write_text(json.dumps({'_class_name':'StableDiffusionPipeline'}))
             output=root/"output"
             request={"modelId":"animation-diffusion-2d","modelRoot":str(root),"prompt":"a character sheet","settings":{}}
             with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):

@@ -137,6 +137,17 @@ class CatalogBuildTests(unittest.TestCase):
         self.assertEqual(again, self.catalog)
         self.assertEqual(report, self.report)
 
+    def test_complete_image_pipelines_have_automatic_runtime_routes(self):
+        recipes=json.loads((ROOT.parents[1]/'src-tauri/resources/runtime-setup/recipes.json').read_text())['recipes']
+        routes={target:recipe['id'] for recipe in recipes for target in recipe['modelIds']}
+        for entry in json.loads((ROOT/'image-pipelines.json').read_text())['pipelines']:
+            model=self.models[entry['modelId']]
+            self.assertEqual(model['backend'],'diffusers')
+            self.assertTrue(model['runtimeReady'])
+            self.assertEqual(model['installation']['adapterId'],routes[model['id']])
+            index=next(self.artifacts[a] for a in model['artifacts'] if self.artifacts[a]['filename']=='model_index.json')
+            self.assertEqual(index['sha256'],entry['modelIndexSha256'])
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

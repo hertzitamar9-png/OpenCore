@@ -3,8 +3,12 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 from PIL import Image
+
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0,str(Path(__file__).resolve().parent))
 
 
 def verify_generation(worker,request,output):

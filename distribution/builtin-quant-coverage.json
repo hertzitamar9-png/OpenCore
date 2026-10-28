@@ -9,7 +9,7 @@
       "id": "qwen-image-21",
       "label": "Qwen Image 2.1",
       "category": "image",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
       "source": "native catalog",
       "repositories": []
@@ -27,7 +27,7 @@
       "id": "flux-2-klein-4b",
       "label": "FLUX.2 Klein \u00b7 4B distilled",
       "category": "image",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
       "source": "native catalog",
       "repositories": []
@@ -36,7 +36,7 @@
       "id": "z-image-turbo",
       "label": "Z-Image Turbo \u00b7 6B",
       "category": "image",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
       "source": "native catalog",
       "repositories": []
@@ -405,7 +405,7 @@
       "id": "animation-diffusion-2d",
       "label": "Animation Diffusion \u00b7 2D",
       "category": "image",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
       "source": "native catalog",
       "repositories": []
@@ -710,7 +710,7 @@
       "id": "hunyuan-dit-v12-distilled",
       "label": "Hunyuan-DiT v1.2 Distilled",
       "category": "image",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
       "source": "native catalog",
       "repositories": []
@@ -719,7 +719,7 @@
       "id": "sana-16",
       "label": "Sana 1.6B \u00b7 FP16",
       "category": "image",
-      "quantizations": 0,
+      "quantizations": 1,
       "readyToInstallChoices": false,
       "source": "native catalog",
       "repositories": []

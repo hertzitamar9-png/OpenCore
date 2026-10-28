@@ -29,6 +29,7 @@ from hf_lineage import source_identity
 from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, managed_path, validate_entry
 from hf_security import TokenStore
 from hf_specialist_ocr import OCRManager, supports as supports_ocr
+from hf_image_runtime import ImageRuntimeManager, supports as supports_image
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -77,6 +78,7 @@ class BridgeState:
         self.catalog_snapshot_at, self.catalog_fingerprint, self.catalog_revision = 0, None, None
         self.progress, self.worker = None, None
         self.ocr = OCRManager(self.root, self.resources)
+        self.images=ImageRuntimeManager(self.root,self.resources)
         self.owner, self.remote, self.private = None, None, None
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
@@ -188,6 +190,7 @@ class BridgeState:
             result['specialistReady'] = self.ocr.ready(result, entry.get('specialistPreparation'))
         preparation = entry.get("runtimePreparation") or {}
         result["runtimeReady"] = bool(receipt and preparation.get("runtimeReady") is True and preparation.get("receiptRevision") == entry["revision"])
+        if supports_image(entry):result['runtimeReady']=self.images.ready(result,preparation)
         if result['runtimeReady']:
             from managed_engines import engine_for, definition
             selected = engine_for(entry)
@@ -202,6 +205,12 @@ class BridgeState:
     def catalog(self):
         with self.lock:
             return [self._hydrate(x) for x in self.entries.values()]
+
+    def image_generated(self,entry,proof):
+        with self.lock:
+            if self.entries.get(entry['id'],{}).get('revision')==entry['revision']:
+                self.entries[entry['id']]['runtimePreparation']=proof
+                self.persist_catalog()
 
     def status(self, catalog_revision=None):
         with self.lock:
@@ -311,6 +320,7 @@ class BridgeState:
                 raise Conflict("The bridge is shutting down")
             if self.progress and self.progress.get("status") in ACTIVE:
                 raise Conflict("A model download or runtime preparation is already active")
+            if self.images.operation.locked():raise Conflict('Wait for the current image operation before installing another model')
             entry = self.entry(model_id, installed=kind == "prepare")
             validate_entry(entry)
             self.pause_event = threading.Event()
@@ -344,6 +354,12 @@ class BridgeState:
                 final = {"status": "installed", "stage": "installed", "bytesDone": entry["bytes"]}
                 if supports_ocr(entry):
                     final = prepare_ocr()
+                elif supports_image(entry):
+                    result=self.images.prepare(self.entry(entry['id'],installed=True),report,pause)
+                    with self.lock:
+                        self.entries[entry['id']]['runtimePreparation']=result
+                        self.persist_catalog()
+                    final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
                 elif entry.get('runtime',{}).get('adapter') and getattr(self.runtime,'automatic_preparation',False):
                     if pause.is_set():raise Paused('Installation paused after downloading; files were retained')
                     report({'stage':'preparing-runtime','detail':'Download verified. Preparing and testing the model runtime.','bytesTotal':0})
@@ -360,6 +376,12 @@ class BridgeState:
                     final={'status':'ready','stage':'ready','bytesDone':entry['bytes'],'bytesTotal':entry['bytes']}
             elif supports_ocr(entry):
                 final = prepare_ocr()
+            elif supports_image(entry):
+                result=self.images.prepare(entry,report,pause)
+                with self.lock:
+                    self.entries[entry['id']]['runtimePreparation']=result
+                    self.persist_catalog()
+                final={'status':'ready','stage':'ready','bytesDone':entry['bytes']}
             else:
                 self.runtime.on_progress=lambda **value:report(value)
                 result = self.runtime.prepare(entry)
@@ -392,6 +414,7 @@ class BridgeState:
             self.pause_event.set()
             self.progress.update(status="pausing", stage="pausing")
             ocr_job = supports_ocr(self.entries.get(self.progress.get('id'), {}))
+            if supports_image(self.entries.get(self.progress.get('id'),{})) and self.images.operation.locked():self.images.stop()
             if ocr_job and self.ocr.active():
                 self.ocr.stop()
             if not ocr_job and (self.progress.get('kind')=='prepare' or self.progress.get('stage') not in ('queued','downloading','verifying')):
@@ -423,6 +446,7 @@ class BridgeState:
                 raise Conflict('Pause or finish the current installation before removing model files')
             if self.ocr.active():
                 raise Conflict('Wait for the current OCR operation to finish before removing model files')
+            if self.images.operation.locked():raise Conflict('Wait for the current image operation before removing model files')
             entry=self.entry(model_id)
             if getattr(self.runtime,'_generation',None) and self.runtime._generation.locked():
                 raise Conflict('Wait for the current response before removing this model')
@@ -444,6 +468,7 @@ class BridgeState:
         self.closed = True
         self.pause_event.set()
         self.ocr.stop()
+        self.images.stop()
         self.runtime.stop()
         if self.worker and self.worker is not threading.current_thread():
             self.worker.join(timeout=2)
@@ -601,6 +626,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 self._send(200, state.remote.status())
             elif route == '/specialist/ocr/status':
                 self._send(200, state.ocr.status())
+            elif route == '/images/jobs':
+                self._send(200, {'jobs':state.images.list()})
+            elif route == '/images/conversations':
+                self._send(200, {'conversations':state.images.conversation_summaries()})
             elif route == '/mobile/host/poll':
                 devices = set(state.remote.devices) if state.remote.server else set()
                 self._send(200, state.remote.mobile.take(devices))
@@ -679,6 +708,19 @@ class BridgeHandler(BaseHTTPRequestHandler):
                     raise Conflict('Wait for the active installation to finish before using OCR')
                 entry = state.entry(body.get('id'), installed=True)
                 self._send(202, state.ocr.start(entry, body.get('image')))
+        elif route=='/images/generate':
+            with state.lock:
+                if state.progress and state.progress.get('status') in ACTIVE:raise Conflict('Wait for the active installation before generating an image')
+                entry=state.entry((body.get('request') or {}).get('modelId'),installed=True)
+                self._send(202,state.images.start(entry,body.get('request'),on_ready=lambda proof:state.image_generated(entry,proof)))
+        elif route=='/images/preview':
+            self._send(200,state.images.preview(body.get('id'),body.get('path')))
+        elif route=='/images/cancel':
+            self._send(200,state.images.stop(body.get('id')))
+        elif route=='/images/conversation':
+            self._send(200,{'entries':state.images.conversation_entries(body.get('id'))})
+        elif route=='/images/conversation/update':
+            self._send(200,state.images.update_conversation(body))
         elif route == "/pause":
             self._send(200, state.pause(body.get("jobId")))
         elif route == "/stop":

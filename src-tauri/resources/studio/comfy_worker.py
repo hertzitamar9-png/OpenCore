@@ -153,6 +153,44 @@ def managed_qwen_lora(root,settings):
     return path
 
 
+def managed_image_lora(root,settings,base_repository):
+    """Resolve a downloaded adapter whose publisher declares this exact base."""
+    raw=settings.get('loraPath')
+    if raw in ('',None):return None
+    if not isinstance(raw,str):raise ValueError('Image LoRA path must be a string')
+    root=canonical_path(root);hub=root/'models/hub';path=canonical_path(raw)
+    if not path.is_file() or not path.is_relative_to(hub):
+        raise ValueError('Choose an installed OpenCore Hub LoRA')
+    relative=path.relative_to(hub)
+    if len(relative.parts)<2 or path.suffix.lower()!='.safetensors' or path.stat().st_size>2_000_000_000:
+        raise ValueError('Choose a supported safetensors image LoRA under the managed Hub folder')
+    receipt=json.loads((hub/relative.parts[0]/'install-receipt.json').read_text(encoding='utf-8'))
+    # Earlier installed versions saved these two pinned adapters before the
+    # general Hub catalog included base-model metadata. Keep those receipts usable.
+    if receipt.get('repository')=='f23gg/NSFW-LORA-Qwen-Image-2.1' and base_repository.lower()=='qwen/qwen-image-2.1':
+        return managed_qwen_lora(root,{'loraPath':str(path)})
+    if receipt.get('repository')=='axiomofmind/Moss-image-nsfw-uncensored-lora' and base_repository.lower()=='openmoss-team/moss-image-sft' and path.name.endswith('-ComfyUI.safetensors'):
+        return managed_moss_lora(root,{'loraPath':str(path)})
+    catalog_path=root/'models/hub-imports.json'
+    if not catalog_path.is_file():raise ValueError('The LoRA base metadata is missing; recheck its repository in Models')
+    catalog=json.loads(catalog_path.read_text(encoding='utf-8'))
+    entry=next((e for e in catalog.get('entries',[]) if e.get('id')==receipt.get('id') and e.get('repository')==receipt.get('repository') and e.get('revision')==receipt.get('revision')),None)
+    bases=([entry.get('baseRepository')] + entry.get('baseRepositories',[])) if entry else []
+    if not entry or base_repository.lower() not in [base.lower() for base in bases if isinstance(base,str)]:
+        raise ValueError('This LoRA does not declare the selected image model as its base')
+    if entry.get('packageKind')!='adapter' and entry.get('format')!='lora':
+        raise ValueError('The selected package is not an image adapter')
+    filename='/'.join(relative.parts[1:])
+    matches=[f for f in receipt.get('files',[]) if f.get('filename')==filename and f.get('role')=='model']
+    pins=[f for f in entry.get('files',[]) if f.get('filename')==filename and f.get('role')=='model']
+    if len(matches)!=1 or len(pins)!=1 or path.stat().st_size!=pins[0].get('bytes') or matches[0].get('bytes')!=pins[0].get('bytes'):
+        raise ValueError('The image LoRA does not match its installed download receipt')
+    with path.open('rb') as stream:actual=hashlib.file_digest(stream,'sha256').hexdigest()
+    if actual!=matches[0].get('actualSha256') or actual!=(pins[0].get('sha256') or matches[0].get('actualSha256')):
+        raise ValueError('The image LoRA file hash changed after installation')
+    return path
+
+
 def validate_history_output(root,image):
     filename=image.get('filename','')
     subfolder=image.get('subfolder','')
@@ -182,7 +220,12 @@ def generate_comfy(request,output):
     if not Path(request.get('sourceDir') or '').is_absolute() or not engine.is_relative_to(root/'runtime-setup'/'sources') or not (engine/'main.py').is_file():
         raise RuntimeError('The pinned managed ComfyUI source is not prepared')
     settings=request.get('settings') or {}
-    lora=managed_qwen_lora(root,settings) if qwen else managed_moss_lora(root,settings)
+    if qwen:
+        lora=managed_image_lora(root,settings,'Qwen/Qwen-Image-2.1')
+    else:
+        lora=managed_image_lora(root,settings,'OpenMOSS-Team/MOSS-Image-SFT')
+        if lora and not (lora.name.endswith('-ComfyUI.safetensors') or 'comfy' in lora.name.lower()):
+            raise ValueError('Select a ComfyUI-format MOSS LoRA for this quantized runtime')
     if lora:required_nodes.add('LoraLoaderModelOnly')
     lora_name=('opencore-qwen-lora.safetensors' if qwen else 'opencore-moss-lora.safetensors') if lora else None
     graph=build_qwen_workflow(request,variant,lora_name) if qwen else build_moss_workflow(request,variant,lora_name)

@@ -88,7 +88,8 @@ def recipe_for(target, recipe_id=None):
             return {'supported':False,'reason':'The approved recipe does not match this setup target'}
         # Native admission resolves newer catalog text entries. Only select an
         # existing bundled recipe; callers cannot supply packages or commands.
-        if recipe is None and approved['kind']!='text':
+        generic_image=target=='hub-image-runtime' and approved['id']=='diffusers-images-v1'
+        if recipe is None and approved['kind']!='text' and not generic_image:
             return {'supported':False,'reason':'This target is not supported by the approved recipe'}
         recipe=approved
     if recipe is None:

@@ -50,39 +50,50 @@
         "qwen-image-21",
         "animation-diffusion-2d",
         "sana-16",
-        "hunyuan-dit-v12-distilled"
+        "hunyuan-dit-v12-distilled",
+        "flux-2-klein-4b",
+        "flux-2-klein-base-4b",
+        "z-image-turbo",
+        "z-image-base"
       ],
       "packages": {
         "diffusers": "0.41.0",
         "transformers": "5.18.0",
         "accelerate": "1.12.0",
-        "safetensors": "0.6.2",
+        "safetensors": "0.8.0",
         "sentencepiece": "0.2.1",
         "pillow": "11.3.0",
         "numpy": "2.2.6",
-        "protobuf": "6.33.5"
+        "protobuf": "6.33.5",
+        "peft": "0.18.0",
+        "psutil": "6.1.1"
       },
       "torchPackages": {
-        "torch": "2.7.1",
-        "torchvision": "0.22.1"
+        "torch": "2.11.0",
+        "torchvision": "0.26.0"
       },
-      "torchIndex": "https://download.pytorch.org/whl/cu128",
+      "torchIndex": "https://download.pytorch.org/whl/cu126",
       "imports": {
         "diffusers": [
           "DiffusionPipeline",
           "QwenImage21Pipeline",
           "SanaPipeline",
           "HunyuanDiTPipeline",
-          "StableDiffusionPipeline"
+          "StableDiffusionPipeline",
+          "Flux2KleinPipeline",
+          "ZImagePipeline"
         ],
         "accelerate": [
           "cpu_offload_with_hook"
         ],
         "PIL.Image": [
           "Image"
+        ],
+        "peft": [
+          "PeftModel"
         ]
       },
-      "minimumDiskBytes": 9000000000,
+      "minimumDiskBytes": 2000000000,
       "minimumRamBytes": 8000000000,
       "requiresCuda": true,
       "sourceUrls": [
@@ -90,7 +101,9 @@
         "https://pytorch.org/get-started/previous-versions/",
         "https://pypi.org/project/transformers/5.18.0/"
       ],
-      "limitations": "Exact dependency versions and worker pipeline imports are checked, then a CUDA kernel is executed. Model inference is verified only by a real completed generation. CPU offload still requires enough host RAM for the selected published checkpoint."
+      "limitations": "Exact dependency versions and worker pipeline imports are checked, then a CUDA kernel is executed. Model inference is verified only by a real completed generation. CPU offload still requires enough host RAM for the selected published checkpoint.",
+      "shareManagedTorch": true,
+      "fallbackDiskBytes": 9000000000
     },
     {
       "id": "whisper-reference-v1",

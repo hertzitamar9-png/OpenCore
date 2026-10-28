@@ -116,6 +116,12 @@ def quantization_count(variants):
     return len(labels)
 
 
+def diffusers_variant(filename):
+    name=PurePosixPath(filename).name
+    match=re.search(r'\.([A-Za-z][A-Za-z0-9_]*)(?:-\d+-of-\d+)?\.safetensors$',name)
+    return match.group(1).lower() if match else ''
+
+
 def build_plan(metadata):
     if not isinstance(metadata, dict):
         raise ValueError("Invalid Hub metadata")
@@ -146,7 +152,7 @@ def build_plan(metadata):
     pipeline_roots = [str(PurePosixPath(item['rfilename']).parent) for item in files
                       if image and PurePosixPath(item['rfilename']).name in ('model_index.json', 'modular_model_index.json')]
     components = ('text_encoder', 'text_encoder_2', 'text_encoder_3', 'tokenizer', 'tokenizer_2', 'tokenizer_3',
-                  'processor', 'transformer', 'unet', 'vae', 'scheduler')
+                  'processor', 'transformer', 'unet', 'vae', 'scheduler','safety_checker','feature_extractor','image_encoder')
     groups = {}
     companions = [i for i in files if "mmproj" in PurePosixPath(i["rfilename"]).name.lower() and i["rfilename"].lower().endswith(".gguf")]
     for item in files:
@@ -179,11 +185,28 @@ def build_plan(metadata):
         subdirectory = pipe_root if pipe_root is not None else str(path.parent)
         group = groups.setdefault(key, {"format": format_name, "subdirectory": "" if subdirectory == "." else subdirectory, "items": []})
         group["items"].append(item)
+    expanded={}
+    for key,group in groups.items():
+        if group['format']!='diffusers':expanded[key]=group;continue
+        # A pipeline repository can publish both default and fp16 component files.
+        # Select one per component and reuse default components where no variant exists.
+        prefix=group['subdirectory']+'/' if group['subdirectory'] else ''
+        component=lambda item:item['rfilename'][len(prefix):].split('/')[0]
+        available={component(item) for item in group['items']}
+        names={diffusers_variant(item['rfilename']) for item in group['items']}
+        for variant in sorted(names):
+            selected=[item for item in group['items'] if diffusers_variant(item['rfilename'])==variant]
+            used={component(item) for item in selected}
+            selected += [item for item in group['items'] if not diffusers_variant(item['rfilename']) and component(item) not in used]
+            if {component(item) for item in selected}!=available:continue
+            expanded[key+(':'+variant if variant else '')]={**group,'items':selected,'diffusersVariant':variant}
+    groups=expanded
     variants = []
     for key, group in sorted(groups.items()):
         items = sorted(group["items"], key=lambda x: x["rfilename"])
         format_name, subdir = group["format"], group["subdirectory"]
         quant = _quantization(key, config, format_name)
+        if group.get('diffusersVariant'):quant=group['diffusersVariant'].upper()
         pins = [_pin(repo, revision, item, "model") for item in items]
         if format_name == 'lora':
             quant = 'LoRA · ' + ('ComfyUI' if 'comfy' in key.lower() else 'Diffusers')
@@ -222,6 +245,7 @@ def build_plan(metadata):
                     'image-classification': 'classification'}.get(task, 'text' if task in (
                         '', 'text-generation', 'text2text-generation', 'image-text-to-text', 'conversational') else 'omni')
         runtime_kind = ("gguf" if format_name == "gguf" else "transformers" if format_name == "safetensors" else None) if category == 'text' else None
+        if category=='image' and format_name=='diffusers':runtime_kind='diffusers'
         is_adapter = (adapter_only and format_name != 'gguf') or format_name == 'lora'
         if is_adapter:
             runtime_kind = None
@@ -236,13 +260,18 @@ def build_plan(metadata):
             "reason": reason, "modelType": config.get("model_type") or (metadata.get("gguf") or {}).get("architecture"), "architectures": config.get("architectures", []),
             "runtime": runtime, "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),
             "sourceUrl": HUB + "/" + repo, "status": "not-installed"})
+        if group.get('diffusersVariant'):variants[-1]['diffusersVariant']=group['diffusersVariant']
         if is_adapter:
             variants[-1]['packageKind'] = 'adapter'
             base = (metadata.get('cardData') or {}).get('base_model')
-            if isinstance(base, list): base = base[0] if len(base) == 1 else None
-            if isinstance(base, str):
-                try: variants[-1]['baseRepository'] = parse_repository(base)
-                except ValueError: pass
+            bases=[]
+            for value in base if isinstance(base,list) else [base]:
+                if isinstance(value,str):
+                    try:bases.append(parse_repository(value))
+                    except ValueError:pass
+            if bases:
+                variants[-1]['baseRepository']=bases[0]
+                if len(bases)>1:variants[-1]['baseRepositories']=bases
     # Key and commit pin bind Add to the metadata that was actually reviewed.
     identity = json.dumps({"repository": repo, "revision": revision, "variants": variants}, sort_keys=True, separators=(",", ":"))
     return {"planId": hashlib.sha256(identity.encode("utf-8")).hexdigest(), "repository": repo, "revision": revision,

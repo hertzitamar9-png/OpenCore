@@ -40,13 +40,35 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(sum(p['role'] == 'model' for p in entry['files']), 3)
         self.assertIn('scheduler/scheduler_config.json', {p['filename'] for p in entry['files']})
         self.assertFalse(any(p['filename'].endswith('.py') for p in entry['files']))
-        self.assertIsNone(entry['runtime']['adapter'])
+        self.assertEqual(entry['runtime']['adapter'],'diffusers')
 
     def test_image_lora_is_one_adapter_not_a_text_checkpoint(self):
         data = metadata([file('NSFW Qwen Lora.safetensors')], pipeline_tag='text-to-image', tags=['lora'])
         entry = catalog.build_plan(data)['variants'][0]
         self.assertEqual(entry['packageKind'], 'adapter')
         self.assertIsNone(entry['runtime']['adapter'])
+
+    def test_all_publisher_declared_adapter_bases_survive_planning(self):
+        data=metadata([file('style.safetensors')],pipeline_tag='text-to-image',tags=['lora'],cardData={'base_model':['Owner/First','Owner/Second']})
+        entry=catalog.build_plan(data)['variants'][0]
+        self.assertEqual(entry['baseRepository'],'Owner/First')
+        self.assertEqual(entry['baseRepositories'],['Owner/First','Owner/Second'])
+
+    def test_diffusers_precision_variants_do_not_mix_duplicate_component_weights(self):
+        data=metadata([file('model_index.json'),file('unet/config.json'),file('unet/diffusion_pytorch_model.safetensors'),
+                       file('unet/diffusion_pytorch_model.fp16.safetensors'),file('text_encoder/config.json'),file('text_encoder/model.safetensors'),
+                       file('vae/config.json'),file('vae/diffusion_pytorch_model.safetensors'),file('safety_checker/config.json'),
+                       file('safety_checker/model.safetensors'),file('feature_extractor/preprocessor_config.json')],pipeline_tag='text-to-image')
+        variants=catalog.build_plan(data)['variants']
+        self.assertEqual(len(variants),2)
+        full=next(entry for entry in variants if not entry.get('diffusersVariant'))
+        half=next(entry for entry in variants if entry.get('diffusersVariant')=='fp16')
+        self.assertNotIn('unet/diffusion_pytorch_model.fp16.safetensors',{pin['filename'] for pin in full['files']})
+        self.assertNotIn('unet/diffusion_pytorch_model.safetensors',{pin['filename'] for pin in half['files']})
+        for entry in variants:
+            self.assertIn('text_encoder/model.safetensors',{pin['filename'] for pin in entry['files']})
+            self.assertIn('safety_checker/model.safetensors',{pin['filename'] for pin in entry['files']})
+            self.assertIn('feature_extractor/preprocessor_config.json',{pin['filename'] for pin in entry['files']})
 
     def test_speech_archive_is_downloadable_without_executing_repo_code(self):
         plan = catalog.build_plan(metadata([file('phonon-2.5.bps.tar.zst'), file('config.json'), file('reference.py')],

@@ -281,6 +281,25 @@ def build_catalog(include_official_companions=True):
         add_model('raon-1-mini-mlx', 'raon-1-mini', 'Raon 1 mini · MLX 4-bit', repo, names, 'MLX 4-bit',
                   note=unsupported_note + 'Official MLX weights target Apple Silicon; no Windows MLX/Raon adapter is declared.', parameter_count=30000000000)
 
+    # Only complete, pinned pipelines whose classes were inspected are routed to
+    # the shared worker. Denoiser-only GGUF/MLX files and analysis models retain
+    # their own status; a file extension alone does not establish a runtime.
+    image_pipelines=read_json(ROOT/'image-pipelines.json')['pipelines']
+    recipes=read_json(ROOT.parents[1]/'src-tauri/resources/runtime-setup/recipes.json')['recipes']
+    artifacts_by_id={artifact['id']:artifact for artifact in catalog['artifacts']}
+    models_by_id={model['id']:model for model in catalog['models']}
+    for pipeline in image_pipelines:
+        model=models_by_id[pipeline['modelId']]
+        index=next(artifacts_by_id[a] for a in model['artifacts'] if artifacts_by_id[a]['filename']=='model_index.json')
+        if (index['repo'],index['revision'],index['sha256'])!=(pipeline['repository'],pipeline['revision'],pipeline['modelIndexSha256']):
+            raise ValueError('Image pipeline snapshot differs from its pinned package: '+model['id'])
+        recipe=next(recipe for recipe in recipes if model['id'] in recipe['modelIds'])
+        model.update(backend='diffusers',runtimeReady=True,installation={
+            'adapterId':recipe['id'],'smokeTestId':'image-output-512',
+            'sourceIdentity':pipeline['repository']+'@'+pipeline['revision']})
+        model['note']='Complete pinned '+pipeline['className']+' package. Automatic isolated CUDA runtime setup is available in Chat and Media Studio. The original tensor precision is preserved. The selected checkpoint must fit available RAM; Ready requires a real generated verification image. Compatible publisher-declared LoRAs can be selected after download.'
+        updated.append(model['id'])
+
     catalog['models'], aliases = deduplicate_generic_models(catalog['models'], catalog['artifacts'])
     validate_catalog(catalog)
     raw = json.dumps(catalog, ensure_ascii=False, separators=(',', ':')).encode('utf-8')

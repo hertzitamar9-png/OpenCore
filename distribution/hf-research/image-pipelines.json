@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "pipelines": [
+    {
+      "modelId": "qwen-image-21",
+      "repository": "Qwen/Qwen-Image-2.1",
+      "revision": "d26bb61231c349cf6b7896fa83353113880e1ba3",
+      "modelIndexSha256": "cf1ecd104ea090855d60d8cec0895c1e9d6ee41b2f87e231b678beecd1cf7809",
+      "className": "QwenImage21Pipeline"
+    },
+    {
+      "modelId": "flux-2-klein-4b",
+      "repository": "black-forest-labs/FLUX.2-klein-4B",
+      "revision": "e7b7dc27f91deacad38e78976d1f2b499d76a294",
+      "modelIndexSha256": "51a76cb1cf3ed37423a1128c79c22faee8e6fbe7f5aaeb737f0a258930dbaac0",
+      "className": "Flux2KleinPipeline"
+    },
+    {
+      "modelId": "flux-2-klein-base-4b",
+      "repository": "black-forest-labs/FLUX.2-klein-base-4B",
+      "revision": "a3b4f4849157f664bdbc776fd7453c2783562f4d",
+      "modelIndexSha256": "de1fef01845f0af3e1e2f2581cd5e86f2dfa4a4776f7f0b26b4c77feac4ee70f",
+      "className": "Flux2KleinPipeline"
+    },
+    {
+      "modelId": "z-image-turbo",
+      "repository": "Tongyi-MAI/Z-Image-Turbo",
+      "revision": "f332072aa78be7aecdf3ee76d5c247082da564a6",
+      "modelIndexSha256": "18a90e1bc117a29a8b7961bb200c86ff0b9704609e87c7171511dc724fcdc9d3",
+      "className": "ZImagePipeline"
+    },
+    {
+      "modelId": "z-image-base",
+      "repository": "Tongyi-MAI/Z-Image",
+      "revision": "04cc4abb7c5069926f75c9bfde9ef43d49423021",
+      "modelIndexSha256": "1dbd162955866394e55e1964aee83b367aaaf9304e0591bbb9c9e58c4ddfce32",
+      "className": "ZImagePipeline"
+    },
+    {
+      "modelId": "animation-diffusion-2d",
+      "repository": "ModelsLab/3D-Animation-Diffusion",
+      "revision": "98a6db6f28ecb40b2330954bac8ec2e155292ee3",
+      "modelIndexSha256": "1a947288a85b1fd87c862ebb72def7747ac0a11eb42f35d3d4fb79deb392d034",
+      "className": "StableDiffusionPipeline"
+    },
+    {
+      "modelId": "hunyuan-dit-v12-distilled",
+      "repository": "Tencent-Hunyuan/HunyuanDiT-v1.2-Diffusers-Distilled",
+      "revision": "ba991d1546d8c50936c4c16398ed0a87b9b99fb1",
+      "modelIndexSha256": "2efa723f3c6d0d3417cdaae521007ab606d20c5f8436183eaf37f10169f9e0a5",
+      "className": "HunyuanDiTPipeline"
+    },
+    {
+      "modelId": "sana-16",
+      "repository": "Efficient-Large-Model/Sana_1600M_1024px_diffusers",
+      "revision": "ac0da2ff55fbe434795be0dce883042e4d49e2fc",
+      "modelIndexSha256": "5692423f50e7908bec51264ad39e5a9b7566970600f6089a0a40759524f5569b",
+      "className": "SanaPipeline"
+    },
+    {
+      "modelId": "moss-image-sft",
+      "repository": "OpenMOSS-Team/MOSS-Image-SFT",
+      "revision": "fc5de0d56fc910cbca6f6625a70f5f582b26deb1",
+      "modelIndexSha256": "ca80b1f562a506e0eb24afb1acb464fb583163e3c240c04e4bc69fea090db173",
+      "className": "MOSSImagePipeline"
+    },
+    {
+      "modelId": "kromoss",
+      "repository": "lodestones/Kromoss",
+      "revision": "7f9bb7b06d7b6c27d294b0bab5a2b3056c379279",
+      "modelIndexSha256": "ca80b1f562a506e0eb24afb1acb464fb583163e3c240c04e4bc69fea090db173",
+      "className": "MOSSImagePipeline"
+    }
+  ]
+}

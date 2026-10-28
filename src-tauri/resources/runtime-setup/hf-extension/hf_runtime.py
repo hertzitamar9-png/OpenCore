@@ -180,7 +180,7 @@ class RuntimeManager:
         values = catalog.get('models', []) if isinstance(catalog, dict) else catalog
         return {'object': 'list', 'data': [{'id': e['id'], 'object': 'model', 'owned_by': 'local-huggingface',
             'context_length': max(8192, min(int(e.get('contextTokens') or 8192), 32768))} for e in values
-            if e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
+            if e.get('category','text')=='text' and e.get('status') == 'installed' and (e.get('runtimeReady') or e.get('runtimePreparation', {}).get('runtimeReady'))]}
 
     def set_context(self, model_id, conversation_id, request_id):
         conversation_key(conversation_id)
