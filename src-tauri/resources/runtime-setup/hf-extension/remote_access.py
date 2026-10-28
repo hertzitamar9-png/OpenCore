@@ -527,6 +527,18 @@ class RemoteAccess:
             atomic_json(self.config_path, options)
             return self.status()
 
+    def _visible_devices(self):
+        """Show one entry per phone, preferring the identity that sent a device key."""
+        ordered = sorted(self.devices.values(), key=lambda item: self.last_seen.get(item['id'], -100), reverse=True)
+        chosen = {}
+        for item in ordered:
+            name = str(item.get('name', 'Phone')).strip().casefold()
+            key = item.get('deviceKey') or 'legacy:' + name
+            chosen.setdefault(key, item)
+        keyed_names = {str(item.get('name', 'Phone')).strip().casefold() for item in chosen.values() if item.get('deviceKey')}
+        return [item for item in chosen.values()
+                if item.get('deviceKey') or str(item.get('name', 'Phone')).strip().casefold() not in keyed_names]
+
     def status(self):
         now = time.monotonic()
         if now - self.addresses_checked > 60:
@@ -551,7 +563,7 @@ class RemoteAccess:
                     'addresses': addresses, 'publicAddress': permanent or public, 'internet': internet,
                     'ddns': ddns, 'permanent': permanent_dns,
                     'devices': [{'id': d['id'], 'name': d.get('name', 'Phone'),
-                                 'connected': now-self.last_seen.get(d['id'], -100) < 10} for d in self.devices.values()],
+                                 'connected': now-self.last_seen.get(d['id'], -100) < 10} for d in self._visible_devices()],
                     'network': 'internet' if (public or permanent) else 'direct', 'relay': False}
 
     def start(self, options):
@@ -741,7 +753,7 @@ class RemoteAccess:
             text = 'opencore://pair?' + urlencode({'url': endpoint, 'pin': self.fingerprint, 'code': self.pair_code, 'name': self.pc_name})
             return {'pairingText': text, 'qrRows': pairing_qr(text), 'expiresIn': 120, 'fingerprint': self.fingerprint}
 
-    def pair(self, code, name, address):
+    def pair(self, code, name, address, device_key=None):
         with self.lock:
             now = time.monotonic()
             self.attempts = {key: value for key, value in self.attempts.items() if now - value[0] < 120}
@@ -750,10 +762,22 @@ class RemoteAccess:
             self.attempts[address] = (stamp, attempts + 1)
             if not isinstance(code, str) or not self.pair_code or now > self.pair_until or not hmac.compare_digest(code, self.pair_code):
                 raise PermissionError('Pairing code is invalid or expired')
-            if len(self.devices) >= 8: raise ValueError('Revoke an old phone before pairing another')
             if not isinstance(name, str) or not 1 <= len(name) <= 80 or any(ord(c) < 32 for c in name): raise ValueError('Invalid phone name')
+            if device_key is not None and (not isinstance(device_key, str) or not re.fullmatch(r'[a-f0-9]{64}', device_key)):
+                raise ValueError('Invalid phone identity')
+            previous = [item['id'] for item in self.devices.values() if device_key and item.get('deviceKey') == device_key]
+            if device_key:
+                previous += [item['id'] for item in self.devices.values()
+                             if not item.get('deviceKey') and str(item.get('name', 'Phone')).strip().casefold() == name.strip().casefold()]
+            previous = list(dict.fromkeys(previous))
+            if len(self.devices) - len(previous) >= 8: raise ValueError('Revoke an old phone before pairing another')
+            for identity in previous:
+                del self.devices[identity]
+                self.last_seen.pop(identity, None)
+                self.mobile.forget(identity)
             token, identity = secrets.token_urlsafe(48), secrets.token_hex(12)
             self.devices[identity] = {'id': identity, 'name': name, 'hash': hashlib.sha256(token.encode()).hexdigest()}
+            if device_key: self.devices[identity]['deviceKey'] = device_key
             atomic_json(self.devices_path, list(self.devices.values()))
             self.pair_code, self.pair_until = None, 0
             return {'deviceId': identity, 'token': token, 'name': self.pc_name}
@@ -773,6 +797,17 @@ class RemoteAccess:
             self.last_seen.pop(identity, None)
             self.mobile.forget(identity)
             atomic_json(self.devices_path, list(self.devices.values()))
+            return self.status()
+
+    def revoke_disconnected(self):
+        with self.lock:
+            now = time.monotonic()
+            disconnected = [identity for identity in self.devices if now-self.last_seen.get(identity, -100) >= 10]
+            for identity in disconnected:
+                del self.devices[identity]
+                self.last_seen.pop(identity, None)
+                self.mobile.forget(identity)
+            if disconnected: atomic_json(self.devices_path, list(self.devices.values()))
             return self.status()
 
     def shutdown(self):
@@ -997,7 +1032,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
         state, parsed = self.server.state, urlsplit(self.path)
         if parsed.query or parsed.fragment: raise ValueError('Query parameters are not accepted')
         if self.command == 'POST' and parsed.path == '/pair':
-            body = self.body(); return self.send(200, state.pair(body.get('code'), body.get('name', 'Android phone'), self.client_address[0]))
+            body = self.body(); return self.send(200, state.pair(body.get('code'), body.get('name', 'Android phone'), self.client_address[0], body.get('deviceKey')))
         device = state.authorize(self.headers.get('Authorization'))
         if not device: raise PermissionError('Pair this phone from the PC app')
         if self.command == 'POST' and parsed.path == '/session':

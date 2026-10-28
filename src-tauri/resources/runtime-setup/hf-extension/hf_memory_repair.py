@@ -43,6 +43,9 @@ Each quote must be a complete relevant statement copied verbatim as one contiguo
 Use global for personal facts/preferences, project for ongoing project facts (only if a project exists), conversation for chat-specific facts.
 Reuse an existing key for the same subject, including corrections. Never change the kind or scope of an existing key. Never recreate a blocked key.
 For new subjects use a short stable lowercase semantic key. Do not emit reasoning, tools, markdown, or commentary.
+Personal history, sports played, age ranges, team positions, named places and explicitly stated dates are durable biographical facts.
+An immediate request to write a book, a target page count, a task's quality target, and current project topics are temporary task context, not global personal preferences. Do not save those as global memories.
+Examples: 'I played football in Canada as a teenager, as a goalkeeper' is a personal fact. 'I played basketball in 2010' is a personal fact with an exact date. 'Write a 300-page book about current events' is a temporary task and should return an empty memories array. Never convert an illustrative 'if I told you' example into a personal fact.
 """
 _NEW_KEY = re.compile(r"[a-z0-9][a-z0-9._:/-]{0,255}\Z")
 _OPT_OUT = re.compile(r"\b(?:forget|don['\u2019]t\s+(?:remember|save|store)|do\s+not\s+(?:remember|save|store)|(?:delete|remove|clear)\s+(?:(?:the|my|all)\s+)?memor(?:y|ies))\b", re.I)
@@ -183,8 +186,8 @@ class MemoryRepair:
             with closing(sqlite3.connect((self.data / "agent-platform.sqlite3").as_uri() + "?mode=ro", uri=True, timeout=1)) as ledger:
                 ledger.row_factory = sqlite3.Row
                 capture = ledger.execute("SELECT status,saved_count,error FROM memory_auto_captures WHERE conversation_id=? AND user_entry_id=?", (conversation, entry)).fetchone()
-                if not capture or capture["status"] != "failed" or capture["saved_count"] != 0:
-                    raise RepairError("capture_not_failed", "Recovery only applies to a failed native capture with no saved memories")
+                if not capture or capture["status"] not in ("failed","unchanged","deferred") or capture["saved_count"] != 0:
+                    raise RepairError("capture_not_failed", "Recovery only applies to an unsaved failed, skipped or deferred native capture")
                 records = [dict(row) for row in ledger.execute("SELECT key,kind,scope,content,source FROM memories WHERE status='active' LIMIT ?", (MAX_RECORDS + 1,))]
                 tombstones = [dict(row) for row in ledger.execute("SELECT scope,kind,key,content_hash FROM memory_tombstones LIMIT ?", (MAX_RECORDS + 1,))]
                 source_tombstones = [dict(row) for row in ledger.execute("SELECT source_hash,scope FROM memory_source_tombstones LIMIT ?", (MAX_RECORDS + 1,))]

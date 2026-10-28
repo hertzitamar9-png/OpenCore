@@ -45,7 +45,7 @@ jobs:
         run: python distribution/sync-branding.py
       - name: Test manual update controls and release version ordering
         run: |
-          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/image-generation-panel.test.ts src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx
+          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/image-generation-panel.test.ts src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx tsc --noEmit
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -73,7 +73,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-model-view-cache.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --test test-mobile-host.cjs
+          node --test test-mobile-host.cjs test-hub-reconnect.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-native-recipe-data.cjs test-native-studio-data.cjs test-image-conversations.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -137,6 +137,8 @@ jobs:
           node qa-cached-views.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node test-mobile-render.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-first-run.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-branding.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -15,13 +15,16 @@ const server=http.createServer((req,res)=>{
   if(!fs.existsSync(file)||!fs.statSync(file).isFile()){res.statusCode=404;res.end();return;}
   res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'image/png');res.end(fs.readFileSync(file));
 });
-const fake=({snapshot,timeline})=>{
-  window.fixture={calls:[],snapshot,timeline,listeners:{},nextListener:0};
+const fake=({snapshot,timeline,firstRun=false,startupDelay=0,hangSnapshot=false})=>{
+  window.fixture={calls:[],snapshot,timeline,listeners:{},nextListener:0,hangSnapshot};
   document.addEventListener('DOMContentLoaded',()=>{
     const channel=new MessageChannel();channel.port1.onmessage=async event=>{
       const request=JSON.parse(event.data);fixture.calls.push(request);let value=null;
       if(request.kind==='invoke'){
         const command=request.command,args=request.args||{};
+        if(firstRun&&command==='account_action')return;
+        if(command==='get_snapshot'&&fixture.hangSnapshot)return;
+        if(command==='get_snapshot'&&startupDelay)await new Promise(resolve=>setTimeout(resolve,startupDelay));
         if(command==='startup_status'||command==='account_action'&&args.action==='startup_status')value={configured:true,user:{id:'fixture-user',name:'Fixture User'}};
         else if(command==='get_snapshot')value=fixture.snapshot;
         else if(command==='get_conversation')value=fixture.timeline;
@@ -70,6 +73,7 @@ const fake=({snapshot,timeline})=>{
     const composerButtons=page.locator('.chat-composer').getByRole('button');
     const composerBounds=await composerButtons.evaluateAll(items=>items.filter(e=>e.offsetParent!==null).map(e=>{const r=e.getBoundingClientRect();return {name:e.getAttribute('aria-label')||e.textContent.trim(),x:r.x,y:r.y,width:r.width,height:r.height};}));
     assert.ok(composerBounds.length>=5,'Composer controls must be present');
+    assert.ok(await page.getByRole('button',{name:/^Effort:/}).locator('svg').first().isVisible(),'The effort control must keep its brain icon on phones, including Off');
     assert.ok(composerBounds.every(r=>r.width>=44&&r.height>=44),`Composer touch targets must be at least 44px: ${JSON.stringify(composerBounds)}`);
     assert.ok(Math.max(...composerBounds.map(r=>r.y+r.height/2))-Math.min(...composerBounds.map(r=>r.y+r.height/2))<=2,'Composer buttons must be vertically aligned');
     const ordered=[...composerBounds].sort((a,b)=>a.x-b.x),viewport=page.viewportSize();

@@ -15,6 +15,7 @@ import urllib.request
 
 from hf_download import atomic_json
 from hf_runtime import checked_model_files, _inside, _python
+import hf_sdcpp
 
 RECIPE='diffusers-images-v1'
 TARGET='hub-image-runtime'
@@ -22,7 +23,7 @@ ACTIVE={'queued','starting','running','preparing'}
 
 
 def supports(entry):
-    return (entry.get('category')=='image' and entry.get('format')=='diffusers'
+    return hf_sdcpp.supports(entry) or (entry.get('category')=='image' and entry.get('format')=='diffusers'
             and entry.get('packageKind')!='adapter'
             and any(Path(file['filename']).name=='model_index.json' for file in entry.get('files',[])))
 
@@ -119,6 +120,8 @@ class ImageRuntimeManager:
         digest=hashlib.sha256()
         for name in ('asset_worker.py','comfy_worker.py','model_smoke.py'):
             digest.update((self.resources/'studio'/name).read_text(encoding='utf-8').replace('\r\n','\n').encode())
+        source=self.resources/'runtime-setup/hf-extension/hf_sdcpp.py'
+        if source.is_file():digest.update(source.read_text(encoding='utf-8').replace('\r\n','\n').encode())
         return digest.hexdigest()
 
     def _update(self,job,**value):
@@ -235,6 +238,8 @@ class ImageRuntimeManager:
         checked_model_files(entry,self.root,self.cancelled)
         folder=_inside(entry['localDirectory'],self.root/'models/hub')
         directory=_inside(folder/entry['subdirectory'],folder) if entry.get('subdirectory') else folder
+        if hf_sdcpp.supports(entry):
+            return self._run_iris(entry,request,job)
         index=json.loads((directory/'model_index.json').read_text(encoding='utf-8'))
         name=index.get('_class_name')
         if not isinstance(name,str) or not name.endswith('Pipeline') or not name.replace('_','').isalnum():
@@ -259,6 +264,26 @@ class ImageRuntimeManager:
             if not path.is_file() or path.suffix.lower() not in ('.png','.jpeg','.jpg','.webp'):raise ValueError('Invalid image output')
             paths.append(str(path))
         if not paths:raise RuntimeError('The image worker returned no images')
+        self._update(job,status='completed',stage='Generation complete',outputs=paths)
+        return {'runtimeReady':True,'inferenceVerified':True,'receiptRevision':entry['revision'],'workerVersion':1,'workerSha256':self.worker_identity(),'verifiedAt':time.time()}
+
+    def _run_iris(self,entry,request,job):
+        hf_sdcpp.model_paths(entry)
+        if not self.dependencies_ready():
+            self._update(job,stage='Preparing the isolated image tools')
+            self._spawn([_python(self.root),'-I',self.resources/'runtime-setup/setup_manager.py','--root',self.root,
+                         '--resources',self.resources,'--target',TARGET,'--recipe-id',RECIPE,'--cancel-file',self.directory/'cancel'],job)
+            if not self.dependencies_ready():raise RuntimeError('The managed image tools did not pass verification')
+        engine=hf_sdcpp.ensure_engine(self.root,self.cancelled,lambda message:self._update(job,stage=message))
+        output=self.directory/job['id'];output.mkdir(exist_ok=False)
+        payload={'entry':entry,'request':request,'engine':str(engine)}
+        request_file=self.directory/(job['id']+'.json');atomic_json(request_file,payload)
+        self._update(job,status='running',stage='Generating with Sakura-Iris · 30-step quality preset')
+        self._spawn([self.python(),'-I',self.resources/'runtime-setup/hf-extension/hf_sdcpp.py','--request',request_file,'--output',output],job,output=output)
+        proof=json.loads((output/'smoke-result.json').read_text(encoding='utf-8'))
+        if proof.get('modelId')!=entry['id'] or proof.get('inferenceVerified') is not True:raise RuntimeError('The Iris worker did not verify the generation')
+        paths=[str(_inside(item['path'],output)) for item in proof['outputs']]
+        if not paths or any(not Path(path).is_file() for path in paths):raise RuntimeError('Iris returned no image files')
         self._update(job,status='completed',stage='Generation complete',outputs=paths)
         return {'runtimeReady':True,'inferenceVerified':True,'receiptRevision':entry['revision'],'workerVersion':1,'workerSha256':self.worker_identity(),'verifiedAt':time.time()}
 
@@ -291,7 +316,7 @@ class ImageRuntimeManager:
         return copy.deepcopy(job)
 
     def prepare(self,entry,report,pause):
-        request=validate_request({'modelId':entry['id'],'prompt':'A blue ceramic cup on a plain table','settings':{'width':512,'height':512,'steps':4,'outputFormat':'png'}})
+        request=validate_request({'modelId':entry['id'],'prompt':'A blue ceramic cup on a plain table','settings':{'width':512,'height':512,'steps':20 if hf_sdcpp.supports(entry) else 4,'guidanceScale':3,'outputFormat':'png'}})
         job=self._new(entry,request,internal=True)
         try:
             report({'stage':'verifying-inference','detail':'Preparing the image runtime and generating a verification image'})

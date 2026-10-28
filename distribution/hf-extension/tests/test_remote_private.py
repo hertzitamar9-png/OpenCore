@@ -59,9 +59,12 @@ class RemoteTests(unittest.TestCase):
             self.assertEqual(local_addresses(), [{'address':'10.10.0.4','interface':'Wi-Fi'}, {'address':'192.168.1.33','interface':'Ethernet'}, {'address':'100.101.102.103','interface':'Private VPN'}, {'address':'172.20.1.5','interface':'vEthernet'}])
 
     def test_pairing_qr_contains_the_exact_one_time_code_and_no_extra_data(self):
-        self.remote.server = type('Server',(),{'server_port':12345})()
+        self.remote.server = type('Server',(),{'server_port':12345,'shutdown':lambda _:None,'server_close':lambda _:None})()
         self.remote.fingerprint = 'ab' * 32
-        value = self.remote.pairing('192.168.1.33')
+        # A fixed payload makes the optional OpenCV decoder check reproducible;
+        # production pairing tokens are generated independently in RemoteAccess.
+        with patch('remote_access.secrets.token_urlsafe',return_value='fixture-one-use-code'):
+            value = self.remote.pairing('192.168.1.33')
         self.assertIn('pairingText', value)
         self.assertGreater(len(value['qrRows']), 20)
         self.assertTrue(all(set(row) <= {'0','1'} and len(row)==len(value['qrRows']) for row in value['qrRows']))
@@ -113,6 +116,32 @@ public class DecodeFixture {
         self.remote.last_seen[phone['deviceId']] = time.monotonic()-20
         self.assertFalse(self.remote.status()['devices'][0]['connected'])
         self.assertNotIn('last_seen', self.remote.devices_path.read_text())
+
+    def test_repairing_the_same_device_replaces_only_its_old_pairing(self):
+        def pair(code, key):
+            self.remote.pair_code, self.remote.pair_until = code, time.monotonic()+120
+            return self.remote.pair(code,'Xiaomi phone','127.0.0.1',key)
+        first=pair('one','a'*64)
+        other=pair('two','b'*64)
+        self.remote.authorize('Bearer '+first['token'])
+        replacement=pair('three','a'*64)
+        self.assertIsNone(self.remote.authorize('Bearer '+first['token']))
+        self.assertEqual(self.remote.authorize('Bearer '+replacement['token']),replacement['deviceId'])
+        self.assertEqual(self.remote.authorize('Bearer '+other['token']),other['deviceId'])
+        self.assertEqual(len(self.remote.devices),2)
+        self.remote.pair_code,self.remote.pair_until='bad',time.monotonic()+120
+        with self.assertRaises(ValueError):self.remote.pair('bad','Xiaomi phone','127.0.0.1','not-a-device-key')
+        self.assertEqual(len(self.remote.devices),2)
+
+    def test_removing_disconnected_pairings_preserves_connected_phones(self):
+        self.remote.pair_code,self.remote.pair_until='one',time.monotonic()+120
+        offline=self.remote.pair('one','Offline phone','127.0.0.1')
+        self.remote.pair_code,self.remote.pair_until='two',time.monotonic()+120
+        online=self.remote.pair('two','Connected phone','127.0.0.1')
+        self.remote.authorize('Bearer '+online['token'])
+        self.remote.revoke_disconnected()
+        self.assertIsNone(self.remote.authorize('Bearer '+offline['token']))
+        self.assertEqual(self.remote.authorize('Bearer '+online['token']),online['deviceId'])
 
     @unittest.skipUnless(os.name == 'nt', 'Windows owns the local TLS key')
     def test_pairing_name_and_port_survive_restart_and_disabling_access(self):

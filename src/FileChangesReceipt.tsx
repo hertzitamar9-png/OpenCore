@@ -15,6 +15,8 @@ export function CaptureCoverage({ coverage }: { coverage: string[] }) {
 }
 
 export function FileChangesReceipt({ conversationId, active, onOpen }: { conversationId: string; active: boolean; onOpen: (file: FileRecord) => void }) {
+  const [expanded,setExpanded] = useState(() => {try{return window.localStorage.getItem('opencore.ui.v1.file-changes')==='expanded';}catch{return false;}});
+  const toggle = () => setExpanded(value=>{try{window.localStorage.setItem('opencore.ui.v1.file-changes',value?'collapsed':'expanded');}catch{}return !value;});
   const [receipt, setReceipt] = useState<FileChangesResult | null>(null);
   const [error, setError] = useState('');
   const previous = useRef<{ conversationId: string; turnId: string | null }>({ conversationId, turnId: null });
@@ -49,11 +51,11 @@ export function FileChangesReceipt({ conversationId, active, onOpen }: { convers
   const partial = ['failed', 'cancelled', 'interrupted', 'error'].includes(receipt.status || '');
   const hasLines = receipt.files.some(file => file.added !== null || file.removed !== null);
   return <section className="file-changes-receipt" aria-label="Task file changes">
-    <header><span><Files size={15} />{partial ? 'Partial changes' : 'File changes'} <small>{receipt.files.length}</small></span>{hasLines && <FileLineCounts added={receipt.added} removed={receipt.removed} labelled />}</header>
-    <div className="file-change-list">{receipt.files.map(file => <button key={file.id} onClick={() => onOpen(file)} title={file.source}>
+    <header><span><Files size={15} />{partial ? 'Partial changes' : 'File changes'} <small>{receipt.files.length}</small></span>{hasLines && <FileLineCounts added={receipt.added} removed={receipt.removed} labelled />}<button className="file-changes-toggle" type="button" aria-expanded={expanded} aria-label={expanded?'Collapse file changes':'Show all file changes'} onClick={toggle}>{expanded?'Collapse ▴':'Show all ▾'}</button></header>
+    {expanded&&<div className="file-change-list">{receipt.files.map(file => <button key={file.id} onClick={() => onOpen(file)} title={file.source}>
       <FileCode2 size={15} /><span className="file-change-path">{file.path}</span><small>{file.change}</small>
       {file.added === null && file.removed === null ? <span className="file-binary-label">{/^(text\/|application\/(json|javascript|xml))/.test(file.mime) ? 'Line count unavailable' : 'Binary output'}</span> : <FileLineCounts added={file.added} removed={file.removed} />}
-    </button>)}</div>
+    </button>)}</div>}
     <CaptureCoverage coverage={receipt.coverage} />
   </section>;
 }

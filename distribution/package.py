@@ -88,11 +88,15 @@ Var TestInstall
 Var UpdateInstall
 Var RestartAfterInstall
 Var UpdateInstallSucceeded
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SkipUpdateWizard
 !insertmacro MUI_PAGE_WELCOME
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SkipUpdateWizard
 !insertmacro MUI_PAGE_DIRECTORY
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW ShowUpdateProgress
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\\OpenCore.exe"
 !define MUI_FINISHPAGE_RUN_NOTCHECKED
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SkipUpdateWizard
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
@@ -123,6 +127,9 @@ Function .onInit
   ${{GetOptions}} $0 "/UPDATE" $1
   ${{IfNot}} ${{Errors}}
     StrCpy $UpdateInstall "1"
+    ; The updater passes /S, but the user needs to see the installation work.
+    SetSilent normal
+    SetAutoClose true
     ReadRegStr $3 HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenCore" "InstallLocation"
     StrCpy $4 $3 1
     StrCpy $5 $3 1 -1
@@ -161,6 +168,16 @@ Function .onInit
     ${{EndIf}}
     SetErrorLevel 5
     Quit
+  ${{EndIf}}
+FunctionEnd
+Function SkipUpdateWizard
+  ${{If}} $UpdateInstall == "1"
+    Abort
+  ${{EndIf}}
+FunctionEnd
+Function ShowUpdateProgress
+  ${{If}} $UpdateInstall == "1"
+    !insertmacro MUI_HEADER_TEXT "Installing the OpenCore update" "Please wait; OpenCore will reopen automatically."
   ${{EndIf}}
 FunctionEnd
 Section "OpenCore"

@@ -216,7 +216,7 @@
       "familyId": "publisher-nemotron-3-5-bolt-e4b",
       "label": "NVIDIA Nemotron 3.5 Bolt E4B",
       "category": "text",
-      "description": "Includes NVIDIA’s official 4GB Q4_K_M edition and verified quantizations of its linked BF16 checkpoint. Other precisions have different memory requirements.",
+      "description": "Includes NVIDIA\u2019s official 4GB Q4_K_M edition and verified quantizations of its linked BF16 checkpoint. Other precisions have different memory requirements.",
       "sources": [
         {
           "repository": "nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB"
@@ -385,6 +385,57 @@
       "sources": [
         {
           "repository": "ccore/Qwen3.5-4B-3D-Coder"
+        }
+      ]
+    },
+    {
+      "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "familyId": "publisher-sakura-iris-3b",
+      "label": "Sakura-Iris 3B Uncensored",
+      "category": "image",
+      "description": "Iris 3B pixel-space image generation with the publisher Q8 text encoder. Four real image quants; Q8_0 is recommended for fidelity. No VAE is required.",
+      "sources": [
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "imageRuntime": "iris-sdcpp-v1",
+          "packages": [
+            {
+              "key": "iris-gguf:Sakura-Iris-3B-Q4_K_M-3.14GiB.gguf",
+              "format": "gguf",
+              "quantization": "Q4_K_M",
+              "files": [
+                "Sakura-Iris-3B-Q4_K_M-3.14GiB.gguf",
+                "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf"
+              ]
+            },
+            {
+              "key": "iris-gguf:Sakura-Iris-3B-Q5_K_M-3.40GiB.gguf",
+              "format": "gguf",
+              "quantization": "Q5_K_M",
+              "files": [
+                "Sakura-Iris-3B-Q5_K_M-3.40GiB.gguf",
+                "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf"
+              ]
+            },
+            {
+              "key": "iris-gguf:Sakura-Iris-3B-Q6_K-3.66GiB.gguf",
+              "format": "gguf",
+              "quantization": "Q6_K",
+              "files": [
+                "Sakura-Iris-3B-Q6_K-3.66GiB.gguf",
+                "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf"
+              ]
+            },
+            {
+              "key": "iris-gguf:Sakura-Iris-3B-Q8_0-4.15GiB.gguf",
+              "format": "gguf",
+              "quantization": "Q8_0",
+              "files": [
+                "Sakura-Iris-3B-Q8_0-4.15GiB.gguf",
+                "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf"
+              ]
+            }
+          ]
         }
       ]
     }

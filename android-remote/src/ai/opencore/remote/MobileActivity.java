@@ -41,6 +41,7 @@ public final class MobileActivity extends Activity {
     volatile String uiRevision="";
     final RemoteSession remoteSession=new RemoteSession();
     final ImageMemoryCache imageCache=new ImageMemoryCache(40*1024*1024);
+    final UiAssetCache uiCache=new UiAssetCache(16*1024*1024);
     ConnectionPanel connectionPanel;
     WebView web;
     WebMessagePort port;
@@ -69,7 +70,7 @@ public final class MobileActivity extends Activity {
         });
         FrameLayout stage=new FrameLayout(this);root.addView(stage,new LinearLayout.LayoutParams(-1,0,1));
         web=new WebView(this);web.setBackgroundColor(0xff0b1118);stage.addView(web,new FrameLayout.LayoutParams(-1,-1));
-        connectionPanel=new ConnectionPanel(this,connection.name,new String[]{"Connect securely to your PC","Load the latest OpenCore interface","Open your chats and tools"},()->connect(),()->finish(),()->removePc());stage.addView(connectionPanel,new FrameLayout.LayoutParams(-1,-1));
+        connectionPanel=new ConnectionPanel(this,connection.name,new String[]{"Secure PC connection","Latest app interface","Your chats and tools"},()->connect(),()->finish(),()->removePc());stage.addView(connectionPanel,new FrameLayout.LayoutParams(-1,-1));
         status=label("");status.setTextSize(12);status.setVisibility(View.GONE);root.addView(status);
         WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);settings.setAllowContentAccess(true);settings.setJavaScriptCanOpenWindowsAutomatically(false);
@@ -85,11 +86,13 @@ public final class MobileActivity extends Activity {
         if(!reconnecting.compareAndSet(false,true))return;
         final Connection selected=connection;if(selected==null){reconnecting.set(false);return;}
         final int attempt=remoteSession.begin();session=null;status("");
-        runOnUiThread(()->connectionPanel.showProgress("Connecting to "+selected.name,"Keep OpenCore open and your PC awake. Your chats stay on the PC.",0));
+        nextReconnectAt=SystemClock.elapsedRealtime()+30000;
+        runOnUiThread(()->connectionPanel.showProgress("Connecting","Keep OpenCore open on your PC. Connecting securely…",0));
         io.execute(()->{try{
             JSONObject sessionResult=selected.json("/session",new JSONObject());String next=sessionResult.getString("session");
             runOnUiThread(()->{if(remoteSession.isCurrent(attempt))connectionPanel.showProgress("Loading OpenCore","Getting the latest interface and your saved settings from the PC…",1);});
-            selected.bytes("/ui",new JSONObject().put("path","index.html"),1024*1024);
+            uiCache.select(selected.pin,sessionResult.optString("uiRevision",""));
+            if(uiCache.get("index.html")==null)uiCache.put("index.html",selected.bytes("/ui",new JSONObject().put("path","index.html"),1024*1024));
             JSONObject preferences=selected.json("/preferences",new JSONObject().put("session",next));
             byte[] random=new byte[18];new SecureRandom().nextBytes(random);String nextNonce=Base64.encodeToString(random,Base64.NO_WRAP|Base64.URL_SAFE|Base64.NO_PADDING);
             if(!remoteSession.accept(attempt,next,sessionResult.optString("uiRevision","")))return;
@@ -132,7 +135,9 @@ public final class MobileActivity extends Activity {
         try{
             JSONObject value=new JSONObject(raw);String id=value.getString("id"),kind=value.getString("kind");
             if(kind.equals("phone-app-update")){AppUpdates.check(this,true);ok(id,null,targetGeneration);return;}
+            if(kind.equals("phone-disconnect")){ok(id,null,targetGeneration);removePc();return;}
             if(kind.equals("phone-ready")){connectionPanel.setVisibility(View.GONE);status("");return;}
+            if(kind.equals("phone-startup-error")){connectionPanel.showError("Your PC is connected","The workspace did not respond yet. Press Retry now to reopen it.",2);return;}
             if(kind.equals("phone-dialog")){showPhoneDialog(id,value.optString("command",""),value.optJSONObject("args"),targetGeneration);return;}
             if(kind.equals("phone-open")){openLink(id,value.optJSONObject("args"),targetGeneration);return;}
             if(!kind.equals("invoke")&&!kind.equals("hub")&&!kind.equals("preference")){fail(id,"Unsupported phone action.",targetGeneration);return;}
@@ -173,7 +178,8 @@ public final class MobileActivity extends Activity {
                 }else{
                     if(relative.isEmpty())relative="index.html";
                     Connection selected=connection;if(selected==null)return denied();
-                    data=selected.bytes("/ui",new JSONObject().put("path",relative),8*1024*1024);
+                    data=uiCache.get(relative);
+                    if(data==null){data=selected.bytes("/ui",new JSONObject().put("path",relative),8*1024*1024);uiCache.put(relative,data);}
                     mime=relative.endsWith(".html")?"text/html":relative.endsWith(".js")?"text/javascript":relative.endsWith(".css")?"text/css":relative.endsWith(".png")?"image/png":"application/octet-stream";
                     if(relative.equals("index.html")){
                         String html=new String(data,StandardCharsets.UTF_8);

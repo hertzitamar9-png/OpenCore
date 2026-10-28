@@ -1,0 +1,414 @@
+{
+  "_id": "6acc017c81800b2f2d3b3f30",
+  "id": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+  "private": false,
+  "pipeline_tag": "text-to-image",
+  "library_name": "gguf",
+  "tags": [
+    "gguf",
+    "safetensors",
+    "sakura",
+    "sakura-image",
+    "stable-diffusion.cpp",
+    "text-to-image",
+    "iris-3b",
+    "pixel-space",
+    "uncensored",
+    "abliterated",
+    "not-for-all-audiences",
+    "base_model:speridlabs/iris-3b",
+    "base_model:quantized:speridlabs/iris-3b",
+    "license:apache-2.0",
+    "region:us"
+  ],
+  "downloads": 2501,
+  "likes": 8,
+  "modelId": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+  "author": "webmp3",
+  "sha": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+  "lastModified": "2026-10-17T10:44:54.000Z",
+  "gated": false,
+  "disabled": false,
+  "widgetData": [
+    {
+      "text": "A vast floating harbour city above the clouds at golden hour: huge wooden and brass airships docking at suspended piers, tiny people on the gangways, waterfalls spilling off the edge of a sky island, warm light, epic wide shot, detailed fantasy concept art.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/01_airship.png"
+      }
+    },
+    {
+      "text": "A hand-painted 1980s fantasy film poster: a warrior woman with long braided hair and a glowing sword stands on a cliff facing a gigantic dragon wreathed in flames, storm clouds and a burning castle behind her. The title at the top reads \"EMBER CROWN\" in ornate golden letters, the tagline below says \"One sword. One kingdom.\"",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/02_emberqueen.png"
+      }
+    },
+    {
+      "text": "A colossal rusted mecha robot standing motionless in a flooded city at sunrise, moss and flowers growing on its armour, a tiny boat with a child passing between its legs, soft golden mist, epic cinematic wide shot, concept art.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/03_mecha.png"
+      }
+    },
+    {
+      "text": "Anime movie key visual: a mountain village at night during a lantern festival, hundreds of glowing paper lanterns rising into a sky full of stars, a girl in a yukata with a fox mask on her head looking up, warm light, rich detail, painterly background.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/04_lanterns.png"
+      }
+    },
+    {
+      "text": "A narrow rainy street at night in a dense city, neon signs in many colours reflected in the puddles, a lone cyclist holding an umbrella, cinematic wide shot.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/05_street.png"
+      }
+    },
+    {
+      "text": "Portrait photo of an elderly fisherman with a weathered face and a grey beard, wearing a yellow raincoat, a harbour with boats softly out of focus behind him, overcast light.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/06_fisherman.png"
+      }
+    },
+    {
+      "text": "A snow leopard standing alert on a snowy ridge in a light snowfall, head turned toward the camera, both rounded ears upright and clearly visible with black backs and white tufts, thick spotted fur dusted with snow, pale blue eyes, shallow depth of field, wildlife photograph, telephoto lens.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/07_leopard.png"
+      }
+    },
+    {
+      "text": "A clockwork dragon sculpture made of polished brass gears, springs and tiny rivets, wings of thin copper plates, perched on an old wooden workbench, studio macro photograph with dramatic side light and a soft dark background.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/08_clockdragon.png"
+      }
+    },
+    {
+      "text": "A Japanese woodblock print in ukiyo-e style: a samurai cat in armour fishing from a wooden bridge under a huge full moon, ripples on the water, cherry blossom branches, flat colours with fine black outlines, a small red seal in the corner.",
+      "output": {
+        "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/09_woodblock.png"
+      }
+    }
+  ],
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "apache-2.0",
+    "base_model": "speridlabs/iris-3b",
+    "base_model_relation": "quantized",
+    "library_name": "gguf",
+    "pipeline_tag": "text-to-image",
+    "tags": [
+      "sakura",
+      "sakura-image",
+      "gguf",
+      "stable-diffusion.cpp",
+      "text-to-image",
+      "iris-3b",
+      "pixel-space",
+      "uncensored",
+      "abliterated",
+      "not-for-all-audiences"
+    ],
+    "widget": [
+      {
+        "text": "A vast floating harbour city above the clouds at golden hour: huge wooden and brass airships docking at suspended piers, tiny people on the gangways, waterfalls spilling off the edge of a sky island, warm light, epic wide shot, detailed fantasy concept art.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/01_airship.png"
+        }
+      },
+      {
+        "text": "A hand-painted 1980s fantasy film poster: a warrior woman with long braided hair and a glowing sword stands on a cliff facing a gigantic dragon wreathed in flames, storm clouds and a burning castle behind her. The title at the top reads \"EMBER CROWN\" in ornate golden letters, the tagline below says \"One sword. One kingdom.\"",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/02_emberqueen.png"
+        }
+      },
+      {
+        "text": "A colossal rusted mecha robot standing motionless in a flooded city at sunrise, moss and flowers growing on its armour, a tiny boat with a child passing between its legs, soft golden mist, epic cinematic wide shot, concept art.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/03_mecha.png"
+        }
+      },
+      {
+        "text": "Anime movie key visual: a mountain village at night during a lantern festival, hundreds of glowing paper lanterns rising into a sky full of stars, a girl in a yukata with a fox mask on her head looking up, warm light, rich detail, painterly background.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/04_lanterns.png"
+        }
+      },
+      {
+        "text": "A narrow rainy street at night in a dense city, neon signs in many colours reflected in the puddles, a lone cyclist holding an umbrella, cinematic wide shot.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/05_street.png"
+        }
+      },
+      {
+        "text": "Portrait photo of an elderly fisherman with a weathered face and a grey beard, wearing a yellow raincoat, a harbour with boats softly out of focus behind him, overcast light.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/06_fisherman.png"
+        }
+      },
+      {
+        "text": "A snow leopard standing alert on a snowy ridge in a light snowfall, head turned toward the camera, both rounded ears upright and clearly visible with black backs and white tufts, thick spotted fur dusted with snow, pale blue eyes, shallow depth of field, wildlife photograph, telephoto lens.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/07_leopard.png"
+        }
+      },
+      {
+        "text": "A clockwork dragon sculpture made of polished brass gears, springs and tiny rivets, wings of thin copper plates, perched on an old wooden workbench, studio macro photograph with dramatic side light and a soft dark background.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/08_clockdragon.png"
+        }
+      },
+      {
+        "text": "A Japanese woodblock print in ukiyo-e style: a samurai cat in armour fishing from a wooden bridge under a huge full moon, ripples on the water, cherry blossom branches, flat colours with fine black outlines, a small red seal in the corner.",
+        "output": {
+          "url": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF/resolve/main/images/09_woodblock.png"
+        }
+      }
+    ]
+  },
+  "gguf": {
+    "total": 2987511888,
+    "totalFileSize": 3374947744
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "d80d00de0bc1caf89123472a5a75d0a14c5d45c0",
+      "size": 2649
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "size": 11358
+    },
+    {
+      "rfilename": "NOTICE",
+      "blobId": "0a138672f17cff9cd82a08141c5a145a649d78ad",
+      "size": 2107
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "fcaa77a1c28940994271b54e09edb569d32f842a",
+      "size": 28755
+    },
+    {
+      "rfilename": "README_zh.md",
+      "blobId": "de5a6e3f732484d6c8aed28aca125987b5f2d858",
+      "size": 12707
+    },
+    {
+      "rfilename": "SHA256SUMS",
+      "blobId": "13feeeac2f37a813b2d67580bdcff483d0e37704",
+      "size": 2907
+    },
+    {
+      "rfilename": "Sakura-Iris-3B-Q4_K_M-3.14GiB.gguf",
+      "blobId": "a43c355bad813c0a8c12c3664deb1519a24589cc",
+      "size": 3374947744,
+      "lfs": {
+        "sha256": "a65ca4a773ca9433166d1a3b20ba8f4e66a3193e7198264f23ffd2528a7678a3",
+        "size": 3374947744,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Sakura-Iris-3B-Q5_K_M-3.40GiB.gguf",
+      "blobId": "df9bec86a6a2c469d6155c17125d52671fc98850",
+      "size": 3646102944,
+      "lfs": {
+        "sha256": "869200be41e9610315274d86d69f9d191d5ddf86c23ed21cc407df1047245c1f",
+        "size": 3646102944,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Sakura-Iris-3B-Q6_K-3.66GiB.gguf",
+      "blobId": "7458216a5816caa49530af17b7abffa5c2d10b26",
+      "size": 3934208416,
+      "lfs": {
+        "sha256": "51e957208928c3dc23c3dfce0a325665e855fa69959f8648cfe13a300e59f1ff",
+        "size": 3934208416,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Sakura-Iris-3B-Q8_0-4.15GiB.gguf",
+      "blobId": "084662b6c63d35484882759b098526416faa39f5",
+      "size": 4459531168,
+      "lfs": {
+        "sha256": "4e9821f132f6c076b833ade81e201754268756064dd073881414b62a70afc4a5",
+        "size": 4459531168,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-4bit-2.33GiB.gguf",
+      "blobId": "a8eb8e6c907eb8ec998ec68b03821e79ac2c39dd",
+      "size": 2497281984,
+      "lfs": {
+        "sha256": "a876aed5e2b350fab9c7d5cf22ffaf03e0bf79cf4c163a6e7f747cd5c4a8fc6d",
+        "size": 2497281984,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf",
+      "blobId": "7ec86314d34efff2477b54e624e8004fa268d2b1",
+      "size": 4280406144,
+      "lfs": {
+        "sha256": "ae45d32cb972b12f7e64a2c6c4077f59dcbef4b9108e4c58dbc3f0bc24268b62",
+        "size": 4280406144,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/chat_template.jinja",
+      "blobId": "2a65e88d9c09ecee0952c5dcf666a5f37c4a5cf1",
+      "size": 5412
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/config.json",
+      "blobId": "deab40648555a203431ed3d2310064441a3d13b0",
+      "size": 1744
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/generation_config.json",
+      "blobId": "8efe474642c4561e45531ffdbbc4685e7f2e14a4",
+      "size": 256
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/model-00001-of-00002.safetensors",
+      "blobId": "71c1a2c667fab83d0cd9fd68c5ea7c712191a0bf",
+      "size": 4990822120,
+      "lfs": {
+        "sha256": "bf621d5c82dc0b811bff12ce4ae1b9170a3e09cd099fd69a802e2328bc49ffb5",
+        "size": 4990822120,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/model-00002-of-00002.safetensors",
+      "blobId": "9d6d0099da873985777cfbc5573443b4d001da68",
+      "size": 3884897208,
+      "lfs": {
+        "sha256": "ca1f143bb461f4d8bd9399c119f51b5f77fac736d9f7194f36634db89319c24a",
+        "size": 3884897208,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/model.safetensors.index.json",
+      "blobId": "ab1c213bb2abcdade942f2678ab588f062f96c79",
+      "size": 65499
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/processor_config.json",
+      "blobId": "47f77d305e1217df99dd0c00dc4b6386184a428f",
+      "size": 1281
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/tokenizer.json",
+      "blobId": "c7afbed2efcdf019f88ab0572ec29d3bf595dfe2",
+      "size": 11422650,
+      "lfs": {
+        "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+        "size": 11422650,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "TextEncoder-Qwen3VL-4B-Uncensored-bf16/tokenizer_config.json",
+      "blobId": "23893ca5654187d8fcd0bb1d21ec94b202f41261",
+      "size": 765
+    },
+    {
+      "rfilename": "images/01_airship.png",
+      "blobId": "234a35c87ce6d324902ae0527a2966e8a578e9f0",
+      "size": 2679303,
+      "lfs": {
+        "sha256": "75dca7913cd7791458cc73c09fc0dd4b2b83dfbee4321f3e78e4df84b8b4e929",
+        "size": 2679303,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/02_emberqueen.png",
+      "blobId": "d2a140b95be8a8d54ea31ddaac524c32baa576e3",
+      "size": 3030753,
+      "lfs": {
+        "sha256": "c30a6948f5cf4aec1196b09c39b29663977dc11e64eb04b9ebe1ed25723d1061",
+        "size": 3030753,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/03_mecha.png",
+      "blobId": "835cd6dd07e6b976bb0d82ce4495a98c03b3e531",
+      "size": 2727777,
+      "lfs": {
+        "sha256": "daeb899dce00da7c913d05ef894ab469fa575d0441de6dce6eadb4f4bef9e8f2",
+        "size": 2727777,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/04_lanterns.png",
+      "blobId": "0ad1bde2de62ce81938c8533c5ea8fdc3a8beec8",
+      "size": 2847849,
+      "lfs": {
+        "sha256": "9f85a544fff6e119eb372381135ccaea04afa685814df39ac4985e0a0b945d25",
+        "size": 2847849,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/05_street.png",
+      "blobId": "c01b23a7bbe78674a9d8a1857d7e393b23dc2bfb",
+      "size": 2881681,
+      "lfs": {
+        "sha256": "442eda6d0fb68e6a28f9fbe34bbf52ccced0fce155c6f0b4dcbd11011b7012d5",
+        "size": 2881681,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/06_fisherman.png",
+      "blobId": "580c6fcb0b5c82b22ba17775df26e8f3bb68a100",
+      "size": 2659146,
+      "lfs": {
+        "sha256": "a01f737bafa3d67ad5ec7ddc4166dcac35e6b747453e1e57110c24c1948cccbf",
+        "size": 2659146,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/07_leopard.png",
+      "blobId": "5fc9cc3b3b81a55109a461c618df26ecfcdf6df6",
+      "size": 2589979,
+      "lfs": {
+        "sha256": "9a46d873eb042dfcf6e9b7a1e07114f55c26e437110b793b035cda33ec36de04",
+        "size": 2589979,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/08_clockdragon.png",
+      "blobId": "b8050e714843f259965749a024275bd4148e5a3f",
+      "size": 2745373,
+      "lfs": {
+        "sha256": "c55e62921e43f99778d84a8ee9e89b76b7af901569bffd792e92f8dbb9e5406b",
+        "size": 2745373,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "images/09_woodblock.png",
+      "blobId": "f46d64f6712b0c0ad0331a1f8a6f368a11b581f2",
+      "size": 2857382,
+      "lfs": {
+        "sha256": "b6c48212b6964fe0f798ee6e3e81204ef6fd9aa77eb91b5413af6e28225a60ab",
+        "size": 2857382,
+        "pointerSize": 132
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-10-11T21:37:00.000Z",
+  "usedStorage": 31104639621
+}

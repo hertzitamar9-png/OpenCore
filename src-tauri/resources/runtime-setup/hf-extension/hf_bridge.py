@@ -719,8 +719,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             elif route == '/images/conversations':
                 self._send(200, {'conversations':state.images.conversation_summaries()})
             elif route == '/mobile/host/poll':
-                devices = set(state.remote.devices) if state.remote.server else set()
-                self._send(200, state.remote.mobile.take(devices))
+                devices = lambda: set(state.remote.devices.copy()) if state.remote.server else set()
+                self._send(200, state.remote.mobile.take(devices,wait=20))
             elif route == '/mobile/host/preferences':
                 self._send(200, {'values': dict(state.remote.mobile.preferences)})
             elif route == "/v1/models":
@@ -761,6 +761,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.remote.pairing(body.get('address')))
         elif route == '/remote/revoke':
             self._send(200, state.remote.revoke(body.get('deviceId')))
+        elif route == '/remote/revoke-disconnected':
+            self._send(200, state.remote.revoke_disconnected())
         elif route == '/remote/name':
             self._send(200, state.remote.rename(body.get('name')))
         elif route == '/remote/ddns':

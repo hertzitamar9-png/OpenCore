@@ -120,6 +120,7 @@
   "runtime-setup/hf-extension/hf_memory_repair.py": "src-tauri/resources/runtime-setup/hf-extension/hf_memory_repair.py",
   "runtime-setup/hf-extension/hf_prompt_assistant.py": "src-tauri/resources/runtime-setup/hf-extension/hf_prompt_assistant.py",
   "runtime-setup/hf-extension/hf_runtime.py": "src-tauri/resources/runtime-setup/hf-extension/hf_runtime.py",
+  "runtime-setup/hf-extension/hf_sdcpp.py": "src-tauri/resources/runtime-setup/hf-extension/hf_sdcpp.py",
   "runtime-setup/hf-extension/hf_security.py": "src-tauri/resources/runtime-setup/hf-extension/hf_security.py",
   "runtime-setup/hf-extension/hf_specialist_ocr.py": "src-tauri/resources/runtime-setup/hf-extension/hf_specialist_ocr.py",
   "runtime-setup/hf-extension/hf_specialist_ocr_worker.py": "src-tauri/resources/runtime-setup/hf-extension/hf_specialist_ocr_worker.py",

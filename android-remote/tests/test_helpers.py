@@ -13,7 +13,7 @@ class NativeClientTests(unittest.TestCase):
         java_home = Path(os.environ['JAVA_HOME'])
         sources = ROOT / 'src/ai/opencore/remote'
         with tempfile.TemporaryDirectory(prefix='opencore-android-tests-') as output:
-            files = [sources / name for name in ('RemoteSession.java', 'ImageMemoryCache.java', 'ConnectionMessages.java')]
+            files = [sources / name for name in ('RemoteSession.java', 'ImageMemoryCache.java', 'UiAssetCache.java', 'ConnectionMessages.java')]
             compile_result = subprocess.run([str(java_home / 'bin/javac.exe'), '--release', '8', '-encoding', 'UTF-8', '-d', output,
                                              *map(str, files), str(ROOT / 'tests/RemoteClientTest.java')], capture_output=True, text=True)
             self.assertEqual(compile_result.returncode, 0, compile_result.stderr)

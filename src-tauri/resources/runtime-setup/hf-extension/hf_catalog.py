@@ -273,6 +273,9 @@ def build_plan(metadata):
                 variants[-1]['baseRepository']=bases[0]
                 if len(bases)>1:variants[-1]['baseRepositories']=bases
     # Key and commit pin bind Add to the metadata that was actually reviewed.
+    from hf_sdcpp import plan_variants as iris_variants
+    reviewed_iris=iris_variants(metadata)
+    if reviewed_iris is not None:variants=reviewed_iris
     identity = json.dumps({"repository": repo, "revision": revision, "variants": variants}, sort_keys=True, separators=(",", ":"))
     return {"planId": hashlib.sha256(identity.encode("utf-8")).hexdigest(), "repository": repo, "revision": revision,
             "private": metadata.get("private") is True, "gated": bool(metadata.get("gated")),

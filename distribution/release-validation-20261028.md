@@ -1,0 +1,10 @@
+# Local release evidence, 28 October 2026
+
+- The packaged first-run UI opens an empty workspace when the optional account service never responds. Desktop and phone widths pass. A deliberately stalled local request reaches a visible timeout and Retry recovers.
+- The paired-device command path was exercised against the running Windows app, including account state and the complete conversation list. Read requests also succeeded with the app minimized. Temporary verification pairings were revoked.
+- The signed Android 2.3 APK retains the existing package and signing certificate, adds bounded connection requests, waits for the actual workspace, and caches UI assets by PC identity and revision. Physical-phone install and reconnection still require device confirmation.
+- Installer fixtures prove visible installation progress, stopping only the target installation, replacing the executable, and reopening it. Browser checks prove the visible download overlay and one-click update action.
+- Sakura-Iris publishes four image quants. The Q8 image package and its Q8 text encoder completed an actual 1024-pixel, 30-step generation through the pinned Vulkan runtime. Iris reference editing and LoRA execution are explicitly unsupported by this adapter. Other compatible image runtimes retain their own adapter support.
+- Exact-source personal-history recovery was confirmed in the native ledger. Temporary task records were moved to their original conversation scope; account instructions and unrelated memories were preserved.
+- Source verification: 129 targeted React checks; 132 metadata, runtime, and device checks before the additional two device-identity cases; 39 helper checks; Android-independent JVM and shim checks; rendered chat/image retention, file changes, navigation, discovery, first-run, and updater checks.
+- Packaging retains the preserved native executable and changes only verified data/resource slots. The permanent Windows setup remains unchanged. No downloaded model weights or personal chat records are included in release assets.

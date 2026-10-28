@@ -3,6 +3,36 @@ import argparse, ctypes, hashlib, json, os, pathlib, shutil, struct, subprocess,
 from ctypes import wintypes
 import package
 
+class Startup(ctypes.Structure):
+    _fields_=[('cb',wintypes.DWORD),('lpReserved',wintypes.LPWSTR),('lpDesktop',wintypes.LPWSTR),('lpTitle',wintypes.LPWSTR),('dwX',wintypes.DWORD),('dwY',wintypes.DWORD),('dwXSize',wintypes.DWORD),('dwYSize',wintypes.DWORD),('dwXCountChars',wintypes.DWORD),('dwYCountChars',wintypes.DWORD),('dwFillAttribute',wintypes.DWORD),('dwFlags',wintypes.DWORD),('wShowWindow',wintypes.WORD),('cbReserved2',wintypes.WORD),('lpReserved2',ctypes.c_void_p),('hStdInput',wintypes.HANDLE),('hStdOutput',wintypes.HANDLE),('hStdError',wintypes.HANDLE)]
+class ProcessInfo(ctypes.Structure):
+    _fields_=[('hProcess',wintypes.HANDLE),('hThread',wintypes.HANDLE),('dwProcessId',wintypes.DWORD),('dwThreadId',wintypes.DWORD)]
+class DesktopProcess:
+    def __init__(self,exe,arguments,desktop):
+        self.kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+        self.kernel.CreateProcessW.argtypes=[wintypes.LPCWSTR,wintypes.LPWSTR,ctypes.c_void_p,ctypes.c_void_p,wintypes.BOOL,wintypes.DWORD,ctypes.c_void_p,wintypes.LPCWSTR,ctypes.POINTER(Startup),ctypes.POINTER(ProcessInfo)]
+        self.kernel.CreateProcessW.restype=wintypes.BOOL
+        self.kernel.GetExitCodeProcess.argtypes=[wintypes.HANDLE,ctypes.POINTER(wintypes.DWORD)]
+        self.kernel.WaitForSingleObject.argtypes=[wintypes.HANDLE,wintypes.DWORD]
+        self.kernel.TerminateProcess.argtypes=[wintypes.HANDLE,wintypes.UINT]
+        self.kernel.CloseHandle.argtypes=[wintypes.HANDLE]
+        startup=Startup();startup.cb=ctypes.sizeof(startup);startup.lpDesktop='WinSta0\\'+desktop
+        self.info=ProcessInfo();command=ctypes.create_unicode_buffer(subprocess.list2cmdline([str(exe),*arguments]))
+        if not self.kernel.CreateProcessW(str(exe),command,None,None,False,0,None,str(exe.parent),ctypes.byref(startup),ctypes.byref(self.info)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        self.pid=self.info.dwProcessId;self.returncode=None
+    def poll(self):
+        code=wintypes.DWORD()
+        if not self.kernel.GetExitCodeProcess(self.info.hProcess,ctypes.byref(code)):raise ctypes.WinError(ctypes.get_last_error())
+        self.returncode=None if code.value==259 else code.value
+        return self.returncode
+    def communicate(self,timeout):
+        if self.kernel.WaitForSingleObject(self.info.hProcess,int(timeout*1000))!=0:raise TimeoutError('The test installer did not exit')
+        self.poll();return b'',b''
+    def close(self):
+        if self.poll() is None:self.kernel.TerminateProcess(self.info.hProcess,1)
+        self.kernel.CloseHandle(self.info.hThread);self.kernel.CloseHandle(self.info.hProcess)
+
 parser=argparse.ArgumentParser()
 parser.add_argument('--nsis',type=pathlib.Path,required=True)
 args=parser.parse_args()
@@ -56,6 +86,8 @@ script=script.replace(r'$SMPROGRAMS\OpenCore\OpenCore.lnk',str(root/'start-menu.
 script=script.replace(r'$SMPROGRAMS\OpenCore',str(root/'start-menu'))
 script=script.replace(r'$DESKTOP\OpenCore.lnk',str(root/'desktop.lnk'))
 if original_key in script or r'$DESKTOP\OpenCore.lnk' in script: raise RuntimeError('Unsafe installer destination')
+# Leave enough time to inspect the real progress page in the disposable installer.
+script=script.replace('Section "OpenCore"\n','Section "OpenCore"\n  Sleep 4000\n',1)
 nsi=root/'fixture.nsi';nsi.write_text(script,encoding='utf-8')
 compiled=subprocess.run([str(nsis),str(nsi)],capture_output=True,text=True,creationflags=flags,timeout=60)
 (root/'compiler.log').write_text(compiled.stdout+'\n'+compiled.stderr)
@@ -90,11 +122,43 @@ try:
     if ordinary.returncode!=5 or first.poll() is not None or unrelated.poll() is not None:
         raise RuntimeError('A standard install did not safely detect the running target')
     result['normalInstallDetectsActualProcessWithoutStoppingIt']=True
-    update=subprocess.Popen([str(installer),'/S','/UPDATE'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,creationflags=flags)
+    # Render the installer on an isolated desktop so this check never steals
+    # the user's focus. The window and its progress bar must actually exist.
+    user.CreateDesktopW.argtypes=[wintypes.LPCWSTR,wintypes.LPCWSTR,ctypes.c_void_p,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p]
+    user.CreateDesktopW.restype=wintypes.HANDLE
+    user.CloseDesktop.argtypes=[wintypes.HANDLE]
+    desktop_name='OpenCoreUpdateTest_'+uuid.uuid4().hex
+    desktop=user.CreateDesktopW(desktop_name,None,None,0,0x10000000,None)
+    if not desktop:raise RuntimeError('Could not create the isolated installer test desktop')
+    update=DesktopProcess(installer,['/S','/UPDATE'],desktop_name)
     time.sleep(1)
     second=subprocess.Popen([str(target/'OpenCore.exe')],creationflags=flags);processes.append(second)
-    stdout,stderr=update.communicate(timeout=45)
+    enum_proc=ctypes.WINFUNCTYPE(wintypes.BOOL,wintypes.HWND,wintypes.LPARAM)
+    user.EnumDesktopWindows.argtypes=[wintypes.HANDLE,enum_proc,wintypes.LPARAM]
+    user.EnumChildWindows.argtypes=[wintypes.HWND,enum_proc,wintypes.LPARAM]
+    user.IsWindowVisible.argtypes=[wintypes.HWND];user.IsWindowVisible.restype=wintypes.BOOL
+    user.GetClassNameW.argtypes=[wintypes.HWND,wintypes.LPWSTR,ctypes.c_int]
+    observed={'window':False,'progress':False,'windows':[],'children':[]}
+    def child(window,_):
+        name=ctypes.create_unicode_buffer(256);user.GetClassNameW(window,name,len(name))
+        if len(observed['children'])<50:observed['children'].append({'class':name.value,'visible':bool(user.IsWindowVisible(window))})
+        if name.value.lower()=='msctls_progress32' and user.IsWindowVisible(window):observed['progress']=True
+        return True
+    def top(window,_):
+        pid=wintypes.DWORD();user.GetWindowThreadProcessId(window,ctypes.byref(pid))
+        if len(observed['windows'])<30:observed['windows'].append({'pid':pid.value,'visible':bool(user.IsWindowVisible(window))})
+        if pid.value==update.pid and user.IsWindowVisible(window):
+            observed['window']=True;user.EnumChildWindows(window,enum_proc(child),0)
+        return True
+    deadline=time.monotonic()+20
+    while time.monotonic()<deadline and update.poll() is None and not observed['progress']:
+        user.EnumDesktopWindows(desktop,enum_proc(top),0);time.sleep(.15)
+    try:stdout,stderr=update.communicate(timeout=45)
+    finally:update.close();user.CloseDesktop(desktop)
     if update.returncode!=0: raise RuntimeError('The update exited '+str(update.returncode)+' '+stderr.decode(errors='replace'))
+    if not observed['window'] or not observed['progress']:
+        result['uiObservation']=observed
+        raise RuntimeError('The update did not show a visible installer and progress bar')
     deadline=time.monotonic()+15
     while time.monotonic()<deadline and not marker.exists(): time.sleep(.25)
     if first.poll() is None or second.poll() is None: raise RuntimeError('The old app or its immediate restart survived the handoff')
@@ -102,7 +166,7 @@ try:
     if not marker.exists() or marker.read_text()!='new': raise RuntimeError('The new executable did not reopen')
     def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
     if sha(target/'OpenCore.exe')!=sha(payload/'OpenCore.exe'): raise RuntimeError('The new executable was not installed')
-    result.update({'oldAndRestartedProcessesStopped':True,'unrelatedProcessSurvived':True,
+    result.update({'visibleInstallerAndProgressBar':True,'oldAndRestartedProcessesStopped':True,'unrelatedProcessSurvived':True,
                    'newExecutableInstalledAndReopened':True,'installedSha256':sha(target/'OpenCore.exe')})
     # Stop only the disposable test installation's new process.
     stop=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass',

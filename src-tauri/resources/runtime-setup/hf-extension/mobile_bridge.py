@@ -25,11 +25,13 @@ def presentation_preference(key):
 class MobileBridge:
     def __init__(self, preference_file=None):
         self.lock = threading.RLock()
+        self.changed = threading.Condition(self.lock)
         self.waiting = deque()
         self.pending = {}
         self.mailboxes = {}
         self.subscriptions = {}
         self.sessions = {}
+        self.last_phone_activity = {}
         self.preferences = {}
         self.preference_file=Path(preference_file) if preference_file else None
         self.device_preferences={}
@@ -79,6 +81,8 @@ class MobileBridge:
         with self.lock:
             self.forget(device,drop_preferences=False)
             self.sessions[device] = secrets.token_urlsafe(18)
+            self.last_phone_activity[device] = time.monotonic()
+            self.changed.notify_all()
             return {'session': self.sessions[device]}
 
     def enqueue(self, device, value):
@@ -113,6 +117,7 @@ class MobileBridge:
         key = (device, identity)
         with self.lock:
             if value.get('session') != self.sessions.get(device): raise ValueError('The phone session expired. Reconnect to the PC.')
+            self.last_phone_activity[device] = time.monotonic()
             if kind=='preference' and presentation_preference(value['key']):
                 preferences=self.device_preferences.setdefault(device,{})
                 if value['action']=='set':preferences[value['key']]=value['value']
@@ -126,6 +131,7 @@ class MobileBridge:
             record = {**value, 'device': device}
             self.pending[key] = {'created': time.monotonic(), 'value': record}
             self.waiting.append(key)
+            self.changed.notify_all()
             if kind == 'invoke' and value['command'] == 'plugin:event|listen':
                 handler = value['args'].get('handler')
                 if type(handler) is not int or handler < 0 or handler > 2147483647:
@@ -140,8 +146,15 @@ class MobileBridge:
                 self.subscriptions.setdefault(device, set()).discard(handler)
             return {'accepted': True}
 
-    def take(self, devices):
+    def take(self, devices, wait=0):
         with self.lock:
+            allowed = devices() if callable(devices) else devices
+            deadline = time.monotonic() + min(max(wait, 0), 20)
+            while wait and not any(key in self.pending and key[0] in allowed for key in self.waiting):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0: break
+                self.changed.wait(remaining)
+                allowed = devices() if callable(devices) else devices
             now = time.monotonic()
             for key, item in list(self.pending.items()):
                 if now - item['created'] > 3600:
@@ -150,9 +163,10 @@ class MobileBridge:
             tasks = []
             while self.waiting and len(tasks) < 32:
                 key = self.waiting.popleft()
-                if key in self.pending and key[0] in devices:
+                if key in self.pending and key[0] in allowed:
                     tasks.append(self.pending[key]['value'])
-            return {'active': bool(devices), 'sessions': {device:self.sessions[device] for device in devices if device in self.sessions}, 'tasks': tasks}
+            active = bool(tasks) or any(device in allowed and now - seen < 30 for device,seen in self.last_phone_activity.items())
+            return {'active': active, 'longPoll': bool(wait), 'sessions': {device:self.sessions[device] for device in allowed if device in self.sessions}, 'tasks': tasks}
 
     def _push(self, device, item):
         mailbox = self.mailboxes.setdefault(device, deque())
@@ -186,6 +200,7 @@ class MobileBridge:
     def updates(self, device, session):
         with self.lock:
             if not self.sessions.get(device) or session != self.sessions.get(device): raise ValueError('The phone session expired. Reconnect to the PC.')
+            self.last_phone_activity[device] = time.monotonic()
             mailbox = self.mailboxes.setdefault(device, deque())
             items = []
             while mailbox and len(items) < 64: items.append(mailbox.popleft())
@@ -198,10 +213,11 @@ class MobileBridge:
             self.mailboxes.pop(device, None)
             self.subscriptions.pop(device, None)
             self.sessions.pop(device, None)
+            self.last_phone_activity.pop(device, None)
             self.waiting = deque(key for key in self.waiting if key[0] != device)
             for key in list(self.pending):
                 if key[0] == device: del self.pending[key]
 
     def close(self):
         with self.lock:
-            self.waiting.clear(); self.pending.clear(); self.mailboxes.clear(); self.subscriptions.clear(); self.sessions.clear(); self.preferences.clear()
+            self.waiting.clear(); self.pending.clear(); self.mailboxes.clear(); self.subscriptions.clear(); self.sessions.clear(); self.last_phone_activity.clear(); self.preferences.clear()

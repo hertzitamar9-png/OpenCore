@@ -18,24 +18,24 @@ final class ConnectionPanel extends FrameLayout {
         ScrollView scroll=new ScrollView(context);scroll.setFillViewport(true);addView(scroll,new FrameLayout.LayoutParams(-1,-1));
         LinearLayout center=new LinearLayout(context);center.setOrientation(LinearLayout.VERTICAL);center.setGravity(Gravity.CENTER);
         center.setPadding(dp(20),dp(24),dp(20),dp(24));scroll.addView(center,new ScrollView.LayoutParams(-1,-2));
-        card=new LinearLayout(context);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(22),dp(24),dp(22),dp(20));
+        card=new LinearLayout(context);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(18),dp(20),dp(18),dp(18));
         GradientDrawable surface=new GradientDrawable();surface.setColor(0xff14202d);surface.setCornerRadius(dp(22));surface.setStroke(dp(1),0xff304457);card.setBackground(surface);
         center.addView(card,new LinearLayout.LayoutParams(-1,-2));
         ImageView logo=new ImageView(context);logo.setImageResource(R.drawable.opencore);logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         LinearLayout.LayoutParams logoSize=new LinearLayout.LayoutParams(dp(46),dp(46));logoSize.gravity=Gravity.CENTER_HORIZONTAL;logoSize.bottomMargin=dp(12);card.addView(logo,logoSize);
-        pc=text(pcName,14,0xffa9bfd3);pc.setGravity(Gravity.CENTER);card.addView(pc);
-        heading=text("Connecting to your PC",25,0xfff2f7fc);heading.setGravity(Gravity.CENTER);heading.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);card.addView(heading);
-        detail=text("",16,0xffc5d5e3);detail.setGravity(Gravity.CENTER);detail.setLineSpacing(dp(3),1);card.addView(detail);
+        pc=text(pcName,13,0xffa9bfd3);pc.setGravity(Gravity.CENTER);card.addView(pc);
+        heading=text("Connecting",22,0xfff2f7fc);heading.setGravity(Gravity.CENTER);heading.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);card.addView(heading);
+        detail=text("",14,0xffc5d5e3);detail.setGravity(Gravity.CENTER);detail.setLineSpacing(dp(2),1);card.addView(detail);
         spinner=new ProgressBar(context);spinner.setIndeterminate(true);spinner.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(0xff76c4ff));
         LinearLayout.LayoutParams spinnerSize=new LinearLayout.LayoutParams(dp(44),dp(44));spinnerSize.gravity=Gravity.CENTER_HORIZONTAL;spinnerSize.topMargin=dp(16);spinnerSize.bottomMargin=dp(10);card.addView(spinner,spinnerSize);
         counter=text("STEP 1 OF "+labels.length,12,0xff8dcfff);counter.setGravity(Gravity.CENTER);card.addView(counter);
         stages=new TextView[labels.length];
-        for(int i=0;i<labels.length;i++){stages[i]=text(labels[i],15,0xffa9bfd3);stages[i].setTag(labels[i]);stages[i].setPadding(0,dp(9),0,dp(9));card.addView(stages[i]);}
+        for(int i=0;i<labels.length;i++){stages[i]=text(labels[i],13,0xffa9bfd3);stages[i].setTag(labels[i]);stages[i].setPadding(0,dp(6),0,dp(6));card.addView(stages[i]);}
         retry=button("Retry now",onRetry,true);LinearLayout.LayoutParams retrySize=new LinearLayout.LayoutParams(-1,-2);retrySize.topMargin=dp(15);card.addView(retry,retrySize);
         LinearLayout options=new LinearLayout(context);LinearLayout.LayoutParams optionSize=new LinearLayout.LayoutParams(-1,-2);optionSize.topMargin=dp(12);card.addView(options,optionSize);
         back=button("Back",onBack,false);change=button("Change PC",onChange,false);
-        LinearLayout.LayoutParams half=new LinearLayout.LayoutParams(0,-2,1);half.rightMargin=dp(5);options.addView(back,half);
-        LinearLayout.LayoutParams otherHalf=new LinearLayout.LayoutParams(0,-2,1);otherHalf.leftMargin=dp(5);options.addView(change,otherHalf);
+        LinearLayout.LayoutParams half=new LinearLayout.LayoutParams(0,dp(48),1);half.rightMargin=dp(5);options.addView(back,half);
+        LinearLayout.LayoutParams otherHalf=new LinearLayout.LayoutParams(0,dp(48),1);otherHalf.leftMargin=dp(5);options.addView(change,otherHalf);
         if(onChange==null)change.setVisibility(View.GONE);
         setVisibility(View.GONE);
     }
@@ -47,11 +47,12 @@ final class ConnectionPanel extends FrameLayout {
         view.setOnClickListener(ignored->{if(action!=null)action.run();});return view;
     }
     void showProgress(String title,String message,int step){
-        heading.setText(title);detail.setText(message);spinner.setVisibility(View.VISIBLE);retry.setVisibility(View.GONE);
+        heading.setText(title);detail.setText(message);spinner.setVisibility(View.VISIBLE);retry.setVisibility(View.VISIBLE);retry.setEnabled(false);retry.setAlpha(0.45f);
+        retry.postDelayed(()->{retry.setEnabled(true);retry.setAlpha(1f);},16000);
         counter.setText("STEP "+(step+1)+" OF "+stages.length);renderStages(step,false);setVisibility(View.VISIBLE);bringToFront();
     }
     void showError(String title,String message,int step){
-        heading.setText(title);detail.setText(message);spinner.setVisibility(View.GONE);retry.setVisibility(View.VISIBLE);
+        heading.setText(title);detail.setText(message);spinner.setVisibility(View.GONE);retry.setVisibility(View.VISIBLE);retry.setEnabled(true);retry.setAlpha(1f);
         counter.setText("CONNECTION NEEDS ATTENTION");renderStages(step,true);setVisibility(View.VISIBLE);bringToFront();
     }
     void renderStages(int step,boolean error){
@@ -61,6 +62,6 @@ final class ConnectionPanel extends FrameLayout {
         }
     }
     @Override protected void onSizeChanged(int width,int height,int oldWidth,int oldHeight){
-        super.onSizeChanged(width,height,oldWidth,oldHeight);LinearLayout.LayoutParams size=(LinearLayout.LayoutParams)card.getLayoutParams();size.width=Math.max(dp(220),Math.min(dp(440),width-dp(40)));size.gravity=Gravity.CENTER_HORIZONTAL;card.setLayoutParams(size);
+        super.onSizeChanged(width,height,oldWidth,oldHeight);LinearLayout.LayoutParams size=(LinearLayout.LayoutParams)card.getLayoutParams();size.width=Math.max(dp(220),Math.min(dp(360),width-dp(32)));size.gravity=Gravity.CENTER_HORIZONTAL;card.setLayoutParams(size);
     }
 }

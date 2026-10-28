@@ -111,6 +111,11 @@ def append_requested(entries, manifest, snapshots):
                     entry['baseRepository'] = row['baseRepository']
                     entry['packageKind'] = 'adapter'
                 entry['catalogOrder'] = 0 if entry['runtime'].get('adapter') else 1
+                if source.get('imageRuntime')=='iris-sdcpp-v1':
+                    from hf_sdcpp import REPOSITORY,REVISION
+                    if repository!=REPOSITORY or metadata['sha']!=REVISION:raise ValueError('Sakura runtime package identity differs')
+                    entry.update(category='image',imageRuntime='iris-sdcpp-v1',imageDefaults={'width':1024,'height':1024,'steps':30,'guidance':3},catalogOrder=0 if quant=='Q8_0' else 1)
+                    entry['runtime'].update(adapter='sdcpp-iris',reason='The pinned Vulkan image engine and text encoder prepare automatically. Actual image generation is required before Ready.')
                 validate_entry(entry)
                 entries.append(entry)
                 existing.add(entry['id'])

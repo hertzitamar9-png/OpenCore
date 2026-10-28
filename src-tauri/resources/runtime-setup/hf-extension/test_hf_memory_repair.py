@@ -132,6 +132,13 @@ class MemoryRepairTests(unittest.TestCase):
         self.assertEqual(self.repair.recover(self.request)["code"], "human_source_unavailable")
         self.assertEqual(self.server.posts, [])
 
+    def test_skipped_and_deferred_unsaved_captures_are_reviewed_again_from_exact_human_source(self):
+        for status in ('unchanged','deferred'):
+            self.mutate(self.platform,'UPDATE memory_auto_captures SET status=?',(status,))
+            result=self.repair.recover(self.request)
+            self.assertEqual(result['status'],'ready')
+            self.assertEqual(result['candidates'][0]['recordArgs']['content'],SOURCE)
+
     def test_assistant_inventions_and_paraphrases_are_rejected_even_with_valid_json(self):
         for quote in ["You played esports football.", "I played professional football a year ago"]:
             with self.subTest(quote=quote):

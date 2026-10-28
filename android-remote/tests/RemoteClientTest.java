@@ -34,6 +34,11 @@ public final class RemoteClientTest {
         check(cache.get("pc-a/too-large")==null,"oversized image is never retained");
         cache.clear();check(cache.get("pc-a/image-1")==null,"revocation drops cached images");
 
+        UiAssetCache ui=new UiAssetCache(6);ui.select("pc-a","revision-1");ui.put("app.js",new byte[]{1,2,3});
+        ui.select("pc-a","revision-1");check(ui.get("app.js")!=null,"reconnecting reuses the same verified app resources");
+        ui.select("pc-a","revision-2");check(ui.get("app.js")==null,"a PC update invalidates cached interface resources");
+        ui.put("app.js",new byte[]{4,5,6});ui.select("pc-b","revision-2");check(ui.get("app.js")==null,"cached app resources belong to one authenticated PC");
+
         String unreachable=ConnectionMessages.forError(new ConnectException("Failed to connect to /192.0.2.1:60475"));
         check(unreachable.contains("OpenCore")&&unreachable.contains("network")&&!unreachable.contains("192.0.2.1"),"network failure gives usable recovery instructions");
         check(ConnectionMessages.forError(new SocketTimeoutException()).contains("PC"),"timeouts identify the PC connection");

@@ -18,7 +18,7 @@ async function $hubConnect() {
   }).catch(error => { $hubPublish({available:false, loaded:true, error:String(error)}); throw error; }).finally(() => {$hubConnecting=null;});
   return $hubConnecting;
 }
-async function $hubRequest(path, body, method) {
+async function $hubRequest(path, body, method, retried=false) {
   const descriptor = await $hubConnect(), controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), path==='/memory/recover'||path==='/prompts/improve'?90000:45000);
   try {
@@ -26,9 +26,18 @@ async function $hubRequest(path, body, method) {
       headers:{'Content-Type':'application/json', [descriptor.authHeader || 'X-OpenCore-Hub-Secret']:descriptor.secret,
         ...(path==='/status'&&/^[a-f0-9]{64}$/.test($hubState.catalogRevision||'')?{'X-OpenCore-Catalog-Revision':$hubState.catalogRevision}:{})},
       ...(body===undefined?{}:{body:JSON.stringify(body)}), signal:controller.signal});
+    if(response.status===401||response.status===403){$hubDescriptor=null;$hubStatusAt=0;}
     const value = await response.json();
     if (!response.ok) throw new Error(value.error?.message || value.error || 'The Hugging Face operation failed.');
     return value;
+  } catch(error) {
+    // A helper restart changes its port and secret. Retire stale descriptors,
+    // retry reads once, and leave writes to the caller to prevent duplicate jobs.
+    if(error?.name==='TypeError'||error?.name==='AbortError'){
+      if($hubDescriptor===descriptor)$hubDescriptor=null;$hubStatusAt=0;
+      if(body===undefined&&(!method||method==='GET')&&!retried)return $hubRequest(path,body,method,true);
+    }
+    throw error;
   } finally {clearTimeout(timeout);}
 }
 async function $hubRefresh(force=false) {
@@ -428,7 +437,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     h('small',null,entry.specialist==='ocr'?'Local image OCR needs a CUDA-capable NVIDIA GPU with BF16 and enough free GPU memory.':entry.runtime?.reason||'The publisher’s package is pinned and verified. Local execution depends on architecture support and available memory.'),
     h('footer',null,entry.status!=='installed'?h('button',{disabled:locked||!entry.installable,onClick:start},active?'Installing…':'Install'):
       entry.specialistReady?h('button',{disabled:locked,onClick:()=>setOCROpen(v=>!v)},ocrOpen?'Close OCR':'Use OCR'):
-      entry.category==='image'&&entry.format==='diffusers'?h('button',{disabled:locked,onClick:()=>{globalThis.__opencoreRequestedImageModel=entry.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));}},'Generate images'):
+      entry.category==='image'&&(entry.format==='diffusers'||entry.imageRuntime==='iris-sdcpp-v1')?h('button',{disabled:locked,onClick:()=>{globalThis.__opencoreRequestedImageModel=entry.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));}},'Generate images'):
       entry.runtimeReady?h('button',{disabled:locked,onClick:use},busy?'Connecting…':selectedProfile===entry.profileId?'Selected':'Use model'):
       h('button',{disabled:locked||!(entry.runtime?.adapter||entry.specialist==='ocr'),onClick:prepare},active?'Preparing…':entry.specialist==='ocr'?'Prepare OCR':'Prepare runtime'),
       entry.status==='installed'?h('button',{className:'model-delete-button',disabled:locked,onClick:askRemove},'Uninstall'):null),

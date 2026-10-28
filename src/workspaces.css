@@ -1,4 +1,5 @@
 .spaces-view,.file-snapshot-view,.file-changes-receipt{min-width:0;color:var(--text,var(--theme-ink,#e7e8ee))}
+.file-changes-toggle{min-height:36px;padding:4px 8px;white-space:nowrap;font-size:12px}.file-changes-receipt .file-change-list{max-height:min(42vh,360px);overflow:auto;overscroll-behavior:contain}.file-changes-receipt>header{flex-wrap:wrap}@media(max-width:600px){.file-changes-toggle{min-height:40px}.file-changes-receipt .file-change-list{max-height:32vh}}
 .spaces-view{padding:20px 24px;max-width:1250px;margin:0 auto;width:100%;box-sizing:border-box}
 .spaces-heading,.spaces-heading>div,.spaces-toolbar,.spaces-toolbar>div,.file-snapshot-heading,.file-snapshot-meta,.file-snapshot-tabs,.file-snapshot-proof,.file-diff-view>header,.file-changes-receipt>header,.file-changes-receipt>header>span{display:flex;align-items:center;gap:9px}
 .spaces-heading,.spaces-toolbar,.file-diff-view>header,.file-changes-receipt>header{justify-content:space-between}

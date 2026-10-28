@@ -52,11 +52,15 @@ const server=http.createServer((request,response)=>{
   assert.equal(await page.getByRole('button',{name:'Download update',exact:true}).count(),0);
   assert.equal(await page.getByRole('button').count(),1);
   assert.equal(await page.getByRole('button',{name:'Updating…',exact:true}).evaluate((element,previous)=>element===previous,readyButton),true);
+  await page.getByRole('progressbar',{name:'Update download in progress'}).waitFor();
+  await page.clock.fastForward(6000);
+  assert.equal(await page.getByText('Preparing and downloading the update…',{exact:true}).isVisible(),true);
   await page.getByRole('button',{name:'Updating…',exact:true}).dispatchEvent('click');assert.equal(await installs(),1);
   await page.screenshot({path:path.join(screenshotOutput,'update-in-progress.png')});
   results.push({name:'one click starts the update and the same button shows Updating with duplicate clicks disabled',pass:true});
   await page.evaluate(()=>fixture.reject(Error('Network interrupted')));
   await page.getByText('Could not install the update: Error: Network interrupted',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('progressbar',{name:'Update download in progress'}).count(),0);
   assert.equal(await page.getByRole('button',{name:'Update ready',exact:true}).isEnabled(),true);assert.equal(await installs(),1);
   results.push({name:'failure unlocks the same button and never retries automatically',pass:true});
   await page.getByRole('button',{name:'Update ready',exact:true}).click();await page.getByRole('button',{name:'Updating…',exact:true}).waitFor();assert.equal(await installs(),2);

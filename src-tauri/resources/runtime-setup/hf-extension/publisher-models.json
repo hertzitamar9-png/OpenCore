@@ -68820,6 +68820,250 @@
       "builtIn": true
     },
     {
+      "id": "hf-145f30fdf0ec48b427f792a1",
+      "variantKey": "iris-gguf:Sakura-Iris-3B-Q8_0-4.15GiB.gguf",
+      "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+      "format": "gguf",
+      "quantization": "Q8_0",
+      "subdirectory": "",
+      "category": "image",
+      "files": [
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-Iris-3B-Q8_0-4.15GiB.gguf",
+          "bytes": 4459531168,
+          "sha256": "4e9821f132f6c076b833ade81e201754268756064dd073881414b62a70afc4a5",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf",
+          "bytes": 4280406144,
+          "sha256": "ae45d32cb972b12f7e64a2c6c4077f59dcbef4b9108e4c58dbc3f0bc24268b62",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 8739937312,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "gated": false,
+      "runtime": {
+        "adapter": "sdcpp-iris",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Vulkan image engine and text encoder prepare automatically. Actual image generation is required before Ready."
+      },
+      "familyId": "publisher-sakura-iris-3b",
+      "familyLabel": "Sakura-Iris 3B Uncensored",
+      "originalRepository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Iris 3B pixel-space image generation with the publisher Q8 text encoder. Four real image quants; Q8_0 is recommended for fidelity. No VAE is required.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "Sakura-Iris 3B Uncensored · Q8_0",
+      "catalogOrder": 0,
+      "imageRuntime": "iris-sdcpp-v1",
+      "imageDefaults": {
+        "width": 1024,
+        "height": 1024,
+        "steps": 30,
+        "guidance": 3
+      }
+    },
+    {
+      "id": "hf-3a90f0fb5e8254c0984033a2",
+      "variantKey": "iris-gguf:Sakura-Iris-3B-Q4_K_M-3.14GiB.gguf",
+      "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+      "format": "gguf",
+      "quantization": "Q4_K_M",
+      "subdirectory": "",
+      "category": "image",
+      "files": [
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-Iris-3B-Q4_K_M-3.14GiB.gguf",
+          "bytes": 3374947744,
+          "sha256": "a65ca4a773ca9433166d1a3b20ba8f4e66a3193e7198264f23ffd2528a7678a3",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf",
+          "bytes": 4280406144,
+          "sha256": "ae45d32cb972b12f7e64a2c6c4077f59dcbef4b9108e4c58dbc3f0bc24268b62",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 7655353888,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "gated": false,
+      "runtime": {
+        "adapter": "sdcpp-iris",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Vulkan image engine and text encoder prepare automatically. Actual image generation is required before Ready."
+      },
+      "familyId": "publisher-sakura-iris-3b",
+      "familyLabel": "Sakura-Iris 3B Uncensored",
+      "originalRepository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Iris 3B pixel-space image generation with the publisher Q8 text encoder. Four real image quants; Q8_0 is recommended for fidelity. No VAE is required.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "Sakura-Iris 3B Uncensored · Q4_K_M",
+      "catalogOrder": 1,
+      "imageRuntime": "iris-sdcpp-v1",
+      "imageDefaults": {
+        "width": 1024,
+        "height": 1024,
+        "steps": 30,
+        "guidance": 3
+      }
+    },
+    {
+      "id": "hf-e41496ea599e60ec3088d4ee",
+      "variantKey": "iris-gguf:Sakura-Iris-3B-Q5_K_M-3.40GiB.gguf",
+      "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+      "format": "gguf",
+      "quantization": "Q5_K_M",
+      "subdirectory": "",
+      "category": "image",
+      "files": [
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-Iris-3B-Q5_K_M-3.40GiB.gguf",
+          "bytes": 3646102944,
+          "sha256": "869200be41e9610315274d86d69f9d191d5ddf86c23ed21cc407df1047245c1f",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf",
+          "bytes": 4280406144,
+          "sha256": "ae45d32cb972b12f7e64a2c6c4077f59dcbef4b9108e4c58dbc3f0bc24268b62",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 7926509088,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "gated": false,
+      "runtime": {
+        "adapter": "sdcpp-iris",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Vulkan image engine and text encoder prepare automatically. Actual image generation is required before Ready."
+      },
+      "familyId": "publisher-sakura-iris-3b",
+      "familyLabel": "Sakura-Iris 3B Uncensored",
+      "originalRepository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Iris 3B pixel-space image generation with the publisher Q8 text encoder. Four real image quants; Q8_0 is recommended for fidelity. No VAE is required.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "Sakura-Iris 3B Uncensored · Q5_K_M",
+      "catalogOrder": 1,
+      "imageRuntime": "iris-sdcpp-v1",
+      "imageDefaults": {
+        "width": 1024,
+        "height": 1024,
+        "steps": 30,
+        "guidance": 3
+      }
+    },
+    {
+      "id": "hf-767a578a83a828789e5ec911",
+      "variantKey": "iris-gguf:Sakura-Iris-3B-Q6_K-3.66GiB.gguf",
+      "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+      "format": "gguf",
+      "quantization": "Q6_K",
+      "subdirectory": "",
+      "category": "image",
+      "files": [
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-Iris-3B-Q6_K-3.66GiB.gguf",
+          "bytes": 3934208416,
+          "sha256": "51e957208928c3dc23c3dfce0a325665e855fa69959f8648cfe13a300e59f1ff",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        },
+        {
+          "repository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+          "revision": "eab8cb6f5021ba8948cfe9d18a8578c98f061879",
+          "filename": "Sakura-TextEncoder-Qwen3VL-4B-Uncensored-8bit-3.99GiB.gguf",
+          "bytes": 4280406144,
+          "sha256": "ae45d32cb972b12f7e64a2c6c4077f59dcbef4b9108e4c58dbc3f0bc24268b62",
+          "gitBlobSha1": null,
+          "role": "model",
+          "pinned": true
+        }
+      ],
+      "bytes": 8214614560,
+      "installable": true,
+      "status": "not-installed",
+      "sourceUrl": "https://huggingface.co/webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "gated": false,
+      "runtime": {
+        "adapter": "sdcpp-iris",
+        "available": false,
+        "inferenceVerified": false,
+        "reason": "The pinned Vulkan image engine and text encoder prepare automatically. Actual image generation is required before Ready."
+      },
+      "familyId": "publisher-sakura-iris-3b",
+      "familyLabel": "Sakura-Iris 3B Uncensored",
+      "originalRepository": "webmp3/Sakura-Iris-3B-Uncensored-GGUF",
+      "builtIn": true,
+      "nativeModelIds": [],
+      "libraryCategory": "image",
+      "builtInDescription": "Iris 3B pixel-space image generation with the publisher Q8 text encoder. Four real image quants; Q8_0 is recommended for fidelity. No VAE is required.",
+      "contextTokens": 8192,
+      "license": "apache-2.0",
+      "name": "Sakura-Iris 3B Uncensored · Q6_K",
+      "catalogOrder": 1,
+      "imageRuntime": "iris-sdcpp-v1",
+      "imageDefaults": {
+        "width": 1024,
+        "height": 1024,
+        "steps": 30,
+        "guidance": 3
+      }
+    },
+    {
       "id": "hf-8e7db91192afa5f59c845be3",
       "repository": "mradermacher/SimpleSD-4B-thinking-i1-GGUF",
       "revision": "962cb15cddc7624950c537620c55e1fa52d5161e",

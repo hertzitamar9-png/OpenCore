@@ -99,8 +99,11 @@ it('tells the user active model work is stopped before installation begins', asy
   render(<UpdateButton />);
   fireEvent.click(await screen.findByRole('button', { name: 'Update ready' }));
   expect(await screen.findByText('Stopping active model work, then installing OpenCore 1.3.0…')).toBeVisible();
+  expect(screen.getByRole('heading',{name:'Updating OpenCore'})).toBeVisible();
+  expect(screen.getByRole('progressbar',{name:'Update download in progress'})).toBeVisible();
   expect(screen.getByRole('button', { name: 'Updating…' })).toBeDisabled();
   await act(async () => complete());
+  expect(screen.queryByRole('progressbar',{name:'Update download in progress'})).not.toBeInTheDocument();
 });
 
 it('locks the same button across headers and only retries after a new click on failure', async () => {

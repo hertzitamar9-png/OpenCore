@@ -1,10 +1,36 @@
 import unittest
 import tempfile
+import concurrent.futures
+import threading
+from unittest.mock import patch
 from pathlib import Path
 from mobile_bridge import MobileBridge
 
 
 class MobileBridgeTests(unittest.TestCase):
+    def test_idle_host_waits_and_a_phone_command_wakes_it_immediately(self):
+        bridge=MobileBridge();devices=set();started=threading.Event()
+        def wait():
+            started.set();return bridge.take(lambda:devices.copy(),wait=1)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future=pool.submit(wait);self.assertTrue(started.wait(.5))
+            devices.add('phone');session=bridge.open_session('phone')['session']
+            bridge.enqueue('phone',{'session':session,'id':'read','kind':'invoke','command':'get_snapshot','args':{}})
+            result=future.result(timeout=1)
+        self.assertTrue(result['longPoll'])
+        self.assertEqual(result['tasks'][0]['command'],'get_snapshot')
+
+    def test_paired_but_offline_phones_do_not_keep_the_desktop_polling_rapidly(self):
+        with patch('mobile_bridge.time.monotonic',return_value=100):
+            bridge=MobileBridge(); session=bridge.open_session('phone')['session']
+            self.assertTrue(bridge.take({'phone'})['active'])
+        with patch('mobile_bridge.time.monotonic',return_value=140):
+            self.assertFalse(bridge.take({'phone'})['active'])
+            bridge.updates('phone',session)
+            self.assertTrue(bridge.take({'phone'})['active'])
+            bridge.forget('phone')
+            self.assertFalse(bridge.take({'phone'})['active'])
+
     def setUp(self):
         self.bridge = MobileBridge()
         self.sessions = {device:self.bridge.open_session(device)['session'] for device in ('phone-a','phone-b','a','b')}

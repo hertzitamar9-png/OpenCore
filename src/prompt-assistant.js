@@ -33,6 +33,10 @@ export function PromptAssistantSettings(){
     h('label',null,h('input',{type:'checkbox',checked:value.recap,disabled:!value.enabled,onChange:e=>set({recap:e.target.checked})}),'Show a short summary of the generation request'),
     h('small',null,'The chat composer also shows Improve prompt so you can review a rewrite before sending.'),error?h('p',{role:'alert'},error):null);
 }
+export function PhoneAppUpdatesSettings(){
+  const h=React.createElement;
+  return globalThis.__OPENCORE_MOBILE__?h('section',{className:'hub-settings'},h('h3',null,'Android app updates'),h('p',null,'Your interface updates from the PC automatically. Native app updates install over this app and keep your saved PC.'),h('button',{type:'button',onClick:()=>globalThis.__opencoreCheckAppUpdates?.()},'Check for app updates')):null;
+}
 export function PromptAssistantTools({prompt,onPrompt,conversationId}){
   const h=React.createElement,value=usePromptAssistantSettings(),[busy,setBusy]=React.useState(false),[message,setMessage]=React.useState(''),[previous,setPrevious]=React.useState('');
   if(!value.enabled)return null;

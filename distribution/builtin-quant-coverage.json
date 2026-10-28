@@ -2,7 +2,7 @@
   "schema": 1,
   "requirement": "At least five distinct named published packages per built-in checkpoint",
   "allModelsMeetMinimum": false,
-  "families": 546,
+  "families": 547,
   "withFive": 208,
   "models": [
     {
@@ -5404,6 +5404,17 @@
       "source": "bundled packages",
       "repositories": [
         "DavidAU/Qwen3.8-27B-Jumbo-Fusion-IQ-747-900-Turbo-Brilliance-50X-Reasoning-Instruct-NEO-MAX-MTP-GGUF"
+      ]
+    },
+    {
+      "id": "publisher-sakura-iris-3b",
+      "label": "Sakura-Iris 3B Uncensored",
+      "category": "image",
+      "quantizations": 4,
+      "readyToInstallChoices": false,
+      "source": "bundled packages",
+      "repositories": [
+        "webmp3/Sakura-Iris-3B-Uncensored-GGUF"
       ]
     },
     {

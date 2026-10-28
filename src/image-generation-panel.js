@@ -73,9 +73,9 @@ export function imageGenerationDefaults(id) {
   return {steps:30,guidance:id.startsWith('moss-')?3:id.startsWith('qwen-image-21')?4:4.5};
 }
 
-export function automaticImageSettings(id,prompt,files=[]) {
+export function automaticImageSettings(id,prompt,files=[],preset) {
   if(files.length>4||files.some(path=>typeof path!=='string'||!/^([A-Za-z]:[\\/]|\/)/.test(path)||! /\.(png|jpe?g|webp)$/i.test(path)))throw Error('Attach up to four PNG, JPEG or WebP reference images.');
-  const defaults=imageGenerationDefaults(id),portrait=/\b(portrait|vertical|phone wallpaper|9:16)\b/i.test(prompt),wide=/\b(landscape|wide|panorama|wallpaper|16:9)\b/i.test(prompt),scale=id.startsWith('qwen-image-21')?2:1;
+  const defaults=preset||imageGenerationDefaults(id),portrait=/\b(portrait|vertical|phone wallpaper|9:16)\b/i.test(prompt),wide=/\b(landscape|wide|panorama|wallpaper|16:9)\b/i.test(prompt),scale=id.startsWith('qwen-image-21')?2:1;
   return {width:(portrait?576:1024)*scale,height:(portrait?1024:wide?576:1024)*scale,steps:defaults.steps,guidanceScale:defaults.guidance,numImages:1,outputFormat:'png',seed:crypto.getRandomValues(new Uint32Array(1))[0],...(files.length?{referencePaths:[...files]}:{})};
 }
 
@@ -120,7 +120,8 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     window.addEventListener('opencore-chat-image-prompt',send);window.addEventListener('opencore-chat-image-stop',stop);
     return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);};
   });
-  React.useEffect(()=>{const defaults=imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);setAdapterId('');},[modelId]);
+  const imagePreset=models.find(model=>model.id===modelId)?.hubEntry?.imageDefaults;
+  React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);setAdapterId('');},[modelId,imagePreset?.steps,imagePreset?.guidance]);
   const model=models.find(m=>m.id===modelId),choices=imageAdaptersForModel(model,adapters);
   React.useEffect(()=>{if(open&&!studio&&!embedded&&model)rememberChatImageModel(model);},[open,studio,embedded,model]);
   React.useEffect(()=>{const draft=globalThis.__opencoreImageDraft;if(draft?.modelId===modelId&&choices.some(a=>a.id===draft.adapterId)){setAdapterId(draft.adapterId);setPrompt(draft.prompt||'');setStrength(draft.strength??0.8);delete globalThis.__opencoreImageDraft;}},[modelId,adapters]);
@@ -176,13 +177,13 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     submitting.current=true;setBusy(true);setError('');
     try{
       const adapter=choices.find(a=>a.id===adapterId),file=adapter?.installReceipt.files.find(f=>f.role==='model'&&f.localPath);
-      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
+      const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,model.hubEntry?.imageDefaults)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
       if(globalThis.__opencorePromptSettings?.().enabled&&globalThis.__opencorePromptSettings().automaticImages){
         try{const better=await globalThis.__opencoreImproveLocalPrompt(request.prompt,conversation.current,'image',setStage);request.settings.originalPrompt=text.trim();request.settings.promptRecap=better.recap;request.prompt=better.prompt;}
         catch(error){setError('Prompt assistant: '+String(error)+' Your original prompt will be used.');}
       }
       if(studio&&request.settings.outputWidth>request.settings.width){setStage('Preparing the AI detail upscaler…');const upscaler=await globalThis.__opencoreImageHub.prepareUpscaler();request.settings.upscaleModelPath=upscaler.path;}
-      if(model.hubEntry?.format==='diffusers'&&!model.hubEntry?.nativeProfile){
+      if((model.hubEntry?.format==='diffusers'||model.hubEntry?.imageRuntime==='iris-sdcpp-v1')&&!model.hubEntry?.nativeProfile){
         const hub=globalThis.__opencoreImageHub;if(!hub)throw Error('Update OpenCore to enable imported image generation.');
         try{window.window.localStorage.setItem('opencore.image-chat-history','1');}catch{}
         request.conversationId=request.conversationId||(studio?null:'opencore:'+crypto.randomUUID());

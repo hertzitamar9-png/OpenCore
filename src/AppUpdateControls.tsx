@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Download } from 'lucide-react';
 import * as api from './api';
+import './update-progress.css';
 
 type CheckedVersion = Awaited<ReturnType<typeof api.checkLatestAppVersion>>;
 
@@ -94,6 +95,13 @@ export function UpdateButton() {
   }
 
   return <div className="manual-update-control">
+    {installing && <div className="app-update-overlay" role="status" aria-live="polite">
+      <div className="app-update-card"><h2>Updating OpenCore</h2>
+        <p>Preparing and downloading the update…</p>
+        <progress aria-label="Update download in progress" />
+        <small>Keep your PC on. An installation window will show the next step, then OpenCore will reopen.</small>
+      </div>
+    </div>}
     {open && showMessage && <div className="manual-update-inline">
       {showMessage && <span className="manual-update-message" role="status" aria-live="polite">{message}</span>}
     </div>}

@@ -13,17 +13,25 @@
   for(const [key,value] of Object.entries(preferenceSeed))if(preferenceKey(key)&&typeof value==='string')originalSet.call(storage,key,value);
   let resolvePort;
   const ready=new Promise(resolve=>{resolvePort=resolve;});
+  function startupError(message){if(port&&!appReady)port.postMessage(JSON.stringify({id:'phone-startup-error',kind:'phone-startup-error',error:message}));}
   function request(value){
     if(connectionError)return Promise.reject(new Error(connectionError));
     const id='phone-'+(++sequence);
     return new Promise((resolve,reject)=>{
-      waiting.set(id,{resolve,reject});
-      ready.then(()=>port.postMessage(JSON.stringify({id,...value}))).catch(error=>{waiting.delete(id);reject(error);});
+      const startup=value.command==='startup_status'||value.command==='account_action'&&value.args?.action==='startup_status';
+      const timer=setTimeout(()=>{
+        if(!waiting.delete(id))return;
+        const message='The PC did not respond in time. Keep OpenCore open on the PC, then retry.';
+        reject(new Error(message));if(startup)startupError(message);
+      },startup?18000:180000);
+      waiting.set(id,{resolve,reject,timer});
+      ready.then(()=>{if(waiting.has(id))port.postMessage(JSON.stringify({id,...value}));}).catch(error=>{clearTimeout(timer);waiting.delete(id);reject(error);});
     });
   }
   globalThis.__opencoreCheckAppUpdates=()=>request({kind:'phone-app-update'});
+  globalThis.__opencoreDisconnectPhone=()=>request({kind:'phone-disconnect'});
   function checkAppReady(){
-    if(!port||appReady||!document.getElementById('root')?.childElementCount)return;
+    if(!port||appReady||!document.getElementById('root')?.querySelector('.opencore-shell .section-header'))return;
     appReady=true;rootObserver?.disconnect();
     port.postMessage(JSON.stringify({id:'phone-ready',kind:'phone-ready'}));
   }
@@ -32,7 +40,7 @@
   function deliver(packet){
     if(packet.type==='connection-lost'){
       connectionError=packet.error||'PC disconnected. Reconnecting…';
-      for(const item of waiting.values())item.reject(new Error(connectionError));
+      for(const item of waiting.values()){clearTimeout(item.timer);item.reject(new Error(connectionError));}
       for(const controller of streams.values())try{controller.error(new Error(connectionError));}catch{}
       waiting.clear();streams.clear();return;
     }
@@ -47,10 +55,11 @@
     if(packet.type==='event'){callbacks.get(packet.handler)?.(packet.payload);return;}
     const item=waiting.get(packet.id);
     if(packet.type==='result'){
-      if(!item)return;waiting.delete(packet.id);
+      if(!item)return;clearTimeout(item.timer);waiting.delete(packet.id);
       if(packet.ok)item.resolve(packet.value);else item.reject(new Error(packet.error||'PC request failed.'));
     }else if(packet.type==='stream-start'){
       if(!item)return;
+      clearTimeout(item.timer);
       const stream=new ReadableStream({start(controller){streams.set(packet.id,controller);},cancel(){streams.delete(packet.id);}});
       item.resolve(new Response(stream,{status:packet.status,headers:{'Content-Type':packet.contentType}}));
     }else if(packet.type==='stream-chunk'){

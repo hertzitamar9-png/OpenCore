@@ -65,6 +65,7 @@ app=editFunction(app,'Pj',text=>{
   text=replaceOnce(text,'t&&(n||(o==null?void 0:o.available))','t&&n');
   text=replaceOnce(text,',(o==null?void 0:o.available)&&i.jsx("button",{type:"button",disabled:c,onClick:()=>void u(),children:c?"Updating…":"Install update"})','');
   text=replaceOnce(text,'"aria-label":"Update","aria-expanded":t','"aria-label":$installing?"Updating…":"Update ready","aria-busy":$installing');
+  text=replaceOnce(text,'className:"manual-update-control",children:[','className:"manual-update-control",children:[$installing?i.jsx($OpenCoreUpdateProgress,{}):null,');
   return replaceOnce(text,'children:"Update"','children:$installing?"Updating…":"Update ready"');
 });
 // Local UI recovery can pin the version while the matching release is prepared.
@@ -123,6 +124,8 @@ app+='\n'+fs.readFileSync(path.join(root,'managed-panels.js'),'utf8');
 app+='\n'+fs.readFileSync(path.join(root,'mobile-host.js'),'utf8');
 app+='\nconst $railHoverStyle=document.createElement("style");$railHoverStyle.textContent=".conversation-app-rail .nav-item:hover:not(:disabled),.conversation-app-rail .nav-item:focus-visible{background:color-mix(in srgb,var(--theme-accent,#6dacf5) 22%,var(--theme-panel,#10283d))!important;box-shadow:inset 0 0 0 1px var(--theme-accent,#6dacf5);color:var(--theme-ink,#fff)!important}";document.head.appendChild($railHoverStyle);\n';
 app+='\nconst $navDividerStyle=document.createElement("style");$navDividerStyle.textContent=".nav-rail .nav-group-start{border-top:2px solid var(--theme-accent-ink,#8ec4ff)}";document.head.appendChild($navDividerStyle);\n';
+app+='\nconst $updateProgressStyle=document.createElement("style");$updateProgressStyle.textContent='+JSON.stringify(fs.readFileSync(path.join(root,'../src/update-progress.css'),'utf8'))+';document.head.appendChild($updateProgressStyle);\n';
+app+='\nfunction $OpenCoreUpdateProgress(){return i.jsx("div",{className:"app-update-overlay",role:"status","aria-live":"polite",children:i.jsxs("div",{className:"app-update-card",children:[i.jsx("h2",{children:"Updating OpenCore"}),i.jsx("p",{children:"Preparing and downloading the update…"}),i.jsx("progress",{"aria-label":"Update download in progress"}),i.jsx("small",{children:"Keep your PC on. An installation window will show the next step, then OpenCore will reopen."})]})})}\n';
 app+='\n'+fs.readFileSync(path.join(root,'retained-views.js'),'utf8');
 app += '\n' + fs.readFileSync(path.join(root, 'install-coordinator.js'), 'utf8');
 app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+JSON.stringify(releaseVersion)+');\n';

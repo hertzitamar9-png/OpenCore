@@ -68,7 +68,7 @@ class RequestedCatalogTests(unittest.TestCase):
             'Teriminal-RSI/Terminal-RSI-27B', 'Gen-Verse/DiscoveryRSI-27B',
             'IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF',
             'talxcc/Tals-coder-flash-02', 'Jackrong/Kestrel-4B-Coder'}.issubset({row['repository'] for row in self.rows}))
-        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 21)
+        self.assertEqual(len({entry['familyId'] for entry in self.entries}), 22)
         self.assertEqual(len({entry['id'] for entry in self.entries}), len(self.entries))
         self.assertTrue(all(entry['builtIn'] and entry['installable'] for entry in self.entries))
         self.assertTrue(all(entry['originalRepository'] != 'Qwen/Qwen3.8-27B' for entry in self.entries))
@@ -107,7 +107,7 @@ class RequestedCatalogTests(unittest.TestCase):
             if entry['quantization'] in ('MLX 8-bit', 'MLX NVFP4', 'EXL3 4.0 bpw', 'Q2_0'):
                 self.assertIsNone(entry['runtime']['adapter'])
         report = coverage({'models': []}, self.entries)
-        self.assertEqual(report['families'], 21)
+        self.assertEqual(report['families'], 22)
         self.assertEqual(report['withFive'], 9)
         self.assertFalse(report['allModelsMeetMinimum'])
 

@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.Locale;
+import android.provider.Settings;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.net.ssl.*;
@@ -50,6 +51,11 @@ final class Connection {
         }}, new SecureRandom()); factory = tls.getSocketFactory();
     }
     static String hex(byte[] bytes){ StringBuilder result=new StringBuilder(); for(byte b:bytes)result.append(String.format(Locale.ROOT,"%02x",b&255));return result.toString(); }
+    static String deviceKey(Context context)throws Exception{
+        String id=Settings.Secure.getString(context.getContentResolver(),Settings.Secure.ANDROID_ID);
+        if(id==null||id.isEmpty())return null;
+        return hex(MessageDigest.getInstance("SHA-256").digest(("OpenCore Remote device v1:"+id).getBytes(StandardCharsets.UTF_8)));
+    }
     HttpsURLConnection open(String path, JSONObject body) throws Exception {
         if (!path.matches("/[a-z]+")) throw new IOException("Invalid remote endpoint");
         HttpsURLConnection request=(HttpsURLConnection)new URL(endpoint+path).openConnection(Proxy.NO_PROXY);
@@ -58,7 +64,8 @@ final class Connection {
             try {return hex(MessageDigest.getInstance("SHA-256").digest(session.getPeerCertificates()[0].getEncoded())).equals(pin);}
             catch(Exception e){return false;}
         });
-        request.setInstanceFollowRedirects(false);request.setConnectTimeout(10000);request.setReadTimeout(60000);request.setUseCaches(false);
+        request.setInstanceFollowRedirects(false);request.setConnectTimeout(8000);
+        request.setReadTimeout(path.equals("/ui")?30000:path.equals("/artifact")||path.equals("/file")||path.equals("/folder")?60000:15000);request.setUseCaches(false);
         request.setRequestProperty("Cache-Control","no-cache");
         if(token!=null)request.setRequestProperty("Authorization","Bearer "+token);
         if(body!=null){

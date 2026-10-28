@@ -1,7 +1,7 @@
 /* Execute paired-phone requests through this PC's existing OpenCore runtime. */
 const $mobileNative=window.__TAURI_INTERNALS__;
 const $mobileHostListeners=new Map();
-let $mobileHostStopped=false, $mobileEventWrites=Promise.resolve(),$mobilePreferenceSyncAt=0;
+let $mobileHostStopped=false, $mobileEventWrites=Promise.resolve(),$mobilePreferenceSyncAt=0,$mobilePreferenceSnapshot='';
 const $mobileHostSend=(path,value)=>$hubRequest('/mobile/host/'+path,value);
 const $mobilePresentationPreference=key=>/^(opencore\.ui\.|opencore\.workspace\.|opencore\.browser\.|opencore\.floating\.)/.test(key)||key==='opencore.model-profile';
 function $mobileHostEvent(device,session,handler,payload){
@@ -69,16 +69,17 @@ async function $mobileHostLoop(){
   if($mobileHostStopped)return;
   let delay=5000;
   try{
-    if(Date.now()-$mobilePreferenceSyncAt>2500){
+    if(Date.now()-$mobilePreferenceSyncAt>5000){
       $mobilePreferenceSyncAt=Date.now();const values={};
       for(let index=0;index<window.localStorage.length&&index<512;index++){const key=window.localStorage.key(index);if(key&&/^opencore\.[A-Za-z0-9._:-]{1,180}$/.test(key)){const value=window.localStorage.getItem(key);if(value!==null&&value.length<=32768)values[key]=value;}}
-      await $mobileHostSend('preferences',{values});
+      const serialized=JSON.stringify(values);
+      if(serialized!==$mobilePreferenceSnapshot){await $mobileHostSend('preferences',{values});$mobilePreferenceSnapshot=serialized;}
     }
-    const result=await $hubRequest('/mobile/host/poll');delay=result.active?250:5000;
+    const result=await $hubRequest('/mobile/host/poll');delay=result.longPoll?0:result.active?350:5000;
     const sessions=result.sessions||{};
     for(const [key,item] of $mobileHostListeners)if(sessions[item.device]!==item.session)void $mobileHostUnlisten(key,item);
     for(const task of result.tasks||[])void $mobileHostTask(task);
   }catch{}
-  if(!$mobileHostStopped)setTimeout(()=>void $mobileHostLoop(),delay);
+  if(!$mobileHostStopped){if(delay===0)queueMicrotask(()=>void $mobileHostLoop());else setTimeout(()=>void $mobileHostLoop(),delay);}
 }
 if(!globalThis.__OPENCORE_MOBILE__){window.addEventListener('pagehide',()=>{$mobileHostStopped=true;},{once:true});void $mobileHostLoop();}
