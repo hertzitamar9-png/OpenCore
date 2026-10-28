@@ -76,7 +76,7 @@ class StudioBounds(unittest.TestCase):
             self.write_safetensors_header(root/"models"/"library"/"sana-16"/"transformer"/"diffusion_pytorch_model.fp16.safetensors", "F16")
             output=root/"output"
             request={"modelId":"sana-16","modelRoot":str(root),"prompt":"a game icon","settings":{}}
-            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):
+            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers,"psutil":types.SimpleNamespace(virtual_memory=lambda:types.SimpleNamespace(available=64_000_000_000))}):
                 generate(request,output)
             self.assertTrue((output/"image-1.png").is_file())
             self.assertEqual(Pipeline.loaded[1]["variant"],"fp16")
@@ -111,7 +111,7 @@ class StudioBounds(unittest.TestCase):
             self.write_safetensors_header(root/"models"/"library"/"hunyuan-dit-v12-distilled"/"transformer"/"diffusion_pytorch_model.safetensors", "BF16")
             output=root/"output"
             request={"modelId":"hunyuan-dit-v12-distilled","modelRoot":str(root),"prompt":"a game icon","settings":{}}
-            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):
+            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers,"psutil":types.SimpleNamespace(virtual_memory=lambda:types.SimpleNamespace(available=64_000_000_000))}):
                 generate(request,output)
             self.assertTrue((output/"image-1.png").is_file())
             self.assertTrue(Pipeline.loaded[1]["local_files_only"])
@@ -141,7 +141,7 @@ class StudioBounds(unittest.TestCase):
             (root/'models/library/animation-diffusion-2d/model_index.json').write_text(json.dumps({'_class_name':'StableDiffusionPipeline'}))
             output=root/"output"
             request={"modelId":"animation-diffusion-2d","modelRoot":str(root),"prompt":"a character sheet","settings":{}}
-            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers}):
+            with patch.dict(sys.modules,{"torch":torch,"diffusers":diffusers,"psutil":types.SimpleNamespace(virtual_memory=lambda:types.SimpleNamespace(available=64_000_000_000))}):
                 generate(request,output)
             self.assertTrue((output/"image-1.png").is_file())
             self.assertFalse((output/"animation.gif").exists())
