@@ -20,7 +20,7 @@ case 'runtime_setup_start':fixture.ready=true;return{id:'setup'};
 case 'plugin:dialog|open':return['C:/attachments/reference.png'];
 case 'preview_attachment_image':return png;
 case 'get_conversation':return fixture.jobs.flatMap((j,index)=>[{id:index*2+1,conversationId:'qa-chat',kind:'message',role:'user',source:'OpenCore',title:'You',content:j.request.prompt,timestamp:j.createdAt,metadata:{files:j.request.settings.referencePaths||[]}},{id:index*2+2,conversationId:'qa-chat',kind:'message',role:'assistant',source:'OpenCore',title:'OpenCore',content:'Open Game Dev Studio',timestamp:j.createdAt,metadata:{studioJobId:j.id,studioReceipt:true}}]);
-case 'submit_studio_job':{const j={id:'01234567-abcd-1234-abcd-0123456789ab',category:'image',request:args.request,status:'completed',stage:'Generation complete',createdAt:new Date().toISOString(),outputs:['C:/Studio/image-1.png']};fixture.jobs.push(j);return j;}
+case 'submit_studio_job':{const j={id:'01234567-abcd-1234-abcd-0123456789ab',category:'image',request:args.request,status:'running',stage:'Generating image',progress:{step:10,steps:40,stepsPerSecond:.25},createdAt:new Date(Date.now()-50000).toISOString(),outputs:[]};fixture.jobs.push(j);return j;}
 case 'plugin:event|listen':return 1;default:return[];}}};
 window.fetch=async()=>({ok:true,json:async()=>({catalog:[],jobs:[],entries:[],progress:null,tokenConfigured:false,catalogRevision:'a'.repeat(64)})});
 </script><script type=module>import{r as React,TestDOM}from'/assets/${entryName}';import{TestComposer,TestFooter,TestChanges}from'/assets/${appName}';const h=React.createElement;
@@ -29,11 +29,22 @@ const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://lo
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,args:['--mute-audio']});const page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));try{
 await page.goto('http://127.0.0.1:'+server.address().port);const message=page.getByLabel('Message OpenCore');await message.waitFor();
 await page.getByRole('button',{name:'Add files or choose model'}).click();await page.getByRole('menuitem',{name:/Model/}).click();await page.getByRole('button',{name:/Qwen Image.*NVFP4/}).click();await page.getByText('Qwen Image · Automatic quality').waitFor();
+assert.equal(await page.getByLabel('Image LoRA',{exact:true}).count(),0);assert.equal(await page.getByText('Image style',{exact:true}).count(),0);
+await page.getByRole('button',{name:/Choose model profile, currently/}).click();
+const picker=page.locator('.statusbar-model-popover');await picker.getByRole('button',{name:/ECHO 3T/}).waitFor();assert.equal(await picker.locator('[aria-pressed=true]').count(),1);assert.equal(await picker.getByRole('button',{name:/ECHO 3T/}).getAttribute('aria-pressed'),'false');
+await picker.getByRole('button',{name:/Qwen Image.*NVFP4/}).click();
 const changes=page.getByRole('region',{name:'Task file changes'}).first();await changes.getByRole('button',{name:'Show all file changes'}).waitFor();assert.equal(await changes.getByRole('button',{name:/src\/main.ts/}).count(),0);await changes.getByRole('button',{name:'Show all file changes'}).click();await changes.getByRole('button',{name:/src\/main.ts/}).waitFor();await changes.getByRole('button',{name:'Collapse file changes'}).click();assert.equal(await changes.getByRole('button',{name:/src\/main.ts/}).count(),0);assert.equal(await message.inputValue(),'Keep this draft');assert.equal(await page.getByLabel('Image generation prompt').count(),0);assert.equal(await page.getByLabel('Image steps',{exact:true}).count(),0);
 await page.getByRole('button',{name:'Add files or choose model'}).click();await page.getByRole('menuitem',{name:'Upload files or images'}).click();await page.getByRole('button',{name:'Remove reference.png'}).waitFor();
 await message.fill('Make this cup blue');await page.getByRole('button',{name:'Send message',exact:true}).click();await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='submit_studio_job'));
 const calls=await page.evaluate(()=>fixture.calls),request=calls.find(c=>c.command==='submit_studio_job').args.request;
 assert.equal(request.prompt,'Make this cup blue');assert.equal(request.conversationId,'qa-chat');assert.equal(request.modelId,'qwen-image-21-uc-nvfp4');assert.equal(request.settings.steps,40);assert.equal(request.settings.width,2048);assert.deepEqual(request.settings.referencePaths,['C:/attachments/reference.png']);assert.equal(calls.find(c=>c.command==='runtime_setup_start').args.options.verifyInference,true);assert.equal(calls.some(c=>['send_chat_message','start_runtime','send_message'].includes(c.command)),false);
+await page.getByText('Step 10 of 40',{exact:true}).waitFor();await page.getByText('0.25 steps/s',{exact:true}).waitFor();
+assert.equal(await page.getByRole('progressbar',{name:'Image generation progress'}).getAttribute('value'),'24');
+assert.ok((await page.getByRole('progressbar',{name:'Image generation progress'}).boundingBox()).width>300);
+await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok((await page.getByRole('progressbar',{name:'Image generation progress'}).boundingBox()).width>250);
+await page.evaluate(()=>{Object.assign(fixture.jobs[0],{progress:{step:40,steps:40,stepsPerSecond:.25},stage:'Decoding image'});});await page.getByText('Decoding image',{exact:true}).waitFor();assert.notEqual(await page.getByRole('progressbar',{name:'Image generation progress'}).getAttribute('value'),'100');
+await page.evaluate(()=>{Object.assign(fixture.jobs[0],{status:'completed',stage:'Generation complete',updatedAt:new Date().toISOString(),outputs:['C:/Studio/image-1.png']});});
+await page.getByText('Image ready',{exact:true}).waitFor();assert.equal(await page.getByRole('progressbar',{name:'Image generation progress'}).getAttribute('value'),'100');
 await page.getByRole('img',{name:'Generated image',exact:true}).waitFor();assert.equal(await message.inputValue(),'');assert.equal(await page.getByText('Open Game Dev Studio',{exact:true}).count(),0);
 const previewCalls=await page.evaluate(()=>fixture.calls.filter(c=>c.command==='preview_attachment_image').length);
 await page.evaluate(()=>{window.fixtureFirstImage=document.querySelector('img[alt="Generated image"]');});
@@ -45,5 +56,5 @@ for(let refresh=0;refresh<3;refresh++){
 assert.equal(await page.evaluate(()=>fixture.calls.filter(c=>c.command==='preview_attachment_image').length),previewCalls);
 await page.getByRole('button',{name:/Choose model profile, currently/}).click();await page.locator('.statusbar-model-popover').getByRole('button',{name:/MOSS Image/}).click();await page.getByText('MOSS Image · Automatic quality').waitFor();
 await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok(await message.isVisible());assert.deepEqual(errors,[]);
-console.log('PASS: packaged normal composer, automatic quality/runtime, reference attachment, same-chat image rendering, footer picker, and phone width.');
+console.log('PASS: packaged normal composer, one selected model, no style controls, measured step progress and speed, finalization before 100%, stable images, automatic runtime, and phone width.');
 }catch(error){console.error('PAGE ERRORS',errors);console.error((await page.locator('body').innerText()).slice(0,1300));throw error;}finally{await browser.close();server.close();}})().catch(error=>{console.error(error);process.exitCode=1});

@@ -1,10 +1,13 @@
 import type { ComponentType,MouseEvent } from 'react';
 export function getChatImageSelection(): {id:string;label:string}|null;
 export function useChatImageSelection(): {id:string;label:string}|null;
+export function imageProgressView(job:any,now?:number):{done:boolean;percent:number|null;elapsedLabel:string;stepLabel:string;speedLabel:string;stage:string};
+export const ImageSamplingStats:ComponentType;
+export function useImageProgress():{modelId:string;job:any}|null;
 export function selectChatImageModel(model:{id:string;label?:string},options?:{scope?:Element|null;primary?:boolean}): boolean;
 export function clearChatImageSelection(options?:{scope?:Element|null;primary?:boolean}): boolean;
 export function downloadedImageModels(models:any[]): any[];
-export const ChatImageModelOptions: ComponentType<{onSelect:(model:any,event:MouseEvent<HTMLButtonElement>)=>void;disabled?:boolean;loadModels?:()=>Promise<any>}>;
+export const ChatImageModelOptions: ComponentType<{onSelect:(model:any,event:MouseEvent<HTMLButtonElement>)=>void;disabled?:boolean;loadModels?:()=>Promise<any>;selectedId?:string|null}>;
 export const IMAGE_SIZE_OPTIONS: {value:number;label:string}[];
 export function imageSizeSettings(size:number,modelId?:string): {width:number;height:number;outputWidth:number;outputHeight:number};
 export function imageAdaptersForModel(model: {id:string;backend?:string;sourceUrl?:string;hubEntry?:any}|undefined, adapters: any[]): any[];
@@ -12,6 +15,6 @@ export function imageGenerationDefaults(id:string): {steps:number;guidance:numbe
 export function automaticImageSettings(id:string,prompt:string,files?:string[],preset?:{steps:number;guidance:number}):Record<string,unknown>;
 export function submitChatImagePrompt(detail:{scope?:Element|null;prompt:string;files?:string[];onAccepted?:()=>void}):boolean;
 export function stopChatImagePrompt(scope?:Element|null):boolean;
-export const ImageGenerationPanel: ComponentType<{conversationId?: string|null;onConversationId?:(id:string)=>void;onNotice?:(message:string)=>void;onRefresh?:()=>void;onStateChange?:(state:{active:boolean;busy:boolean;label?:string})=>void;studio?:boolean;embedded?:boolean;initialModelId?:string}>;
+export const ImageGenerationPanel: ComponentType<{conversationId?: string|null;onConversationId?:(id:string)=>void;onNotice?:(message:string)=>void;onRefresh?:()=>void;onStateChange?:(state:{active:boolean;busy:boolean;label?:string;modelId?:string})=>void;studio?:boolean;embedded?:boolean;initialModelId?:string}>;
 
 export function imageOutputs(job: {outputs?:string[]}): string[];

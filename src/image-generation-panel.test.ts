@@ -1,5 +1,15 @@
 import { describe,it,expect } from 'vitest';
-import { imageAdaptersForModel,imageGenerationDefaults,imageSizeSettings,IMAGE_SIZE_OPTIONS } from './image-generation-panel.js';
+import { imageAdaptersForModel,imageGenerationDefaults,imageSizeSettings,IMAGE_SIZE_OPTIONS,imageProgressView } from './image-generation-panel.js';
+
+it('shows measured image work and reserves Ready for an actual completed image',()=>{
+ const job={id:'image',status:'running',createdAt:'2026-10-28T10:00:00Z',progress:{step:10,steps:40,stepsPerSecond:.25},outputs:[]};
+ const view=imageProgressView(job,Date.parse('2026-10-28T10:00:50Z'));
+ expect(view.stepLabel).toBe('Step 10 of 40');expect(view.speedLabel).toBe('0.25 steps/s');expect(view.elapsedLabel).toBe('50s');expect(view.percent).toBeGreaterThan(0);expect(view.percent).toBeLessThan(100);
+ expect(imageProgressView({...job,progress:{step:40,steps:40}}).percent).toBeLessThan(100);
+ expect(imageProgressView({...job,status:'completed',updatedAt:'2026-10-28T10:01:30Z',outputs:['image-1.png']})).toMatchObject({percent:100,done:true,elapsedLabel:'1m 30s'});
+ expect(imageProgressView({...job,progress:{}}).percent).toBeNull();
+ expect(imageProgressView({...job,status:'completed'}).done).toBe(false);
+});
 
 function adapter(base:string,extra={}) {return {status:'installed',repository:'creator/style',packageKind:'adapter',format:'lora',baseRepository:base,installReceipt:{files:[{role:'model',localPath:'C:/hub/style.safetensors'}]},...extra};}
 

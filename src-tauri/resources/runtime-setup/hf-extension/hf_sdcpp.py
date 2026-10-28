@@ -1,6 +1,7 @@
 """Pinned Iris GGUF image runtime. Repository Python code is never executed."""
 import hashlib
 import json
+import re
 import os
 from pathlib import Path
 import shutil
@@ -114,12 +115,20 @@ def command(entry,request,output,engine):
 def run(payload,output):
     from PIL import Image
     sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'studio'))
-    from asset_worker import save_image_output
+    from asset_worker import save_image_output,SamplingProgress
     output=Path(output);output.mkdir(exist_ok=True,parents=True)
     entry,request=payload['entry'],payload['request']
     args=command(entry,request,output,Path(payload['engine']))
-    result=subprocess.run(args,cwd=Path(payload['engine']).parent,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-    result.check_returncode()
+    tracker=SamplingProgress(output,request['settings'].get('steps',30))
+    process=subprocess.Popen(args,cwd=Path(payload['engine']).parent,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0),
+                             stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace')
+    for line in process.stdout:
+        sys.stdout.write(line);sys.stdout.flush()
+        cleaned=re.sub(r'\x1b\[[0-9;]*[A-Za-z]','',line)
+        match=re.search(r'(\d+)\s*/\s*(\d+).*?(?:s/it|it/s)',cleaned)
+        if match:tracker.update(int(match[1]),total=int(match[2]))
+    process.wait()
+    if process.returncode:raise subprocess.CalledProcessError(process.returncode,args)
     paths=[]
     for index,path in enumerate(sorted(output.glob('native-image*.png')),1):
         with Image.open(path) as image:

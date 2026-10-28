@@ -1,11 +1,27 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen,cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as api from "./api";
 import { ModelProfileOptions } from "./ModelProfiles";
+import {selectChatImageModel,clearChatImageSelection} from './image-generation-panel.js';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {cleanup();clearChatImageSelection();vi.restoreAllMocks();});
 
 describe("downloaded model choices", () => {
+  it('marks exactly one image or text model as selected',async()=>{
+    const inventory=await api.modelLibrary();
+    const image={...inventory.models[0],id:'qa-image',label:'QA image',category:'image' as const,installed:true,selectable:false};
+    vi.spyOn(api,'modelLibrary').mockResolvedValue({...inventory,models:[...inventory.models.filter(model=>model.id==='echo').map(model=>({...model,installed:true})),image]});
+    render(<ModelProfileOptions selectedProfile="echo" onSelect={()=>{}} onSelectImage={model=>{selectChatImageModel(model);}}/>);
+    const text=await screen.findByRole('button',{name:/ECHO 3T Addressable history/});
+    expect(text).toHaveAttribute('aria-pressed','true');
+    fireEvent.click(await screen.findByRole('button',{name:/QA image.*Generate images/}));
+    expect(text).toHaveAttribute('aria-pressed','false');
+    expect(screen.getByRole('button',{name:/QA image.*Generate images/})).toHaveAttribute('aria-pressed','true');
+    expect(document.querySelectorAll('button[aria-pressed="true"]')).toHaveLength(1);
+    fireEvent.click(text);
+    expect(text).toHaveAttribute('aria-pressed','true');
+    expect(document.querySelectorAll('button[aria-pressed="true"]')).toHaveLength(1);
+  });
   it("shows installed text profiles and hides undownloaded and non-text models", async () => {
     const inventory = await api.modelLibrary();
     vi.spyOn(api, "modelLibrary").mockResolvedValue({ ...inventory, models: inventory.models.map(model => ({

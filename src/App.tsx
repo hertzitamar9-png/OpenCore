@@ -1,4 +1,5 @@
 import { EchoContextStatus } from "./EchoContextStatus";
+import {useChatImageSelection,selectChatImageModel,ImageSamplingStats} from './image-generation-panel.js';
 import { EchoMemorySettings } from "./EchoMemorySettings";
 import { ClaudeBridgePanel } from "./ClaudeBridgePanel";
 import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -1190,6 +1191,7 @@ function ContextUsageIndicator({ conversationId, profile, runtime }: { conversat
 }
 
 function StatusbarModelSelector({ selectedProfile, onSelect, blockedReason }: { selectedProfile: RuntimeProfile; onSelect: (profile: RuntimeProfile) => void; blockedReason?: string }) {
+  const image=useChatImageSelection();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -1220,12 +1222,12 @@ function StatusbarModelSelector({ selectedProfile, onSelect, blockedReason }: { 
   }, [open]);
   const choose = (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => { onSelect(profile); setOpen(false); triggerRef.current?.focus(); };
   return <div className="statusbar-model-picker" ref={rootRef}>
-    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" onClick={() => setOpen((value) => !value)}>
-      <BrainCircuit size={13} aria-hidden="true" /><strong>{profileLabel(selectedProfile)}</strong><ChevronDown size={12} aria-hidden="true" />
+    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${image?.label||profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" onClick={() => setOpen((value) => !value)}>
+      <BrainCircuit size={13} aria-hidden="true" /><strong>{image?.label||profileLabel(selectedProfile)}</strong><ChevronDown size={12} aria-hidden="true" />
     </button>
     {open ? createPortal(<div ref={menuRef} className="statusbar-model-popover" style={{ position: "fixed", ...position }}>
       {blockedReason ? <p className="statusbar-model-reason" role="status">{blockedReason}</p> : null}
-      <ModelProfileOptions selectedProfile={selectedProfile} onSelect={choose} disabled={Boolean(blockedReason)} id="statusbar-model-profile-options" />
+      <ModelProfileOptions selectedProfile={selectedProfile} onSelect={choose} onSelectImage={model=>{if(selectChatImageModel(model))setOpen(false);}} disabled={Boolean(blockedReason)} id="statusbar-model-profile-options" />
     </div>, document.body) : null}
   </div>;
 }
@@ -1240,15 +1242,16 @@ function RuntimeStatusBar({ snapshot, selectedProfile, setSelectedProfile, block
 }) {
   const active = ["running", "starting"].includes(snapshot.runtime.status);
   const currentProfile = active && snapshot.runtime.profile !== "stopped" ? snapshot.runtime.profile : selectedProfile;
+  const image=useChatImageSelection();
   return <footer className={`statusbar ${className}`}>
     <span className="statusbar-state"><StatusDot state={snapshot.runtime.status} />{active ? "Runtime active" : "Runtime stopped"}</span>
     <span>{snapshot.conversations.length} conversations</span>
     <span>Gateway :{snapshot.runtime.gatewayPort}</span>
     <span className="push">GPU {snapshot.telemetry.gpuUtilization}%</span>
     <span>{(snapshot.telemetry.vramUsedMib / 1024).toFixed(1)}GB VRAM</span>
-    <span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span>
+    {image?<ImageSamplingStats/>:<span>{snapshot.telemetry.tokensPerSecond.toFixed(1)} tokens/s</span>}
     <StatusbarModelSelector selectedProfile={currentProfile} onSelect={setSelectedProfile} blockedReason={blockedReason} />
-    <ContextUsageIndicator conversationId={conversationId} profile={currentProfile} runtime={snapshot.runtime} />
+    {!image?<ContextUsageIndicator conversationId={conversationId} profile={currentProfile} runtime={snapshot.runtime} />:null}
   </footer>;
 }
 

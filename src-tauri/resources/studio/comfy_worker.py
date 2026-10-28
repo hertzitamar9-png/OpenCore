@@ -12,7 +12,36 @@ import time
 import urllib.request
 import uuid
 
-from asset_worker import bounded_integer,progress,validate_output_format,save_image_output,prepare_reference_images
+from asset_worker import bounded_integer,progress,validate_output_format,save_image_output,prepare_reference_images,SamplingProgress
+
+def start_progress_stream(address,client_id,tracker,prompt_identity):
+    """Read actual sampler events from this job's private ComfyUI connection."""
+    import asyncio,threading
+    stopped,connected=threading.Event(),threading.Event()
+    async def watch():
+        try:
+            import aiohttp
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=None,sock_connect=5)) as session:
+                async with session.ws_connect(address.replace('http:','ws:',1)+'/ws?clientId='+client_id,max_msg_size=16_000_000,heartbeat=20) as socket:
+                    connected.set()
+                    while not stopped.is_set():
+                        try:message=await socket.receive(timeout=1)
+                        except asyncio.TimeoutError:continue
+                        if message.type in (aiohttp.WSMsgType.CLOSE,aiohttp.WSMsgType.CLOSED,aiohttp.WSMsgType.ERROR):break
+                        if message.type!=aiohttp.WSMsgType.TEXT:continue
+                        try:packet=json.loads(message.data);data=packet.get('data')or{} if isinstance(packet,dict) else {}
+                        except (ValueError,TypeError):continue
+                        if isinstance(packet,dict) and isinstance(data,dict) and prompt_identity[0] and packet.get('type')=='progress' and data.get('prompt_id')==prompt_identity[0] and str(data.get('node'))=='16':
+                            tracker.update(data.get('value'),total=data.get('max'))
+                        elif isinstance(packet,dict) and isinstance(data,dict) and prompt_identity[0] and packet.get('type')=='executing' and data.get('prompt_id')==prompt_identity[0] and str(data.get('node')) in ('17','18'):
+                            progress(tracker.output,'Decoding image' if str(data['node'])=='17' else 'Saving image')
+        except Exception:
+            # Telemetry must not turn a valid generation into a failed job.
+            pass
+        finally:connected.set()
+    thread=threading.Thread(target=lambda:asyncio.run(watch()),daemon=True);thread.start();connected.wait(5)
+    def stop():stopped.set();thread.join(timeout=3)
+    return stop
 
 def canonical_path(value):
     path=Path(value).resolve()
@@ -274,7 +303,7 @@ def generate_comfy(request,output):
             raw=response.read(16_000_001)
         if len(raw)>16_000_000:raise RuntimeError('ComfyUI response exceeded its size limit')
         return json.loads(raw)
-    process=None;finished_image=None
+    process=None;finished_image=None;stop_progress=None
     log_path=output/'comfy-runtime.log'
     for directory in ('comfy-user','comfy-temp'):
         (output/directory).mkdir(parents=True,exist_ok=True)
@@ -301,10 +330,14 @@ def generate_comfy(request,output):
                     break
             except (OSError,urllib.error.URLError):pass
             time.sleep(0.25)
-        queued=api('/prompt',{'prompt':graph,'client_id':str(uuid.uuid4())})
+        client_id=str(uuid.uuid4());prompt_identity=[None]
+        tracker=SamplingProgress(output,bounded_integer(settings,'steps',40 if label.startswith('Qwen') else 50,1,100))
+        stop_progress=start_progress_stream(address,client_id,tracker,prompt_identity)
+        queued=api('/prompt',{'prompt':graph,'client_id':client_id})
         prompt_id=queued.get('prompt_id')
         if not prompt_id:raise RuntimeError(f'{label} workflow was rejected: '+json.dumps(queued))
-        progress(output,f'Generating image with the selected {label} quantization')
+        prompt_identity[0]=prompt_id
+        progress(output,f'Loading the selected {label} image model and prompt encoder')
         deadline=time.monotonic()+1200
         while True:
             if process.poll() is not None:raise RuntimeError(f'Managed {label} runtime exited during generation')
@@ -327,6 +360,7 @@ def generate_comfy(request,output):
                 log.seek(max(0,log_path.stat().st_size-4096));tail=log.read().decode('utf-8',errors='replace')
         raise RuntimeError(f'{error}\n{tail}') from error
     finally:
+        if stop_progress:stop_progress()
         if process is not None and process.poll() is None:
             try:
                 descendants=psutil.Process(process.pid).children(recursive=True)

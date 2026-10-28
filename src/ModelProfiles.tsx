@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { modelLibrary } from "./api";
 import type { RuntimeProfile } from "./types";
 import modelCatalog from "../src-tauri/resources/model-catalog.json";
-import {ChatImageModelOptions,clearChatImageSelection} from './image-generation-panel.js';
+import {ChatImageModelOptions,clearChatImageSelection,useChatImageSelection} from './image-generation-panel.js';
 import type {MouseEvent} from 'react';
 
 const catalogModels = modelCatalog.models as { id: string; label: string; description: string; selectable: boolean; memoryMode?: string }[];
@@ -79,31 +79,35 @@ export const profileDescription = (profile: RuntimeProfile) =>
 export const isSelectableModelProfile = (profile: string) =>
   profile === "unsloth-echo" || selectableModelProfiles.some(item => item.id === profile) || catalogProfiles.has(profile);
 
-export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, disabled = false, id = "model-profile-options", className = "" }: {
+export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, imageActive,imageModelId, disabled = false, id = "model-profile-options", className = "" }: {
   selectedProfile: RuntimeProfile;
   onSelect: (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => void;
   onSelectImage?: (model:any,event:MouseEvent<HTMLButtonElement>)=>void;
+  imageActive?:boolean;
+  imageModelId?:string;
   disabled?: boolean;
   id?: string;
   className?: string;
 }) {
   const { installedProfiles, error } = useInstalledModelProfiles();
   const profiles = profilesForInstalledModels(installedProfiles || []);
+  const image=useChatImageSelection(),active=Boolean(onSelectImage)&&(imageActive??Boolean(image));
+  const selectedText=active?'stopped':selectedProfile;
   return <div className={`model-picker-options ${className}`} id={id} role="group" aria-label="Choose model profile">
-    {onSelectImage?<ChatImageModelOptions onSelect={onSelectImage} disabled={disabled} loadModels={modelLibrary}/>:null}
+    {onSelectImage?<ChatImageModelOptions onSelect={onSelectImage} disabled={disabled} loadModels={modelLibrary} selectedId={active?imageModelId||image?.id:null}/>:null}
     {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
       : installedProfiles === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
       : profiles.length === 0 ? <p className="model-picker-empty" role="status">No downloaded text models. Install one in Models.</p> : null}
     {profiles.map(({ id: profile, label, description }) => <button
       key={profile}
-      className={`model-picker-option ${selectedProfile === profile ? "selected" : ""}`}
+      className={`model-picker-option ${selectedText === profile ? "selected" : ""}`}
       type="button"
-      aria-pressed={selectedProfile === profile}
+      aria-pressed={selectedText === profile}
       disabled={disabled}
       onClick={event => {if(!onSelectImage||clearChatImageSelection({scope:event.currentTarget.closest('.chat-composer-wrap'),primary:!id.startsWith('side-')}))onSelect(profile);}}
     >
       <span><strong>{label}</strong><small>{description}</small></span>
-      {selectedProfile === profile ? <Check size={16} aria-hidden="true" /> : null}
+      {selectedText === profile ? <Check size={16} aria-hidden="true" /> : null}
     </button>)}
   </div>;
 }

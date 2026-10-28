@@ -216,7 +216,8 @@ class ImageRuntimeManager:
                     if output:
                         try:
                             progress=json.loads((output/'progress.json').read_text(encoding='utf-8'))
-                            if progress.get('stage') and progress['stage']!=job['stage']:self._update(job,stage=str(progress['stage'])[:300])
+                            if progress.get('stage') and (progress['stage']!=job['stage'] or progress!=job.get('progress')):
+                                self._update(job,stage=str(progress['stage'])[:300],progress=progress)
                         except (OSError,ValueError):pass
                     time.sleep(0.5)
                 if self.cancelled.is_set():raise RuntimeError('Image generation cancelled')

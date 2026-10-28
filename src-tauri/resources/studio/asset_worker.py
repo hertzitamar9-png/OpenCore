@@ -9,6 +9,8 @@ import os
 import sys
 import struct
 import inspect
+import time
+import threading
 from pathlib import Path
 
 DIFFUSERS_IMAGE_MODELS = {
@@ -62,10 +64,30 @@ def checkpoint_dtypes(model,variant=None):
     return result
 
 
+_PROGRESS_LOCK=threading.Lock()
 def progress(output, stage, **values):
-    temporary = output / "progress.tmp"
-    temporary.write_text(json.dumps({"stage": stage, **values}), encoding="utf-8")
-    temporary.replace(output / "progress.json")
+    with _PROGRESS_LOCK:
+        retained={}
+        try:
+            saved=json.loads((output/'progress.json').read_text(encoding='utf-8'))
+            retained={key:saved[key] for key in ('step','steps','elapsedSeconds','stepsPerSecond') if key in saved}
+        except (OSError,ValueError,TypeError):pass
+        temporary = output / "progress.tmp"
+        temporary.write_text(json.dumps({"stage": stage, **retained, **values}), encoding="utf-8")
+        temporary.replace(output / "progress.json")
+
+class SamplingProgress:
+    """Measured sampler work; final output readiness remains the job's decision."""
+    def __init__(self,output,steps):
+        self.output,self.steps,self.started,self.first_step=output,steps,None,None
+    def update(self,step,total=None):
+        if type(step) is not int or not 0<=step<=self.steps or total is not None and total!=self.steps:return False
+        now=time.monotonic()
+        if self.started is None:self.started,self.first_step=now,step
+        elapsed=max(0,now-self.started)
+        progress(self.output,f'Generating image · step {step}/{self.steps}',step=step,steps=self.steps,
+                 elapsedSeconds=round(elapsed,2),stepsPerSecond=round((step-self.first_step)/elapsed,4) if elapsed else 0)
+        return True
 
 
 def prepare_reference_images(settings, directory):
@@ -326,6 +348,14 @@ def generate(request, output):
         # The catalog's animation-diffusion-2d is a plain Stable Diffusion
         # checkpoint for animation-style still images, without a motion adapter.
         progress(output, "Generating image", steps=args["num_inference_steps"])
+        tracker=SamplingProgress(output,args['num_inference_steps'])
+        parameters=inspect.signature(generator.__call__).parameters
+        if 'callback_on_step_end' in parameters:
+            def on_step(pipe,step,timestep,kwargs):tracker.update(step+1);return kwargs
+            args['callback_on_step_end']=on_step
+        elif 'callback' in parameters:
+            args['callback']=lambda step,timestep,latents:tracker.update(step+1)
+            if 'callback_steps' in parameters:args['callback_steps']=1
         result = generator(**args)
         if not getattr(result, "images", None):
             raise RuntimeError("The selected pipeline did not return images")
