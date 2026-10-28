@@ -15,7 +15,7 @@ globalThis.__opencoreImageConversationInvoke=async(command,args,run)=>{
     $imageNativeIds=new Set(rows.map(row=>row.id));
     const query=String(args.query||'').toLowerCase();
     const added=$imageConversations.filter(row=>!$imageNativeIds.has(row.id)&&(!query||row.title.toLowerCase().includes(query)));
-    const existing=rows.map(row=>{const image=$imageConversations.find(image=>image.id===row.id);return image?{...row,messageCount:row.messageCount+image.messageCount,updatedAt:row.updatedAt>image.updatedAt?row.updatedAt:image.updatedAt}:row;});
+    const existing=rows.map(row=>{const image=$imageConversations.find(image=>image.id===row.id);return image?{...row,title:row.messageCount===0&&/^(new conversation|new chat|untitled)$/i.test(row.title)?image.title:row.title,messageCount:row.messageCount+image.messageCount,updatedAt:row.updatedAt>image.updatedAt?row.updatedAt:image.updatedAt}:row;});
     const combined=[...existing,...added].sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.updatedAt.localeCompare(a.updatedAt));
     return command==='get_snapshot'?{...native,conversations:combined}:combined;
   }
