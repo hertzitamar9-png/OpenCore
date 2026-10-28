@@ -9,6 +9,8 @@ import re
 import secrets
 import threading
 import time
+from pathlib import Path
+from hf_download import atomic_json
 
 ID = re.compile(r'^[A-Za-z0-9_-]{1,100}$')
 COMMAND = re.compile(r'^[a-z][a-z0-9_]{0,99}$')
@@ -16,9 +18,12 @@ PREFERENCE_KEY = re.compile(r'^opencore\.[A-Za-z0-9._:-]{1,180}$')
 PLUGINS = frozenset({'plugin:event|listen', 'plugin:event|unlisten', 'plugin:event|emit'})
 METHODS = frozenset({'GET', 'POST', 'PUT', 'DELETE'})
 
+def presentation_preference(key):
+    return key.startswith(('opencore.ui.','opencore.workspace.','opencore.browser.','opencore.floating.')) or key=='opencore.model-profile'
+
 
 class MobileBridge:
-    def __init__(self):
+    def __init__(self, preference_file=None):
         self.lock = threading.RLock()
         self.waiting = deque()
         self.pending = {}
@@ -26,6 +31,19 @@ class MobileBridge:
         self.subscriptions = {}
         self.sessions = {}
         self.preferences = {}
+        self.preference_file=Path(preference_file) if preference_file else None
+        self.device_preferences={}
+        if self.preference_file:
+            try:
+                saved=json.loads(self.preference_file.read_text(encoding='utf-8'))
+                self.device_preferences={device:{key:value for key,value in self._preferences(values).items() if presentation_preference(key)} for device,values in saved.items() if ID.fullmatch(device)}
+            except (OSError,ValueError,TypeError,AttributeError):pass
+
+    def _save_preferences(self):
+        if self.preference_file:atomic_json(self.preference_file,self.device_preferences)
+
+    def _phone_values(self,device):
+        return {**self.preferences,**self.device_preferences.get(device,{})}
 
     @staticmethod
     def _preferences(values):
@@ -43,23 +61,23 @@ class MobileBridge:
         return result
 
     def publish_preferences(self, values):
-        values = self._preferences(values)
+        values = {key:value for key,value in self._preferences(values).items() if not presentation_preference(key)}
         with self.lock:
             if values != self.preferences:
                 self.preferences = values
                 for device in self.sessions:
-                    self._push(device, {'type': 'preferences', 'values': values})
+                    self._push(device, {'type': 'preferences', 'values': self._phone_values(device)})
             return {'accepted': True}
 
     def phone_preferences(self, device, session):
         with self.lock:
             if not self.sessions.get(device) or session != self.sessions.get(device):
                 raise ValueError('The phone session expired. Reconnect to the PC.')
-            return {'values': dict(self.preferences)}
+            return {'values': self._phone_values(device)}
 
     def open_session(self, device):
         with self.lock:
-            self.forget(device)
+            self.forget(device,drop_preferences=False)
             self.sessions[device] = secrets.token_urlsafe(18)
             return {'session': self.sessions[device]}
 
@@ -95,6 +113,13 @@ class MobileBridge:
         key = (device, identity)
         with self.lock:
             if value.get('session') != self.sessions.get(device): raise ValueError('The phone session expired. Reconnect to the PC.')
+            if kind=='preference' and presentation_preference(value['key']):
+                preferences=self.device_preferences.setdefault(device,{})
+                if value['action']=='set':preferences[value['key']]=value['value']
+                else:preferences.pop(value['key'],None)
+                self._save_preferences()
+                self._push(device,{'type':'result','id':identity,'ok':True,'value':None})
+                return {'accepted':True}
             if key in self.pending: raise ValueError('Phone request ID is already in use')
             if sum(owner == device for owner, _ in self.pending) >= 128 or len(self.pending) >= 512:
                 raise ValueError('Too many phone requests are pending')
@@ -166,8 +191,10 @@ class MobileBridge:
             while mailbox and len(items) < 64: items.append(mailbox.popleft())
             return {'items': items}
 
-    def forget(self, device):
+    def forget(self, device, drop_preferences=True):
         with self.lock:
+            if drop_preferences and device in self.device_preferences:
+                self.device_preferences.pop(device,None);self._save_preferences()
             self.mailboxes.pop(device, None)
             self.subscriptions.pop(device, None)
             self.sessions.pop(device, None)

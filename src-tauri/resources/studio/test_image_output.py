@@ -6,21 +6,33 @@ import unittest
 from PIL import Image
 from asset_worker import save_image_output
 from model_smoke import verify_generation
+from unittest.mock import patch
+from contextlib import contextmanager
+
+@contextmanager
+def exporter_contract_upscaler():
+    # The real pretrained, tiled inference is exercised in test_ai_upscale.
+    # Here we assert export sizing and method metadata without a GPU dependency.
+    def restore(image,checkpoint_path,*,target_size,device,progress):
+        progress('AI upscaling with Real-ESRGAN')
+        return image.resize(target_size)
+    import sys,types
+    with patch.dict(sys.modules,{'torch':types.SimpleNamespace(cuda=types.SimpleNamespace(is_available=lambda:False))}),patch('ai_upscale.upscale_image',side_effect=restore):yield
 
 
 class ImageOutputTests(unittest.TestCase):
-    def test_exports_real_2k_4k_8k_pngs_with_honest_render_metadata(self):
-        with tempfile.TemporaryDirectory() as tmp:
+    def test_exports_2k_4k_8k_with_the_learned_upscaler_and_render_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp,exporter_contract_upscaler():
             output=Path(tmp)
             with Image.new('RGB',(256,256),(30,80,150)) as image:
                 for size in (2048,4096,8192):
                     with self.subTest(size=size):
-                        path=save_image_output(image,output,1,{'outputWidth':size,'outputHeight':size,'outputFormat':'png'})
+                        path=save_image_output(image,output,1,{'outputWidth':size,'outputHeight':size,'outputFormat':'png','upscaleModelPath':'verified-model.pth'})
                         with Image.open(path) as saved:
                             self.assertEqual(saved.size,(size,size))
                             self.assertEqual(saved.info['OpenCore.RenderSize'],'256x256')
-                            self.assertEqual(saved.info['OpenCore.ResizeMethod'],'Lanczos')
-                        self.assertIn('Upscaling',json.loads((output/'progress.json').read_text())['stage'])
+                            self.assertEqual(saved.info['OpenCore.ResizeMethod'],'Real-ESRGAN realesr-general-x4v3')
+                        self.assertIn('AI upscaling',json.loads((output/'progress.json').read_text())['stage'])
 
     def test_preserves_native_size_when_no_export_dimensions_are_given(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -37,8 +49,8 @@ class ImageOutputTests(unittest.TestCase):
                         save_image_output(image,Path(tmp),1,{'outputWidth':value,'outputHeight':8192})
 
     def test_real_output_verification_uses_export_dimensions(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            request={'modelId':'image-test','settings':{'width':256,'height':256,'outputWidth':8192,'outputHeight':8192}}
+        with tempfile.TemporaryDirectory() as tmp,exporter_contract_upscaler():
+            request={'modelId':'image-test','settings':{'width':256,'height':256,'outputWidth':8192,'outputHeight':8192,'upscaleModelPath':'verified-model.pth'}}
             def worker(task,output):
                 with Image.new('RGB',(256,256)) as image:save_image_output(image,output,1,task['settings'])
             proof=verify_generation(worker,request,Path(tmp)/'job')

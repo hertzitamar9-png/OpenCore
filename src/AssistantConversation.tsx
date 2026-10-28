@@ -10,8 +10,11 @@ import {
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import ReactMarkdown from "react-markdown";
-import { ImageGenerationPanel,selectChatImageModel } from './image-generation-panel.js';
+import { ImageGenerationPanel,selectChatImageModel,submitChatImagePrompt,stopChatImagePrompt } from './image-generation-panel.js';
 import './ImageGenerationPanel.css';
+import {ChatMemoryStatus,chatPostprocessing} from './chat-postprocessing.js';
+import {cachedImagePreview,readImagePreview} from './image-preview-cache.js';
+import {PromptAssistantTools} from './prompt-assistant.js';
 import remarkGfm from "remark-gfm";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
@@ -156,15 +159,16 @@ export function MessageImage({ src, alt }: { src?: string; alt?: string }) {
   const actions = useContext(ArtifactActionsContext);
   const artifact = parseArtifactLink(src);
   const path = localFilePath(src);
-  const [image, setImage] = useState<{ source?: string; url: string; error: string }>({ source: src, url: artifact || path ? "" : src || "", error: "" });
+  const [image, setImage] = useState<{ source?: string; url: string; error: string }>(()=>({ source: src, url: cachedImagePreview(src)|| (artifact || path ? "" : src || ""), error: "" }));
   useEffect(() => {
+    const cached=cachedImagePreview(src);if(cached){setImage({source:src,url:cached,error:''});return;}
     setImage({ source: src, url: artifact || path ? "" : src || "", error: "" });
     if (!artifact && !path) return;
     let active = true;
-    const preview = path ? api.previewAttachmentImage(path) : api.previewArtifact(artifact!.id).then(item => {
+    const preview = readImagePreview(src!,()=>path ? api.previewAttachmentImage(path) : api.previewArtifact(artifact!.id).then(item => {
       if (!item.mime.startsWith("image/")) throw new Error("This file is not an image");
       return item.dataUrl;
-    });
+    }));
     preview.then(url => { if (active) setImage({ source: src, url, error: "" }); })
       .catch((error: unknown) => { if (active) setImage({ source: src, url: "", error: String(error) }); });
     return () => { active = false; };
@@ -276,7 +280,7 @@ function MessageLink({ href, children }: { href?: string; children?: React.React
 function MarkdownText() {
   return <MarkdownTextPrimitive remarkPlugins={[remarkGfm]} className="aui-md" urlTransform={messageUrlTransform} components={{
     a: MessageLink,
-    img: ({ src, alt }) => <MessageImage src={src} alt={alt} />,
+    img: MessageImage,
   }} />;
 }
 
@@ -357,7 +361,7 @@ export function EchoReceipt({ entries }: { entries: TimelineEntry[] }) {
 function ResponseMarkdown({ content }: { content: string }) {
   return <div className="aui-md"><ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={messageUrlTransform} components={{
     a: MessageLink,
-    img: ({ src, alt }) => <MessageImage src={src} alt={alt} />,
+    img: MessageImage,
   }}>{displayText(content)}</ReactMarkdown></div>;
 }
 
@@ -481,6 +485,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   initialSettings, embedded = false, inferenceBlocked, sendMessage = api.sendChatMessage,
 }: Props) {
   const [draft, setDraft] = useState(initialDraft?.text || "");
+  const [imageChat,setImageChat]=useState<{active:boolean;busy:boolean;label?:string}>({active:false,busy:false});
   const appliedDraftRequest = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (!draftRequest?.text || draftRequest.id === appliedDraftRequest.current) return;
@@ -529,7 +534,8 @@ export const AssistantConversation = memo(function AssistantConversation({
   const [confirmApproval, setConfirmApproval] = useState<ApprovalMode | null>(null);
   const [pendingTool, setPendingTool] = useState<ToolApprovalRequest | null>(null);
   const [artifactLoading, setArtifactLoading] = useState(false);
-  const generationActive = sending || backendActive;
+  const postprocessing=chatPostprocessing(entries);
+  const generationActive = imageChat.active ? imageChat.busy : (sending || backendActive)&&!postprocessing;
   const pendingToolRef = useRef<ToolApprovalRequest | null>(null);
   const composerMenuRef = useRef<HTMLDivElement>(null);
   const composerMenuTriggerRef = useRef<HTMLButtonElement>(null);
@@ -782,6 +788,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   }, [backendActive]);
 
   const submit = () => {
+    if(submitChatImagePrompt({scope:draftInput.current?.closest('.chat-composer-wrap'),prompt:draft,files,onAccepted:()=>{setDraft('');setFiles([]);}}))return;
     if (inferenceBlocked && !sendingRef.current) { onNotice(inferenceBlocked); return; }
     if (backendActive && !sendingRef.current) return;
     let text = draft.trim();
@@ -822,8 +829,8 @@ export const AssistantConversation = memo(function AssistantConversation({
   const focusDraft = async () => {
     // WebView2's native keyboard target can remain outside the renderer after
     // a native dialog or another child webview. DOM focus alone is insufficient.
-    if ('__TAURI_INTERNALS__' in window) {
-      try { await getCurrentWebview().setFocus(); } catch (error) { onNotice(`Could not focus the editor: ${String(error)}`); }
+    if (!(globalThis as any).__OPENCORE_MOBILE__ && '__TAURI_INTERNALS__' in window) {
+      try { await getCurrentWebview().setFocus(); } catch { /* DOM focus below remains available. */ }
     }
     draftInput.current?.focus({ preventScroll: true });
   };
@@ -917,7 +924,9 @@ export const AssistantConversation = memo(function AssistantConversation({
     </AssistantRuntimeProvider>
 
     <div className="chat-composer-wrap">
-      <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} embedded={embedded}/>
+      <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} onStateChange={setImageChat} embedded={embedded}/>
+      <ChatMemoryStatus conversationId={conversationId} entries={entries} runtime={runtimeSnapshot} active={sending||backendActive} onRefresh={onRefresh}/>
+      <PromptAssistantTools prompt={draft} onPrompt={setDraft} conversationId={conversationId}/>
       {matchingSkills.length > 0 ? <div className="composer-skill-menu" role="listbox" aria-label="Skills">{matchingSkills.map((skill) => <button type="button" role="option" aria-selected={selectedSkills.includes(skill.id)} key={skill.id} onClick={() => selectSkill(skill.id)}><strong>/{skill.id}</strong><small>{skill.description}</small></button>)}</div> : null}
       {queue.length > 0 && <div className="prompt-queue">
         <div className="queue-heading"><strong>Queued</strong><span>{queue.length}</span></div>
@@ -1028,7 +1037,7 @@ export const AssistantConversation = memo(function AssistantConversation({
             <div className="approval-bar" role="group" aria-label="Approval mode"><div className="approval-rail"><div className="approval-segments" aria-hidden="true">{APPROVAL_MODES.map((mode, index) => <span key={mode.value} className={index <= shownApprovalIndex ? "lit" : ""} />)}</div><input className="approval-range" type="range" min="0" max="3" step="1" value={shownApprovalIndex} aria-label="Approval level" aria-valuetext={APPROVAL_MODES[shownApprovalIndex].label} onChange={(event) => { const index = Number(event.target.value); approvalPreviewRef.current = index; setApprovalPreviewIndex(index); }} onPointerUp={commitApprovalRange} onKeyUp={commitApprovalRange} onBlur={commitApprovalRange} onPointerCancel={() => { approvalPreviewRef.current = null; setApprovalPreviewIndex(null); }} /></div><div className="approval-labels">{APPROVAL_MODES.map((mode) => <button type="button" key={mode.value} aria-pressed={mode.value === approvalMode} onClick={() => chooseApprovalMode(mode.value)}>{mode.label}</button>)}</div></div>
           </FloatingWindow> : null}
         </div>
-        <button className={`send-button ${generationActive ? "is-stop" : ""}`} onClick={generationActive ? () => void stop() : submit} disabled={!generationActive && (Boolean(inferenceBlocked) || (!draft.trim() && files.length === 0))} title={generationActive ? "Stop" : inferenceBlocked || "Send"} aria-label={generationActive ? "Stop generation" : "Send message"}>
+        <button className={`send-button ${generationActive ? "is-stop" : ""}`} onClick={generationActive ? () => {if(!stopChatImagePrompt(draftInput.current?.closest('.chat-composer-wrap')))void stop();} : submit} disabled={!generationActive && ((!imageChat.active&&Boolean(inferenceBlocked)) || (!draft.trim() && files.length === 0))} title={generationActive ? "Stop" : imageChat.active?'Send':inferenceBlocked || "Send"} aria-label={generationActive ? "Stop generation" : "Send message"}>
           {generationActive ? <Square size={17} fill="currentColor" /> : <Send size={18} />}
         </button>
       </div>

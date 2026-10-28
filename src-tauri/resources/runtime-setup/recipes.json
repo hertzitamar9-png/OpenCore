@@ -66,7 +66,8 @@
         "numpy": "2.2.6",
         "protobuf": "6.33.5",
         "peft": "0.18.0",
-        "psutil": "6.1.1"
+        "psutil": "6.1.1",
+        "spandrel": "0.4.2"
       },
       "torchPackages": {
         "torch": "2.11.0",
@@ -91,6 +92,9 @@
         ],
         "peft": [
           "PeftModel"
+        ],
+        "spandrel": [
+          "ModelLoader"
         ]
       },
       "minimumDiskBytes": 2000000000,
@@ -225,7 +229,8 @@
         "sentencepiece": "0.2.1",
         "pillow": "11.3.0",
         "numpy": "2.2.6",
-        "protobuf": "6.33.5"
+        "protobuf": "6.33.5",
+        "spandrel": "0.4.2"
       },
       "torchPackages": {
         "torch": "2.11.0",
@@ -245,6 +250,9 @@
         ],
         "PIL.Image": [
           "Image"
+        ],
+        "spandrel": [
+          "ModelLoader"
         ]
       },
       "minimumDiskBytes": 9000000000,

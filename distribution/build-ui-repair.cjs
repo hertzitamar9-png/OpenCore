@@ -130,7 +130,7 @@ app += '\nconst $manualUpdatePolicy=('+createManualUpdatePolicy.toString()+')('+
 (async () => {
   const report = [];
   const catalog=JSON.parse(fs.readFileSync(path.join(root,'hf-research/expanded-catalog.json'),'utf8'));
-  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};';
+  const catalogCode='const t='+JSON.stringify(catalog)+';export{t as default};'+require('./image-ui-patches.cjs').featureInstallerSource();
   for (const [name, code] of [['index-CD0EH-dA.js', index], ['App-kNA9sRUP.js', app], ['model-catalog-B8SfuDgQ.js',catalogCode]]) {
     const seen = new Set();
     const result = await terser.minify(code, { module: true, mangle: name === 'App-kNA9sRUP.js' ? {toplevel:false,keep_fnames:true} : false,

@@ -20,6 +20,8 @@ describe('Image LoRA compatibility',()=>{
   it('uses pipeline-specific defaults for distilled models',()=>{
     expect(imageGenerationDefaults('z-image-turbo')).toEqual({steps:9,guidance:0});
     expect(imageGenerationDefaults('flux-2-klein-4b').steps).toBe(4);
+    expect(imageGenerationDefaults('qwen-image-21-uc-nvfp4')).toEqual({steps:40,guidance:1});
+    expect(imageSizeSettings(2048,'qwen-image-21-uc-nvfp4')).toEqual({width:2048,height:2048,outputWidth:2048,outputHeight:2048});
   });
 });
 

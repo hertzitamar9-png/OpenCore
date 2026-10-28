@@ -1,37 +1,49 @@
-const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),acorn=require('acorn');
-const {chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright');
-const directory=path.join(__dirname,'candidate-dist'),entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
-let entry=fs.readFileSync(path.join(directory,'assets',entryName),'utf8');
-const mount=acorn.parse(entry,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='ExpressionStatement'&&entry.slice(n.start,n.end).includes('createRoot('));
-entry=entry.slice(0,mount.start)+entry.slice(mount.end)+'\nexport{ev as TestDOM};';
-let app=fs.readFileSync(path.join(directory,'assets',appName),'utf8');
-const panel=acorn.parse(app,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='VariableDeclaration'&&app.slice(n.start,n.end).includes('Chat image generation'));
-app+='\nexport{Hp as TestPicker,x8 as TestFooter,'+panel.declarations[0].id.name+' as TestPanel};';
-const fixture=`window.fixture={calls:[],jobs:[]};
-const moss={id:'moss-image-sft-int8-convrot',label:'MOSS Image',category:'image',backend:'comfyui',precision:'INT8',installed:true,selectable:false};
-const qwen={id:'qwen-image-21-uc-nvfp4',label:'Qwen Image',category:'image',backend:'comfyui',precision:'NVFP4',installed:true,selectable:false};
-window.__TAURI_INTERNALS__={invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
-case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.1:59999',secret:'fixture-only-secret',authHeader:'X-OpenCore-Hub-Secret'}};
-case 'list_model_library':return{models:[moss,qwen,{...moss,id:'not-installed',label:'Not downloaded',installed:false},{...moss,id:'lora',label:'Adapter only',hubEntry:{packageKind:'adapter',format:'lora'}},{id:'echo',label:'ECHO 3T',description:'Text model',category:'text',installed:true,selectable:true}],progress:null};
+// Exercise the actual packaged conversation component and its normal Send button.
+const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict'),acorn=require('acorn');
+const{chromium}=require(process.env.OPENCORE_PLAYWRIGHT||'playwright');
+const dir=path.join(__dirname,'candidate-dist'),entryName='index-CD0EH-dA.js',appName='App-kNA9sRUP.js';
+let entry=fs.readFileSync(path.join(dir,'assets',entryName),'utf8');
+const mount=acorn.parse(entry,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='ExpressionStatement'&&entry.slice(n.start,n.end).includes('createRoot('));entry=entry.slice(0,mount.start)+entry.slice(mount.end)+'\nexport{ev as TestDOM};';
+let app=fs.readFileSync(path.join(dir,'assets',appName),'utf8');
+const composer=acorn.parse(app,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='VariableDeclaration'&&app.slice(n.start,n.end).includes('chat-composer-wrap')&&app.slice(n.start,n.end).includes('Message OpenCore'));
+app+='\nexport{'+composer.declarations[0].id.name+' as TestComposer,x8 as TestFooter};';
+const html=`<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/assets/index-CsoxYKnK.css><link rel=stylesheet href=/assets/App-C9duitZV.css><style>#root{height:100dvh;display:flex;flex-direction:column;max-width:1000px;margin:auto}.assistant-conversation{flex:1;min-height:0}</style><div id=root></div><script>
+window.fixture={calls:[],jobs:[],ready:false};const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+const models=['moss-image-sft-int8-convrot','qwen-image-21-uc-nvfp4'].map((id,i)=>({id,label:i?'Qwen Image':'MOSS Image',category:'image',backend:'comfyui',precision:i?'NVFP4':'INT8',installed:true,selectable:false}));
+window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener(){}};window.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,invoke:async(command,args={})=>{fixture.calls.push({command,args});switch(command){
+case 'runtime_setup_probe':return{hubBridge:{available:true,url:'http://127.0.0.1:59999',secret:'fixture-only',authHeader:'X-OpenCore-Hub-Secret'}};
+case 'list_model_library':return{models:[...models,{id:'echo',label:'ECHO 3T',category:'text',installed:true,selectable:true}],progress:null};
 case 'list_studio_jobs':return fixture.jobs;
-case 'runtime_setup_status':return{jobs:[],recipes:[],receipts:[moss,qwen].map(model=>({targetId:model.id,dependenciesVerified:true,inferenceVerified:true,python:'C:/managed/python.exe',runner:'C:/managed/worker.py'})),activeJobId:null};
-case 'submit_studio_job':{const job={id:'native-picker-job',category:'image',request:args.request,status:'completed',stage:'Generation complete',createdAt:new Date().toISOString(),outputs:[]};fixture.jobs.push(job);return job;}
-default:return[];}}};
-window.fetch=async()=>({ok:true,json:async()=>({catalog:[],jobs:[],progress:null,tokenConfigured:false,catalogRevision:'a'.repeat(64)})});`;
-const html=`<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/assets/index-CsoxYKnK.css><link rel=stylesheet href=/assets/App-C9duitZV.css><div id=root style="max-width:700px;margin:auto"></div><script>${fixture}</script><script type=module>
-import{r as React,TestDOM}from'/assets/${entryName}';import{TestPicker,TestFooter,TestPanel}from'/assets/${appName}';
-const h=React.createElement;TestDOM.createRoot(document.getElementById('root')).render(h(React.Fragment,null,
-h('div',{className:'chat-composer-wrap'},h(TestPanel,{conversationId:'qa-picker-chat'}),h('div',{className:'chat-composer'},h('textarea',{'aria-label':'Message OpenCore',defaultValue:'Keep this draft'}),h(TestPicker,{selectedProfile:'echo',id:'composer-model-profile-options',onSelect:id=>fixture.calls.push({command:'text_profile',id}),onSelectImage:model=>globalThis.__opencoreSelectChatImageModel(model)}))),
-h('div',{style:{position:'fixed',bottom:12,right:16}},h(TestFooter,{selectedProfile:'echo',onSelect:id=>fixture.calls.push({command:'text_profile',id}),blockedReason:null}))));</script>`;
-const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://local').pathname;if(name==='/'){res.setHeader('Content-Type','text/html');return res.end(html);}res.setHeader('Content-Type',name.endsWith('.css')?'text/css':'text/javascript');if(name==='/assets/'+entryName)return res.end(entry);if(name==='/assets/'+appName)return res.end(app);const file=path.join(directory,name);if(!file.startsWith(directory)||!fs.existsSync(file)){res.statusCode=404;return res.end();}res.end(fs.readFileSync(file));});
-(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,args:['--mute-audio']});const page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];page.on('pageerror',error=>errors.push(error.message));try{
-await page.goto('http://127.0.0.1:'+server.address().port);
-const picker=page.locator('#composer-model-profile-options');await picker.getByRole('button',{name:/Qwen Image/}).waitFor();assert.equal(await picker.getByRole('button',{name:/Not downloaded|Adapter only/}).count(),0);
-await picker.getByRole('button',{name:/Qwen Image/}).click();await page.waitForFunction(()=>document.querySelector('[aria-label="Downloaded image model"]')?.value==='qwen-image-21-uc-nvfp4');assert.match(await page.getByRole('button',{name:/Choose model profile, currently/}).getAttribute('aria-label'),/Qwen Image/);
-await page.getByLabel('Image generation prompt').fill('A blue cup in the same conversation');await page.getByRole('button',{name:'Generate image',exact:true}).click();await page.waitForFunction(()=>fixture.jobs.length===1);const request=await page.evaluate(()=>fixture.jobs[0].request);assert.equal(request.modelId,'qwen-image-21-uc-nvfp4');assert.equal(request.conversationId,'qa-picker-chat');assert.equal(await page.evaluate(()=>fixture.calls.some(call=>['text_profile','start_runtime','send_message'].includes(call.command))),false);
-await page.getByRole('button',{name:'Text',exact:true}).click();await page.getByLabel('Message OpenCore').waitFor();assert.equal(await page.getByLabel('Message OpenCore').inputValue(),'Keep this draft');
-await page.getByRole('button',{name:/Choose model profile, currently/}).click();await page.locator('.statusbar-model-popover').getByRole('button',{name:/MOSS Image/}).click();await page.waitForFunction(()=>document.querySelector('[aria-label="Downloaded image model"]')?.value==='moss-image-sft-int8-convrot');assert.equal(await page.locator('.statusbar-model-popover').count(),0);
-await page.getByRole('button',{name:/Choose model profile, currently/}).click();await page.locator('.statusbar-model-popover').getByRole('button',{name:/^ECHO 3T/}).click();await page.getByLabel('Message OpenCore').waitFor();assert.equal(await page.evaluate(()=>fixture.calls.filter(call=>call.command==='text_profile').length),1);
-await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:/Choose model profile, currently/}).click();const imageOption=page.locator('.statusbar-model-popover').getByRole('button',{name:/Qwen Image/});assert.ok((await imageOption.boundingBox()).height>=40);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
-console.log('PASS: chat and footer image model selection, exact selected model, image-only dispatch, retained text draft, return to text, and phone picker.');
-}catch(error){console.error('PAGE ERRORS',errors);console.error((await page.locator('body').innerText()).slice(0,1200));throw error;}finally{await browser.close();server.close();}})().catch(error=>{console.error(error);process.exitCode=1});
+case 'model_install_progress':return null;
+case 'runtime_setup_status':return{jobs:[{id:'setup',status:'completed'}],recipes:[{modelIds:models.map(m=>m.id)}],receipts:fixture.ready?models.map(m=>({targetId:m.id,dependenciesVerified:true,inferenceVerified:true,python:'C:/managed/python.exe'})):[]};
+case 'runtime_setup_start':fixture.ready=true;return{id:'setup'};
+case 'plugin:dialog|open':return['C:/attachments/reference.png'];
+case 'preview_attachment_image':return png;
+case 'get_conversation':return fixture.jobs.flatMap((j,index)=>[{id:index*2+1,conversationId:'qa-chat',kind:'message',role:'user',source:'OpenCore',title:'You',content:j.request.prompt,timestamp:j.createdAt,metadata:{files:j.request.settings.referencePaths||[]}},{id:index*2+2,conversationId:'qa-chat',kind:'message',role:'assistant',source:'OpenCore',title:'OpenCore',content:'Open Game Dev Studio',timestamp:j.createdAt,metadata:{studioJobId:j.id,studioReceipt:true}}]);
+case 'submit_studio_job':{const j={id:'01234567-abcd-1234-abcd-0123456789ab',category:'image',request:args.request,status:'completed',stage:'Generation complete',createdAt:new Date().toISOString(),outputs:['C:/Studio/image-1.png']};fixture.jobs.push(j);return j;}
+case 'plugin:event|listen':return 1;default:return[];}}};
+window.fetch=async()=>({ok:true,json:async()=>({catalog:[],jobs:[],entries:[],progress:null,tokenConfigured:false,catalogRevision:'a'.repeat(64)})});
+</script><script type=module>import{r as React,TestDOM}from'/assets/${entryName}';import{TestComposer,TestFooter}from'/assets/${appName}';const h=React.createElement;
+function Fixture(){const[entries,setEntries]=React.useState([]);const refresh=async()=>setEntries(await globalThis.__opencoreImageConversationInvoke('get_conversation',{id:'qa-chat'},()=>window.__TAURI_INTERNALS__.invoke('get_conversation',{})));return h(React.Fragment,null,h(TestComposer,{conversationId:'qa-chat',initialDraft:{text:'Keep this draft',files:[]},title:'Image chat',client:'OpenCore',entries,runtimeRunning:false,runtimeSnapshot:{status:'stopped',profile:'echo'},telemetry:{tokensPerSecond:0,completionTokens:0,totalCompletionTokens:0},selectedProfile:'echo',onSelectProfile:()=>{},backendActive:false,onNotice:()=>{},onConversationId:()=>{},onRefresh:refresh,onExport:()=>{},onRename:()=>{},onDelete:()=>{},projects:[],defaultSkills:[],subagentsEnabled:false,maxSubagents:1,projectSkillsEnabled:false,compactAtTokens:32000,inferenceBlocked:'Text runtime is not loaded'}),h(TestFooter,{selectedProfile:'echo',onSelect:()=>{},blockedReason:null}));}TestDOM.createRoot(document.getElementById('root')).render(h(Fixture));</script>`;
+const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://local').pathname;if(name==='/'){res.setHeader('Content-Type','text/html');return res.end(html);}res.setHeader('Content-Type',name.endsWith('.css')?'text/css':'text/javascript');if(name==='/assets/'+entryName)return res.end(entry);if(name==='/assets/'+appName)return res.end(app);const file=path.join(dir,name);if(!file.startsWith(dir)||!fs.existsSync(file)){res.statusCode=404;return res.end();}res.end(fs.readFileSync(file));});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,args:['--mute-audio']});const page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));try{
+await page.goto('http://127.0.0.1:'+server.address().port);const message=page.getByLabel('Message OpenCore');await message.waitFor();
+await page.getByRole('button',{name:'Add files or choose model'}).click();await page.getByRole('menuitem',{name:/Model/}).click();await page.getByRole('button',{name:/Qwen Image.*NVFP4/}).click();await page.getByText('Qwen Image · Automatic quality').waitFor();
+assert.equal(await message.inputValue(),'Keep this draft');assert.equal(await page.getByLabel('Image generation prompt').count(),0);assert.equal(await page.getByLabel('Image steps',{exact:true}).count(),0);
+await page.getByRole('button',{name:'Add files or choose model'}).click();await page.getByRole('menuitem',{name:'Upload files or images'}).click();await page.getByRole('button',{name:'Remove reference.png'}).waitFor();
+await message.fill('Make this cup blue');await page.getByRole('button',{name:'Send message',exact:true}).click();await page.waitForFunction(()=>fixture.calls.some(c=>c.command==='submit_studio_job'));
+const calls=await page.evaluate(()=>fixture.calls),request=calls.find(c=>c.command==='submit_studio_job').args.request;
+assert.equal(request.prompt,'Make this cup blue');assert.equal(request.conversationId,'qa-chat');assert.equal(request.modelId,'qwen-image-21-uc-nvfp4');assert.equal(request.settings.steps,40);assert.equal(request.settings.width,2048);assert.deepEqual(request.settings.referencePaths,['C:/attachments/reference.png']);assert.equal(calls.find(c=>c.command==='runtime_setup_start').args.options.verifyInference,true);assert.equal(calls.some(c=>['send_chat_message','start_runtime','send_message'].includes(c.command)),false);
+await page.getByRole('img',{name:'Generated image',exact:true}).waitFor();assert.equal(await message.inputValue(),'');assert.equal(await page.getByText('Open Game Dev Studio',{exact:true}).count(),0);
+const previewCalls=await page.evaluate(()=>fixture.calls.filter(c=>c.command==='preview_attachment_image').length);
+await page.evaluate(()=>{window.fixtureFirstImage=document.querySelector('img[alt="Generated image"]');});
+for(let refresh=0;refresh<3;refresh++){
+  await message.fill('Keep the image visible '+refresh);
+  assert.ok(await page.evaluate(()=>fixtureFirstImage===document.querySelector('img[alt="Generated image"]')&&fixtureFirstImage.getAttribute('src').startsWith('data:image/')));
+  assert.equal(await page.getByText('Loading image…',{exact:true}).count(),0);
+}
+assert.equal(await page.evaluate(()=>fixture.calls.filter(c=>c.command==='preview_attachment_image').length),previewCalls);
+await page.getByRole('button',{name:/Choose model profile, currently/}).click();await page.locator('.statusbar-model-popover').getByRole('button',{name:/MOSS Image/}).click();await page.getByText('MOSS Image · Automatic quality').waitFor();
+await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok(await message.isVisible());assert.deepEqual(errors,[]);
+console.log('PASS: packaged normal composer, automatic quality/runtime, reference attachment, same-chat image rendering, footer picker, and phone width.');
+}catch(error){console.error('PAGE ERRORS',errors);console.error((await page.locator('body').innerText()).slice(0,1300));throw error;}finally{await browser.close();server.close();}})().catch(error=>{console.error(error);process.exitCode=1});

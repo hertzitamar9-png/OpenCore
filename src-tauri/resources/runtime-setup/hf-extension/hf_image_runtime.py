@@ -10,6 +10,8 @@ import sys
 import threading
 import time
 import uuid
+import importlib.util
+import urllib.request
 
 from hf_download import atomic_json
 from hf_runtime import checked_model_files, _inside, _python
@@ -38,8 +40,13 @@ def validate_request(request):
     for name in ('outputWidth','outputHeight'):
         if name in settings and (type(settings[name]) is not int or not 128<=settings[name]<=8192 or settings[name]%8):
             raise ValueError(f'{name} must be a multiple of 8 from 128 to 8192')
-    if set(settings)-{'width','height','outputWidth','outputHeight','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength'}:
+    if set(settings)-{'width','height','outputWidth','outputHeight','steps','numImages','seed','guidanceScale','negativePrompt','outputFormat','loraPath','loraStrength','referencePaths','upscaleModelPath','promptRecap','originalPrompt'}:
         raise ValueError('This image request contains unsupported controls')
+    for name,limit in [('promptRecap',300),('originalPrompt',16000)]:
+        if name in settings and (not isinstance(settings[name],str) or len(settings[name])>limit):raise ValueError('Invalid prompt assistant summary')
+    references=settings.get('referencePaths',[])
+    if not isinstance(references,list) or len(references)>4 or any(not isinstance(path,str) or not Path(path).is_absolute() or Path(path).suffix.lower() not in ('.png','.jpg','.jpeg','.webp') for path in references):
+        raise ValueError('Attach up to four local PNG, JPEG or WebP reference images')
     for name,default,high in [('guidanceScale',4,30),('loraStrength',0.8,2)]:
         value=settings.get(name,default)
         if isinstance(value,bool) or not isinstance(value,(int,float)) or not 0<=value<=high:raise ValueError(f'{name} must be from 0 to {high}')
@@ -58,6 +65,7 @@ class ImageRuntimeManager:
         self.lock,self.operation=threading.RLock(),threading.Lock()
         self.child,self.cancelled,self.jobs=None,threading.Event(),[]
         self.conversations={}
+        self.upscale_lock=threading.Lock()
         try:
             saved=json.loads((self.directory/'jobs.json').read_text(encoding='utf-8'))
             self.jobs=saved['jobs']
@@ -68,6 +76,26 @@ class ImageRuntimeManager:
 
     def python(self):
         return self.root/'runtime-setup/environments'/RECIPE/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
+
+    def prepare_upscaler(self):
+        spec=importlib.util.spec_from_file_location('opencore_ai_upscale',self.resources/'studio/ai_upscale.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        folder=self.root/'models/components/image-upscale';folder.mkdir(parents=True,exist_ok=True)
+        file=folder/module.MODEL_FILENAME
+        with self.upscale_lock:
+            if not file.is_file() or file.stat().st_size!=module.MODEL_BYTES or hashlib.sha256(file.read_bytes()).hexdigest()!=module.MODEL_SHA256:
+                temporary=folder/(module.MODEL_FILENAME+'.download')
+                try:
+                    digest=hashlib.sha256();size=0
+                    with urllib.request.urlopen(urllib.request.Request(module.MODEL_URL,headers={'User-Agent':'OpenCore AI image setup'}),timeout=45) as response,temporary.open('wb') as stream:
+                        while chunk:=response.read(65536):
+                            size+=len(chunk)
+                            if size>module.MODEL_BYTES:raise ValueError('AI upscaler download exceeded its verified size')
+                            digest.update(chunk);stream.write(chunk)
+                    if size!=module.MODEL_BYTES or digest.hexdigest()!=module.MODEL_SHA256:raise ValueError('AI upscaler download failed its publisher checksum')
+                    temporary.replace(file)
+                finally:temporary.unlink(missing_ok=True)
+        return {'path':str(file),'modelId':module.MODEL_ID,'sha256':module.MODEL_SHA256}
 
     def dependencies_ready(self):
         try:
@@ -99,12 +127,13 @@ class ImageRuntimeManager:
             atomic_json(self.directory/'jobs.json',{'schema':1,'jobs':self.jobs,'conversations':self.conversations})
 
     def list(self):
-        with self.lock:return copy.deepcopy(list(reversed(self.jobs[-100:])))
+        with self.lock:return copy.deepcopy(list(reversed([job for job in self.jobs if not job.get('internalVerification') and not job.get('hidden')][-100:])))
 
     def conversation_summaries(self):
         with self.lock:
             groups={}
             for job in self.jobs:
+                if job.get('internalVerification') or job.get('hidden'):continue
                 identity=job['request'].get('conversationId')
                 if identity and not self.conversations.get(identity,{}).get('deleted'):groups.setdefault(identity,[]).append(job)
             summaries=[]
@@ -122,12 +151,13 @@ class ImageRuntimeManager:
         with self.lock:
             if self.conversations.get(identity,{}).get('deleted'):return []
             for job in self.jobs:
+                if job.get('internalVerification') or job.get('hidden'):continue
                 if job['request'].get('conversationId')!=identity:continue
                 number=-int(hashlib.sha256(job['id'].encode()).hexdigest()[:12],16)
                 common={'conversationId':identity,'source':'OpenCore','kind':'message','metadata':{'hubImageJobId':job['id'],'studioReceipt':True}}
                 rows.append({**common,'id':number,'timestamp':job['createdAt'],'role':'user','title':'You','content':job['request']['prompt']})
                 if job['status'] not in ACTIVE:
-                    content='Image generated. Open Images in this chat to view it.' if job['status']=='completed' else 'Image generation '+job['status']+'. '+str(job.get('error') or '')
+                    content='Image generated.' if job['status']=='completed' else 'Image generation '+job['status']+'. '+str(job.get('error') or '')
                     rows.append({**common,'id':number+1,'timestamp':job.get('updatedAt',job['createdAt']),'role':'assistant','title':'OpenCore','content':content})
         return rows
 
@@ -232,14 +262,14 @@ class ImageRuntimeManager:
         self._update(job,status='completed',stage='Generation complete',outputs=paths)
         return {'runtimeReady':True,'inferenceVerified':True,'receiptRevision':entry['revision'],'workerVersion':1,'workerSha256':self.worker_identity(),'verifiedAt':time.time()}
 
-    def _new(self,entry,request):
+    def _new(self,entry,request,internal=False):
         if not supports(entry) or entry.get('status')!='installed':raise ValueError('Download a complete supported Diffusers image package first')
         if not self.operation.acquire(blocking=False):raise ValueError('An image operation is already running')
         self.cancelled.clear()
         try:
             (self.directory/'cancel').unlink(missing_ok=True)
             job={'id':'hub-image-'+uuid.uuid4().hex,'source':'hub-image','category':'image','request':request,'status':'queued',
-                 'stage':'Queued','createdAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'outputs':[],'error':None}
+                 'stage':'Queued','createdAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'outputs':[],'error':None,'internalVerification':internal}
             with self.lock:self.jobs.append(job)
             self._update(job)
         except Exception:
@@ -262,7 +292,7 @@ class ImageRuntimeManager:
 
     def prepare(self,entry,report,pause):
         request=validate_request({'modelId':entry['id'],'prompt':'A blue ceramic cup on a plain table','settings':{'width':512,'height':512,'steps':4,'outputFormat':'png'}})
-        job=self._new(entry,request)
+        job=self._new(entry,request,internal=True)
         try:
             report({'stage':'verifying-inference','detail':'Preparing the image runtime and generating a verification image'})
             if pause.is_set():self.stop()

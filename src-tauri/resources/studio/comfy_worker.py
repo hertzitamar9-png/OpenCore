@@ -12,7 +12,7 @@ import time
 import urllib.request
 import uuid
 
-from asset_worker import bounded_integer,progress,validate_output_format,save_image_output
+from asset_worker import bounded_integer,progress,validate_output_format,save_image_output,prepare_reference_images
 
 def canonical_path(value):
     path=Path(value).resolve()
@@ -46,7 +46,7 @@ QWEN_VARIANTS={
 QWEN_ENCODER='qwen3vl_8b_int8_convrot.safetensors'
 QWEN_VAE='qwen_image_2.1_vae_bf16.safetensors'
 
-def build_qwen_workflow(request,dit,lora_name=None):
+def build_qwen_workflow(request,dit,lora_name=None,reference_names=()):
     settings=request.get('settings') or {}
     width=bounded_integer(settings,'width',1024,128,2048)
     height=bounded_integer(settings,'height',1024,128,2048)
@@ -63,18 +63,24 @@ def build_qwen_workflow(request,dit,lora_name=None):
         '1':node('UnetLoaderGGUF',unet_name=dit) if dit.endswith('.gguf') else node('UNETLoader',unet_name=dit,weight_dtype='default'),
         '2':node('CLIPLoader',clip_name=QWEN_ENCODER,type='qwen_image',device='default'),
         '3':node('VAELoader',vae_name=QWEN_VAE),
-        '4':node('TextEncodeQwenImage21',clip=['2',0],prompt=request['prompt'],negative_prompt=settings.get('negativePrompt',''),resolution=1024),
+        '4':node('TextEncodeQwenImage21',clip=['2',0],prompt=request['prompt'],negative_prompt=settings.get('negativePrompt',''),resolution=max(width,height)),
         '6':node('EmptyLatentImage',width=width,height=height,batch_size=1),
-        '16':node('KSampler',seed=bounded_integer(settings,'seed',831001,0,2**32-1),steps=bounded_integer(settings,'steps',25,1,100),cfg=cfg,
+        '16':node('KSampler',seed=bounded_integer(settings,'seed',831001,0,2**32-1),steps=bounded_integer(settings,'steps',40,1,100),cfg=cfg,
             sampler_name='euler',scheduler='simple',denoise=1.0,model=['19',0] if lora_name else ['1',0],positive=['4',0],negative=['4',1],latent_image=['6',0]),
         '17':node('VAEDecode',samples=['16',0],vae=['3',0]),
         '18':node('SaveImage',images=['17',0],filename_prefix='OpenCore-Qwen'),
     }
     if lora_name:graph['19']=node('LoraLoaderModelOnly',model=['1',0],lora_name=lora_name,strength_model=strength)
+    if reference_names:
+        graph['4']['inputs']['vae']=['3',0]
+        for index,name in enumerate(reference_names):
+            key=str(100+index);graph[key]=node('LoadImage',image=name)
+            graph['4']['inputs'][f'images.image_{index+1}']=[key,0]
+        graph['16']['inputs']['latent_image']=['4',2]
     return graph
 
 
-def build_moss_workflow(request,dit,lora_name=None):
+def build_moss_workflow(request,dit,lora_name=None,reference_names=()):
     settings=request.get('settings') or {}
     width=bounded_integer(settings,'width',1024,128,2048)
     height=bounded_integer(settings,'height',1024,128,2048)
@@ -101,6 +107,12 @@ def build_moss_workflow(request,dit,lora_name=None):
         '18':node('SaveImage',filename_prefix='opencore-moss',images=['17',0]),
     }
     if lora_name:graph['19']=node('LoraLoaderModelOnly',model=['1',0],lora_name=lora_name,strength_model=strength)
+    if reference_names:
+        if len(reference_names)!=1:raise ValueError('MOSS supports one reference image; use Qwen Image 2.1 for multiple references')
+        graph['100']=node('LoadImage',image=reference_names[0])
+        graph['102']=node('ImageScale',image=['100',0],upscale_method='lanczos',width=width,height=height,crop='disabled')
+        graph['101']=node('VAEEncode',pixels=['102',0],vae=['3',0])
+        graph['16']['inputs'].update(latent_image=['101',0],denoise=0.65)
     return graph
 
 
@@ -228,7 +240,9 @@ def generate_comfy(request,output):
             raise ValueError('Select a ComfyUI-format MOSS LoRA for this quantized runtime')
     if lora:required_nodes.add('LoraLoaderModelOnly')
     lora_name=('opencore-qwen-lora.safetensors' if qwen else 'opencore-moss-lora.safetensors') if lora else None
-    graph=build_qwen_workflow(request,variant,lora_name) if qwen else build_moss_workflow(request,variant,lora_name)
+    reference_names=prepare_reference_images(settings,output/'comfy-inputs')
+    if reference_names:required_nodes.update({'LoadImage','VAEEncode'} if not qwen else {'LoadImage'})
+    graph=build_qwen_workflow(request,variant,lora_name,reference_names) if qwen else build_moss_workflow(request,variant,lora_name,reference_names)
     output_format=validate_output_format(settings.get('outputFormat','png'),{'png','jpeg','webp'},'outputFormat')
     component=root/'models'/'components'/('qwen-image-21-abenzerps' if qwen else 'moss-int8-convrot')
     dit=root/'models'/'library'/target/'diffusion_models'
@@ -260,7 +274,7 @@ def generate_comfy(request,output):
             raw=response.read(16_000_001)
         if len(raw)>16_000_000:raise RuntimeError('ComfyUI response exceeded its size limit')
         return json.loads(raw)
-    process=None
+    process=None;finished_image=None
     log_path=output/'comfy-runtime.log'
     for directory in ('comfy-user','comfy-temp'):
         (output/directory).mkdir(parents=True,exist_ok=True)
@@ -269,7 +283,7 @@ def generate_comfy(request,output):
             process=subprocess.Popen([sys.executable,str(engine/'main.py'),'--listen','127.0.0.1','--port',str(port),
                 '--disable-auto-launch','--offline','--disable-mmap','--disable-metadata',
                 '--disable-all-custom-nodes','--whitelist-custom-nodes',plugin,
-                '--extra-model-paths-config',str(paths),'--output-directory',str(images),
+                '--extra-model-paths-config',str(paths),'--output-directory',str(images),'--input-directory',str(output/'comfy-inputs'),
                 '--user-directory',str(output/'comfy-user'),'--temp-directory',str(output/'comfy-temp')],
                 cwd=engine,stdin=subprocess.DEVNULL,stdout=log,stderr=log,
                 env={**os.environ,'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1'},
@@ -303,10 +317,9 @@ def generate_comfy(request,output):
                     source=validate_history_output(images,generated[0])
                     with Image.open(source) as image:
                         image.load()
-                        with image.convert('RGB') as rgb:save_image_output(rgb,output,1,settings)
+                        finished_image=image.convert('RGB')
                     break
             time.sleep(0.75)
-        progress(output,'Generation complete')
     except Exception as error:
         tail=''
         if log_path.is_file():
@@ -329,3 +342,7 @@ def generate_comfy(request,output):
             for child in alive:
                 try:child.kill()
                 except psutil.NoSuchProcess:pass
+    if finished_image is not None:
+        try:save_image_output(finished_image,output,1,settings)
+        finally:finished_image.close()
+    progress(output,'Generation complete')

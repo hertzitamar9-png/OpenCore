@@ -20,7 +20,7 @@ async function $hubConnect() {
 }
 async function $hubRequest(path, body, method) {
   const descriptor = await $hubConnect(), controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45000);
+  const timeout = setTimeout(() => controller.abort(), path==='/memory/recover'||path==='/prompts/improve'?90000:45000);
   try {
     const response = await fetch(descriptor.url + '/api' + path, {method:method || (body === undefined ? 'GET' : 'POST'),
       headers:{'Content-Type':'application/json', [descriptor.authHeader || 'X-OpenCore-Hub-Secret']:descriptor.secret,

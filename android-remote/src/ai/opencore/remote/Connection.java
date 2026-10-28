@@ -17,6 +17,11 @@ import javax.net.ssl.*;
 
 final class Connection {
     static final class SessionExpired extends IOException { SessionExpired(){super("Phone session expired");} }
+    static class RequestFailed extends IOException {
+        final int status;
+        RequestFailed(int status,String detail){super(detail);this.status=status;}
+    }
+    static final class NotPaired extends RequestFailed { NotPaired(){super(403,"This phone is no longer paired. Reveal a new QR code in OpenCore on your PC and pair again.");} }
     static final class ArtifactData {
         final byte[] bytes; final String mime, name;
         ArtifactData(byte[] bytes,String mime,String name){this.bytes=bytes;this.mime=mime;this.name=name;}
@@ -54,6 +59,7 @@ final class Connection {
             catch(Exception e){return false;}
         });
         request.setInstanceFollowRedirects(false);request.setConnectTimeout(10000);request.setReadTimeout(60000);request.setUseCaches(false);
+        request.setRequestProperty("Cache-Control","no-cache");
         if(token!=null)request.setRequestProperty("Authorization","Bearer "+token);
         if(body!=null){
             byte[] raw=body.toString().getBytes(StandardCharsets.UTF_8);request.setRequestMethod("POST");request.setDoOutput(true);
@@ -68,9 +74,9 @@ final class Connection {
                     while(bytes.size()<16384&&(count=input.read(buffer))!=-1)bytes.write(buffer,0,count);
                     detail=new JSONObject(new String(bytes.toByteArray(),StandardCharsets.UTF_8)).optString("error","");}
             }catch(Exception ignored){}finally{request.disconnect();}
-            if(status==400&&detail.contains("phone session expired"))throw new SessionExpired();
-            throw new IOException(status==403?"This phone is not paired. Create a new QR code on the PC.":
-                detail.isEmpty()?"PC request failed ("+status+"). Keep OpenCore open on your PC.":detail);
+            if(status==400&&detail.toLowerCase(Locale.ROOT).contains("phone session expired"))throw new SessionExpired();
+            if(status==403)throw new NotPaired();
+            throw new RequestFailed(status,detail.isEmpty()?"PC request failed ("+status+"). Keep OpenCore open on your PC.":detail);
         }
         return request;
     }

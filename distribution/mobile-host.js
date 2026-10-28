@@ -3,6 +3,7 @@ const $mobileNative=window.__TAURI_INTERNALS__;
 const $mobileHostListeners=new Map();
 let $mobileHostStopped=false, $mobileEventWrites=Promise.resolve(),$mobilePreferenceSyncAt=0;
 const $mobileHostSend=(path,value)=>$hubRequest('/mobile/host/'+path,value);
+const $mobilePresentationPreference=key=>/^(opencore\.ui\.|opencore\.workspace\.|opencore\.browser\.|opencore\.floating\.)/.test(key)||key==='opencore.model-profile';
 function $mobileHostEvent(device,session,handler,payload){
   $mobileEventWrites=$mobileEventWrites.then(()=>$mobileHostSend('event',{device,session,handler,payload})).catch(()=>{});
 }
@@ -16,6 +17,7 @@ async function $mobileHostTask(task){
   const finish=value=>$mobileHostSend('result',{device,session,id,phase:'complete',...value});
   try{
     if(task.kind==='preference'){
+      if($mobilePresentationPreference(task.key)){await finish({ok:true,value:null});return;}
       if(task.action==='set')window.localStorage.setItem(task.key,task.value);
       else if(task.action==='remove')window.localStorage.removeItem(task.key);
       else throw Error('Invalid OpenCore preference update');
@@ -38,7 +40,10 @@ async function $mobileHostTask(task){
       await finish({ok:true,value:{status:response.status,contentType,body:await response.text()}});return;
     }
     const command=task.command,args={...(task.args||{})};let value;
-    if(command==='plugin:event|listen'){
+    if(command==='plugin:event|emit'&&args.event==='opencore-navigate'){
+      for(const item of $mobileHostListeners.values())if(item.device===device&&item.session===session&&item.event===args.event)$mobileHostEvent(device,session,item.clientHandler,{event:args.event,payload:args.payload});
+      value=null;
+    }else if(command==='plugin:event|listen'){
       const handler=args.handler,event=args.event;
       if(typeof event!=='string'||event.length>200)throw Error('Invalid event name');
       const callback=$mobileNative.transformCallback(payload=>$mobileHostEvent(device,session,handler,payload));

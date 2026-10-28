@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+from pathlib import Path
 from mobile_bridge import MobileBridge
 
 
@@ -58,6 +60,28 @@ class MobileBridgeTests(unittest.TestCase):
         self.assertEqual(self.bridge.take({'a'})['tasks'],[])
         with self.assertRaises(ValueError): self.bridge.updates('a',old)
         with self.assertRaises(ValueError): self.bridge.enqueue('a',{'session':old,'id':'two','kind':'invoke','command':'get_snapshot','args':{}})
+
+    def test_phone_navigation_is_private_while_model_settings_remain_shared(self):
+        key='opencore.ui.v1.navigation.view'
+        self.bridge.publish_preferences({key:'"models"','opencore.reasoning-effort.v1':'high'})
+        self.send('a',{'id':'page','kind':'preference','action':'set','key':key,'value':'"conversations"'})
+        self.assertEqual(self.bridge.take({'a'})['tasks'],[])
+        self.assertEqual(self.bridge.preferences.get(key),None)
+        self.assertEqual(self.bridge.phone_preferences('a',self.sessions['a'])['values'][key],'"conversations"')
+        self.assertNotIn(key,self.bridge.phone_preferences('b',self.sessions['b'])['values'])
+        self.assertEqual(self.bridge.phone_preferences('a',self.sessions['a'])['values']['opencore.reasoning-effort.v1'],'high')
+
+    def test_phone_presentation_survives_reconnection_and_pc_restart_but_not_revocation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            file=Path(folder)/'remote-ui.json';bridge=MobileBridge(file)
+            session=bridge.open_session('a')['session'];key='opencore.ui.v1.navigation.view'
+            bridge.enqueue('a',{'session':session,'id':'page','kind':'preference','action':'set','key':key,'value':'"models"'})
+            session=bridge.open_session('a')['session']
+            self.assertEqual(bridge.phone_preferences('a',session)['values'][key],'"models"')
+            restarted=MobileBridge(file);session=restarted.open_session('a')['session']
+            self.assertEqual(restarted.phone_preferences('a',session)['values'][key],'"models"')
+            restarted.forget('a')
+            self.assertEqual(MobileBridge(file).device_preferences,{})
 
 
 if __name__ == '__main__': unittest.main()

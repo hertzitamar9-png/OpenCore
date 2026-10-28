@@ -2,7 +2,7 @@
 (()=>{
   'use strict';
   globalThis.__OPENCORE_MOBILE__=true;
-  let port,sequence=0,callbackSequence=0;
+  let port,sequence=0,callbackSequence=0,connectionError=null,appReady=false,rootObserver;
   const nonce=document.querySelector('meta[name="opencore-native-nonce"]')?.content;
   const waiting=new Map(),callbacks=new Map(),listeners=new Map(),streams=new Map();
   const storage=window.localStorage,storagePrototype=Object.getPrototypeOf(storage);
@@ -14,13 +14,27 @@
   let resolvePort;
   const ready=new Promise(resolve=>{resolvePort=resolve;});
   function request(value){
+    if(connectionError)return Promise.reject(new Error(connectionError));
     const id='phone-'+(++sequence);
     return new Promise((resolve,reject)=>{
       waiting.set(id,{resolve,reject});
       ready.then(()=>port.postMessage(JSON.stringify({id,...value}))).catch(error=>{waiting.delete(id);reject(error);});
     });
   }
+  function checkAppReady(){
+    if(!port||appReady||!document.getElementById('root')?.childElementCount)return;
+    appReady=true;rootObserver?.disconnect();
+    port.postMessage(JSON.stringify({id:'phone-ready',kind:'phone-ready'}));
+  }
+  rootObserver=new MutationObserver(checkAppReady);
+  rootObserver.observe(document.documentElement,{childList:true,subtree:true});
   function deliver(packet){
+    if(packet.type==='connection-lost'){
+      connectionError=packet.error||'PC disconnected. Reconnecting…';
+      for(const item of waiting.values())item.reject(new Error(connectionError));
+      for(const controller of streams.values())try{controller.error(new Error(connectionError));}catch{}
+      waiting.clear();streams.clear();return;
+    }
     if(packet.type==='preferences'){
       const next=packet.values&&typeof packet.values==='object'?packet.values:{};
       const old=new Map();for(let index=0;index<storage.length;index++){const key=storage.key(index);if(key?.startsWith('opencore.'))old.set(key,storage.getItem(key));}
@@ -46,7 +60,7 @@
   }
   window.addEventListener('message',event=>{
     if(!nonce||event.data!=='opencore-mobile-port:'+nonce||!event.ports?.length||port)return;
-    port=event.ports[0];port.onmessage=event=>{try{deliver(JSON.parse(event.data));}catch{}};port.start();resolvePort();
+    port=event.ports[0];port.onmessage=event=>{try{deliver(JSON.parse(event.data));}catch{}};port.start();resolvePort();checkAppReady();
   });
   window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener(){}};
   window.__TAURI_INTERNALS__={

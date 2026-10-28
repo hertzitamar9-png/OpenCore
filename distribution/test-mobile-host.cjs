@@ -43,3 +43,10 @@ test('managed model registration uses the actual PC-local service endpoint',asyn
   const h=host();await h.run({device:'phone',session:'session',id:'save',kind:'invoke',command:'api_provider_save',args:{input:{baseUrl:'http://127.0.0.1:1/v1',apiKey:'paired-phone'}}});
   assert.equal(h.calls[0].args.input.baseUrl,'http://127.0.0.1:4444/v1');assert.equal(h.calls[0].args.input.apiKey,'PC_ONLY_SECRET');
 });
+
+test('a stale phone presentation task cannot navigate the desktop or write its preferences',async()=>{
+  const h=host();await h.run({device:'phone',session:'session',id:'page',kind:'preference',action:'set',key:'opencore.ui.v1.navigation.view',value:'"media"'});
+  assert.equal(h.sent.at(-1).body.ok,true);
+  await h.run({device:'phone',session:'session',id:'nav',kind:'invoke',command:'plugin:event|emit',args:{event:'opencore-navigate',payload:{view:'models'}}});
+  assert.equal(h.calls.length,0);
+});

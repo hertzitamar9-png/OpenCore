@@ -30,6 +30,8 @@ from hf_download import Downloader, HubClient, HubError, Paused, atomic_json, ma
 from hf_security import TokenStore
 from hf_specialist_ocr import OCRManager, supports as supports_ocr
 from hf_image_runtime import ImageRuntimeManager, supports as supports_image
+from hf_memory_repair import MemoryRepair
+from hf_prompt_assistant import PromptAssistant
 
 AUTH_HEADER = "X-OpenCore-Hub-Secret"
 CATALOG_HEADER = "X-OpenCore-Catalog-Revision"
@@ -80,6 +82,9 @@ class BridgeState:
         self.ocr = OCRManager(self.root, self.resources)
         self.images=ImageRuntimeManager(self.root,self.resources)
         self.owner, self.remote, self.private = None, None, None
+        self.memory_repair = None
+        self.prompt_assistant = None
+        self._memory_lock = threading.RLock()
         self.pause_event, self.closed = threading.Event(), False
         self._load_catalog()
         self._seed_publisher_catalog()
@@ -99,6 +104,89 @@ class BridgeState:
                 self.runtime = RuntimeManager(self.root, self.resources)
             except ImportError:
                 self.runtime = RuntimeUnavailable()
+
+    def _memory_helper(self):
+        # Construction opens no database; receipts also work with no model loaded.
+        with self._memory_lock:
+            if self.memory_repair is None:
+                appdata = os.environ.get('APPDATA')
+                data = Path(appdata).resolve() / 'ai.opencore.control-center' if appdata else self.root / 'runtime-setup'
+                self.memory_repair = MemoryRepair(data, allowed_ports={8811, 8813})
+            return self.memory_repair
+
+    def _memory_runtime(self, supplied):
+        if not isinstance(supplied, dict):
+            raise ValueError('The current native runtime snapshot is required for memory recovery')
+        runtime = {k: supplied[k] for k in ('status', 'profile', 'backendPort', 'echoPort', 'baseUrl', 'echoBaseUrl') if k in supplied}
+        for field, url_field in (('backendPort', 'baseUrl'), ('echoPort', 'echoBaseUrl')):
+            port = runtime.get(field)
+            if type(port) is not int or not 1 <= port <= 65535:
+                raise ValueError('Valid native backend and ECHO ports are required')
+            expected = 'http://127.0.0.1:%d' % port
+            endpoint = runtime.get(url_field, expected)
+            if not isinstance(endpoint, str) or endpoint.rstrip('/') != expected:
+                raise ValueError('Memory recovery only accepts the exact native IPv4 loopback endpoints')
+        # The authenticated PC/paired-device descriptor supplies the native ports.
+        # When process inspection is available, additionally prove ownership and
+        # obtain backend authorization internally rather than accepting it from UI.
+        try:
+            import psutil
+        except ImportError:
+            return runtime
+        if not self.owner:
+            return runtime
+        try:
+            username = psutil.Process().username()
+            for port_field, pid_field in (('backendPort', 'modelPid'), ('echoPort', 'echoPid')):
+                pid = supplied.get(pid_field)
+                if type(pid) is not int or pid <= 0:
+                    # Some native adapters omit child PIDs. The strict descriptor
+                    # still applies; the recovery module verifies the RAM branch.
+                    continue
+                process = psutil.Process(pid)
+                processes = [process] + process.children(recursive=True)[:16]
+                listener = None
+                for candidate in processes:
+                    if candidate.username() != username:
+                        continue
+                    ancestry = {p.pid for p in candidate.parents()}
+                    if candidate.pid != self.owner['pid'] and self.owner['pid'] not in ancestry:
+                        continue
+                    connections = candidate.net_connections(kind='tcp')
+                    if any(c.status == psutil.CONN_LISTEN and c.laddr and c.laddr.port == runtime[port_field]
+                           and c.laddr.ip in ('127.0.0.1', '::ffff:127.0.0.1') for c in connections):
+                        listener = candidate
+                        break
+                if listener is None:
+                    raise ValueError('The native memory runtime port is not owned by this OpenCore process')
+                if port_field == 'echoPort':
+                    command = [str(a).replace('\\', '/').lower() for a in listener.cmdline()]
+                    if any(a.endswith(('/echo_server.py', '/echo_server_runtime.py')) for a in command):
+                        try:
+                            key = listener.environ().get('ECHO_UPSTREAM_API_KEY')
+                        except (psutil.AccessDenied, OSError):
+                            key = None
+                        if isinstance(key, str) and key and len(key) <= 4000 and all(32 <= ord(c) <= 126 for c in key):
+                            runtime['authorization'] = 'Bearer ' + key
+        except (psutil.AccessDenied, NotImplementedError):
+            # Optional inspection must not install packages or elevate privileges.
+            pass
+        except (psutil.NoSuchProcess, psutil.ZombieProcess):
+            raise ValueError('The native text runtime exited before memory recovery') from None
+        return runtime
+
+    def memory_action(self, action, body):
+        helper = self._memory_helper()
+        if action == 'receipts':
+            return helper.receipts(body.get('conversationId'))
+        if action == 'revalidate':
+            return helper.revalidate(body.get('proof'))
+        if action != 'recover':
+            raise ValueError('Unknown memory recovery action')
+        runtime = self._memory_runtime(body.get('runtime'))
+        with self._memory_lock:
+            helper.allowed_ports = frozenset((*helper.allowed_ports, runtime['backendPort'], runtime['echoPort']))
+        return helper.recover({**body, 'runtime': runtime})
 
     def _load_catalog(self):
         try:
@@ -650,6 +738,17 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send(200, state.tokens.save(body.get("token"), state.client))
         elif self.command != "POST":
             self._send(405, {"error": "Method not allowed"})
+        elif route=='/prompts/improve':
+            runtime=state._memory_runtime(body.get('runtime'))
+            with state._memory_lock:
+                if state.prompt_assistant is None:
+                    memory=state._memory_helper()
+                    state.prompt_assistant=PromptAssistant(memory.data,allowed_ports={runtime['backendPort'],runtime['echoPort']})
+                    state.prompt_assistant._discarded_sessions=memory._discarded_sessions
+                state.prompt_assistant.allowed_ports=frozenset((runtime['backendPort'],runtime['echoPort']))
+            self._send(200,state.prompt_assistant.improve({**body,'runtime':runtime}))
+        elif route in ('/memory/recover', '/memory/revalidate', '/memory/receipts'):
+            self._send(200, state.memory_action(route.rsplit('/', 1)[1], body))
         elif route == "/plan":
             self._send(200, state.plan(body.get("repository")))
         elif route == "/search":
@@ -708,6 +807,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                     raise Conflict('Wait for the active installation to finish before using OCR')
                 entry = state.entry(body.get('id'), installed=True)
                 self._send(202, state.ocr.start(entry, body.get('image')))
+        elif route=='/images/upscaler/prepare':
+            self._send(200,state.images.prepare_upscaler())
         elif route=='/images/generate':
             with state.lock:
                 if state.progress and state.progress.get('status') in ACTIVE:raise Conflict('Wait for the active installation before generating an image')

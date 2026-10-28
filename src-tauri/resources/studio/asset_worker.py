@@ -68,6 +68,46 @@ def progress(output, stage, **values):
     temporary.replace(output / "progress.json")
 
 
+def prepare_reference_images(settings, directory):
+    paths=settings.get('referencePaths') or []
+    if not isinstance(paths,list) or len(paths)>4:raise ValueError('Attach up to four reference images')
+    if not paths:return []
+    from PIL import Image,ImageOps
+    directory.mkdir(parents=True,exist_ok=True)
+    names=[]
+    for index,raw in enumerate(paths):
+        if not isinstance(raw,str) or not Path(raw).is_absolute():raise ValueError('Reference images must be local attachments')
+        file=Path(raw).resolve(strict=True)
+        if file.suffix.lower() not in ('.png','.jpg','.jpeg','.webp') or not 0<file.stat().st_size<=32*1024**2:
+            raise ValueError('Reference images must be PNG, JPEG or WebP files up to 32 MB')
+        try:
+            with Image.open(file) as image:
+                if image.width*image.height>32_000_000:raise ValueError('Reference image exceeds 32 megapixels')
+                pixels=ImageOps.exif_transpose(image).convert('RGB');pixels.thumbnail((2048,2048),Image.Resampling.LANCZOS)
+                name=f'reference-{index+1}.png';pixels.save(directory/name,format='PNG');names.append(name)
+        except (OSError,Image.DecompressionBombError) as error:raise ValueError('Could not decode this reference image') from error
+    return names
+
+
+def reference_pipeline(generator, settings, output, diffusers):
+    names=prepare_reference_images(settings,output/'reference-inputs')
+    if not names:return generator,{}
+    parameters=inspect.signature(generator.__call__).parameters
+    if 'image' not in parameters:
+        try:generator=diffusers.AutoPipelineForImage2Image.from_pipe(generator)
+        except (ValueError,AttributeError,NotImplementedError) as error:
+            raise RuntimeError('This model does not support reference images in its installed runtime. Choose Qwen Image 2.1 for image editing.') from error
+        parameters=inspect.signature(generator.__call__).parameters
+    if 'image' not in parameters:raise RuntimeError('The selected pipeline cannot consume reference images')
+    from PIL import Image
+    images=[Image.open(output/'reference-inputs'/name).convert('RGB') for name in names]
+    edit='Edit' in type(generator).__name__ or 'Kontext' in type(generator).__name__
+    if len(images)>1 and not edit:raise ValueError('This model supports one reference image. Choose Qwen Image 2.1 to use multiple references.')
+    args={'image':images if edit else images[0]}
+    if 'strength' in parameters:args['strength']=0.65
+    return generator,args
+
+
 def supported_generation_kwargs(pipeline, request, settings, seed):
     """Map common studio controls only to parameters the selected pipeline supports."""
     parameters = inspect.signature(pipeline.__call__).parameters
@@ -78,8 +118,10 @@ def supported_generation_kwargs(pipeline, request, settings, seed):
         "height": bounded_integer(settings, "height", 768, 128, 2048),
         "generator": seed,
     }
-    for key in requested:
+    for key in list(requested):
         if key not in parameters and not accepts_kwargs:
+            if key in ('width','height') and settings.get('referencePaths'):
+                requested.pop(key);continue
             raise RuntimeError(f"This model runtime does not support the requested {key} setting")
     if settings.get("negativePrompt"):
         if "negative_prompt" not in parameters and not accepts_kwargs:
@@ -126,14 +168,17 @@ def save_image_output(image, output, index, settings):
     options={}
     try:
         if (width,height)!=render:
-            action='Upscaling' if width>render[0] or height>render[1] else 'Resizing'
-            progress(output,f'{action} image to {width} × {height} with Lanczos',outputWidth=width,outputHeight=height)
-            resized=image.resize((width,height),Image.Resampling.LANCZOS)
+            if width>render[0] or height>render[1]:
+                from ai_upscale import upscale_image
+                if not settings.get('upscaleModelPath'):raise RuntimeError('Prepare the AI upscaler in OpenCore before requesting a larger image export')
+                import torch
+                resized=upscale_image(image,settings['upscaleModelPath'],target_size=(width,height),device='cuda' if torch.cuda.is_available() else 'cpu',progress=lambda stage,**values:progress(output,stage,**values))
+            else:resized=image.resize((width,height),Image.Resampling.LANCZOS)
         if output_format=='png':
             metadata=PngImagePlugin.PngInfo()
             metadata.add_text('OpenCore.RenderSize',f'{render[0]}x{render[1]}')
             metadata.add_text('OpenCore.OutputSize',f'{width}x{height}')
-            metadata.add_text('OpenCore.ResizeMethod','Lanczos' if resized is not None else 'None')
+            metadata.add_text('OpenCore.ResizeMethod',('Real-ESRGAN realesr-general-x4v3' if width>render[0] or height>render[1] else 'Lanczos') if resized is not None else 'None')
             options['pnginfo']=metadata
         (resized if resized is not None else image).save(path,format=output_format.upper(),**options)
     finally:
@@ -272,9 +317,11 @@ def generate(request, output):
             for component in generator.components.values():
                 if hasattr(component,'_apply'):component._apply(lambda tensor:tensor.clone())
             generator.enable_model_cpu_offload()
+        generator,reference_args=reference_pipeline(generator,settings,output,diffusers)
         apply_diffusers_image_lora(generator,model_id,Path(request['modelRoot']).resolve(),settings,request.get('sourceRepository'))
         seed = bounded_integer(settings, "seed", 831001, 0, 2**32-1)
         args = supported_generation_kwargs(generator, request, settings, torch.Generator("cpu").manual_seed(seed))
+        args.update(reference_args)
         if model_id in ('moss-image-sft','kromoss'):args['uncond_skip_layers']=[22]
         # The catalog's animation-diffusion-2d is a plain Stable Diffusion
         # checkpoint for animation-style still images, without a motion adapter.
@@ -282,6 +329,10 @@ def generate(request, output):
         result = generator(**args)
         if not getattr(result, "images", None):
             raise RuntimeError("The selected pipeline did not return images")
+        del generator
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():torch.cuda.empty_cache()
         for index, image in enumerate(result.images):
             save_image_output(image,output,index+1,settings)
     else:

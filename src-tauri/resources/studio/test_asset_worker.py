@@ -67,7 +67,7 @@ class StudioBounds(unittest.TestCase):
             def manual_seed(self, seed): self.seed=seed; return self
         torch=types.ModuleType("torch")
         torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"
-        torch.Generator=Generator
+        torch.Generator=Generator; torch.cuda=types.SimpleNamespace(is_available=lambda:False)
         diffusers=types.ModuleType("diffusers")
         diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline; diffusers.SanaPipeline=Pipeline
         with tempfile.TemporaryDirectory() as folder:
@@ -102,7 +102,7 @@ class StudioBounds(unittest.TestCase):
             def manual_seed(self, seed): self.seed=seed; return self
         torch=types.ModuleType("torch")
         torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"
-        torch.Generator=Generator
+        torch.Generator=Generator; torch.cuda=types.SimpleNamespace(is_available=lambda:False)
         diffusers=types.ModuleType("diffusers")
         diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline; diffusers.HunyuanDiTPipeline=Pipeline
         with tempfile.TemporaryDirectory() as folder:
@@ -132,7 +132,7 @@ class StudioBounds(unittest.TestCase):
             def __init__(self, device): pass
             def manual_seed(self, seed): return self
         torch=types.ModuleType("torch")
-        torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"; torch.Generator=Generator
+        torch.float32="float32"; torch.float16="float16"; torch.bfloat16="bfloat16"; torch.Generator=Generator; torch.cuda=types.SimpleNamespace(is_available=lambda:False)
         diffusers=types.ModuleType("diffusers")
         diffusers.__version__="0.41.0"; diffusers.DiffusionPipeline=Pipeline; diffusers.StableDiffusionPipeline=Pipeline
         with tempfile.TemporaryDirectory() as folder:

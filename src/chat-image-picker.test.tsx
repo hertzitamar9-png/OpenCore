@@ -2,7 +2,7 @@ import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import * as api from './api';
 import {ModelProfileOptions} from './ModelProfiles';
-import {ImageGenerationPanel,selectChatImageModel,clearChatImageSelection,getChatImageSelection} from './image-generation-panel.js';
+import {ImageGenerationPanel,selectChatImageModel,clearChatImageSelection,getChatImageSelection,submitChatImagePrompt} from './image-generation-panel.js';
 
 const moss={id:'moss-image-sft-int8-convrot',label:'MOSS Image',category:'image',backend:'comfyui',precision:'INT8',installed:true,selectable:false};
 const qwen={id:'qwen-image-21-uc-nvfp4',label:'Qwen Image',category:'image',backend:'comfyui',precision:'NVFP4',installed:true,selectable:false};
@@ -36,9 +36,9 @@ describe('image models in the regular chat picker',()=>{
     render(<ImageGenerationPanel conversationId="opencore:image-picker-test"/>);
     expect(screen.queryByLabelText('Downloaded image model')).toBeNull();
     selectChatImageModel(qwen);
-    await waitFor(()=>expect(screen.getByLabelText('Downloaded image model')).toHaveValue(qwen.id));
-    fireEvent.change(screen.getByLabelText('Image generation prompt'),{target:{value:'A blue cup'}});
-    fireEvent.click(screen.getByRole('button',{name:'Generate image'}));
+    await screen.findByText('Qwen Image · Automatic quality');
+    expect(screen.queryByLabelText('Image generation prompt')).toBeNull();
+    submitChatImagePrompt({prompt:'A blue cup'});
     await waitFor(()=>expect(calls.some(call=>call.command==='submit_studio_job')).toBe(true));
     const request=calls.find(call=>call.command==='submit_studio_job').args.request;
     expect(request.modelId).toBe(qwen.id);
@@ -54,8 +54,8 @@ describe('image models in the regular chat picker',()=>{
     const first=render(<div className="chat-composer-wrap"><ImageGenerationPanel conversationId="one"/></div>);
     const second=render(<div className="chat-composer-wrap"><ImageGenerationPanel conversationId="two" embedded/></div>);
     selectChatImageModel(qwen,{scope:second.container,primary:false});
-    await waitFor(()=>expect(second.container.querySelector('[aria-label="Downloaded image model"]')).toHaveValue(qwen.id));
-    expect(first.container.querySelector('[aria-label="Downloaded image model"]')).toBeNull();
+    await waitFor(()=>expect(second.container.textContent).toContain('Qwen Image · Automatic quality'));
+    expect(first.container.textContent).not.toContain('Automatic quality');
     expect(getChatImageSelection()).toBeNull();
   });
 });

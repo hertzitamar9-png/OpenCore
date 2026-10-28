@@ -477,7 +477,7 @@ class RemoteAccess:
         self.external_port = None
         self.pair_code, self.pair_until, self.fingerprint = None, 0, ''
         self.attempts, self.last_input, self.last_seen = {}, {}, {}
-        self.mobile = MobileBridge()
+        self.mobile = MobileBridge(self.root/'runtime-setup'/'remote-ui-preferences.json')
         appdata = os.environ.get('APPDATA')
         upload_base = Path(appdata).resolve() / 'ai.opencore.control-center' if appdata else self.root / 'runtime-setup'
         self.artifact_root = upload_base / 'artifacts'
@@ -848,6 +848,12 @@ class RemoteAccess:
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             raise ValueError('This OpenCore file is unavailable') from None
 
+    def ui_revision(self):
+        try:
+            data=(self.resources/'runtime-setup/mobile-ui/manifest.json').read_bytes()
+            return hashlib.sha256(data).hexdigest() if len(data)<=65536 else ''
+        except OSError:return ''
+
     def mobile_asset(self, relative):
         if not isinstance(relative, str) or len(relative) > 160 or '\\' in relative:
             raise ValueError('Invalid mobile interface asset')
@@ -995,7 +1001,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
         device = state.authorize(self.headers.get('Authorization'))
         if not device: raise PermissionError('Pair this phone from the PC app')
         if self.command == 'POST' and parsed.path == '/session':
-            self.body(); return self.send(200, state.mobile.open_session(device))
+            self.body(); return self.send(200, {**state.mobile.open_session(device),'uiRevision':state.ui_revision()})
         if self.command == 'POST' and parsed.path == '/request':
             return self.send(200, state.mobile.enqueue(device, self.body(48 * 1024 * 1024)))
         if self.command == 'POST' and parsed.path == '/updates':
@@ -1007,7 +1013,7 @@ class RemoteHandler(BaseHTTPRequestHandler):
         if self.command == 'POST' and parsed.path == '/ui':
             data, mime = state.mobile_asset(self.body().get('path'))
             return self.send(200, data, mime)
-        if self.command == 'GET' and parsed.path == '/info': return self.send(200, {'name': state.pc_name})
+        if self.command == 'GET' and parsed.path == '/info': return self.send(200, {'name': state.pc_name,'uiRevision':state.ui_revision()})
         if self.command == 'POST' and parsed.path == '/rename':
             state.rename(self.body().get('name')); return self.send(200, {'name': state.pc_name})
         if self.command == 'POST' and parsed.path == '/unpair':
