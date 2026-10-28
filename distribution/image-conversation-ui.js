@@ -26,7 +26,7 @@ globalThis.__opencoreImageConversationInvoke=async(command,args,run)=>{
     let result=await $imageInlineEntries([...rows,...extra],args.id);
     if($hubDescriptor&&result.some(row=>row.title==='Automatic memory'))try{
       const {receipts}=await $hubRequest('/memory/receipts',{conversationId:args.id});
-      result=result.map(row=>{const saved=receipts?.[row.metadata?.userEntryId];return row.title==='Automatic memory'&&saved?{...row,content:'Saved '+saved.savedCount+' verified '+(saved.savedCount===1?'memory':'memories')+' from your message.',metadata:{...row.metadata,status:'complete',savedCount:saved.savedCount,recovered:true}}:row;});
+      result=result.map(row=>{const saved=receipts?.[row.metadata?.userEntryId];return row.title==='Automatic memory'&&saved?{...row,content:'Saved '+saved.savedCount+' verified '+(saved.savedCount===1?'memory':'memories')+' from your message.',metadata:{...row.metadata,status:'complete',savedCount:saved.savedCount,memoryRecovered:true}}:row;});
     }catch{}
     return result;
   }

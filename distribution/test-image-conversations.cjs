@@ -14,3 +14,12 @@ test('native image receipts render actual output images in the existing chat tim
   assert.equal(rows.length,2);assert.match(rows.find(row=>row.role==='assistant').content,/!\[Generated image\]\(file:\/\/\/C:\/Studio\/image-1.png\)/);
   assert.doesNotMatch(rows.find(row=>row.role==='assistant').content,/comfy-output|Game Dev Studio/);
 });
+
+test('a verified memory receipt never marks a completed answer as interrupted',async()=>{
+  const context=vm.createContext({$hubDescriptor:{},$hubRequest:async route=>route==='/memory/receipts'?{receipts:{7:{savedCount:1}}}:{entries:[]},window:{__TAURI_INTERNALS__:{invoke:async()=>[]}}});
+  vm.runInContext(fs.readFileSync(require.resolve('./image-conversation-ui.js'),'utf8'),context);
+  const rows=await context.__opencoreImageConversationInvoke('get_conversation',{id:'chat'},async()=>[{id:8,title:'Automatic memory',timestamp:'2026-10-28',metadata:{userEntryId:7,status:'failed'},content:'Failed'}]);
+  assert.equal(rows[0].metadata.memoryRecovered,true);
+  assert.equal(rows[0].metadata.recovered,undefined);
+  assert.match(rows[0].content,/Saved 1 verified memory/);
+});
