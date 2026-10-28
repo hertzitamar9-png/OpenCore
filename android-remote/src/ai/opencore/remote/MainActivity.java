@@ -80,11 +80,13 @@ public final class MainActivity extends Activity {
         heading.setGravity(android.view.Gravity.CENTER); content.addView(heading);
         TextView intro = label("Use the same chats, models, tools, settings, and generated files. OpenCore runs the work on your PC; this phone shows the app in a mobile layout.");
         intro.setTextSize(15); intro.setLineSpacing(dp(4), 1); content.addView(intro);
-        content.addView(label("1  On your PC, open OpenCore → Settings → Remote access, then choose Reveal QR code."));
+        content.addView(label("1  On your PC, open OpenCore â†’ Settings â†’ Remote access, then choose Reveal QR code."));
         content.addView(label("2  Tap Scan QR code and point your camera at the code. Check the PC name and approve the connection."));
         content.addView(label("3  OpenCore saves this PC on your phone. It reconnects when the PC is online."));
+        content.addView(button("Check for app updates",()->AppUpdates.check(this,true)));
+        AppUpdates.check(this,false);
         content.addView(button("Scan QR code", () -> startActivityForResult(new Intent(this, ScannerActivity.class), SCAN_PAIRING)));
-        TextView fallback = label("If you can’t scan, paste the pairing code from OpenCore on your PC.");
+        TextView fallback = label("If you canâ€™t scan, paste the pairing code from OpenCore on your PC.");
         fallback.setPadding(dp(14), dp(18), dp(14), dp(4)); content.addView(fallback);
         pairing = new EditText(this); pairing.setTextColor(0xffe0e9f5); pairing.setHintTextColor(0xff8291a0);
         pairing.setHint("Paste pairing code"); pairing.setSingleLine(false); pairing.setMinLines(2); content.addView(pairing);
@@ -116,9 +118,9 @@ public final class MainActivity extends Activity {
     void beginPair(String raw) {
         if (pairingInProgress) return;
         pendingPairCode=raw;
-        if(pairingPanel!=null)pairingPanel.showProgress("Connecting securely","Checking the PC identity and saving your approved connection…",0);
+        if(pairingPanel!=null)pairingPanel.showProgress("Connecting securely","Checking the PC identity and saving your approved connectionâ€¦",0);
         pairingInProgress = true; if (pairButton != null) pairButton.setEnabled(false);
-        message("Connecting to your PC…");
+        message("Connecting to your PCâ€¦");
         actions.execute(() -> {
             try {
                 Uri uri = Uri.parse(raw);
@@ -137,9 +139,9 @@ public final class MainActivity extends Activity {
             } catch (Exception error) {
                 String detail = error instanceof javax.net.ssl.SSLException ? "The PC identity did not match. Reveal a new QR code on the PC."
                     : error instanceof java.net.SocketTimeoutException || error instanceof java.net.ConnectException || error instanceof java.net.UnknownHostException
-                    ? "Can’t reach the PC. Keep OpenCore open and connect both devices to the same network or private VPN."
+                    ? "Canâ€™t reach the PC. Keep OpenCore open and connect both devices to the same network or private VPN."
                     : error.getMessage() == null ? "Connection failed. Reveal a new QR code and try again." : error.getMessage();
-                message(detail);runOnUiThread(()->{if(pairingPanel!=null)pairingPanel.showError("Couldn’t pair with your PC",ConnectionMessages.forError(error),0);});
+                message(detail);runOnUiThread(()->{if(pairingPanel!=null)pairingPanel.showError("Couldnâ€™t pair with your PC",ConnectionMessages.forError(error),0);});
             } finally { runOnUiThread(() -> { pairingInProgress = false; if (pairButton != null) pairButton.setEnabled(true); }); }
         });
     }

@@ -21,6 +21,7 @@
       ready.then(()=>port.postMessage(JSON.stringify({id,...value}))).catch(error=>{waiting.delete(id);reject(error);});
     });
   }
+  globalThis.__opencoreCheckAppUpdates=()=>request({kind:'phone-app-update'});
   function checkAppReady(){
     if(!port||appReady||!document.getElementById('root')?.childElementCount)return;
     appReady=true;rootObserver?.disconnect();

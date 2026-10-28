@@ -77,6 +77,7 @@ public final class MobileActivity extends Activity {
         settings.setSupportMultipleWindows(false);
         web.setWebViewClient(new LocalClient());web.setWebChromeClient(new PhoneChrome());
         connect();
+        AppUpdates.check(this,false);
         polling.scheduleWithFixedDelay(this::poll,0,450,TimeUnit.MILLISECONDS);
     }
 
@@ -130,6 +131,7 @@ public final class MobileActivity extends Activity {
     void message(String raw,int targetGeneration){
         try{
             JSONObject value=new JSONObject(raw);String id=value.getString("id"),kind=value.getString("kind");
+            if(kind.equals("phone-app-update")){AppUpdates.check(this,true);ok(id,null,targetGeneration);return;}
             if(kind.equals("phone-ready")){connectionPanel.setVisibility(View.GONE);status("");return;}
             if(kind.equals("phone-dialog")){showPhoneDialog(id,value.optString("command",""),value.optJSONObject("args"),targetGeneration);return;}
             if(kind.equals("phone-open")){openLink(id,value.optJSONObject("args"),targetGeneration);return;}
@@ -373,7 +375,7 @@ public final class MobileActivity extends Activity {
         connection=null;session=null;getSharedPreferences("paired-pc",MODE_PRIVATE).edit().clear().apply();
         runOnUiThread(()->{if(!destroyed){startActivity(new Intent(this,MainActivity.class));finish();}});
     }
-    @Override public void onResume(){super.onResume();resumed=true;nextInfoAt=0;}
+    @Override public void onResume(){super.onResume();resumed=true;nextInfoAt=0;AppUpdates.resume(this);AppUpdates.check(this,false);}
     @Override public void onPause(){resumed=false;super.onPause();}
     @Override public void onDestroy(){destroyed=true;remoteSession.cancel();imageCache.clear();if(port!=null)port.close();polling.shutdownNow();io.shutdownNow();if(web!=null)web.destroy();super.onDestroy();}
     @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
