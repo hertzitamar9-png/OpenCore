@@ -1,17 +1,27 @@
 import React from 'react';
 
 let chatImageSelection=null;
-try{const value=JSON.parse(window.localStorage.getItem('opencore.ui.v1.chat-image-model'));if(typeof value?.id==='string'&&typeof value?.label==='string')chatImageSelection={id:value.id,label:value.label};}catch{}
+try{const value=JSON.parse(window.localStorage.getItem('opencore.ui.v1.chat-image-model'));if(typeof value?.id==='string'&&typeof value?.label==='string')chatImageSelection={id:value.id,label:value.label,...(typeof value.adapterId==='string'?{adapterId:value.adapterId,adapterLabel:value.adapterLabel||value.adapterId}:{})};}catch{}
 const chatImageListeners=new Set();
 export function getChatImageSelection(){return chatImageSelection;}
 function subscribeChatImageSelection(listener){chatImageListeners.add(listener);return()=>chatImageListeners.delete(listener);}
 function rememberChatImageModel(model){
-  const next=model?{id:model.id,label:model.label||model.id}:null;
-  if(next?.id===chatImageSelection?.id&&next?.label===chatImageSelection?.label)return;
+  const next=model?{id:model.id,label:model.label||model.id,...(model.adapterId?{adapterId:model.adapterId,adapterLabel:model.adapterLabel||model.adapterId}:{})}:null;
+  if(JSON.stringify(next)===JSON.stringify(chatImageSelection))return;
   chatImageSelection=next;for(const listener of chatImageListeners)listener();
   try{if(next)window.localStorage.setItem('opencore.ui.v1.chat-image-model',JSON.stringify(next));else window.localStorage.removeItem('opencore.ui.v1.chat-image-model');}catch{}
 }
 export function useChatImageSelection(){return React.useSyncExternalStore(subscribeChatImageSelection,getChatImageSelection,getChatImageSelection);}
+export function imageSelectionLabel(model){return model?model.label+(model.adapterId?' + '+(model.adapterLabel||'LoRA'):''):'';}
+export function imageErrorMessage(error){
+  const raw=String(error?.message||error||'');
+  if(/failed to fetch|PC did not respond|connection (lost|interrupted)/i.test(raw))return 'The connection to your PC was interrupted. Reconnect, then retry your image prompt.';
+  if(/required pinned .* component is missing|installed model folder is missing/i.test(raw))return 'Base model files are missing. Reinstall the selected base in Models, then retry.';
+  const memory=raw.match(/needs about ([\d.]+) GB available RAM/i);
+  if(memory)return 'This model needs '+memory[1]+' GB of free RAM. Free memory or choose a smaller quantization, then retry.';
+  const lines=raw.trim().split(/\r?\n/).filter(Boolean);return (lines.at(-1)||'Image generation failed. Please retry.').replace(/^(?:Error|RuntimeError|ValueError):\s*/,'').slice(0,300);
+}
+function ImageError({error}){const h=React.createElement,raw=String(error?.message||error||''),message=imageErrorMessage(error);return h('div',{className:'image-error',role:'alert'},h('p',null,message),raw.replace(/^Error:\s*/,'')!==message?h('details',null,h('summary',null,'Error details'),h('pre',null,raw)):null);}
 let currentImageProgress=null;
 const imageProgressListeners=new Set();
 function publishImageProgress(value){if(JSON.stringify(value)===JSON.stringify(currentImageProgress))return;currentImageProgress=value;for(const listener of imageProgressListeners)listener();}
@@ -44,7 +54,7 @@ function ImageProgressCard({job,stage}){
 }
 export function selectChatImageModel(model,{scope=null,primary=true}={}){
   if(!model?.id)throw Error('Choose a downloaded image model.');
-  const event=new CustomEvent('opencore-chat-image-selected',{cancelable:true,detail:{modelId:model.id,scope,primary}});
+  const event=new CustomEvent('opencore-chat-image-selected',{cancelable:true,detail:{modelId:model.id,adapterId:model.adapterId||'',scope,primary}});
   if(!window.dispatchEvent(event))return false;
   if(primary)rememberChatImageModel(model);
   return true;
@@ -55,19 +65,24 @@ export function clearChatImageSelection({scope=null,primary=true}={}){
   return true;
 }
 export function downloadedImageModels(models){
-  return models.filter(model=>model.category==='image'&&model.hubEntry?.packageKind!=='adapter'&&model.hubEntry?.format!=='lora'&&(model.installed||model.runtimeConnected));
+  return models.filter(model=>model.category==='image'&&model.hubEntry?.packageKind!=='adapter'&&model.hubEntry?.format!=='lora'&&model.installed===true);
 }
-async function readImageModelLibrary(){
+async function readImageModelLibrary(options={}){
   const run=()=>window.__TAURI_INTERNALS__.invoke('list_model_library',{});
   const invoke=()=>globalThis.__opencoreInstallBridge?globalThis.__opencoreInstallBridge.invoke('list_model_library',{},run):run();
-  return globalThis.__opencoreModelLibrary?.read?globalThis.__opencoreModelLibrary.read(invoke):invoke();
+  return globalThis.__opencoreModelLibrary?.read?globalThis.__opencoreModelLibrary.read(invoke,options):invoke();
 }
-export function ChatImageModelOptions({onSelect,disabled=false,loadModels=readImageModelLibrary,selectedId}){
+export function imageModelChoices(models,adapters=[]){
+  return downloadedImageModels(models).flatMap(model=>[model,...imageAdaptersForModel(model,adapters).map(adapter=>({...model,adapterId:adapter.id,adapterLabel:adapter.familyLabel||adapter.name||adapter.repository}))]);
+}
+export function ChatImageModelOptions({onSelect,disabled=false,loadModels=readImageModelLibrary,selectedId,selectedAdapterId}){
   const h=React.createElement,[models,setModels]=React.useState(null),[error,setError]=React.useState(''),selected=useChatImageSelection();
-  React.useEffect(()=>{let active=true;Promise.resolve().then(()=>loadModels()).then(library=>{if(active)setModels(downloadedImageModels(library.models));}).catch(reason=>{if(active)setError(String(reason));});return()=>{active=false;};},[loadModels]);
+  React.useEffect(()=>{let active=true;Promise.all([Promise.resolve().then(()=>loadModels()),Promise.resolve().then(()=>globalThis.__opencoreImageAdapters?.()||[]).catch(()=>[])]).then(([library,adapters])=>{if(active)setModels(imageModelChoices(library.models,adapters));}).catch(reason=>{if(active)setError(String(reason));});return()=>{active=false;};},[loadModels]);
+  const pickedId=selectedId===undefined?selected?.id:selectedId,pickedAdapter=selectedAdapterId===undefined?selected?.adapterId:selectedAdapterId;
+  const picked=model=>pickedId===model.id&&(pickedAdapter||'')===(model.adapterId||'');
   return h('div',{className:'chat-image-model-options',role:'group','aria-label':'Downloaded image models'},h('strong',{className:'chat-image-model-heading'},'Image models'),
     error?h('p',{role:'alert'},'Could not check downloaded image models. '+error):models===null?h('p',{role:'status'},'Checking image models…'):models.length===0?h('p',{role:'status'},'No image models are downloaded. Install one in Models.'):null,
-    ...(models||[]).map(model=>h('button',{key:model.id,type:'button',className:'model-picker-option'+((selectedId===undefined?selected?.id:selectedId)===model.id?' selected':''),'aria-pressed':(selectedId===undefined?selected?.id:selectedId)===model.id,disabled,onClick:event=>onSelect(model,event)},h('span',null,h('strong',null,model.label),h('small',null,(model.precision||'Publisher checkpoint')+' · Generate images in this conversation')))));
+    ...(models||[]).map(model=>h('button',{key:model.id+':'+(model.adapterId||'base'),type:'button',className:'model-picker-option'+(picked(model)?' selected':''),'aria-pressed':picked(model),disabled,onClick:event=>onSelect(model,event)},h('span',null,h('strong',null,model.label+(model.adapterId?' + '+model.adapterLabel:'')),h('small',null,(model.precision||'Publisher checkpoint')+(model.adapterId?' · LoRA enabled':'')+' · Generate images in this conversation')))));
 }
 
 export const IMAGE_SIZE_OPTIONS = [256,512,768,1024,2048,4096,8192].map(value=>({value,label:(value>=2048?(value/1024)+'K · ':'')+value+' × '+value}));
@@ -125,10 +140,9 @@ export function imageOutputs(job) {
 export function ImageGenerationPanel({conversationId,onConversationId,onNotice,onRefresh,onStateChange,studio=false,embedded=false,initialModelId=''}) {
   const h=React.createElement;
   const initialSelection=!studio&&!embedded?getChatImageSelection():null;
-  const [open,setOpen]=React.useState(studio||!!initialSelection),[models,setModels]=React.useState([]),[modelId,setModelId]=React.useState(initialModelId||initialSelection?.id||''),[adapters,setAdapters]=React.useState([]),[adapterId,setAdapterId]=React.useState(''),[prompt,setPrompt]=React.useState(''),[strength,setStrength]=React.useState(0.8),[steps,setSteps]=React.useState(30),[guidance,setGuidance]=React.useState(3),[size,setSize]=React.useState(512),[busy,setBusy]=React.useState(false),[stage,setStage]=React.useState(''),[error,setError]=React.useState(''),[jobs,setJobs]=React.useState([]),[images,setImages]=React.useState({});
+  const [open,setOpen]=React.useState(studio||!!initialSelection),[models,setModels]=React.useState([]),[modelId,setModelId]=React.useState(initialModelId||initialSelection?.id||''),[adapters,setAdapters]=React.useState([]),[adapterId,setAdapterId]=React.useState(initialSelection?.adapterId||''),[prompt,setPrompt]=React.useState(''),[strength,setStrength]=React.useState(0.8),[steps,setSteps]=React.useState(30),[guidance,setGuidance]=React.useState(3),[size,setSize]=React.useState(512),[busy,setBusy]=React.useState(false),[stage,setStage]=React.useState(''),[error,setError]=React.useState(''),[jobs,setJobs]=React.useState([]),[images,setImages]=React.useState({});
   const panel=React.useRef(null),requestedModel=React.useRef(initialSelection?.id||''),pending=React.useRef(null),inFlight=React.useRef(false),previewing=React.useRef(new Set()),conversation=React.useRef(conversationId),submitting=React.useRef(false),fingerprint=React.useRef('');
   const activeJob=jobs.find(job=>['queued','starting','running','preparing'].includes(job.status));
-  React.useEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,label:models.find(m=>m.id===modelId)?.label});},[open,busy,!!activeJob,modelId,models,onStateChange]);
   const shownJob=activeJob||jobs.find(job=>job.request?.modelId===modelId);
   React.useEffect(()=>{if(!studio&&!embedded&&open)publishImageProgress(busy?{modelId,job:{status:'preparing',stage:stage||'Preparing image generation'}}:shownJob?{modelId,job:shownJob}:null);},[open,studio,embedded,modelId,shownJob,busy,stage]);
   React.useEffect(()=>{conversation.current=conversationId;},[conversationId]);
@@ -139,7 +153,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       if(detail.scope?!detail.scope.contains(panel.current):embedded)return;
       if(busy||activeJob||submitting.current){event.preventDefault();onNotice?.('Wait for image generation to finish before changing models.');return;}
       if(event.type==='opencore-chat-text-selected'){setOpen(false);return;}
-      requestedModel.current=detail.modelId;setModelId(detail.modelId);setOpen(true);setError('');
+      requestedModel.current=detail.modelId;setModelId(detail.modelId);setAdapterId(detail.adapterId||'');setOpen(true);setError('');
     }
     window.addEventListener('opencore-chat-image-selected',accept);window.addEventListener('opencore-chat-text-selected',accept);
     return()=>{window.removeEventListener('opencore-chat-image-selected',accept);window.removeEventListener('opencore-chat-text-selected',accept);};
@@ -153,9 +167,11 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);};
   });
   const imagePreset=models.find(model=>model.id===modelId)?.hubEntry?.imageDefaults;
-  React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);setAdapterId('');},[modelId,imagePreset?.steps,imagePreset?.guidance]);
+  React.useEffect(()=>{const defaults=imagePreset||imageGenerationDefaults(modelId);setSteps(defaults.steps);setGuidance(defaults.guidance);setSize(modelId.startsWith('qwen-image-21')?2048:1024);},[modelId,imagePreset?.steps,imagePreset?.guidance]);
   const model=models.find(m=>m.id===modelId),choices=imageAdaptersForModel(model,adapters);
-  React.useEffect(()=>{if(open&&!studio&&!embedded&&model)rememberChatImageModel(model);},[open,studio,embedded,model]);
+  const activeAdapter=choices.find(adapter=>adapter.id===adapterId),adapterLabel=activeAdapter?.familyLabel||activeAdapter?.name||activeAdapter?.repository||initialSelection?.adapterLabel;
+  React.useEffect(()=>{onStateChange?.({active:open,busy:busy||!!activeJob,modelId,adapterId,label:model?imageSelectionLabel({...model,adapterId,adapterLabel}):undefined});},[open,busy,!!activeJob,modelId,adapterId,model,adapterLabel,onStateChange]);
+  React.useEffect(()=>{if(open&&!studio&&!embedded&&model)rememberChatImageModel({...model,...(adapterId?{adapterId,adapterLabel}:{})});},[open,studio,embedded,model,adapterId,adapterLabel]);
   React.useEffect(()=>{const draft=globalThis.__opencoreImageDraft;if(draft?.modelId===modelId&&choices.some(a=>a.id===draft.adapterId)){setAdapterId(draft.adapterId);setPrompt(draft.prompt||'');setStrength(draft.strength??0.8);delete globalThis.__opencoreImageDraft;}},[modelId,adapters]);
   async function invoke(command,args={}) {
     const run=()=>window.__TAURI_INTERNALS__.invoke(command,args);
@@ -165,12 +181,12 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     const lib=await (globalThis.__opencoreModelLibrary?.read?globalThis.__opencoreModelLibrary.read(()=>invoke('list_model_library')):invoke('list_model_library'));
     const available=downloadedImageModels(lib.models);setModels(old=>old.length===available.length&&old.every((model,index)=>model===available[index])?old:available);
     const requested=requestedModel.current||globalThis.__opencoreRequestedImageModel;
-    setModelId(id=>available.some(m=>m.id===requested)?requested:available.some(m=>m.id===id)?id:available[0]?.id||'');
+    setModelId(id=>requested||id||available[0]?.id||'');
     if(requested&&available.some(m=>m.id===requested)){requestedModel.current='';delete globalThis.__opencoreRequestedImageModel;}
     const load=globalThis.__opencoreImageAdapters; if(load)setAdapters(await load());
     const all=await invoke('list_studio_jobs'),hub=globalThis.__opencoreImageHub;
     const imported=hub?await hub.list():[];
-    const next=[...all,...imported].filter(j=>j.category==='image'&&!j.internalVerification&&!j.hidden&&(studio?j.source==='hub-image':j.request.conversationId===conversation.current)).slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+    const next=[...all,...imported].filter(j=>j.category==='image'&&!j.internalVerification&&!j.hidden&&(studio||j.request.conversationId===conversation.current)).slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
     setJobs(next);const signature=JSON.stringify(next.map(j=>[j.id,j.status,j.outputs]));if(!studio&&signature!==fingerprint.current){fingerprint.current=signature;onRefresh?.();}
   }
   React.useEffect(()=>{
@@ -205,10 +221,16 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
   async function generate(input){
     const text=studio?prompt:input?.prompt||'';
     if(submitting.current||busy||!text.trim())return;
-    if(!model){setError('The selected image model is still loading. Send your prompt again in a moment.');return;}
     submitting.current=true;setBusy(true);setError('');
     try{
-      const adapter=choices.find(a=>a.id===adapterId),file=adapter?.installReceipt.files.find(f=>f.role==='model'&&f.localPath);
+      const live=await readImageModelLibrary({fresh:true}),installed=downloadedImageModels(live.models).find(value=>value.id===modelId);
+      if(!installed)throw Error('This image model is no longer installed. Choose a downloaded model or install its base weights in Models.');
+      const model=installed;
+      const liveAdapters=adapterId?await globalThis.__opencoreImageAdapters?.()||[]:[],adapter=imageAdaptersForModel(installed,liveAdapters).find(a=>a.id===adapterId),file=adapter?.installReceipt.files.find(f=>f.role==='model'&&f.localPath);
+      if(adapterId&&!file)throw Error('This LoRA is no longer installed or compatible with the selected base. Choose another model option.');
+      const snapshot=await invoke('get_snapshot');
+      if(snapshot?.activeConversationIds?.length)throw Error('Another conversation is generating. Let it finish before starting image generation.');
+      if(['running','starting'].includes(snapshot?.runtime?.status)){setStage('Releasing the text model from memory for image generation');await invoke('stop_runtime');}
       const request={modelId,prompt:adapter?.repository==='axiomofmind/Moss-image-nsfw-uncensored-lora'&&file&&!/\bmoss_xvstyle\b/i.test(text)?'moss_xvstyle, '+text.trim():text.trim(),conversationId:conversation.current,settings:{...(studio?{...imageSizeSettings(size,modelId),steps,guidanceScale:guidance,numImages:1,outputFormat:'png'}:automaticImageSettings(modelId,text,input?.files,model.hubEntry?.imageDefaults)),...(file?{loraPath:file.localPath,loraStrength:strength}:{})},onAccepted:input?.onAccepted};
       if(globalThis.__opencorePromptSettings?.().enabled&&globalThis.__opencorePromptSettings().automaticImages){
         try{const better=await globalThis.__opencoreImproveLocalPrompt(request.prompt,conversation.current,'image',setStage);request.settings.originalPrompt=text.trim();request.settings.promptRecap=better.recap;request.prompt=better.prompt;}
@@ -231,7 +253,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       pending.current={...request,setupId:job.id};setStage('Preparing and verifying the image model. Your prompt will run automatically afterward.');
     }catch(e){pending.current=null;submitting.current=false;setBusy(false);setStage('');setError(String(e));}
   }
-  if(!studio)return h('section',{ref:panel,className:'chat-image-status','data-image-mode':open?'open':'closed','aria-label':'Chat image generation'},open?h(React.Fragment,null,h('span',null,(model?.label||'Image model')+' · Automatic quality'),busy||stage||shownJob?h(ImageProgressCard,{job:activeJob||(!busy?shownJob:null),stage:busy?stage||'Preparing image generation':undefined}):null,error||shownJob?.error?h('p',{role:'alert'},error||shownJob.error):null):null);
+  if(!studio)return h('section',{ref:panel,className:'chat-image-status','data-image-mode':open?'open':'closed','aria-label':'Chat image generation'},open?h(React.Fragment,null,h('span',null,(model?.label||initialSelection?.label||'Image model')+(adapterId?' + '+(adapterLabel||'LoRA'):'')+' · Automatic quality'),busy||stage||shownJob?h(ImageProgressCard,{job:activeJob||(!busy?shownJob:null),stage:busy?stage||'Preparing image generation':undefined}):null,error||!busy&&!activeJob&&shownJob?.error?h(ImageError,{error:error||shownJob.error}):null):null);
   return h('section',{ref:panel,className:'image-generation-panel','data-image-mode':open?'open':'closed','aria-label':studio?'Image generation':'Chat image generation'},
     !studio?h('div',{className:'image-mode-tabs',role:'group','aria-label':'Chat generation mode'},h('button',{type:'button','aria-pressed':!open,disabled:busy,onClick:()=>clearChatImageSelection({scope:panel.current?.closest('.chat-composer-wrap')||panel.current,primary:!embedded})},'Text'),h('button',{type:'button','aria-pressed':open,disabled:busy,onClick:()=>setOpen(true)},'Images')):null,
     open?h(React.Fragment,null,h('h3',null,studio?'Generate an image':'Generate images in this chat'),
@@ -242,6 +264,6 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
       size>imageSizeSettings(size,modelId).width?h('small',{className:'image-output-size-note'},'Output: '+size+' × '+size+'. Generated at '+imageSizeSettings(size,modelId).width+' × '+imageSizeSettings(size,modelId).height+', then enhanced locally with the Real-ESRGAN AI upscaler.'):null,
       h('button',{type:'button',className:'image-generate-button',disabled:busy||!model||!prompt.trim()||!Number.isInteger(steps)||steps<1||steps>100||!Number.isFinite(strength)||strength<0||strength>2||!Number.isFinite(guidance)||guidance<0||guidance>30,onClick:()=>void generate()},busy?'Preparing…':'Generate image'),
       stage?h('div',{role:'status'},h('progress',{'aria-label':'Image runtime preparation'}),h('span',null,stage)):null,
-      error?h('p',{role:'alert'},error):null,
-      ...jobs.map(job=>h('article',{className:'chat-image-job',key:job.id},h('p',null,job.request.prompt),h(ImageProgressCard,{job}),job.error?h('p',{role:'alert'},job.error):null,...imageOutputs(job).map(path=>images[job.id+':'+path]?h('img',{key:path,src:images[job.id+':'+path],alt:job.request.prompt}):null),['queued','starting','running','preparing'].includes(job.status)?h('button',{type:'button',onClick:()=>void (job.source==='hub-image'?globalThis.__opencoreImageHub.cancel(job.id):invoke('cancel_studio_job',{id:job.id})).catch(e=>setError(String(e)))},'Cancel image generation'):null))):null);
+      error?h(ImageError,{error}):null,
+      ...jobs.map(job=>h('article',{className:'chat-image-job',key:job.id},h('p',null,job.request.prompt),h(ImageProgressCard,{job}),job.error?h(ImageError,{error:job.error}):null,...imageOutputs(job).map(path=>images[job.id+':'+path]?h('img',{key:path,src:images[job.id+':'+path],alt:job.request.prompt}):null),['queued','starting','running','preparing'].includes(job.status)?h('button',{type:'button',onClick:()=>void (job.source==='hub-image'?globalThis.__opencoreImageHub.cancel(job.id):invoke('cancel_studio_job',{id:job.id})).catch(e=>setError(String(e)))},'Cancel image generation'):null))):null);
 }

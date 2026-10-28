@@ -1,5 +1,11 @@
 import { describe,it,expect } from 'vitest';
-import { imageAdaptersForModel,imageGenerationDefaults,imageSizeSettings,IMAGE_SIZE_OPTIONS,imageProgressView } from './image-generation-panel.js';
+import { imageAdaptersForModel,imageModelChoices,imageGenerationDefaults,imageSizeSettings,IMAGE_SIZE_OPTIONS,imageProgressView,imageErrorMessage } from './image-generation-panel.js';
+
+it('turns native image traces into short actionable errors',()=>{
+ expect(imageErrorMessage('Traceback (most recent call last):\nRuntimeError: This MOSS variant needs about 18.2 GB available RAM including load buffers.')).toMatch(/^This model needs 18.2 GB/);
+ expect(imageErrorMessage('RuntimeError: A required pinned Qwen Image 2.1 component is missing: model.safetensors')).toContain('Reinstall the selected base');
+ expect(imageErrorMessage('TypeError: Failed to fetch')).toContain('connection to your PC');
+});
 
 it('shows measured image work and reserves Ready for an actual completed image',()=>{
  const job={id:'image',status:'running',createdAt:'2026-10-28T10:00:00Z',progress:{step:10,steps:40,stepsPerSecond:.25},outputs:[]};
@@ -14,6 +20,14 @@ it('shows measured image work and reserves Ready for an actual completed image',
 function adapter(base:string,extra={}) {return {status:'installed',repository:'creator/style',packageKind:'adapter',format:'lora',baseRepository:base,installReceipt:{files:[{role:'model',localPath:'C:/hub/style.safetensors'}]},...extra};}
 
 describe('Image LoRA compatibility',()=>{
+  it('offers an installed compatible adapter as a single model choice, without a style editor',()=>{
+    const base={id:'moss-image-sft-int8-convrot',label:'MOSS',category:'image',backend:'comfyui',installed:true};
+    const lora=adapter('OpenMOSS-Team/MOSS-Image-SFT',{id:'moss-adapter',name:'MOSS adapter',variantKey:'lora:MOSS-ComfyUI.safetensors'});
+    const options=imageModelChoices([base],[lora]);
+    expect(options.map((model:any)=>model.adapterId||'')).toEqual(['','moss-adapter']);
+    expect(options[1]).toMatchObject({id:base.id,adapterId:'moss-adapter',adapterLabel:'MOSS adapter'});
+    expect(imageModelChoices([{...base,installed:false,runtimeConnected:true}],[lora])).toEqual([]);
+  });
   it('offers other publishers when their declared base matches the model',()=>{
     const model={id:'z-image-turbo',sourceUrl:'https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/tree/abc'};
     const good=adapter('Tongyi-MAI/Z-Image-Turbo');

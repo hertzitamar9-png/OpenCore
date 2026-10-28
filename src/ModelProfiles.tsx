@@ -79,12 +79,13 @@ export const profileDescription = (profile: RuntimeProfile) =>
 export const isSelectableModelProfile = (profile: string) =>
   profile === "unsloth-echo" || selectableModelProfiles.some(item => item.id === profile) || catalogProfiles.has(profile);
 
-export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, imageActive,imageModelId, disabled = false, id = "model-profile-options", className = "" }: {
+export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, imageActive,imageModelId,imageAdapterId, disabled = false, id = "model-profile-options", className = "" }: {
   selectedProfile: RuntimeProfile;
   onSelect: (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => void;
   onSelectImage?: (model:any,event:MouseEvent<HTMLButtonElement>)=>void;
   imageActive?:boolean;
   imageModelId?:string;
+  imageAdapterId?:string;
   disabled?: boolean;
   id?: string;
   className?: string;
@@ -94,7 +95,7 @@ export function ModelProfileOptions({ selectedProfile, onSelect, onSelectImage, 
   const image=useChatImageSelection(),active=Boolean(onSelectImage)&&(imageActive??Boolean(image));
   const selectedText=active?'stopped':selectedProfile;
   return <div className={`model-picker-options ${className}`} id={id} role="group" aria-label="Choose model profile">
-    {onSelectImage?<ChatImageModelOptions onSelect={onSelectImage} disabled={disabled} loadModels={modelLibrary} selectedId={active?imageModelId||image?.id:null}/>:null}
+    {onSelectImage?<ChatImageModelOptions onSelect={onSelectImage} disabled={disabled} loadModels={modelLibrary} selectedId={active?imageModelId||image?.id:null} selectedAdapterId={active?imageAdapterId??image?.adapterId:null}/>:null}
     {error ? <p className="model-picker-empty" role="alert">Could not check downloaded models. Close and reopen to retry.</p>
       : installedProfiles === null ? <p className="model-picker-empty" role="status">Checking downloaded models…</p>
       : profiles.length === 0 ? <p className="model-picker-empty" role="status">No downloaded text models. Install one in Models.</p> : null}

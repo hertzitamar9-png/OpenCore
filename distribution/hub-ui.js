@@ -369,6 +369,10 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
     onNotice?.('The selected base runtime setup was queued. Its progress appears in Runtime setup.');
   }catch(e){setError(String(e));}finally{setBusy(false);}}
   async function generateWithBase(){if(!canGenerate||!adapterPrompt.trim())return;setBusy(true);setError('');try{
+    if(selectedBase.native){const live=await window.__TAURI_INTERNALS__.invoke('list_model_library',{});if(!live.models?.some(model=>model.id===selectedBase.id&&model.installed===true))throw Error('This base model is no longer installed. Install its weights or choose another downloaded base.');}
+    const snapshot=await window.__TAURI_INTERNALS__.invoke('get_snapshot',{});
+    if(snapshot?.activeConversationIds?.length)throw Error('Another conversation is generating. Let it finish before starting an image.');
+    if(['running','starting'].includes(snapshot?.runtime?.status))await window.__TAURI_INTERNALS__.invoke('stop_runtime',{});
     if(!readyMoss&&!readyQwen){globalThis.__opencoreImageDraft={modelId:selectedBase.id,adapterId:entry.id,prompt:adapterPrompt.trim(),strength:adapterStrength};globalThis.__opencoreRequestedImageModel=selectedBase.id;window.dispatchEvent(new CustomEvent('opencore-open-studio',{detail:'image'}));return;}
     const path=$hubChosenAdapterPath(entry);if(!path)throw Error('Install and verify the supported LoRA file before generating.');
     let status=await window.__TAURI_INTERNALS__.invoke('runtime_setup_status',{});
@@ -421,6 +425,7 @@ function $HubCard({group,disabled,onSelect,onNotice,onChanged,onNativeRemove,sel
         selectedBase&&!selectedBase.installed?h('button',{type:'button',disabled:locked||!selectedBase.installable,onClick:()=>void installBase()},'Install selected base'):null,
         selectedBase?.installed&&!connected?h('button',{type:'button',disabled:locked,onClick:connectBase},'Connect to installed model'):null,
         connected?h('button',{type:'button',disabled:locked,onClick:disconnectBase},'Disconnect LoRA'):null,
+        canGenerate?h('button',{type:'button',disabled:locked,onClick:()=>{const choose=globalThis.__opencoreSelectChatImageModel;if(choose&&choose({id:selectedBase.id,label:selectedBase.label,adapterId:entry.id,adapterLabel:entry.familyLabel||entry.name||entry.repository}))onNotice?.('LoRA selected in Conversations. Write your image prompt in the normal message box.');}},'Use in chat'):null,
         selectedBase?.native&&['comfyui','diffusers'].includes(selectedBase.backend)?h('button',{type:'button',disabled:locked||!selectedBase.installed,onClick:()=>void prepareBase()},'Prepare base runtime'):null,
         entry.baseRepository?h('button',{type:'button',disabled:locked,onClick:()=>findBase()},bases.length?'Browse other base variants':'Find base checkpoint'):null,
         entry.repository?.startsWith('Muapi/ltx-2-2.3-')?h('button',{type:'button',disabled:locked,onClick:()=>findBase('Lightricks/LTX-2.5')},'Inspect LTX 2.5 (experimental)'):null,

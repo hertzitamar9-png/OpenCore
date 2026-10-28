@@ -7,9 +7,32 @@ import {ImageGenerationPanel,selectChatImageModel,clearChatImageSelection,getCha
 const moss={id:'moss-image-sft-int8-convrot',label:'MOSS Image',category:'image',backend:'comfyui',precision:'INT8',installed:true,selectable:false};
 const qwen={id:'qwen-image-21-uc-nvfp4',label:'Qwen Image',category:'image',backend:'comfyui',precision:'NVFP4',installed:true,selectable:false};
 
-afterEach(()=>{cleanup();clearChatImageSelection();vi.restoreAllMocks();delete (window as any).__TAURI_INTERNALS__;});
+afterEach(()=>{cleanup();clearChatImageSelection();vi.restoreAllMocks();delete (window as any).__TAURI_INTERNALS__;delete (globalThis as any).__opencoreImageAdapters;});
 
 describe('image models in the regular chat picker',()=>{
+  it('submits the chosen LoRA with its base and rechecks removed base weights before queuing',async()=>{
+    let installed=true;const calls:any[]=[];
+    const adapter={id:'qa-lora',name:'MOSS add-on',repository:'axiomofmind/Moss-image-nsfw-uncensored-lora',variantKey:'lora:adapter-ComfyUI.safetensors',format:'lora',status:'installed',baseRepository:'OpenMOSS-Team/MOSS-Image-SFT',installReceipt:{files:[{role:'model',localPath:'C:/managed/adapter.safetensors'}]}};
+    (globalThis as any).__opencoreImageAdapters=async()=>[adapter];
+    (window as any).__TAURI_INTERNALS__={invoke:async(command:string,args:any={})=>{calls.push({command,args});
+      if(command==='list_model_library')return{models:[{...moss,installed,runtimeConnected:true}]};
+      if(command==='list_studio_jobs')return[];
+      if(command==='get_snapshot')return{runtime:{status:'stopped'},activeConversationIds:[]};
+      if(command==='runtime_setup_status')return{receipts:[{targetId:moss.id,dependenciesVerified:true,inferenceVerified:true,python:'C:/managed/python.exe'}]};
+      if(command==='submit_studio_job')return{id:'image',status:'completed',request:args.request,outputs:[]};
+      return null;}};
+    render(<ImageGenerationPanel conversationId="lora-chat"/>);
+    selectChatImageModel({...moss,adapterId:adapter.id,adapterLabel:adapter.name});
+    await screen.findByText(/MOSS Image.*MOSS add-on.*Automatic quality/);
+    expect(screen.queryByText('Image style')).toBeNull();
+    submitChatImagePrompt({prompt:'A blue cup'});
+    await waitFor(()=>expect(calls.some(call=>call.command==='submit_studio_job')).toBe(true));
+    expect(calls.find(call=>call.command==='submit_studio_job').args.request.settings).toMatchObject({loraPath:'C:/managed/adapter.safetensors',loraStrength:.8});
+    await waitFor(()=>expect(screen.queryByText(/Preparing image generation/)).toBeNull());
+    installed=false;submitChatImagePrompt({prompt:'A second cup'});
+    await screen.findByText(/no longer installed/i);
+    expect(calls.filter(call=>call.command==='submit_studio_job')).toHaveLength(1);
+  });
   it('offers downloaded image generators through a separate image selection callback',async()=>{
     const inventory=await api.modelLibrary();
     vi.spyOn(api,'modelLibrary').mockResolvedValue({...inventory,models:[moss,qwen,{...qwen,id:'missing',installed:false},{...moss,id:'adapter',hubEntry:{packageKind:'adapter',format:'lora'}}] as any});

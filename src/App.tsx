@@ -1,5 +1,5 @@
 import { EchoContextStatus } from "./EchoContextStatus";
-import {useChatImageSelection,selectChatImageModel,ImageSamplingStats} from './image-generation-panel.js';
+import {useChatImageSelection,selectChatImageModel,ImageSamplingStats,imageSelectionLabel} from './image-generation-panel.js';
 import { EchoMemorySettings } from "./EchoMemorySettings";
 import { ClaudeBridgePanel } from "./ClaudeBridgePanel";
 import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -1222,8 +1222,8 @@ function StatusbarModelSelector({ selectedProfile, onSelect, blockedReason }: { 
   }, [open]);
   const choose = (profile: Exclude<RuntimeProfile, "stopped" | "unsloth-echo">) => { onSelect(profile); setOpen(false); triggerRef.current?.focus(); };
   return <div className="statusbar-model-picker" ref={rootRef}>
-    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${image?.label||profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" onClick={() => setOpen((value) => !value)}>
-      <BrainCircuit size={13} aria-hidden="true" /><strong>{image?.label||profileLabel(selectedProfile)}</strong><ChevronDown size={12} aria-hidden="true" />
+    <button ref={triggerRef} type="button" className={`statusbar-model-trigger ${open ? "open" : ""}`} aria-label={`Choose model profile, currently ${imageSelectionLabel(image)||profileLabel(selectedProfile)}`} aria-expanded={open} aria-controls="statusbar-model-profile-options" onClick={() => setOpen((value) => !value)}>
+      <BrainCircuit size={13} aria-hidden="true" /><strong>{imageSelectionLabel(image)||profileLabel(selectedProfile)}</strong><ChevronDown size={12} aria-hidden="true" />
     </button>
     {open ? createPortal(<div ref={menuRef} className="statusbar-model-popover" style={{ position: "fixed", ...position }}>
       {blockedReason ? <p className="statusbar-model-reason" role="status">{blockedReason}</p> : null}

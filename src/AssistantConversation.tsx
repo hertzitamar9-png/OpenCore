@@ -485,7 +485,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   initialSettings, embedded = false, inferenceBlocked, sendMessage = api.sendChatMessage,
 }: Props) {
   const [draft, setDraft] = useState(initialDraft?.text || "");
-  const [imageChat,setImageChat]=useState<{active:boolean;busy:boolean;label?:string;modelId?:string}>({active:false,busy:false});
+  const [imageChat,setImageChat]=useState<{active:boolean;busy:boolean;label?:string;modelId?:string;adapterId?:string}>({active:false,busy:false});
   const appliedDraftRequest = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (!draftRequest?.text || draftRequest.id === appliedDraftRequest.current) return;
@@ -977,7 +977,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           </div> : null}
           {composerMenu === "model" ? <div className="composer-action-popover composer-model-popover" id={composerMenuId} role="menu" aria-label="Model selection">
             <div className="composer-model-heading"><button type="button" aria-label="Back to composer actions" onClick={() => setComposerMenu("actions")}><ArrowLeft size={14} /></button><span><strong>Model</strong><small>Current · {imageChat.active?imageChat.label||'Image model':profileLabel(selectedProfile)}</small></span></div>
-            <ModelProfileOptions selectedProfile={selectedProfile} imageActive={imageChat.active} imageModelId={imageChat.modelId} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} onSelectImage={(model,event)=>{if(selectChatImageModel(model,{scope:event.currentTarget.closest('.chat-composer-wrap'),primary:!embedded}))setComposerMenu(null);}} disabled={profileLocked} id={embedded ? `side-model-options-${surfaceId}` : "composer-model-profile-options"} className="composer-model-options" />
+            <ModelProfileOptions selectedProfile={selectedProfile} imageActive={imageChat.active} imageModelId={imageChat.modelId} imageAdapterId={imageChat.adapterId} onSelect={(profile) => { onSelectProfile(profile); setComposerMenu(null); }} onSelectImage={(model,event)=>{if(selectChatImageModel(model,{scope:event.currentTarget.closest('.chat-composer-wrap'),primary:!embedded}))setComposerMenu(null);}} disabled={profileLocked} id={embedded ? `side-model-options-${surfaceId}` : "composer-model-profile-options"} className="composer-model-options" />
           </div> : null}
         </div>
         <SpeechButton key={conversationId || "new"} onTranscript={(text) => setDraft((current) => current + (current && !/\s$/.test(current) ? " " : "") + text)} onError={onNotice} />
