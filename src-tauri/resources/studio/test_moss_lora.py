@@ -53,7 +53,7 @@ class MossLoRATest(unittest.TestCase):
                 'repository': 'axiomofmind/Moss-image-nsfw-uncensored-lora',
                 'files': [{'role': 'model', 'filename': filename, 'sha256': sha, 'actualSha256': sha}]
             }))
-            self.assertEqual(managed_moss_lora(root, {'loraPath': str(path)}), path)
+            self.assertEqual(managed_moss_lora(root, {'loraPath': str(path)}), path.resolve())
             path.write_bytes(b'tampered')
             with self.assertRaisesRegex(ValueError, 'hash'):
                 managed_moss_lora(root, {'loraPath': str(path)})

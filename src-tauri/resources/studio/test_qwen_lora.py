@@ -32,7 +32,7 @@ class QwenLoRATest(unittest.TestCase):
                 'role':'model','filename':file.name,'bytes':file.stat().st_size,'sha256':digest,'actualSha256':digest
             }]}
             (folder/'install-receipt.json').write_text(json.dumps(receipt))
-            self.assertEqual(managed_qwen_lora(root,{'loraPath':str(file)}),file)
+            self.assertEqual(managed_qwen_lora(root,{'loraPath':str(file)}),file.resolve())
             class FakeQwenPipeline:
                 def __init__(self):self.actions=[]
                 def load_lora_weights(self,*args,**kwargs):self.actions.append(('load',args,kwargs))
