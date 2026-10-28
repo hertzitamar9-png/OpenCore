@@ -21,7 +21,7 @@ module.exports=function applyImageUi(app,{editFunction,replaceOnce}){
   composer=replaceOnce(composer,'wt=Ge||g,bt=wt||(d==null?void 0:d.status)==="starting"','wt=(Ge||g)&&!$postReply,bt=$imageChat.active?$imageChat.busy:wt||(d==null?void 0:d.status)==="starting"');
   composer=replaceOnce(composer,'const ta=()=>{var jt,Pt;','const ta=()=>{var jt,Pt;if(globalThis.__opencoreSubmitChatImagePrompt({scope:D.current?.closest(".chat-composer-wrap"),prompt:fe,files:ce,onAccepted:()=>{ge("");pe([])}}))return;');
   composer=replaceOnce(composer,'onClick:bt?()=>void sa():ta,disabled:!bt&&(!!ee||!fe.trim()&&ce.length===0),title:bt?"Stop":ee||"Send"','onClick:bt?()=>{if(!globalThis.__opencoreStopChatImagePrompt(D.current?.closest(".chat-composer-wrap")))void sa()}:ta,disabled:!bt&&(!$imageChat.active&&!!ee||!fe.trim()&&ce.length===0),title:bt?"Stop":$imageChat.active?"Send":ee||"Send"');
-  composer=replaceOnce(composer,'if("__TAURI_INTERNALS__"in window)try{await Rv().setFocus()}','if(!globalThis.__OPENCORE_MOBILE__&&"__TAURI_INTERNALS__"in window)try{await Rv().setFocus()}');
+  composer=replaceOnce(composer,'if("__TAURI_INTERNALS__"in window)try{await Rv().setFocus()}','if(!globalThis.__OPENCORE_MOBILE__&&!document.hasFocus())return;if(!globalThis.__OPENCORE_MOBILE__&&"__TAURI_INTERNALS__"in window)try{await Rv().setFocus()}');
   composer=replaceOnce(composer,'catch(ae){k(`Could not focus the editor: ${String(ae)}`)}','catch(ae){}');
   composer=replaceOnce(composer,'children:["Current · ",Tn(b)]','children:["Current · ",$imageChat.active?$imageChat.label||"Image model":Tn(b)]');
   app=app.slice(0,conversation.start)+composer+app.slice(conversation.end);

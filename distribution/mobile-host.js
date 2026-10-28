@@ -40,7 +40,11 @@ async function $mobileHostTask(task){
       await finish({ok:true,value:{status:response.status,contentType,body:await response.text()}});return;
     }
     const command=task.command,args={...(task.args||{})};let value;
-    if(command==='plugin:event|emit'&&args.event==='opencore-navigate'){
+    if(/^plugin:(window|webview)\|/.test(command)){
+      // Presentation belongs to the phone. Older clients must never activate,
+      // restore, minimize, or otherwise change the PC's native windows.
+      value=command==='plugin:window|is_maximized'?false:command==='plugin:webview|get_all_webviews'?[]:null;
+    }else if(command==='plugin:event|emit'&&args.event==='opencore-navigate'){
       for(const item of $mobileHostListeners.values())if(item.device===device&&item.session===session&&item.event===args.event)$mobileHostEvent(device,session,item.clientHandler,{event:args.event,payload:args.payload});
       value=null;
     }else if(command==='plugin:event|listen'){

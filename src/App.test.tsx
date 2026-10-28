@@ -62,7 +62,7 @@ describe("OpenCore", () => {
       fireEvent.click(trigger);
       const waiting = await screen.findByRole("group", { name: "Choose model profile" });
       expect(await within(waiting).findByRole("button", { name: /^Swift 1\.5/ })).toBeDisabled();
-      expect(within(waiting.parentElement!).getByRole("status")).toHaveTextContent("Changing the model…");
+      expect(within(waiting.parentElement!).getByText("Changing the model…")).toBeVisible();
       await act(async () => finishStop());
       await screen.findByRole("button", { name: "Choose model profile, currently Swift 1.5 · ECHO" });
       expect(calls).toEqual(["stop", "select:swift-27b", "start:swift-27b"]);
@@ -105,7 +105,7 @@ describe("OpenCore", () => {
       fireEvent.click(screen.getByRole('button', { name: 'Choose model profile, currently ECHO 3T' }));
       const menu = await screen.findByRole('group', { name: 'Choose model profile' });
       expect(await within(menu).findByRole('button', { name: /^Swift 1\.5/ })).toBeDisabled();
-      expect(within(menu.parentElement!).getByRole('status')).toHaveTextContent('Wait for the app update to finish.');
+      expect(within(menu.parentElement!).getByText('Wait for the app update to finish.')).toBeVisible();
       expect(stop).not.toHaveBeenCalled();
       expect(start).not.toHaveBeenCalled();
       await act(async () => complete());
@@ -240,6 +240,7 @@ describe("OpenCore", () => {
   it("returns keyboard focus to the draft after an attachment dialog is cancelled or fails", async () => {
     render(<App />);
     const input = await screen.findByLabelText('Message OpenCore');
+    input.focus();
     fireEvent.change(input, { target: { value: 'Keep my draft' } });
     vi.mocked(dialog.open).mockResolvedValueOnce(null);
     fireEvent.click(screen.getByRole('button', { name: 'Add files or choose model' }));
@@ -252,6 +253,14 @@ describe("OpenCore", () => {
     await waitFor(() => expect(input).toHaveFocus());
     fireEvent.change(input, { target: { value: 'Edited' } });
     expect(input).toHaveValue('Edited');
+  });
+  it('does not focus the desktop editor while its window is in the background',async()=>{
+    render(<App />);
+    const input=await screen.findByLabelText('Message OpenCore');
+    const active=vi.spyOn(document,'hasFocus').mockReturnValue(false);
+    const focus=vi.spyOn(input,'focus');
+    try{fireEvent.pointerDown(input);expect(focus).not.toHaveBeenCalled();}
+    finally{active.mockRestore();focus.mockRestore();}
   });
   it("reads the runtime's spaced prompt-progress format", () => {
     const now = Date.now();

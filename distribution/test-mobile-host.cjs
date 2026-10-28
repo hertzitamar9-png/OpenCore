@@ -50,3 +50,14 @@ test('a stale phone presentation task cannot navigate the desktop or write its p
   await h.run({device:'phone',session:'session',id:'nav',kind:'invoke',command:'plugin:event|emit',args:{event:'opencore-navigate',payload:{view:'models'}}});
   assert.equal(h.calls.length,0);
 });
+
+test('phone window and webview focus requests never reach the PC window',async()=>{
+ const h=host();
+ for(const command of ['plugin:window|set_focus','plugin:window|show','plugin:window|unminimize','plugin:window|minimize','plugin:webview|set_webview_focus']){
+  await h.run({device:'phone',session:'session',id:'focus',kind:'invoke',command,args:{label:'main'}});
+  assert.equal(h.sent.at(-1).body.ok,true);
+ }
+ assert.equal(h.calls.length,0);
+ await h.run({device:'phone',session:'session',id:'read',kind:'invoke',command:'get_snapshot',args:{}});
+ assert.equal(h.sent.at(-1).body.value.conversations[0].id,'same-pc-chat');
+});

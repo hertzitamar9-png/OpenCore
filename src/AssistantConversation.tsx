@@ -827,6 +827,7 @@ export const AssistantConversation = memo(function AssistantConversation({
   };
 
   const focusDraft = async () => {
+    if (!(globalThis as any).__OPENCORE_MOBILE__ && !document.hasFocus()) return;
     // WebView2's native keyboard target can remain outside the renderer after
     // a native dialog or another child webview. DOM focus alone is insufficient.
     if (!(globalThis as any).__OPENCORE_MOBILE__ && '__TAURI_INTERNALS__' in window) {
