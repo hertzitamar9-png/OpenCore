@@ -14,6 +14,21 @@ import uuid
 
 from asset_worker import bounded_integer,progress,validate_output_format
 
+def canonical_path(value):
+    path=Path(value).resolve()
+    text=str(path)
+    if os.name=='nt' and text.startswith('\\\\?\\'):
+        text='\\\\'+text[8:] if text.startswith('\\\\?\\UNC\\') else text[4:]
+        path=Path(text)
+    return path
+
+
+def owned_listener(psutil,process,port):
+    owner=psutil.Process(process.pid)
+    return any(connection.status==psutil.CONN_LISTEN and connection.laddr.port==port
+               for child in [owner,*owner.children(recursive=True)]
+               for connection in child.net_connections(kind='tcp'))
+
 VARIANTS={
     'moss-image-sft-int8-convrot':'moss-image-sft-dit-int8-convrot.safetensors',
     'moss-image-sft-int4-convrot':'moss_image_sft_int4_convrot.safetensors',
@@ -153,7 +168,7 @@ def validate_history_output(root,image):
 def generate_comfy(request,output):
     import psutil
     from PIL import Image
-    root=Path(request['modelRoot']).resolve()
+    root=canonical_path(request['modelRoot'])
     target=request['modelId']
     qwen=target in QWEN_VARIANTS
     if target not in VARIANTS and not qwen:raise RuntimeError('No managed ComfyUI adapter for this model')
@@ -163,8 +178,8 @@ def generate_comfy(request,output):
     vae_file=QWEN_VAE if qwen else VAE
     plugin='qwen-image-gguf' if qwen else 'moss-image'
     required_nodes={'CLIPLoader','TextEncodeQwenImage21','UnetLoaderGGUF' if variant.endswith('.gguf') else 'UNETLoader'} if qwen else {'MOSSImageUNETLoader','MOSSImageCLIPLoader'}
-    engine=Path(request.get('sourceDir') or '')
-    if not engine.is_absolute() or not engine.resolve().is_relative_to(root/'runtime-setup'/'sources') or not (engine/'main.py').is_file():
+    engine=canonical_path(request.get('sourceDir') or '')
+    if not Path(request.get('sourceDir') or '').is_absolute() or not engine.is_relative_to(root/'runtime-setup'/'sources') or not (engine/'main.py').is_file():
         raise RuntimeError('The pinned managed ComfyUI source is not prepared')
     settings=request.get('settings') or {}
     lora=managed_qwen_lora(root,settings) if qwen else managed_moss_lora(root,settings)
@@ -204,6 +219,8 @@ def generate_comfy(request,output):
         return json.loads(raw)
     process=None
     log_path=output/'comfy-runtime.log'
+    for directory in ('comfy-user','comfy-temp'):
+        (output/directory).mkdir(parents=True,exist_ok=True)
     try:
         with log_path.open('wb') as log:
             process=subprocess.Popen([sys.executable,str(engine/'main.py'),'--listen','127.0.0.1','--port',str(port),
@@ -220,7 +237,7 @@ def generate_comfy(request,output):
             if process.poll() is not None:raise RuntimeError(f'Managed {label} runtime exited during startup')
             if time.monotonic()>startup:raise RuntimeError(f'Managed {label} runtime did not become ready within two minutes')
             try:
-                listening=any(item.status==psutil.CONN_LISTEN and item.laddr.port==port for item in psutil.Process(process.pid).net_connections(kind='tcp'))
+                listening=owned_listener(psutil,process,port)
                 if listening:
                     nodes=api('/object_info')
                     if not required_nodes.issubset(nodes):raise RuntimeError(f'Pinned {label} loader nodes are missing from the managed runtime')
@@ -255,6 +272,17 @@ def generate_comfy(request,output):
         raise RuntimeError(f'{error}\n{tail}') from error
     finally:
         if process is not None and process.poll() is None:
+            try:
+                descendants=psutil.Process(process.pid).children(recursive=True)
+            except psutil.NoSuchProcess:
+                descendants=[]
+            for child in reversed(descendants):
+                try:child.terminate()
+                except psutil.NoSuchProcess:pass
             process.terminate()
             try:process.wait(timeout=10)
             except subprocess.TimeoutExpired:process.kill();process.wait(timeout=10)
+            _,alive=psutil.wait_procs(descendants,timeout=5)
+            for child in alive:
+                try:child.kill()
+                except psutil.NoSuchProcess:pass

@@ -200,5 +200,12 @@
   "training-scripts/inspect_lfm_mask.py": "src-tauri/resources/training-scripts/inspect_lfm_mask.py",
   "training-scripts/profile_dualcore_latency.py": "src-tauri/resources/training-scripts/profile_dualcore_latency.py",
   "training-scripts/run_lfm_balanced_pilot.py": "src-tauri/resources/training-scripts/run_lfm_balanced_pilot.py",
-  "training-scripts/test_dualcore_reasoning_budget.py": "src-tauri/resources/training-scripts/test_dualcore_reasoning_budget.py"
+  "training-scripts/test_dualcore_reasoning_budget.py": "src-tauri/resources/training-scripts/test_dualcore_reasoning_budget.py",
+  "model-runtime-sources/qwen-image-gguf/LICENSE.txt": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/LICENSE.txt",
+  "model-runtime-sources/qwen-image-gguf/OPENCORE-NOTICE.txt": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/OPENCORE-NOTICE.txt",
+  "model-runtime-sources/qwen-image-gguf/__init__.py": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/__init__.py",
+  "model-runtime-sources/qwen-image-gguf/dequant.py": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/dequant.py",
+  "model-runtime-sources/qwen-image-gguf/loader.py": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/loader.py",
+  "model-runtime-sources/qwen-image-gguf/nodes.py": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/nodes.py",
+  "model-runtime-sources/qwen-image-gguf/ops.py": "src-tauri/resources/model-runtime-sources/qwen-image-gguf/ops.py"
 }

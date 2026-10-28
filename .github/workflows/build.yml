@@ -75,6 +75,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test test-mobile-host.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test test-native-recipe-data.cjs test-native-studio-data.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s ../src-tauri/resources/studio -p "test*.py"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Test Hugging Face metadata, token protection, downloads and runtime isolation
         env:
           PYTHONPATH: ${{ github.workspace }}/src-tauri/resources/runtime-setup/hf-extension
@@ -105,6 +109,8 @@ jobs:
           node qa-model-install.cjs candidate-dist
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node qa-image-chat.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node qa-hub-pagination.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

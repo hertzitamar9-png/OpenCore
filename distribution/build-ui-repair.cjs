@@ -109,6 +109,7 @@ app = editFunction(app, 'yj', text => {
 });
 app = require('./connector-research/connector-patches.cjs').applyConnectorPatches(app,{editFunction,replaceOnce});
 app = require('./hub-patches.cjs')(app,{editFunction,replaceOnce});
+app = require('./image-ui-patches.cjs')(app,{editFunction,replaceOnce});
 app=editFunction(app,'yj',text=>{
   text=replaceOnce(text,'J=p.useCallback(async(se=!0)=>','J=p.useCallback(async(se=!1)=>');
   text=replaceOnce(text,'p.useEffect(()=>{J()},[J,$shared.terminal,$shared.receiptsRevision,$hub.catalog])',

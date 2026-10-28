@@ -1,0 +1,20 @@
+[
+  {
+    "name": "comfy_worker.py",
+    "raw": 139876320,
+    "length": 11985,
+    "sha256": "fc40e622303ed4742c521d9238c2be9948a84b331acbac6a9e65247b5a431bfd"
+  },
+  {
+    "name": "asset_worker.py",
+    "raw": 139865126,
+    "length": 11194,
+    "sha256": "3f50901e70fa3feb6202b137f90837194c0278cadf827085303446fe0ee1e9b1"
+  },
+  {
+    "name": "model_smoke.py",
+    "raw": 139862338,
+    "length": 2788,
+    "sha256": "c71a82a3b1d463f2afa45f965ab7907c908b33755b55f60b4c52b0999c8fc682"
+  }
+]

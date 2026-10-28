@@ -10,6 +10,8 @@ import {
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import ReactMarkdown from "react-markdown";
+import { ImageGenerationPanel } from './image-generation-panel.js';
+import './ImageGenerationPanel.css';
 import remarkGfm from "remark-gfm";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
@@ -915,6 +917,7 @@ export const AssistantConversation = memo(function AssistantConversation({
     </AssistantRuntimeProvider>
 
     <div className="chat-composer-wrap">
+      <ImageGenerationPanel conversationId={conversationId} onConversationId={onConversationId} onNotice={onNotice} onRefresh={onRefresh} />
       {matchingSkills.length > 0 ? <div className="composer-skill-menu" role="listbox" aria-label="Skills">{matchingSkills.map((skill) => <button type="button" role="option" aria-selected={selectedSkills.includes(skill.id)} key={skill.id} onClick={() => selectSkill(skill.id)}><strong>/{skill.id}</strong><small>{skill.description}</small></button>)}</div> : null}
       {queue.length > 0 && <div className="prompt-queue">
         <div className="queue-heading"><strong>Queued</strong><span>{queue.length}</span></div>

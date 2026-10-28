@@ -1,0 +1,7 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {createHash}=require('node:crypto');
+const {patchNativeRecipes}=require('./native-recipe-data.cjs');
+function fixture(){const recipe={schema:1,recipes:[{id:'image',kind:'studio',packages:{safetensors:'0.6.2'}}]};const slot=Buffer.from(JSON.stringify(recipe).padEnd(512));const buffer=Buffer.concat([Buffer.from('code-before'),slot,Buffer.from('code-after')]);return{buffer,recipe,slot:{start:11,length:512,sha256:createHash('sha256').update(slot).digest('hex')}};}
+test('synchronizes the native verifier recipe without modifying code or data length',()=>{const {buffer,recipe,slot}=fixture();const before=Buffer.from(buffer);recipe.recipes[0].packages.safetensors='0.8.0';patchNativeRecipes(buffer,recipe,slot);assert.deepEqual(JSON.parse(buffer.subarray(slot.start,slot.start+slot.length).toString()),recipe);assert.deepEqual(buffer.subarray(0,slot.start),before.subarray(0,slot.start));assert.deepEqual(buffer.subarray(slot.start+slot.length),before.subarray(slot.start+slot.length));assert.equal(buffer.length,before.length);});
+test('rejects mismatched baseline and unsupported native recipe kinds',()=>{const {buffer,recipe,slot}=fixture();assert.throws(()=>patchNativeRecipes(buffer,recipe,{...slot,sha256:'0'.repeat(64)}),/differs/);recipe.recipes[0].kind='unknown';assert.throws(()=>patchNativeRecipes(buffer,recipe,slot),/matching native build/);});

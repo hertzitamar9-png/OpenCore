@@ -6,8 +6,11 @@ import { StudioModelSetup } from './StudioModelSetup';
 import { selectStudioModel } from './studio-model-selection';
 import { hasManagedRuntime } from './runtimeSetupApi';
 import './MediaStudio.css';
+import { ImageGenerationPanel } from './image-generation-panel.js';
+import './ImageGenerationPanel.css';
 
 export const MEDIA_CATEGORIES = [
+  ['image', 'Images'],
   ['video', 'Video'], ['tts', 'Speech synthesis'], ['voice-cloning', 'Reference voice'],
   ['ocr', 'Document extraction'], ['omni', 'Audio and multimodal'], ['policy', 'Robotics policy'],
 ] as const;
@@ -121,7 +124,7 @@ export function MediaStudio({category, models, onCategoryChange, onNotice = () =
   const [revision, setRevision] = useState(0);
   return <section className="media-studio" aria-label="Media Studio"><header><h1>Media Studio</h1><p>Generate and inspect video, voices, document extractions, multimodal responses, and offline policy predictions with a connected model runtime.</p></header>
     {onCategoryChange && <div className="model-category-tabs" role="group" aria-label="Media categories">{MEDIA_CATEGORIES.map(([id, name]) => <button key={id} aria-pressed={category === id} onClick={() => onCategoryChange(id)}>{name}</button>)}</div>}
-    <MediaGenerationForm key={category} category={category} label={label} models={models} onNotice={onNotice} onSubmitted={() => setRevision(current => current + 1)} />
+    {category==='image'?<ImageGenerationPanel studio onNotice={onNotice}/>:<MediaGenerationForm key={category} category={category} label={label} models={models} onNotice={onNotice} onSubmitted={() => setRevision(current => current + 1)} />}
     <MediaHistory category={category} revision={revision} onNotice={onNotice} />
   </section>;
 }

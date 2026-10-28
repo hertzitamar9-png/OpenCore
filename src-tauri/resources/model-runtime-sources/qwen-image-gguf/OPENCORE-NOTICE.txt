@@ -1,0 +1,6 @@
+ComfyUI-GGUF runtime sources
+Upstream: https://github.com/leejet/ComfyUI-GGUF
+Revision: 373048b8403a7820620065210a691263d4da0a61
+Upstream loader.py SHA-256: 8bec7829182d320eac5c3d530985607771e9d2f4e4da140133c20804bc01f9d7
+OpenCore modification: copy quantized NumPy tensor data into owned RAM before wrapping it in Torch; active weights do not retain the source GGUF memory map.
+All other runtime source files are unchanged upstream files. LICENSE.txt contains the upstream Apache-2.0 license.

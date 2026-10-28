@@ -34,6 +34,13 @@ for(const start of [30626254,128366186,134114815]){
   if(!JSON.parse(result.subarray(start,end).toString()).models.length)throw Error('Invalid padded native catalog');
   ranges.push([start,end]);changes.push({name:'native-catalog',raw:start,bytes:catalog.length,sha256:hash(catalog)});
 }
+// Setup Python and the preserved native verifier must read the same recipes.
+const recipes=JSON.parse(fs.readFileSync(path.join(root,'../src-tauri/resources/runtime-setup/recipes.json'),'utf8'));
+const recipeChange=require('./native-recipe-data.cjs').patchNativeRecipes(result,recipes);
+ranges.push([recipeChange.raw,recipeChange.raw+recipeChange.slotBytes]);changes.push(recipeChange);
+for(const workerChange of require('./native-studio-data.cjs').patchNativeStudioWorkers(result,path.join(root,'../src-tauri/resources/studio'))){
+  ranges.push([workerChange.raw,workerChange.raw+workerChange.slotBytes]);changes.push(workerChange);
+}
 ranges.sort((a, b) => a[0] - b[0]);
 let checked = 0;
 for (const [start, end] of ranges) {

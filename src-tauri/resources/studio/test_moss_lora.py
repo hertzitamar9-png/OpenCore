@@ -5,10 +5,28 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from comfy_worker import build_moss_workflow, managed_moss_lora
+from comfy_worker import build_moss_workflow, managed_moss_lora, canonical_path, owned_listener
+from types import SimpleNamespace
+import os
 
 
 class MossLoRATest(unittest.TestCase):
+    @unittest.skipUnless(os.name=='nt','Windows path representation regression')
+    def test_extended_paths_share_the_same_managed_boundary(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)/'sources'/'engine'
+            folder.mkdir(parents=True)
+            self.assertEqual(canonical_path('\\\\?\\'+str(folder)),canonical_path(folder))
+            self.assertTrue(canonical_path('\\\\?\\'+str(folder)).is_relative_to(canonical_path(tmp)))
+
+    def test_windows_launcher_child_can_own_the_server_listener(self):
+        connection=SimpleNamespace(status='LISTEN',laddr=SimpleNamespace(port=12345))
+        child=SimpleNamespace(net_connections=lambda **kw:[connection])
+        launcher=SimpleNamespace(children=lambda **kw:[child],net_connections=lambda **kw:[])
+        psutil=SimpleNamespace(Process=lambda pid:launcher,CONN_LISTEN='LISTEN')
+        self.assertTrue(owned_listener(psutil,SimpleNamespace(pid=42),12345))
+        self.assertFalse(owned_listener(psutil,SimpleNamespace(pid=42),54321))
+
     def test_base_and_lora_workflows_have_different_model_edges(self):
         request = {'prompt': 'a test photo', 'settings': {'steps': 30, 'guidanceScale': 3, 'loraStrength': 0.8}}
         base = build_moss_workflow(request, 'model.safetensors')
