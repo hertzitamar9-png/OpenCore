@@ -915,7 +915,7 @@ export const AssistantConversation = memo(function AssistantConversation({
           </ThreadPrimitive.Empty>
           <ThreadPrimitive.Messages components={{ Message: ChatMessage }} />
           {conversationId && onOpenFileRecord ? <FileChangesReceipt conversationId={conversationId} active={generationActive} onOpen={onOpenFileRecord} /> : null}
-          {generationActive && <div className="generation-state">
+          {generationActive && !imageChat.active && <div className="generation-state">
             <span className="generation-pulse" />
             <span>{runtimeSnapshot.status === "starting" ? `${runtimeSnapshot.loadingPhase || "Loading model and ECHO"} · ${((runtimeSnapshot.loadingElapsedMs || 0) / 1000).toFixed(1)}s` : promptProgress?.label || (runtimeRunning ? "OpenCore is working" : "Preparing model and ECHO…")}{active?.files.length ? ` · ${active.files.length} attachment(s)` : ""}</span>
             {runtimeSnapshot.status === "starting" ? <progress aria-label="Model loading" /> : null}

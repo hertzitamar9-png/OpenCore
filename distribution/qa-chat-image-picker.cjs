@@ -40,6 +40,7 @@ await message.fill('Make this cup blue');await page.getByRole('button',{name:'Se
 const calls=await page.evaluate(()=>fixture.calls),request=calls.find(c=>c.command==='submit_studio_job').args.request;
 assert.equal(request.prompt,'Make this cup blue');assert.equal(request.conversationId,'qa-chat');assert.equal(request.modelId,'qwen-image-21-uc-nvfp4');assert.equal(request.settings.steps,40);assert.equal(request.settings.width,2048);assert.deepEqual(request.settings.referencePaths,['C:/attachments/reference.png']);assert.equal(calls.find(c=>c.command==='runtime_setup_start').args.options.verifyInference,true);assert.equal(calls.some(c=>['send_chat_message','start_runtime','send_message'].includes(c.command)),false);
 await page.getByText('Step 10 of 40',{exact:true}).waitFor();await page.getByText('0.25 steps/s',{exact:true}).waitFor();
+assert.equal(await page.getByText('Preparing model and ECHO…',{exact:true}).count(),0);assert.equal(await page.locator('.composer-token-speed').count(),0);
 assert.equal(await page.getByRole('progressbar',{name:'Image generation progress'}).getAttribute('value'),'24');
 assert.ok((await page.getByRole('progressbar',{name:'Image generation progress'}).boundingBox()).width>300);
 await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok((await page.getByRole('progressbar',{name:'Image generation progress'}).boundingBox()).width>250);

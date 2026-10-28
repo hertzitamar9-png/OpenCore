@@ -40,8 +40,11 @@ describe('media catalog provenance and availability', () => {
     expect(model?.note).toMatch(/audio input only.*text output only/);
     expect(model?.note).toMatch(/30 seconds/);
   });
-  it.each(['video', 'tts', 'voice-cloning', 'ocr', 'omni', 'policy'])('provides ten distinct publisher identities for %s without inventing install support', category => {
-    const models = catalog.models.filter(model => model.category === category);
+  it.each(['video', 'tts', 'voice-cloning', 'ocr', 'omni', 'policy'])('retains ten reviewed publisher identities and their original evidence for %s', category => {
+    // This evidence file records the original reviewed publishers. Later pinned
+    // catalog additions and published quant variants have separate provenance.
+    const reviewedIds = new Set(evidence.entries.map(entry => entry.modelId));
+    const models = catalog.models.filter(model => model.category === category && reviewedIds.has(model.id));
     expect(models.length).toBeGreaterThanOrEqual(10);
     expect(new Set(models.map(model => 'sourceUrl' in model ? model.sourceUrl : '')).size).toBeGreaterThanOrEqual(10);
     for (const model of models) {
@@ -76,6 +79,20 @@ describe('media catalog provenance and availability', () => {
     expect(new Set(catalog.models.map(model => model.id)).size).toBe(catalog.models.length);
     for (const model of catalog.models) {
       for (const id of model.artifacts) expect(ids).toContain(id);
+    }
+  });
+  it('pins every later media entry and quant variant to real artifact identities', () => {
+    const categories = new Set(['video', 'tts', 'voice-cloning', 'ocr', 'omni', 'policy']);
+    for (const model of catalog.models.filter(model => categories.has(model.category))) {
+      expect(model.sourceUrl, model.id).toMatch(/^https:\/\/huggingface\.co\/[^/]+\/[^/]+\/tree\/[a-f\d]{40}$/);
+      if (model.installable) expect(model.artifacts.length, model.id).toBeGreaterThan(0);
+      for (const id of model.artifacts) {
+        const file = catalog.artifacts.find(file => file.id === id)!;
+        expect(file.repo, id).toMatch(/^[^/]+\/[^/]+$/);
+        expect(file.revision, id).toMatch(/^[a-f\d]{40}$/);
+        expect(file.sha256, id).toMatch(/^[a-f\d]{64}$/);
+        expect(Number.isSafeInteger(file.bytes) && file.bytes > 0, id).toBe(true);
+      }
     }
   });
   it('offers the official LTX 2.5 pack without rewriting older installed identities', () => {

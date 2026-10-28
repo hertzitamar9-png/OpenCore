@@ -45,7 +45,7 @@ jobs:
         run: python distribution/sync-branding.py
       - name: Test manual update controls and release version ordering
         run: |
-          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/image-generation-panel.test.ts src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx
+          npx vitest run src/AppUpdateControls.test.tsx src/App.test.tsx src/ModelLibrary.test.tsx src/media-catalog.test.ts src/image-generation-panel.test.ts src/chat-image-picker.test.tsx src/chat-image-composer.test.tsx src/chat-postprocessing.test.tsx src/image-preview-cache.test.ts src/prompt-assistant.test.tsx src/ModelProfileOptions.test.tsx src/FileChangesReceipt.test.tsx
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx tsc --noEmit
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
