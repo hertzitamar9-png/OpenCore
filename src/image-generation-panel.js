@@ -162,7 +162,7 @@ export function ImageGenerationPanel({conversationId,onConversationId,onNotice,o
     if(studio||!open)return;
     const matches=event=>event.detail?.scope?event.detail.scope.contains(panel.current):!embedded;
     const send=event=>{if(!matches(event))return;event.preventDefault();if(!submitting.current&&!busy&&!activeJob)void generate(event.detail);};
-    const stop=event=>{if(!matches(event))return;event.preventDefault();void (async()=>{try{if(pending.current){await invoke('runtime_setup_pause',{id:pending.current.setupId});pending.current=null;submitting.current=false;setBusy(false);setStage('');}else if(activeJob){await (activeJob.source==='hub-image'?globalThis.__opencoreImageHub.cancel(activeJob.id):invoke('cancel_studio_job',{id:activeJob.id}));}}catch(error){setError(String(error));}})();};
+    const stop=event=>{if(!matches(event))return;event.preventDefault();void (async()=>{try{if(pending.current){await invoke('runtime_setup_cancel',{jobId:pending.current.setupId});pending.current=null;submitting.current=false;setBusy(false);setStage('');}else if(activeJob){await (activeJob.source==='hub-image'?globalThis.__opencoreImageHub.cancel(activeJob.id):invoke('cancel_studio_job',{id:activeJob.id}));}}catch(error){setError(String(error));}})();};
     window.addEventListener('opencore-chat-image-prompt',send);window.addEventListener('opencore-chat-image-stop',stop);
     return()=>{window.removeEventListener('opencore-chat-image-prompt',send);window.removeEventListener('opencore-chat-image-stop',stop);};
   });

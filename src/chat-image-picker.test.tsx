@@ -2,7 +2,7 @@ import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import * as api from './api';
 import {ModelProfileOptions} from './ModelProfiles';
-import {ImageGenerationPanel,selectChatImageModel,clearChatImageSelection,getChatImageSelection,submitChatImagePrompt} from './image-generation-panel.js';
+import {ImageGenerationPanel,selectChatImageModel,clearChatImageSelection,getChatImageSelection,submitChatImagePrompt,stopChatImagePrompt} from './image-generation-panel.js';
 
 const moss={id:'moss-image-sft-int8-convrot',label:'MOSS Image',category:'image',backend:'comfyui',precision:'INT8',installed:true,selectable:false};
 const qwen={id:'qwen-image-21-uc-nvfp4',label:'Qwen Image',category:'image',backend:'comfyui',precision:'NVFP4',installed:true,selectable:false};
@@ -10,6 +10,16 @@ const qwen={id:'qwen-image-21-uc-nvfp4',label:'Qwen Image',category:'image',back
 afterEach(()=>{cleanup();clearChatImageSelection();vi.restoreAllMocks();delete (window as any).__TAURI_INTERNALS__;delete (globalThis as any).__opencoreImageAdapters;});
 
 describe('image models in the regular chat picker',()=>{
+  it('stops automatic preparation through the actual native cancellation command',async()=>{
+    const calls:any[]=[];(window as any).__TAURI_INTERNALS__={invoke:async(command:string,args:any={})=>{calls.push({command,args});
+      if(command==='list_model_library')return{models:[moss]};if(command==='list_studio_jobs')return[];
+      if(command==='runtime_setup_status')return{receipts:[],recipes:[{modelIds:[moss.id]}],jobs:[]};
+      if(command==='runtime_setup_start')return{id:'pending-runtime'};return null;}};
+    render(<ImageGenerationPanel conversationId="cancel-image"/>);selectChatImageModel(moss);await screen.findByText('MOSS Image · Automatic quality');submitChatImagePrompt({prompt:'A blue cup'});
+    await waitFor(()=>expect(calls.some(call=>call.command==='runtime_setup_start')).toBe(true));
+    stopChatImagePrompt();await waitFor(()=>expect(calls).toContainEqual({command:'runtime_setup_cancel',args:{jobId:'pending-runtime'}}));
+    expect(calls.some(call=>call.command==='submit_studio_job')).toBe(false);
+  });
   it('submits the chosen LoRA with its base and rechecks removed base weights before queuing',async()=>{
     let installed=true;const calls:any[]=[];
     const adapter={id:'qa-lora',name:'MOSS add-on',repository:'axiomofmind/Moss-image-nsfw-uncensored-lora',variantKey:'lora:adapter-ComfyUI.safetensors',format:'lora',status:'installed',baseRepository:'OpenMOSS-Team/MOSS-Image-SFT',installReceipt:{files:[{role:'model',localPath:'C:/managed/adapter.safetensors'}]}};
